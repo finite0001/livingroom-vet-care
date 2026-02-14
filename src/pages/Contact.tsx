@@ -306,7 +306,7 @@ const Contact = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">Address</p>
                         <p className="font-medium text-foreground">
-                          1234 Pearl Street
+                          2619 Spruce Street
                           <br />
                           Boulder, CO 80302
                         </p>
@@ -398,7 +398,7 @@ const Contact = () => {
                   Visit Our Practice
                 </h2>
                 <p className="text-muted-foreground text-lg">
-                  Conveniently located on Pearl Street in the heart of Boulder.
+                  Conveniently located on Spruce Street in the heart of Boulder.
                 </p>
               </div>
             </ScrollReveal>
@@ -466,7 +466,7 @@ const Contact = () => {
                       </div>
                     </div>
                     <a
-                      href="https://www.google.com/maps/dir/?api=1&destination=1234+Pearl+Street+Boulder+CO+80302"
+                      href="https://www.google.com/maps/dir/?api=1&destination=2619+Spruce+Street+Boulder+CO+80302"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-6 inline-block"
