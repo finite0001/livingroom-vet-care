@@ -3,6 +3,8 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import ScrollReveal from "@/components/ScrollReveal";
+import { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { ArrowRight, Heart, Dog, Zap, Stethoscope, FlaskConical, Scissors, Syringe } from "lucide-react";
 import wellnessImage from "@/assets/service-wellness.jpg";
 import seniorImage from "@/assets/service-senior.jpg";
@@ -92,7 +94,7 @@ const Services = () => {
         {/* Featured Services */}
         <section className="py-24 bg-background">
           <div className="container">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+            <ScrollReveal variant="fadeUp" className="text-center max-w-2xl mx-auto mb-16">
               <p className="text-primary font-medium mb-3">Featured Services</p>
               <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 What We're Known For
@@ -100,7 +102,7 @@ const Services = () => {
               <p className="text-muted-foreground text-lg">
                 Our most sought-after services, delivered with Fear Free certified care.
               </p>
-            </div>
+            </ScrollReveal>
 
             <div className="space-y-16">
               {featuredServices.map((service, index) => (
@@ -153,7 +155,7 @@ const Services = () => {
         {/* Additional Services Grid */}
         <section className="py-24 bg-cream">
           <div className="container">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+            <ScrollReveal variant="fadeUp" className="text-center max-w-2xl mx-auto mb-16">
               <p className="text-primary font-medium mb-3">More Services</p>
               <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 Complete Veterinary Care
@@ -161,38 +163,40 @@ const Services = () => {
               <p className="text-muted-foreground text-lg">
                 Everything your pet needs under one roof.
               </p>
-            </div>
+            </ScrollReveal>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {additionalServices.map((service) => (
-                <Link key={service.title} to={service.href}>
-                  <Card variant="elevated" className="h-full group">
-                    <CardContent className="p-8">
-                      <div className="w-12 h-12 rounded-xl bg-sage/30 flex items-center justify-center mb-5 group-hover:bg-gradient-warm transition-colors duration-300">
-                        <service.icon className="h-6 w-6 text-sage-dark group-hover:text-primary-foreground transition-colors duration-300" />
-                      </div>
-                      <h3 className="font-heading text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                        {service.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                        {service.description}
-                      </p>
-                      <span className="flex items-center gap-2 text-primary font-medium text-sm">
-                        Learn more
-                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <StaggerItem key={service.title}>
+                  <Link to={service.href}>
+                    <Card variant="elevated" className="h-full group">
+                      <CardContent className="p-8">
+                        <div className="w-12 h-12 rounded-xl bg-sage/30 flex items-center justify-center mb-5 group-hover:bg-gradient-warm transition-colors duration-300">
+                          <service.icon className="h-6 w-6 text-sage-dark group-hover:text-primary-foreground transition-colors duration-300" />
+                        </div>
+                        <h3 className="font-heading text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                          {service.title}
+                        </h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                          {service.description}
+                        </p>
+                        <span className="flex items-center gap-2 text-primary font-medium text-sm">
+                          Learn more
+                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* CTA Section */}
         <section className="py-24 bg-gradient-warm">
           <div className="container">
-            <div className="max-w-3xl mx-auto text-center">
+            <ScrollReveal variant="scaleUp" className="max-w-3xl mx-auto text-center">
               <h2 className="font-heading text-3xl sm:text-4xl font-bold text-primary-foreground mb-6">
                 Not Sure What Your Pet Needs?
               </h2>
@@ -217,7 +221,7 @@ const Services = () => {
                   </Button>
                 </Link>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </section>
       </main>
