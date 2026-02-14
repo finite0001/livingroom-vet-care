@@ -3,10 +3,12 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Dog, Zap, Stethoscope, Smile, FlaskConical, Scissors, Syringe } from "lucide-react";
+import { ArrowRight, Heart, Dog, Zap, Stethoscope, FlaskConical, Scissors, Syringe } from "lucide-react";
 import wellnessImage from "@/assets/service-wellness.jpg";
 import seniorImage from "@/assets/service-senior.jpg";
 import laserImage from "@/assets/service-laser.jpg";
+import surgeryImage from "@/assets/service-surgery.jpg";
+import diagnosticsImage from "@/assets/service-diagnostics.jpg";
 
 const featuredServices = [
   {
@@ -30,6 +32,20 @@ const featuredServices = [
     href: "/services/laser-therapy",
     image: laserImage,
   },
+  {
+    icon: Scissors,
+    title: "Surgery",
+    description: "Compassionate soft tissue and routine surgical procedures with advanced anesthetic monitoring and personalized pain management protocols.",
+    href: "/services/surgery",
+    image: surgeryImage,
+  },
+  {
+    icon: Stethoscope,
+    title: "Diagnostics",
+    description: "In-house laboratory testing, digital radiography, and ultrasound services for same-day results so we can start treatment sooner.",
+    href: "/services/diagnostics",
+    image: diagnosticsImage,
+  },
 ];
 
 const additionalServices = [
@@ -38,24 +54,6 @@ const additionalServices = [
     title: "Urgent Care",
     description: "Same-day appointments for injuries, sudden illness, and urgent health concerns.",
     href: "/services/urgent-care",
-  },
-  {
-    icon: Smile,
-    title: "Dental Care",
-    description: "Complete dental services including cleanings, extractions, and oral health assessments.",
-    href: "/services/dental",
-  },
-  {
-    icon: Scissors,
-    title: "Surgery",
-    description: "Soft tissue and routine surgical procedures with advanced pain management.",
-    href: "/services/surgery",
-  },
-  {
-    icon: FlaskConical,
-    title: "Diagnostics",
-    description: "In-house laboratory testing, digital radiography, and ultrasound services.",
-    href: "/services/diagnostics",
   },
   {
     icon: Syringe,
