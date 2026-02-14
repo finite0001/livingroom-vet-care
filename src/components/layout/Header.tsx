@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Phone, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -13,6 +14,12 @@ const navLinks = [
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cream-light/95 backdrop-blur-md border-b border-border">
@@ -35,7 +42,12 @@ const Header = () => {
             <Link
               key={link.href}
               to={link.href}
-              className="text-sm font-medium text-charcoal hover:text-primary transition-colors"
+              className={cn(
+                "text-sm font-medium transition-colors",
+                isActive(link.href)
+                  ? "text-primary"
+                  : "text-charcoal hover:text-primary"
+              )}
             >
               {link.label}
             </Link>
@@ -74,7 +86,12 @@ const Header = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-base font-medium text-charcoal hover:text-primary transition-colors py-2"
+                className={cn(
+                  "text-base font-medium transition-colors py-2",
+                  isActive(link.href)
+                    ? "text-primary"
+                    : "text-charcoal hover:text-primary"
+                )}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}

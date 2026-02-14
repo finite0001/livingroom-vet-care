@@ -50,9 +50,7 @@ const Footer = () => {
                 { label: "The Experience", href: "/experience" },
                 { label: "Services", href: "/services" },
                 { label: "About Us", href: "/about" },
-                { label: "New Clients", href: "/new-clients" },
-                { label: "FAQs", href: "/resources/faqs" },
-                { label: "Blog", href: "/resources/blog" },
+                { label: "Contact", href: "/contact" },
               ].map((link) => (
                 <Link
                   key={link.href}
@@ -99,7 +97,7 @@ const Footer = () => {
                 className="flex items-start gap-3 text-sm text-cream-light/70 hover:text-cream-light transition-colors"
               >
                 <MapPin className="h-5 w-5 shrink-0 mt-0.5" />
-                <span>3015 Sterling Circle, Suite 300<br />Boulder, CO 80301</span>
+                <span>2619 Spruce Street<br />Boulder, CO 80302</span>
               </a>
               <a
                 href="tel:+13035551234"
@@ -133,12 +131,12 @@ const Footer = () => {
             © 2026 The Living Room Vet. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link to="/privacy" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">
+            <span className="text-sm text-cream-light/50">
               Privacy Policy
-            </Link>
-            <Link to="/terms" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">
+            </span>
+            <span className="text-sm text-cream-light/50">
               Terms
-            </Link>
+            </span>
           </div>
         </div>
       </div>
