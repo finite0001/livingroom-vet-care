@@ -73,8 +73,8 @@ const Footer = () => {
                 { label: "Wellness Care", href: "/services/wellness" },
                 { label: "Senior Care", href: "/services/senior-care" },
                 { label: "Laser Therapy", href: "/services/laser-therapy" },
-                { label: "Urgent Care", href: "/services/urgent-care" },
-                { label: "Dental Care", href: "/services/dental" },
+                { label: "Diagnostics", href: "/services/diagnostics" },
+                { label: "Vaccinations", href: "/services/vaccinations" },
                 { label: "Surgery", href: "/services/surgery" },
               ].map((link) => (
                 <Link
