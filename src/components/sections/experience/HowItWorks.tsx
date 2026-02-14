@@ -1,4 +1,5 @@
 import { MessageCircle, DoorOpen, Sofa, Heart, CheckCircle } from "lucide-react";
+import ScrollReveal from "@/components/ScrollReveal";
 import textArrivalImage from "@/assets/experience-text-arrival.jpg";
 import vetFloorImage from "@/assets/experience-vet-floor.jpg";
 import heroImage from "@/assets/hero-living-room.jpg";
@@ -63,7 +64,7 @@ const HowItWorks = () => {
     <section className="py-24 bg-background">
       <div className="container">
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-20">
+        <ScrollReveal className="text-center max-w-2xl mx-auto mb-20">
           <p className="text-primary font-medium mb-3">How It Works</p>
           <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Your Visit, Step by Step
@@ -72,7 +73,7 @@ const HowItWorks = () => {
             From parking lot to peaceful exam—here's exactly what to expect 
             when you visit The Living Room Vet.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Steps */}
         <div className="space-y-24 lg:space-y-32">
@@ -84,8 +85,10 @@ const HowItWorks = () => {
               }`}
             >
               {/* Content */}
-              <div className={index % 2 === 1 ? "lg:order-2" : ""}>
-                {/* Step number and icon */}
+              <ScrollReveal
+                variant={index % 2 === 0 ? "fadeRight" : "fadeLeft"}
+                className={index % 2 === 1 ? "lg:order-2" : ""}
+              >
                 <div className="flex items-center gap-4 mb-6">
                   <span className="text-6xl font-heading font-bold text-terracotta/20">
                     {step.number}
@@ -94,16 +97,12 @@ const HowItWorks = () => {
                     <step.icon className="h-7 w-7 text-primary-foreground" />
                   </div>
                 </div>
-
-                {/* Title and description */}
                 <h3 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-4">
                   {step.title}
                 </h3>
                 <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                   {step.description}
                 </p>
-
-                {/* Details list */}
                 <ul className="space-y-3">
                   {step.details.map((detail, i) => (
                     <li key={i} className="flex items-start gap-3">
@@ -112,10 +111,14 @@ const HowItWorks = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </ScrollReveal>
 
               {/* Image */}
-              <div className={index % 2 === 1 ? "lg:order-1" : ""}>
+              <ScrollReveal
+                variant={index % 2 === 0 ? "fadeLeft" : "fadeRight"}
+                delay={0.15}
+                className={index % 2 === 1 ? "lg:order-1" : ""}
+              >
                 <div className="relative group">
                   <div className="absolute -inset-4 bg-sage/30 rounded-3xl opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
                   <img
@@ -124,7 +127,7 @@ const HowItWorks = () => {
                     className="relative w-full rounded-2xl shadow-soft object-cover aspect-[4/3] transition-transform duration-500 group-hover:scale-[1.02]"
                   />
                 </div>
-              </div>
+              </ScrollReveal>
             </div>
           ))}
         </div>

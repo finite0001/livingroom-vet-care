@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Phone, MessageCircle } from "lucide-react";
+import ScrollReveal from "@/components/ScrollReveal";
 
 const CTASection = () => {
   return (
@@ -9,19 +10,14 @@ const CTASection = () => {
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-cream-light/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
       <div className="container relative">
-        <div className="max-w-3xl mx-auto text-center">
-          {/* Headline */}
+        <ScrollReveal variant="scaleUp" className="max-w-3xl mx-auto text-center">
           <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
             Ready to Experience the Difference?
           </h2>
-
-          {/* Description */}
           <p className="text-primary-foreground/80 text-lg sm:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
             Your pet deserves veterinary care that feels like home. 
             Book your first appointment and see why Boulder families are making the switch.
           </p>
-
-          {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Button 
               size="xl" 
@@ -40,13 +36,11 @@ const CTASection = () => {
               </Button>
             </a>
           </div>
-
-          {/* Text Message Option */}
           <p className="text-primary-foreground/70 text-sm flex items-center justify-center gap-2">
             <MessageCircle className="h-4 w-4" />
             Or text us anytime at (303) 555-1234
           </p>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Heart, Dog, Zap, Stethoscope, Smile, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
+import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 
 const services = [
   {
@@ -53,7 +54,7 @@ const ServicesSection = () => {
     <section className="py-24 bg-cream">
       <div className="container">
         {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
+        <ScrollReveal className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <div className="max-w-xl">
             <p className="text-primary font-medium mb-3">Our Services</p>
             <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
@@ -70,48 +71,41 @@ const ServicesSection = () => {
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
-        </div>
+        </ScrollReveal>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service, index) => (
-            <Link key={service.title} to={service.href}>
-              <Card
-                variant={service.featured ? "warm" : "elevated"}
-                className="h-full group cursor-pointer"
-              >
-                <CardContent className="p-8 h-full flex flex-col">
-                  {/* Icon */}
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110 ${
-                    service.featured 
-                      ? "bg-gradient-warm" 
-                      : "bg-sage/30"
-                  }`}>
-                    <service.icon className={`h-6 w-6 ${
-                      service.featured 
-                        ? "text-primary-foreground" 
-                        : "text-sage-dark"
-                    }`} />
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="font-heading text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed flex-grow">
-                    {service.description}
-                  </p>
-
-                  {/* Link */}
-                  <div className="flex items-center gap-2 mt-4 text-primary font-medium text-sm">
-                    Learn more
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service) => (
+            <StaggerItem key={service.title}>
+              <Link to={service.href}>
+                <Card
+                  variant={service.featured ? "warm" : "elevated"}
+                  className="h-full group cursor-pointer"
+                >
+                  <CardContent className="p-8 h-full flex flex-col">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110 ${
+                      service.featured ? "bg-gradient-warm" : "bg-sage/30"
+                    }`}>
+                      <service.icon className={`h-6 w-6 ${
+                        service.featured ? "text-primary-foreground" : "text-sage-dark"
+                      }`} />
+                    </div>
+                    <h3 className="font-heading text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                      {service.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed flex-grow">
+                      {service.description}
+                    </p>
+                    <div className="flex items-center gap-2 mt-4 text-primary font-medium text-sm">
+                      Learn more
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );
