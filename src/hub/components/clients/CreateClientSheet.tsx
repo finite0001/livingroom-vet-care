@@ -18,7 +18,7 @@ export function CreateClientSheet() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [channel, setChannel] = useState("SMS");
+  const [channel, setChannel] = useState<Database["public"]["Enums"]["channel_type"]>("SMS");
   const [petName, setPetName] = useState("");
   const [petSpecies, setPetSpecies] = useState("Dog");
 
