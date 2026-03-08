@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge, Heart, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-living-room.jpg";
 
 const HeroSection = () => {
