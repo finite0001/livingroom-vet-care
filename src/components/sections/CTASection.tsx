@@ -48,6 +48,8 @@ const CTASection = React.forwardRef<HTMLElement>((_, ref) => {
       </div>
     </section>
   );
-};
+});
+
+CTASection.displayName = "CTASection";
 
 export default CTASection;

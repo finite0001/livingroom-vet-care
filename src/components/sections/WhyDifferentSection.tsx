@@ -84,6 +84,8 @@ const WhyDifferentSection = React.forwardRef<HTMLElement>((_, ref) => {
       </div>
     </section>
   );
-};
+});
+
+WhyDifferentSection.displayName = "WhyDifferentSection";
 
 export default WhyDifferentSection;

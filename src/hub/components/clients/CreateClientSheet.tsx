@@ -31,7 +31,7 @@ export function CreateClientSheet() {
       const fullName = `${firstName} ${lastName}`;
       const { data: client, error } = await supabase.from("clients").insert({
         first_name: firstName, last_name: lastName, full_name: fullName,
-        primary_phone: phone || null, primary_email: email || null, preferred_channel: channel as any,
+        primary_phone: phone || null, primary_email: email || null, preferred_channel: channel,
       }).select().single();
       if (error) throw error;
       if (petName && client) {

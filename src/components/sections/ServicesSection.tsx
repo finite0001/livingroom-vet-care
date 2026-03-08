@@ -110,6 +110,8 @@ const ServicesSection = React.forwardRef<HTMLElement>((_, ref) => {
       </div>
     </section>
   );
-};
+});
+
+ServicesSection.displayName = "ServicesSection";
 
 export default ServicesSection;
