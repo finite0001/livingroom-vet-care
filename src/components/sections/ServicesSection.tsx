@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Heart, Dog, Zap, Stethoscope, Syringe, FlaskConical } from "lucide-react";
@@ -49,7 +50,7 @@ const services = [
   },
 ];
 
-const ServicesSection = () => {
+const ServicesSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
     <section className="py-24 bg-cream">
       <div className="container">
@@ -109,6 +110,8 @@ const ServicesSection = () => {
       </div>
     </section>
   );
-};
+});
+
+ServicesSection.displayName = "ServicesSection";
 
 export default ServicesSection;

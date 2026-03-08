@@ -6,6 +6,7 @@ import {
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { useConversations } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -29,6 +30,7 @@ export default function HubHomePage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: conversations } = useConversations();
+  usePageTitle("Hub Home");
 
   const unreadCount = conversations?.filter((c) => !c.is_read).length ?? 0;
   const activeCount = conversations?.filter((c) => c.status === "ACTIVE").length ?? 0;

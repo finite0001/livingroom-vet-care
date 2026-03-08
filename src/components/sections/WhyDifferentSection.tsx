@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DoorOpen, Sofa, ShieldCheck, Heart, Dog, Sparkles } from "lucide-react";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
@@ -41,7 +42,7 @@ const features = [
   },
 ];
 
-const WhyDifferentSection = () => {
+const WhyDifferentSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
     <section className="py-24 bg-background">
       <div className="container">
@@ -83,6 +84,8 @@ const WhyDifferentSection = () => {
       </div>
     </section>
   );
-};
+});
+
+WhyDifferentSection.displayName = "WhyDifferentSection";
 
 export default WhyDifferentSection;

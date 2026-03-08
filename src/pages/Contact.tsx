@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ const hours = [
 ];
 
 const Contact = () => {
+  usePageTitle("Contact Us");
   const { toast } = useToast();
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",

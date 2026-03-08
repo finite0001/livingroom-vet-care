@@ -1,3 +1,4 @@
+import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ const additionalServices = [
 ];
 
 const Services = () => {
+  usePageTitle("Our Services");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

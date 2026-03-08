@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface ClientFile {
   id: string;
@@ -49,8 +50,8 @@ export function useMessageFiles(messageIds: string[]) {
 export function useUpdateFileCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ fileId, category }: { fileId: string; category: string }) => {
-      const { error } = await supabase.from("client_files").update({ category: category as any }).eq("id", fileId);
+    mutationFn: async ({ fileId, category }: { fileId: string; category: Database["public"]["Enums"]["file_category"] }) => {
+      const { error } = await supabase.from("client_files").update({ category }).eq("id", fileId);
       if (error) throw error;
     },
     onSuccess: () => {

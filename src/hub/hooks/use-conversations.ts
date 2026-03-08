@@ -57,18 +57,12 @@ export function useConversations() {
 
       const convIds = conversations.map((c) => c.id);
       const { data: messages, error: msgError } = await supabase
-        .from("messages")
-        .select("conversation_id, content, type, created_at")
-        .in("conversation_id", convIds)
-        .order("created_at", { ascending: false })
-        .limit(convIds.length * 2);
+        .rpc("get_last_messages", { conv_ids: convIds });
       if (msgError) throw msgError;
 
       const lastMessageMap = new Map<string, typeof messages[0]>();
-      for (const msg of messages) {
-        if (!lastMessageMap.has(msg.conversation_id)) {
-          lastMessageMap.set(msg.conversation_id, msg);
-        }
+      for (const msg of messages ?? []) {
+        lastMessageMap.set(msg.conversation_id, msg);
       }
 
       const clientMap = new Map(clientsRes.data.map((c) => [c.id, c]));
@@ -148,15 +142,7 @@ export function useDeleteConversation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error: msgError } = await supabase
-        .from("messages")
-        .delete()
-        .eq("conversation_id", conversationId);
-      if (msgError) throw msgError;
-      const { error } = await supabase
-        .from("conversations")
-        .delete()
-        .eq("id", conversationId);
+      const { error } = await supabase.rpc("delete_conversation_cascade", { conv_id: conversationId });
       if (error) throw error;
     },
     onSuccess: () => {

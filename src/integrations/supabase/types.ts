@@ -1940,6 +1940,10 @@ export type Database = {
     }
     Functions: {
       apply_retention_policies: { Args: never; Returns: undefined }
+      delete_conversation_cascade: {
+        Args: { conv_id: string }
+        Returns: undefined
+      }
       get_current_on_call: {
         Args: never
         Returns: {
@@ -1947,6 +1951,15 @@ export type Database = {
           dvm_name: string
           phone_number: string
           schedule_id: string
+        }[]
+      }
+      get_last_messages: {
+        Args: { conv_ids: string[] }
+        Returns: {
+          content: string
+          conversation_id: string
+          created_at: string
+          type: Database["public"]["Enums"]["message_type"]
         }[]
       }
       has_role: {

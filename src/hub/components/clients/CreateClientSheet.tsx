@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
 export function CreateClientSheet() {
   const [open, setOpen] = useState(false);
@@ -17,7 +18,7 @@ export function CreateClientSheet() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [channel, setChannel] = useState("SMS");
+  const [channel, setChannel] = useState<Database["public"]["Enums"]["channel_type"]>("SMS");
   const [petName, setPetName] = useState("");
   const [petSpecies, setPetSpecies] = useState("Dog");
 
@@ -30,7 +31,7 @@ export function CreateClientSheet() {
       const fullName = `${firstName} ${lastName}`;
       const { data: client, error } = await supabase.from("clients").insert({
         first_name: firstName, last_name: lastName, full_name: fullName,
-        primary_phone: phone || null, primary_email: email || null, preferred_channel: channel as any,
+        primary_phone: phone || null, primary_email: email || null, preferred_channel: channel,
       }).select().single();
       if (error) throw error;
       if (petName && client) {
@@ -56,7 +57,7 @@ export function CreateClientSheet() {
           <div className="space-y-1.5"><Label className="text-xs">Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+15551234567" className="h-9 text-sm" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-9 text-sm" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Preferred Channel</Label>
-            <Select value={channel} onValueChange={setChannel}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SMS">SMS</SelectItem><SelectItem value="EMAIL">Email</SelectItem><SelectItem value="VOICE">Voice</SelectItem></SelectContent></Select>
+            <Select value={channel} onValueChange={(v) => setChannel(v as Database["public"]["Enums"]["channel_type"])}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SMS">SMS</SelectItem><SelectItem value="EMAIL">Email</SelectItem><SelectItem value="VOICE">Voice</SelectItem></SelectContent></Select>
           </div>
           <div className="border-t pt-3 space-y-3">
             <p className="text-xs font-medium text-muted-foreground">Pet (optional)</p>

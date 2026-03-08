@@ -18,8 +18,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ConversationsPage() {
+  usePageTitle("Messages");
   const navigate = useNavigate();
   const { data: conversations, isLoading, isError } = useConversations();
   const toggleRead = useToggleRead();

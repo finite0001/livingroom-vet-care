@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,7 @@ export default function ConversationDetailPage() {
 
   const conversation = conversations?.find((c) => c.id === id);
   const conversationNotFound = !convsLoading && conversations && !conversation;
+  usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
   // Mark as read on open
   useEffect(() => {
