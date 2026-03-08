@@ -41,11 +41,12 @@ const Header = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-8" aria-label="Main navigation">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               to={link.href}
+              aria-current={isActive(link.href) ? "page" : undefined}
               className={cn(
                 "text-sm font-medium transition-colors",
                 isActive(link.href)
