@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Phone, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ScrollReveal";
 
 const CTASection = () => {
@@ -19,12 +20,14 @@ const CTASection = () => {
             Book your first appointment and see why Boulder families are making the switch.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Button 
-              size="xl" 
-              className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated hover:-translate-y-1 transition-all duration-300 font-semibold"
-            >
-              Book Your Visit
-            </Button>
+            <Link to="/contact">
+              <Button 
+                size="xl" 
+                className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated hover:-translate-y-1 transition-all duration-300 font-semibold"
+              >
+                Book Your Visit
+              </Button>
+            </Link>
             <a href="tel:+13035551234">
               <Button 
                 variant="heroOutline" 

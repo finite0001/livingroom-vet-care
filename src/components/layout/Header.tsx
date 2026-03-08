@@ -63,9 +63,11 @@ const Header = () => {
             <Phone className="h-4 w-4" />
             (303) 555-1234
           </a>
-          <Button variant="default" size="default">
-            Book Appointment
-          </Button>
+          <Link to="/contact">
+            <Button variant="default" size="default">
+              Book Appointment
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -105,9 +107,11 @@ const Header = () => {
               <Phone className="h-5 w-5" />
               (303) 555-1234
             </a>
-            <Button variant="default" size="lg" className="mt-2">
-              Book Appointment
-            </Button>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="default" size="lg" className="mt-2 w-full">
+                Book Appointment
+              </Button>
+            </Link>
           </nav>
         </div>
       )}

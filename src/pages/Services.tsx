@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ScrollReveal";
 import { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { ArrowRight, Heart, Dog, Zap, Stethoscope, FlaskConical, Scissors, Syringe } from "lucide-react";
+import vaccinationsImage from "@/assets/service-vaccinations.jpg";
 import wellnessImage from "@/assets/service-wellness.jpg";
 import seniorImage from "@/assets/service-senior.jpg";
 import laserImage from "@/assets/service-laser.jpg";
@@ -52,16 +53,11 @@ const featuredServices = [
 
 const additionalServices = [
   {
-    icon: Stethoscope,
-    title: "Urgent Care",
-    description: "Same-day appointments for injuries, sudden illness, and urgent health concerns.",
-    href: "/services/urgent-care",
-  },
-  {
     icon: Syringe,
     title: "Vaccinations",
     description: "Core and lifestyle vaccines customized to your pet's needs and risk factors.",
     href: "/services/vaccinations",
+    image: vaccinationsImage,
   },
 ];
 
@@ -84,9 +80,11 @@ const Services = () => {
                 veterinary services in our stress-free living room environment. Every visit 
                 is tailored to your pet's unique needs.
               </p>
-              <Button variant="default" size="lg" className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
-                Book an Appointment
-              </Button>
+              <Link to="/contact">
+                <Button variant="default" size="lg" className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
+                  Book an Appointment
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
@@ -205,12 +203,14 @@ const Services = () => {
                 tailored to your pet's age, breed, and lifestyle.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button 
-                  size="xl" 
-                  className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
-                >
-                  Schedule a Consultation
-                </Button>
+                <Link to="/contact">
+                  <Button 
+                    size="xl" 
+                    className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
+                  >
+                    Schedule a Consultation
+                  </Button>
+                </Link>
                 <Link to="/contact">
                   <Button 
                     variant="heroOutline" 

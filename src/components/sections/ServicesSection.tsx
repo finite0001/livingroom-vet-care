@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Heart, Dog, Zap, Stethoscope, Smile, FlaskConical } from "lucide-react";
+import { ArrowRight, Heart, Dog, Zap, Stethoscope, Syringe, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 
@@ -28,16 +28,16 @@ const services = [
   },
   {
     icon: Stethoscope,
-    title: "Urgent Care",
-    description: "Same-day appointments for injuries, sudden illness, and urgent health concerns that need immediate attention.",
-    href: "/services/urgent-care",
+    title: "Surgery",
+    description: "Compassionate soft tissue and routine surgical procedures with advanced anesthetic monitoring and pain management.",
+    href: "/services/surgery",
     featured: false,
   },
   {
-    icon: Smile,
-    title: "Dental Care",
-    description: "Complete dental services including cleanings, extractions, and oral health assessments under safe anesthesia.",
-    href: "/services/dental",
+    icon: Syringe,
+    title: "Vaccinations",
+    description: "Core and lifestyle vaccines customized to your pet's needs, risk factors, and life stage.",
+    href: "/services/vaccinations",
     featured: false,
   },
   {

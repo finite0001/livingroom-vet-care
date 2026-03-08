@@ -77,12 +77,16 @@ const ServiceDetailLayout = ({
                   {description}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button variant="default" size="lg">
-                    Book This Service
-                  </Button>
-                  <Button variant="outline" size="lg">
-                    Ask a Question
-                  </Button>
+                  <Link to="/contact">
+                    <Button variant="default" size="lg">
+                      Book This Service
+                    </Button>
+                  </Link>
+                  <Link to="/contact">
+                    <Button variant="outline" size="lg">
+                      Ask a Question
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
@@ -237,12 +241,14 @@ const ServiceDetailLayout = ({
                 Schedule your appointment today and experience Fear Free care in our 
                 comfortable living room environment.
               </p>
-              <Button 
-                size="xl" 
-                className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
-              >
-                Book Your Appointment
-              </Button>
+              <Link to="/contact">
+                <Button 
+                  size="xl" 
+                  className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
+                >
+                  Book Your Appointment
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

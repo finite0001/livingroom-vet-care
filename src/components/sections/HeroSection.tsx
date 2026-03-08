@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge, Heart, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-living-room.jpg";
 
 const HeroSection = () => {
@@ -74,12 +75,16 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.95 }}
           >
-            <Button variant="hero" size="xl">
-              Book Appointment
-            </Button>
-            <Button variant="heroOutline" size="xl">
-              Take a Virtual Tour
-            </Button>
+            <Link to="/contact">
+              <Button variant="hero" size="xl">
+                Book Appointment
+              </Button>
+            </Link>
+            <Link to="/experience">
+              <Button variant="heroOutline" size="xl">
+                Take a Virtual Tour
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.div
