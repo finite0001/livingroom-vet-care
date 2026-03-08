@@ -39,7 +39,7 @@ export function useUpdateConsent() {
       clientId: string;
       phoneNumber: string;
       optedIn: boolean;
-      method: "verbal" | "written" | "digital" | "implied";
+      method: "VERBAL" | "WRITTEN" | "WEB_FORM" | "SMS_KEYWORD" | "IMPORT";
       details?: string;
     }) => {
       const now = new Date().toISOString();
