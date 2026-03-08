@@ -80,9 +80,11 @@ const Services = () => {
                 veterinary services in our stress-free living room environment. Every visit 
                 is tailored to your pet's unique needs.
               </p>
-              <Button variant="default" size="lg" className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
-                Book an Appointment
-              </Button>
+              <Link to="/contact">
+                <Button variant="default" size="lg" className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
+                  Book an Appointment
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
