@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import ScrollReveal from "@/components/ScrollReveal";
 import { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
+import { Link } from "react-router-dom";
 import {
   Phone,
   Mail,
