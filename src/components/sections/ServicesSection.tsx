@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Heart, Dog, Zap, Stethoscope, Smile, FlaskConical } from "lucide-react";
+import { ArrowRight, Heart, Dog, Zap, Stethoscope, Syringe, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 

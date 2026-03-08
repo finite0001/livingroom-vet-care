@@ -241,12 +241,14 @@ const ServiceDetailLayout = ({
                 Schedule your appointment today and experience Fear Free care in our 
                 comfortable living room environment.
               </p>
-              <Button 
-                size="xl" 
-                className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
-              >
-                Book Your Appointment
-              </Button>
+              <Link to="/contact">
+                <Button 
+                  size="xl" 
+                  className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
+                >
+                  Book Your Appointment
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

@@ -203,12 +203,14 @@ const Services = () => {
                 tailored to your pet's age, breed, and lifestyle.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button 
-                  size="xl" 
-                  className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
-                >
-                  Schedule a Consultation
-                </Button>
+                <Link to="/contact">
+                  <Button 
+                    size="xl" 
+                    className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
+                  >
+                    Schedule a Consultation
+                  </Button>
+                </Link>
                 <Link to="/contact">
                   <Button 
                     variant="heroOutline" 

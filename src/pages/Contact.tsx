@@ -460,9 +460,8 @@ const Contact = () => {
                           Parking
                         </h4>
                         <p className="text-muted-foreground leading-relaxed">
-                          Free 2-hour street parking is available on Pearl
-                          Street. There's also a public parking garage one block
-                          south on Walnut Street.
+                          Free 2-hour street parking is available on Spruce
+                          Street and surrounding blocks.
                         </p>
                       </div>
                     </div>
