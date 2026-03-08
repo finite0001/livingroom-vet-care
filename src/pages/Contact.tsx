@@ -450,9 +450,9 @@ const Contact = () => {
                           From Longmont / US-287
                         </h4>
                         <p className="text-muted-foreground leading-relaxed">
-                          Take US-287 South into Boulder. Turn right on Pearl
+                          Take US-287 South into Boulder. Turn right on Spruce
                           Street. Continue west past Folsom. We're on the left
-                          before 13th Street.
+                          near 26th Street.
                         </p>
                       </div>
                       <div>
