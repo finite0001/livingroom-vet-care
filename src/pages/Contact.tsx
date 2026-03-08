@@ -367,18 +367,18 @@ const Contact = () => {
                     </h3>
                     <div className="space-y-2">
                       {[
-                        { label: "Book an Appointment", href: "/services" },
+                        { label: "Book an Appointment", href: "/contact" },
                         { label: "Our Services", href: "/services" },
                         { label: "The Experience", href: "/experience" },
                       ].map((link) => (
-                        <a
+                        <Link
                           key={link.label}
-                          href={link.href}
+                          to={link.href}
                           className="flex items-center gap-2 text-sm text-primary font-medium hover:underline"
                         >
                           <ArrowRight className="h-3.5 w-3.5" />
                           {link.label}
-                        </a>
+                        </Link>
                       ))}
                     </div>
                   </CardContent>
