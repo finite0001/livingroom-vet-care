@@ -83,11 +83,11 @@ export function useConversations() {
         .filter((conv) => clientMap.has(conv.client_id))
         .map((conv) => ({
           ...conv,
-          is_read: (conv as any).is_read ?? true,
-          priority: (conv as any).priority ?? "NORMAL",
-          tags: (conv as any).tags ?? [],
-          first_message_at: (conv as any).first_message_at ?? null,
-          first_response_at: (conv as any).first_response_at ?? null,
+          is_read: conv.is_read ?? true,
+          priority: conv.priority ?? "NORMAL",
+          tags: conv.tags ?? [],
+          first_message_at: conv.first_message_at ?? null,
+          first_response_at: conv.first_response_at ?? null,
           client: clientMap.get(conv.client_id)!,
           pets: petsByClient.get(conv.client_id) || [],
           last_message: lastMessageMap.get(conv.id) || undefined,
