@@ -162,10 +162,12 @@ const Contact = () => {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="Your name"
+                            aria-invalid={!!errors.name}
+                            aria-describedby={errors.name ? "name-error" : undefined}
                             className={errors.name ? "border-destructive" : ""}
                           />
                           {errors.name && (
-                            <p className="text-destructive text-xs">
+                            <p id="name-error" className="text-destructive text-xs" role="alert">
                               {errors.name}
                             </p>
                           )}
