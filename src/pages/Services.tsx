@@ -106,9 +106,7 @@ const Services = () => {
               {featuredServices.map((service, index) => (
                 <div
                   key={service.title}
-                  className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${
-                    index % 2 === 1 ? "" : ""
-                  }`}
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
                 >
                   {/* Image */}
                   <div className={index % 2 === 1 ? "lg:order-2" : ""}>

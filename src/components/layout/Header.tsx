@@ -120,7 +120,8 @@ const Header = () => {
           </nav>
         </div>
       )}
-    </header>
+      </header>
+    </>
   );
 };
 

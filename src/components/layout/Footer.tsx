@@ -132,12 +132,12 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             © 2026 The Living Room Vet. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-sm text-cream-light/50">
+            <Link to="/privacy" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">
               Privacy Policy
-            </span>
-            <span className="text-sm text-cream-light/50">
+            </Link>
+            <Link to="/terms" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">
               Terms
-            </span>
+            </Link>
           </div>
         </div>
       </div>

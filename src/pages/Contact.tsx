@@ -242,12 +242,14 @@ const Contact = () => {
                           onChange={handleChange}
                           placeholder="Tell us how we can help…"
                           rows={5}
+                          aria-invalid={!!errors.message}
+                          aria-describedby={errors.message ? "message-error" : undefined}
                           className={
                             errors.message ? "border-destructive" : ""
                           }
                         />
                         {errors.message && (
-                          <p className="text-destructive text-xs">
+                          <p id="message-error" className="text-destructive text-xs" role="alert">
                             {errors.message}
                           </p>
                         )}

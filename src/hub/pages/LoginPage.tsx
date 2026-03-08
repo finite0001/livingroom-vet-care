@@ -54,8 +54,8 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-2xl bg-card p-3 shadow-lg border border-border">
-            <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">LRV</span>
+            <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center" role="img" aria-label="The Living Room Vet logo">
+              <span className="text-primary font-bold text-xl" aria-hidden="true">LRV</span>
             </div>
           </div>
           <div className="text-center">
