@@ -53,16 +53,11 @@ const featuredServices = [
 
 const additionalServices = [
   {
-    icon: Stethoscope,
-    title: "Urgent Care",
-    description: "Same-day appointments for injuries, sudden illness, and urgent health concerns.",
-    href: "/services/urgent-care",
-  },
-  {
     icon: Syringe,
     title: "Vaccinations",
     description: "Core and lifestyle vaccines customized to your pet's needs and risk factors.",
     href: "/services/vaccinations",
+    image: vaccinationsImage,
   },
 ];
 
