@@ -10,7 +10,7 @@ const Experience = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow">
+      <main id="main-content" className="flex-grow">
         <ExperienceHero />
         <HowItWorks />
         <WhyItMatters />
