@@ -83,11 +83,11 @@ export function useConversations() {
         .filter((conv) => clientMap.has(conv.client_id))
         .map((conv) => ({
           ...conv,
-          is_read: (conv as any).is_read ?? true,
-          priority: (conv as any).priority ?? "NORMAL",
-          tags: (conv as any).tags ?? [],
-          first_message_at: (conv as any).first_message_at ?? null,
-          first_response_at: (conv as any).first_response_at ?? null,
+          is_read: conv.is_read ?? true,
+          priority: conv.priority ?? "NORMAL",
+          tags: conv.tags ?? [],
+          first_message_at: conv.first_message_at ?? null,
+          first_response_at: conv.first_response_at ?? null,
           client: clientMap.get(conv.client_id)!,
           pets: petsByClient.get(conv.client_id) || [],
           last_message: lastMessageMap.get(conv.id) || undefined,
@@ -102,7 +102,7 @@ export function useMarkRead() {
     mutationFn: async (conversationId: string) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ is_read: true } as any)
+        .update({ is_read: true })
         .eq("id", conversationId);
       if (error) throw error;
     },
@@ -118,7 +118,7 @@ export function useToggleRead() {
     mutationFn: async ({ conversationId, isRead }: { conversationId: string; isRead: boolean }) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ is_read: isRead } as any)
+        .update({ is_read: isRead })
         .eq("id", conversationId);
       if (error) throw error;
     },
@@ -171,7 +171,7 @@ export function useSetPriority() {
     mutationFn: async ({ conversationId, priority }: { conversationId: string; priority: ConversationPriority }) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ priority } as any)
+        .update({ priority })
         .eq("id", conversationId);
       if (error) throw error;
     },
@@ -187,7 +187,7 @@ export function useSetTags() {
     mutationFn: async ({ conversationId, tags }: { conversationId: string; tags: string[] }) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ tags } as any)
+        .update({ tags })
         .eq("id", conversationId);
       if (error) throw error;
     },

@@ -37,7 +37,7 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
       if (!clientId) {
         const { data: newClient, error: clientError } = await supabase
           .from("clients")
-          .insert({ first_name: recipient, last_name: "", full_name: recipient, primary_phone: recipient, preferred_channel: "SMS" as any })
+          .insert({ first_name: recipient, last_name: "", full_name: recipient, primary_phone: recipient, preferred_channel: "SMS" })
           .select("id").single();
         if (clientError) throw clientError;
         clientId = newClient?.id;
@@ -46,7 +46,7 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
 
       let { data: conv } = await supabase.from("conversations").select("id").eq("client_id", clientId).eq("status", "ACTIVE").order("last_message_at", { ascending: false }).limit(1).maybeSingle();
       if (!conv) {
-        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ client_id: clientId, status: "ACTIVE", is_read: true } as any).select("id").single();
+        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ client_id: clientId, status: "ACTIVE", is_read: true }).select("id").single();
         if (convError) throw convError;
         conv = newConv;
       }

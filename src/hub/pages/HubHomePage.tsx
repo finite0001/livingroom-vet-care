@@ -3,8 +3,8 @@ import {
   MessageSquare, ClipboardList, Phone, Users,
   AudioWaveform, FileText, Megaphone, BarChart3,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { useConversations } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 
 function getGreeting() {
@@ -28,6 +28,11 @@ const quickActions = [
 export default function HubHomePage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { data: conversations } = useConversations();
+
+  const unreadCount = conversations?.filter((c) => !c.is_read).length ?? 0;
+  const activeCount = conversations?.filter((c) => c.status === "ACTIVE").length ?? 0;
+  const recentConversations = conversations?.slice(0, 3) ?? [];
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
@@ -38,6 +43,24 @@ export default function HubHomePage() {
         <p className="text-sm text-muted-foreground mt-1">
           The Living Room Vet — Staff Communications Hub
         </p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate("/hub/chats")}
+          className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
+        >
+          <p className="text-2xl font-bold text-foreground">{unreadCount}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Unread messages</p>
+        </button>
+        <button
+          onClick={() => navigate("/hub/chats")}
+          className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
+        >
+          <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Active conversations</p>
+        </button>
       </div>
 
       <div>
@@ -58,13 +81,33 @@ export default function HubHomePage() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Hub features are being connected. Data from conversations, tickets, calls, and more will appear here as each module is wired up in upcoming phases.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Recent conversations */}
+      {recentConversations.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-3">Recent Conversations</h2>
+          <div className="space-y-2">
+            {recentConversations.map((conv) => (
+              <button
+                key={conv.id}
+                onClick={() => navigate(`/hub/conversation/${conv.id}`)}
+                className="flex items-center gap-3 w-full rounded-xl border bg-card p-3 text-left hover:shadow-md hover:border-primary/30 transition-all"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-sm truncate", !conv.is_read && "font-semibold")}>
+                    {conv.client.full_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {conv.last_message?.content || "No messages"}
+                  </p>
+                </div>
+                {!conv.is_read && (
+                  <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
