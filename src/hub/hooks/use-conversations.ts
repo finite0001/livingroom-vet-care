@@ -171,7 +171,7 @@ export function useSetPriority() {
     mutationFn: async ({ conversationId, priority }: { conversationId: string; priority: ConversationPriority }) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ priority } as any)
+        .update({ priority })
         .eq("id", conversationId);
       if (error) throw error;
     },
