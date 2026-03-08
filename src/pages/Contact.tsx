@@ -112,7 +112,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow">
+      <main id="main-content" className="flex-grow">
         {/* Hero */}
         <section className="pt-32 pb-16 bg-cream">
           <div className="container">
@@ -162,10 +162,12 @@ const Contact = () => {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="Your name"
+                            aria-invalid={!!errors.name}
+                            aria-describedby={errors.name ? "name-error" : undefined}
                             className={errors.name ? "border-destructive" : ""}
                           />
                           {errors.name && (
-                            <p className="text-destructive text-xs">
+                            <p id="name-error" className="text-destructive text-xs" role="alert">
                               {errors.name}
                             </p>
                           )}
@@ -181,10 +183,12 @@ const Contact = () => {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="you@email.com"
+                            aria-invalid={!!errors.email}
+                            aria-describedby={errors.email ? "email-error" : undefined}
                             className={errors.email ? "border-destructive" : ""}
                           />
                           {errors.email && (
-                            <p className="text-destructive text-xs">
+                            <p id="email-error" className="text-destructive text-xs" role="alert">
                               {errors.email}
                             </p>
                           )}
@@ -213,12 +217,14 @@ const Contact = () => {
                             value={formData.subject}
                             onChange={handleChange}
                             placeholder="Appointment, question, etc."
+                            aria-invalid={!!errors.subject}
+                            aria-describedby={errors.subject ? "subject-error" : undefined}
                             className={
                               errors.subject ? "border-destructive" : ""
                             }
                           />
                           {errors.subject && (
-                            <p className="text-destructive text-xs">
+                            <p id="subject-error" className="text-destructive text-xs" role="alert">
                               {errors.subject}
                             </p>
                           )}
@@ -236,12 +242,14 @@ const Contact = () => {
                           onChange={handleChange}
                           placeholder="Tell us how we can help…"
                           rows={5}
+                          aria-invalid={!!errors.message}
+                          aria-describedby={errors.message ? "message-error" : undefined}
                           className={
                             errors.message ? "border-destructive" : ""
                           }
                         />
                         {errors.message && (
-                          <p className="text-destructive text-xs">
+                          <p id="message-error" className="text-destructive text-xs" role="alert">
                             {errors.message}
                           </p>
                         )}

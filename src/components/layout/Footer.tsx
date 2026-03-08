@@ -46,7 +46,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Quick Links */}
           <div>
             <h4 className="font-heading font-semibold mb-4">Quick Links</h4>
-            <nav className="flex flex-col gap-2">
+            <nav aria-label="Quick links" className="flex flex-col gap-2">
               {[
                 { label: "The Experience", href: "/experience" },
                 { label: "Services", href: "/services" },
@@ -67,7 +67,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Services */}
           <div>
             <h4 className="font-heading font-semibold mb-4">Services</h4>
-            <nav className="flex flex-col gap-2">
+            <nav aria-label="Services" className="flex flex-col gap-2">
               {[
                 { label: "Wellness Care", href: "/services/wellness" },
                 { label: "Senior Care", href: "/services/senior-care" },
@@ -132,12 +132,12 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             © 2026 The Living Room Vet. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-sm text-cream-light/50">
+            <Link to="/privacy" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">
               Privacy Policy
-            </span>
-            <span className="text-sm text-cream-light/50">
+            </Link>
+            <Link to="/terms" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">
               Terms
-            </span>
+            </Link>
           </div>
         </div>
       </div>

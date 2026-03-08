@@ -22,8 +22,12 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-cream-light/95 backdrop-blur-md border-b border-border">
-      <div className="container flex items-center justify-between h-20">
+    <>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium">
+        Skip to main content
+      </a>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-cream-light/95 backdrop-blur-md border-b border-border">
+        <div className="container flex items-center justify-between h-20">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex flex-col">
@@ -37,11 +41,12 @@ const Header = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-8" aria-label="Main navigation">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               to={link.href}
+              aria-current={isActive(link.href) ? "page" : undefined}
               className={cn(
                 "text-sm font-medium transition-colors",
                 isActive(link.href)
@@ -115,7 +120,8 @@ const Header = () => {
           </nav>
         </div>
       )}
-    </header>
+      </header>
+    </>
   );
 };
 
