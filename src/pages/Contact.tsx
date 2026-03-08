@@ -60,6 +60,7 @@ const hours = [
 ];
 
 const Contact = () => {
+  usePageTitle("Contact Us");
   const { toast } = useToast();
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",

@@ -9,6 +9,7 @@ import { useClientMessages } from "@/hub/hooks/use-conversations";
 import { ClientNotesCard } from "@/hub/components/clients/ClientNotesCard";
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
 import { formatDistanceToNow } from "date-fns";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();

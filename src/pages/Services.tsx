@@ -63,6 +63,7 @@ const additionalServices = [
 ];
 
 const Services = () => {
+  usePageTitle("Our Services");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

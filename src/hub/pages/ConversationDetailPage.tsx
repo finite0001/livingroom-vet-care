@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
