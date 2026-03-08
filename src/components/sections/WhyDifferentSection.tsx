@@ -42,7 +42,7 @@ const features = [
   },
 ];
 
-const WhyDifferentSection = () => {
+const WhyDifferentSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
     <section className="py-24 bg-background">
       <div className="container">
