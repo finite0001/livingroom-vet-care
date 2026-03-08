@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
 export function CreateClientSheet() {
   const [open, setOpen] = useState(false);
