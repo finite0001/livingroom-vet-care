@@ -142,15 +142,7 @@ export function useDeleteConversation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error: msgError } = await supabase
-        .from("messages")
-        .delete()
-        .eq("conversation_id", conversationId);
-      if (msgError) throw msgError;
-      const { error } = await supabase
-        .from("conversations")
-        .delete()
-        .eq("id", conversationId);
+      const { error } = await supabase.rpc("delete_conversation_cascade", { conv_id: conversationId });
       if (error) throw error;
     },
     onSuccess: () => {

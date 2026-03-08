@@ -57,7 +57,7 @@ export function CreateClientSheet() {
           <div className="space-y-1.5"><Label className="text-xs">Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+15551234567" className="h-9 text-sm" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-9 text-sm" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Preferred Channel</Label>
-            <Select value={channel} onValueChange={setChannel}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SMS">SMS</SelectItem><SelectItem value="EMAIL">Email</SelectItem><SelectItem value="VOICE">Voice</SelectItem></SelectContent></Select>
+            <Select value={channel} onValueChange={(v) => setChannel(v as Database["public"]["Enums"]["channel_type"])}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SMS">SMS</SelectItem><SelectItem value="EMAIL">Email</SelectItem><SelectItem value="VOICE">Voice</SelectItem></SelectContent></Select>
           </div>
           <div className="border-t pt-3 space-y-3">
             <p className="text-xs font-medium text-muted-foreground">Pet (optional)</p>
