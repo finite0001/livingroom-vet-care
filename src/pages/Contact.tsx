@@ -217,12 +217,14 @@ const Contact = () => {
                             value={formData.subject}
                             onChange={handleChange}
                             placeholder="Appointment, question, etc."
+                            aria-invalid={!!errors.subject}
+                            aria-describedby={errors.subject ? "subject-error" : undefined}
                             className={
                               errors.subject ? "border-destructive" : ""
                             }
                           />
                           {errors.subject && (
-                            <p className="text-destructive text-xs">
+                            <p id="subject-error" className="text-destructive text-xs" role="alert">
                               {errors.subject}
                             </p>
                           )}
