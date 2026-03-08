@@ -73,10 +73,10 @@ const App = () => (
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route path="/hub" element={<HubHomePage />} />
-                  <Route path="/hub/chats" element={<PlaceholderPage />} />
-                  <Route path="/hub/conversation/:id" element={<PlaceholderPage />} />
-                  <Route path="/hub/clients" element={<PlaceholderPage />} />
-                  <Route path="/hub/client/:id" element={<PlaceholderPage />} />
+                  <Route path="/hub/chats" element={<ConversationsPage />} />
+                  <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
+                  <Route path="/hub/clients" element={<ClientsPage />} />
+                  <Route path="/hub/client/:id" element={<ClientProfilePage />} />
                   <Route path="/hub/tickets" element={<PlaceholderPage />} />
                   <Route path="/hub/ticket/:id" element={<PlaceholderPage />} />
                   <Route path="/hub/call" element={<PlaceholderPage />} />

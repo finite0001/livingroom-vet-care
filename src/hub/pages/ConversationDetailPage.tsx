@@ -133,7 +133,7 @@ export default function ConversationDetailPage() {
       {id && messages && messages.length > 0 && (
         <SmartReplySuggestions
           conversationId={id}
-          lastMessage={messages[messages.length - 1]?.content || ""}
+          onSelect={(text) => handleSend(text, "SMS")}
         />
       )}
 
