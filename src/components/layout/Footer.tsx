@@ -67,7 +67,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Services */}
           <div>
             <h4 className="font-heading font-semibold mb-4">Services</h4>
-            <nav className="flex flex-col gap-2">
+            <nav aria-label="Services" className="flex flex-col gap-2">
               {[
                 { label: "Wellness Care", href: "/services/wellness" },
                 { label: "Senior Care", href: "/services/senior-care" },
