@@ -39,7 +39,7 @@ export function useUpdateConsent() {
       clientId: string;
       phoneNumber: string;
       optedIn: boolean;
-      method: string;
+      method: "VERBAL" | "WRITTEN" | "WEB_FORM" | "SMS_KEYWORD" | "IMPORT";
       details?: string;
     }) => {
       const now = new Date().toISOString();
@@ -51,9 +51,9 @@ export function useUpdateConsent() {
           opted_in: optedIn,
           opted_in_at: optedIn ? now : null,
           opted_out_at: optedIn ? null : now,
-          consent_method: method as any,
+          consent_method: method,
           consent_details: details,
-        }, { onConflict: "client_id,phone_number" } as any)
+        }, { onConflict: "client_id,phone_number" })
         .select()
         .single();
       if (error) throw error;

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export default function ClientsPage() {
   const navigate = useNavigate();
-  const { data: clients, isLoading } = useClients();
+  const { data: clients, isLoading, isError } = useClients();
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -53,6 +53,12 @@ export default function ClientsPage() {
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))}
           </div>
+        ) : isError ? (
+          <EmptyState
+            icon={Users}
+            title="Failed to load clients"
+            description="Something went wrong. Please try again."
+          />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={Users}

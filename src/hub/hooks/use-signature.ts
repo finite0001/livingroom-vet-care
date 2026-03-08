@@ -10,12 +10,12 @@ export function useSignature() {
     queryKey: ["profile-signature", userId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("app_settings")
-        .select("value")
-        .eq("key", `email_signature_${userId}`)
-        .maybeSingle();
+        .from("profiles")
+        .select("email_signature")
+        .eq("id", userId!)
+        .single();
       if (error) throw error;
-      return (data?.value as string) || null;
+      return data?.email_signature || null;
     },
     enabled: !!userId,
   });
@@ -29,8 +29,9 @@ export function useUpdateSignature() {
     mutationFn: async (signature: string) => {
       if (!profile) throw new Error("Not authenticated");
       const { error } = await supabase
-        .from("app_settings")
-        .upsert({ key: `email_signature_${profile.id}`, value: signature || "" });
+        .from("profiles")
+        .update({ email_signature: signature || null })
+        .eq("id", profile.id);
       if (error) throw error;
     },
     onSuccess: () => {

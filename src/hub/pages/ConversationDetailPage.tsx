@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, MoreVertical } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageTimeline } from "@/hub/components/conversations/MessageTimeline";
@@ -21,11 +21,12 @@ export default function ConversationDetailPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
-  const { data: conversations } = useConversations();
+  const { data: conversations, isLoading: convsLoading } = useConversations();
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const conversation = conversations?.find((c) => c.id === id);
+  const conversationNotFound = !convsLoading && conversations && !conversation;
 
   // Mark as read on open
   useEffect(() => {
@@ -74,6 +75,25 @@ export default function ConversationDetailPage() {
     }
   };
 
+  if (conversationNotFound) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card">
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/hub/chats")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <p className="text-sm font-semibold">Conversation</p>
+        </div>
+        <div className="flex flex-col items-center justify-center flex-1 gap-3">
+          <p className="text-sm text-muted-foreground">Conversation not found</p>
+          <Button variant="outline" size="sm" onClick={() => navigate("/hub/chats")}>
+            Back to chats
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const clientName = conversation
     ? `${conversation.client.first_name} ${conversation.client.last_name}`
     : "";
@@ -114,7 +134,7 @@ export default function ConversationDetailPage() {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background">
-        {msgsLoading ? (
+        {msgsLoading || convsLoading ? (
           <div className="space-y-3 p-4">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className={`h-16 ${i % 2 ? "w-3/4 ml-auto" : "w-3/4"} rounded-lg`} />
@@ -137,11 +157,13 @@ export default function ConversationDetailPage() {
         />
       )}
 
-      {/* Composer */}
-      <ReplyComposer
-        onSend={handleSend}
-        defaultChannel={conversation?.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"}
-      />
+      {/* Composer — only show when conversation is loaded */}
+      {conversation && (
+        <ReplyComposer
+          onSend={handleSend}
+          defaultChannel={conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"}
+        />
+      )}
     </div>
   );
 }
