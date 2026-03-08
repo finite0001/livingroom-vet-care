@@ -77,12 +77,16 @@ const ServiceDetailLayout = ({
                   {description}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button variant="default" size="lg">
-                    Book This Service
-                  </Button>
-                  <Button variant="outline" size="lg">
-                    Ask a Question
-                  </Button>
+                  <Link to="/contact">
+                    <Button variant="default" size="lg">
+                      Book This Service
+                    </Button>
+                  </Link>
+                  <Link to="/contact">
+                    <Button variant="outline" size="lg">
+                      Ask a Question
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
