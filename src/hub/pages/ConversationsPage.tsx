@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ConversationsPage() {
   const navigate = useNavigate();
-  const { data: conversations, isLoading } = useConversations();
+  const { data: conversations, isLoading, isError } = useConversations();
   const toggleRead = useToggleRead();
   const archiveConv = useArchiveConversation();
   const deleteConv = useDeleteConversation();
