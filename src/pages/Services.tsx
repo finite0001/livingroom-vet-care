@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ScrollReveal";
 import { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { ArrowRight, Heart, Dog, Zap, Stethoscope, FlaskConical, Scissors, Syringe } from "lucide-react";
+import vaccinationsImage from "@/assets/service-vaccinations.jpg";
 import wellnessImage from "@/assets/service-wellness.jpg";
 import seniorImage from "@/assets/service-senior.jpg";
 import laserImage from "@/assets/service-laser.jpg";
