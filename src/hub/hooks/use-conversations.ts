@@ -118,7 +118,7 @@ export function useToggleRead() {
     mutationFn: async ({ conversationId, isRead }: { conversationId: string; isRead: boolean }) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ is_read: isRead } as any)
+        .update({ is_read: isRead })
         .eq("id", conversationId);
       if (error) throw error;
     },
