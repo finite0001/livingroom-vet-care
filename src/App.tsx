@@ -27,6 +27,10 @@ const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const HubSignupPage = lazy(() => import("@/hub/pages/SignupPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
 const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
+const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
+const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
+const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
+const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 
 function HubLoader() {
   return (
