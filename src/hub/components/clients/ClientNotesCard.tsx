@@ -10,7 +10,8 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-interface ClientNote { id: string; content: string; created_at: string; created_by: string | null; profile?: { full_name: string } | null; }
+interface ClientNoteProfile { full_name: string }
+interface ClientNote { id: string; content: string; created_at: string; created_by: string | null; profile?: ClientNoteProfile | null; }
 
 export function ClientNotesCard({ clientId }: { clientId: string }) {
   const queryClient = useQueryClient();
