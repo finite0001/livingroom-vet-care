@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export default function ClientsPage() {
   const navigate = useNavigate();
-  const { data: clients, isLoading } = useClients();
+  const { data: clients, isLoading, isError } = useClients();
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
