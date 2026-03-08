@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DoorOpen, Sofa, ShieldCheck, Heart, Dog, Sparkles } from "lucide-react";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
