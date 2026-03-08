@@ -18,6 +18,7 @@ export default function ClientProfilePage() {
   const { data: recentMessages } = useClientMessages(id);
 
   const client = clients?.find((c) => c.id === id);
+  usePageTitle(client ? client.full_name : "Client Profile");
 
   if (isLoading) {
     return (

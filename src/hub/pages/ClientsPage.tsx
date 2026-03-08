@@ -9,8 +9,10 @@ import { CreateClientSheet } from "@/hub/components/clients/CreateClientSheet";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
 import { cn } from "@/lib/utils";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ClientsPage() {
+  usePageTitle("Clients");
   const navigate = useNavigate();
   const { data: clients, isLoading, isError } = useClients();
   const [search, setSearch] = useState("");
