@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, type ReactNode } from "react";
+import { forwardRef, useRef, type ReactNode } from "react";
 
 interface ScrollRevealProps {
   children: ReactNode;
@@ -38,7 +38,7 @@ const variants = {
   },
 };
 
-const ScrollReveal = ({
+const ScrollReveal = forwardRef<HTMLDivElement, ScrollRevealProps>(({
   children,
   className,
   variant = "fadeUp",
@@ -46,13 +46,13 @@ const ScrollReveal = ({
   duration = 0.6,
   once = true,
   amount = 0.2,
-}: ScrollRevealProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once, amount });
+}, _ref) => {
+  const internalRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(internalRef, { once, amount });
 
   return (
     <motion.div
-      ref={ref}
+      ref={internalRef}
       className={className}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
@@ -62,27 +62,29 @@ const ScrollReveal = ({
       {children}
     </motion.div>
   );
-};
+});
 
-export const StaggerContainer = ({
-  children,
-  className,
-  staggerDelay = 0.1,
-  once = true,
-  amount = 0.15,
-}: {
+ScrollReveal.displayName = "ScrollReveal";
+
+export const StaggerContainer = forwardRef<HTMLDivElement, {
   children: ReactNode;
   className?: string;
   staggerDelay?: number;
   once?: boolean;
   amount?: number;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once, amount });
+}>(({
+  children,
+  className,
+  staggerDelay = 0.1,
+  once = true,
+  amount = 0.15,
+}, _ref) => {
+  const internalRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(internalRef, { once, amount });
 
   return (
     <motion.div
-      ref={ref}
+      ref={internalRef}
       className={className}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
@@ -94,24 +96,29 @@ export const StaggerContainer = ({
       {children}
     </motion.div>
   );
-};
+});
 
-export const StaggerItem = ({
-  children,
-  className,
-  variant = "fadeUp",
-}: {
+StaggerContainer.displayName = "StaggerContainer";
+
+export const StaggerItem = forwardRef<HTMLDivElement, {
   children: ReactNode;
   className?: string;
   variant?: keyof typeof variants;
-}) => (
+}>(({
+  children,
+  className,
+  variant = "fadeUp",
+}, ref) => (
   <motion.div
+    ref={ref}
     className={className}
     variants={variants[variant]}
     transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
   >
     {children}
   </motion.div>
-);
+));
+
+StaggerItem.displayName = "StaggerItem";
 
 export default ScrollReveal;
