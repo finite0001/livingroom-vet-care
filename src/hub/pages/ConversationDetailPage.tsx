@@ -48,7 +48,7 @@ export default function ConversationDetailPage() {
         const { error } = await supabase.from("messages").insert({
           conversation_id: id,
           content,
-          type: "NOTE" as any,
+          type: "NOTE",
           sender_type: "STAFF",
           sender_id: profile?.id ?? null,
           is_internal: true,

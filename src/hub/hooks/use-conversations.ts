@@ -187,7 +187,7 @@ export function useSetTags() {
     mutationFn: async ({ conversationId, tags }: { conversationId: string; tags: string[] }) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ tags } as any)
+        .update({ tags })
         .eq("id", conversationId);
       if (error) throw error;
     },
