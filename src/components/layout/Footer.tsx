@@ -46,7 +46,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Quick Links */}
           <div>
             <h4 className="font-heading font-semibold mb-4">Quick Links</h4>
-            <nav className="flex flex-col gap-2">
+            <nav aria-label="Quick links" className="flex flex-col gap-2">
               {[
                 { label: "The Experience", href: "/experience" },
                 { label: "Services", href: "/services" },
