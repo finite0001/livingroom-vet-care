@@ -1,9 +1,10 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Phone, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ScrollReveal";
 
-const CTASection = () => {
+const CTASection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
     <section className="py-24 bg-gradient-warm relative overflow-hidden">
       {/* Decorative Elements */}
