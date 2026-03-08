@@ -28,6 +28,7 @@ export default function ConversationDetailPage() {
 
   const conversation = conversations?.find((c) => c.id === id);
   const conversationNotFound = !convsLoading && conversations && !conversation;
+  usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
   // Mark as read on open
   useEffect(() => {
