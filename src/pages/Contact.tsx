@@ -441,8 +441,8 @@ const Contact = () => {
                         </h4>
                         <p className="text-muted-foreground leading-relaxed">
                           Take US-36 West to Boulder. Exit at Baseline Road,
-                          head north on Broadway, then turn left on Pearl Street.
-                          We're on the right after 12th Street.
+                          head north on Broadway, then turn left on Spruce Street.
+                          We're on the right near 26th Street.
                         </p>
                       </div>
                       <div>
