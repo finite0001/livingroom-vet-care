@@ -183,10 +183,12 @@ const Contact = () => {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="you@email.com"
+                            aria-invalid={!!errors.email}
+                            aria-describedby={errors.email ? "email-error" : undefined}
                             className={errors.email ? "border-destructive" : ""}
                           />
                           {errors.email && (
-                            <p className="text-destructive text-xs">
+                            <p id="email-error" className="text-destructive text-xs" role="alert">
                               {errors.email}
                             </p>
                           )}
