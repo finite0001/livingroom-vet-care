@@ -50,7 +50,7 @@ const services = [
   },
 ];
 
-const ServicesSection = () => {
+const ServicesSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
     <section className="py-24 bg-cream">
       <div className="container">
