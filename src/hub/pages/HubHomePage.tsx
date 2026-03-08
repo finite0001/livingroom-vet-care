@@ -6,6 +6,7 @@ import {
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { useConversations } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 function getGreeting() {
   const h = new Date().getHours();
