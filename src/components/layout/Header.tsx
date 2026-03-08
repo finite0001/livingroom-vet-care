@@ -63,9 +63,11 @@ const Header = () => {
             <Phone className="h-4 w-4" />
             (303) 555-1234
           </a>
-          <Button variant="default" size="default">
-            Book Appointment
-          </Button>
+          <Link to="/contact">
+            <Button variant="default" size="default">
+              Book Appointment
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
