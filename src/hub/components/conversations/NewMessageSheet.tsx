@@ -37,7 +37,7 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
       if (!clientId) {
         const { data: newClient, error: clientError } = await supabase
           .from("clients")
-          .insert({ first_name: recipient, last_name: "", full_name: recipient, primary_phone: recipient, preferred_channel: "SMS" as any })
+          .insert({ first_name: recipient, last_name: "", full_name: recipient, primary_phone: recipient, preferred_channel: "SMS" })
           .select("id").single();
         if (clientError) throw clientError;
         clientId = newClient?.id;
