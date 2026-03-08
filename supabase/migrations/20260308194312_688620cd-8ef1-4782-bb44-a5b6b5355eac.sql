@@ -1,0 +1,1 @@
+ALTER TABLE public.conversations ADD COLUMN IF NOT EXISTS is_read boolean NOT NULL DEFAULT true;

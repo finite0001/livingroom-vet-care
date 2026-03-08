@@ -665,6 +665,7 @@ export type Database = {
           first_message_at: string | null
           first_response_at: string | null
           id: string
+          is_read: boolean
           last_message_at: string
           priority: Database["public"]["Enums"]["conversation_priority"]
           status: Database["public"]["Enums"]["conversation_status"]
@@ -678,6 +679,7 @@ export type Database = {
           first_message_at?: string | null
           first_response_at?: string | null
           id?: string
+          is_read?: boolean
           last_message_at?: string
           priority?: Database["public"]["Enums"]["conversation_priority"]
           status?: Database["public"]["Enums"]["conversation_status"]
@@ -691,6 +693,7 @@ export type Database = {
           first_message_at?: string | null
           first_response_at?: string | null
           id?: string
+          is_read?: boolean
           last_message_at?: string
           priority?: Database["public"]["Enums"]["conversation_priority"]
           status?: Database["public"]["Enums"]["conversation_status"]
