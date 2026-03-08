@@ -102,7 +102,7 @@ export function useMarkRead() {
     mutationFn: async (conversationId: string) => {
       const { error } = await supabase
         .from("conversations")
-        .update({ is_read: true } as any)
+        .update({ is_read: true })
         .eq("id", conversationId);
       if (error) throw error;
     },
