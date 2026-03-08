@@ -103,12 +103,12 @@ const About = () => {
       <Header />
       <main className="flex-grow">
         {/* Hero */}
-        <section className="relative pt-32 pb-20 lg:pb-28 bg-cream overflow-hidden">
+        <section className="relative pt-32 pb-20 lg:pb-24 bg-cream overflow-hidden">
           <div className="container">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <ScrollReveal variant="fadeRight">
-                <p className="text-primary font-medium mb-3">About Us</p>
-                <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+                <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-4">About Us</p>
+                <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6">
                   Built by Pet Lovers,{" "}
                   <span className="text-gradient-warm">For Pet Lovers</span>
                 </h1>
@@ -123,10 +123,10 @@ const About = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/experience">
-                    <Button variant="default" size="lg">See The Experience</Button>
+                    <Button variant="default" size="lg" className="shadow-sm hover:shadow-md transition-shadow">See The Experience</Button>
                   </Link>
                   <Link to="/services">
-                    <Button variant="outline" size="lg">View Our Services</Button>
+                    <Button variant="outline" size="lg" className="hover:shadow-sm transition-shadow">View Our Services</Button>
                   </Link>
                 </div>
               </ScrollReveal>
@@ -138,6 +138,7 @@ const About = () => {
                     src={aboutPracticeImage}
                     alt="The Living Room Vet practice interior with comfortable sofa and mountain views"
                     className="relative w-full rounded-2xl shadow-elevated object-cover aspect-[16/10]"
+                    loading="lazy"
                   />
                 </div>
               </ScrollReveal>
@@ -147,11 +148,11 @@ const About = () => {
         </section>
 
         {/* Our Story */}
-        <section className="py-24 bg-background">
+        <section className="py-24 lg:py-32 bg-background">
           <div className="container">
             <ScrollReveal className="max-w-3xl mx-auto text-center">
-              <p className="text-primary font-medium mb-3">Our Story</p>
-              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-8">
+              <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">Our Story</p>
+              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-8">
                 A Better Way to Care
               </h2>
               <div className="text-muted-foreground text-lg leading-relaxed space-y-6 text-left">
@@ -181,11 +182,11 @@ const About = () => {
         </section>
 
         {/* Values */}
-        <section className="py-24 bg-cream">
+        <section className="py-24 lg:py-32 bg-cream">
           <div className="container">
             <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-              <p className="text-primary font-medium mb-3">Our Values</p>
-              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">Our Values</p>
+              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-4">
                 What Guides Us Every Day
               </h2>
             </ScrollReveal>
@@ -193,9 +194,9 @@ const About = () => {
             <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {values.map((value) => (
                 <StaggerItem key={value.title}>
-                  <Card variant="feature" className="h-full">
+                  <Card variant="feature" className="h-full group">
                     <CardContent className="p-8 flex gap-6">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-warm flex items-center justify-center shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-warm flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:shadow-warm transition-all duration-300">
                         <value.icon className="h-7 w-7 text-primary-foreground" />
                       </div>
                       <div>
@@ -215,11 +216,11 @@ const About = () => {
         </section>
 
         {/* Team */}
-        <section className="py-24 bg-background">
+        <section className="py-24 lg:py-32 bg-background">
           <div className="container">
             <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-              <p className="text-primary font-medium mb-3">Our Team</p>
-              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">Our Team</p>
+              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-4">
                 Meet the People Behind the Care
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
@@ -231,7 +232,7 @@ const About = () => {
             <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8" staggerDelay={0.12}>
               {team.map((member) => (
                 <StaggerItem key={member.name}>
-                  <Card variant="elevated" className="overflow-hidden h-full">
+                  <Card variant="elevated" className="overflow-hidden h-full hover:shadow-elevated transition-shadow duration-300">
                     <CardContent className="p-0">
                       <div className="flex flex-col sm:flex-row">
                         <div className="sm:w-48 shrink-0">
@@ -239,6 +240,7 @@ const About = () => {
                             src={member.image}
                             alt={`${member.name} - ${member.role}`}
                             className="w-full h-48 sm:h-full object-cover"
+                            loading="lazy"
                           />
                         </div>
                         <div className="p-6 flex-grow">
@@ -255,14 +257,14 @@ const About = () => {
                             {member.credentials.map((cred) => (
                               <span
                                 key={cred}
-                                className="px-2 py-1 rounded-md bg-sage/20 text-sage-dark text-xs font-medium"
+                                className="px-2.5 py-1 rounded-full bg-sage/15 text-sage-dark text-xs font-semibold tracking-wide"
                               >
                                 {cred}
                               </span>
                             ))}
                           </div>
                           <p className="text-muted-foreground text-xs italic">
-                            🐾 {member.funFact}
+                            <span role="img" aria-label="paw print">🐾</span> {member.funFact}
                           </p>
                         </div>
                       </div>
@@ -275,11 +277,11 @@ const About = () => {
         </section>
 
         {/* Certifications */}
-        <section className="py-24 bg-cream">
+        <section className="py-24 lg:py-32 bg-cream">
           <div className="container">
             <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-              <p className="text-primary font-medium mb-3">Certifications & Training</p>
-              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">Certifications & Training</p>
+              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-4">
                 Credentials You Can Trust
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Expand } from "lucide-react";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
@@ -13,11 +14,11 @@ const tourImages = [
 
 const VirtualTour = () => {
   return (
-    <section id="virtual-tour" className="py-24 bg-background">
+    <section id="virtual-tour" className="py-24 lg:py-32 bg-background">
       <div className="container">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-primary font-medium mb-3">Virtual Tour</p>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+          <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">Virtual Tour</p>
+          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
             See Our Living Room Spaces
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
@@ -33,6 +34,7 @@ const VirtualTour = () => {
               src={heroImage}
               alt="Virtual tour of our living room veterinary space"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-charcoal/30 flex items-center justify-center group-hover:bg-charcoal/40 transition-colors">
               <div className="w-20 h-20 rounded-full bg-cream-light/90 flex items-center justify-center shadow-elevated group-hover:scale-110 transition-transform">
@@ -56,6 +58,7 @@ const VirtualTour = () => {
                   src={image.src}
                   alt={image.alt}
                   className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/30 transition-colors flex items-center justify-center">
                   <Expand className="h-8 w-8 text-cream-light opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -69,8 +72,8 @@ const VirtualTour = () => {
         </StaggerContainer>
 
         <ScrollReveal variant="fade" delay={0.2} className="text-center mt-12">
-          <p className="text-muted-foreground mb-4">Want to see it in person?</p>
-          <Button variant="default" size="lg">Schedule a Tour</Button>
+          <p className="text-muted-foreground text-lg mb-4">Want to see it in person?</p>
+          <Link to="/contact"><Button variant="default" size="lg" className="shadow-sm hover:shadow-md transition-shadow">Schedule a Tour</Button></Link>
         </ScrollReveal>
       </div>
     </section>

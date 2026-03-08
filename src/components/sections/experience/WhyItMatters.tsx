@@ -35,11 +35,11 @@ const stats = [
 
 const WhyItMatters = () => {
   return (
-    <section className="py-24 bg-cream">
+    <section className="py-24 lg:py-32 bg-cream">
       <div className="container">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-primary font-medium mb-3">Why It Matters</p>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+          <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">Why It Matters</p>
+          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
             The Difference is Real
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
@@ -102,8 +102,8 @@ const WhyItMatters = () => {
           {stats.map((stat) => (
             <StaggerItem key={stat.label} variant="scaleUp">
               <div className="text-center p-8 rounded-2xl bg-cream-light shadow-soft">
-                <div className="w-14 h-14 rounded-2xl bg-sage/30 flex items-center justify-center mx-auto mb-4">
-                  <stat.icon className="h-7 w-7 text-sage-dark" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-warm shadow-sm flex items-center justify-center mx-auto mb-4">
+                  <stat.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <div className="flex items-baseline justify-center gap-1 mb-2">
                   <span className="font-heading text-5xl font-bold text-foreground">

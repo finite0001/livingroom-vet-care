@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -117,11 +118,11 @@ const Contact = () => {
         <section className="pt-32 pb-16 bg-cream">
           <div className="container">
             <div className="max-w-3xl">
-              <p className="text-primary font-medium mb-3 animate-fade-up">
+              <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-4 animate-fade-up">
                 Get in Touch
               </p>
               <h1
-                className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-up"
+                className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 animate-fade-up"
                 style={{ animationDelay: "0.1s" }}
               >
                 We'd Love to{" "}
@@ -140,14 +141,14 @@ const Contact = () => {
         </section>
 
         {/* Contact Form + Info */}
-        <section className="py-20 bg-background">
+        <section className="py-24 lg:py-32 bg-background">
           <div className="container">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
               {/* Form */}
               <ScrollReveal variant="fadeLeft" className="lg:col-span-3">
                 <Card variant="warm" className="h-full">
                   <CardContent className="p-8 sm:p-10">
-                    <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
+                    <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground mb-6">
                       Send Us a Message
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -162,6 +163,7 @@ const Contact = () => {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="Your name"
+                            aria-required="true"
                             className={errors.name ? "border-destructive" : ""}
                           />
                           {errors.name && (
@@ -181,6 +183,7 @@ const Contact = () => {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="you@email.com"
+                            aria-required="true"
                             className={errors.email ? "border-destructive" : ""}
                           />
                           {errors.email && (
@@ -213,6 +216,7 @@ const Contact = () => {
                             value={formData.subject}
                             onChange={handleChange}
                             placeholder="Appointment, question, etc."
+                            aria-required="true"
                             className={
                               errors.subject ? "border-destructive" : ""
                             }
@@ -236,6 +240,7 @@ const Contact = () => {
                           onChange={handleChange}
                           placeholder="Tell us how we can help…"
                           rows={5}
+                          aria-required="true"
                           className={
                             errors.message ? "border-destructive" : ""
                           }
@@ -269,7 +274,7 @@ const Contact = () => {
                 {/* Phone & Email */}
                 <Card variant="elevated">
                   <CardContent className="p-6 space-y-5">
-                    <h3 className="font-heading text-lg font-semibold text-foreground">
+                    <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
                       Contact Info
                     </h3>
                     <a
@@ -323,7 +328,7 @@ const Contact = () => {
                       <div className="w-10 h-10 rounded-xl bg-sage/30 flex items-center justify-center">
                         <Clock className="h-5 w-5 text-sage-dark" />
                       </div>
-                      <h3 className="font-heading text-lg font-semibold text-foreground">
+                      <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
                         Hours of Operation
                       </h3>
                     </div>
@@ -363,7 +368,7 @@ const Contact = () => {
                 {/* Quick Links */}
                 <Card variant="elevated">
                   <CardContent className="p-6">
-                    <h3 className="font-heading text-lg font-semibold text-foreground mb-3">
+                    <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground mb-3">
                       Quick Links
                     </h3>
                     <div className="space-y-2">
@@ -390,12 +395,12 @@ const Contact = () => {
         </section>
 
         {/* Map & Directions */}
-        <section className="py-20 bg-cream">
+        <section className="py-24 lg:py-32 bg-cream">
           <div className="container">
             <ScrollReveal variant="fadeUp">
               <div className="text-center max-w-2xl mx-auto mb-12">
-                <p className="text-primary font-medium mb-3">Find Us</p>
-                <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-4">Find Us</p>
+                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">
                   Visit Our Practice
                 </h2>
                 <p className="text-muted-foreground text-lg">
@@ -430,7 +435,7 @@ const Contact = () => {
                       <div className="w-10 h-10 rounded-xl bg-gradient-warm flex items-center justify-center">
                         <Car className="h-5 w-5 text-primary-foreground" />
                       </div>
-                      <h3 className="font-heading text-lg font-semibold text-foreground">
+                      <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
                         Getting Here
                       </h3>
                     </div>
@@ -471,9 +476,9 @@ const Contact = () => {
                       rel="noopener noreferrer"
                       className="mt-6 inline-block"
                     >
-                      <Button variant="outline" size="default">
+                      <Button variant="outline" size="default" className="group">
                         Get Directions
-                        <ArrowRight className="h-4 w-4 ml-1" />
+                        <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </a>
                   </CardContent>
@@ -484,11 +489,13 @@ const Contact = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-gradient-warm">
-          <div className="container">
+        <section className="py-24 lg:py-32 bg-gradient-warm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-cream-light/8 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-cream-light/8 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+          <div className="container relative">
             <ScrollReveal variant="scaleUp">
               <div className="max-w-2xl mx-auto text-center">
-                <h2 className="font-heading text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
+                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-primary-foreground mb-4">
                   Prefer to Call?
                 </h2>
                 <p className="text-primary-foreground/80 text-lg mb-8">
@@ -498,7 +505,7 @@ const Contact = () => {
                 <a href="tel:+13035551234">
                   <Button
                     size="xl"
-                    className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
+                    className="bg-cream-light text-charcoal hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-elevated font-semibold"
                   >
                     <Phone className="h-5 w-5 mr-2" />
                     Call (303) 555-1234
