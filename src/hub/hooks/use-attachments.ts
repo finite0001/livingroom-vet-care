@@ -18,11 +18,11 @@ export function useAttachments(messageIds: string[]) {
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<MessageAttachment[]> => {
       const { data, error } = await supabase
-        .from("message_attachments" as any)
+        .from("message_attachments")
         .select("*")
         .in("message_id", messageIds);
       if (error) throw error;
-      return (data ?? []) as unknown as MessageAttachment[];
+      return data ?? [];
     },
   });
 }
@@ -38,7 +38,7 @@ export function useUploadAttachment() {
       const { error: uploadError } = await supabase.storage.from("message-attachments").upload(storagePath, file);
       if (uploadError) throw uploadError;
       const { data, error: insertError } = await supabase
-        .from("message_attachments" as any)
+        .from("message_attachments")
         .insert({ message_id: messageId, file_name: file.name, file_type: file.type, file_size: file.size, storage_path: storagePath })
         .select()
         .single();

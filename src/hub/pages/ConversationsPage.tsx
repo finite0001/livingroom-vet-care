@@ -95,6 +95,12 @@ export default function ConversationsPage() {
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
           </div>
+        ) : isError ? (
+          <EmptyState
+            icon={MessageSquare}
+            title="Failed to load conversations"
+            description="Something went wrong. Please try again."
+          />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={MessageSquare}

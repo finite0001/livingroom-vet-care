@@ -1,5 +1,6 @@
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 interface UserHeaderProps {
@@ -8,9 +9,17 @@ interface UserHeaderProps {
 }
 
 export function UserHeader({ navHidden = false, onToggleNav }: UserHeaderProps) {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
 
-  if (!profile) return null;
+  if (loading || !profile) {
+    return (
+      <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-2">
+        <Skeleton className="h-8 w-8 rounded-lg" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    );
+  }
 
   const initials = `${profile.first_name?.[0] ?? ""}${profile.last_name?.[0] ?? ""}`;
 

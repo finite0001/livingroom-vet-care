@@ -67,7 +67,7 @@ export function ClientNotesCard({ clientId }: { clientId: string }) {
             <div key={n.id} className="rounded-lg bg-muted/50 p-3 group">
               <p className="text-sm whitespace-pre-wrap">{n.content}</p>
               <div className="flex items-center justify-between mt-1.5">
-                <p className="text-xs text-muted-foreground">{(n.profile as any)?.full_name ?? "Staff"} · {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+                <p className="text-xs text-muted-foreground">{n.profile?.full_name ?? "Staff"} · {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
                 <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive" onClick={() => setPendingDeleteId(n.id)}><Trash2 className="h-3 w-3" /></Button>
               </div>
             </div>
