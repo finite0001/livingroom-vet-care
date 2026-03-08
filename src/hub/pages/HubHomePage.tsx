@@ -30,6 +30,7 @@ export default function HubHomePage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: conversations } = useConversations();
+  usePageTitle("Hub Home");
 
   const unreadCount = conversations?.filter((c) => !c.is_read).length ?? 0;
   const activeCount = conversations?.filter((c) => c.status === "ACTIVE").length ?? 0;
