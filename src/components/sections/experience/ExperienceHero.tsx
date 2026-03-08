@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import catRoomImage from "@/assets/experience-cat-room.jpg";
@@ -11,7 +10,7 @@ const ExperienceHero = () => {
           {/* Content */}
           <div className="order-2 lg:order-1">
             <motion.p
-              className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-4"
+              className="text-primary font-medium mb-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -19,7 +18,7 @@ const ExperienceHero = () => {
               The Experience
             </motion.p>
             <motion.h1
-              className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6"
+              className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -51,16 +50,12 @@ const ExperienceHero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.65 }}
             >
-              <Link to="/contact">
-                <Button variant="default" size="lg" className="shadow-sm hover:shadow-md transition-shadow">
-                  Book Your First Visit
-                </Button>
-              </Link>
-              <a href="#virtual-tour">
-                <Button variant="outline" size="lg" className="hover:shadow-sm transition-shadow">
-                  Watch How It Works
-                </Button>
-              </a>
+              <Button variant="default" size="lg">
+                Book Your First Visit
+              </Button>
+              <Button variant="outline" size="lg">
+                Watch How It Works
+              </Button>
             </motion.div>
           </div>
 
@@ -77,10 +72,9 @@ const ExperienceHero = () => {
                 src={catRoomImage}
                 alt="A calm cat relaxing in our cozy exam room with mountain views"
                 className="relative w-full rounded-2xl shadow-elevated object-cover aspect-square"
-                loading="lazy"
               />
               <motion.div
-                className="absolute -bottom-4 -left-4 bg-cream-light backdrop-blur-sm rounded-xl shadow-warm p-4"
+                className="absolute -bottom-4 -left-4 bg-cream-light rounded-xl shadow-warm p-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 }}

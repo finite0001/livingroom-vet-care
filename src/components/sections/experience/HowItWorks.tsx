@@ -61,12 +61,12 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 lg:py-32 bg-background">
+    <section className="py-24 bg-background">
       <div className="container">
         {/* Section Header */}
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-20">
-          <p className="text-primary font-heading text-sm font-semibold tracking-wide uppercase mb-3">How It Works</p>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
+          <p className="text-primary font-medium mb-3">How It Works</p>
+          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Your Visit, Step by Step
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
@@ -124,8 +124,7 @@ const HowItWorks = () => {
                   <img
                     src={step.image}
                     alt={step.imageAlt}
-                    className="relative w-full rounded-2xl shadow-soft hover:shadow-elevated transition-shadow duration-500 object-cover aspect-[4/3] transition-transform duration-500 group-hover:scale-[1.02]"
-                    loading="lazy"
+                    className="relative w-full rounded-2xl shadow-soft object-cover aspect-[4/3] transition-transform duration-500 group-hover:scale-[1.02]"
                   />
                 </div>
               </ScrollReveal>

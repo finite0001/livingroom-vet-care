@@ -97,7 +97,6 @@ const ServiceDetailLayout = ({
                   src={heroImage}
                   alt={heroImageAlt}
                   className="relative w-full rounded-2xl shadow-elevated object-cover aspect-[4/3]"
-                  loading="lazy"
                 />
               </div>
             </div>
@@ -132,25 +131,23 @@ const ServiceDetailLayout = ({
             <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-12 text-center">
               What to Expect
             </h2>
-            <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 list-none p-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {whatToExpect.map((item, index) => (
-                <li key={index}>
-                  <Card variant="warm" className="h-full">
-                    <CardContent className="p-8">
-                      <div className="w-10 h-10 rounded-full bg-gradient-warm flex items-center justify-center mb-4 text-primary-foreground font-heading font-bold" aria-hidden="true">
-                        {index + 1}
-                      </div>
-                      <h3 className="font-heading text-lg font-semibold text-foreground mb-2">
-                        {item.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {item.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </li>
+                <Card key={index} variant="warm" className="h-full">
+                  <CardContent className="p-8">
+                    <div className="w-10 h-10 rounded-full bg-gradient-warm flex items-center justify-center mb-4 text-primary-foreground font-heading font-bold">
+                      {index + 1}
+                    </div>
+                    <h3 className="font-heading text-lg font-semibold text-foreground mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {item.description}
+                    </p>
+                  </CardContent>
+                </Card>
               ))}
-            </ol>
+            </div>
           </div>
         </section>
 
@@ -245,8 +242,8 @@ const ServiceDetailLayout = ({
                 comfortable living room environment.
               </p>
               <Link to="/contact">
-                <Button
-                  size="xl"
+                <Button 
+                  size="xl" 
                   className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
                 >
                   Book Your Appointment

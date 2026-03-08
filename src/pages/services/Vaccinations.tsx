@@ -96,7 +96,7 @@ const Vaccinations = () => {
               {/* Dogs */}
               <div className="bg-cream-light rounded-2xl p-6 sm:p-8 shadow-soft">
                 <h3 className="font-heading font-bold text-foreground text-xl mb-5 flex items-center gap-2">
-                  <span role="img" aria-label="dog">🐕</span> Dogs
+                  🐕 Dogs
                 </h3>
                 <div className="space-y-5">
                   {[
@@ -150,7 +150,7 @@ const Vaccinations = () => {
               {/* Cats */}
               <div className="bg-cream-light rounded-2xl p-6 sm:p-8 shadow-soft">
                 <h3 className="font-heading font-bold text-foreground text-xl mb-5 flex items-center gap-2">
-                  <span role="img" aria-label="cat">🐈</span> Cats
+                  🐈 Cats
                 </h3>
                 <div className="space-y-5">
                   {[
@@ -251,7 +251,7 @@ const Vaccinations = () => {
                   key={item.lifestyle}
                   className="bg-cream-light rounded-xl p-5 shadow-soft"
                 >
-                  <span className="text-2xl mb-2 block" role="img" aria-label={item.lifestyle}>{item.icon}</span>
+                  <span className="text-2xl mb-2 block">{item.icon}</span>
                   <h3 className="font-heading font-bold text-foreground text-sm mb-3">
                     {item.lifestyle}
                   </h3>
