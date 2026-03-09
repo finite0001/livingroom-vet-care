@@ -19,7 +19,7 @@ interface ReplyComposerProps {
 
 const SMS_SEGMENT_LENGTH = 160;
 
-export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDraftConsumed }: ReplyComposerProps) {
+export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDraftConsumed, disabled }: ReplyComposerProps) {
   const [content, setContent] = useState("");
   useEffect(() => { if (draft) { setContent(draft); onDraftConsumed?.(); } }, [draft]);
 
