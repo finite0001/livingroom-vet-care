@@ -9,7 +9,7 @@ import { SmartReplySuggestions } from "@/hub/components/conversations/SmartReply
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
 import {
   useConversationMessages,
-  useConversations,
+  useConversation,
   useMarkRead,
 } from "@/hub/hooks/use-conversations";
 import { supabase } from "@/integrations/supabase/client";
