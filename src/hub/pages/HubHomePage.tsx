@@ -7,6 +7,8 @@ import { useAuth } from "@/hub/contexts/AuthContext";
 import { useConversations } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -31,6 +33,19 @@ export default function HubHomePage() {
   const { profile } = useAuth();
   const { data: conversations } = useConversations();
   usePageTitle("Hub Home");
+
+  const { data: openTicketCount } = useQuery({
+    queryKey: ["open-ticket-count"],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tickets")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "OPEN");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 
   const unreadCount = conversations?.filter((c) => !c.is_read).length ?? 0;
   const activeCount = conversations?.filter((c) => c.status === "ACTIVE").length ?? 0;

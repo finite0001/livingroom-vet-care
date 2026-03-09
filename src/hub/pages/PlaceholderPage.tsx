@@ -1,11 +1,13 @@
 import { useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function PlaceholderPage() {
   const location = useLocation();
   const pageName = location.pathname.split("/").filter(Boolean).pop() || "Page";
   const title = pageName.charAt(0).toUpperCase() + pageName.slice(1).replace(/-/g, " ");
+  usePageTitle(title);
 
   return (
     <div className="p-4 md:p-6 space-y-4">

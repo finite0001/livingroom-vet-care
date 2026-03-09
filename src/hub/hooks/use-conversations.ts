@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 export type ConversationPriority = "URGENT" | "NORMAL" | "LOW";
 
@@ -35,6 +36,23 @@ export interface ConversationWithClient {
 }
 
 export function useConversations() {
+  const queryClient = useQueryClient();
+
+  // Realtime listener for conversation changes (from other tabs/users)
+  useEffect(() => {
+    const channel = supabase
+      .channel("conversations-list")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "conversations",
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["conversations"],
     staleTime: 30 * 1000,
@@ -100,7 +118,18 @@ export function useMarkRead() {
         .eq("id", conversationId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, is_read: true } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
@@ -116,7 +145,22 @@ export function useToggleRead() {
         .eq("id", conversationId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async ({ conversationId, isRead }) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, is_read: isRead } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to update read status");
+    },
+    onSuccess: (_data, { isRead }) => {
+      toast.success(isRead ? "Marked as read" : "Marked as unread");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
@@ -132,7 +176,22 @@ export function useArchiveConversation() {
         .eq("id", conversationId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async ({ conversationId, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, status } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to update conversation");
+    },
+    onSuccess: (_data, { status }) => {
+      toast.success(status === "ARCHIVED" ? "Conversation archived" : "Conversation restored");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
@@ -146,7 +205,11 @@ export function useDeleteConversation() {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Conversation deleted");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: () => {
+      toast.error("Failed to delete conversation");
     },
   });
 }
