@@ -306,3 +306,60 @@ export function useClientMessages(clientId: string | undefined) {
     },
   });
 }
+
+/** Fetch a single conversation by ID (lightweight alternative to useConversations) */
+export function useConversation(conversationId: string | undefined) {
+  return useQuery({
+    queryKey: ["conversation", conversationId],
+    enabled: !!conversationId,
+    staleTime: 30 * 1000,
+    queryFn: async (): Promise<ConversationWithClient | null> => {
+      const { data: conv, error } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq("id", conversationId!)
+        .maybeSingle();
+      if (error) throw error;
+      if (!conv) return null;
+
+      const [clientRes, petsRes, msgsRes] = await Promise.all([
+        supabase.from("clients").select("*").eq("id", conv.client_id).single(),
+        supabase.from("pets").select("id, client_id, name, species, breed").eq("client_id", conv.client_id),
+        supabase.rpc("get_last_messages", { conv_ids: [conv.id] }),
+      ]);
+      if (clientRes.error) throw clientRes.error;
+      if (petsRes.error) throw petsRes.error;
+
+      const lastMsg = msgsRes.data?.[0];
+      return {
+        ...conv,
+        is_read: conv.is_read ?? true,
+        priority: conv.priority ?? "NORMAL",
+        tags: conv.tags ?? [],
+        first_message_at: conv.first_message_at ?? null,
+        first_response_at: conv.first_response_at ?? null,
+        client: clientRes.data,
+        pets: petsRes.data || [],
+        last_message: lastMsg || undefined,
+      } as ConversationWithClient;
+    },
+  });
+}
+
+/** Lightweight query for unread conversation count */
+export function useUnreadCount() {
+  return useQuery({
+    queryKey: ["unread-count"],
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("is_read", false)
+        .eq("status", "ACTIVE");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}
