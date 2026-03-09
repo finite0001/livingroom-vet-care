@@ -99,8 +99,16 @@ const Contact = () => {
       return;
     }
 
-    // Simulate submission
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.from("contact_submissions").insert({
+        name: result.data.name,
+        email: result.data.email,
+        phone: result.data.phone || null,
+        subject: result.data.subject,
+        message: result.data.message,
+      });
+      if (error) throw error;
+
       toast({
         title: "Message sent!",
         description:
@@ -108,8 +116,15 @@ const Contact = () => {
       });
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       setErrors({});
+    } catch {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or call us directly.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
   };
 
   return (
