@@ -1,13 +1,11 @@
 import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSmartReplies } from "@/hub/hooks/use-smart-replies";
-import { useEffect } from "react";
 
 interface SmartReplySuggestionsProps { conversationId: string | undefined; onSelect: (text: string) => void; }
 
 export function SmartReplySuggestions({ conversationId, onSelect }: SmartReplySuggestionsProps) {
   const { suggestions, loading, fetchSuggestions } = useSmartReplies(conversationId);
-  useEffect(() => { if (conversationId) fetchSuggestions(); }, [conversationId]);
   if (!conversationId) return null;
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 border-t bg-muted/30 overflow-x-auto">

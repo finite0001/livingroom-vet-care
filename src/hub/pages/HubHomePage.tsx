@@ -4,7 +4,7 @@ import {
   AudioWaveform, FileText, Megaphone, BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/hub/contexts/AuthContext";
-import { useConversations } from "@/hub/hooks/use-conversations";
+import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
@@ -31,8 +31,22 @@ const quickActions = [
 export default function HubHomePage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { data: conversations } = useConversations();
   usePageTitle("Hub Home");
+
+  const { data: unreadCount } = useUnreadCount();
+
+  const { data: activeCount } = useQuery({
+    queryKey: ["active-conversation-count"],
+    staleTime: 45 * 1000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "ACTIVE");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 
   const { data: openTicketCount } = useQuery({
     queryKey: ["open-ticket-count"],
@@ -47,9 +61,37 @@ export default function HubHomePage() {
     },
   });
 
-  const unreadCount = conversations?.filter((c) => !c.is_read).length ?? 0;
-  const activeCount = conversations?.filter((c) => c.status === "ACTIVE").length ?? 0;
-  const recentConversations = conversations?.slice(0, 3) ?? [];
+  const { data: recentConversations } = useQuery({
+    queryKey: ["recent-conversations"],
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const { data: convs, error } = await supabase
+        .from("conversations")
+        .select("id, client_id, is_read, last_message_at")
+        .order("last_message_at", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      if (!convs?.length) return [];
+
+      const clientIds = [...new Set(convs.map((c) => c.client_id))];
+      const [clientsRes, msgsRes] = await Promise.all([
+        supabase.from("clients").select("id, full_name").in("id", clientIds),
+        supabase.rpc("get_last_messages", { conv_ids: convs.map((c) => c.id) }),
+      ]);
+
+      const clientMap = new Map(clientsRes.data?.map((c) => [c.id, c]) ?? []);
+      const msgMap = new Map(msgsRes.data?.map((m) => [m.conversation_id, m]) ?? []);
+
+      return convs
+        .filter((c) => clientMap.has(c.client_id))
+        .map((c) => ({
+          id: c.id,
+          is_read: c.is_read,
+          client_name: clientMap.get(c.client_id)!.full_name,
+          last_message_content: msgMap.get(c.id)?.content || null,
+        }));
+    },
+  });
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
@@ -68,14 +110,14 @@ export default function HubHomePage() {
           onClick={() => navigate("/hub/chats")}
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
         >
-          <p className="text-2xl font-bold text-foreground">{unreadCount}</p>
+          <p className="text-2xl font-bold text-foreground">{unreadCount ?? 0}</p>
           <p className="text-xs text-muted-foreground mt-0.5">Unread messages</p>
         </button>
         <button
           onClick={() => navigate("/hub/chats")}
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
         >
-          <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+          <p className="text-2xl font-bold text-foreground">{activeCount ?? 0}</p>
           <p className="text-xs text-muted-foreground mt-0.5">Active chats</p>
         </button>
         <button
@@ -106,7 +148,7 @@ export default function HubHomePage() {
       </div>
 
       {/* Recent conversations */}
-      {recentConversations.length > 0 && (
+      {recentConversations && recentConversations.length > 0 && (
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">Recent Conversations</h2>
           <div className="space-y-2">
@@ -118,10 +160,10 @@ export default function HubHomePage() {
               >
                 <div className="flex-1 min-w-0">
                   <p className={cn("text-sm truncate", !conv.is_read && "font-semibold")}>
-                    {conv.client.full_name}
+                    {conv.client_name}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {conv.last_message?.content || "No messages"}
+                    {conv.last_message_content || "No messages"}
                   </p>
                 </div>
                 {!conv.is_read && (

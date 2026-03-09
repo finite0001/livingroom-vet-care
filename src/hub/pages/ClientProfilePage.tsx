@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Phone, Mail, MessageSquare, PawPrint, Edit } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MessageSquare, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useClients } from "@/hub/hooks/use-clients";
+import { useClient } from "@/hub/hooks/use-client";
 import { useClientMessages } from "@/hub/hooks/use-conversations";
 import { ClientNotesCard } from "@/hub/components/clients/ClientNotesCard";
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
@@ -14,11 +14,15 @@ import { usePageTitle } from "@/hooks/use-page-title";
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: clients, isLoading } = useClients();
+  const { data: client, isLoading } = useClient(id);
   const { data: recentMessages } = useClientMessages(id);
 
-  const client = clients?.find((c) => c.id === id);
   usePageTitle(client ? client.full_name : "Client Profile");
+
+  const goBack = () => {
+    if (window.history.length > 2) navigate(-1);
+    else navigate("/hub/clients");
+  };
 
   if (isLoading) {
     return (
@@ -45,7 +49,7 @@ export default function ClientProfilePage() {
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card sticky top-0 z-10">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/hub/clients")}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={goBack} aria-label="Go back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <BrandAvatar name={client.full_name} email={client.primary_email} className="h-8 w-8 text-xs" />
