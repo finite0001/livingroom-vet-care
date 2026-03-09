@@ -41,6 +41,7 @@ export function BottomTabBar() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const [moreOpen, setMoreOpen] = useState(false);
+  const { data: unreadCount } = useUnreadCount();
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
