@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { MessageSquare, Mail, PhoneIncoming, PhoneOutgoing, AudioWaveform, StickyNote, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ConversationBoundary } from "@/hub/hooks/use-client-history";
 
 interface Message {
   id: string;
