@@ -7,7 +7,7 @@ import heroImage from "@/assets/hero-living-room.jpg";
 
 const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <motion.img
