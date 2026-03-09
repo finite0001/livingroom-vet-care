@@ -1,7 +1,7 @@
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Phone, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const Header = () => {
+const Header = React.forwardRef<HTMLElement>((_, ref) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
 
