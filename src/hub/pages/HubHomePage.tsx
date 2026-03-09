@@ -7,6 +7,8 @@ import { useAuth } from "@/hub/contexts/AuthContext";
 import { useConversations } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -32,6 +34,19 @@ export default function HubHomePage() {
   const { data: conversations } = useConversations();
   usePageTitle("Hub Home");
 
+  const { data: openTicketCount } = useQuery({
+    queryKey: ["open-ticket-count"],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tickets")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "OPEN");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   const unreadCount = conversations?.filter((c) => !c.is_read).length ?? 0;
   const activeCount = conversations?.filter((c) => c.status === "ACTIVE").length ?? 0;
   const recentConversations = conversations?.slice(0, 3) ?? [];
@@ -48,7 +63,7 @@ export default function HubHomePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <button
           onClick={() => navigate("/hub/chats")}
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
@@ -61,7 +76,14 @@ export default function HubHomePage() {
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
         >
           <p className="text-2xl font-bold text-foreground">{activeCount}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Active conversations</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Active chats</p>
+        </button>
+        <button
+          onClick={() => navigate("/hub/tickets")}
+          className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
+        >
+          <p className="text-2xl font-bold text-foreground">{openTicketCount ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Open tickets</p>
         </button>
       </div>
 

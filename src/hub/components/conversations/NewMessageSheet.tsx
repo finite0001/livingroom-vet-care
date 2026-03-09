@@ -19,6 +19,8 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
   const [search, setSearch] = useState("");
   const [sending, setSending] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
   const queryClient = useQueryClient();
   const { data: clients } = useClients();
 
@@ -29,15 +31,29 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
 
   const selectClient = (client: any) => { setSelectedClientId(client.id); setRecipient(client.primary_phone || ""); setSearch(client.full_name); };
 
+  const isNewClient = !selectedClientId && recipient.trim().length > 0;
+
+  const reset = () => {
+    setRecipient(""); setBody(""); setSearch(""); setSelectedClientId(null);
+    setNewFirstName(""); setNewLastName("");
+  };
+
   const handleSend = async () => {
     if (!body.trim() || !recipient.trim()) return;
+    if (isNewClient && !newFirstName.trim()) {
+      toast.error("Please enter the client's first name");
+      return;
+    }
     setSending(true);
     try {
       let clientId = selectedClientId;
       if (!clientId) {
+        const first = newFirstName.trim();
+        const last = newLastName.trim();
+        const full = last ? `${first} ${last}` : first;
         const { data: newClient, error: clientError } = await supabase
           .from("clients")
-          .insert({ first_name: recipient, last_name: "", full_name: recipient, primary_phone: recipient, preferred_channel: "SMS" })
+          .insert({ first_name: first, last_name: last || "", full_name: full, primary_phone: recipient, preferred_channel: "SMS" })
           .select("id").single();
         if (clientError) throw clientError;
         clientId = newClient?.id;
@@ -56,15 +72,16 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
       if (error) throw error;
       toast.success("SMS sent");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       onOpenChange(false);
-      setRecipient(""); setBody(""); setSearch(""); setSelectedClientId(null);
+      reset();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send message");
     } finally { setSending(false); }
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setRecipient(""); setBody(""); setSearch(""); setSelectedClientId(null); } }}>
+    <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
       <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
         <SheetHeader><SheetTitle>New Message</SheetTitle></SheetHeader>
         <div className="mt-4 space-y-4">
@@ -83,8 +100,19 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
             )}
           </div>
           <Input placeholder="Phone number (e.g. +14155551234)" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="h-10" type="tel" />
+
+          {isNewClient && (
+            <div className="space-y-2 rounded-lg border border-dashed p-3">
+              <p className="text-xs font-medium text-muted-foreground">New client — enter their name</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="First name *" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="h-9" />
+                <Input placeholder="Last name" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="h-9" />
+              </div>
+            </div>
+          )}
+
           <Textarea placeholder="Type your text message..." value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
-          <Button onClick={handleSend} disabled={!body.trim() || !recipient.trim() || sending} className="w-full">
+          <Button onClick={handleSend} disabled={!body.trim() || !recipient.trim() || sending || (isNewClient && !newFirstName.trim())} className="w-full">
             <MessageSquare className="h-4 w-4 mr-2" /> {sending ? "Sending..." : "Send SMS"}
           </Button>
         </div>

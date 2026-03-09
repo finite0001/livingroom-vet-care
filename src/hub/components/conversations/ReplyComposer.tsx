@@ -42,6 +42,13 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
     setContent("");
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
     <div className="border-t p-3 space-y-2 bg-muted/30">
       <div className="flex items-center gap-2">
@@ -61,6 +68,7 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
           ref={textareaRef}
           value={content}
           onChange={(e) => { setContent(e.target.value); autoResize(); }}
+          onKeyDown={handleKeyDown}
           placeholder={channel === "NOTE" ? "Write an internal note..." : `Send ${channel}...`}
           className="min-h-[44px] max-h-[120px] bg-background/60 text-[14px] flex-1 resize-none overflow-y-auto"
           rows={1}
