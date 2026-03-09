@@ -255,7 +255,55 @@ export function useSetTags() {
         .eq("id", conversationId);
       if (error) throw error;
     },
+    onMutate: async ({ conversationId, tags }) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, tags } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to update tags");
+    },
     onSuccess: () => {
+      toast.success("Tags updated");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+}
+
+export function useMarkAllRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ is_read: true })
+        .eq("is_read", false)
+        .eq("status", "ACTIVE");
+      if (error) throw error;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => ({ ...c, is_read: true }))
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to mark all as read");
+    },
+    onSuccess: () => {
+      toast.success("All conversations marked as read");
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
