@@ -123,6 +123,8 @@ const Header = React.forwardRef<HTMLElement>((_, ref) => {
       </header>
     </>
   );
-};
+});
+
+Header.displayName = "Header";
 
 export default Header;

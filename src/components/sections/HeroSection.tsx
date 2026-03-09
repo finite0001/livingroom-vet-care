@@ -118,6 +118,8 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
       </div>
     </section>
   );
-};
+});
+
+HeroSection.displayName = "HeroSection";
 
 export default HeroSection;

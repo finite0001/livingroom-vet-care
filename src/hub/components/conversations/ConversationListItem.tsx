@@ -49,9 +49,13 @@ export function ConversationListItem({ conversation, onSelect, onLongPress, onAr
   const isUnread = !conversation.is_read;
   const clientName = `${client.first_name} ${client.last_name}`;
 
-  let longPressTimer: ReturnType<typeof setTimeout> | null = null;
-  const handleTouchStart = () => { longPressTimer = setTimeout(() => { onLongPress(conversation); longPressTimer = null; }, 500); };
-  const handleTouchEnd = () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } };
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleTouchStart = useCallback(() => {
+    longPressTimer.current = setTimeout(() => { onLongPress(conversation); longPressTimer.current = null; }, 500);
+  }, [conversation, onLongPress]);
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+  }, []);
 
   return (
     <div
