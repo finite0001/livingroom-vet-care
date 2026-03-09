@@ -63,7 +63,7 @@ export default function HubHomePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <button
           onClick={() => navigate("/hub/chats")}
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
@@ -76,7 +76,14 @@ export default function HubHomePage() {
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
         >
           <p className="text-2xl font-bold text-foreground">{activeCount}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Active conversations</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Active chats</p>
+        </button>
+        <button
+          onClick={() => navigate("/hub/tickets")}
+          className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
+        >
+          <p className="text-2xl font-bold text-foreground">{openTicketCount ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Open tickets</p>
         </button>
       </div>
 
