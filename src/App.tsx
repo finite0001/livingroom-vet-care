@@ -54,17 +54,17 @@ const App = () => (
           <Suspense fallback={<HubLoader />}>
             <Routes>
               {/* Marketing site routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/experience" element={<Experience />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/services/wellness" element={<WellnessCare />} />
-              <Route path="/services/senior-care" element={<SeniorCare />} />
-              <Route path="/services/laser-therapy" element={<LaserTherapy />} />
-              <Route path="/services/surgery" element={<Surgery />} />
-              <Route path="/services/diagnostics" element={<Diagnostics />} />
-              <Route path="/services/vaccinations" element={<Vaccinations />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
+              <Route path="/" element={<MarketingErrorBoundary><Index /></MarketingErrorBoundary>} />
+              <Route path="/experience" element={<MarketingErrorBoundary><Experience /></MarketingErrorBoundary>} />
+              <Route path="/services" element={<MarketingErrorBoundary><Services /></MarketingErrorBoundary>} />
+              <Route path="/services/wellness" element={<MarketingErrorBoundary><WellnessCare /></MarketingErrorBoundary>} />
+              <Route path="/services/senior-care" element={<MarketingErrorBoundary><SeniorCare /></MarketingErrorBoundary>} />
+              <Route path="/services/laser-therapy" element={<MarketingErrorBoundary><LaserTherapy /></MarketingErrorBoundary>} />
+              <Route path="/services/surgery" element={<MarketingErrorBoundary><Surgery /></MarketingErrorBoundary>} />
+              <Route path="/services/diagnostics" element={<MarketingErrorBoundary><Diagnostics /></MarketingErrorBoundary>} />
+              <Route path="/services/vaccinations" element={<MarketingErrorBoundary><Vaccinations /></MarketingErrorBoundary>} />
+              <Route path="/about" element={<MarketingErrorBoundary><About /></MarketingErrorBoundary>} />
+              <Route path="/contact" element={<MarketingErrorBoundary><Contact /></MarketingErrorBoundary>} />
 
               {/* Hub public routes */}
               <Route path="/hub/login" element={<HubLoginPage />} />
