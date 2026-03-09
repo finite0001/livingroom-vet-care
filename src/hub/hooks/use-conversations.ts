@@ -224,7 +224,22 @@ export function useSetPriority() {
         .eq("id", conversationId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async ({ conversationId, priority }) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, priority } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to update priority");
+    },
+    onSuccess: (_data, { priority }) => {
+      toast.success(`Priority set to ${priority.toLowerCase()}`);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
@@ -240,7 +255,55 @@ export function useSetTags() {
         .eq("id", conversationId);
       if (error) throw error;
     },
+    onMutate: async ({ conversationId, tags }) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, tags } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to update tags");
+    },
     onSuccess: () => {
+      toast.success("Tags updated");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+}
+
+export function useMarkAllRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ is_read: true })
+        .eq("is_read", false)
+        .eq("status", "ACTIVE");
+      if (error) throw error;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => ({ ...c, is_read: true }))
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to mark all as read");
+    },
+    onSuccess: () => {
+      toast.success("All conversations marked as read");
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
@@ -350,7 +413,7 @@ export function useConversation(conversationId: string | undefined) {
 export function useUnreadCount() {
   return useQuery({
     queryKey: ["unread-count"],
-    staleTime: 15 * 1000,
+    staleTime: 45 * 1000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
       const { count, error } = await supabase
