@@ -67,11 +67,6 @@ export default function ConversationDetailPage() {
         if (error) throw error;
         toast.success("SMS sent");
       }
-      // Update last_message_at
-      await supabase
-        .from("conversations")
-        .update({ last_message_at: new Date().toISOString() })
-        .eq("id", id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send");
     }
