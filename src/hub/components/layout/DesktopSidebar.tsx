@@ -38,6 +38,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const navigate = useNavigate();
   const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
+  const { data: unreadCount } = useUnreadCount();
 
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
