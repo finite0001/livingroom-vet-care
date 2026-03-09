@@ -8,6 +8,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { useUnreadCount } from "@/hub/hooks/use-conversations";
 
 const workspaceItems = [
   { path: "/hub", label: "Home", icon: Home, exact: true },
