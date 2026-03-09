@@ -1,3 +1,4 @@
+import { useRef, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, Mail, Archive, MailOpen, StickyNote } from "lucide-react";
 import { PhoneIncoming, PhoneOutgoing, AudioWaveform } from "lucide-react";
