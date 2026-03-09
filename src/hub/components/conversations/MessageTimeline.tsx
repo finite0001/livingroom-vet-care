@@ -19,6 +19,12 @@ interface Message {
   triage_reason?: string | null;
 }
 
+interface ConversationBoundary {
+  conversationId: string;
+  createdAt: string;
+  status: string;
+}
+
 interface MessageTimelineProps {
   messages: Message[];
   conversationBoundaries?: ConversationBoundary[];
