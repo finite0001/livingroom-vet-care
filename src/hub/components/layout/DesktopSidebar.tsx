@@ -48,7 +48,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
     return location.pathname.startsWith(path);
   };
 
-  const renderItem = (item: { path: string; label: string; icon: React.ElementType; exact?: boolean }) => {
+  const renderItem = (item: { path: string; label: string; icon: React.ElementType; exact?: boolean; badge?: number }) => {
     const active = isActive(item.path, item.exact);
     return (
       <button
@@ -64,6 +64,11 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
       >
         <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="flex-1 text-left">{item.label}</span>
+        {(item.badge ?? 0) > 0 && (
+          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
+            {item.badge! > 99 ? "99+" : item.badge}
+          </span>
+        )}
       </button>
     );
   };
