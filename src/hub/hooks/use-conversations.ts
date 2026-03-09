@@ -224,7 +224,22 @@ export function useSetPriority() {
         .eq("id", conversationId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async ({ conversationId, priority }) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const prev = queryClient.getQueryData<ConversationWithClient[]>(["conversations"]);
+      queryClient.setQueryData<ConversationWithClient[]>(["conversations"], (old) =>
+        old?.map((c) => c.id === conversationId ? { ...c, priority } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["conversations"], ctx.prev);
+      toast.error("Failed to update priority");
+    },
+    onSuccess: (_data, { priority }) => {
+      toast.success(`Priority set to ${priority.toLowerCase()}`);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
