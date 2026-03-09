@@ -22,12 +22,11 @@ export default function ConversationDetailPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
-  const { data: conversations, isLoading: convsLoading } = useConversations();
+  const { data: conversation, isLoading: convLoading } = useConversation(id);
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const conversation = conversations?.find((c) => c.id === id);
-  const conversationNotFound = !convsLoading && conversations && !conversation;
+  const conversationNotFound = !convLoading && !conversation;
   usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
   // Mark as read on open
