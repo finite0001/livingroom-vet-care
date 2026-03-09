@@ -130,7 +130,7 @@ export default function ConversationDetailPage() {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background">
-        {msgsLoading || convsLoading ? (
+        {msgsLoading || convLoading ? (
           <div className="space-y-3 p-4">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className={`h-16 ${i % 2 ? "w-3/4 ml-auto" : "w-3/4"} rounded-lg`} />

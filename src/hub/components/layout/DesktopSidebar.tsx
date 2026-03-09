@@ -94,7 +94,9 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
           </button>
           {workspaceOpen && (
             <div className="mt-0.5 space-y-0.5">
-              {workspaceItems.map(renderItem)}
+              {workspaceItems.map((item) =>
+                renderItem(item.path === "/hub/chats" ? { ...item, badge: unreadCount } : item)
+              )}
             </div>
           )}
         </div>

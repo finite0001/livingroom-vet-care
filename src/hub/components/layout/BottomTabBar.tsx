@@ -58,6 +58,7 @@ export function BottomTabBar() {
       >
         {tabs.map((tab) => {
           const active = isActive(tab.path, tab.exact);
+          const badge = tab.path === "/hub/chats" ? (unreadCount ?? 0) : 0;
           return (
             <button
               key={tab.path}
@@ -71,6 +72,11 @@ export function BottomTabBar() {
             >
               <tab.icon className={cn("h-5 w-5", active && "text-primary")} aria-hidden="true" />
               <span className={cn("text-[11px]", active ? "font-semibold" : "font-medium")}>{tab.label}</span>
+              {badge > 0 && (
+                <span className="absolute top-0.5 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </button>
           );
         })}
