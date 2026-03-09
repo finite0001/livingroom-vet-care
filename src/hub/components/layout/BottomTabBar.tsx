@@ -7,6 +7,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -40,6 +41,7 @@ export function BottomTabBar() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const [moreOpen, setMoreOpen] = useState(false);
+  const { data: unreadCount } = useUnreadCount();
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
@@ -56,6 +58,7 @@ export function BottomTabBar() {
       >
         {tabs.map((tab) => {
           const active = isActive(tab.path, tab.exact);
+          const badge = tab.path === "/hub/chats" ? (unreadCount ?? 0) : 0;
           return (
             <button
               key={tab.path}
@@ -69,6 +72,11 @@ export function BottomTabBar() {
             >
               <tab.icon className={cn("h-5 w-5", active && "text-primary")} aria-hidden="true" />
               <span className={cn("text-[11px]", active ? "font-semibold" : "font-medium")}>{tab.label}</span>
+              {badge > 0 && (
+                <span className="absolute top-0.5 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </button>
           );
         })}

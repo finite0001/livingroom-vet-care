@@ -9,7 +9,7 @@ import { SmartReplySuggestions } from "@/hub/components/conversations/SmartReply
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
 import {
   useConversationMessages,
-  useConversations,
+  useConversation,
   useMarkRead,
 } from "@/hub/hooks/use-conversations";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,12 +22,11 @@ export default function ConversationDetailPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
-  const { data: conversations, isLoading: convsLoading } = useConversations();
+  const { data: conversation, isLoading: convLoading } = useConversation(id);
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const conversation = conversations?.find((c) => c.id === id);
-  const conversationNotFound = !convsLoading && conversations && !conversation;
+  const conversationNotFound = !convLoading && !conversation;
   usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
   // Mark as read on open
@@ -131,7 +130,7 @@ export default function ConversationDetailPage() {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background">
-        {msgsLoading || convsLoading ? (
+        {msgsLoading || convLoading ? (
           <div className="space-y-3 p-4">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className={`h-16 ${i % 2 ? "w-3/4 ml-auto" : "w-3/4"} rounded-lg`} />

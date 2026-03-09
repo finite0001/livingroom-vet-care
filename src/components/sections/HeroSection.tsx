@@ -1,12 +1,13 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge, Heart, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-living-room.jpg";
 
-const HeroSection = () => {
+const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <motion.img
@@ -117,6 +118,8 @@ const HeroSection = () => {
       </div>
     </section>
   );
-};
+});
+
+HeroSection.displayName = "HeroSection";
 
 export default HeroSection;

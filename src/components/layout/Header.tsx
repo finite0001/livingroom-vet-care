@@ -1,7 +1,7 @@
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Phone, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const Header = () => {
+const Header = React.forwardRef<HTMLElement>((_, ref) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
 
@@ -26,7 +26,7 @@ const Header = () => {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium">
         Skip to main content
       </a>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-cream-light/95 backdrop-blur-md border-b border-border">
+      <header ref={ref} className="fixed top-0 left-0 right-0 z-50 bg-cream-light/95 backdrop-blur-md border-b border-border">
         <div className="container flex items-center justify-between h-20">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
@@ -123,6 +123,8 @@ const Header = () => {
       </header>
     </>
   );
-};
+});
+
+Header.displayName = "Header";
 
 export default Header;

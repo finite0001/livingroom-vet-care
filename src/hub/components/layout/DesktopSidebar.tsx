@@ -8,6 +8,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { useUnreadCount } from "@/hub/hooks/use-conversations";
 
 const workspaceItems = [
   { path: "/hub", label: "Home", icon: Home, exact: true },
@@ -37,6 +38,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const navigate = useNavigate();
   const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
+  const { data: unreadCount } = useUnreadCount();
 
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
@@ -46,7 +48,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
     return location.pathname.startsWith(path);
   };
 
-  const renderItem = (item: { path: string; label: string; icon: React.ElementType; exact?: boolean }) => {
+  const renderItem = (item: { path: string; label: string; icon: React.ElementType; exact?: boolean; badge?: number }) => {
     const active = isActive(item.path, item.exact);
     return (
       <button
@@ -62,6 +64,11 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
       >
         <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="flex-1 text-left">{item.label}</span>
+        {(item.badge ?? 0) > 0 && (
+          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
+            {item.badge! > 99 ? "99+" : item.badge}
+          </span>
+        )}
       </button>
     );
   };
@@ -87,7 +94,9 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
           </button>
           {workspaceOpen && (
             <div className="mt-0.5 space-y-0.5">
-              {workspaceItems.map(renderItem)}
+              {workspaceItems.map((item) =>
+                renderItem(item.path === "/hub/chats" ? { ...item, badge: unreadCount } : item)
+              )}
             </div>
           )}
         </div>
