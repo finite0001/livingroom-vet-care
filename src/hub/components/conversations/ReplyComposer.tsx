@@ -14,6 +14,7 @@ interface ReplyComposerProps {
   smsOptedOut?: boolean;
   draft?: string;
   onDraftConsumed?: () => void;
+  disabled?: boolean;
 }
 
 const SMS_SEGMENT_LENGTH = 160;
