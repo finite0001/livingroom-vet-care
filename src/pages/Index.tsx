@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
@@ -6,10 +7,10 @@ import ServicesSection from "@/components/sections/ServicesSection";
 import CTASection from "@/components/sections/CTASection";
 import { usePageTitle } from "@/hooks/use-page-title";
 
-const Index = () => {
+const Index = forwardRef<HTMLDivElement>((_props, ref) => {
   usePageTitle("Fear-Free Veterinary Care in Boulder");
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={ref} className="min-h-screen flex flex-col">
       <Header />
       <main id="main-content" className="flex-grow">
         <HeroSection />
@@ -20,6 +21,8 @@ const Index = () => {
       <Footer />
     </div>
   );
-};
+});
+
+Index.displayName = "Index";
 
 export default Index;

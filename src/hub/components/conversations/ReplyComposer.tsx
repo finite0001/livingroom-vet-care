@@ -14,11 +14,12 @@ interface ReplyComposerProps {
   smsOptedOut?: boolean;
   draft?: string;
   onDraftConsumed?: () => void;
+  disabled?: boolean;
 }
 
 const SMS_SEGMENT_LENGTH = 160;
 
-export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDraftConsumed }: ReplyComposerProps) {
+export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDraftConsumed, disabled }: ReplyComposerProps) {
   const [content, setContent] = useState("");
   useEffect(() => { if (draft) { setContent(draft); onDraftConsumed?.(); } }, [draft]);
 
@@ -74,7 +75,7 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
           rows={1}
         />
         <div className="flex flex-col gap-1 shrink-0">
-          <Button size="icon" onClick={handleSubmit} disabled={!content.trim()} className="h-[44px] w-[44px]" aria-label="Send message">
+          <Button size="icon" onClick={handleSubmit} disabled={!content.trim() || disabled} className="h-[44px] w-[44px]" aria-label="Send message">
             <Send className="h-4 w-4" />
           </Button>
           {channel !== "NOTE" && <TemplateSelector onSelect={(text) => setContent(text)} />}

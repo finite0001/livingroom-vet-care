@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,26 +25,31 @@ export default function ConversationDetailPage() {
   const { data: conversation, isLoading: convLoading } = useConversation(id);
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isSending, setIsSending] = useState(false);
 
   const conversationNotFound = !convLoading && !conversation;
   usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
-  // Mark as read on open
   useEffect(() => {
     if (id && conversation && !conversation.is_read) {
       markRead.mutate(id);
     }
   }, [id, conversation?.is_read]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages?.length]);
 
+  const goBack = () => {
+    if (window.history.length > 2) navigate(-1);
+    else navigate("/hub/chats");
+  };
+
   const handleSend = async (content: string, channel: "SMS" | "EMAIL" | "NOTE") => {
-    if (!id || !conversation) return;
+    if (!id || !conversation || isSending) return;
+    setIsSending(true);
     try {
       if (channel === "NOTE") {
         const { error } = await supabase.from("messages").insert({
@@ -65,9 +70,13 @@ export default function ConversationDetailPage() {
         });
         if (error) throw error;
         toast.success("SMS sent");
+      } else if (channel === "EMAIL") {
+        toast.error("Email sending is not yet configured");
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -75,12 +84,12 @@ export default function ConversationDetailPage() {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card">
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/hub/chats")}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={goBack} aria-label="Go back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <p className="text-sm font-semibold">Conversation</p>
         </div>
-        <div className="flex flex-col items-center justify-center flex-1 gap-3">
+        <div className="flex items-center justify-center flex-1 gap-3 flex-col">
           <p className="text-sm text-muted-foreground">Conversation not found</p>
           <Button variant="outline" size="sm" onClick={() => navigate("/hub/chats")}>
             Back to chats
@@ -98,7 +107,7 @@ export default function ConversationDetailPage() {
     <div className="flex flex-col h-full">
       {/* Top bar */}
       <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card">
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/hub/chats")}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={goBack} aria-label="Go back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         {conversation ? (
@@ -119,6 +128,7 @@ export default function ConversationDetailPage() {
               size="icon"
               className="h-8 w-8 shrink-0"
               onClick={() => navigate(`/hub/client/${conversation.client.id}`)}
+              aria-label="View client profile"
             >
               <User className="h-4 w-4" />
             </Button>
@@ -153,11 +163,12 @@ export default function ConversationDetailPage() {
         />
       )}
 
-      {/* Composer — only show when conversation is loaded */}
+      {/* Composer */}
       {conversation && (
         <ReplyComposer
           onSend={handleSend}
           defaultChannel={conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"}
+          disabled={isSending}
         />
       )}
     </div>

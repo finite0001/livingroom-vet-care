@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { MessageSquare, Mail, PhoneIncoming, PhoneOutgoing, AudioWaveform, StickyNote, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ConversationBoundary } from "@/hub/hooks/use-client-history";
 
 interface Message {
   id: string;
@@ -18,6 +17,12 @@ interface Message {
   triage_priority?: string | null;
   triage_confidence?: number | null;
   triage_reason?: string | null;
+}
+
+interface ConversationBoundary {
+  conversationId: string;
+  createdAt: string;
+  status: string;
 }
 
 interface MessageTimelineProps {
