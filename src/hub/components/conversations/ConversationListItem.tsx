@@ -84,8 +84,8 @@ export function ConversationListItem({ conversation, onSelect, onLongPress, onAr
       <div className="flex flex-col items-end gap-1 shrink-0">
         <div className="flex items-center gap-1">
           <span className="text-xs text-muted-foreground tabular-nums">{formatDistanceToNow(new Date(conversation.last_message_at), { addSuffix: true })}</span>
-          {onToggleRead && <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:flex" onClick={(e) => { e.stopPropagation(); onToggleRead(conversation.id, !conversation.is_read); }}><MailOpen className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-          {onArchive && <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:flex" onClick={(e) => { e.stopPropagation(); onArchive(conversation.id); }}><Archive className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+          {onToggleRead && <Button variant="ghost" size="icon" aria-label={conversation.is_read ? "Mark as unread" : "Mark as read"} className="h-7 w-7 opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:flex" onClick={(e) => { e.stopPropagation(); onToggleRead(conversation.id, !conversation.is_read); }}><MailOpen className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+          {onArchive && <Button variant="ghost" size="icon" aria-label="Archive conversation" className="h-7 w-7 opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:flex" onClick={(e) => { e.stopPropagation(); onArchive(conversation.id); }}><Archive className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
         </div>
       </div>
     </div>

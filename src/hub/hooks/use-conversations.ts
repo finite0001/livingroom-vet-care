@@ -413,7 +413,7 @@ export function useConversation(conversationId: string | undefined) {
 export function useUnreadCount() {
   return useQuery({
     queryKey: ["unread-count"],
-    staleTime: 15 * 1000,
+    staleTime: 45 * 1000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
       const { count, error } = await supabase
