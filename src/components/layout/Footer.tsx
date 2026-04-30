@@ -71,10 +71,11 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               {[
                 { label: "Wellness Care", href: "/services/wellness" },
                 { label: "Senior Care", href: "/services/senior-care" },
-                { label: "Laser Therapy", href: "/services/laser-therapy" },
+                { label: "Illness Care", href: "/services/illness-care" },
                 { label: "Diagnostics", href: "/services/diagnostics" },
-                { label: "Vaccinations", href: "/services/vaccinations" },
                 { label: "Surgery", href: "/services/surgery" },
+                { label: "Laser Therapy", href: "/services/laser-therapy" },
+                { label: "Vaccinations", href: "/services/vaccinations" },
               ].map((link) => (
                 <Link
                   key={link.href}
