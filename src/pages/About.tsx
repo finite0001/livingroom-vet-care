@@ -71,29 +71,29 @@ const team = [
   },
 ];
 
-const certifications = [
+const paymentInfo = [
   {
-    icon: Award,
-    title: "Fear Free Certified Practice",
-    description: "Our entire team—from veterinarians to front desk staff—has completed Fear Free certification. This nationally recognized program trains professionals in techniques that minimize fear, anxiety, and stress in pets during veterinary visits.",
+    icon: CreditCard,
+    title: "Payment Options",
+    description:
+      "We aim to make care accessible. We accept the following so you can choose what works best for your family:",
     details: [
-      "Gentle handling techniques that reduce restraint",
-      "Environmental modifications to reduce sensory stress",
-      "Treats, pheromones, and positive reinforcement",
-      "Separate pathways for cats and dogs",
-      "Anxiety-reduction protocols for every visit",
+      "Credit and debit cards",
+      "Cash",
+      "Scratchpay (including Scratchpay Payment Plans)",
+      "Cherry financing",
     ],
   },
   {
-    icon: GraduationCap,
-    title: "Continuing Education Leaders",
-    description: "Our team doesn't just meet continuing education requirements—we exceed them. Every team member completes twice the required hours annually, staying current on the latest advances in veterinary medicine and low-stress care.",
+    icon: FileText,
+    title: "Our Philosophy on Estimates",
+    description:
+      "We value transparency. Recommended treatment plans come with written estimates and tiered options so you can make informed decisions for your pet and your budget.",
     details: [
-      "Advanced pain management training",
-      "Therapeutic laser certification",
-      "Senior pet wellness specialization",
-      "Behavior and anxiety management",
-      "Nutrition and preventive care updates",
+      "Essential — addresses the most pressing needs",
+      "Recommended — our balanced, best-value plan",
+      "Comprehensive — the most thorough workup or treatment",
+      "We'll walk through every option together",
     ],
   },
 ];
