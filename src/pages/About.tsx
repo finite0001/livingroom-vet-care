@@ -158,24 +158,25 @@ const About = () => {
               </h2>
               <div className="text-muted-foreground text-lg leading-relaxed space-y-6 text-left">
                 <p>
-                  After years of watching pets tremble in crowded waiting rooms—and owners 
-                  apologize for their pet's anxiety—Dr. Sarah Mitchell decided something had to 
+                  After years of watching pets tremble in crowded waiting rooms—and apologizing 
+                  to owners for their pet's anxiety—Dr. Susan Edler decided something had to 
                   change. Not just a little. Everything.
                 </p>
                 <p>
                   She studied Fear Free practices, visited innovative clinics around the country, 
                   and talked to hundreds of pet parents about what they wished veterinary care 
-                  could be. The answer was always the same: <em className="text-foreground font-medium">they wanted it to feel like home.</em>
+                  could be. The answer was always the same: <em className="text-foreground font-medium">they wanted it to feel less stressful.</em>
                 </p>
                 <p>
                   So that's exactly what we built. From the ground up, The Living Room Vet was 
                   designed with no traditional waiting room, private living room exam spaces, 
-                  separate pathways for cats and dogs, and a team certified in gentle, 
+                  separate pathways for cats and dogs, and a team trained in gentle, 
                   stress-free handling.
                 </p>
                 <p className="text-foreground font-medium">
                   The result? Pets who walk in wagging their tails. Cats who purr through their 
-                  exams. And families who no longer dread the vet visit.
+                  exams. Appointments structured to give owners time to ask questions. And 
+                  families who no longer dread the vet visit.
                 </p>
               </div>
             </ScrollReveal>
