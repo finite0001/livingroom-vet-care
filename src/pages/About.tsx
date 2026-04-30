@@ -5,7 +5,7 @@ import CTASection from "@/components/sections/CTASection";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Heart, Leaf, Users, Award, GraduationCap } from "lucide-react";
+import { ShieldCheck, Heart, Leaf, Users, CreditCard, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import aboutPracticeImage from "@/assets/about-practice.jpg";
 import drSarahImage from "@/assets/team-dr-sarah.jpg";
