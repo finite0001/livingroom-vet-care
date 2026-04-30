@@ -1,4 +1,4 @@
-import { MessageCircle, DoorOpen, Sofa, Heart, CheckCircle } from "lucide-react";
+import { MessageCircle, DoorOpen, Sofa, Heart, CheckCircle, Users } from "lucide-react";
 import ScrollReveal from "@/components/ScrollReveal";
 import textArrivalImage from "@/assets/experience-text-arrival.jpg";
 import vetFloorImage from "@/assets/experience-vet-floor.jpg";
