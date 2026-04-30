@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import ScrollReveal from "@/components/ScrollReveal";
 import { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
-import { ArrowRight, Heart, Dog, Zap, Stethoscope, FlaskConical, Scissors, Syringe } from "lucide-react";
+import { ArrowRight, Heart, Dog, Zap, Stethoscope, FlaskConical, Scissors, Syringe, Activity } from "lucide-react";
 import vaccinationsImage from "@/assets/service-vaccinations.jpg";
 import wellnessImage from "@/assets/service-wellness.jpg";
 import seniorImage from "@/assets/service-senior.jpg";
@@ -30,11 +30,18 @@ const featuredServices = [
     image: seniorImage,
   },
   {
-    icon: Zap,
-    title: "Laser Therapy",
-    description: "Non-invasive therapeutic laser treatment for drug-free pain relief, arthritis management, post-surgical healing, and chronic condition support.",
-    href: "/services/laser-therapy",
-    image: laserImage,
+    icon: Activity,
+    title: "Illness Care",
+    description: "Same-day care for sick pets with thoughtful workups, clear communication, and treatment plans tailored to your pet's condition and your budget.",
+    href: "/services/illness-care",
+    image: diagnosticsImage,
+  },
+  {
+    icon: FlaskConical,
+    title: "Diagnostics",
+    description: "In-house laboratory testing, digital radiography, and ultrasound services for same-day results so we can start treatment sooner.",
+    href: "/services/diagnostics",
+    image: diagnosticsImage,
   },
   {
     icon: Scissors,
@@ -44,11 +51,11 @@ const featuredServices = [
     image: surgeryImage,
   },
   {
-    icon: Stethoscope,
-    title: "Diagnostics",
-    description: "In-house laboratory testing, digital radiography, and ultrasound services for same-day results so we can start treatment sooner.",
-    href: "/services/diagnostics",
-    image: diagnosticsImage,
+    icon: Zap,
+    title: "Laser Therapy",
+    description: "Non-invasive therapeutic laser treatment for drug-free pain relief, arthritis management, post-surgical healing, and chronic condition support.",
+    href: "/services/laser-therapy",
+    image: laserImage,
   },
 ];
 
