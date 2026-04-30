@@ -30,7 +30,7 @@ const Diagnostics = () => {
         {
           title: "Sample Collection",
           description:
-            "Our Fear Free techniques keep your pet calm during blood draws, urine collection, or other sampling. Most pets barely notice.",
+            "Our Fear Free trained techniques keep your pet calm during blood draws, urine collection, or other sampling. Most pets barely notice.",
         },
         {
           title: "Testing & Imaging",
