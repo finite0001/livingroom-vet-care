@@ -21,8 +21,8 @@ const values = [
   },
   {
     icon: ShieldCheck,
-    title: "Fear Free Always",
-    description: "We've eliminated the triggers that make vet visits stressful—from architecture to handling techniques.",
+    title: "Low Stress Handling",
+    description: "We're trained in low-stress handling techniques that minimize fear and anxiety from the moment your pet arrives.",
   },
   {
     icon: Leaf,
