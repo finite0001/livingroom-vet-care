@@ -65,7 +65,7 @@ const team = [
     name: "Marcus Rivera",
     role: "Veterinary Technician",
     image: marcusImage,
-    credentials: ["CVT, Licensed Vet Tech", "Fear Free Certified", "Dental Care Specialist"],
+    credentials: ["CVT, Licensed Vet Tech", "Fear Free Trained", "Dental Care Specialist"],
     bio: "Marcus brings warmth and humor to every visit. His expertise in dental care and patient comfort makes him a favorite among our regular families.",
     funFact: "Amateur chef who bakes homemade dog treats for all our patients on their birthdays.",
   },
