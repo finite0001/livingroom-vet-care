@@ -277,38 +277,38 @@ const About = () => {
           </div>
         </section>
 
-        {/* Certifications */}
+        {/* Payment Options & Philosophy */}
         <section className="py-24 bg-cream">
           <div className="container">
             <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-              <p className="text-primary font-medium mb-3">Certifications & Training</p>
+              <p className="text-primary font-medium mb-3">Payment Options & Our Philosophy</p>
               <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                Credentials You Can Trust
+                Transparent Care, Transparent Costs
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Our commitment to excellence is backed by nationally recognized 
-                certifications and ongoing professional development.
+                We believe great care starts with clear communication—about your pet's health 
+                and what it costs.
               </p>
             </ScrollReveal>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {certifications.map((cert, index) => (
-                <ScrollReveal key={cert.title} variant={index === 0 ? "fadeRight" : "fadeLeft"} delay={index * 0.1}>
+              {paymentInfo.map((item, index) => (
+                <ScrollReveal key={item.title} variant={index === 0 ? "fadeRight" : "fadeLeft"} delay={index * 0.1}>
                   <Card variant="warm" className="h-full">
                     <CardContent className="p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-warm flex items-center justify-center">
-                          <cert.icon className="h-7 w-7 text-primary-foreground" />
+                          <item.icon className="h-7 w-7 text-primary-foreground" />
                         </div>
                         <h3 className="font-heading text-xl font-semibold text-foreground">
-                          {cert.title}
+                          {item.title}
                         </h3>
                       </div>
                       <p className="text-muted-foreground leading-relaxed mb-6">
-                        {cert.description}
+                        {item.description}
                       </p>
                       <ul className="space-y-3">
-                        {cert.details.map((detail) => (
+                        {item.details.map((detail) => (
                           <li key={detail} className="flex items-start gap-3">
                             <span className="w-2 h-2 rounded-full bg-sage shrink-0 mt-2" />
                             <span className="text-foreground text-sm">{detail}</span>
