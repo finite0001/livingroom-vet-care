@@ -18,9 +18,9 @@ const features = [
   },
   {
     icon: ShieldCheck,
-    title: "Fear Free Certified",
+    title: "Fear Free Trained",
     description: "Our entire team is trained in Fear Free handling methods—nationally recognized techniques that minimize anxiety and maximize comfort for every pet.",
-    highlight: "Professional certification",
+    highlight: "Low-stress handling",
   },
   {
     icon: Heart,

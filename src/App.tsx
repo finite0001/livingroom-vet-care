@@ -14,6 +14,7 @@ import SeniorCare from "./pages/services/SeniorCare";
 import LaserTherapy from "./pages/services/LaserTherapy";
 import Surgery from "./pages/services/Surgery";
 import Diagnostics from "./pages/services/Diagnostics";
+import IllnessCare from "./pages/services/IllnessCare";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Vaccinations from "./pages/services/Vaccinations";
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/services/laser-therapy" element={<MarketingErrorBoundary><LaserTherapy /></MarketingErrorBoundary>} />
               <Route path="/services/surgery" element={<MarketingErrorBoundary><Surgery /></MarketingErrorBoundary>} />
               <Route path="/services/diagnostics" element={<MarketingErrorBoundary><Diagnostics /></MarketingErrorBoundary>} />
+              <Route path="/services/illness-care" element={<MarketingErrorBoundary><IllnessCare /></MarketingErrorBoundary>} />
               <Route path="/services/vaccinations" element={<MarketingErrorBoundary><Vaccinations /></MarketingErrorBoundary>} />
               <Route path="/about" element={<MarketingErrorBoundary><About /></MarketingErrorBoundary>} />
               <Route path="/contact" element={<MarketingErrorBoundary><Contact /></MarketingErrorBoundary>} />

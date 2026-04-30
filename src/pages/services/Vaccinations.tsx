@@ -16,7 +16,7 @@ const Vaccinations = () => {
         "Personalized schedules based on lifestyle risk",
         "Minimized unnecessary vaccinations",
         "Titer testing available to check immunity",
-        "Fear Free injection techniques for comfort",
+        "Fear Free trained injection techniques for comfort",
         "Bundled with wellness exams for convenience",
         "Puppy and kitten series guidance",
         "Travel and boarding vaccine certificates",
@@ -35,7 +35,7 @@ const Vaccinations = () => {
         {
           title: "Gentle Administration",
           description:
-            "Using Fear Free techniques—treats, gentle handling, and distraction—we make the experience as stress-free as possible. Most pets barely notice!",
+            "Using Fear Free trained techniques—treats, gentle handling, and distraction—we make the experience as stress-free as possible. Most pets barely notice!",
         },
         {
           title: "Post-Vaccine Monitoring",

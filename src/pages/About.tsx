@@ -5,7 +5,7 @@ import CTASection from "@/components/sections/CTASection";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Heart, Leaf, Users, Award, GraduationCap } from "lucide-react";
+import { ShieldCheck, Heart, Leaf, Users, CreditCard, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import aboutPracticeImage from "@/assets/about-practice.jpg";
 import drSarahImage from "@/assets/team-dr-sarah.jpg";
@@ -21,8 +21,8 @@ const values = [
   },
   {
     icon: ShieldCheck,
-    title: "Fear Free Always",
-    description: "We've eliminated the triggers that make vet visits stressful—from architecture to handling techniques.",
+    title: "Low Stress Handling",
+    description: "We're trained in low-stress handling techniques that minimize fear and anxiety from the moment your pet arrives.",
   },
   {
     icon: Leaf,
@@ -38,18 +38,18 @@ const values = [
 
 const team = [
   {
-    name: "Dr. Sarah Mitchell",
+    name: "Dr. Susan Edler",
     role: "Founder & Lead Veterinarian",
     image: drSarahImage,
-    credentials: ["DVM, Colorado State University", "Fear Free Certified Elite", "AAHA Member"],
-    bio: "With 15 years of experience in small animal medicine, Dr. Mitchell founded The Living Room Vet to create the practice she always wished existed—one where pets actually enjoy coming in.",
+    credentials: ["DVM, Colorado State University", "Fear Free Trained", "AAHA Member"],
+    bio: "With years of experience in small animal medicine, Dr. Edler founded The Living Room Vet to create the practice she always wished existed—one where every visit feels less stressful for pets and their people.",
     funFact: "Mom to two rescue dogs and a very opinionated cat named Biscuit.",
   },
   {
     name: "Dr. James Chen",
     role: "Associate Veterinarian",
     image: drJamesImage,
-    credentials: ["DVM, UC Davis", "Fear Free Certified", "Special Interest: Senior Care"],
+    credentials: ["DVM, UC Davis", "Fear Free Trained", "Special Interest: Senior Care"],
     bio: "Dr. Chen brings a gentle, methodical approach to every patient. His passion for geriatric medicine and pain management makes him a perfect fit for our senior care program.",
     funFact: "Avid trail runner who can often be found on Boulder's Flatirons with his border collie, Scout.",
   },
@@ -57,43 +57,43 @@ const team = [
     name: "Emily Torres",
     role: "Lead Veterinary Technician",
     image: emilyImage,
-    credentials: ["CVT, Licensed Vet Tech", "Fear Free Certified", "Laser Therapy Specialist"],
-    bio: "Emily's calm presence and expert handling skills put even the most anxious pets at ease. She oversees our laser therapy program and Fear Free protocols.",
+    credentials: ["CVT, Licensed Vet Tech", "Fear Free Trained", "Laser Therapy Specialist"],
+    bio: "Emily's calm presence and expert handling skills put even the most anxious pets at ease. She oversees our laser therapy program and low-stress handling protocols.",
     funFact: "Volunteers at Boulder Humane Society every weekend and fosters kittens year-round.",
   },
   {
     name: "Marcus Rivera",
     role: "Veterinary Technician",
     image: marcusImage,
-    credentials: ["CVT, Licensed Vet Tech", "Fear Free Certified", "Dental Care Specialist"],
+    credentials: ["CVT, Licensed Vet Tech", "Fear Free Trained", "Dental Care Specialist"],
     bio: "Marcus brings warmth and humor to every visit. His expertise in dental care and patient comfort makes him a favorite among our regular families.",
     funFact: "Amateur chef who bakes homemade dog treats for all our patients on their birthdays.",
   },
 ];
 
-const certifications = [
+const paymentInfo = [
   {
-    icon: Award,
-    title: "Fear Free Certified Practice",
-    description: "Our entire team—from veterinarians to front desk staff—has completed Fear Free certification. This nationally recognized program trains professionals in techniques that minimize fear, anxiety, and stress in pets during veterinary visits.",
+    icon: CreditCard,
+    title: "Payment Options",
+    description:
+      "We aim to make care accessible. We accept the following so you can choose what works best for your family:",
     details: [
-      "Gentle handling techniques that reduce restraint",
-      "Environmental modifications to reduce sensory stress",
-      "Treats, pheromones, and positive reinforcement",
-      "Separate pathways for cats and dogs",
-      "Anxiety-reduction protocols for every visit",
+      "Credit and debit cards",
+      "Cash",
+      "Scratchpay (including Scratchpay Payment Plans)",
+      "Cherry financing",
     ],
   },
   {
-    icon: GraduationCap,
-    title: "Continuing Education Leaders",
-    description: "Our team doesn't just meet continuing education requirements—we exceed them. Every team member completes twice the required hours annually, staying current on the latest advances in veterinary medicine and low-stress care.",
+    icon: FileText,
+    title: "Our Philosophy on Estimates",
+    description:
+      "We value transparency. Recommended treatment plans come with written estimates and tiered options so you can make informed decisions for your pet and your budget.",
     details: [
-      "Advanced pain management training",
-      "Therapeutic laser certification",
-      "Senior pet wellness specialization",
-      "Behavior and anxiety management",
-      "Nutrition and preventive care updates",
+      "Essential — addresses the most pressing needs",
+      "Recommended — our balanced, best-value plan",
+      "Comprehensive — the most thorough workup or treatment",
+      "We'll walk through every option together",
     ],
   },
 ];
@@ -120,8 +120,8 @@ const About = () => {
                 </p>
                 <p className="text-lg text-muted-foreground leading-relaxed mb-8">
                   Located in Boulder, Colorado, we're an independently owned practice that has 
-                  reimagined every detail of veterinary care around one goal: making your pet 
-                  actually enjoy coming to the vet.
+                  reimagined every detail of veterinary care around one goal: making trips to 
+                  the vet much less stressful.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/experience">
@@ -158,24 +158,25 @@ const About = () => {
               </h2>
               <div className="text-muted-foreground text-lg leading-relaxed space-y-6 text-left">
                 <p>
-                  After years of watching pets tremble in crowded waiting rooms—and owners 
-                  apologize for their pet's anxiety—Dr. Sarah Mitchell decided something had to 
+                  After years of watching pets tremble in crowded waiting rooms—and apologizing 
+                  to owners for their pet's anxiety—Dr. Susan Edler decided something had to 
                   change. Not just a little. Everything.
                 </p>
                 <p>
                   She studied Fear Free practices, visited innovative clinics around the country, 
                   and talked to hundreds of pet parents about what they wished veterinary care 
-                  could be. The answer was always the same: <em className="text-foreground font-medium">they wanted it to feel like home.</em>
+                  could be. The answer was always the same: <em className="text-foreground font-medium">they wanted it to feel less stressful.</em>
                 </p>
                 <p>
                   So that's exactly what we built. From the ground up, The Living Room Vet was 
                   designed with no traditional waiting room, private living room exam spaces, 
-                  separate pathways for cats and dogs, and a team certified in gentle, 
+                  separate pathways for cats and dogs, and a team trained in gentle, 
                   stress-free handling.
                 </p>
                 <p className="text-foreground font-medium">
                   The result? Pets who walk in wagging their tails. Cats who purr through their 
-                  exams. And families who no longer dread the vet visit.
+                  exams. Appointments structured to give owners time to ask questions. And 
+                  families who no longer dread the vet visit.
                 </p>
               </div>
             </ScrollReveal>
@@ -276,38 +277,38 @@ const About = () => {
           </div>
         </section>
 
-        {/* Certifications */}
+        {/* Payment Options & Philosophy */}
         <section className="py-24 bg-cream">
           <div className="container">
             <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-              <p className="text-primary font-medium mb-3">Certifications & Training</p>
+              <p className="text-primary font-medium mb-3">Payment Options & Our Philosophy</p>
               <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                Credentials You Can Trust
+                Transparent Care, Transparent Costs
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Our commitment to excellence is backed by nationally recognized 
-                certifications and ongoing professional development.
+                We believe great care starts with clear communication—about your pet's health 
+                and what it costs.
               </p>
             </ScrollReveal>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {certifications.map((cert, index) => (
-                <ScrollReveal key={cert.title} variant={index === 0 ? "fadeRight" : "fadeLeft"} delay={index * 0.1}>
+              {paymentInfo.map((item, index) => (
+                <ScrollReveal key={item.title} variant={index === 0 ? "fadeRight" : "fadeLeft"} delay={index * 0.1}>
                   <Card variant="warm" className="h-full">
                     <CardContent className="p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-warm flex items-center justify-center">
-                          <cert.icon className="h-7 w-7 text-primary-foreground" />
+                          <item.icon className="h-7 w-7 text-primary-foreground" />
                         </div>
                         <h3 className="font-heading text-xl font-semibold text-foreground">
-                          {cert.title}
+                          {item.title}
                         </h3>
                       </div>
                       <p className="text-muted-foreground leading-relaxed mb-6">
-                        {cert.description}
+                        {item.description}
                       </p>
                       <ul className="space-y-3">
-                        {cert.details.map((detail) => (
+                        {item.details.map((detail) => (
                           <li key={detail} className="flex items-start gap-3">
                             <span className="w-2 h-2 rounded-full bg-sage shrink-0 mt-2" />
                             <span className="text-foreground text-sm">{detail}</span>

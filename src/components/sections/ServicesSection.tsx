@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Heart, Dog, Zap, Stethoscope, Syringe, FlaskConical } from "lucide-react";
+import { ArrowRight, Heart, Dog, Activity, FlaskConical, Stethoscope, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 
@@ -21,11 +21,18 @@ const services = [
     featured: true,
   },
   {
-    icon: Zap,
-    title: "Laser Therapy",
-    description: "Non-invasive therapeutic laser treatment for pain relief, arthritis, post-surgical healing, and chronic conditions.",
-    href: "/services/laser-therapy",
+    icon: Activity,
+    title: "Illness Care",
+    description: "Same-day care for sick pets with thoughtful workups and clear treatment plans tailored to your pet and budget.",
+    href: "/services/illness-care",
     featured: true,
+  },
+  {
+    icon: FlaskConical,
+    title: "Diagnostics",
+    description: "In-house laboratory testing, digital radiography, and ultrasound for accurate and timely diagnoses.",
+    href: "/services/diagnostics",
+    featured: false,
   },
   {
     icon: Stethoscope,
@@ -35,17 +42,10 @@ const services = [
     featured: false,
   },
   {
-    icon: Syringe,
-    title: "Vaccinations",
-    description: "Core and lifestyle vaccines customized to your pet's needs, risk factors, and life stage.",
-    href: "/services/vaccinations",
-    featured: false,
-  },
-  {
-    icon: FlaskConical,
-    title: "Diagnostics",
-    description: "In-house laboratory testing, digital radiography, and ultrasound for accurate and timely diagnoses.",
-    href: "/services/diagnostics",
+    icon: Zap,
+    title: "Laser Therapy",
+    description: "Non-invasive therapeutic laser treatment for pain relief, arthritis, post-surgical healing, and chronic conditions.",
+    href: "/services/laser-therapy",
     featured: false,
   },
 ];

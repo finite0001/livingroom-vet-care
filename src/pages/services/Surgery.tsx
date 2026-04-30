@@ -19,7 +19,7 @@ const Surgery = () => {
         "Warm, comfortable recovery environment",
         "Detailed post-operative care instructions",
         "Follow-up included with every procedure",
-        "Fear Free approach before, during, and after",
+        "Fear Free trained approach before, during, and after",
       ]}
       whatToExpect={[
         {

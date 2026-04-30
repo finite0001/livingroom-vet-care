@@ -238,7 +238,7 @@ const ServiceDetailLayout = ({
                 Ready to Get Started?
               </h2>
               <p className="text-primary-foreground/80 text-lg mb-8">
-                Schedule your appointment today and experience Fear Free care in our 
+                Schedule your appointment today and experience Fear Free trained care in our 
                 comfortable living room environment.
               </p>
               <Link to="/contact">

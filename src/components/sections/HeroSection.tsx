@@ -61,13 +61,22 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
           </motion.p>
 
           <motion.p
-            className="text-cream-light/70 text-base sm:text-lg max-w-xl mb-8 leading-relaxed"
+            className="text-cream-light/70 text-base sm:text-lg max-w-xl mb-3 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
             Direct-to-exam-room care in comfortable living room spaces designed 
             to make every visit feel like a house call.
+          </motion.p>
+
+          <motion.p
+            className="text-cream-light/70 text-sm sm:text-base max-w-xl mb-8 italic"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.85 }}
+          >
+            An independent, female-owned private practice in Boulder.
           </motion.p>
 
           <motion.div
@@ -96,11 +105,11 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <Badge className="h-4 w-4 text-gold" />
-              <span className="text-sm font-medium text-cream-light">Fear Free Certified</span>
+              <span className="text-sm font-medium text-cream-light">Fear Free Trained</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <Heart className="h-4 w-4 text-terracotta-light" />
-              <span className="text-sm font-medium text-cream-light">Locally Owned</span>
+              <span className="text-sm font-medium text-cream-light">Independent · Female-Owned</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <MapPin className="h-4 w-4 text-sage" />

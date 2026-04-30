@@ -18,7 +18,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               </span>
             </div>
             <p className="text-sm text-cream-light/70 leading-relaxed">
-              Fear Free certified veterinary care in Boulder, Colorado. 
+              Fear Free trained veterinary care in Boulder, Colorado. 
               No waiting room, no stress—just wellness.
             </p>
             <div className="flex items-center gap-4 pt-2">
@@ -71,10 +71,11 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               {[
                 { label: "Wellness Care", href: "/services/wellness" },
                 { label: "Senior Care", href: "/services/senior-care" },
-                { label: "Laser Therapy", href: "/services/laser-therapy" },
+                { label: "Illness Care", href: "/services/illness-care" },
                 { label: "Diagnostics", href: "/services/diagnostics" },
-                { label: "Vaccinations", href: "/services/vaccinations" },
                 { label: "Surgery", href: "/services/surgery" },
+                { label: "Laser Therapy", href: "/services/laser-therapy" },
+                { label: "Vaccinations", href: "/services/vaccinations" },
               ].map((link) => (
                 <Link
                   key={link.href}

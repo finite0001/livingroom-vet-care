@@ -21,7 +21,7 @@ const comparisons = [
         "Zero waiting room time",
         "Complete privacy and quiet",
         "Your pet stays calm",
-        "Relaxed from start to finish",
+        "You stay with your pet the whole visit",
       ],
     },
   },
