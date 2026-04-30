@@ -107,7 +107,7 @@ const Services = () => {
                 What We're Known For
               </h2>
               <p className="text-muted-foreground text-lg">
-                Our most sought-after services, delivered with Fear Free certified care.
+                Our most sought-after services, delivered with Fear Free trained care.
               </p>
             </ScrollReveal>
 
