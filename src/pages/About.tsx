@@ -49,7 +49,7 @@ const team = [
     name: "Dr. James Chen",
     role: "Associate Veterinarian",
     image: drJamesImage,
-    credentials: ["DVM, UC Davis", "Fear Free Certified", "Special Interest: Senior Care"],
+    credentials: ["DVM, UC Davis", "Fear Free Trained", "Special Interest: Senior Care"],
     bio: "Dr. Chen brings a gentle, methodical approach to every patient. His passion for geriatric medicine and pain management makes him a perfect fit for our senior care program.",
     funFact: "Avid trail runner who can often be found on Boulder's Flatirons with his border collie, Scout.",
   },
