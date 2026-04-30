@@ -105,11 +105,11 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <Badge className="h-4 w-4 text-gold" />
-              <span className="text-sm font-medium text-cream-light">Fear Free Certified</span>
+              <span className="text-sm font-medium text-cream-light">Fear Free Trained</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <Heart className="h-4 w-4 text-terracotta-light" />
-              <span className="text-sm font-medium text-cream-light">Locally Owned</span>
+              <span className="text-sm font-medium text-cream-light">Independent · Female-Owned</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <MapPin className="h-4 w-4 text-sage" />
