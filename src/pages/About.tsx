@@ -38,11 +38,11 @@ const values = [
 
 const team = [
   {
-    name: "Dr. Sarah Mitchell",
+    name: "Dr. Susan Edler",
     role: "Founder & Lead Veterinarian",
     image: drSarahImage,
     credentials: ["DVM, Colorado State University", "Fear Free Trained", "AAHA Member"],
-    bio: "With 15 years of experience in small animal medicine, Dr. Mitchell founded The Living Room Vet to create the practice she always wished existed—one where pets actually enjoy coming in.",
+    bio: "With years of experience in small animal medicine, Dr. Edler founded The Living Room Vet to create the practice she always wished existed—one where every visit feels less stressful for pets and their people.",
     funFact: "Mom to two rescue dogs and a very opinionated cat named Biscuit.",
   },
   {
