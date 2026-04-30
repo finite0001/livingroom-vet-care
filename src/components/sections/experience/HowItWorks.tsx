@@ -46,9 +46,22 @@ const steps = [
   },
   {
     number: "04",
+    icon: Users,
+    title: "Stay With Your Pet",
+    description: "You're welcome to stay through the entire appointment. No back-room exams, no separation. We work alongside you so you can ask questions and your pet has their person right there.",
+    details: [
+      "No exams behind closed doors",
+      "Ask questions in real time",
+      "Your pet stays with their person",
+    ],
+    image: vetFloorImage,
+    imageAlt: "Pet parent staying with their dog during the exam",
+  },
+  {
+    number: "05",
     icon: Heart,
-    title: "Experience Fear Free Care",
-    description: "Our Fear Free certified team meets your pet at their level—often on the floor. We use gentle handling, treats, and patience to make every moment comfortable.",
+    title: "Experience Fear Free Trained Care",
+    description: "Our Fear Free trained team meets your pet at their level—often on the floor. We use gentle handling, treats, and patience to make every moment comfortable.",
     details: [
       "Treats and positive reinforcement",
       "Low-stress handling techniques",
