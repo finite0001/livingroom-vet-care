@@ -35,7 +35,7 @@ const Vaccinations = () => {
         {
           title: "Gentle Administration",
           description:
-            "Using Fear Free techniques—treats, gentle handling, and distraction—we make the experience as stress-free as possible. Most pets barely notice!",
+            "Using Fear Free trained techniques—treats, gentle handling, and distraction—we make the experience as stress-free as possible. Most pets barely notice!",
         },
         {
           title: "Post-Vaccine Monitoring",
