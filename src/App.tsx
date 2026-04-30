@@ -63,6 +63,7 @@ const App = () => (
               <Route path="/services/laser-therapy" element={<MarketingErrorBoundary><LaserTherapy /></MarketingErrorBoundary>} />
               <Route path="/services/surgery" element={<MarketingErrorBoundary><Surgery /></MarketingErrorBoundary>} />
               <Route path="/services/diagnostics" element={<MarketingErrorBoundary><Diagnostics /></MarketingErrorBoundary>} />
+              <Route path="/services/illness-care" element={<MarketingErrorBoundary><IllnessCare /></MarketingErrorBoundary>} />
               <Route path="/services/vaccinations" element={<MarketingErrorBoundary><Vaccinations /></MarketingErrorBoundary>} />
               <Route path="/about" element={<MarketingErrorBoundary><About /></MarketingErrorBoundary>} />
               <Route path="/contact" element={<MarketingErrorBoundary><Contact /></MarketingErrorBoundary>} />
