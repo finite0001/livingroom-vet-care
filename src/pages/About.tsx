@@ -57,8 +57,8 @@ const team = [
     name: "Emily Torres",
     role: "Lead Veterinary Technician",
     image: emilyImage,
-    credentials: ["CVT, Licensed Vet Tech", "Fear Free Certified", "Laser Therapy Specialist"],
-    bio: "Emily's calm presence and expert handling skills put even the most anxious pets at ease. She oversees our laser therapy program and Fear Free protocols.",
+    credentials: ["CVT, Licensed Vet Tech", "Fear Free Trained", "Laser Therapy Specialist"],
+    bio: "Emily's calm presence and expert handling skills put even the most anxious pets at ease. She oversees our laser therapy program and low-stress handling protocols.",
     funFact: "Volunteers at Boulder Humane Society every weekend and fosters kittens year-round.",
   },
   {
