@@ -14,6 +14,7 @@ import SeniorCare from "./pages/services/SeniorCare";
 import LaserTherapy from "./pages/services/LaserTherapy";
 import Surgery from "./pages/services/Surgery";
 import Diagnostics from "./pages/services/Diagnostics";
+import IllnessCare from "./pages/services/IllnessCare";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Vaccinations from "./pages/services/Vaccinations";
