@@ -120,8 +120,8 @@ const About = () => {
                 </p>
                 <p className="text-lg text-muted-foreground leading-relaxed mb-8">
                   Located in Boulder, Colorado, we're an independently owned practice that has 
-                  reimagined every detail of veterinary care around one goal: making your pet 
-                  actually enjoy coming to the vet.
+                  reimagined every detail of veterinary care around one goal: making trips to 
+                  the vet much less stressful.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/experience">
