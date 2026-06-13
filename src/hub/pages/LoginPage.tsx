@@ -92,7 +92,7 @@ export default function LoginPage() {
                   <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Sending…" : "Send reset link"}
+                  {loading ? "Sending..." : "Send reset link"}
                 </Button>
                 <Button variant="ghost" size="sm" className="w-full" onClick={() => setResetMode(false)}>
                   Back to sign in
@@ -117,11 +117,11 @@ export default function LoginPage() {
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
               </div>
               <Button type="submit" className="w-full shadow-sm hover:shadow-md transition-all" disabled={loading}>
-                {loading ? "Signing in…" : "Sign in"}
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
-              <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/hub/signup")}>
-                Create account
-              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Staff accounts are created by an administrator.
+              </p>
             </form>
           </div>
         )}
