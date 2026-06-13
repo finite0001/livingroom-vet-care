@@ -2036,6 +2036,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_staff_active: {
+        Args: { _is_active: boolean; _target_user: string }
+        Returns: undefined
+      }
+      admin_update_staff_role: {
+        Args: {
+          _new_role: Database["public"]["Enums"]["user_role"]
+          _target_user: string
+        }
+        Returns: undefined
+      }
       apply_retention_policies: { Args: never; Returns: undefined }
       delete_conversation_cascade: {
         Args: { conv_id: string }
