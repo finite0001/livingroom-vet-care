@@ -70,7 +70,7 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
 
       const { data, error } = await supabase.functions.invoke("send-sms", { body: { to: recipient, body, conversation_id: conv.id } });
       if (error) throw error;
-      if (data?.delivered) toast.success("SMS sent");
+      if (data?.delivered) toast.success("SMS delivered");
       else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
@@ -112,10 +112,11 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
             </div>
           )}
 
-          <Textarea placeholder="Type your text message..." value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
+          <Textarea placeholder="Type message (will be logged; SMS delivery pending Twilio setup)..." value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
           <Button onClick={handleSend} disabled={!body.trim() || !recipient.trim() || sending || (isNewClient && !newFirstName.trim())} className="w-full">
-            <MessageSquare className="h-4 w-4 mr-2" /> {sending ? "Sending..." : "Send SMS"}
+            <MessageSquare className="h-4 w-4 mr-2" /> {sending ? "Recording..." : "Record Message"}
           </Button>
+
         </div>
       </SheetContent>
     </Sheet>

@@ -1155,6 +1155,73 @@ export type Database = {
           },
         ]
       }
+      outbound_message_attempts: {
+        Row: {
+          channel: string
+          client_id: string | null
+          conversation_id: string | null
+          created_at: string
+          delivered: boolean
+          error_text: string | null
+          id: string
+          message_id: string | null
+          provider: string | null
+          recipient: string
+          status_note: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel: string
+          client_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivered?: boolean
+          error_text?: string | null
+          id?: string
+          message_id?: string | null
+          provider?: string | null
+          recipient: string
+          status_note?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          client_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivered?: boolean
+          error_text?: string | null
+          id?: string
+          message_id?: string | null
+          provider?: string | null
+          recipient?: string
+          status_note?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outbound_message_attempts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_message_attempts_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_message_attempts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_links: {
         Row: {
           amount_cents: number

@@ -78,14 +78,14 @@ serve(async (req) => {
       return jsonResponse({ error: "Recipient does not match the conversation client" }, 403);
     }
 
-    const { error: msgError } = await supabase.from("messages").insert({
+    const { data: inserted, error: msgError } = await supabase.from("messages").insert({
       conversation_id,
       content: body.trim(),
       type: "SMS",
       sender_type: "STAFF",
       sender_id: user.id,
       is_internal: false,
-    });
+    }).select("id").single();
     if (msgError) throw msgError;
 
     await supabase.from("conversations").update({
@@ -93,9 +93,34 @@ serve(async (req) => {
       is_read: true,
     }).eq("id", conversation_id);
 
-    console.log(`[send-sms] Message recorded for ${to} in conversation ${conversation_id}. Twilio delivery pending configuration.`);
+    const twilioConfigured = !!Deno.env.get("TWILIO_API_KEY");
+    const delivered = false; // Twilio delivery not yet wired
+    const statusNote = twilioConfigured
+      ? "Twilio configured but delivery path not yet implemented."
+      : "Message recorded. SMS delivery pending Twilio configuration.";
 
-    return jsonResponse({ success: true, delivered: false, note: "Message recorded. SMS delivery pending Twilio configuration." });
+    await supabase.from("outbound_message_attempts").insert({
+      user_id: user.id,
+      conversation_id,
+      client_id: conversation.client_id,
+      message_id: inserted?.id ?? null,
+      channel: "SMS",
+      recipient: String(to),
+      delivered,
+      provider: twilioConfigured ? "twilio" : null,
+      status_note: statusNote,
+      error_text: null,
+    });
+
+    console.log(`[send-sms] Recorded message ${inserted?.id} for conversation ${conversation_id} (delivered=${delivered}).`);
+
+    return jsonResponse({
+      success: true,
+      delivered,
+      note: statusNote,
+      message_id: inserted?.id ?? null,
+    });
+
   } catch (e) {
     console.error("send-sms error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
