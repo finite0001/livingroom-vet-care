@@ -65,11 +65,12 @@ export default function ConversationDetailPage() {
       } else if (channel === "SMS") {
         const phone = conversation.client.primary_phone;
         if (!phone) { toast.error("Client has no phone number"); return; }
-        const { error } = await supabase.functions.invoke("send-sms", {
+        const { data, error } = await supabase.functions.invoke("send-sms", {
           body: { to: phone, body: content, conversation_id: id },
         });
         if (error) throw error;
-        toast.success("SMS sent");
+        if (data?.delivered) toast.success("SMS sent");
+        else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
       } else if (channel === "EMAIL") {
         toast.error("Email sending is not yet configured");
       }
