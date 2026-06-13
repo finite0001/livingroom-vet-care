@@ -69,7 +69,7 @@ export default function ConversationDetailPage() {
           body: { to: phone, body: content, conversation_id: id },
         });
         if (error) throw error;
-        if (data?.delivered) toast.success("SMS sent");
+        if (data?.delivered) toast.success("SMS delivered");
         else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
       } else if (channel === "EMAIL") {
         toast.error("Email sending is not yet configured");
