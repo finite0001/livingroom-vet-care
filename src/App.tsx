@@ -26,7 +26,6 @@ import { ProtectedRoute } from "@/hub/components/layout/ProtectedRoute";
 import { AppShell } from "@/hub/components/layout/AppShell";
 
 const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
-const HubSignupPage = lazy(() => import("@/hub/pages/SignupPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
 const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
@@ -70,7 +69,6 @@ const App = () => (
 
               {/* Hub public routes */}
               <Route path="/hub/login" element={<HubLoginPage />} />
-              <Route path="/hub/signup" element={<HubSignupPage />} />
 
               {/* Hub protected routes */}
               <Route element={<ProtectedRoute />}>
