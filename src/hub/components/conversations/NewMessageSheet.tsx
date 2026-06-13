@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, MessageSquare, Search } from "lucide-react";
+import { MessageSquare, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClients } from "@/hub/hooks/use-clients";
@@ -68,9 +68,10 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
       }
       if (!conv) throw new Error("Failed to create conversation");
 
-      const { error } = await supabase.functions.invoke("send-sms", { body: { to: recipient, body, conversation_id: conv.id } });
+      const { data, error } = await supabase.functions.invoke("send-sms", { body: { to: recipient, body, conversation_id: conv.id } });
       if (error) throw error;
-      toast.success("SMS sent");
+      if (data?.delivered) toast.success("SMS sent");
+      else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       onOpenChange(false);
