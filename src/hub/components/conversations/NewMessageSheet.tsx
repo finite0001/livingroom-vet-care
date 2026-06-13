@@ -70,7 +70,7 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
 
       const { data, error } = await supabase.functions.invoke("send-sms", { body: { to: recipient, body, conversation_id: conv.id } });
       if (error) throw error;
-      if (data?.delivered) toast.success("SMS sent");
+      if (data?.delivered) toast.success("SMS delivered");
       else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
