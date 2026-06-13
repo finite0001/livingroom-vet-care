@@ -78,17 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message ?? null };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, firstName: string, lastName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { first_name: firstName, last_name: lastName },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) return { error: error.message };
-    return { error: null };
+  const signUp = useCallback(async () => {
+    return { error: "Staff accounts are invitation-only. Ask an administrator to create your account." };
   }, []);
 
   const signOut = useCallback(async () => {
