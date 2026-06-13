@@ -30,6 +30,7 @@ const toolItems = [
 
 const adminItems = [
   { path: "/hub/admin", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/hub/admin/staff", label: "Staff", icon: Users },
   { path: "/hub/admin/import", label: "Import", icon: Upload },
 ];
 
