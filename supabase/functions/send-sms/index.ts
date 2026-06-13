@@ -78,12 +78,15 @@ serve(async (req) => {
       return jsonResponse({ error: "Recipient does not match the conversation client" }, 403);
     }
 
-    const { data: consent } = await supabase
+    const { data: consentRows, error: consentError } = await supabase
       .from("sms_consent")
-      .select("opted_in")
-      .eq("client_id", conversation.client_id)
-      .maybeSingle();
-    if (consent?.opted_in === false) {
+      .select("phone_number, opted_in")
+      .eq("client_id", conversation.client_id);
+    if (consentError) throw consentError;
+    const consentForNumber = (consentRows ?? []).find(
+      (r) => normalizePhone(r.phone_number ?? "") === normalizePhone(String(to))
+    );
+    if (consentForNumber?.opted_in === false) {
       return jsonResponse({ error: "Client has opted out of SMS" }, 403);
     }
 
