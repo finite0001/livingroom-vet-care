@@ -1403,6 +1403,7 @@ export type Database = {
           last_name: string
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -1414,6 +1415,7 @@ export type Database = {
           last_name?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -1425,6 +1427,7 @@ export type Database = {
           last_name?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2051,6 +2054,32 @@ export type Database = {
       delete_conversation_cascade: {
         Args: { conv_id: string }
         Returns: undefined
+      }
+      get_consent_submission: {
+        Args: { p_token: string }
+        Returns: {
+          access_token: string
+          client_id: string
+          conversation_id: string | null
+          created_at: string
+          expires_at: string
+          form_data: Json
+          id: string
+          ip_address: string | null
+          pet_id: string | null
+          signature_data: string | null
+          signed_at: string | null
+          status: string
+          template_id: string
+          ticket_id: string | null
+          user_agent: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "consent_submissions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_current_on_call: {
         Args: never
