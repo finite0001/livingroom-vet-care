@@ -51,10 +51,10 @@ export default function AdminStaffPage() {
   const toggleActive = useMutation({
     mutationFn: async (row: StaffRow) => {
       setBusyId(row.id);
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_active: !row.is_active })
-        .eq("id", row.id);
+      const { error } = await supabase.rpc("admin_set_staff_active", {
+        _target_user: row.id,
+        _is_active: !row.is_active,
+      });
       if (error) throw error;
     },
     onSuccess: (_d, row) => {
@@ -68,22 +68,11 @@ export default function AdminStaffPage() {
   const changeRole = useMutation({
     mutationFn: async ({ row, role }: { row: StaffRow; role: Role }) => {
       setBusyId(row.id);
-      // Update profile role
-      const { error: pErr } = await supabase
-        .from("profiles")
-        .update({ role })
-        .eq("id", row.id);
-      if (pErr) throw pErr;
-      // Replace user_roles rows
-      const { error: dErr } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", row.id);
-      if (dErr) throw dErr;
-      const { error: iErr } = await supabase
-        .from("user_roles")
-        .insert({ user_id: row.id, role });
-      if (iErr) throw iErr;
+      const { error } = await supabase.rpc("admin_update_staff_role", {
+        _target_user: row.id,
+        _new_role: role,
+      });
+      if (error) throw error;
     },
     onSuccess: (_d, { row, role }) => {
       toast.success(`${row.full_name} role changed to ${role}`);
