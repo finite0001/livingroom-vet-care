@@ -32,6 +32,7 @@ const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
+const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
 
 function HubLoader() {
   return (
@@ -97,8 +98,10 @@ const App = () => (
                 <Route element={<AppShell />}>
                   <Route path="/hub/admin" element={<PlaceholderPage />} />
                   <Route path="/hub/admin/import" element={<PlaceholderPage />} />
+                  <Route path="/hub/admin/staff" element={<AdminStaffPage />} />
                 </Route>
               </Route>
+
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
