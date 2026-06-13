@@ -78,6 +78,17 @@ serve(async (req) => {
       return jsonResponse({ error: "Recipient does not match the conversation client" }, 403);
     }
 
+    const { data: consent } = await supabase
+      .from("sms_consent")
+      .select("opted_in")
+      .eq("client_id", conversation.client_id)
+      .maybeSingle();
+    if (consent?.opted_in === false) {
+      return jsonResponse({ error: "Client has opted out of SMS" }, 403);
+    }
+
+
+
     const { data: inserted, error: msgError } = await supabase.from("messages").insert({
       conversation_id,
       content: body.trim(),
