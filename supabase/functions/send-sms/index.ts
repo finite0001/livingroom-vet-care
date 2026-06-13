@@ -6,6 +6,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const STAFF_ROLES = new Set(["ADMIN", "DVM", "TECH", "STAFF"]);
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function normalizePhone(phone: string) {
+  return phone.replace(/\D/g, "");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -13,33 +26,61 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
-
-    // Verify JWT
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader || "" } },
     });
+
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+
+    const [profileRes, rolesRes] = await Promise.all([
+      supabase.from("profiles").select("id, is_active, role").eq("id", user.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id),
+    ]);
+    if (profileRes.error) throw profileRes.error;
+
+    const profileRole = typeof profileRes.data?.role === "string" ? profileRes.data.role : null;
+    const roles = new Set([profileRole, ...(rolesRes.data ?? []).map((row: { role: string }) => row.role)].filter(Boolean));
+    const isActiveStaff = profileRes.data?.is_active === true && [...roles].some((role) => STAFF_ROLES.has(role as string));
+    if (!isActiveStaff) {
+      return jsonResponse({ error: "Forbidden" }, 403);
     }
 
     const { to, body, conversation_id } = await req.json();
     if (!to || !body || !conversation_id) {
-      return new Response(JSON.stringify({ error: "Missing required fields: to, body, conversation_id" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Missing required fields: to, body, conversation_id" }, 400);
+    }
+    if (typeof body !== "string" || body.trim().length === 0 || body.length > 1600) {
+      return jsonResponse({ error: "Message body must be between 1 and 1600 characters" }, 400);
     }
 
-    // Insert the message record
+    const { data: conversation, error: convError } = await supabase
+      .from("conversations")
+      .select("id, client_id")
+      .eq("id", conversation_id)
+      .maybeSingle();
+    if (convError) throw convError;
+    if (!conversation) {
+      return jsonResponse({ error: "Conversation not found" }, 404);
+    }
+
+    const { data: client, error: clientError } = await supabase
+      .from("clients")
+      .select("primary_phone")
+      .eq("id", conversation.client_id)
+      .maybeSingle();
+    if (clientError) throw clientError;
+    if (!client?.primary_phone || normalizePhone(client.primary_phone) !== normalizePhone(String(to))) {
+      return jsonResponse({ error: "Recipient does not match the conversation client" }, 403);
+    }
+
     const { error: msgError } = await supabase.from("messages").insert({
       conversation_id,
-      content: body,
+      content: body.trim(),
       type: "SMS",
       sender_type: "STAFF",
       sender_id: user.id,
@@ -47,23 +88,16 @@ serve(async (req) => {
     });
     if (msgError) throw msgError;
 
-    // Update conversation timestamps
     await supabase.from("conversations").update({
       last_message_at: new Date().toISOString(),
       is_read: true,
     }).eq("id", conversation_id);
 
-    // TODO: Integrate Twilio for actual SMS delivery when TWILIO_* secrets are configured
     console.log(`[send-sms] Message recorded for ${to} in conversation ${conversation_id}. Twilio delivery pending configuration.`);
 
-    return new Response(JSON.stringify({ success: true, delivered: false, note: "Message recorded. SMS delivery pending Twilio configuration." }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ success: true, delivered: false, note: "Message recorded. SMS delivery pending Twilio configuration." });
   } catch (e) {
     console.error("send-sms error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
