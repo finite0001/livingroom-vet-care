@@ -1999,6 +1999,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       process_due_reminders: {
         Args: never
         Returns: {
