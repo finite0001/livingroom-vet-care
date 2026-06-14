@@ -29,6 +29,9 @@ export default function ConversationDetailPage() {
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
+  // AI smart-reply suggestions populate the composer for staff review rather than
+  // sending immediately — a one-tap auto-send of AI text to a client is too risky.
+  const [draft, setDraft] = useState<string | undefined>(undefined);
 
   const conversationNotFound = !convLoading && !conversation;
   usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
@@ -164,7 +167,7 @@ export default function ConversationDetailPage() {
       {id && messages && messages.length > 0 && (
         <SmartReplySuggestions
           conversationId={id}
-          onSelect={(text) => handleSend(text, "SMS")}
+          onSelect={(text) => setDraft(text)}
         />
       )}
 
@@ -174,6 +177,8 @@ export default function ConversationDetailPage() {
           onSend={handleSend}
           defaultChannel={conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"}
           smsOptedOut={smsOptedOut}
+          draft={draft}
+          onDraftConsumed={() => setDraft(undefined)}
           disabled={isSending}
         />
       )}

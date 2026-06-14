@@ -21,7 +21,9 @@ const SMS_SEGMENT_LENGTH = 160;
 
 export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDraftConsumed, disabled }: ReplyComposerProps) {
   const [content, setContent] = useState("");
-  useEffect(() => { if (draft) { setContent(draft); onDraftConsumed?.(); } }, [draft]);
+  // Only populate from a suggestion/draft when the composer is empty, so tapping a
+  // smart-reply can never silently overwrite a reply the staffer is mid-typing.
+  useEffect(() => { if (draft && !content.trim()) { setContent(draft); onDraftConsumed?.(); } }, [draft]);
 
   const [channel, setChannel] = useState<"SMS" | "EMAIL" | "NOTE">(defaultChannel || "SMS");
   const textareaRef = useRef<HTMLTextAreaElement>(null);

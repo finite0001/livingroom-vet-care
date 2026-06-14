@@ -34,11 +34,16 @@ export function CreateClientSheet() {
         primary_phone: phone || null, primary_email: email || null, preferred_channel: channel,
       }).select().single();
       if (error) throw error;
+      let petFailed = false;
       if (petName && client) {
         const { error: petError } = await supabase.from("pets").insert({ client_id: client.id, name: petName, species: petSpecies });
-        if (petError) toast.success(`${fullName} added (pet could not be saved)`);
+        petFailed = !!petError;
       }
-      toast.success(`${fullName} added`);
+      if (petFailed) {
+        toast.warning(`${fullName} added, but the pet could not be saved`);
+      } else {
+        toast.success(`${fullName} added`);
+      }
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       reset(); setOpen(false);
     } catch (err) { toast.error(err instanceof Error ? err.message : "Failed to create client"); } finally { setSaving(false); }

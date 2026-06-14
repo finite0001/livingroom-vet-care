@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useAuth } from "@/hub/contexts/AuthContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ClientNoteProfile { full_name: string }
@@ -15,6 +16,8 @@ interface ClientNote { id: string; content: string; created_at: string; created_
 
 export function ClientNotesCard({ clientId }: { clientId: string }) {
   const queryClient = useQueryClient();
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("ADMIN");
   const [draft, setDraft] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -39,8 +42,16 @@ export function ClientNotesCard({ clientId }: { clientId: string }) {
   });
 
   const deleteNote = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("client_notes").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => {
+      // client_notes DELETE is admin-only in RLS. A non-admin's delete matches 0
+      // rows and returns NO error, so select the deleted rows and treat an empty
+      // result as a failure instead of reporting a false "Note deleted".
+      const { data, error } = await supabase.from("client_notes").delete().eq("id", id).select("id");
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error("You don't have permission to delete this note");
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["client-notes", clientId] }); toast.success("Note deleted"); },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to delete note"),
   });
 
   return (
@@ -68,7 +79,7 @@ export function ClientNotesCard({ clientId }: { clientId: string }) {
               <p className="text-sm whitespace-pre-wrap">{n.content}</p>
               <div className="flex items-center justify-between mt-1.5">
                 <p className="text-xs text-muted-foreground">{n.profile?.full_name ?? "Staff"} · {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
-                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive" onClick={() => setPendingDeleteId(n.id)}><Trash2 className="h-3 w-3" /></Button>
+                {isAdmin && <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive" onClick={() => setPendingDeleteId(n.id)}><Trash2 className="h-3 w-3" /></Button>}
               </div>
             </div>
           ))}</div>}
