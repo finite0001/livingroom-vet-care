@@ -35,6 +35,7 @@ const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
 const AdminDashboardPage = lazy(() => import("@/hub/pages/AdminDashboardPage"));
 const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
+const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
 
 function HubLoader() {
   return (
@@ -86,6 +87,7 @@ const App = () => (
                   <Route path="/hub/call" element={<PlaceholderPage />} />
                   <Route path="/hub/voicemails" element={<PlaceholderPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
+                  <Route path="/hub/my-time" element={<MyTimePage />} />
                   <Route path="/hub/tools/templates" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/campaigns" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/surveys" element={<PlaceholderPage />} />
