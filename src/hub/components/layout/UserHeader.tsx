@@ -38,6 +38,9 @@ export function UserHeader({ navHidden = false, onToggleNav }: UserHeaderProps) 
         <AvatarFallback className="text-xs font-medium">{initials}</AvatarFallback>
       </Avatar>
       <span className="text-sm font-medium text-foreground">{profile.full_name}</span>
+      <div className="ml-auto">
+        <ClockInOutButton />
+      </div>
     </div>
   );
 }
