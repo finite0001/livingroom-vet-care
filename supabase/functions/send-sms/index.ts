@@ -86,8 +86,8 @@ serve(async (req) => {
     const consentForNumber = (consentRows ?? []).find(
       (r) => normalizePhone(r.phone_number ?? "") === normalizePhone(String(to))
     );
-    if (consentForNumber?.opted_in === false) {
-      return jsonResponse({ error: "Client has opted out of SMS" }, 403);
+    if (consentForNumber?.opted_in !== true) {
+      return jsonResponse({ error: "No SMS consent on record for this number" }, 403);
     }
 
 
