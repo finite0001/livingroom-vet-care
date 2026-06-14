@@ -26,6 +26,15 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
   const [channel, setChannel] = useState<"SMS" | "EMAIL" | "NOTE">(defaultChannel || "SMS");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Consent loads async after first paint; if it resolves to opted-out while the
+  // SMS tab is selected AND the draft is still empty, move off it so staff can't
+  // sit on a disabled channel. We only switch when empty so a half-typed client
+  // message is never silently re-labeled as an internal NOTE — a typed SMS to an
+  // opted-out client is instead blocked with a toast by the send handler.
+  useEffect(() => {
+    if (smsOptedOut && channel === "SMS" && !content) setChannel("NOTE");
+  }, [smsOptedOut, channel, content]);
+
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;

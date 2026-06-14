@@ -12,6 +12,7 @@ import {
   useConversation,
   useMarkRead,
 } from "@/hub/hooks/use-conversations";
+import { useClientConsent } from "@/hub/hooks/use-sms-consent";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/AuthContext";
@@ -23,6 +24,8 @@ export default function ConversationDetailPage() {
   const { profile } = useAuth();
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
   const { data: conversation, isLoading: convLoading } = useConversation(id);
+  const { data: consent } = useClientConsent(conversation?.client.id);
+  const smsOptedOut = consent?.opted_in === false;
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
@@ -63,6 +66,7 @@ export default function ConversationDetailPage() {
         if (error) throw error;
         toast.success("Note added");
       } else if (channel === "SMS") {
+        if (smsOptedOut) { toast.error("This client has opted out of SMS"); return; }
         const phone = conversation.client.primary_phone;
         if (!phone) { toast.error("Client has no phone number"); return; }
         const { data, error } = await supabase.functions.invoke("send-sms", {
@@ -169,6 +173,7 @@ export default function ConversationDetailPage() {
         <ReplyComposer
           onSend={handleSend}
           defaultChannel={conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"}
+          smsOptedOut={smsOptedOut}
           disabled={isSending}
         />
       )}
