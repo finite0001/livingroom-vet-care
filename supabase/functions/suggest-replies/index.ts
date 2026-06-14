@@ -57,6 +57,10 @@ serve(async (req) => {
     if (!conversation_id) {
       return jsonResponse({ suggestions: [] });
     }
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof conversation_id !== "string" || !UUID_RE.test(conversation_id)) {
+      return jsonResponse({ error: "Invalid conversation_id", suggestions: [] }, 400);
+    }
 
     const { data: conversation, error: convError } = await supabase
       .from("conversations")
@@ -72,6 +76,7 @@ serve(async (req) => {
       .from("messages")
       .select("content, sender_type, type, created_at")
       .eq("conversation_id", conversation_id)
+      .eq("is_internal", false)
       .order("created_at", { ascending: false })
       .limit(10);
 
@@ -85,7 +90,7 @@ serve(async (req) => {
     }
 
     const transcript = messages.reverse().map((m) =>
-      `${m.sender_type === "CLIENT" ? "Client" : "Staff"}: ${redactMessage(m.content)}`
+      `${m.sender_type === "CLIENT" ? "Client" : "Staff"}: ${redactMessage(m.content).slice(0, 800)}`
     ).join("\n");
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
