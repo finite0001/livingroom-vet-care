@@ -1400,6 +1400,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_on_duty: boolean
           last_name: string
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -1412,6 +1413,7 @@ export type Database = {
           full_name?: string
           id: string
           is_active?: boolean
+          is_on_duty?: boolean
           last_name?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -1424,6 +1426,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          is_on_duty?: boolean
           last_name?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -1811,6 +1814,33 @@ export type Database = {
           },
         ]
       }
+      time_entries: {
+        Row: {
+          clock_in_at: string
+          clock_out_at: string | null
+          created_at: string
+          id: string
+          note: string | null
+          staff_id: string
+        }
+        Insert: {
+          clock_in_at?: string
+          clock_out_at?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          staff_id: string
+        }
+        Update: {
+          clock_in_at?: string
+          clock_out_at?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          staff_id?: string
+        }
+        Relationships: []
+      }
       urgent_alerts: {
         Row: {
           alert_type: string
@@ -2051,6 +2081,40 @@ export type Database = {
         Returns: undefined
       }
       apply_retention_policies: { Args: never; Returns: undefined }
+      clock_in: {
+        Args: never
+        Returns: {
+          clock_in_at: string
+          clock_out_at: string | null
+          created_at: string
+          id: string
+          note: string | null
+          staff_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "time_entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      clock_out: {
+        Args: never
+        Returns: {
+          clock_in_at: string
+          clock_out_at: string | null
+          created_at: string
+          id: string
+          note: string | null
+          staff_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "time_entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_conversation_cascade: {
         Args: { conv_id: string }
         Returns: undefined
