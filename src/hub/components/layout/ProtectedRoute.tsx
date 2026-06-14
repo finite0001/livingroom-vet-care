@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hub/contexts/AuthContext";
 
@@ -6,7 +7,15 @@ interface Props {
 }
 
 export function ProtectedRoute({ requiredRole }: Props) {
-  const { user, loading, hasRole } = useAuth();
+  const { user, profile, loading, hasRole, signOut } = useAuth();
+
+  // A staff member whose account was deactivated mid-session still holds a valid
+  // token. DB RLS blocks their data, but without this they'd sit in the Hub UI
+  // (and see admin buttons). End the session and bounce them to login.
+  const deactivated = !!user && profile?.is_active === false;
+  useEffect(() => {
+    if (!loading && deactivated) signOut();
+  }, [loading, deactivated, signOut]);
 
   if (loading) {
     return (
@@ -16,7 +25,7 @@ export function ProtectedRoute({ requiredRole }: Props) {
     );
   }
 
-  if (!user) {
+  if (!user || deactivated) {
     return <Navigate to="/hub/login" replace />;
   }
 
