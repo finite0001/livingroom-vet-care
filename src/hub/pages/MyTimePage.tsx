@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Clock, CalendarIcon, Search, X } from "lucide-react";
+import { Clock, CalendarIcon, Search, X, Download } from "lucide-react";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { cn } from "@/lib/utils";
@@ -86,6 +86,28 @@ export default function MyTimePage() {
     setSearch("");
   };
 
+  const exportCsv = () => {
+    const headers = ["Clock In", "Clock Out", "Duration", "Note"];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = filtered.map((e) => [
+      new Date(e.clock_in_at).toISOString(),
+      e.clock_out_at ? new Date(e.clock_out_at).toISOString() : "",
+      formatDuration(e.clock_in_at, e.clock_out_at),
+      e.note ?? "",
+    ].map(escape).join(","));
+    const csv = [headers.map(escape).join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = format(new Date(), "yyyy-MM-dd");
+    a.href = url;
+    a.download = `my-time-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container max-w-4xl py-6 space-y-6">
       <div>
@@ -118,11 +140,22 @@ export default function MyTimePage() {
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Entries</CardTitle>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 self-start sm:self-auto">
-                <X className="h-3.5 w-3.5" /> Clear filters
+            <div className="flex gap-2 self-start sm:self-auto">
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                  <X className="h-3.5 w-3.5" /> Clear filters
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportCsv}
+                disabled={isLoading || filtered.length === 0}
+                className="h-8"
+              >
+                <Download className="h-3.5 w-3.5" /> Export CSV
               </Button>
-            )}
+            </div>
           </div>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Popover>
