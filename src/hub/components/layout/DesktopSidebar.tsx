@@ -3,7 +3,7 @@ import {
   Home, MessageSquare, Users, Phone, Settings,
   ClipboardList, AudioWaveform, FileText, Megaphone,
   AlertTriangle, BarChart3, Pill, Stethoscope,
-  LayoutDashboard, Upload, ChevronDown, LogOut,
+  LayoutDashboard, Upload, ChevronDown, LogOut, Clock,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
