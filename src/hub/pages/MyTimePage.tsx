@@ -140,11 +140,22 @@ export default function MyTimePage() {
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Entries</CardTitle>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 self-start sm:self-auto">
-                <X className="h-3.5 w-3.5" /> Clear filters
+            <div className="flex gap-2 self-start sm:self-auto">
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                  <X className="h-3.5 w-3.5" /> Clear filters
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportCsv}
+                disabled={isLoading || filtered.length === 0}
+                className="h-8"
+              >
+                <Download className="h-3.5 w-3.5" /> Export CSV
               </Button>
-            )}
+            </div>
           </div>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Popover>
