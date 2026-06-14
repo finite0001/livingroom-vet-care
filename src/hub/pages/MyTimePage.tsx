@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Clock, CalendarIcon, Search, X } from "lucide-react";
+import { Clock, CalendarIcon, Search, X, Download } from "lucide-react";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { cn } from "@/lib/utils";
