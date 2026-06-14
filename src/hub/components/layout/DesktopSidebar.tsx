@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
+import { useUnreadVoicemailCount } from "@/hub/hooks/use-telephony";
 
 const workspaceItems = [
   { path: "/hub", label: "Home", icon: Home, exact: true },
@@ -42,6 +43,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const { data: unreadCount } = useUnreadCount();
+  const { data: voicemailUnread } = useUnreadVoicemailCount();
 
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
@@ -97,9 +99,11 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
           </button>
           {workspaceOpen && (
             <div className="mt-0.5 space-y-0.5">
-              {workspaceItems.map((item) =>
-                renderItem(item.path === "/hub/chats" ? { ...item, badge: unreadCount } : item)
-              )}
+              {workspaceItems.map((item) => {
+                if (item.path === "/hub/chats") return renderItem({ ...item, badge: unreadCount });
+                if (item.path === "/hub/voicemails") return renderItem({ ...item, badge: voicemailUnread });
+                return renderItem(item);
+              })}
             </div>
           )}
         </div>
