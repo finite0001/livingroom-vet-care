@@ -35,6 +35,7 @@ const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
 const AdminDashboardPage = lazy(() => import("@/hub/pages/AdminDashboardPage"));
 const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
+const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
 
 function HubLoader() {
   return (
