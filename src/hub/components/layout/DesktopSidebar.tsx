@@ -126,6 +126,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
       </nav>
 
       <div className="border-t p-3 space-y-0.5">
+        {renderItem({ path: "/hub/my-time", label: "My Time", icon: Clock })}
         {renderItem({ path: "/hub/settings", label: "Settings", icon: Settings })}
         <button
           onClick={() => signOut()}
