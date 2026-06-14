@@ -54,12 +54,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(s);
         setUser(s?.user ?? null);
         if (s?.user) {
-          setTimeout(() => fetchProfile(s.user.id), 0);
+          // Re-show loading on the events where roles are (re)fetched from scratch
+          // — initial load and fresh sign-in — so ProtectedRoute never evaluates
+          // requiredRole against an empty roles[]. Deliberately NOT on TOKEN_REFRESHED
+          // / USER_UPDATED, which would flicker the spinner mid-session.
+          if (_event === "SIGNED_IN" || _event === "INITIAL_SESSION") setLoading(true);
+          // Defer the supabase call out of the auth callback (avoids deadlocks),
+          // and only drop loading once profile + roles have resolved.
+          setTimeout(() => {
+            fetchProfile(s.user.id).finally(() => setLoading(false));
+          }, 0);
         } else {
           setProfile(null);
           setRoles([]);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 

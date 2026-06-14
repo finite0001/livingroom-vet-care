@@ -38,19 +38,32 @@ export interface ConversationWithClient {
 export function useConversations() {
   const queryClient = useQueryClient();
 
-  // Realtime listener for conversation changes (from other tabs/users)
+  // Realtime listener for conversation changes (from other tabs/users).
+  // Debounce the invalidation so a burst of row changes — "mark all read",
+  // an inbound SMS spike, or echoes of this app's own optimistic mutations —
+  // collapses into a single refetch instead of one full 4-query refetch per row.
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefetch = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+        timer = null;
+      }, 500);
+    };
     const channel = supabase
       .channel("conversations-list")
       .on("postgres_changes", {
         event: "*",
         schema: "public",
         table: "conversations",
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      })
+      }, scheduleRefetch)
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
   }, [queryClient]);
 
   return useQuery({
@@ -131,6 +144,7 @@ export function useMarkRead() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
     },
   });
 }
@@ -162,6 +176,7 @@ export function useToggleRead() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
     },
   });
 }
