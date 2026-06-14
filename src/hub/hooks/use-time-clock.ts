@@ -2,12 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
 
-// NOTE: time_entries, the clock_in/clock_out RPCs, and profiles.is_on_duty are
-// added by the clock-in/out migration (applied via Lovable). Until the generated
-// Supabase types are regenerated, those names aren't in the Database type, so this
-// hook uses a loosely-typed client. Remove the `as any` once types.ts includes them.
-const db = supabase as any;
-
 export interface TimeEntry {
   id: string;
   staff_id: string;
@@ -34,7 +28,7 @@ export function useCurrentShift() {
     queryKey: ["time-clock", "current", profile?.id],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("time_entries")
         .select("*")
         .eq("staff_id", profile!.id)
@@ -52,7 +46,7 @@ export function useClockIn() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { error } = await db.rpc("clock_in");
+      const { error } = await supabase.rpc("clock_in");
       if (error) throw error;
     },
     onSuccess: () => {
@@ -65,7 +59,7 @@ export function useClockOut() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { error } = await db.rpc("clock_out");
+      const { error } = await supabase.rpc("clock_out");
       if (error) throw error;
     },
     onSuccess: () => {
@@ -81,7 +75,7 @@ export function useMyShifts(days = 30) {
     enabled: !!profile?.id,
     queryFn: async () => {
       const start = new Date(Date.now() - days * 86_400_000).toISOString();
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("time_entries")
         .select("*")
         .eq("staff_id", profile!.id)
@@ -100,7 +94,7 @@ export function useOnDutyStaff(enabled: boolean) {
     enabled,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name")
         .eq("is_on_duty", true)
