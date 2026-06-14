@@ -33,6 +33,8 @@ const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetail
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
+const AdminDashboardPage = lazy(() => import("@/hub/pages/AdminDashboardPage"));
+const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
 
 function HubLoader() {
   return (
@@ -83,7 +85,7 @@ const App = () => (
                   <Route path="/hub/ticket/:id" element={<PlaceholderPage />} />
                   <Route path="/hub/call" element={<PlaceholderPage />} />
                   <Route path="/hub/voicemails" element={<PlaceholderPage />} />
-                  <Route path="/hub/settings" element={<PlaceholderPage />} />
+                  <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/tools/templates" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/campaigns" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/surveys" element={<PlaceholderPage />} />
@@ -96,7 +98,7 @@ const App = () => (
               {/* Hub admin routes */}
               <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
                 <Route element={<AppShell />}>
-                  <Route path="/hub/admin" element={<PlaceholderPage />} />
+                  <Route path="/hub/admin" element={<AdminDashboardPage />} />
                   <Route path="/hub/admin/import" element={<PlaceholderPage />} />
                   <Route path="/hub/admin/staff" element={<AdminStaffPage />} />
                 </Route>
