@@ -87,6 +87,7 @@ const App = () => (
                   <Route path="/hub/call" element={<PlaceholderPage />} />
                   <Route path="/hub/voicemails" element={<PlaceholderPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
+                  <Route path="/hub/my-time" element={<MyTimePage />} />
                   <Route path="/hub/tools/templates" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/campaigns" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/surveys" element={<PlaceholderPage />} />
