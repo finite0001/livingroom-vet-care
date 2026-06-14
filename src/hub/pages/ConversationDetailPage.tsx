@@ -24,8 +24,12 @@ export default function ConversationDetailPage() {
   const { profile } = useAuth();
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
   const { data: conversation, isLoading: convLoading } = useConversation(id);
-  const { data: consent } = useClientConsent(conversation?.client.id);
-  const smsOptedOut = consent?.opted_in === false;
+  // Strict opt-in: SMS is blocked unless the client has an explicit opted_in=true
+  // record, matching the server's send-sms gate. Gate on consentFetched so we stay
+  // optimistic (SMS enabled) while consent is still loading — otherwise the empty
+  // composer would auto-switch off SMS before we know an opted-in client is fine.
+  const { data: consent, isFetched: consentFetched } = useClientConsent(conversation?.client.id);
+  const smsOptedOut = consentFetched && consent?.opted_in !== true;
   const markRead = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
@@ -69,7 +73,7 @@ export default function ConversationDetailPage() {
         if (error) throw error;
         toast.success("Note added");
       } else if (channel === "SMS") {
-        if (smsOptedOut) { toast.error("This client has opted out of SMS"); return; }
+        if (smsOptedOut) { toast.error("No SMS consent on record for this client"); return; }
         const phone = conversation.client.primary_phone;
         if (!phone) { toast.error("Client has no phone number"); return; }
         const { data, error } = await supabase.functions.invoke("send-sms", {
