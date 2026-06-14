@@ -3,7 +3,7 @@ import {
   Home, MessageSquare, Users, Phone, Settings,
   ClipboardList, AudioWaveform, FileText, Megaphone,
   AlertTriangle, BarChart3, Pill, Stethoscope,
-  LayoutDashboard, Upload, ChevronDown, LogOut,
+  LayoutDashboard, Upload, ChevronDown, LogOut, Clock,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const workspaceItems = [
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/call", label: "Phone", icon: Phone },
   { path: "/hub/voicemails", label: "Voicemails", icon: AudioWaveform },
+  { path: "/hub/time", label: "Time Clock", icon: Clock },
 ];
 
 const toolItems = [
