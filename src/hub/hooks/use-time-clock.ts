@@ -87,6 +87,26 @@ export function useMyShifts(days = 30) {
   });
 }
 
+// My shifts within an optional date range (for the detailed timesheet view).
+// Shares the ["time-clock"] key namespace so clocking in/out refreshes it.
+export function useMyShiftsRange(fromIso: string | null, toIso: string | null) {
+  const { profile } = useAuth();
+  return useQuery<TimeEntry[]>({
+    queryKey: ["time-clock", "range", profile?.id, fromIso, toIso],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      let q = supabase.from("time_entries").select("*").eq("staff_id", profile!.id);
+      if (fromIso) q = q.gte("clock_in_at", fromIso);
+      if (toIso) q = q.lte("clock_in_at", toIso);
+      const { data, error } = await q
+        .order("clock_in_at", { ascending: false })
+        .limit(fromIso || toIso ? 500 : 100);
+      if (error) throw error;
+      return (data ?? []) as TimeEntry[];
+    },
+  });
+}
+
 // Admin: who is currently on duty (profiles.is_on_duty maintained by clock in/out).
 export function useOnDutyStaff(enabled: boolean) {
   return useQuery<OnDutyStaff[]>({

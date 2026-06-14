@@ -1,9 +1,6 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Clock, CalendarIcon, Search, X } from "lucide-react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hub/contexts/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,14 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
-
-type TimeEntry = {
-  id: string;
-  clock_in_at: string;
-  clock_out_at: string | null;
-  note: string | null;
-  created_at: string;
-};
+import { useMyShiftsRange } from "@/hub/hooks/use-time-clock";
 
 function formatDuration(start: string, end: string | null) {
   const endMs = end ? new Date(end).getTime() : Date.now();
@@ -53,8 +43,7 @@ function endOfDay(d: Date) {
 }
 
 export default function MyTimePage() {
-  usePageTitle("My Time");
-  const { user } = useAuth();
+  usePageTitle("Timesheet");
 
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
@@ -63,23 +52,7 @@ export default function MyTimePage() {
   const fromIso = fromDate ? startOfDay(fromDate).toISOString() : null;
   const toIso = toDate ? endOfDay(toDate).toISOString() : null;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["time-entries", "mine", user?.id, fromIso, toIso],
-    enabled: !!user,
-    queryFn: async () => {
-      let q = (supabase as any)
-        .from("time_entries")
-        .select("id, clock_in_at, clock_out_at, note, created_at")
-        .eq("staff_id", user!.id)
-        .order("clock_in_at", { ascending: false })
-        .limit(fromIso || toIso ? 500 : 50);
-      if (fromIso) q = q.gte("clock_in_at", fromIso);
-      if (toIso) q = q.lte("clock_in_at", toIso);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as TimeEntry[];
-    },
-  });
+  const { data, isLoading } = useMyShiftsRange(fromIso, toIso);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -116,8 +89,8 @@ export default function MyTimePage() {
   return (
     <div className="container max-w-4xl py-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">My Time</h1>
-        <p className="text-sm text-muted-foreground">Your recent clock-in/out history.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Timesheet</h1>
+        <p className="text-sm text-muted-foreground">Your clock-in/out history.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
