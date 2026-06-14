@@ -38,6 +38,7 @@ const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
 const TimeClockPage = lazy(() => import("@/hub/pages/TimeClockPage"));
 const TemplatesPage = lazy(() => import("@/hub/pages/TemplatesPage"));
 const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
+const CampaignsPage = lazy(() => import("@/hub/pages/CampaignsPage"));
 
 function HubLoader() {
   return (
@@ -92,7 +93,7 @@ const App = () => (
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />
                   <Route path="/hub/tools/templates" element={<TemplatesPage />} />
-                  <Route path="/hub/tools/campaigns" element={<PlaceholderPage />} />
+                  <Route path="/hub/tools/campaigns" element={<CampaignsPage />} />
                   <Route path="/hub/tools/surveys" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/alerts" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/refills" element={<PlaceholderPage />} />
