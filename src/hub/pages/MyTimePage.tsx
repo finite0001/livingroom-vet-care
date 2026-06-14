@@ -86,6 +86,28 @@ export default function MyTimePage() {
     setSearch("");
   };
 
+  const exportCsv = () => {
+    const headers = ["Clock In", "Clock Out", "Duration", "Note"];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = filtered.map((e) => [
+      new Date(e.clock_in_at).toISOString(),
+      e.clock_out_at ? new Date(e.clock_out_at).toISOString() : "",
+      formatDuration(e.clock_in_at, e.clock_out_at),
+      e.note ?? "",
+    ].map(escape).join(","));
+    const csv = [headers.map(escape).join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = format(new Date(), "yyyy-MM-dd");
+    a.href = url;
+    a.download = `my-time-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container max-w-4xl py-6 space-y-6">
       <div>
