@@ -57,7 +57,7 @@ export default function ConversationDetailPage() {
     else navigate("/hub/chats");
   };
 
-  const handleSend = async (content: string, channel: "SMS" | "EMAIL" | "NOTE") => {
+  const handleSend = async (content: string, channel: "SMS" | "EMAIL" | "NOTE", subject?: string) => {
     if (!id || !conversation || isSending) return;
     setIsSending(true);
     try {
@@ -83,7 +83,14 @@ export default function ConversationDetailPage() {
         if (data?.delivered) toast.success("SMS delivered");
         else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
       } else if (channel === "EMAIL") {
-        toast.error("Email sending is not yet configured");
+        const email = conversation.client.primary_email;
+        if (!email) { toast.error("Client has no email address"); return; }
+        const { data, error } = await supabase.functions.invoke("send-email", {
+          body: { to: email, subject: subject ?? "", body: content, conversation_id: id },
+        });
+        if (error) throw error;
+        if (data?.delivered) toast.success("Email sent");
+        else toast(data?.note ?? "Message recorded. Email delivery pending configuration.");
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send");

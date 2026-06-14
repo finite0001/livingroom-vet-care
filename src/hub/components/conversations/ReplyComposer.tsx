@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, MessageSquare, StickyNote } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Send, MessageSquare, StickyNote, Mail } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TemplateSelector } from "./TemplateSelector";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
   useEffect(() => { if (draft && !content.trim()) { setContent(draft); onDraftConsumed?.(); } }, [draft]);
 
   const [channel, setChannel] = useState<"SMS" | "EMAIL" | "NOTE">(defaultChannel || "SMS");
+  const [subject, setSubject] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Consent loads async after first paint; if it resolves to opted-out while the
@@ -48,10 +50,13 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
 
   const smsSegments = channel === "SMS" ? Math.ceil(content.length / SMS_SEGMENT_LENGTH) : 0;
 
+  const emailMissingSubject = channel === "EMAIL" && !subject.trim();
+
   const handleSubmit = () => {
-    if (!content.trim()) return;
-    onSend(content, channel);
+    if (!content.trim() || emailMissingSubject) return;
+    onSend(content, channel, channel === "EMAIL" ? subject.trim() : undefined);
     setContent("");
+    setSubject("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -69,12 +74,23 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
             <TabsTrigger value="SMS" className="text-xs gap-1 h-6" disabled={smsOptedOut}>
               <MessageSquare className="h-3 w-3" /> SMS
             </TabsTrigger>
+            <TabsTrigger value="EMAIL" className="text-xs gap-1 h-6">
+              <Mail className="h-3 w-3" /> Email
+            </TabsTrigger>
             <TabsTrigger value="NOTE" className="text-xs gap-1 h-6">
               <StickyNote className="h-3 w-3" /> Note
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
+      {channel === "EMAIL" && (
+        <Input
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Subject"
+          className="h-8 bg-background/60 text-[13px]"
+        />
+      )}
       <div className="flex gap-2">
         <Textarea
           ref={textareaRef}
@@ -86,7 +102,7 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
           rows={1}
         />
         <div className="flex flex-col gap-1 shrink-0">
-          <Button size="icon" onClick={handleSubmit} disabled={!content.trim() || disabled} className="h-[44px] w-[44px]" aria-label="Send message">
+          <Button size="icon" onClick={handleSubmit} disabled={!content.trim() || emailMissingSubject || disabled} className="h-[44px] w-[44px]" aria-label="Send message">
             <Send className="h-4 w-4" />
           </Button>
           {channel !== "NOTE" && <TemplateSelector onSelect={(text) => setContent(text)} />}
