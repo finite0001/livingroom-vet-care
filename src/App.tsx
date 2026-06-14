@@ -43,6 +43,7 @@ const CallPage = lazy(() => import("@/hub/pages/CallPage"));
 const VoicemailsPage = lazy(() => import("@/hub/pages/VoicemailsPage"));
 const TicketsPage = lazy(() => import("@/hub/pages/TicketsPage"));
 const TicketDetailPage = lazy(() => import("@/hub/pages/TicketDetailPage"));
+const RefillsPage = lazy(() => import("@/hub/pages/RefillsPage"));
 
 function HubLoader() {
   return (
@@ -100,7 +101,7 @@ const App = () => (
                   <Route path="/hub/tools/campaigns" element={<CampaignsPage />} />
                   <Route path="/hub/tools/surveys" element={<PlaceholderPage />} />
                   <Route path="/hub/tools/alerts" element={<PlaceholderPage />} />
-                  <Route path="/hub/tools/refills" element={<PlaceholderPage />} />
+                  <Route path="/hub/tools/refills" element={<RefillsPage />} />
                   <Route path="/hub/tools/ezyvet" element={<PlaceholderPage />} />
                 </Route>
               </Route>
