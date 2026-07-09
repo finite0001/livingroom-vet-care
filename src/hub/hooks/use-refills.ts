@@ -62,7 +62,10 @@ export function useUpdateRefill() {
   return useMutation({
     mutationFn: async ({ id, status, assigned_to_id, notes }: { id: string; status?: RefillStatus; assigned_to_id?: string | null; notes?: string | null }) => {
       const now = new Date().toISOString();
-      const updates: Record<string, unknown> = { updated_at: now };
+      const updates: {
+        updated_at: string; status?: RefillStatus; approved_at?: string;
+        ready_at?: string; picked_up_at?: string; assigned_to_id?: string | null; notes?: string | null;
+      } = { updated_at: now };
       if (status !== undefined) {
         updates.status = status;
         if (status === "APPROVED") updates.approved_at = now;

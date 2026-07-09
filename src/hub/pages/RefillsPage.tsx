@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pill, Plus, Search } from "lucide-react";
+import { MessageSquare, Pill, Plus, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,8 +16,9 @@ import { useProfiles } from "@/hub/hooks/use-profiles";
 import { useClients, type ClientWithPets } from "@/hub/hooks/use-clients";
 import {
   useRefills, useCreateRefill, useUpdateRefill, REFILL_STATUSES, refillStatusLabel,
-  type RefillStatus,
+  type Refill, type RefillStatus,
 } from "@/hub/hooks/use-refills";
+import { SendToClientDialog } from "@/hub/components/shared/SendToClientDialog";
 
 const STATUS_TONE: Record<string, string> = {
   REQUESTED: "bg-blue-500/10 text-blue-600",
@@ -29,6 +30,14 @@ const STATUS_TONE: Record<string, string> = {
 const UNASSIGNED = "__unassigned__";
 const FILTERS: (RefillStatus | "ALL")[] = ["ALL", ...REFILL_STATUSES];
 
+function refillNotifyBody(r: Refill): string {
+  const med = r.medication_name ?? "your pet's medication";
+  const pet = r.pet_name ?? "your pet";
+  if (r.status === "APPROVED") return `Good news! The refill of ${med} for ${pet} has been approved. We'll let you know as soon as it's ready.`;
+  if (r.status === "READY") return `The refill of ${med} for ${pet} is ready. Reply here to arrange pickup or delivery.`;
+  return `Update on the refill of ${med} for ${pet}: ${refillStatusLabel(r.status).toLowerCase()}.`;
+}
+
 export default function RefillsPage() {
   usePageTitle("Refills");
   const [filter, setFilter] = useState<RefillStatus | "ALL">("ALL");
@@ -36,6 +45,7 @@ export default function RefillsPage() {
   const { data: staff } = useProfiles();
   const update = useUpdateRefill();
   const [open, setOpen] = useState(false);
+  const [notifyRefill, setNotifyRefill] = useState<Refill | null>(null);
 
   return (
     <div className="flex flex-col">
@@ -90,6 +100,9 @@ export default function RefillsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <Button variant="outline" size="sm" className="h-8 w-full gap-1.5 text-xs" onClick={() => setNotifyRefill(r)}>
+                  <MessageSquare className="h-3.5 w-3.5" /> Notify client
+                </Button>
               </CardContent>
             </Card>
           ))
@@ -97,6 +110,15 @@ export default function RefillsPage() {
       </div>
 
       <NewRefillSheet open={open} onOpenChange={setOpen} />
+      {notifyRefill && (
+        <SendToClientDialog
+          clientId={notifyRefill.client_id}
+          defaultSubject={`Prescription update for ${notifyRefill.pet_name ?? "your pet"}`}
+          defaultBody={refillNotifyBody(notifyRefill)}
+          open
+          onOpenChange={(o) => { if (!o) setNotifyRefill(null); }}
+        />
+      )}
     </div>
   );
 }

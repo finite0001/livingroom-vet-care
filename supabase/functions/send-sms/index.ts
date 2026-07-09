@@ -107,11 +107,27 @@ serve(async (req) => {
       is_read: true,
     }).eq("id", conversation_id);
 
-    const twilioConfigured = !!Deno.env.get("TWILIO_API_KEY");
-    const delivered = false; // Twilio delivery not yet wired
-    const statusNote = twilioConfigured
-      ? "Twilio configured but delivery path not yet implemented."
-      : "Message recorded. SMS delivery pending Twilio configuration.";
+    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const fromNumber = Deno.env.get("TWILIO_FROM_NUMBER");
+    const twilioConfigured = !!(accountSid && authToken && fromNumber);
+    let delivered = false;
+    let statusNote = "Message recorded. SMS delivery pending Twilio configuration.";
+    let errorText: string | null = null;
+    if (accountSid && authToken && fromNumber) {
+      try {
+        const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ To: String(to), From: fromNumber, Body: body.trim() }).toString(),
+        });
+        if (resp.ok) { delivered = true; statusNote = "SMS sent via Twilio."; }
+        else { errorText = `Twilio ${resp.status}: ${await resp.text()}`; statusNote = "Twilio send failed."; }
+      } catch (e) { errorText = e instanceof Error ? e.message : "Twilio request failed"; statusNote = "Twilio send failed."; }
+    }
 
     await supabase.from("outbound_message_attempts").insert({
       user_id: user.id,
@@ -123,7 +139,7 @@ serve(async (req) => {
       delivered,
       provider: twilioConfigured ? "twilio" : null,
       status_note: statusNote,
-      error_text: null,
+      error_text: errorText,
     });
 
     console.log(`[send-sms] Recorded message ${inserted?.id} for conversation ${conversation_id} (delivered=${delivered}).`);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,10 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { supabase } from "@/integrations/supabase/client";
 import { useProfiles } from "@/hub/hooks/use-profiles";
 import {
   useTicket, useUpdateTicket, TICKET_STATUSES, statusLabel, formTypeLabel, type Ticket, type TicketStatus, type PetSex,
 } from "@/hub/hooks/use-tickets";
+import { SendToClientDialog } from "@/hub/components/shared/SendToClientDialog";
 
 const UNASSIGNED = "__unassigned__";
 
@@ -42,15 +45,66 @@ function toForm(t: Ticket): TicketForm {
   return rest;
 }
 
+/**
+ * Tickets store client_name/client_contact as free text (no client_id), so
+ * resolve the client record via the linked conversation when there is one,
+ * otherwise by matching client_contact against clients' email/phone.
+ */
+function useTicketClientId(ticket: Ticket | null | undefined) {
+  return useQuery<string | null>({
+    queryKey: ["ticket-client", ticket?.id],
+    enabled: !!ticket,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      if (!ticket) return null;
+      if (ticket.conversation_id) {
+        const { data, error } = await supabase
+          .from("conversations")
+          .select("client_id")
+          .eq("id", ticket.conversation_id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.client_id) return data.client_id;
+      }
+      const contact = ticket.client_contact?.trim() ?? "";
+      if (!contact) return null;
+      if (contact.includes("@")) {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("id")
+          .ilike("primary_email", contact)
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        return data?.id ?? null;
+      }
+      const digits = contact.replace(/\D/g, "");
+      if (digits.length < 10) return null;
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, primary_phone")
+        .not("primary_phone", "is", null);
+      if (error) throw error;
+      const match = (data ?? []).find((c) => {
+        const p = (c.primary_phone ?? "").replace(/\D/g, "");
+        return p.length >= 10 && p.slice(-10) === digits.slice(-10);
+      });
+      return match?.id ?? null;
+    },
+  });
+}
+
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: ticket, isLoading } = useTicket(id);
   const { data: staff } = useProfiles();
   const update = useUpdateTicket();
+  const { data: linkedClientId, isFetched: clientLookupFetched } = useTicketClientId(ticket);
   usePageTitle(ticket ? `Ticket — ${ticket.pet_name}` : "Ticket");
 
   const [form, setForm] = useState<TicketForm | null>(null);
+  const [sendOpen, setSendOpen] = useState(false);
   useEffect(() => { if (ticket) setForm(toForm(ticket)); }, [ticket]);
 
   const set = <K extends keyof TicketForm>(key: K, value: TicketForm[K]) => setForm((f) => (f ? { ...f, [key]: value } : f));
@@ -160,12 +214,42 @@ export default function TicketDetailPage() {
               </CardContent>
             </Card>
 
+            <Button variant="outline" className="w-full gap-1.5" disabled={!linkedClientId} onClick={() => setSendOpen(true)}>
+              <MessageSquare className="h-4 w-4" /> Send to client
+            </Button>
+            {clientLookupFetched && !linkedClientId && (
+              <p className="text-center text-xs text-muted-foreground">
+                No client record matches this ticket's contact, so it can't be messaged from here.
+              </p>
+            )}
+
             <Button className="w-full" disabled={update.isPending} onClick={handleSave}>{update.isPending ? "Saving…" : "Save ticket"}</Button>
+
+            {linkedClientId && (
+              <SendToClientDialog
+                clientId={linkedClientId}
+                defaultSubject="Update from your vet visit"
+                defaultBody={ticketMessageSeed(form)}
+                open={sendOpen}
+                onOpenChange={setSendOpen}
+              />
+            )}
           </>
         )}
       </div>
     </div>
   );
+}
+
+// Seed only client-facing fields — ticket notes are internal and stay out.
+function ticketMessageSeed(form: TicketForm): string {
+  const lines = [
+    `Hi ${form.client_name},`,
+    "",
+    `Here's an update from your vet visit for ${form.pet_name}.`,
+  ];
+  if (form.symptom_summary?.trim()) lines.push("", form.symptom_summary.trim());
+  return lines.join("\n");
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
