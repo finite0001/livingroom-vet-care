@@ -10,7 +10,7 @@ Goal: complete all requested practice software and website components, then perf
 | Pet name/age/species/breed/weight/birthday/color/microchip | PR2 patient workspace, exact/estimated/unknown dates, dated units, mobile persistence test | Hosted clinician review |
 | Vaccine upcoming/last dates | Stock-backed and historical vaccine administration, frozen metadata and clinician-chosen due dates implemented | PR24 due plans and PR29 guarded outbox bridge implemented; obtain clinician acceptance and controlled provider proof |
 | SOAP records | PR2 versioned save/sign/addenda and concurrency/immutability tests | Full clinical acceptance, hosted selected-record export acceptance and restore proof |
-| Important historical diagnoses highlighted red | PR2 problem history and red/icon/text flags; PR31 selected diagnosis revisions and critical-history export | Review propagation into booking/medication/vaccine workflows and accept exported history |
+| Important historical diagnoses highlighted red | PR2 red/icon/text flags, PR31 critical-history export and PR40 shared booking/treatment refresh with exact server-validated alert review | Clinician acceptance and hosted booking/medication/vaccine workflow checks |
 | Text/email with records and labs | Durable outbox plus verified inbound/status processing implemented; provider delivery remains disabled | PR35 frozen report/original-file email preparation and guarded outbox delivery implemented; controlled authorized provider round-trips remain |
 | Standard and per-patient vaccine/lab reminders | PR19 lab interval templates and PR24 standard/patient vaccine due plans with immutable unsent jobs | PR29 disabled-by-default scheduler/outbox bridge and PR34 versioned administrator policy UI implemented; reviewed wording/policies, deployment configuration and controlled provider acceptance remain |
 | Vaccine certificates with due dates | PR20 immutable vaccine history and Current certificate integration adds reviewed patient due-plan snapshots; print/correction tests pass | Veterinarian acceptance and hosted issuance |
@@ -47,7 +47,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, GoDaddy DNS access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. GoDaddy access has been verified; the prepared DNS changes remain unsaved. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
@@ -61,7 +61,7 @@ Living Room Vet is the primary record system. ezyVet imports are staged and revi
 
 ## Current implementation evidence (2026-09-12)
 
-PRs 3–36 have green frontend/database CI at this checkpoint; PR37 at `109b891` has green frontend, database and frozen Edge checks. PR38 schema-4 provenance at `63414e8` has completed local verification; its Edge CI is green while frontend/database CI remain pending at this checkpoint. PR32's earlier published documentation tip was green; the newly aligned documentation tip requires its own CI run after push. [The clinician acceptance pack](clinical-review/README.md) remains a technical review artifact with every clinical decision pending. No CI result proves hosted deployment, provider activation or commercial acceptance.
+PRs 3–36 have green frontend/database CI at this checkpoint. PRs 37–41 have green frontend, database and frozen Edge checks, including PR41 at `5896463`; the aligned PR32 documentation tip `a75dce4` also passed all three checks. Subsequent increments require their own CI runs. [The clinician acceptance pack](clinical-review/README.md) remains a technical review artifact with every clinical decision pending. No CI result proves hosted deployment, provider activation or commercial acceptance.
 
 | Increment | Implemented evidence | Remaining gate |
 | --- | --- | --- |
@@ -77,9 +77,12 @@ PRs 3–36 have green frontend/database CI at this checkpoint; PR37 at `109b891`
 | PR35 | Exact frozen HTML report and original attachments, preparation/queue recovery and final guarded email delivery | Staff-authenticated hosted Edge gateway check, verified sender/inbound configuration, recipient acceptance and controlled delivery |
 | PR36 | Reviewed historical ezyVet weight creation/linking, durable approval/recovery and retained discrepancy reviews | Authorized account/sample contract, live source mapping evidence and Dr. Edler review |
 | PR37 | All 14 Edge entry points checked with frozen Deno dependencies; shared renderers remain deployable | Hosted gateway/runtime commissioning, not just module checks |
-| PR38 | Schema-4 selected-weight source provenance, original versus reviewed values, source-review history and separate form-version acceptance | Current CI, Dr. Edler/operator v4 acceptance and hosted release/delivery checks |
+| PR38 | Schema-4 selected-weight source provenance, original versus reviewed values, source-review history and separate form-version acceptance; all three CI checks passed | Dr. Edler/operator v4 acceptance and hosted release/delivery checks |
+| PR39 | Explicit deployment environment checks reject old-backend fallback, unsafe browser key types and production-backed previews; all three CI checks passed | Separately commissioned staging backend and actual hosted configuration/authentication acceptance |
+| PR40 | Exact server-validated treatment alert review, shared diagnosis/profile refresh and immutable review evidence; all three CI checks passed including two-session lock regression | Dr. Edler workflow review and hosted stock/billing acceptance |
+| PR41 | Personal unread home counts, explicit load failures and unavailable legacy-tool route gating; focused browser and all three CI checks passed | Hosted staff navigation acceptance |
 
-PR numbering is not a linear dependency order. PR30 intake hardening is based on PR31 history; the later functional chain reaches PR37 through logo, policy controls, release delivery and reviewed weights. PR38 extends PR37. The documentation review branch is aligned to PR38.
+PR numbering is not a linear dependency order. PR30 intake hardening is based on PR31 history; the later functional chain reaches PR37 through logo, policy controls, release delivery and reviewed weights. PR38 extends PR37, followed by the aligned PR32 clinical review pack, PR39 deployment checks, PR40 treatment review and PR41 staff navigation.
 
 At `63414e8`, the implementation owner reports 1,039 SQL assertions, 148 unit tests, ten targeted release browser tests and frozen checks for all 14 Edge entry points passing. These targeted browser results are not a claim of a fresh complete browser-suite run. Historical evidence remains available: PR26 had a local 66/67 browser run with one reminder timeout followed by two passing targeted reminder tests; that older result is not the latest integrated test count.
 
@@ -114,3 +117,5 @@ The root rollout audit observed nameservers `ns07.domaincontrol.com` and `ns08.d
 ## Pending email-domain preparation
 
 The pending Resend domain `thelivingroom.vet` was created in `us-east-1` with sending requested On; receiving is saved Off and the domain remains NotStarted/unverified. Enforced TLS was saved. Tracking behavior remains a controlled-message verification gate; no tracking configuration was submitted. No DNS changes, webhook/API-key setup, messages or billing upgrade/charge flow were performed in that preparation. [Exact proposed GoDaddy records and mail-routing gates](email-domain-setup.md) keep sending verification separate from root MX cutover. Mailbox names remain unpublished until actual verified ingestion and controlled delivery are demonstrated.
+
+A subsequent signed-in GoDaddy review confirmed seven existing DNS records, including the parked website and a DMARC quarantine policy, with no MX or Resend verification entries. Three sending-verification rows are prepared in an unsaved form with the default 30-minute TTL. This removes DNS-account access as an unknown; it does not establish verification, receiving, sender configuration or delivery. Existing records and the exact unsaved proposal are recorded in the email-domain setup document. No registrant personal details were copied into repository documentation.
