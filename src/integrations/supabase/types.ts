@@ -3632,6 +3632,70 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_inventory_product: {
+        Args: {
+          p_id: string;
+          p_kind: string;
+          p_manufacturer: string;
+          p_name: string;
+          p_unit: string;
+          p_unit_price_cents: number;
+        };
+        Returns: {
+          active: boolean;
+          created_at: string;
+          created_by: string;
+          id: string;
+          kind: string;
+          manufacturer: string;
+          name: string;
+          unit: string;
+          unit_price_cents: number;
+          version: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "catalog_products";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      inventory_lot_balances: {
+        Args: { p_limit?: number; p_product_id?: string; p_search?: string };
+        Returns: {
+          active: boolean;
+          balance: number;
+          expires_on: string;
+          id: string;
+          kind: string;
+          location: string;
+          lot_number: string;
+          product_id: string;
+          product_name: string;
+          unit: string;
+        }[];
+      };
+      search_inventory_products: {
+        Args: { p_limit?: number; p_search?: string };
+        Returns: {
+          active: boolean;
+          created_at: string;
+          created_by: string;
+          id: string;
+          kind: string;
+          manufacturer: string;
+          name: string;
+          unit: string;
+          unit_price_cents: number;
+          version: number;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "catalog_products";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     }
     Enums: {
       appointment_status:

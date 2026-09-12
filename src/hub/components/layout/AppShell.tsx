@@ -15,12 +15,12 @@ export function AppShell() {
         Skip to main content
       </a>
       <DesktopSidebar collapsed={navHidden} />
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <UserHeader navHidden={navHidden} onToggleNav={() => setNavHidden((v) => !v)} />
         <main
           id="main-content"
           key={location.pathname}
-          className={`mx-auto w-full max-w-screen-xl flex-1 animate-fade-in ${navHidden ? "pb-0" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}`}
+          className={`mx-auto min-w-0 w-full max-w-screen-xl flex-1 animate-fade-in ${navHidden ? "pb-0" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}`}
         >
           <ErrorBoundary>
             <Outlet />

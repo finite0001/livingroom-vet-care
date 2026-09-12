@@ -13,6 +13,7 @@ import { useUnreadVoicemailCount } from "@/hub/hooks/use-telephony";
 
 const workspaceItems = [
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
+  { path: "/hub/inventory", label: "Inventory", icon: Pill },
   { path: "/hub", label: "Home", icon: Home, exact: true },
   { path: "/hub/chats", label: "Communication", icon: MessageSquare },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },

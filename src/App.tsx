@@ -32,6 +32,7 @@ const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
+const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
 const SchedulePage = lazy(() => import("./hub/features/scheduling/SchedulePage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
@@ -90,6 +91,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/chats" element={<ConversationsPage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
                   <Route path="/hub/schedule" element={<SchedulePage />} />
+                  <Route path="/hub/inventory" element={<InventoryPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />
                   <Route path="/hub/client/:id" element={<ClientProfilePage />} />
                   <Route path="/hub/patient/:id" element={<PatientPage />} />
