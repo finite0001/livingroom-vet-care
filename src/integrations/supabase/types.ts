@@ -4631,6 +4631,198 @@ export type Database = {
           },
         ]
       }
+      anesthesia_record_addenda: {
+        Row: {
+          actor_id: string
+          content: string
+          id: string
+          record_id: string
+          recorded_at: string
+        }
+        Insert: {
+          actor_id: string
+          content: string
+          id: string
+          record_id: string
+          recorded_at?: string
+        }
+        Update: {
+          actor_id?: string
+          content?: string
+          id?: string
+          record_id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anesthesia_record_addenda_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anesthesia_record_addenda_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "patient_anesthesia_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anesthesia_record_revisions: {
+        Row: {
+          actor_id: string
+          id: number
+          record_id: string
+          recorded_at: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          actor_id: string
+          id?: never
+          record_id: string
+          recorded_at?: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          actor_id?: string
+          id?: never
+          record_id?: string
+          recorded_at?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anesthesia_record_revisions_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anesthesia_record_revisions_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "patient_anesthesia_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_anesthesia_records: {
+        Row: {
+          assessment: string
+          created_at: string
+          created_by: string
+          ended_at: string | null
+          events: Json
+          id: string
+          observations: Json
+          original_document_id: string | null
+          pet_id: string
+          plan: string
+          procedure_name: string
+          recovery_notes: string
+          signed_at: string | null
+          signed_by: string | null
+          source: string
+          source_description: string
+          started_at: string
+          status: string
+          team: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          assessment?: string
+          created_at?: string
+          created_by: string
+          ended_at?: string | null
+          events?: Json
+          id: string
+          observations?: Json
+          original_document_id?: string | null
+          pet_id: string
+          plan?: string
+          procedure_name: string
+          recovery_notes?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          source: string
+          source_description?: string
+          started_at: string
+          status?: string
+          team: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          assessment?: string
+          created_at?: string
+          created_by?: string
+          ended_at?: string | null
+          events?: Json
+          id?: string
+          observations?: Json
+          original_document_id?: string | null
+          pet_id?: string
+          plan?: string
+          procedure_name?: string
+          recovery_notes?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          source?: string
+          source_description?: string
+          started_at?: string
+          status?: string
+          team?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_anesthesia_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_anesthesia_records_original_document_id_fkey"
+            columns: ["original_document_id"]
+            isOneToOne: false
+            referencedRelation: "patient_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_anesthesia_records_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_anesthesia_records_signed_by_fkey"
+            columns: ["signed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_anesthesia_records_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -6617,6 +6809,104 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "vaccine_certificate_events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      add_anesthesia_record_addendum: {
+        Args: {
+          p_content: string
+          p_id: string
+          p_pet_id: string
+          p_record_id: string
+        }
+        Returns: {
+          actor_id: string
+          content: string
+          id: string
+          record_id: string
+          recorded_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "anesthesia_record_addenda"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      anesthesia_validate: {
+        Args: {
+          p_record: Database["public"]["Tables"]["patient_anesthesia_records"]["Row"]
+        }
+        Returns: undefined
+      }
+      save_patient_anesthesia_record: {
+        Args: {
+          p_expected_version: number
+          p_id: string
+          p_pet_id: string
+          p_values: Json
+        }
+        Returns: {
+          assessment: string
+          created_at: string
+          created_by: string
+          ended_at: string | null
+          events: Json
+          id: string
+          observations: Json
+          original_document_id: string | null
+          pet_id: string
+          plan: string
+          procedure_name: string
+          recovery_notes: string
+          signed_at: string | null
+          signed_by: string | null
+          source: string
+          source_description: string
+          started_at: string
+          status: string
+          team: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_anesthesia_records"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      sign_patient_anesthesia_record: {
+        Args: { p_expected_version: number; p_id: string; p_pet_id: string }
+        Returns: {
+          assessment: string
+          created_at: string
+          created_by: string
+          ended_at: string | null
+          events: Json
+          id: string
+          observations: Json
+          original_document_id: string | null
+          pet_id: string
+          plan: string
+          procedure_name: string
+          recovery_notes: string
+          signed_at: string | null
+          signed_by: string | null
+          source: string
+          source_description: string
+          started_at: string
+          status: string
+          team: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_anesthesia_records"
           isOneToOne: true
           isSetofReturn: false
         }
