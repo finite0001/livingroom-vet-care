@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Home, MessageSquare, Phone, ClipboardList, MoreHorizontal,
+  CalendarDays, Home, MessageSquare, Phone, ClipboardList, MoreHorizontal,
   Users, FileText, Megaphone, BarChart3, AlertTriangle,
   Pill, Stethoscope, Settings, LayoutDashboard, Upload, X, Clock, History,
 } from "lucide-react";
@@ -20,6 +20,7 @@ const tabs = [
 ];
 
 const moreItems = [
+  { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
