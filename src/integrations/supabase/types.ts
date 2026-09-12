@@ -877,6 +877,282 @@ export type Database = {
           },
         ]
       }
+      communication_attempts: {
+        Row: {
+          attempt_number: number
+          error_code: string | null
+          finished_at: string | null
+          id: string
+          lease_token: string
+          outbox_id: string
+          outcome: string | null
+          provider_message_id: string | null
+          started_at: string
+        }
+        Insert: {
+          attempt_number: number
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_token: string
+          outbox_id: string
+          outcome?: string | null
+          provider_message_id?: string | null
+          started_at?: string
+        }
+        Update: {
+          attempt_number?: number
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_token?: string
+          outbox_id?: string
+          outcome?: string | null
+          provider_message_id?: string | null
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_attempts_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_delivery_events: {
+        Row: {
+          event_id: string
+          outbox_id: string
+          outcome: string
+          provider: string
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          outbox_id: string
+          outcome: string
+          provider: string
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          outbox_id?: string
+          outcome?: string
+          provider?: string
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_delivery_events_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_outbox: {
+        Row: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          attachment_ids?: string[]
+          attempt_count?: number
+          attempt_started_at?: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at?: string
+          created_by: string
+          delivered_at?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          message_id: string
+          provider: string
+          provider_config?: Json | null
+          provider_message_id?: string | null
+          recipient: string
+          request_id: string
+          state?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          attachment_ids?: string[]
+          attempt_count?: number
+          attempt_started_at?: string | null
+          body?: string
+          channel?: string
+          client_id?: string
+          conversation_id?: string
+          created_at?: string
+          created_by?: string
+          delivered_at?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          message_id?: string
+          provider?: string
+          provider_config?: Json | null
+          provider_message_id?: string | null
+          recipient?: string
+          request_id?: string
+          state?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_outbox_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_reconciliations: {
+        Row: {
+          created_at: string
+          evidence_reference: string
+          id: string
+          outbox_id: string
+          outcome: string
+          previous_state: string
+          provider_message_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          evidence_reference: string
+          id?: string
+          outbox_id: string
+          outcome: string
+          previous_state: string
+          provider_message_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          evidence_reference?: string
+          id?: string
+          outbox_id?: string
+          outcome?: string
+          previous_state?: string
+          provider_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_reconciliations_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_retry_audit: {
+        Row: {
+          created_at: string
+          id: string
+          outbox_id: string
+          previous_state: string
+          requested_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outbox_id: string
+          previous_state: string
+          requested_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outbox_id?: string
+          previous_state?: string
+          requested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_retry_audit_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_suppressions: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          reason: string
+          recipient: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          reason: string
+          recipient: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          reason?: string
+          recipient?: string
+        }
+        Relationships: []
+      }
       consent_form_templates: {
         Row: {
           content_html: string
@@ -1083,6 +1359,230 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_page_items: {
+        Row: {
+          page: number
+          run_id: string
+          snapshot_id: string
+        }
+        Insert: {
+          page: number
+          run_id: string
+          snapshot_id: string
+        }
+        Update: {
+          page?: number
+          run_id?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_page_items_run_id_page_fkey"
+            columns: ["run_id", "page"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_pages"
+            referencedColumns: ["run_id", "page"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_page_items_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_pages: {
+        Row: {
+          fetched_at: string
+          item_count: number
+          page: number
+          run_id: string
+        }
+        Insert: {
+          fetched_at?: string
+          item_count: number
+          page: number
+          run_id: string
+        }
+        Update: {
+          fetched_at?: string
+          item_count?: number
+          page?: number
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_pages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_reviews: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          decision: string
+          id: string
+          pet_id: string | null
+          reason: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+          pet_id?: string | null
+          reason: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+          pet_id?: string | null
+          reason?: string
+          reviewed_by?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_reviews_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_reviews_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_reviews_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_runs: {
+        Row: {
+          created_at: string
+          id: string
+          last_error_code: string | null
+          lease_id: string | null
+          lease_until: string | null
+          next_page: number
+          requested_by: string
+          resource: string
+          retry_after: string | null
+          source_origin: string
+          source_site_uid: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          last_error_code?: string | null
+          lease_id?: string | null
+          lease_until?: string | null
+          next_page?: number
+          requested_by: string
+          resource: string
+          retry_after?: string | null
+          source_origin: string
+          source_site_uid: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error_code?: string | null
+          lease_id?: string | null
+          lease_until?: string | null
+          next_page?: number
+          requested_by?: string
+          resource?: string
+          retry_after?: string | null
+          source_origin?: string
+          source_site_uid?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_runs_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_snapshots: {
+        Row: {
+          created_at: string
+          external_id: string
+          first_seen_by: string
+          id: string
+          payload: Json
+          payload_hash: string
+          resource: string
+          source_origin: string
+          source_site_uid: string
+        }
+        Insert: {
+          created_at?: string
+          external_id: string
+          first_seen_by: string
+          id?: string
+          payload: Json
+          payload_hash: string
+          resource: string
+          source_origin: string
+          source_site_uid: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string
+          first_seen_by?: string
+          id?: string
+          payload?: Json
+          payload_hash?: string
+          resource?: string
+          source_origin?: string
+          source_site_uid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_snapshots_first_seen_by_fkey"
+            columns: ["first_seen_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2936,6 +3436,72 @@ export type Database = {
         Returns: undefined
       }
       apply_retention_policies: { Args: never; Returns: undefined }
+      claim_communication: {
+        Args: never
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_ezyvet_import: {
+        Args: {
+          p_actor: string
+          p_id: string
+          p_resource: string
+          p_site_uid: string
+          p_source_origin: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_error_code: string | null
+          lease_id: string | null
+          lease_until: string | null
+          next_page: number
+          requested_by: string
+          resource: string
+          retry_after: string | null
+          source_origin: string
+          source_site_uid: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_import_runs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       clinical_require_staff: { Args: never; Returns: string }
       clock_in: {
         Args: never
@@ -2971,6 +3537,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      communication_is_suppressed: {
+        Args: { p_channel: string; p_client_id: string; p_recipient: string }
+        Returns: boolean
+      }
+      communication_recipient: {
+        Args: { p_channel: string; p_recipient: string }
+        Returns: string
+      }
+      communication_require_service: { Args: never; Returns: undefined }
       correct_patient_treatment: {
         Args: {
           p_id: string
@@ -3015,6 +3590,34 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_inventory_product: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_manufacturer: string
+          p_name: string
+          p_unit: string
+          p_unit_price_cents: number
+        }
+        Returns: {
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          manufacturer: string
+          name: string
+          unit: string
+          unit_price_cents: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "catalog_products"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       credit_billing_invoice: {
         Args: {
           p_amount_cents: number
@@ -3039,6 +3642,62 @@ export type Database = {
       }
       delete_conversation_cascade: {
         Args: { conv_id: string }
+        Returns: undefined
+      }
+      enqueue_communication: {
+        Args: {
+          p_actor_id: string
+          p_attachment_ids?: string[]
+          p_body: string
+          p_channel: string
+          p_conversation_id: string
+          p_recipient: string
+          p_request_id: string
+          p_subject: string
+        }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ezyvet_is_active_admin: { Args: { p_actor: string }; Returns: boolean }
+      fail_ezyvet_import_page: {
+        Args: {
+          p_actor: string
+          p_code: string
+          p_id: string
+          p_lease_id: string
+          p_retry_seconds: number
+        }
         Returns: undefined
       }
       finalize_patient_document: {
@@ -3067,6 +3726,48 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "patient_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      finish_communication_attempt: {
+        Args: {
+          p_error_code: string
+          p_id: string
+          p_lease_token: string
+          p_outcome: string
+          p_provider_message_id: string
+        }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -3121,6 +3822,21 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      inventory_lot_balances: {
+        Args: { p_limit?: number; p_product_id?: string; p_search?: string }
+        Returns: {
+          active: boolean
+          balance: number
+          expires_on: string
+          id: string
+          kind: string
+          location: string
+          lot_number: string
+          product_id: string
+          product_name: string
+          unit: string
+        }[]
       }
       is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       issue_billing_invoice: {
@@ -3235,6 +3951,56 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      reconcile_communication: {
+        Args: {
+          p_evidence_reference: string
+          p_id: string
+          p_outcome: string
+          p_provider_message_id: string
+        }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_communication_delivery: {
+        Args: {
+          p_event_id: string
+          p_outcome: string
+          p_provider: string
+          p_provider_message_id: string
+        }
+        Returns: undefined
+      }
       record_patient_treatment: {
         Args: { p_id: string; p_request: Json }
         Returns: {
@@ -3288,6 +4054,71 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "patient_weights"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      release_communication_claim: {
+        Args: { p_error_code: string; p_id: string; p_lease_token: string }
+        Returns: undefined
+      }
+      retry_communication: {
+        Args: { p_actor_id: string; p_id: string }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_ezyvet_snapshot: {
+        Args: {
+          p_client_id: string
+          p_decision: string
+          p_pet_id: string
+          p_reason: string
+          p_snapshot_id: string
+        }
+        Returns: {
+          client_id: string | null
+          created_at: string
+          decision: string
+          id: string
+          pet_id: string | null
+          reason: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_import_reviews"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -3552,6 +4383,27 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      search_inventory_products: {
+        Args: { p_limit?: number; p_search?: string }
+        Returns: {
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          manufacturer: string
+          name: string
+          unit: string
+          unit_price_cents: number
+          version: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "catalog_products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       sign_clinical_encounter: {
         Args: { p_expected_version: number; p_id: string }
         Returns: {
@@ -3579,6 +4431,82 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      stage_ezyvet_import_page: {
+        Args: {
+          p_actor: string
+          p_complete: boolean
+          p_id: string
+          p_items: Json
+          p_lease_id: string
+          p_page: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_error_code: string | null
+          lease_id: string | null
+          lease_until: string | null
+          next_page: number
+          requested_by: string
+          resource: string
+          retry_after: string | null
+          source_origin: string
+          source_site_uid: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_import_runs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_communication_attempt: {
+        Args: { p_id: string; p_lease_token: string; p_provider_config: Json }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      suppress_communication: {
+        Args: {
+          p_actor_id: string
+          p_channel: string
+          p_reason: string
+          p_recipient: string
+        }
+        Returns: undefined
       }
       void_billing_invoice: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }

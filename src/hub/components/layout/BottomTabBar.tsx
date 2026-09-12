@@ -21,6 +21,7 @@ const tabs = [
 
 const moreItems = [
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
+  { path: "/hub/inventory", label: "Inventory", icon: Pill },
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },

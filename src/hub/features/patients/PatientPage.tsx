@@ -9,6 +9,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { PatientFormDialog } from "./PatientFormDialog";
 import { WeightHistory } from "./WeightHistory";
 import { patientAge } from "./patient-details";
+import { PatientTreatments } from "@/hub/features/treatments/PatientTreatments";
 import { PatientDocuments } from "@/hub/features/documents/PatientDocuments";
 import { ClinicalWorkspace } from "@/hub/features/clinical/ClinicalWorkspace";
 import { PatientAlerts } from "@/hub/features/clinical/PatientAlerts";
@@ -44,6 +45,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientAlerts petId={petId} />
     {patient.allergies?.trim() && <div role="note" className="flex gap-3 rounded-md border border-destructive bg-destructive/10 p-4 text-clinical-alert"><AlertTriangle className="h-5 w-5 shrink-0" /><div><h2 className="font-semibold">Allergy information from existing record</h2><p className="whitespace-pre-wrap text-sm">{patient.allergies}</p><p className="mt-1 text-xs">Review alongside the structured problem list below.</p></div></div>}
     <div className="grid items-start gap-5 lg:grid-cols-2"><Card><CardHeader><CardTitle className="text-lg">Patient details</CardTitle></CardHeader><CardContent><dl className="grid grid-cols-2 gap-4">{details.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-muted-foreground">{label}{label === "Age" && patient.deceased_at ? " at death" : ""}</dt><dd className="break-words text-sm">{value}</dd></div>)}</dl></CardContent></Card><WeightHistory petId={petId} legacyWeight={patient.weight_lbs} disabled={inactive} /></div>
+    <PatientTreatments petId={petId} clientId={patient.client_id} />
     <PatientDocuments petId={petId} />
     <ClinicalWorkspace petId={petId} disabled={inactive} />
   </div></section>;
