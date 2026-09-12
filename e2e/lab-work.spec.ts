@@ -130,3 +130,12 @@ test('mobile lab due plan uses reviewed template with explicit patient override'
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await expect(page.getByText('Reviewed standard lab intervals',{exact:true})).toHaveCount(0);
 });
+test('unsaved lab plan participates in the shared patient navigation guard',async({page})=>{
+ await fixture(page);await page.goto(`/hub/patient/${petId}`);
+ await page.getByRole('button',{name:'New lab order',exact:true}).click();
+ await page.getByLabel('Test name',{exact:true}).fill('Unsaved synthetic plan');
+ await page.getByRole('link',{name:'Synthetic Household',exact:true}).click();
+ const dialog=page.getByRole('alertdialog');await expect(dialog).toBeVisible();
+ await dialog.getByRole('button',{name:/keep editing|stay/i}).click();
+ await expect(page.getByLabel('Test name',{exact:true})).toHaveValue('Unsaved synthetic plan');
+});
