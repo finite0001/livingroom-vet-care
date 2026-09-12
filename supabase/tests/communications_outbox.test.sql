@@ -2,6 +2,16 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+
+-- The compatibility fixtures use the same mandatory prepare path as the browser.
+create function pg_temp.queue_prepared(p_actor_id uuid,p_request_id uuid,p_conversation_id uuid,p_channel text,p_recipient text,p_subject text,p_body text,p_attachment_ids uuid[] default '{}') returns public.communication_outbox language plpgsql as $$
+begin
+ if not exists(select 1 from public.communication_prepared_requests where request_id=p_request_id) then
+  perform public.prepare_message_request(p_actor_id,p_request_id,'fixture:'||p_request_id,p_conversation_id,p_channel,p_recipient,p_subject,p_body,p_attachment_ids);
+ end if;
+ return public.enqueue_communication(p_actor_id,p_request_id,p_conversation_id,p_channel,p_recipient,p_subject,p_body,p_attachment_ids);
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values
 ('51000000-0000-4000-8000-000000000001','outbox-staff@example.test','{"first_name":"Outbox","last_name":"Staff"}');
 create temp table fixture_ids(kind text primary key,id uuid);
@@ -12,14 +22,14 @@ insert into fixture_ids select 'client',id from public.save_client(auth.uid(),nu
 reset role;
 insert into public.conversations(id,client_id) values('51000000-0000-4000-8000-000000000002',(select id from fixture_ids where kind='client'));
 set local role authenticated;
-insert into fixture_ids select 'email',id from public.enqueue_communication(auth.uid(),'51000000-0000-4000-8000-000000000003','51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic email');
-select lives_ok($$select public.enqueue_communication(auth.uid(),'51000000-0000-4000-8000-000000000003','51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic email')$$,'Unchanged stable UUID returns existing request');
+insert into fixture_ids select 'email',id from pg_temp.queue_prepared(auth.uid(),'51000000-0000-4000-8000-000000000003','51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic email');
+select lives_ok($$select pg_temp.queue_prepared(auth.uid(),'51000000-0000-4000-8000-000000000003','51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic email')$$,'Unchanged stable UUID returns existing request');
 select is((select count(*) from public.communication_outbox),1::bigint,'Duplicate intent creates one outbox row');
 select is((select count(*) from public.messages where conversation_id='51000000-0000-4000-8000-000000000002'),1::bigint,'Duplicate intent creates one message');
-select throws_ok($$select public.enqueue_communication(auth.uid(),'51000000-0000-4000-8000-000000000003','51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Changed')$$,'23505',null,'UUID cannot be reused for changed content');
-select throws_ok($$select public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','EMAIL','wrong@example.test','Visit','Synthetic')$$,'42501',null,'Recipient mismatch denied');
-select throws_ok($$select public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic')$$,'42501',null,'SMS without consent denied');
-select throws_ok($$select public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic',array[gen_random_uuid()])$$,'23514',null,'Attachments rejected until authorized record release exists');
+select throws_ok($$select pg_temp.queue_prepared(auth.uid(),'51000000-0000-4000-8000-000000000003','51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Changed')$$,'23505',null,'UUID cannot be reused for changed content');
+select throws_ok($$select pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','EMAIL','wrong@example.test','Visit','Synthetic')$$,'42501',null,'Recipient mismatch denied');
+select throws_ok($$select pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic')$$,'42501',null,'SMS without consent denied');
+select throws_ok($$select pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic',array[gen_random_uuid()])$$,'23514',null,'Attachments rejected until authorized record release exists');
 select throws_ok($$update public.communication_outbox set body='rewrite'$$,'42501',null,'Staff cannot rewrite immutable intent');
 select throws_ok($$select public.claim_communication()$$,'42501',null,'Staff cannot claim service jobs');
 reset role;
@@ -62,7 +72,7 @@ select set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-00000000
 reset role;
 insert into public.sms_consent(client_id,phone_number,opted_in) values((select id from fixture_ids where kind='client'),'+13035550100',true);
 set local role authenticated;
-insert into fixture_ids select 'sms',id from public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic SMS');
+insert into fixture_ids select 'sms',id from pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic SMS');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
@@ -79,7 +89,7 @@ set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select throws_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='sms'))$$,'23514',null,'Uncertain SMS cannot blindly retry');
 select lives_ok($$select public.suppress_communication(auth.uid(),'SMS','+13035550100','Client requested STOP')$$,'Staff can suppress a recipient');
-select throws_ok($$select public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic SMS')$$,'42501',null,'Suppression overrides stored consent');
+select throws_ok($$select pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic SMS')$$,'42501',null,'Suppression overrides stored consent');
 select throws_ok($$select public.reconcile_communication((select id from fixture_ids where kind='sms'),'accepted','SMreceipt','Provider dashboard evidence')$$,'42501',null,'Staff cannot manufacture reconciliation outcomes');
 reset role;
 set local role service_role;
@@ -91,7 +101,7 @@ select is((select count(*) from public.communication_reconciliations),1::bigint,
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fixture_ids select 'blocked',id from public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic preflight suppression');
+insert into fixture_ids select 'blocked',id from pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','EMAIL','outbox@example.test','Visit','Synthetic preflight suppression');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);

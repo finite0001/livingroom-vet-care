@@ -12,6 +12,7 @@ async function invoke(
     mode?: string;
     authorization?: string;
     rpcCode?: string;
+    prepared?: boolean;
   } = {},
 ) {
   const calls: unknown[] = [];
@@ -37,7 +38,11 @@ async function invoke(
       calls.push({ name, args });
       return {
         data: { id: "outbox", message_id: "message", state: "pending" },
-        error: options.rpcCode ? { code: options.rpcCode } : null,
+        error: options.rpcCode
+          ? { code: options.rpcCode }
+          : name === "enqueue_communication" && !options.prepared
+            ? { code: "42501" }
+            : null,
       };
     },
   };
@@ -84,7 +89,7 @@ const request = {
   body: "Synthetic",
 };
 test("enqueue returns queued without claiming provider acceptance or delivery", async () => {
-  const result = await invoke("enqueue-message", request);
+  const result = await invoke("enqueue-message", request, { prepared: true });
   assert.equal(result.status, 202);
   assert.equal(result.body.queued, true);
   assert.equal(result.body.accepted, false);
@@ -132,4 +137,12 @@ test("dispatcher requires exact service credential and denies staff credential",
   );
   assert.equal(allowed.status, 200);
   assert.deepEqual(allowed.calls, ["dispatch"]);
+});
+
+test("unprepared legacy enqueue propagates database rejection without claiming queue success", async () => {
+  const result = await invoke("enqueue-message", request, { prepared: false });
+  assert.equal(result.status, 400);
+  assert.equal(result.body.queue_rejected, true);
+  assert.equal(result.body.queued, undefined);
+  assert.equal(result.calls.length, 1);
 });

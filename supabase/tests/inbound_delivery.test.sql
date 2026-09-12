@@ -2,6 +2,16 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+
+-- The compatibility fixtures use the same mandatory prepare path as the browser.
+create function pg_temp.queue_prepared(p_actor_id uuid,p_request_id uuid,p_conversation_id uuid,p_channel text,p_recipient text,p_subject text,p_body text,p_attachment_ids uuid[] default '{}') returns public.communication_outbox language plpgsql as $$
+begin
+ if not exists(select 1 from public.communication_prepared_requests where request_id=p_request_id) then
+  perform public.prepare_message_request(p_actor_id,p_request_id,'fixture:'||p_request_id,p_conversation_id,p_channel,p_recipient,p_subject,p_body,p_attachment_ids);
+ end if;
+ return public.enqueue_communication(p_actor_id,p_request_id,p_conversation_id,p_channel,p_recipient,p_subject,p_body,p_attachment_ids);
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values
 ('61000000-0000-4000-8000-000000000001','inbound-staff@example.test','{"first_name":"Inbound","last_name":"Staff"}'),
 ('61000000-0000-4000-8000-000000000002','inbound-other@example.test','{"first_name":"Other","last_name":"Staff"}');
@@ -49,7 +59,7 @@ update fixture_ids set id=(public.receive_communication_event('twilio','sms-stop
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"61000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select throws_ok($$select public.enqueue_communication(auth.uid(),gen_random_uuid(),(select id from fixture_ids where kind='conversation'),'SMS','+13035550100','','Do not send')$$,'42501',null,'Durably received STOP blocks outbound even before provider content fetch');
+select throws_ok($$select pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),(select id from fixture_ids where kind='conversation'),'SMS','+13035550100','','Do not send')$$,'42501',null,'Durably received STOP blocks outbound even before provider content fetch');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
@@ -67,7 +77,7 @@ select is((select opted_in from public.communication_phone_preferences where pho
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"61000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fixture_ids select 'outbox',id from public.enqueue_communication(auth.uid(),gen_random_uuid(),(select id from fixture_ids where kind='conversation'),'EMAIL','family@example.test','Summary','Synthetic outbound');
+insert into fixture_ids select 'outbox',id from pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),(select id from fixture_ids where kind='conversation'),'EMAIL','family@example.test','Summary','Synthetic outbound');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
