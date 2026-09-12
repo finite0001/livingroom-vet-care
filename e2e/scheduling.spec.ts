@@ -94,6 +94,33 @@ test("housecall booking shows alerts, retains conflicts and saves Denver instant
           },
         ],
       });
+    if (path === "/rest/v1/rpc/read_patient_treatment_alerts")
+      return route.fulfill({
+        json: {
+          source_hash: "a".repeat(64),
+          snapshot: {
+            schema_version: 1,
+            pet_id: pet,
+            patient_version: 1,
+            important_problems: [
+              {
+                id: "problem",
+                title: "Historical vaccine reaction",
+                notes: "",
+                status: "resolved",
+                importance: "high",
+                version: 1,
+                onset_date: null,
+                updated_at: "2026-09-12T12:00:00Z",
+              },
+            ],
+            legacy_allergies: {
+              text: "Legacy penicillin reaction",
+              provenance: "Existing patient profile",
+            },
+          },
+        },
+      });
     if (path === "/rest/v1/patient_problems")
       return route.fulfill({
         json: [

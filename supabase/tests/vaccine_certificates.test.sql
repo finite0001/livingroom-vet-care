@@ -19,6 +19,7 @@ insert into fx select 'product',id from public.save_catalog_product(null,null,'T
 select public.receive_inventory('49000000-0000-4000-8000-000000000001','49000000-0000-4000-8000-000000000002',(select id from fx where k='product'),'TEST-LOT',current_date+365,'Clinic',10,'Synthetic test stock');
 select public.create_billing_invoice('49000000-0000-4000-8000-000000000003',(select id from fx where k='client'));
 insert into requests values('live',jsonb_build_object('pet_id',(select id from fx where k='pet'),'lot_id','49000000-0000-4000-8000-000000000002','invoice_id','49000000-0000-4000-8000-000000000003','quantity',1,'dose','1 mL','route','SC','site','right rear leg','veterinarian','Dr Test','veterinarian_license','TEST-ONLY','administered_at',now(),'next_due_on',current_date+365));
+update requests set v=v||jsonb_build_object('alert_review',jsonb_build_object('source_hash',read_patient_treatment_alerts((v->>'pet_id')::uuid)->>'source_hash','acknowledged',true)) where k='live';
 select public.record_patient_treatment('49000000-0000-4000-8000-000000000004',(select v from requests where k='live'));
 insert into requests values('details','{"administrator":"Test technician","rabies_tag_number":"TEST-TAG","usda_duration":"1 year","vaccine_type":"Killed virus","size_description":"20–50 lb","initial_or_booster":"initial","owner_business_phone_unavailable":true,"supervision_attested":true}');
 select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'rabies','49000000-0000-4000-8000-000000000004','{}')$$,'23514',null,'Missing rabies metadata rejected');
@@ -55,6 +56,7 @@ insert into requests select 'history',public.preview_vaccine_certificate((select
 select is((select jsonb_array_length(v->'vaccinations') from requests where k='history'),1,'General history excludes corrected source');
 select is((select v#>'{vaccinations,0,next_due_on}' from requests where k='history'),'null'::jsonb,'Unknown imported due date remains explicitly unknown');
 select lives_ok($$select public.issue_vaccine_certificate('49000000-0000-4000-8000-000000000010',(select id from fx where k='pet'),'vaccine_history',null,'{"due_plan_review_version":2}',(select v from requests where k='history'),'Dr Test',true)$$,'General reviewed history certificate can issue');
+update requests set v=v||jsonb_build_object('alert_review',jsonb_build_object('source_hash',read_patient_treatment_alerts((v->>'pet_id')::uuid)->>'source_hash','acknowledged',true)) where k='live';
 select public.record_patient_treatment('49000000-0000-4000-8000-000000000011',(select v||jsonb_build_object('administered_at',now()+interval '1 minute') from requests where k='live'));
 select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'rabies','49000000-0000-4000-8000-000000000011',(select v from requests where k='details'))$$,'23514','A future administration cannot be certified','Future administration cannot issue rabies proof');
 select set_config('request.jwt.claims','{"sub":"48000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
