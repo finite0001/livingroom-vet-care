@@ -1,34 +1,25 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Users, PawPrint } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { useClients, type ClientWithPets } from "@/hub/hooks/use-clients";
 import { CreateClientSheet } from "@/hub/components/clients/CreateClientSheet";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
-import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ClientsPage() {
   usePageTitle("Clients");
   const navigate = useNavigate();
-  const { data: clients, isLoading, isError } = useClients();
   const [search, setSearch] = useState("");
-
-  const filtered = useMemo(() => {
-    if (!clients) return [];
-    if (!search.trim()) return clients;
-    const s = search.toLowerCase();
-    return clients.filter(
-      (c) =>
-        c.full_name.toLowerCase().includes(s) ||
-        c.primary_phone?.includes(s) ||
-        c.primary_email?.toLowerCase().includes(s) ||
-        c.pets.some((p) => p.name.toLowerCase().includes(s))
-    );
-  }, [clients, search]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+  const { data: clients, isLoading, isError } = useClients(debouncedSearch);
+  const filtered = clients ?? [];
 
   return (
     <div className="flex flex-col h-full">
@@ -40,6 +31,8 @@ export default function ClientsPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            aria-label="Search clients"
+            maxLength={250}
             placeholder="Search name, phone, email, pet..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -49,6 +42,7 @@ export default function ClientsPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {filtered.length >= 250 && <p role="status" className="px-4 py-2 text-sm text-muted-foreground">Showing the first 250 matches. Refine your search to find additional clients.</p>}
         {isLoading ? (
           <div className="space-y-1 p-4">
             {[...Array(8)].map((_, i) => (
@@ -77,14 +71,16 @@ export default function ClientsPage() {
   );
 }
 
-function ClientRow({ client, onClick }: { client: ClientWithPets; onClick: () => void }) {
+interface ClientRowProps { client: ClientWithPets; onClick: () => void; }
+
+function ClientRow({ client, onClick }: ClientRowProps) {
   return (
     <div
       onClick={onClick}
       className="flex items-center gap-3 border-b px-4 py-3 cursor-pointer hover:bg-accent/40 transition-colors"
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
     >
       <BrandAvatar name={client.full_name} email={client.primary_email} className="h-9 w-9 text-sm shrink-0" />
       <div className="flex-1 min-w-0">

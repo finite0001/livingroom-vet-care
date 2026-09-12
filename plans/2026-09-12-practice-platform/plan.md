@@ -27,7 +27,7 @@ The repo has a public website, staff authentication, clients/basic pets, convers
 | Phase | Deliverable | Depends on | Status |
 |---|---|---|---|
 | [1. Foundation](phase-01-foundation.md) | Owned environments, auth, schema reliability, CI, practice settings | Owner/vendor inventory | In progress |
-| [2. Clients and clinical core](phase-02-clinical-core.md) | Complete patients, SOAP, diagnoses, alerts, files | 1 | Planned |
+| [2. Clients and clinical core](phase-02-clinical-core.md) | Complete patients, SOAP, diagnoses, alerts, files | 1 | In progress |
 | [3. Communications and scheduling](phase-03-communications-scheduling.md) | Two-way inbox, attachments, appointments, reminder engine | 1; patient linking uses 2 | Planned |
 | [4. Vaccines, inventory and billing](phase-04-vaccines-inventory-billing.md) | Vaccine/rabies certificates, stock lots, invoices, payment reconciliation | 2; sending uses 3 | Planned |
 | [5. Clinical charting and integrations](phase-05-charting-integrations.md) | Dental, anesthesia, QOL, body maps, lab ingestion | 2, 4 | Planned |

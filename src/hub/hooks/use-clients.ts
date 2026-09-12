@@ -11,34 +11,39 @@ export interface ClientWithPets {
   preferred_channel: string | null;
   ezyvet_id: string | null;
   created_at: string;
-  pets: {
-    id: string;
-    name: string;
-    species: string;
-    breed: string | null;
-    client_id: string;
-    weight_lbs?: number | null;
-    created_at?: string;
-    dob?: string | null;
-    allergies?: string | null;
-    medications?: string | null;
-    vaccination_notes?: string | null;
-    microchip_id?: string | null;
-    last_visit_at?: string | null;
-  }[];
+  mailing_address: string | null;
+  housecall_address: string | null;
+  version: number;
+  pets: PetSummary[];
 }
 
-export function useClients() {
+export interface PetSummary {
+  id: string;
+  name: string;
+  species: string;
+  breed: string | null;
+  client_id: string;
+  weight_lbs?: number | null;
+  created_at?: string;
+  dob?: string | null;
+  allergies?: string | null;
+  medications?: string | null;
+  vaccination_notes?: string | null;
+  microchip_id?: string | null;
+  last_visit_at?: string | null;
+  archived_at?: string | null;
+  deceased_at?: string | null;
+}
+
+export function useClients(search = "") {
   return useQuery({
-    queryKey: ["clients"],
+    queryKey: ["clients", search.trim()],
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<ClientWithPets[]> => {
-      const { data: clients, error: clientsError } = await supabase
-        .from("clients")
-        .select("id, first_name, last_name, full_name, primary_phone, primary_email, preferred_channel, ezyvet_id, created_at")
-        .order("last_name")
-        .limit(250);
+      const { data: clients, error: clientsError } = await supabase.rpc("search_clients", {
+        p_search: search.trim(), p_limit: 250,
+      });
       if (clientsError) throw clientsError;
       if (!clients.length) return [];
 
@@ -48,7 +53,7 @@ export function useClients() {
       const clientIds = clients.map((c) => c.id);
       const { data: pets, error: petsError } = await supabase
         .from("pets")
-        .select("id, client_id, name, species, breed")
+        .select("id, client_id, name, species, breed, archived_at, deceased_at")
         .in("client_id", clientIds);
       if (petsError) throw petsError;
 

@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { createBrowserRouter, createRoutesFromElements, RouterProvider, Outlet, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { MarketingErrorBoundary } from "./components/MarketingErrorBoundary";
 import Index from "./pages/Index";
@@ -32,6 +32,7 @@ const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
+const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
 const AdminDashboardPage = lazy(() => import("@/hub/pages/AdminDashboardPage"));
@@ -59,16 +60,10 @@ function HubLoader() {
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Suspense fallback={<HubLoader />}>
-            <Routes>
+// Data-router navigation supports the clinical editor's unsaved-change blocker,
+// including back/forward navigation, while retaining the existing route tree.
+const router = createBrowserRouter(createRoutesFromElements(
+  <Route element={<><ScrollToTop /><Suspense fallback={<HubLoader />}><Outlet /></Suspense></>}>
               {/* Marketing site routes */}
               <Route path="/" element={<MarketingErrorBoundary><Index /></MarketingErrorBoundary>} />
               <Route path="/experience" element={<MarketingErrorBoundary><Experience /></MarketingErrorBoundary>} />
@@ -95,6 +90,7 @@ const App = () => (
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />
                   <Route path="/hub/client/:id" element={<ClientProfilePage />} />
+                  <Route path="/hub/patient/:id" element={<PatientPage />} />
                   <Route path="/hub/tickets" element={<TicketsPage />} />
                   <Route path="/hub/ticket/:id" element={<TicketDetailPage />} />
                   <Route path="/hub/call" element={<CallPage />} />
@@ -123,9 +119,16 @@ const App = () => (
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+  </Route>
+));
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <RouterProvider router={router} />
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

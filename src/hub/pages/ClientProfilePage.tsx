@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Phone, Mail, MessageSquare, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +9,14 @@ import { useClientMessages } from "@/hub/hooks/use-conversations";
 import { ClientNotesCard } from "@/hub/components/clients/ClientNotesCard";
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
 import { formatDistanceToNow } from "date-fns";
+import { PatientFormDialog } from "@/hub/features/patients/PatientFormDialog";
+import { EditClientDialog } from "@/hub/components/clients/EditClientDialog";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: client, isLoading } = useClient(id);
+  const { data: client, isLoading, isError, refetch } = useClient(id);
   const { data: recentMessages } = useClientMessages(id);
 
   usePageTitle(client ? client.full_name : "Client Profile");
@@ -33,6 +35,8 @@ export default function ClientProfilePage() {
       </div>
     );
   }
+
+  if (isError) return <div className="space-y-3 p-6" role="alert"><p>Client details could not be loaded.</p><Button variant="outline" onClick={() => void refetch()}>Retry client</Button></div>;
 
   if (!client) {
     return (
@@ -63,7 +67,7 @@ export default function ClientProfilePage() {
         {/* Contact info */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Contact Info</CardTitle>
+            <div className="flex items-center justify-between gap-3"><CardTitle className="text-base">Contact Info</CardTitle><EditClientDialog client={client} /></div>
           </CardHeader>
           <CardContent className="space-y-2">
             {client.primary_phone && (
@@ -82,6 +86,10 @@ export default function ClientProfilePage() {
                 </a>
               </div>
             )}
+            <dl className="grid gap-3 pt-2 md:grid-cols-2">
+              <div><dt className="text-xs text-muted-foreground">Mailing address</dt><dd className="whitespace-pre-wrap text-sm">{client.mailing_address || "Not recorded"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Housecall address</dt><dd className="whitespace-pre-wrap text-sm">{client.housecall_address || "Not recorded"}</dd></div>
+            </dl>
             {!client.primary_phone && !client.primary_email && (
               <p className="text-sm text-muted-foreground">No contact info on file</p>
             )}
@@ -92,8 +100,9 @@ export default function ClientProfilePage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <PawPrint className="h-4 w-4" /> Pets ({client.pets.length})
+              <PawPrint className="h-4 w-4" /> Patients ({client.pets.length})
             </CardTitle>
+            <div><PatientFormDialog clientId={client.id} /></div>
           </CardHeader>
           <CardContent>
             {client.pets.length === 0 ? (
@@ -101,18 +110,17 @@ export default function ClientProfilePage() {
             ) : (
               <div className="space-y-3">
                 {client.pets.map((pet) => (
-                  <div key={pet.id} className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <Link to={`/hub/patient/${pet.id}`} key={pet.id} className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
                       {pet.name[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{pet.name}</p>
+                      <p className="text-sm font-medium">{pet.name}{pet.archived_at ? " · Archived" : ""}{pet.deceased_at ? " · Deceased" : ""}</p>
                       <p className="text-xs text-muted-foreground">
                         {pet.species}{pet.breed ? ` · ${pet.breed}` : ""}
-                        {pet.weight_lbs ? ` · ${pet.weight_lbs} lbs` : ""}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
