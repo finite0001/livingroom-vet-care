@@ -15,7 +15,7 @@ import {
   practiceTimestamp,
 } from "./stock-policy";
 const selectClass =
-  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+  "h-10 min-w-0 w-full rounded-md border border-input bg-background px-3 text-sm";
 interface FieldProps {
   label: string;
   children: ReactElement<{ id?: string }>;
@@ -23,7 +23,7 @@ interface FieldProps {
 export function StockField({ label, children }: FieldProps) {
   const id = useId();
   return (
-    <div className="grid gap-1">
+    <div className="grid min-w-0 gap-1">
       <Label htmlFor={id}>{label}</Label>
       {cloneElement(children, { id })}
     </div>
@@ -99,7 +99,7 @@ function CatalogForm({
   }
   return (
     <form onSubmit={submit} className="space-y-3">
-      <fieldset disabled={state.locked} className="grid gap-3 md:grid-cols-2">
+      <fieldset disabled={state.locked} className="grid min-w-0 gap-3 md:grid-cols-2">
         <StockField label="Product name">
           <Input
             name="name"
@@ -219,7 +219,7 @@ function ReceiveForm({ catalog }: { catalog: Product[] }) {
   }
   return (
     <form onSubmit={submit} className="space-y-3">
-      <fieldset disabled={state.locked} className="grid gap-3 md:grid-cols-2">
+      <fieldset disabled={state.locked} className="grid min-w-0 gap-3 md:grid-cols-2">
         <StockField label="Stock product">
           <select name="product" className={selectClass} required>
             <option value="">Select product</option>
@@ -307,7 +307,7 @@ function AdjustmentForm({ lot }: { lot: LotBalance }) {
         a verified physical count or return. Billing credits never return stock
         automatically.
       </p>
-      <fieldset disabled={state.locked} className="grid gap-3 md:grid-cols-2">
+      <fieldset disabled={state.locked} className="grid min-w-0 gap-3 md:grid-cols-2">
         <StockField label="Signed stock adjustment">
           <Input
             name="quantity"
@@ -391,7 +391,7 @@ export function InventoryPage() {
           {(catalog.data?.length ?? 0) > 100 && (
             <p>Showing 100 results. Narrow your search.</p>
           )}
-          <div className="grid gap-2 md:grid-cols-2">
+          <div className="grid min-w-0 gap-2 md:grid-cols-2">
             {rows.map((p) => (
               <div
                 key={p.id}

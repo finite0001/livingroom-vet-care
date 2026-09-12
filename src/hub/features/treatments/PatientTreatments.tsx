@@ -22,7 +22,7 @@ interface PatientTreatmentsProps {
   clientId: string;
 }
 const selectClass =
-  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+  "h-10 min-w-0 w-full rounded-md border border-input bg-background px-3 text-sm";
 function CorrectionForm({ record }: { record: Tables<"patient_treatments"> }) {
   const state = useStockMutation(`correction:${record.id}`);
   async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -50,7 +50,7 @@ function CorrectionForm({ record }: { record: Tables<"patient_treatments"> }) {
           The original remains in history. This does not return stock or credit
           an invoice.
         </p>
-        <fieldset disabled={state.locked} className="grid gap-2 md:grid-cols-2">
+        <fieldset disabled={state.locked} className="grid min-w-0 gap-2 md:grid-cols-2">
           <StockField label="Correction reason">
             <Input name="reason" required maxLength={2000} />
           </StockField>
@@ -305,7 +305,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
           <form onSubmit={submit} className="space-y-3">
             <fieldset
               disabled={state.locked}
-              className="grid gap-3 md:grid-cols-2"
+              className="grid min-w-0 gap-3 md:grid-cols-2"
             >
               {historical ? (
                 <>
