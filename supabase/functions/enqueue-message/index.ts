@@ -29,7 +29,7 @@ serve(async (req) => {
       data: { user },
       error: authError,
     } = await db.auth.getUser();
-    if (authError || !user) return json({ error: "Unauthorized" }, 401);
+    if (authError || !user) return json({ error: "Unauthorized", queue_rejected: true }, 401);
     const input = await req.json();
     if (
       !input ||
@@ -48,7 +48,7 @@ serve(async (req) => {
           ].includes(key),
       )
     )
-      return json({ error: "Invalid outbound fields" }, 400);
+      return json({ error: "Invalid outbound fields", queue_rejected: true }, 400);
     if (
       !["EMAIL", "SMS"].includes(input.channel) ||
       typeof input.request_id !== "string" ||
@@ -56,7 +56,7 @@ serve(async (req) => {
         input.request_id,
       )
     )
-      return json({ error: "Channel and stable request UUID required" }, 400);
+      return json({ error: "Channel and stable request UUID required", queue_rejected: true }, 400);
     authorizeDelivery(
       {
         APP_ENV: Deno.env.get("APP_ENV"),
@@ -80,6 +80,7 @@ serve(async (req) => {
     if (error)
       return json(
         {
+          queue_rejected: ["23514", "42501", "22023"].includes(error.code),
           error:
             error.code === "23505"
               ? "Request UUID was already used for different content."
@@ -103,13 +104,13 @@ serve(async (req) => {
     );
   } catch (error) {
     if (error instanceof DeliveryPolicyError)
-      return json({ error: error.message }, error.status);
+      return json({ error: error.message, queue_rejected: true }, error.status);
     return json(
       {
         error:
           "Unable to queue message. Keep the same request UUID when retrying unchanged content.",
       },
-      400,
+      503,
     );
   }
 });

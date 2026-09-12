@@ -1,4 +1,4 @@
-import { deliveryErrorNote, isDeliveryAccepted } from "@/hub/lib/delivery-result";
+import { useMessageQueue } from "@/hub/hooks/use-message-queue";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, User } from "lucide-react";
@@ -23,6 +23,7 @@ export default function ConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const queue = useMessageQueue(`conversation:${id}`);
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
   const { data: conversation, isLoading: convLoading } = useConversation(id);
   // Strict opt-in: SMS is blocked unless the client has an explicit opted_in=true
@@ -80,33 +81,19 @@ export default function ConversationDetailPage() {
         if (!consentFetched || consent?.opted_in !== true || !conversation.client.primary_phone || consent.phone_number?.replace(/\D/g, "") !== conversation.client.primary_phone.replace(/\D/g, "")) { toast.error("No SMS consent on record for this number"); return false; }
         const phone = conversation.client.primary_phone;
         if (!phone) { toast.error("Client has no phone number"); return false; }
-        const { data, error } = await supabase.functions.invoke("send-sms", {
-          body: { to: phone, body: content, conversation_id: id },
-        });
-        if (error) throw error;
-        if (isDeliveryAccepted(data)) {
-          toast.success("SMS accepted by provider; delivery is not yet confirmed");
-          return true;
-        }
-        toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
-        return false;
+        const result = await queue.send({ conversation_id: id, channel, to: phone, subject: "", body: content, attachment_ids: [] });
+        toast.success(result.state === "pending" ? "SMS queued" : `Message recorded: ${result.state}`);
+        return true;
       } else if (channel === "EMAIL") {
         const email = conversation.client.primary_email;
         if (!email) { toast.error("Client has no email address"); return false; }
-        const { data, error } = await supabase.functions.invoke("send-email", {
-          body: { to: email, subject: subject ?? "", body: content, conversation_id: id },
-        });
-        if (error) throw error;
-        if (isDeliveryAccepted(data)) {
-          toast.success("Email accepted by provider; delivery is not yet confirmed");
-          return true;
-        }
-        toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
-        return false;
+        const result = await queue.send({ conversation_id: id, channel, to: email, subject: subject ?? "", body: content, attachment_ids: [] });
+        toast.success(result.state === "pending" ? "Email queued" : `Message recorded: ${result.state}`);
+        return true;
       }
       return false;
     } catch (err) {
-      toast.error(channel === "NOTE" ? "Unable to save the internal note. Your draft has been kept." : await deliveryErrorNote(err));
+      toast.error(channel === "NOTE" ? "Unable to save the internal note. Your draft has been kept." : (err instanceof Error ? err.message : "Unable to confirm queue status. Keep the draft and retry unchanged."));
       return false;
     } finally {
       sendingRef.current = false;

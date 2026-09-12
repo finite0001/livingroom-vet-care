@@ -1,3 +1,4 @@
+import { useOutboxStatus, outboxStateLabel } from "@/hub/hooks/use-outbox-status";
 import React, { useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { MessageSquare, Mail, PhoneIncoming, PhoneOutgoing, AudioWaveform, StickyNote, Info } from "lucide-react";
@@ -65,6 +66,8 @@ function SessionDivider({ date }: { date: Date }) {
 }
 
 export function MessageTimeline({ messages, conversationBoundaries }: MessageTimelineProps) {
+  const outgoingIds = messages.filter((message) => message.sender_type === "STAFF" && !message.is_internal && ["SMS", "EMAIL"].includes(message.type)).map((message) => message.id);
+  const outbox = useOutboxStatus(outgoingIds);
   const dividerInfo = useMemo(() => {
     const boundaryConvIds = new Set<string>();
     const boundaryDateMap = new Map<string, string>();
@@ -112,6 +115,12 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
                   {msg.transcription && <p className="text-sm leading-relaxed bg-background/60 rounded-md p-2">{msg.transcription}</p>}
                 </div>
               ) : msg.content && <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>}
+              {!isClient && !msg.is_internal && ["SMS", "EMAIL"].includes(msg.type) && (
+                <p className="mt-2 text-xs text-muted-foreground" role="status">
+                  {outbox.data?.[msg.id] ? outboxStateLabel(outbox.data[msg.id].state) : outbox.isError ? "Delivery status unavailable" : outbox.isLoading ? "Checking delivery status…" : "No tracked delivery receipt"}
+                  {outbox.data?.[msg.id]?.last_error && ` · ${outbox.data[msg.id].last_error}`}
+                </p>
+              )}
               {msg.triage_priority && (
                 <div className={cn("mt-1.5 flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 w-fit", msg.triage_priority === "URGENT" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
                   <span className="font-medium">AI: {msg.triage_priority}</span>
