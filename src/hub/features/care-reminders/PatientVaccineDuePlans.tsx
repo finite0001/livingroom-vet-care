@@ -209,7 +209,8 @@ export function PatientVaccineDuePlans({
         <p className="text-sm text-muted-foreground">
           Reviewed plans are separate from administration history. One current
           or proposed plan is allowed per patient and practice-defined vaccine
-          group. Reminder delivery is not configured.
+          group. Reminder eligibility does not itself send a message; delivery
+          is tracked in Care reminders.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
