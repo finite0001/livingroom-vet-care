@@ -11,8 +11,12 @@ export const resources = [
   "consult",
   "history",
   "vaccination",
-  "diagnostic",
+  "healthstatus",
 ] as const;
+export const resourceContracts = {
+  animal: { path: "/v2/animal", limit: 50 },
+  healthstatus: { path: "/v1/healthstatus", limit: 10 },
+} as const;
 export type Resource = (typeof resources)[number];
 export interface EzyVetConfig {
   baseUrl: string;
@@ -283,7 +287,11 @@ export function createAdapter(
     return token.value;
   }
   return {
-    async page(resource: Resource, page: number): Promise<PageResult> {
+    async page(
+      resource: Resource,
+      page: number,
+      animalExternalId?: string,
+    ): Promise<PageResult> {
       if (
         !config.readResources.includes(resource) ||
         !Number.isInteger(page) ||
@@ -291,10 +299,25 @@ export function createAdapter(
         page > 1000
       )
         throw new ImportError("INVALID_PAGE_REQUEST");
+      if (
+        resource === "healthstatus" &&
+        (!animalExternalId || !/^[0-9]+$/.test(animalExternalId))
+      )
+        throw new ImportError("PATIENT_MAPPING_REQUIRED");
+      const contract =
+        resource === "animal" || resource === "healthstatus"
+          ? resourceContracts[resource]
+          : { path: `/v1/${resource}`, limit: 50 };
+      const query = new URLSearchParams({
+        page: String(page),
+        limit: String(contract.limit),
+      });
+      if (resource === "healthstatus")
+        query.set("animal_id", animalExternalId!);
       for (let attempt = 0; attempt < 2; attempt++) {
         const bearer = await accessToken();
         const response = await request(
-          `${config.baseUrl}/v1/${resource}?page=${page}&limit=50`,
+          `${config.baseUrl}${contract.path}?${query}`,
           { method: "GET", headers: { Authorization: `Bearer ${bearer}` } },
         );
         if (response.status === 401 && attempt === 0) {
@@ -310,7 +333,17 @@ export function createAdapter(
               : "UPSTREAM_REQUEST_FAILED",
           );
         }
-        return parsePage(await json(response), resource, page);
+        const result = parsePage(await json(response), resource, page);
+        if (result.items.length > contract.limit)
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        if (
+          resource === "healthstatus" &&
+          result.items.some(
+            (item) => String(item.payload.animal_id) !== animalExternalId,
+          )
+        )
+          throw new ImportError("SOURCE_PATIENT_MISMATCH");
+        return result;
       }
       throw new ImportError("UPSTREAM_AUTH_FAILED");
     },

@@ -2,7 +2,7 @@
 
 ## Delivered boundary
 
-`ezyvet-import` fetches read-only source records into administrator-only staging tables. It never creates, updates, deletes or reconciles Living Room Vet clients, patients, encounters, appointments, invoices or inventory. Review decisions are append-only proposals, not authorization to merge charts. No scheduled jobs, live requests or credentials were commissioned during implementation. The separate [reviewed contact/patient promotion workflow](ezyvet-reviewed-promotion.md) adds an administrator UI and explicit creation/linking; this adapter itself remains read-only.
+`ezyvet-import` fetches read-only source records into administrator-only staging tables. It never creates, updates, deletes or reconciles Living Room Vet clients, patients, encounters, appointments, invoices or inventory. Review decisions are append-only proposals, not authorization to merge charts. No scheduled jobs, live requests or credentials were commissioned during implementation. The separate [reviewed contact/patient promotion workflow](ezyvet-reviewed-promotion.md) adds an administrator UI and explicit creation/linking; this adapter itself remains read-only. The [historical weight workflow](ezyvet-reviewed-weights.md) similarly requires explicit reviewed approval before chart creation or linking.
 
 The adapter replaces assumptions found in `vet-connect-hub/supabase/functions/ezyvet-proxy` and `ezyvet-sync`: arbitrary incoming parameters, raw upstream error messages, missing `site_uid`, and direct client/patient reconciliation are not carried forward. No Gmail dependency is introduced.
 
@@ -14,20 +14,20 @@ Reviewed September 12, 2026 against [ezyVet API documentation](https://developer
 
 Set secrets through Supabase's server-side secrets management. Never place credentials in `VITE_*`, browser storage, Git, request bodies or chat. Required:
 
-| Name | Meaning |
-| --- | --- |
-| `APP_URL` | Exact website origin for CORS |
-| `APP_ENV` | Must be `staging` for this review-only implementation |
-| `EZYVET_IMPORT_MODE` | Defaults disabled; explicitly set `staging` to enable |
-| `EZYVET_API_URL` | Exact `https://api.trial.ezyvet.com` (default) or `https://api.ezyvet.com` |
+| Name                             | Meaning                                                                                             |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `APP_URL`                        | Exact website origin for CORS                                                                       |
+| `APP_ENV`                        | Must be `staging` for this review-only implementation                                               |
+| `EZYVET_IMPORT_MODE`             | Defaults disabled; explicitly set `staging` to enable                                               |
+| `EZYVET_API_URL`                 | Exact `https://api.trial.ezyvet.com` (default) or `https://api.ezyvet.com`                          |
 | `EZYVET_ALLOW_PRODUCTION_SOURCE` | Must explicitly equal `true` before a production-source read is allowed; leave unset until approved |
-| `EZYVET_SITE_UID` | Issued source site identifier |
-| `EZYVET_PARTNER_ID` | Issued partner identifier |
-| `EZYVET_CLIENT_ID` | Issued client identifier |
-| `EZYVET_CLIENT_SECRET` | Issued client secret |
-| `EZYVET_READ_RESOURCES` | Comma-separated approved resource names; defaults `contact,animal` |
+| `EZYVET_SITE_UID`                | Issued source site identifier                                                                       |
+| `EZYVET_PARTNER_ID`              | Issued partner identifier                                                                           |
+| `EZYVET_CLIENT_ID`               | Issued client identifier                                                                            |
+| `EZYVET_CLIENT_SECRET`           | Issued client secret                                                                                |
+| `EZYVET_READ_RESOURCES`          | Comma-separated approved resource names; defaults `contact,animal`                                  |
 
-Supported allowlist: contact, contactdetail, address, animal, species, breed, sex, animalcolour, appointment, consult, history, vaccination, diagnostic. Include only scopes issued for this integration. All source record operations use GET; the sole upstream POST exchanges OAuth credentials. Redirects are rejected, preventing token forwarding to alternate hosts.
+Supported allowlist: contact, contactdetail, address, animal, species, breed, sex, animalcolour, appointment, consult, history, vaccination, healthstatus. Healthstatus is patient-scoped through the [reviewed historical weight workflow](ezyvet-reviewed-weights.md); it cannot use the generic collection path. Diagnostic collection support was removed because its documented GET requires an ID and returns a test definition, not lab results. Animal fetching uses documented v2. Include only scopes issued for this integration. All source record operations use GET; the sole upstream POST exchanges OAuth credentials. Redirects are rejected, preventing token forwarding to alternate hosts.
 
 Keep the function's JWT verification enabled. The handler also verifies the user token and canonical active-admin role. The service role is used only on the server; its table access is SELECT-only, with narrowly granted staging RPCs for mutations. Database RPCs independently validate the actor's current active-admin status. The import initiator owns the run; another administrator cannot advance it under their own identity.
 

@@ -5339,6 +5339,226 @@ export type Database = {
           },
         ]
       }
+      ezyvet_weight_approvals: {
+        Row: {
+          action: string
+          animal_link_id: string
+          approved_by: string
+          created_at: string
+          external_id: string
+          head_version: number
+          patient_version: number
+          pet_id: string
+          reason: string
+          request_hash: string
+          request_id: string
+          reviewed_values: Json
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+          weight_id: string
+        }
+        Insert: {
+          action: string
+          animal_link_id: string
+          approved_by: string
+          created_at?: string
+          external_id: string
+          head_version: number
+          patient_version: number
+          pet_id: string
+          reason: string
+          request_hash: string
+          request_id: string
+          reviewed_values: Json
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+          weight_id: string
+        }
+        Update: {
+          action?: string
+          animal_link_id?: string
+          approved_by?: string
+          created_at?: string
+          external_id?: string
+          head_version?: number
+          patient_version?: number
+          pet_id?: string
+          reason?: string
+          request_hash?: string
+          request_id?: string
+          reviewed_values?: Json
+          snapshot_id?: string
+          source_origin?: string
+          source_site_uid?: string
+          weight_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_weight_approvals_animal_link_id_fkey"
+            columns: ["animal_link_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_record_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_approvals_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_approvals_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_approvals_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_approvals_weight_id_fkey"
+            columns: ["weight_id"]
+            isOneToOne: false
+            referencedRelation: "patient_weights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_weight_requests: {
+        Row: {
+          actor_id: string
+          created_at: string
+          payload: Json | null
+          request_id: string
+          snapshot_id: string
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          payload?: Json | null
+          request_id: string
+          snapshot_id: string
+          status: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          payload?: Json | null
+          request_id?: string
+          snapshot_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_weight_requests_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_requests_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_weight_runs: {
+        Row: {
+          animal_link_id: string
+          created_at: string
+          run_id: string
+        }
+        Insert: {
+          animal_link_id: string
+          created_at?: string
+          run_id: string
+        }
+        Update: {
+          animal_link_id?: string
+          created_at?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_weight_runs_animal_link_id_fkey"
+            columns: ["animal_link_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_record_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_runs_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: true
+            referencedRelation: "ezyvet_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_weight_source_reviews: {
+        Row: {
+          approval_id: string
+          created_at: string
+          head_version: number
+          reason: string
+          request_id: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        Insert: {
+          approval_id: string
+          created_at?: string
+          head_version: number
+          reason: string
+          request_id: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        Update: {
+          approval_id?: string
+          created_at?: string
+          head_version?: number
+          reason?: string
+          request_id?: string
+          reviewed_by?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_weight_source_reviews_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_weight_approvals"
+            referencedColumns: ["request_id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_source_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_weight_source_reviews_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -7716,6 +7936,142 @@ export type Database = {
       contact_intake_receipt: {
         Args: { p_capability_hash: string; p_request_id: string }
         Returns: Json
+      }
+      approve_ezyvet_weight: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_animal_link_id: string
+          p_confirmed: boolean
+          p_expected_hash: string
+          p_head_version: number
+          p_measured_at: string
+          p_patient_version: number
+          p_reason: string
+          p_request_id: string
+          p_snapshot_id: string
+          p_unit: string
+          p_weight: number
+          p_weight_id: string
+        }
+        Returns: {
+          action: string
+          animal_link_id: string
+          approved_by: string
+          created_at: string
+          external_id: string
+          head_version: number
+          patient_version: number
+          pet_id: string
+          reason: string
+          request_hash: string
+          request_id: string
+          reviewed_values: Json
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+          weight_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_weight_approvals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_ezyvet_weight_import: {
+        Args: {
+          p_actor: string
+          p_animal_link_id: string
+          p_id: string
+          p_site_uid: string
+          p_source_origin: string
+        }
+        Returns: Json
+      }
+      list_ezyvet_weight_candidates: {
+        Args: {
+          p_animal_link_id: string
+          p_before_at?: string
+          p_before_id?: string
+          p_limit?: number
+        }
+        Returns: Json[]
+      }
+      prepare_ezyvet_weight_request: {
+        Args: { p_payload: Json; p_request_id: string; p_snapshot_id: string }
+        Returns: {
+          actor_id: string
+          created_at: string
+          payload: Json | null
+          request_id: string
+          snapshot_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_weight_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      read_weight_import_provenance: {
+        Args: { p_pet_id: string; p_weight_ids: string[] }
+        Returns: {
+          reviewed_at: string
+          reviewed_measurement_date: string
+          reviewer_name: string
+          source_record_id: string
+          source_timestamp: string
+          source_unit: string
+          source_weight: string
+          weight_id: string
+        }[]
+      }
+      resolve_ezyvet_weight_request: {
+        Args: {
+          p_discard: boolean
+          p_request_id: string
+          p_snapshot_id: string
+        }
+        Returns: Json
+      }
+      review_ezyvet_weight_change: {
+        Args: {
+          p_approval_id: string
+          p_head_version: number
+          p_reason: string
+          p_request_id: string
+          p_snapshot_id: string
+        }
+        Returns: {
+          approval_id: string
+          created_at: string
+          head_version: number
+          reason: string
+          request_id: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_weight_source_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      search_ezyvet_weight_patients: {
+        Args: { p_limit?: number; p_search: string }
+        Returns: {
+          external_id: string
+          household_name: string
+          link_id: string
+          patient_name: string
+          patient_version: number
+          pet_id: string
+          source_origin: string
+          source_site_uid: string
+        }[]
       }
     }
     Enums: {

@@ -239,3 +239,66 @@ test("animal birth date survives contact-only personal-data filtering", () => {
   );
   assert.equal(contact.items[0].payload.date_of_birth, undefined);
 });
+
+test("animal reads use documented v2 contract and healthstatus requires scoped patient", async () => {
+  const calls: string[] = [];
+  const adapter = createAdapter(
+    { ...config, readResources: ["animal", "healthstatus"] },
+    {
+      now: () => 1700000000000,
+      sleep: async () => {},
+      fetch: async (input) => {
+        const url = String(input);
+        calls.push(url);
+        if (url.endsWith("access_token")) return token();
+        return Response.json({
+          meta: { items_page: 1, items_page_total: 1 },
+          items: url.includes("healthstatus")
+            ? [
+                {
+                  healthstatus: {
+                    id: "9",
+                    animal_id: "77",
+                    weight: "12",
+                    weight_unit: "unknown",
+                    timestamp: "unknown",
+                  },
+                },
+              ]
+            : [{ animal: { id: 77, contact_id: 8 } }],
+        });
+      },
+    },
+  );
+  await adapter.page("animal", 1);
+  assert.match(calls[1], /\/v2\/animal\?page=1&limit=50$/);
+  await assert.rejects(
+    () => adapter.page("healthstatus", 1),
+    /PATIENT_MAPPING_REQUIRED/,
+  );
+  await adapter.page("healthstatus", 1, "77");
+  assert.match(
+    calls.at(-1)!,
+    /\/v1\/healthstatus\?page=1&limit=10&animal_id=77$/,
+  );
+});
+test("healthstatus patient mismatch never stages a plausible unrelated weight", async () => {
+  const adapter = createAdapter(
+    { ...config, readResources: ["healthstatus"] },
+    {
+      now: () => 1700000000000,
+      sleep: async () => {},
+      fetch: async (input) =>
+        String(input).endsWith("access_token")
+          ? token()
+          : Response.json({
+              meta: { items_page: 1, items_page_total: 1 },
+              items: [{ healthstatus: { id: 1, animal_id: 999 } }],
+            }),
+    },
+  );
+  await assert.rejects(
+    () => adapter.page("healthstatus", 1, "77"),
+    /SOURCE_PATIENT_MISMATCH/,
+  );
+});

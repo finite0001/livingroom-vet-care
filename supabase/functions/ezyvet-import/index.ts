@@ -34,6 +34,17 @@ const handler = createHandler({
       if (error) throw error;
       return data as ImportRun;
     },
+    async claimWeight(id, actor, site, sourceOrigin, animalLinkId) {
+      const { data, error } = await admin.rpc("claim_ezyvet_weight_import", {
+        p_id: id,
+        p_actor: actor,
+        p_site_uid: site,
+        p_source_origin: sourceOrigin,
+        p_animal_link_id: animalLinkId,
+      });
+      if (error) throw error;
+      return data as ImportRun;
+    },
     async stage(run, actor, page) {
       const { data, error } = await admin.rpc("stage_ezyvet_import_page", {
         p_id: run.id,
