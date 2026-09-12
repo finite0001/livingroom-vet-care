@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { dollarsToCents, money } from "./money";
+import { InvoiceDocumentPreview } from "./InvoiceDocumentPreview";
 
 interface HouseholdInvoicesProps {
   clientId: string;
@@ -408,6 +409,12 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-semibold">Invoice {invoiceId.slice(0, 8)}</h3>
         <Badge variant="outline">{record.status}</Badge>
+        <InvoiceDocumentPreview
+          key={session?.user.id}
+          invoiceId={invoiceId}
+          clientId={clientId}
+          disabled={disabled}
+        />
       </div>
       <p className="text-xs text-muted-foreground break-all">
         Record ID: {invoiceId} · Revision {record.version}

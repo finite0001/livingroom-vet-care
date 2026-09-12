@@ -43,6 +43,7 @@ async function fixture(page: Page) {
     services: [] as string[],
     loseCreate: true,
     loseService: true,
+    failDocument: false,
   };
   await page.route("**/*", (route) =>
     new URL(route.request().url()).origin === "http://127.0.0.1:8080"
@@ -94,6 +95,43 @@ async function fixture(page: Page) {
       return route.fulfill({ json: state.items });
     if (path === "/rest/v1/billing_credits")
       return route.fulfill({ json: state.credits });
+    if (path === "/rest/v1/rpc/read_invoice_document") {
+      const body = route.request().postDataJSON();
+      expect(body.p_invoice_id).toBe(state.invoice?.id);
+      expect(body.p_client_id).toBe(clientId);
+      if (state.failDocument)
+        return route.fulfill({
+          status: 403,
+          json: { message: "Unavailable", code: "42501" },
+        });
+      return route.fulfill({
+        json: {
+          ...state.invoice,
+          currency: "usd",
+          issued_at:
+            state.invoice?.status === "draft" ? null : "2026-09-12T18:00:00Z",
+          voided_at:
+            state.invoice?.status === "void" ? "2026-09-12T19:00:00Z" : null,
+          rendered_at: "2026-09-12T20:00:00Z",
+          client: {
+            id: clientId,
+            name: "Synthetic <script> Household",
+            mailing_address: "123 A & B\nBoulder, CO",
+          },
+          total_cents: String(state.invoice?.total_cents ?? 12500),
+          items: state.items.map((item) => ({
+            ...item,
+            quantity: String(item.quantity),
+            unit_price_cents: String(item.unit_price_cents),
+            amount_cents: String(item.amount_cents),
+          })),
+          credits: state.credits.map((item) => ({
+            ...item,
+            amount_cents: String(item.amount_cents),
+          })),
+        },
+      });
+    }
     if (path === "/rest/v1/rpc/create_billing_invoice") {
       const body = route.request().postDataJSON();
       state.creates.push(body.p_id);
@@ -207,3 +245,106 @@ test("invoice creation and service retries retain operation IDs; issuance and cr
     fullPage: true,
   });
 });
+
+for (const mobile of [false, true]) {
+  test(`invoice document preview, download and refresh ${mobile ? "mobile" : "desktop"}`, async ({
+    page,
+  }, testInfo) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    const state = await fixture(page);
+    state.invoice = {
+      id: "55555555-5555-4555-8555-555555555555",
+      client_id: clientId,
+      status: "issued",
+      version: 3,
+      total_cents: 12500,
+      created_at: "2026-09-12T18:00:00Z",
+    };
+    state.items = [
+      {
+        id: productId,
+        description: "Housecall examination",
+        quantity: 1,
+        unit_price_cents: 12500,
+        amount_cents: 12500,
+      },
+    ];
+    state.credits = [
+      {
+        id: "66666666-6666-4666-8666-666666666666",
+        amount_cents: 29,
+        reason: "Internal",
+        created_at: "2026-09-12T19:00:00Z",
+      },
+    ];
+    await page.goto(`/hub/client/${clientId}`);
+    await page.getByRole("button", { name: /issued.*125.00/ }).click();
+    await page
+      .getByRole("button", { name: "Preview invoice document" })
+      .click();
+    const frame = page.frameLocator('iframe[title="Invoice document preview"]');
+    await expect(
+      frame.getByRole("heading", { name: "Invoice", exact: true }),
+    ).toBeVisible();
+    await expect(
+      frame.getByText("Synthetic <script> Household", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      frame.getByText(/Net charges after accounting credits/),
+    ).toContainText("$124.71");
+    await expect(frame.locator("script")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Print / save PDF" }),
+    ).toBeInViewport();
+    const downloaded = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download HTML copy" }).click();
+    const download = await downloaded;
+    expect(download.suggestedFilename()).toMatch(/invoice-.*\.html$/);
+    const fs = await import("node:fs/promises");
+    const contents = await fs.readFile((await download.path())!, "utf8");
+    expect(contents).toContain("$124.71");
+    expect(contents).toContain("&lt;script&gt;");
+    expect(contents).not.toContain("Internal");
+    if (!mobile) {
+      const popupPromise = page.waitForEvent("popup");
+      await page.getByRole("button", { name: "Print / save PDF" }).click();
+      const popup = await popupPromise;
+      await expect(
+        popup.getByRole("heading", { name: "Invoice", exact: true }),
+      ).toBeVisible();
+      expect(await popup.evaluate(() => window.opener === null)).toBe(true);
+      const pdf = await popup.pdf({ format: "Letter" });
+      expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
+      await testInfo.attach("invoice-print.pdf", {
+        body: pdf,
+        contentType: "application/pdf",
+      });
+      await popup.close();
+    }
+    await page.screenshot({
+      path: testInfo.outputPath("invoice-preview.png"),
+      fullPage: true,
+    });
+    state.invoice.status = "void";
+    await page
+      .getByRole("button", { name: "Refresh invoice document" })
+      .click();
+    await expect(
+      frame.getByRole("heading", { name: "VOID — CANCELLED INVOICE" }),
+    ).toBeVisible();
+    await expect(
+      frame.getByText("This invoice is void. Do not pay this invoice."),
+    ).toBeVisible();
+    state.failDocument = true;
+    await page
+      .getByRole("button", { name: "Refresh invoice document" })
+      .click();
+    await expect(page.getByRole("alert")).toContainText("could not be loaded");
+    await expect(
+      page.getByRole("button", { name: "Download HTML copy" }),
+    ).toBeDisabled();
+    await expect(
+      page.locator('iframe[title="Invoice document preview"]'),
+    ).toHaveCount(0);
+  });
+}
