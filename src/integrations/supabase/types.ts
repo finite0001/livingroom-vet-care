@@ -4451,6 +4451,186 @@ export type Database = {
           },
         ]
       }
+      certificate_issuers: {
+        Row: {
+          active: boolean
+          clinical_acceptance_at: string
+          full_name: string
+          id: string
+          license_expires_on: string
+          license_number: string
+          license_state: string
+          practice_address: string
+          practice_name: string
+          practice_phone: string
+          user_id: string
+          verification_reference: string
+          verified_at: string
+        }
+        Insert: {
+          active?: boolean
+          clinical_acceptance_at: string
+          full_name: string
+          id?: string
+          license_expires_on: string
+          license_number: string
+          license_state: string
+          practice_address: string
+          practice_name: string
+          practice_phone: string
+          user_id: string
+          verification_reference: string
+          verified_at: string
+        }
+        Update: {
+          active?: boolean
+          clinical_acceptance_at?: string
+          full_name?: string
+          id?: string
+          license_expires_on?: string
+          license_number?: string
+          license_state?: string
+          practice_address?: string
+          practice_name?: string
+          practice_phone?: string
+          user_id?: string
+          verification_reference?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
+      vaccine_certificate_events: {
+        Row: {
+          certificate_id: string
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          reason: string
+          replacement_id: string | null
+        }
+        Insert: {
+          certificate_id: string
+          created_at?: string
+          created_by: string
+          id: string
+          kind: string
+          reason: string
+          replacement_id?: string | null
+        }
+        Update: {
+          certificate_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          reason?: string
+          replacement_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccine_certificate_events_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "vaccine_certificates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccine_certificate_events_replacement_id_fkey"
+            columns: ["replacement_id"]
+            isOneToOne: false
+            referencedRelation: "vaccine_certificates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccine_certificate_treatments: {
+        Row: {
+          certificate_id: string
+          id: string
+          treatment_id: string
+        }
+        Insert: {
+          certificate_id: string
+          id?: string
+          treatment_id: string
+        }
+        Update: {
+          certificate_id?: string
+          id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccine_certificate_treatments_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "vaccine_certificates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccine_certificate_treatments_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "patient_treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccine_certificates: {
+        Row: {
+          attestation: string
+          id: string
+          issued_at: string
+          issued_by: string
+          kind: string
+          pet_id: string
+          replaces_id: string | null
+          request: Json
+          signature_name: string
+          snapshot: Json
+        }
+        Insert: {
+          attestation: string
+          id: string
+          issued_at?: string
+          issued_by: string
+          kind: string
+          pet_id: string
+          replaces_id?: string | null
+          request: Json
+          signature_name: string
+          snapshot: Json
+        }
+        Update: {
+          attestation?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          kind?: string
+          pet_id?: string
+          replaces_id?: string | null
+          request?: Json
+          signature_name?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccine_certificates_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccine_certificates_replaces_id_fkey"
+            columns: ["replaces_id"]
+            isOneToOne: false
+            referencedRelation: "vaccine_certificates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -6353,6 +6533,90 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "patient_lab_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      certificate_require_issuer: {
+        Args: never
+        Returns: {
+          active: boolean
+          clinical_acceptance_at: string
+          full_name: string
+          id: string
+          license_expires_on: string
+          license_number: string
+          license_state: string
+          practice_address: string
+          practice_name: string
+          practice_phone: string
+          user_id: string
+          verification_reference: string
+          verified_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "certificate_issuers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      issue_vaccine_certificate: {
+        Args: {
+          p_attest_review: boolean
+          p_details: Json
+          p_id: string
+          p_kind: string
+          p_pet_id: string
+          p_rabies_treatment_id: string
+          p_reason?: string
+          p_replaces_id?: string
+          p_reviewed_snapshot: Json
+          p_signature_name: string
+        }
+        Returns: {
+          attestation: string
+          id: string
+          issued_at: string
+          issued_by: string
+          kind: string
+          pet_id: string
+          replaces_id: string | null
+          request: Json
+          signature_name: string
+          snapshot: Json
+        }
+        SetofOptions: {
+          from: "*"
+          to: "vaccine_certificates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      preview_vaccine_certificate: {
+        Args: {
+          p_details: Json
+          p_kind: string
+          p_pet_id: string
+          p_rabies_treatment_id: string
+        }
+        Returns: Json
+      }
+      read_vaccine_certificate: { Args: { p_id: string }; Returns: Json }
+      void_vaccine_certificate: {
+        Args: { p_certificate_id: string; p_id: string; p_reason: string }
+        Returns: {
+          certificate_id: string
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          reason: string
+          replacement_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "vaccine_certificate_events"
           isOneToOne: true
           isSetofReturn: false
         }
