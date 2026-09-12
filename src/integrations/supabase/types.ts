@@ -3710,6 +3710,179 @@ export type Database = {
           },
         ]
       }
+      dental_chart_addenda: {
+        Row: {
+          chart_id: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+        }
+        Insert: {
+          chart_id: string
+          content: string
+          created_at?: string
+          created_by: string
+          id: string
+        }
+        Update: {
+          chart_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dental_chart_addenda_chart_id_fkey"
+            columns: ["chart_id"]
+            isOneToOne: false
+            referencedRelation: "dental_charts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dental_chart_addenda_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dental_chart_revisions: {
+        Row: {
+          actor_id: string
+          chart_id: string
+          id: string
+          notes: string
+          recorded_at: string
+          status: string
+          teeth: Json
+          version: number
+          visit_at: string
+        }
+        Insert: {
+          actor_id: string
+          chart_id: string
+          id?: string
+          notes: string
+          recorded_at?: string
+          status: string
+          teeth: Json
+          version: number
+          visit_at: string
+        }
+        Update: {
+          actor_id?: string
+          chart_id?: string
+          id?: string
+          notes?: string
+          recorded_at?: string
+          status?: string
+          teeth?: Json
+          version?: number
+          visit_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dental_chart_revisions_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dental_chart_revisions_chart_id_fkey"
+            columns: ["chart_id"]
+            isOneToOne: false
+            referencedRelation: "dental_charts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dental_charts: {
+        Row: {
+          created_at: string
+          created_by: string
+          dentition: string
+          id: string
+          notes: string
+          pet_id: string
+          signed_at: string | null
+          signed_by: string | null
+          species_family: string
+          status: string
+          teeth: Json
+          updated_at: string
+          updated_by: string
+          version: number
+          visit_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          dentition: string
+          id: string
+          notes?: string
+          pet_id: string
+          signed_at?: string | null
+          signed_by?: string | null
+          species_family: string
+          status?: string
+          teeth?: Json
+          updated_at?: string
+          updated_by: string
+          version?: number
+          visit_at: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          dentition?: string
+          id?: string
+          notes?: string
+          pet_id?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          species_family?: string
+          status?: string
+          teeth?: Json
+          updated_at?: string
+          updated_by?: string
+          version?: number
+          visit_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dental_charts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dental_charts_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dental_charts_signed_by_fkey"
+            columns: ["signed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dental_charts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -5135,6 +5308,101 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "patient_qol_records"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      add_dental_addendum: {
+        Args: {
+          p_chart_id: string
+          p_content: string
+          p_id: string
+          p_pet_id: string
+        }
+        Returns: {
+          chart_id: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "dental_chart_addenda"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      dental_tooth_numbers: {
+        Args: { p_dentition: string; p_species: string }
+        Returns: string[]
+      }
+      dental_validate_data: {
+        Args: {
+          p_dentition: string
+          p_notes: string
+          p_species: string
+          p_teeth: Json
+          p_visit_at: string
+        }
+        Returns: undefined
+      }
+      save_dental_chart: {
+        Args: {
+          p_dentition: string
+          p_expected_version: number
+          p_id: string
+          p_notes: string
+          p_pet_id: string
+          p_teeth: Json
+          p_visit_at: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          dentition: string
+          id: string
+          notes: string
+          pet_id: string
+          signed_at: string | null
+          signed_by: string | null
+          species_family: string
+          status: string
+          teeth: Json
+          updated_at: string
+          updated_by: string
+          version: number
+          visit_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "dental_charts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      sign_dental_chart: {
+        Args: { p_expected_version: number; p_id: string; p_pet_id: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          dentition: string
+          id: string
+          notes: string
+          pet_id: string
+          signed_at: string | null
+          signed_by: string | null
+          species_family: string
+          status: string
+          teeth: Json
+          updated_at: string
+          updated_by: string
+          version: number
+          visit_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "dental_charts"
           isOneToOne: true
           isSetofReturn: false
         }

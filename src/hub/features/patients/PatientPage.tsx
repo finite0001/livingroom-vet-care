@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, PawPrint } from "lucide-react";
@@ -12,7 +13,9 @@ import { patientAge } from "./patient-details";
 import { PatientCareCharts } from "@/hub/features/care-charts/PatientCareCharts";
 import { PatientTreatments } from "@/hub/features/treatments/PatientTreatments";
 import { PatientDocuments } from "@/hub/features/documents/PatientDocuments";
+import { PatientDentalChart } from "@/hub/features/dental/PatientDentalChart";
 import { ClinicalWorkspace } from "@/hub/features/clinical/ClinicalWorkspace";
+import { useUnsavedChanges } from "@/hub/features/clinical/use-unsaved-changes";
 import { PatientAlerts } from "@/hub/features/clinical/PatientAlerts";
 
 export default function PatientPage() {
@@ -20,6 +23,10 @@ export default function PatientPage() {
   return id ? <PatientWorkspace key={id} petId={id} /> : <p role="alert">Patient not found.</p>;
 }
 function PatientWorkspace({ petId }: { petId: string }) {
+  const [clinicalDirty, setClinicalDirty] = useState(false);
+  const [careDirty, setCareDirty] = useState(false);
+  const [dentalDirty, setDentalDirty] = useState(false);
+  const navigationGuard = useUnsavedChanges(clinicalDirty || careDirty || dentalDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -41,14 +48,16 @@ function PatientWorkspace({ petId }: { petId: string }) {
     ["Color / markings", patient.color || "Not recorded"], ["Sex", patient.sex], ["Neuter status", patient.neuter_status], ["Microchip", patient.microchip_id || "Not recorded"],
   ];
   return <section aria-label="Patient workspace" className="h-full overflow-y-auto"><div className="mx-auto max-w-6xl space-y-5 p-4 md:p-6">
+    {navigationGuard}
     <header className="flex flex-wrap items-center justify-between gap-3"><div><Link to={`/hub/client/${patient.client_id}`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline"><ArrowLeft className="h-4 w-4" />{clientQuery.data?.full_name || "Back to household"}</Link><h1 className="mt-2 flex items-center gap-2 text-2xl font-semibold"><PawPrint className="h-6 w-6 text-primary" />{patient.name}</h1><p className="text-sm text-muted-foreground">Patient record · {patient.species}{patient.breed ? ` · ${patient.breed}` : ""}</p></div><PatientFormDialog clientId={patient.client_id} patient={patient} /></header>
     {inactive && <div className="flex flex-wrap items-center gap-2 rounded-md border p-3"><Badge variant="secondary">{patient.deceased_at ? `Deceased ${patient.deceased_at}` : "Archived"}</Badge><p className="text-sm">History is retained. New visits and weights are disabled.</p></div>}
     <PatientAlerts petId={petId} />
     {patient.allergies?.trim() && <div role="note" className="flex gap-3 rounded-md border border-destructive bg-destructive/10 p-4 text-clinical-alert"><AlertTriangle className="h-5 w-5 shrink-0" /><div><h2 className="font-semibold">Allergy information from existing record</h2><p className="whitespace-pre-wrap text-sm">{patient.allergies}</p><p className="mt-1 text-xs">Review alongside the structured problem list below.</p></div></div>}
     <div className="grid items-start gap-5 lg:grid-cols-2"><Card><CardHeader><CardTitle className="text-lg">Patient details</CardTitle></CardHeader><CardContent><dl className="grid grid-cols-2 gap-4">{details.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-muted-foreground">{label}{label === "Age" && patient.deceased_at ? " at death" : ""}</dt><dd className="break-words text-sm">{value}</dd></div>)}</dl></CardContent></Card><WeightHistory petId={petId} legacyWeight={patient.weight_lbs} disabled={inactive} /></div>
     <PatientTreatments petId={petId} clientId={patient.client_id} />
-    <PatientCareCharts petId={petId} />
+    <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
-    <ClinicalWorkspace petId={petId} disabled={inactive} />
+    <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} />
+    <ClinicalWorkspace petId={petId} disabled={inactive} onDirtyChange={setClinicalDirty} />
   </div></section>;
 }
