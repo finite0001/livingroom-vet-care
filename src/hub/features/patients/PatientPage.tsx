@@ -12,6 +12,7 @@ import { patientAge } from "./patient-details";
 import { PatientCareCharts } from "@/hub/features/care-charts/PatientCareCharts";
 import { PatientTreatments } from "@/hub/features/treatments/PatientTreatments";
 import { PatientDocuments } from "@/hub/features/documents/PatientDocuments";
+import { PatientDentalChart } from "@/hub/features/dental/PatientDentalChart";
 import { ClinicalWorkspace } from "@/hub/features/clinical/ClinicalWorkspace";
 import { PatientAlerts } from "@/hub/features/clinical/PatientAlerts";
 
@@ -49,6 +50,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientTreatments petId={petId} clientId={patient.client_id} />
     <PatientCareCharts petId={petId} />
     <PatientDocuments petId={petId} />
+    <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} />
     <ClinicalWorkspace petId={petId} disabled={inactive} />
   </div></section>;
 }
