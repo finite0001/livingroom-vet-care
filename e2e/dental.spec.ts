@@ -306,3 +306,54 @@ test("unsupported species uses explicit manual dental notes", async ({
     page.getByRole("status").filter({ hasText: "Dental draft saved." }),
   ).toBeVisible();
 });
+
+test("one patient navigation guard preserves multiple dirty panels and remains active after dental save", async ({ page }) => {
+  const warnings: string[] = [];
+  page.on("console", message => { if (/blocker/i.test(message.text())) warnings.push(message.text()); });
+  await fixture(page);
+  await page.goto(`/hub/patient/${petId}`);
+  await page.getByRole("button", { name: "New dental chart", exact: true }).click();
+  await page.getByLabel("Dentition", { exact: true }).selectOption("adult");
+  await page.getByLabel("Dental chart / manual notes").fill("Dental draft retained");
+  await page.getByRole("button", { name: "New QOL observation", exact: true }).click();
+  await page.getByLabel("Comfort", { exact: true }).fill("QOL draft retained");
+  await page.getByRole("button", { name: "New encounter", exact: true }).click();
+  await page.getByLabel("Subjective", { exact: true }).fill("SOAP draft retained");
+  const household = page.getByRole("link", { name: "Synthetic Household", exact: true });
+  await household.click();
+  await expect(page.getByRole("alertdialog")).toHaveCount(1);
+  await page.getByRole("button", { name: "Keep editing", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/hub/patient/${petId}$`));
+  await expect(page.getByLabel("Dental chart / manual notes")).toHaveValue("Dental draft retained");
+  await expect(page.getByLabel("Comfort", { exact: true })).toHaveValue("QOL draft retained");
+  await expect(page.getByLabel("Subjective", { exact: true })).toHaveValue("SOAP draft retained");
+  await page.getByRole("button", { name: "Save dental draft", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Dental draft saved." })).toBeVisible();
+  await household.click();
+  await expect(page.getByRole("alertdialog")).toHaveCount(1);
+  await page.getByRole("button", { name: "Discard and leave", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/hub/client/${clientId}$`));
+  expect(warnings).toEqual([]);
+});
+
+for (const panel of ["dental", "QOL"] as const) {
+  test(`${panel} alone protects SPA navigation and allows deliberate discard`, async ({ page }) => {
+    await fixture(page);
+    await page.goto(`/hub/patient/${petId}`);
+    if (panel === "dental") {
+      await page.getByRole("button", { name: "New dental chart", exact: true }).click();
+      await page.getByLabel("Dental chart / manual notes").fill("Unsaved dental observation");
+    } else {
+      await page.getByRole("button", { name: "New QOL observation", exact: true }).click();
+      await page.getByLabel("Comfort", { exact: true }).fill("Unsaved comfort observation");
+    }
+    const field = panel === "dental" ? page.getByLabel("Dental chart / manual notes") : page.getByLabel("Comfort", { exact: true });
+    const value = await field.inputValue();
+    await page.getByRole("link", { name: "Synthetic Household", exact: true }).click();
+    await page.getByRole("button", { name: "Keep editing", exact: true }).click();
+    await expect(field).toHaveValue(value);
+    await page.getByRole("link", { name: "Synthetic Household", exact: true }).click();
+    await page.getByRole("button", { name: "Discard and leave", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/hub/client/${clientId}$`));
+  });
+}
