@@ -220,6 +220,152 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_credits: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          id: string
+          invoice_id: string
+          reason: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by: string
+          id: string
+          invoice_id: string
+          reason: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          invoice_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_credits_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_invoice_items: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          invoice_id: string
+          pet_id: string | null
+          product_id: string
+          quantity: number
+          unit_price_cents: number
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          created_by: string
+          description: string
+          id: string
+          invoice_id: string
+          pet_id?: string | null
+          product_id: string
+          quantity: number
+          unit_price_cents: number
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          pet_id?: string | null
+          product_id?: string
+          quantity?: number
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoice_items_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_invoices: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          issued_at: string | null
+          status: string
+          total_cents: number | null
+          version: number
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by: string
+          currency?: string
+          id: string
+          issued_at?: string | null
+          status?: string
+          total_cents?: number | null
+          version?: number
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          id?: string
+          issued_at?: string | null
+          status?: string
+          total_cents?: number | null
+          version?: number
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_logs: {
         Row: {
           call_sid: string
@@ -440,6 +586,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      catalog_products: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          manufacturer: string
+          name: string
+          unit: string
+          unit_price_cents: number
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: string
+          manufacturer?: string
+          name: string
+          unit: string
+          unit_price_cents: number
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          manufacturer?: string
+          name?: string
+          unit?: string
+          unit_price_cents?: number
+          version?: number
+        }
+        Relationships: []
       }
       client_files: {
         Row: {
@@ -1051,6 +1236,82 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_lots: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_on: string
+          id: string
+          location: string
+          lot_number: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_on: string
+          id: string
+          location: string
+          lot_number: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_on?: string
+          id?: string
+          location?: string
+          lot_number?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_lots_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          lot_id: string
+          quantity: number
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id: string
+          kind: string
+          lot_id: string
+          quantity: number
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          lot_id?: string
+          quantity?: number
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_lots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lab_results: {
         Row: {
           client_id: string
@@ -1508,6 +1769,155 @@ export type Database = {
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_treatment_corrections: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          reason: string
+          replacement_id: string | null
+          treatment_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id: string
+          reason: string
+          replacement_id?: string | null
+          treatment_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          reason?: string
+          replacement_id?: string | null
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_treatment_corrections_replacement_id_fkey"
+            columns: ["replacement_id"]
+            isOneToOne: false
+            referencedRelation: "patient_treatments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_treatment_corrections_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: true
+            referencedRelation: "patient_treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_treatments: {
+        Row: {
+          administered_at: string
+          created_at: string
+          created_by: string
+          dose: string
+          expires_on: string | null
+          historical: boolean
+          id: string
+          invoice_id: string | null
+          kind: string
+          lot_id: string | null
+          lot_number: string
+          manufacturer: string
+          next_due_on: string | null
+          pet_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          request: Json
+          route: string
+          site: string
+          source: string
+          veterinarian: string
+          veterinarian_license: string
+        }
+        Insert: {
+          administered_at: string
+          created_at?: string
+          created_by: string
+          dose: string
+          expires_on?: string | null
+          historical: boolean
+          id: string
+          invoice_id?: string | null
+          kind: string
+          lot_id?: string | null
+          lot_number: string
+          manufacturer: string
+          next_due_on?: string | null
+          pet_id: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          request: Json
+          route: string
+          site: string
+          source: string
+          veterinarian: string
+          veterinarian_license: string
+        }
+        Update: {
+          administered_at?: string
+          created_at?: string
+          created_by?: string
+          dose?: string
+          expires_on?: string | null
+          historical?: boolean
+          id?: string
+          invoice_id?: string | null
+          kind?: string
+          lot_id?: string | null
+          lot_number?: string
+          manufacturer?: string
+          next_due_on?: string | null
+          pet_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          request?: Json
+          route?: string
+          site?: string
+          source?: string
+          veterinarian?: string
+          veterinarian_license?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_treatments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_treatments_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_treatments_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_treatments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
             referencedColumns: ["id"]
           },
         ]
@@ -2464,6 +2874,56 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      add_invoice_service: {
+        Args: {
+          p_id: string
+          p_invoice_id: string
+          p_pet_id: string
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: {
+          amount_cents: number | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          invoice_id: string
+          pet_id: string | null
+          product_id: string
+          quantity: number
+          unit_price_cents: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "billing_invoice_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      adjust_inventory: {
+        Args: {
+          p_id: string
+          p_lot_id: string
+          p_quantity: number
+          p_reason: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          lot_id: string
+          quantity: number
+          reason: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "inventory_movements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_staff_active: {
         Args: { _is_active: boolean; _target_user: string }
         Returns: undefined
@@ -2507,6 +2967,72 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "time_entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      correct_patient_treatment: {
+        Args: {
+          p_id: string
+          p_reason: string
+          p_replacement_id: string
+          p_treatment_id: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          reason: string
+          replacement_id: string | null
+          treatment_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_treatment_corrections"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_billing_invoice: {
+        Args: { p_client_id: string; p_id: string }
+        Returns: {
+          client_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          issued_at: string | null
+          status: string
+          total_cents: number | null
+          version: number
+          void_reason: string | null
+          voided_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "billing_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      credit_billing_invoice: {
+        Args: {
+          p_amount_cents: number
+          p_id: string
+          p_invoice_id: string
+          p_reason: string
+        }
+        Returns: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          id: string
+          invoice_id: string
+          reason: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "billing_credits"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -2597,6 +3123,28 @@ export type Database = {
         Returns: boolean
       }
       is_active_staff: { Args: { _user_id: string }; Returns: boolean }
+      issue_billing_invoice: {
+        Args: { p_expected_version: number; p_id: string }
+        Returns: {
+          client_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          issued_at: string | null
+          status: string
+          total_cents: number | null
+          version: number
+          void_reason: string | null
+          voided_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "billing_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       patient_document_storage_read: {
         Args: { p_path: string }
         Returns: boolean
@@ -2659,6 +3207,67 @@ export type Database = {
           reminder_id: string
           scheduled_at: string
         }[]
+      }
+      receive_inventory: {
+        Args: {
+          p_expires_on: string
+          p_id: string
+          p_location: string
+          p_lot_id: string
+          p_lot_number: string
+          p_product_id: string
+          p_quantity: number
+          p_reason: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          lot_id: string
+          quantity: number
+          reason: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "inventory_movements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_patient_treatment: {
+        Args: { p_id: string; p_request: Json }
+        Returns: {
+          administered_at: string
+          created_at: string
+          created_by: string
+          dose: string
+          expires_on: string | null
+          historical: boolean
+          id: string
+          invoice_id: string | null
+          kind: string
+          lot_id: string | null
+          lot_number: string
+          manufacturer: string
+          next_due_on: string | null
+          pet_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          request: Json
+          route: string
+          site: string
+          source: string
+          veterinarian: string
+          veterinarian_license: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_treatments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       record_patient_weight: {
         Args: {
@@ -2728,6 +3337,36 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_catalog_product: {
+        Args: {
+          p_active: boolean
+          p_expected_version: number
+          p_id: string
+          p_kind: string
+          p_manufacturer: string
+          p_name: string
+          p_unit: string
+          p_unit_price_cents: number
+        }
+        Returns: {
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          manufacturer: string
+          name: string
+          unit: string
+          unit_price_cents: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "catalog_products"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -2937,6 +3576,28 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "clinical_encounters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      void_billing_invoice: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: {
+          client_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          issued_at: string | null
+          status: string
+          total_cents: number | null
+          version: number
+          void_reason: string | null
+          voided_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "billing_invoices"
           isOneToOne: true
           isSetofReturn: false
         }
