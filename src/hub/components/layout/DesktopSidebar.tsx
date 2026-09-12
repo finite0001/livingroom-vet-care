@@ -30,10 +30,10 @@ const toolItems = [
   { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },
   { path: "/hub/tools/alerts", label: "Alerts", icon: AlertTriangle },
   { path: "/hub/tools/refills", label: "Refills", icon: Pill },
-  { path: "/hub/tools/ezyvet", label: "Clinic Browser", icon: Stethoscope },
 ];
 
 const adminItems = [
+  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
   { path: "/hub/admin", label: "Dashboard", icon: LayoutDashboard },
   { path: "/hub/admin/staff", label: "Staff", icon: Users },
   { path: "/hub/admin/import", label: "Import", icon: Upload },

@@ -30,11 +30,11 @@ const moreItems = [
   { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },
   { path: "/hub/tools/alerts", label: "Alerts", icon: AlertTriangle },
   { path: "/hub/tools/refills", label: "Refills", icon: Pill },
-  { path: "/hub/tools/ezyvet", label: "Clinic Browser", icon: Stethoscope },
   { path: "/hub/settings", label: "Settings", icon: Settings },
 ];
 
 const adminMoreItems = [
+  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
   { path: "/hub/admin", label: "Admin Dashboard", icon: LayoutDashboard },
   { path: "/hub/admin/import", label: "Import Clients", icon: Upload },
 ];

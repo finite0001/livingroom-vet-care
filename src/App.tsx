@@ -32,6 +32,7 @@ const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
+const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
 const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
 const SchedulePage = lazy(() => import("./hub/features/scheduling/SchedulePage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
@@ -107,13 +108,13 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/tools/surveys" element={<SurveysPage />} />
                   <Route path="/hub/tools/alerts" element={<AlertsPage />} />
                   <Route path="/hub/tools/refills" element={<RefillsPage />} />
-                  <Route path="/hub/tools/ezyvet" element={<PlaceholderPage />} />
                 </Route>
               </Route>
 
               {/* Hub admin routes */}
               <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
                 <Route element={<AppShell />}>
+                  <Route path="/hub/tools/ezyvet" element={<EzyVetImportPage />} />
                   <Route path="/hub/admin" element={<AdminDashboardPage />} />
                   <Route path="/hub/admin/import" element={<ImportPage />} />
                   <Route path="/hub/admin/staff" element={<AdminStaffPage />} />

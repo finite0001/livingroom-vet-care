@@ -246,13 +246,8 @@ test("nonadministrator cannot query staged source records", async ({
 }) => {
   const state = await fixture(page, false);
   await page.goto("/hub/tools/ezyvet");
-  await expect(
-    page
-      .getByText(
-        /Active administrator access is required|Access denied|permission/i,
-      )
-      .first(),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/hub$/);
+  await expect(page.getByRole("button", { name: "ezyVet imports", exact: true })).toHaveCount(0);
   expect(state.reviewReads).toBe(0);
   expect(state.stageRequests).toBe(0);
 });
