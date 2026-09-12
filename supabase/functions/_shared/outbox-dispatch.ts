@@ -1,3 +1,4 @@
+import { verifyFrozenReleaseEmail } from "./release-email-payload.ts";
 import {
   authorizeDelivery,
   requireEmailConfiguration,
@@ -56,6 +57,7 @@ export async function dispatchOne(
   let metadata: Record<string, string>;
   let authorization: string;
   let endpoint: string;
+  let frozenReleasePayload: string | null = null;
   try {
     authorizeDelivery(env, row.channel, row.recipient);
     if (row.channel === "EMAIL") {
@@ -81,6 +83,21 @@ export async function dispatchOne(
         JSON.stringify(Object.entries(metadata).sort())
     )
       throw new Error("Sender metadata changed");
+    const frozen = (await call(db, "read_release_email_payload", {
+      p_outbox_id: row.id,
+      p_lease_token: row.lease_token,
+    })) as { payload_text: string; payload_hash: string } | null;
+    if (frozen) {
+      if (row.channel !== "EMAIL")
+        throw new Error("Release attachments require email");
+      frozenReleasePayload = await verifyFrozenReleaseEmail(frozen, {
+        recipient: row.recipient,
+        subject: row.subject,
+        body: row.body,
+        from: metadata.from,
+        replyTo: metadata.reply_to,
+      });
+    }
   } catch {
     await call(db, "release_communication_claim", {
       p_id: row.id,
@@ -116,13 +133,14 @@ export async function dispatchOne(
             },
       body:
         row.channel === "EMAIL"
-          ? JSON.stringify({
+          ? (frozenReleasePayload ??
+            JSON.stringify({
               from: metadata.from,
               reply_to: metadata.reply_to,
               to: [row.recipient],
               subject: row.subject,
               text: row.body,
-            })
+            }))
           : new URLSearchParams({
               From: metadata.from,
               To: row.recipient,

@@ -57,6 +57,40 @@ async function fixture(page: Page, accepted = true) {
   );
   const state = {
     malformedSources: false,
+    emails: [] as Array<{
+      request: {
+        id: string;
+        release_id: string;
+        actor_id: string;
+        conversation_id: string;
+        recipient: string;
+        subject: string;
+        body: string;
+        release_hash: string;
+        state: string;
+      };
+      payload_hash: string;
+      manifest: Array<{
+        filename: string;
+        mime_type: string;
+        file_size: number;
+        sha256: string;
+      }>;
+      report_html: string;
+      purged_at: null;
+      receipt: {
+        outbox_id: string;
+        state: string;
+        queued: boolean;
+        delivered: boolean;
+      } | null;
+    }>,
+    emailPrepareCalls: [] as Array<Record<string, string>>,
+    emailQueueCalls: 0,
+    loseCaptureResponse: false,
+    loseQueueResponse: false,
+    haveConversation: false,
+    malformedRecovery: false,
     rows: [] as ReleaseBundle[],
     requests: [] as ReleaseConfirmArgs[],
     oversized: false,
@@ -111,6 +145,103 @@ async function fixture(page: Page, accepted = true) {
       return route.fulfill({
         json: { id: clientId, full_name: "Test family" },
       });
+    if (path === "/rest/v1/conversations")
+      return route.fulfill({
+        json: state.haveConversation
+          ? [
+              {
+                id: "44444444-4444-4444-8444-444444444444",
+                client_id: clientId,
+                status: "ACTIVE",
+                created_at: "2026-09-12T18:00:00Z",
+              },
+            ]
+          : [],
+      });
+    if (path === "/rest/v1/rpc/ensure_active_conversation") {
+      state.haveConversation = true;
+      return route.fulfill({
+        json: { id: "44444444-4444-4444-8444-444444444444" },
+      });
+    }
+    if (path === "/rest/v1/rpc/recover_release_email") {
+      if (state.malformedRecovery) return route.fulfill({ json: [] });
+      const args = route.request().postDataJSON();
+      return route.fulfill({
+        json:
+          state.emails
+            .filter(
+              (e) =>
+                e.request.release_id === args.p_release_id &&
+                e.request.state !== "abandoned" &&
+                (!args.p_request_id || e.request.id === args.p_request_id),
+            )
+            .at(-1) || null,
+      });
+    }
+    if (path === "/functions/v1/prepare-release-email") {
+      const a = route.request().postDataJSON();
+      state.emailPrepareCalls.push(a);
+      let saved = state.emails.find((e) => e.request.id === a.p_request_id);
+      if (!saved) {
+        saved = {
+          request: {
+            id: a.p_request_id,
+            release_id: a.p_release_id,
+            actor_id: staffId,
+            conversation_id: a.p_conversation_id,
+            recipient: "owner@example.test",
+            subject: a.p_subject,
+            body: a.p_body,
+            release_hash: a.p_release_hash,
+            state: "ready",
+          },
+          payload_hash: "b".repeat(64),
+          manifest: [
+            {
+              filename: "reviewed-report.html",
+              mime_type: "text/html",
+              file_size: 80,
+              sha256: "c".repeat(64),
+            },
+          ],
+          report_html: "<!doctype html><h1>Exact frozen clinical report</h1>",
+          purged_at: null,
+          receipt: null,
+        };
+        state.emails.push(saved);
+      }
+      if (state.loseCaptureResponse) {
+        state.loseCaptureResponse = false;
+        return route.abort("failed");
+      }
+      return route.fulfill({ json: saved });
+    }
+    if (path === "/rest/v1/rpc/enqueue_release_email") {
+      state.emailQueueCalls++;
+      const a = route.request().postDataJSON();
+      const saved = state.emails.find((e) => e.request.id === a.p_request_id)!;
+      saved.request.state = "queued";
+      saved.receipt = {
+        outbox_id: saved.request.id,
+        state: "pending",
+        queued: true,
+        delivered: false,
+      };
+      if (state.loseQueueResponse) {
+        state.loseQueueResponse = false;
+        return route.abort("failed");
+      }
+      return route.fulfill({
+        json: { id: saved.request.id, state: "pending" },
+      });
+    }
+    if (path === "/rest/v1/rpc/abandon_release_email") {
+      const a = route.request().postDataJSON();
+      state.emails.find((e) => e.request.id === a.p_request_id)!.request.state =
+        "abandoned";
+      return route.fulfill({ json: null });
+    }
     if (path === "/rest/v1/rpc/list_record_release_sources") {
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
@@ -523,4 +654,173 @@ test("oversized all-record request preserves prior explicit selection and requir
       .getByRole("heading", { name: "IMPORTANT — Vaccine reaction" })
       .first(),
   ).toBeVisible();
+});
+
+async function emailFixture(page: Page) {
+  const state = await fixture(page);
+  state.rows.push({
+    release: {
+      ...structuredClone(chartArtifact.preview),
+      id: "55555555-5555-4555-8555-555555555555",
+      pet_id: petId,
+      client_id: clientId,
+      channel: "EMAIL",
+      recipient: "owner@example.test",
+      selection: {},
+      created_by: staffId,
+      created_at: "2026-09-12T18:00:00Z",
+    },
+    events: [],
+    eligible: true,
+    ineligibility_reason: null,
+  });
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  return state;
+}
+test("release email recovers lost capture and queue responses across reload and creates a separate new intent explicitly", async ({
+  page,
+}) => {
+  const state = await emailFixture(page);
+  let email = page.getByRole("region", { name: "Reviewed release email" });
+  await email
+    .getByRole("button", {
+      name: "Create or use active household conversation",
+    })
+    .click();
+  await email.getByLabel("Email subject", { exact: true }).fill("");
+  await email
+    .getByRole("button", {
+      name: "Prepare exact email attachments",
+      exact: true,
+    })
+    .click();
+  await expect(
+    email.getByText(
+      "Choose a household conversation and enter an email subject and message.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  expect(state.emailPrepareCalls).toHaveLength(0);
+  await email.getByLabel("Email subject", { exact: true }).fill("Records A");
+  state.loseCaptureResponse = true;
+  await email
+    .getByRole("button", {
+      name: "Prepare exact email attachments",
+      exact: true,
+    })
+    .click();
+  await expect(
+    email
+      .frameLocator("iframe")
+      .getByRole("heading", { name: "Exact frozen clinical report" }),
+  ).toBeVisible();
+  const requestId = state.emails[0].request.id;
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  email = page.getByRole("region", { name: "Reviewed release email" });
+  await expect(email.getByLabel("Email subject", { exact: true })).toHaveValue(
+    "Records A",
+  );
+  await expect(email.getByLabel("Household conversation")).toHaveValue(
+    "44444444-4444-4444-8444-444444444444",
+  );
+  await email
+    .getByLabel(
+      "I reviewed the exact frozen report, original attachments, email message and household recipient.",
+    )
+    .check();
+  state.loseQueueResponse = true;
+  await email
+    .getByRole("button", { name: "Queue reviewed record email", exact: true })
+    .click();
+  await expect(
+    email.getByText("Saved queue receipt:", { exact: false }),
+  ).toBeVisible();
+  expect(state.emailQueueCalls).toBe(1);
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  email = page.getByRole("region", { name: "Reviewed release email" });
+  await expect(email.getByText(requestId, { exact: false })).toBeVisible();
+  await email
+    .getByRole("button", { name: "Compose a separate new email" })
+    .click();
+  await email
+    .getByRole("button", {
+      name: "Create or use active household conversation",
+    })
+    .click();
+  await email.getByLabel("Email subject", { exact: true }).fill("Records B");
+  await email
+    .getByRole("button", {
+      name: "Prepare exact email attachments",
+      exact: true,
+    })
+    .click();
+  await expect(email.getByLabel("Email subject", { exact: true })).toHaveValue(
+    "Records B",
+  );
+  expect(state.emails).toHaveLength(2);
+  expect(state.emails[1].request.id).not.toBe(requestId);
+  expect(state.emailQueueCalls).toBe(1);
+});
+test("malformed email recovery remains a local error and cannot create another email", async ({
+  page,
+}) => {
+  const state = await emailFixture(page);
+  state.malformedRecovery = true;
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  const email = page.getByRole("region", { name: "Reviewed release email" });
+  await expect(
+    email.getByText("Saved-email recovery failed.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    email.getByRole("button", { name: "Prepare exact email attachments" }),
+  ).toBeDisabled();
+  expect(state.emailPrepareCalls).toHaveLength(0);
+});
+
+test("new package confirmation cannot replace an active release email draft", async ({
+  page,
+}) => {
+  await emailFixture(page);
+  const email = page.getByRole("region", { name: "Reviewed release email" });
+  await email
+    .getByLabel("Email subject", { exact: true })
+    .fill("Unsaved clinical email draft");
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await panel
+    .getByRole("button", {
+      name: "Select all shown: Problem and diagnosis history",
+      exact: true,
+    })
+    .click();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  await panel
+    .getByLabel(
+      "I reviewed the complete selected records, original attachments and household recipient.",
+    )
+    .check();
+  await expect(
+    panel.getByRole("button", {
+      name: "Confirm reviewed package",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(email.getByLabel("Email subject", { exact: true })).toHaveValue(
+    "Unsaved clinical email draft",
+  );
 });

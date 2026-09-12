@@ -39,7 +39,11 @@ function fixture(channel: "EMAIL" | "SMS" = "EMAIL") {
       calls.push({ name, args });
       return {
         data:
-          name === "claim_communication" ? row : { ...row, state: startState },
+          name === "read_release_email_payload"
+            ? null
+            : name === "claim_communication"
+              ? row
+              : { ...row, state: startState },
         error:
           name === "finish_communication_attempt" && failFinish
             ? new Error("persistence failed")
@@ -117,6 +121,7 @@ test("email provider acceptance is distinct from delivery and has stable idempot
     f.calls.map((c) => c.name),
     [
       "claim_communication",
+      "read_release_email_payload",
       "start_communication_attempt",
       "finish_communication_attempt",
     ],
