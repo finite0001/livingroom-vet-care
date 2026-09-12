@@ -4264,6 +4264,193 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_due_templates: {
+        Row: {
+          active: boolean
+          id: string
+          interval_days: number
+          name: string
+          review_note: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          id: string
+          interval_days: number
+          name: string
+          review_note: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          interval_days?: number
+          name?: string
+          review_note?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_due_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lab_work_revisions: {
+        Row: {
+          actor_id: string
+          entity: string
+          entity_id: string
+          id: number
+          reason: string
+          recorded_at: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          actor_id: string
+          entity: string
+          entity_id: string
+          id?: never
+          reason: string
+          recorded_at?: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          actor_id?: string
+          entity?: string
+          entity_id?: string
+          id?: never
+          reason?: string
+          recorded_at?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_work_revisions_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_lab_orders: {
+        Row: {
+          accession: string
+          collected_date: string | null
+          created_at: string
+          created_by: string
+          due_date: string | null
+          id: string
+          interval_anchor: string | null
+          interval_days: number | null
+          notes: string
+          override_reason: string
+          pet_id: string
+          result_date: string | null
+          result_document_id: string | null
+          status: string
+          template_id: string | null
+          template_version: number | null
+          test_name: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          accession?: string
+          collected_date?: string | null
+          created_at?: string
+          created_by: string
+          due_date?: string | null
+          id: string
+          interval_anchor?: string | null
+          interval_days?: number | null
+          notes?: string
+          override_reason?: string
+          pet_id: string
+          result_date?: string | null
+          result_document_id?: string | null
+          status: string
+          template_id?: string | null
+          template_version?: number | null
+          test_name: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          accession?: string
+          collected_date?: string | null
+          created_at?: string
+          created_by?: string
+          due_date?: string | null
+          id?: string
+          interval_anchor?: string | null
+          interval_days?: number | null
+          notes?: string
+          override_reason?: string
+          pet_id?: string
+          result_date?: string | null
+          result_document_id?: string | null
+          status?: string
+          template_id?: string | null
+          template_version?: number | null
+          test_name?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_lab_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_lab_orders_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_lab_orders_result_document_id_fkey"
+            columns: ["result_document_id"]
+            isOneToOne: false
+            referencedRelation: "patient_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_lab_orders_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "lab_due_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_lab_orders_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -6103,6 +6290,69 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_lab_due_template: {
+        Args: {
+          p_active: boolean
+          p_expected_version: number
+          p_id: string
+          p_interval_days: number
+          p_name: string
+          p_review_note: string
+        }
+        Returns: {
+          active: boolean
+          id: string
+          interval_days: number
+          name: string
+          review_note: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lab_due_templates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_patient_lab_order: {
+        Args: {
+          p_correction_reason: string
+          p_expected_version: number
+          p_id: string
+          p_pet_id: string
+          p_values: Json
+        }
+        Returns: {
+          accession: string
+          collected_date: string | null
+          created_at: string
+          created_by: string
+          due_date: string | null
+          id: string
+          interval_anchor: string | null
+          interval_days: number | null
+          notes: string
+          override_reason: string
+          pet_id: string
+          result_date: string | null
+          result_document_id: string | null
+          status: string
+          template_id: string | null
+          template_version: number | null
+          test_name: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_lab_orders"
           isOneToOne: true
           isSetofReturn: false
         }
