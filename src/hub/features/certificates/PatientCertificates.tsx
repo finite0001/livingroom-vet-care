@@ -58,6 +58,41 @@ function SnapshotReview({ snapshot: s }: { snapshot: CertificateSnapshot }) {
             </div>
           ))}
       </dl>
+      {s.schema_version === 2 && (
+        <section
+          className="space-y-3 border-t pt-3"
+          aria-label="Patient due plans for certificate"
+        >
+          <h5 className="font-medium">
+            Patient due plans reviewed at issuance
+          </h5>
+          <p className="text-sm text-muted-foreground">
+            Review these plan dates separately from the administration history
+            below. This signed copy will retain them if the care plan changes
+            later.
+          </p>
+          {!s.due_plans?.length && (
+            <p>
+              No nonretired patient due plans are recorded. No current schedule
+              is inferred.
+            </p>
+          )}
+          {s.due_plans?.map((plan) => (
+            <div key={plan.plan_id} className="rounded-md border p-3 text-sm">
+              <p className="font-medium">{plan.group_name}</p>
+              <p>
+                Group: {plan.group_key} · Plan revision {plan.plan_version}
+              </p>
+              <p>Last administration anchor: {plan.last_administered_on}</p>
+              <p>
+                {plan.status === "current"
+                  ? `Reviewed next due date: ${plan.reviewed_due_on}`
+                  : "Awaiting review — no due date certified"}
+              </p>
+            </div>
+          ))}
+        </section>
+      )}
       {s.vaccinations.map((v) => (
         <section key={v.treatment_id} className="border-t pt-3">
           <h5 className="font-medium">{v.product_name}</h5>
@@ -231,7 +266,7 @@ export function PatientCertificates({
     p_pet_id: petId,
     p_kind: kind,
     p_rabies_treatment_id: kind === "rabies" ? treatment || null : null,
-    p_details: kind === "rabies" ? details : {},
+    p_details: kind === "rabies" ? details : { due_plan_review_version: 2 },
   });
   const loadPreview = () =>
     run(async () => {

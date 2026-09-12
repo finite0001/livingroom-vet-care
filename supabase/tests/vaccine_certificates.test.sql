@@ -11,7 +11,7 @@ select set_config('request.jwt.claims','{"sub":"48000000-0000-4000-8000-00000000
 insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Certificate','Family','3035550100',null,'EMAIL','123 Test St, Boulder CO',null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Certificate dog','Dog','Mixed','2020-01-01','exact','Brown','female','neutered',null,null,null);
 insert into fx select 'other',id from public.save_patient(null,(select id from fx where k='client'),null,'Other dog','Dog','Mixed','2020-01-01','exact','Brown','female','neutered',null,null,null);
-select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{}')$$,'42501','Verified veterinarian credentials and clinical acceptance are required','DVM role alone does not establish verified credentials');
+select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{"due_plan_review_version":2}')$$,'42501','Verified veterinarian credentials and clinical acceptance are required','DVM role alone does not establish verified credentials');
 reset role;
 insert into public.certificate_issuers(user_id,full_name,license_number,license_state,license_expires_on,practice_name,practice_address,practice_phone,verified_at,verification_reference,clinical_acceptance_at,active) values('48000000-0000-4000-8000-000000000001','Dr Test','TEST-ONLY','CO',current_date+365,'Test practice','2619 Spruce Street, Boulder CO','3035550199',now(),'SYNTHETIC TEST VERIFICATION',now(),true);
 set local role authenticated;
@@ -51,14 +51,14 @@ select ok(not ((public.read_vaccine_certificate('49000000-0000-4000-8000-0000000
 select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'rabies','49000000-0000-4000-8000-000000000004',(select v from requests where k='details'))$$,'23514','Corrected vaccination cannot be certified','Corrected treatment cannot issue');
 select public.record_patient_treatment('49000000-0000-4000-8000-000000000009',jsonb_build_object('pet_id',(select id from fx where k='pet'),'historical',true,'quantity',1,'product_name','External vaccine','manufacturer','External maker','lot_number','L','expires_on',current_date+365,'dose','1 mL','route','SC','site','leg','veterinarian','Dr Test','veterinarian_license','TEST-ONLY','administered_at',now(),'source','External original'));
 select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'rabies','49000000-0000-4000-8000-000000000009',(select v from requests where k='details'))$$,'23514','Imported history cannot issue a new rabies certificate; retain the original external certificate','Imports do not become new practice rabies certificates');
-insert into requests select 'history',public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{}');
+insert into requests select 'history',public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{"due_plan_review_version":2}');
 select is((select jsonb_array_length(v->'vaccinations') from requests where k='history'),1,'General history excludes corrected source');
 select is((select v#>'{vaccinations,0,next_due_on}' from requests where k='history'),'null'::jsonb,'Unknown imported due date remains explicitly unknown');
-select lives_ok($$select public.issue_vaccine_certificate('49000000-0000-4000-8000-000000000010',(select id from fx where k='pet'),'vaccine_history',null,'{}',(select v from requests where k='history'),'Dr Test',true)$$,'General reviewed history certificate can issue');
+select lives_ok($$select public.issue_vaccine_certificate('49000000-0000-4000-8000-000000000010',(select id from fx where k='pet'),'vaccine_history',null,'{"due_plan_review_version":2}',(select v from requests where k='history'),'Dr Test',true)$$,'General reviewed history certificate can issue');
 select public.record_patient_treatment('49000000-0000-4000-8000-000000000011',(select v||jsonb_build_object('administered_at',now()+interval '1 minute') from requests where k='live'));
 select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'rabies','49000000-0000-4000-8000-000000000011',(select v from requests where k='details'))$$,'23514','A future administration cannot be certified','Future administration cannot issue rabies proof');
 select set_config('request.jwt.claims','{"sub":"48000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{}')$$,'42501','Certificate issuance requires an authorized veterinarian','Non-DVM staff cannot issue');
+select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{"due_plan_review_version":2}')$$,'42501','Certificate issuance requires an authorized veterinarian','Non-DVM staff cannot issue');
 select is((select count(*) from public.vaccine_certificates),3::bigint,'Active staff can read issued history');
 reset role;
 select set_config('request.jwt.claims','{}',true);

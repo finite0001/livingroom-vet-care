@@ -87,5 +87,5 @@ export const attestations = {
   rabies:
     "I reviewed this complete certificate and its due date, confirm this was a rabies vaccine administered by me or under my supervision by the named administrator trained in vaccine storage, handling, administration and adverse-event management, and explicitly sign this certificate.",
   vaccine_history:
-    "I reviewed the patient identity, all included vaccine records and their recorded due dates, and explicitly sign this vaccine history certificate. This is not a rabies certificate or an automatically calculated schedule.",
+    "I reviewed the patient identity, included vaccination history and the patient due-plan snapshot, including any plans awaiting review, and explicitly sign this certificate. The reviewed plan dates apply to this snapshot at issuance; no vaccine equivalence or due date was inferred. This is not a rabies certificate.",
 } as const;

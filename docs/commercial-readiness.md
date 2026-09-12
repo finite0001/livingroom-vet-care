@@ -8,14 +8,14 @@ Goal: complete all requested practice software and website components, then perf
 | --- | --- | --- |
 | Client name/address/phone/email | PR2 household create/edit/search, separate mailing/housecall addresses, duplicate review tests | Owner review and hosted staff test |
 | Pet name/age/species/breed/weight/birthday/color/microchip | PR2 patient workspace, exact/estimated/unknown dates, dated units, mobile persistence test | Hosted clinician review |
-| Vaccine upcoming/last dates | Stock-backed and historical vaccine administration, frozen metadata and clinician-chosen due dates implemented | Complete longitudinal due engine, standard/per-patient reminders and clinician acceptance |
+| Vaccine upcoming/last dates | Stock-backed and historical vaccine administration, frozen metadata and clinician-chosen due dates implemented | PR24 due plans implemented; connect automatic dispatch and obtain clinician acceptance |
 | SOAP records | PR2 versioned save/sign/addenda and concurrency/immutability tests | Full clinical acceptance, document exports and restore proof |
 | Important historical diagnoses highlighted red | PR2 problem history and prominent red/icon/text flags | Propagation into booking/medication/vaccine/export workflows |
-| Text/email with records and labs | Durable outbox plus verified inbound/status processing implemented; provider delivery remains disabled | Real authorized attachments, durable reload recovery and controlled provider round-trips |
-| Standard and per-patient vaccine/lab reminders | PR19 reviewed lab interval templates and patient due dates; reminder engine in progress | Configurable due engine, invalidation, outbox and provider acceptance |
-| Vaccine certificates with due dates | PR20 immutable snapshots, due dates, print samples and correction invalidation; frontend/database CI passed | Veterinarian acceptance and hosted issuance |
+| Text/email with records and labs | Durable outbox plus verified inbound/status processing implemented; provider delivery remains disabled | Real authorized attachments and controlled provider round-trips; PR22 reload recovery implemented |
+| Standard and per-patient vaccine/lab reminders | PR19 lab interval templates and PR24 standard/patient vaccine due plans with immutable unsent jobs | Automatic scheduler/outbox bridge and controlled provider acceptance |
+| Vaccine certificates with due dates | PR20 immutable vaccine history and Current certificate integration adds reviewed patient due-plan snapshots; print/correction tests pass | Veterinarian acceptance and hosted issuance |
 | Rabies certificates with complete vaccine information | PR20 separate required-metadata template, verified issuer registry and immutable issuance | Verified practice issuer setup and Dr. Edler review |
-| Invoices and payment by text/email | Invoice, item and credit ledgers plus household billing UI implemented | Payment ledger/Stripe sandbox reconciliation and invoice delivery integration; Stripe connector needs reauthentication |
+| Invoices and payment by text/email | Invoice/item/credit ledgers, household billing UI and PR23 print/download documents implemented | Payment ledger/Stripe sandbox reconciliation and invoice delivery integration; Stripe connector needs reauthentication |
 | Select all/some medical records/certificates for email | Private patient documents: 46 SQL checks and 3 browser scenarios | Exact authorized package snapshots, export, delivery and privacy tests |
 | Medication inventory, expiration/lot/billing | Product/lot/location stock ledger and atomic treatment-plus-charge workflow implemented | Hosted stock acceptance, invoice/payment reconciliation and real opening balances |
 | Vaccine inventory and billing | Frozen vaccine lot/expiry metadata and atomic stock decrement/billing implemented | Certificate acceptance, inventory import/opening balances and hosted workflow |
@@ -25,7 +25,7 @@ Goal: complete all requested practice software and website components, then perf
 | Automatic anesthesia records | PR21 native monitoring, manual/source-document transcription, immutable signatures/addenda and patient draft protection | Dr. Edler review; vendor selection and actual automatic-import adapter/sample/round-trip evidence |
 | QOL charting | PR14 versioned qualitative observations, sign/addenda and reopen/conflict tests | Dr. Edler instrument acceptance, longitudinal presentation and print/export |
 | Reopen/update mass body maps | PR14 stable lesions, keyboard schematic, dated observations and patient-photo validation | Clinician acceptance of schematic and measurements, print/export |
-| Unified inbox without Gmail dependence | PR16–18 signed Resend/Twilio ingestion, sender review, durable outbox, consent UI, personal read state and paginated inbox implemented | Controlled inbound/provider callback proof, durable reload recovery and attachment release |
+| Unified inbox without Gmail dependence | PR16–18 signed Resend/Twilio ingestion, sender review, durable outbox, consent UI, personal read state and paginated inbox implemented | Controlled inbound/provider callback proof, attachment release and website-inquiry triage |
 | ezyVet API connection | PR11 bounded staging and administrator-reviewed household/patient promotion with provenance | Authorized ezyVet account and actual API/mapping acceptance; clinical resources beyond household/patient identity need reviewed promotion |
 | Logo/new visuals | PR12 approved armchair/dog/cat direction; medical-cross/descriptor refinement proposed | Consistent final master, small-size/readability checks, responsive brand integration and final owner acceptance |
 | Supabase/Vercel + owned domain | Dedicated Supabase provisioned; Vercel config; domain known | Frontend environment parity, staff/Auth SMTP, DNS/HTTPS, backups/restore, monitoring and cutover |
@@ -68,3 +68,9 @@ Latest synthetic message browser tests verify lost queue response recovery, unch
 ## Payment account decision
 
 The owner selected a new Stripe account dedicated to Living Room Vet. Do not configure payments against an existing unrelated account. Stripe connector reauthentication and practice business onboarding are still required; no account has been created or payment processed in this workflow.
+
+## Latest integration checkpoint
+
+PR21 anesthesia and PR22 message recovery passed frontend/database CI. PR23 invoice documents passed 109 local unit tests and all 58 combined browser tests, including an actual PDF artifact. PR24 due plans are mounted in the patient workspace and staff navigation; its local SQL and browser checks passed. Record-release selection/export, website-inquiry triage and automatic reminder dispatch are active implementation work. No providers were contacted and no public deployment occurred.
+
+General certificates now separately preserve reviewed due plans at issuance and per-administration recorded dates. Later plan revisions do not rewrite signed copies; updated client copies require new review/issuance. Standalone invoice documents similarly do not claim payment activity or immutable delivery snapshots. These distinctions remain relevant when attaching documents to outbound messages.

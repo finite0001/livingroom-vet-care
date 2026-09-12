@@ -66,3 +66,52 @@ test("general history preserves all recorded dates and clearly marks missing dat
   );
   assert.ok(!html.includes("<h2>Rabies administration details</h2>"));
 });
+
+test("v2 general certificate separates reviewed plans from recorded administration dates", () => {
+  const general = structuredClone(certificate);
+  general.snapshot.kind = "vaccine_history";
+  general.snapshot.schema_version = 2;
+  general.snapshot.due_plans = [
+    {
+      plan_id: "plan",
+      plan_version: 2,
+      group_key: "reviewed-group",
+      group_name: "Group <script>",
+      template_id: "template",
+      template_version: 1,
+      product_id: "product",
+      treatment_id: null,
+      last_administered_on: "2026-01-01",
+      status: "current",
+      reviewed_due_on: "2026-02-01",
+    },
+    {
+      plan_id: "proposal",
+      plan_version: 1,
+      group_key: "pending",
+      group_name: "Proposed group",
+      template_id: "template",
+      template_version: 1,
+      product_id: "product",
+      treatment_id: null,
+      last_administered_on: "2026-01-02",
+      status: "proposed",
+      reviewed_due_on: null,
+    },
+  ];
+  const html = renderVaccineCertificate(general, []);
+  assert.match(html, /Patient due plans reviewed at issuance/);
+  assert.match(html, /2026-02-01/);
+  assert.match(html, /2027-09-12/);
+  assert.match(html, /Awaiting review — no due date certified/);
+  assert.match(html, /Group &lt;script&gt;/);
+  assert.doesNotMatch(html, /<script>/);
+  assert.match(html, /Later care-plan changes do not update this signed copy/);
+  general.snapshot.due_plans = [];
+  assert.match(
+    renderVaccineCertificate(general, []),
+    /No nonretired patient due plans/,
+  );
+  delete general.snapshot.due_plans;
+  assert.throws(() => renderVaccineCertificate(general, []), /Unsupported/);
+});
