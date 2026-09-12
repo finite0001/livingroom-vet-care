@@ -1,3 +1,35 @@
+export interface WeightProvenance {
+  approval_id: string;
+  source: string;
+  source_record_id: string;
+  action: "create" | "link";
+  original: {
+    weight: string | null;
+    unit: string | null;
+    timestamp: string | null;
+  };
+  reviewed_values: { weight: number; unit: string; measured_at: string };
+  review_reason: string;
+  reviewer_id: string;
+  reviewed_at: string;
+  source_clinician: null;
+  latest_source_version: number;
+  approved_source_version: number;
+  latest_source_reviewed: boolean;
+  source_reviews: Array<{
+    id: string;
+    source_version: number;
+    reviewer_id: string;
+    reviewed_at: string;
+    reason: string;
+    source: {
+      weight: string | null;
+      unit: string | null;
+      timestamp: string | null;
+      active: string | null;
+    };
+  }>;
+}
 export interface ProblemFields {
   version: number;
   title: string;
@@ -23,6 +55,7 @@ export interface HistorySources {
     }>;
   }>;
   weights?: Array<{
+    import_provenance?: WeightProvenance[];
     id: string;
     weight: number;
     unit: string;
@@ -93,7 +126,7 @@ export function renderReleaseHistory(s: HistorySources): string {
       )
       .join("") +
     (s.weights?.length || 0
-      ? `<article><h2>Dated weight measurements</h2>${s.weights!.map((w) => `<section><h3>${esc(w.measured_at)} · ${esc(w.weight)} ${esc(w.unit)}</h3><p>Recorded ${esc(w.created_at)} by ${esc(w.recorded_by)}</p></section>`).join("")}</article>`
+      ? `<article><h2>Dated weight measurements</h2>${s.weights!.map((w) => `<section><h3>${esc(w.measured_at)} · ${esc(w.weight)} ${esc(w.unit)}</h3><p>Recorded ${esc(w.created_at)} by ${esc(w.recorded_by)}</p>${renderWeightProvenance(w.import_provenance, esc)}</section>`).join("")}</article>`
       : "") +
     (s.treatments || [])
       .map(
@@ -102,4 +135,19 @@ export function renderReleaseHistory(s: HistorySources): string {
       )
       .join("")
   );
+}
+
+function renderWeightProvenance(
+  items: WeightProvenance[] | undefined,
+  esc: (value: unknown) => string,
+): string {
+  if (!items) return "";
+  if (!items.length)
+    return "<p>No reviewed ezyVet source association was recorded at package confirmation.</p>";
+  return items
+    .map(
+      (p) =>
+        `<section><h4>Reviewed ezyVet history · source record ${esc(p.source_record_id)}</h4><p>${p.action === "create" ? "Local measurement created from reviewed historical import." : "Existing local measurement linked to reviewed external history."} Source clinician unknown; the reviewer is not necessarily the source clinician.</p><p>Original source: ${esc(p.original.weight)} ${esc(p.original.unit)}; original timestamp: ${esc(p.original.timestamp)}.</p><p>Reviewed local measurement: ${esc(p.reviewed_values.weight)} ${esc(p.reviewed_values.unit)} on ${esc(p.reviewed_values.measured_at)}.</p><p>Reviewed by ${esc(p.reviewer_id)} at ${esc(p.reviewed_at)}: ${esc(p.review_reason)}</p><p>Approved source version ${esc(p.approved_source_version)}; latest observed source version ${esc(p.latest_source_version)}. ${p.latest_source_reviewed ? "Latest source has a recorded review." : "Latest external source change has not been reviewed."}</p><h5>Source review history</h5><p>Source reviews do not automatically correct the local measurement.</p>${p.source_reviews.map((r) => `<section><p>${esc(r.reviewed_at)} · reviewer ${esc(r.reviewer_id)}: ${esc(r.reason)}</p><p>Reviewed source version ${esc(r.source_version)}: ${esc(r.source.weight)} ${esc(r.source.unit)}; timestamp ${esc(r.source.timestamp)}; source active value ${esc(r.source.active)}.</p></section>`).join("") || "<p>No subsequent source reviews recorded.</p>"}</section>`,
+    )
+    .join("");
 }
