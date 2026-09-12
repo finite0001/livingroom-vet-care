@@ -1,3 +1,4 @@
+import { PatientVaccineDuePlans } from "@/hub/features/care-reminders/PatientVaccineDuePlans";
 import { PatientAnesthesiaRecords } from "@/hub/features/anesthesia/PatientAnesthesiaRecords";
 import { PatientCertificates } from "@/hub/features/certificates/PatientCertificates";
 import { PatientLabWork } from "@/hub/features/lab-work/PatientLabWork";
@@ -32,7 +33,8 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [labDirty, setLabDirty] = useState(false);
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty);
+  const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
+  const navigationGuard = useUnsavedChanges(clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -61,6 +63,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     {patient.allergies?.trim() && <div role="note" className="flex gap-3 rounded-md border border-destructive bg-destructive/10 p-4 text-clinical-alert"><AlertTriangle className="h-5 w-5 shrink-0" /><div><h2 className="font-semibold">Allergy information from existing record</h2><p className="whitespace-pre-wrap text-sm">{patient.allergies}</p><p className="mt-1 text-xs">Review alongside the structured problem list below.</p></div></div>}
     <div className="grid items-start gap-5 lg:grid-cols-2"><Card><CardHeader><CardTitle className="text-lg">Patient details</CardTitle></CardHeader><CardContent><dl className="grid grid-cols-2 gap-4">{details.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-muted-foreground">{label}{label === "Age" && patient.deceased_at ? " at death" : ""}</dt><dd className="break-words text-sm">{value}</dd></div>)}</dl></CardContent></Card><WeightHistory petId={petId} legacyWeight={patient.weight_lbs} disabled={inactive} /></div>
     <PatientTreatments petId={petId} clientId={patient.client_id} />
+    <PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} />
     <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
     <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />

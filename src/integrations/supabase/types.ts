@@ -4852,6 +4852,341 @@ export type Database = {
         }
         Relationships: []
       }
+      care_message_templates: {
+        Row: {
+          active: boolean
+          body: string
+          channel: string
+          days_before: number
+          id: string
+          name: string
+          review_note: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          channel: string
+          days_before: number
+          id: string
+          name: string
+          review_note: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          channel?: string
+          days_before?: number
+          id?: string
+          name?: string
+          review_note?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_message_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_plan_revisions: {
+        Row: {
+          actor_id: string
+          entity: string
+          entity_id: string
+          id: number
+          recorded_at: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          actor_id: string
+          entity: string
+          entity_id: string
+          id?: never
+          recorded_at?: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          actor_id?: string
+          entity?: string
+          entity_id?: string
+          id?: never
+          recorded_at?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_plan_revisions_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_reminder_jobs: {
+        Row: {
+          channel: string
+          client_id: string
+          created_at: string
+          due_on: string
+          id: string
+          invalidated_at: string | null
+          invalidation_reason: string | null
+          message_template_id: string
+          message_template_version: number
+          pet_id: string
+          rendered_body: string
+          scheduled_on: string
+          source_id: string
+          source_kind: string
+          source_snapshot: Json
+          source_version: number
+          status: string
+          template_snapshot: Json
+        }
+        Insert: {
+          channel: string
+          client_id: string
+          created_at?: string
+          due_on: string
+          id: string
+          invalidated_at?: string | null
+          invalidation_reason?: string | null
+          message_template_id: string
+          message_template_version: number
+          pet_id: string
+          rendered_body: string
+          scheduled_on: string
+          source_id: string
+          source_kind: string
+          source_snapshot: Json
+          source_version: number
+          status?: string
+          template_snapshot: Json
+        }
+        Update: {
+          channel?: string
+          client_id?: string
+          created_at?: string
+          due_on?: string
+          id?: string
+          invalidated_at?: string | null
+          invalidation_reason?: string | null
+          message_template_id?: string
+          message_template_version?: number
+          pet_id?: string
+          rendered_body?: string
+          scheduled_on?: string
+          source_id?: string
+          source_kind?: string
+          source_snapshot?: Json
+          source_version?: number
+          status?: string
+          template_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_reminder_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_reminder_jobs_message_template_id_fkey"
+            columns: ["message_template_id"]
+            isOneToOne: false
+            referencedRelation: "care_message_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_reminder_jobs_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_vaccine_due_plans: {
+        Row: {
+          anchor_source: string
+          created_at: string
+          created_by: string
+          current_due_on: string
+          group_key: string
+          id: string
+          interval_days: number
+          last_administered_on: string
+          override_reason: string
+          pet_id: string
+          product_id: string
+          proposed_due_on: string
+          reminders_enabled: boolean
+          review_note: string
+          status: string
+          template_id: string
+          template_snapshot: Json
+          template_version: number
+          treatment_id: string | null
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          anchor_source: string
+          created_at?: string
+          created_by: string
+          current_due_on: string
+          group_key: string
+          id: string
+          interval_days: number
+          last_administered_on: string
+          override_reason?: string
+          pet_id: string
+          product_id: string
+          proposed_due_on: string
+          reminders_enabled?: boolean
+          review_note: string
+          status: string
+          template_id: string
+          template_snapshot: Json
+          template_version: number
+          treatment_id?: string | null
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          anchor_source?: string
+          created_at?: string
+          created_by?: string
+          current_due_on?: string
+          group_key?: string
+          id?: string
+          interval_days?: number
+          last_administered_on?: string
+          override_reason?: string
+          pet_id?: string
+          product_id?: string
+          proposed_due_on?: string
+          reminders_enabled?: boolean
+          review_note?: string
+          status?: string
+          template_id?: string
+          template_snapshot?: Json
+          template_version?: number
+          treatment_id?: string | null
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_vaccine_due_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_vaccine_due_plans_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_vaccine_due_plans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_vaccine_due_plans_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "vaccine_due_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_vaccine_due_plans_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "patient_treatments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_vaccine_due_plans_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccine_due_templates: {
+        Row: {
+          active: boolean
+          group_key: string
+          id: string
+          interval_days: number
+          name: string
+          product_ids: string[]
+          review_note: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          group_key: string
+          id: string
+          interval_days: number
+          name: string
+          product_ids: string[]
+          review_note: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          group_key?: string
+          id?: string
+          interval_days?: number
+          name?: string
+          product_ids?: string[]
+          review_note?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccine_due_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -6970,6 +7305,167 @@ export type Database = {
           p_scope: string
         }
         Returns: Json
+      }
+      care_require_admin: { Args: never; Returns: string }
+      enqueue_care_reminder: {
+        Args: {
+          p_expected_source_version: number
+          p_expected_template_version: number
+          p_id: string
+          p_message_template_id: string
+          p_source_id: string
+          p_source_kind: string
+        }
+        Returns: {
+          channel: string
+          client_id: string
+          created_at: string
+          due_on: string
+          id: string
+          invalidated_at: string | null
+          invalidation_reason: string | null
+          message_template_id: string
+          message_template_version: number
+          pet_id: string
+          rendered_body: string
+          scheduled_on: string
+          source_id: string
+          source_kind: string
+          source_snapshot: Json
+          source_version: number
+          status: string
+          template_snapshot: Json
+        }
+        SetofOptions: {
+          from: "*"
+          to: "care_reminder_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      list_care_reminder_candidates: {
+        Args: {
+          p_after_id?: string
+          p_after_kind?: string
+          p_limit?: number
+          p_through: string
+        }
+        Returns: {
+          due_on: string
+          pet_id: string
+          source_id: string
+          source_kind: string
+          source_version: number
+        }[]
+      }
+      save_care_message_template: {
+        Args: {
+          p_active: boolean
+          p_body: string
+          p_channel: string
+          p_days_before: number
+          p_expected_version: number
+          p_id: string
+          p_name: string
+          p_review_note: string
+        }
+        Returns: {
+          active: boolean
+          body: string
+          channel: string
+          days_before: number
+          id: string
+          name: string
+          review_note: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "care_message_templates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_patient_vaccine_due_plan: {
+        Args: {
+          p_anchor_source: string
+          p_current_due_on: string
+          p_expected_version: number
+          p_id: string
+          p_interval_days: number
+          p_last_administered_on: string
+          p_override_reason: string
+          p_pet_id: string
+          p_product_id: string
+          p_reminders_enabled: boolean
+          p_review_note: string
+          p_status: string
+          p_template_id: string
+          p_template_version: number
+          p_treatment_id: string
+        }
+        Returns: {
+          anchor_source: string
+          created_at: string
+          created_by: string
+          current_due_on: string
+          group_key: string
+          id: string
+          interval_days: number
+          last_administered_on: string
+          override_reason: string
+          pet_id: string
+          product_id: string
+          proposed_due_on: string
+          reminders_enabled: boolean
+          review_note: string
+          status: string
+          template_id: string
+          template_snapshot: Json
+          template_version: number
+          treatment_id: string | null
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_vaccine_due_plans"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_vaccine_due_template: {
+        Args: {
+          p_active: boolean
+          p_expected_version: number
+          p_group_key: string
+          p_id: string
+          p_interval_days: number
+          p_name: string
+          p_product_ids: string[]
+          p_review_note: string
+        }
+        Returns: {
+          active: boolean
+          group_key: string
+          id: string
+          interval_days: number
+          name: string
+          product_ids: string[]
+          review_note: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "vaccine_due_templates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {

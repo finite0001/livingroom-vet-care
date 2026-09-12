@@ -34,6 +34,7 @@ const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetail
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
 const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
+const CareRemindersPage = lazy(() => import("@/hub/features/care-reminders/CareRemindersPage").then(module => ({ default: module.CareRemindersPage })));
 const SchedulePage = lazy(() => import("./hub/features/scheduling/SchedulePage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
@@ -103,6 +104,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />
+                  <Route path="/hub/tools/care-reminders" element={<CareRemindersPage />} />
                   <Route path="/hub/tools/templates" element={<TemplatesPage />} />
                   <Route path="/hub/tools/campaigns" element={<CampaignsPage />} />
                   <Route path="/hub/tools/surveys" element={<SurveysPage />} />
