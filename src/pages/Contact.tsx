@@ -1,9 +1,19 @@
-import { practice, practiceAddress, practiceMapsUrl, practiceLaunchSummary } from "@/config/practice";
-import { useState } from "react";
+import {
+  practice,
+  practiceAddress,
+  practiceMapsUrl,
+  practiceLaunchSummary,
+} from "@/config/practice";
+import { useEffect, useState } from "react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { supabase } from "@/integrations/supabase/client";
+import { TurnstileChallenge } from "@/features/contact/TurnstileChallenge";
+import {
+  contactRequest,
+  newContactPointer,
+  readContactPointer,
+} from "@/features/contact/contact-request";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,13 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Link } from "react-router-dom";
-import {
-  MapPin,
-  Clock,
-  Send,
-  Car,
-  ArrowRight,
-} from "lucide-react";
+import { MapPin, Clock, Send, Car, ArrowRight } from "lucide-react";
 import { z } from "zod";
 
 const contactSchema = z.object({
@@ -68,11 +72,84 @@ const Contact = () => {
     subject: "",
     message: "",
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ContactFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pointer, setPointer] = useState(
+    () => readContactPointer(sessionStorage) ?? newContactPointer(),
+  );
+  const [token, setToken] = useState("");
+  const [challengeVersion, setChallengeVersion] = useState(0);
+  const [hasPending, setHasPending] = useState(
+    () => !!readContactPointer(sessionStorage),
+  );
+  const [locked, setLocked] = useState(false);
+  const [receiptNotice, setReceiptNotice] = useState("");
+  const endpoint = import.meta.env.VITE_CONTACT_INTAKE_URL ?? "";
+  const [checking, setChecking] = useState(
+    () => !!readContactPointer(sessionStorage),
+  );
+  const acknowledge = () => {
+    sessionStorage.removeItem("lrv-contact-request");
+    setPointer(newContactPointer());
+    setToken("");
+    setHasPending(false);
+    setLocked(false);
+    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    setReceiptNotice("Request received. This is not a confirmed appointment.");
+  };
+  useEffect(() => {
+    const saved = readContactPointer(sessionStorage);
+    if (!saved) return;
+    let alive = true;
+    contactRequest(endpoint, saved)
+      .then((received) => {
+        if (!alive) return;
+        if (received) {
+          setHasPending(false);
+          sessionStorage.removeItem("lrv-contact-request");
+          setPointer(newContactPointer());
+          setReceiptNotice(
+            "Your earlier request was received. This is not a confirmed appointment.",
+          );
+        } else
+          setReceiptNotice(
+            "Your earlier request is not confirmed. Re-enter its original details to retry with the same request reference.",
+          );
+      })
+      .catch(() => {
+        if (alive)
+          setReceiptNotice(
+            "Your earlier request is not confirmed. Check its receipt before retrying.",
+          );
+      })
+      .finally(() => {
+        if (alive) setChecking(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [endpoint]);
+  const checkReceipt = async () => {
+    setChecking(true);
+    try {
+      if (await contactRequest(endpoint, pointer)) acknowledge();
+      else
+        setReceiptNotice(
+          "Receipt is not confirmed. Retry the same request; do not submit a duplicate.",
+        );
+    } catch {
+      setReceiptNotice(
+        "Receipt could not be checked. Your request reference is retained.",
+      );
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -98,14 +175,25 @@ const Contact = () => {
     }
 
     try {
-      const { error } = await supabase.from("contact_submissions").insert({
-        name: result.data.name,
-        email: result.data.email,
-        phone: result.data.phone || null,
-        subject: result.data.subject,
-        message: result.data.message,
-      });
-      if (error) throw error;
+      sessionStorage.setItem("lrv-contact-request", JSON.stringify(pointer));
+      setHasPending(true);
+      setLocked(true);
+      if (
+        !(await contactRequest(
+          endpoint,
+          pointer,
+          {
+            name: result.data.name!,
+            email: result.data.email!,
+            subject: result.data.subject!,
+            message: result.data.message!,
+            phone: result.data.phone || null,
+          },
+          token,
+        ))
+      )
+        throw new Error("Receipt not confirmed");
+      acknowledge();
 
       toast({
         title: "Request received",
@@ -115,9 +203,15 @@ const Contact = () => {
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       setErrors({});
     } catch {
+      setToken("");
+      setChallengeVersion((v) => v + 1);
+      setReceiptNotice(
+        "Receipt is not confirmed. Check the receipt or retry this same request.",
+      );
       toast({
-        title: "Something went wrong",
-        description: "Your request was not saved. Please try again later.",
+        title: "Receipt is not confirmed",
+        description:
+          "Your request may have been received. Check its receipt, or retry the same request without changing its details.",
         variant: "destructive",
       });
     } finally {
@@ -147,7 +241,9 @@ const Contact = () => {
                 className="text-lg text-muted-foreground leading-relaxed animate-fade-up"
                 style={{ animationDelay: "0.2s" }}
               >
-                {practiceLaunchSummary}. Tell us whether you are interested in a housecall or a visit to our future clinic. Opening targets are subject to change.
+                {practiceLaunchSummary}. Tell us whether you are interested in a
+                housecall or a visit to our future clinic. Opening targets are
+                subject to change.
               </p>
             </div>
           </div>
@@ -164,116 +260,176 @@ const Contact = () => {
                     <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
                       Request a Visit or Ask a Question
                     </h2>
-                    <p className="text-sm text-muted-foreground mb-6">Submitting this form requests follow-up; it does not reserve an appointment. Please avoid including medical records or sensitive payment information.</p>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Submitting this form requests follow-up; it does not
+                      reserve an appointment. Please avoid including medical
+                      records or sensitive payment information.
+                    </p>
                     <form onSubmit={handleSubmit} className="space-y-5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">
-                            Name <span className="text-destructive">*</span>
-                          </Label>
-                          <Input
-                            id="name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            placeholder="Your name"
-                            aria-invalid={!!errors.name}
-                            aria-describedby={errors.name ? "name-error" : undefined}
-                            className={errors.name ? "border-destructive" : ""}
-                          />
-                          {errors.name && (
-                            <p id="name-error" className="text-destructive text-xs" role="alert">
-                              {errors.name}
-                            </p>
-                          )}
+                      {receiptNotice && <p role="status">{receiptNotice}</p>}
+                      {!endpoint && (
+                        <p role="alert">
+                          The online request form is not available yet.
+                        </p>
+                      )}
+                      <fieldset
+                        disabled={isSubmitting || checking || locked}
+                        className="space-y-5"
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">
+                              Name <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="name"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              placeholder="Your name"
+                              aria-invalid={!!errors.name}
+                              aria-describedby={
+                                errors.name ? "name-error" : undefined
+                              }
+                              className={
+                                errors.name ? "border-destructive" : ""
+                              }
+                            />
+                            {errors.name && (
+                              <p
+                                id="name-error"
+                                className="text-destructive text-xs"
+                                role="alert"
+                              >
+                                {errors.name}
+                              </p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">
+                              Email <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              placeholder="you@email.com"
+                              aria-invalid={!!errors.email}
+                              aria-describedby={
+                                errors.email ? "email-error" : undefined
+                              }
+                              className={
+                                errors.email ? "border-destructive" : ""
+                              }
+                            />
+                            {errors.email && (
+                              <p
+                                id="email-error"
+                                className="text-destructive text-xs"
+                                role="alert"
+                              >
+                                {errors.email}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">
-                            Email <span className="text-destructive">*</span>
-                          </Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="you@email.com"
-                            aria-invalid={!!errors.email}
-                            aria-describedby={errors.email ? "email-error" : undefined}
-                            className={errors.email ? "border-destructive" : ""}
-                          />
-                          {errors.email && (
-                            <p id="email-error" className="text-destructive text-xs" role="alert">
-                              {errors.email}
-                            </p>
-                          )}
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Phone (optional)</Label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            type="tel"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            placeholder="Your phone number"
-                          />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone (optional)</Label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              type="tel"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              placeholder="Your phone number"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="subject">
+                              Subject{" "}
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="subject"
+                              name="subject"
+                              value={formData.subject}
+                              onChange={handleChange}
+                              placeholder="Housecall, future clinic visit, or question"
+                              aria-invalid={!!errors.subject}
+                              aria-describedby={
+                                errors.subject ? "subject-error" : undefined
+                              }
+                              className={
+                                errors.subject ? "border-destructive" : ""
+                              }
+                            />
+                            {errors.subject && (
+                              <p
+                                id="subject-error"
+                                className="text-destructive text-xs"
+                                role="alert"
+                              >
+                                {errors.subject}
+                              </p>
+                            )}
+                          </div>
                         </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="subject">
-                            Subject <span className="text-destructive">*</span>
+                          <Label htmlFor="message">
+                            Message <span className="text-destructive">*</span>
                           </Label>
-                          <Input
-                            id="subject"
-                            name="subject"
-                            value={formData.subject}
+                          <Textarea
+                            id="message"
+                            name="message"
+                            value={formData.message}
                             onChange={handleChange}
-                            placeholder="Housecall, future clinic visit, or question"
-                            aria-invalid={!!errors.subject}
-                            aria-describedby={errors.subject ? "subject-error" : undefined}
+                            placeholder="Tell us how we can help…"
+                            rows={5}
+                            aria-invalid={!!errors.message}
+                            aria-describedby={
+                              errors.message ? "message-error" : undefined
+                            }
                             className={
-                              errors.subject ? "border-destructive" : ""
+                              errors.message ? "border-destructive" : ""
                             }
                           />
-                          {errors.subject && (
-                            <p id="subject-error" className="text-destructive text-xs" role="alert">
-                              {errors.subject}
+                          {errors.message && (
+                            <p
+                              id="message-error"
+                              className="text-destructive text-xs"
+                              role="alert"
+                            >
+                              {errors.message}
                             </p>
                           )}
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="message">
-                          Message <span className="text-destructive">*</span>
-                        </Label>
-                        <Textarea
-                          id="message"
-                          name="message"
-                          value={formData.message}
-                          onChange={handleChange}
-                          placeholder="Tell us how we can help…"
-                          rows={5}
-                          aria-invalid={!!errors.message}
-                          aria-describedby={errors.message ? "message-error" : undefined}
-                          className={
-                            errors.message ? "border-destructive" : ""
-                          }
-                        />
-                        {errors.message && (
-                          <p id="message-error" className="text-destructive text-xs" role="alert">
-                            {errors.message}
-                          </p>
-                        )}
-                      </div>
-
+                      </fieldset>
+                      <TurnstileChallenge
+                        key={`${pointer.request_id}:${challengeVersion}`}
+                        requestId={pointer.request_id}
+                        onToken={setToken}
+                      />
+                      {hasPending && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isSubmitting || checking}
+                          onClick={() => void checkReceipt()}
+                        >
+                          Check request receipt
+                        </Button>
+                      )}
                       <Button
                         type="submit"
                         size="lg"
-                        disabled={isSubmitting}
+                        disabled={
+                          isSubmitting || checking || !token || !endpoint
+                        }
                         className="w-full sm:w-auto"
                       >
                         {isSubmitting ? "Sending…" : "Send Message"}
@@ -296,13 +452,14 @@ const Contact = () => {
                       Contact & Launch
                     </h3>
 
-
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-sage/30 flex items-center justify-center shrink-0">
                         <MapPin className="h-5 w-5 text-sage-dark" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Future clinic home base</p>
+                        <p className="text-sm text-muted-foreground">
+                          Future clinic home base
+                        </p>
                         <p className="font-medium text-foreground">
                           {practiceAddress}
                         </p>
@@ -319,17 +476,25 @@ const Contact = () => {
                         <Clock className="h-5 w-5 text-sage-dark" />
                       </div>
                       <h3 className="font-heading text-lg font-semibold text-foreground">
-                        {practice.launchStages.some((stage) => stage.status === "open") ? "Hours of Operation" : "Planned Hours"}
+                        {practice.launchStages.some(
+                          (stage) => stage.status === "open",
+                        )
+                          ? "Hours of Operation"
+                          : "Planned Hours"}
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {practice.hours ?? "Opening hours will be announced before launch."}
+                      {practice.hours ??
+                        "Opening hours will be announced before launch."}
                     </p>
                     <p className="text-sm text-muted-foreground mt-4">
-                      Phone and email details will be published once confirmed. Please use the request form to reach the practice.
+                      Phone and email details will be published once confirmed.
+                      Please use the request form to reach the practice.
                     </p>
                     <p className="text-sm text-muted-foreground mt-4">
-                      This form is not monitored for emergencies. For urgent care, contact an open veterinary emergency hospital directly.
+                      This form is not monitored for emergencies. For urgent
+                      care, contact an open veterinary emergency hospital
+                      directly.
                     </p>
                   </CardContent>
                 </Card>
@@ -342,7 +507,10 @@ const Contact = () => {
                     </h3>
                     <div className="space-y-2">
                       {[
-                        { label: "Request a Visit", href: practice.contactPath },
+                        {
+                          label: "Request a Visit",
+                          href: practice.contactPath,
+                        },
                         { label: "Our Services", href: "/services" },
                         { label: "The Experience", href: "/experience" },
                       ].map((link) => (
@@ -373,7 +541,11 @@ const Contact = () => {
                   Our Future Clinic Home Base
                 </h2>
                 <p className="text-muted-foreground text-lg">
-                  {practiceAddress}. Clinic opening targeted for {practice.launchStages.find((stage) => stage.serviceMode === "clinic")?.targetWindow.toLowerCase()}; visits are not yet available.
+                  {practiceAddress}. Clinic opening targeted for{" "}
+                  {practice.launchStages
+                    .find((stage) => stage.serviceMode === "clinic")
+                    ?.targetWindow.toLowerCase()}
+                  ; visits are not yet available.
                 </p>
               </div>
             </ScrollReveal>
@@ -409,7 +581,11 @@ const Contact = () => {
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Our clinic at {practice.address.street} will be the home base for both clinic visits and housecalls. Housecall coverage and travel details will be confirmed before scheduling. Access and parking details will be shared before the clinic opens.
+                      Our clinic at {practice.address.street} will be the home
+                      base for both clinic visits and housecalls. Housecall
+                      coverage and travel details will be confirmed before
+                      scheduling. Access and parking details will be shared
+                      before the clinic opens.
                     </p>
                     <a
                       href={practiceMapsUrl}
@@ -428,7 +604,6 @@ const Contact = () => {
             </div>
           </div>
         </section>
-
       </main>
       <Footer />
     </div>
