@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { renderRecordRelease } from "../../src/hub/features/record-releases/print.ts";
 import { renderVaccineCertificate } from "../../src/hub/features/certificates/print.ts";
 import { renderInvoiceDocument } from "../../src/hub/features/billing/invoice-document.ts";
-import { historyArtifact } from "../../tests/record-releases/history-fixture.ts";
+import { provenanceArtifact } from "../../tests/record-releases/provenance-fixture.ts";
 import { certificate } from "../../tests/certificates/fixture.ts";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const revision = execFileSync("git", ["rev-parse", "HEAD"], {
@@ -34,8 +34,8 @@ const examples = [
   [
     "records-example.html",
     "Selected records and chart history",
-    "tests/record-releases/history-fixture.ts + charts-fixture.ts + fixture.ts",
-    renderRecordRelease(structuredClone(historyArtifact)),
+    "tests/record-releases/provenance-fixture.ts + history-fixture.ts + charts-fixture.ts + fixture.ts",
+    renderRecordRelease(provenanceArtifact()),
   ],
   [
     "certificate-example.html",
@@ -51,7 +51,7 @@ const examples = [
   ],
 ];
 for (const [name, title, source, html] of examples) {
-  const banner = `<aside role="note"><h1>SYNTHETIC REVIEW DRAFT — NOT APPROVED</h1><p>${escape(title)}. No real patient, clinician signature, invoice or authorization. Source: ${escape(source)}. Code revision: ${revision}.</p><p>Fixture values are documentary test inputs, not suggested normal values, treatment or practice defaults. Escaped script-like strings deliberately test display safety. This schema-3 example includes selected diagnosis, allergy, weight and treatment histories; selection coverage still requires clinician review.</p></aside>`;
+  const banner = `<aside role="note"><h1>SYNTHETIC REVIEW DRAFT — NOT APPROVED</h1><p>${escape(title)}. No real patient, clinician signature, invoice or authorization. Source: ${escape(source)}. Code revision: ${revision}.</p><p>Fixture values are documentary test inputs, not suggested normal values, treatment or practice defaults. Escaped script-like strings deliberately test display safety. This schema-4 example adds reviewed imported-weight provenance to selected diagnosis, allergy and treatment histories; selection coverage still requires clinician review.</p></aside>`;
   writeFileSync(
     new URL(name, import.meta.url),
     html.replace(/<body[^>]*>/, (match) => match + banner),
@@ -65,6 +65,6 @@ const frames = examples
   .join("\n");
 writeFileSync(
   new URL("review-examples.html", import.meta.url),
-  `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dr. Edler clinical review — draft examples</title><style>:root{--paper:#fff;--ink:#222;--line:#bbb}body{max-width:90rem;margin:2rem auto;padding:0 1rem;background:var(--paper);color:var(--ink);font:18px Georgia,serif;line-height:1.5}iframe{width:100%;height:65rem;border:1px solid var(--line)}section{margin:3rem 0}p{max-width:75ch}@media print{iframe{height:90rem}}</style><h1>Clinical review examples — draft, not approved</h1><p>Prepared for Dr. Susan Edler. All values and signature names below are synthetic fixtures. No approval, clinical normal range, payment, message delivery or external authorization is implied. Code revision: ${revision}.</p><p>Use README.md and forms-and-decisions.md for the editable acceptance register and coverage limits. The standalone examples below embed the current application renderers without external assets or network requests. Schema-3 historical release coverage is included; clinical acceptance remains pending.</p>${frames}</html>`,
+  `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dr. Edler clinical review — draft examples</title><style>:root{--paper:#fff;--ink:#222;--line:#bbb}body{max-width:90rem;margin:2rem auto;padding:0 1rem;background:var(--paper);color:var(--ink);font:18px Georgia,serif;line-height:1.5}iframe{width:100%;height:65rem;border:1px solid var(--line)}section{margin:3rem 0}p{max-width:75ch}@media print{iframe{height:90rem}}</style><h1>Clinical review examples — draft, not approved</h1><p>Prepared for Dr. Susan Edler. All values and signature names below are synthetic fixtures. No approval, clinical normal range, payment, message delivery or external authorization is implied. Code revision: ${revision}.</p><p>Use README.md and forms-and-decisions.md for the editable acceptance register and coverage limits. The standalone examples below embed the current application renderers without external assets or network requests. Schema-4 imported-weight provenance is included; clinical acceptance remains pending.</p>${frames}</html>`,
 );
 console.log(`Generated four draft HTML artifacts from ${revision}`);

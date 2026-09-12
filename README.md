@@ -33,11 +33,11 @@ npx playwright test
 - Durable communication outbox, verified inbound/status handlers, per-staff inbox state and draft recovery after rejected or uncertain enqueue responses. These are implemented; configured live provider round-trips remain a commissioning gate.
 - Central practice settings with both launch stages, owned domain and home-base address. Planned hours are Monday–Saturday, 9 am–5 pm America/Denver; unconfigured phone and mailbox are not advertised. Display hours do not create bookable availability.
 - Reviewed care due plans, a disabled-by-default reminder scheduler/outbox bridge and administrator policy controls. Saving wording or a policy does not activate providers or send a message.
-- Selected clinical-record packages and preserved historical export, plus public inquiry triage and recoverable contact intake.
+- Selected clinical-record packages, preserved historical export and reviewed frozen email attachments through the outbox, plus public inquiry triage and recoverable contact intake.
 - A public header/footer medical-logo candidate with live readable text; owner approval and a final optimized/vector master remain pending.
 - Explicit database grants, CI checks and Vercel SPA configuration.
 
-Implementation status spans stacked review branches; this README does not mean those changes are deployed. See the [readiness evidence tracker](docs/commercial-readiness.md) for branch-specific checks and open gates.
+Implementation status spans stacked review branches; this README does not mean those changes are deployed. Reviewed historical ezyVet weight promotion and schema-4 release provenance retain original source values, local reviewed measurements and discrepancy history; no live ezyVet credentials or import activation is implied. See the [readiness evidence tracker](docs/commercial-readiness.md) for branch-specific checks and open gates.
 
 The new dedicated Supabase project is `mgadheotkdnrsatfivjy`; the original Lovable backend remains unchanged. Connection cutover, data migration, provider credentials and public deployment require the commissioning steps below.
 
@@ -56,9 +56,10 @@ The patient workspace includes identity details, weight history, SOAP drafts/sig
 - [Pending Resend domain and proposed GoDaddy records](docs/email-domain-setup.md)
 - [Messaging environments](docs/messaging-environments.md), [durable outbox](docs/communications-outbox.md), [inbound processing](docs/inbound-communications.md) and [reload recovery](docs/message-recovery.md)
 - [Care plans](docs/care-reminders.md) and [guarded reminder scheduler](docs/reminder-dispatch.md)
-- [Reminder policy controls — PR34 branch documentation](https://github.com/finite0001/livingroom-vet-care/blob/codex/reminder-policy-ui/docs/features/reminder-delivery-settings.md)
+- [Reminder policy controls](docs/features/reminder-delivery-settings.md)
+- [Frozen release email delivery](docs/release-email-delivery.md), [reviewed ezyVet weights](docs/ezyvet-reviewed-weights.md) and [schema-4 weight provenance](docs/release-weight-provenance.md)
 - [Selected-record releases](docs/record-releases.md) and [website inquiry workflow](docs/features/website-inquiries.md)
-- [Public logo candidate and responsive previews — PR33 branch documentation](https://github.com/finite0001/livingroom-vet-care/blob/codex/brand-integration/docs/brand/public-logo-integration.md)
+- [Public logo candidate and responsive previews](docs/brand/public-logo-integration.md)
 - [Restore procedure](docs/restore-runbook.md)
 - [Antech commissioning requirements](docs/antech-commissioning.md)
 - [External ezyVet integration plan](plans/2026-09-12-practice-platform/external-pims-integration.md)
