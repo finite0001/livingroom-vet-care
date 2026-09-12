@@ -1,4 +1,4 @@
-# Form fields and decisions — DRAFT v1
+# Form fields and decisions — DRAFT v2
 
 All rows await review. Patient panels live at `/hub/patient/:petId`; administration of reviewed care wording/groups is at `/hub/tools/care-reminders`. Paths below are relative to the repository root. This is an inventory of implemented choices, not a proposed clinical protocol. Each checklist is intended to produce a concrete decision in the acceptance register.
 
@@ -105,14 +105,16 @@ The rendered invoice distinguishes draft, issued and void state, line quantities
 
 ## D02 — Record-release selection and confirmation (disclosure review)
 
-Source: `src/hub/features/record-releases/PatientRecordReleases.tsx`, `RecordReleaseArtifact.tsx`, `print.ts`, `charts.ts`.
+Source: `src/hub/features/record-releases/PatientRecordReleases.tsx`, `RecordReleaseArtifact.tsx`, `print.ts`, `charts.ts`, `history.ts`.
 
-Review explicit selected records, recipient/channel, included shareable originals, original-file requirements, signature/confirmation wording and saved snapshot history. Existing selectors cover signed SOAP/addenda, valid certificates, resulted labs, shareable documents, signed dental/QOL/anesthesia charts and body-map histories. This list is not a claim that every source subtype or latest history extension is complete. The ongoing release-coverage extension must be reviewed separately at its final revision.
+Review explicit selected records, recipient/channel, included shareable originals, original-file requirements, signature/confirmation wording and saved snapshot history. Existing selectors cover signed SOAP/addenda, valid certificates, resulted labs, shareable documents, signed dental/QOL/anesthesia charts, body-map histories, problem/diagnosis revision history, allergy/legacy profile summaries, dated weights and medication/vaccine history. Schema 3 preserves available before/after diagnosis revisions, highlights high-importance problems and allergy information, and retains treatment correction reasons. Legacy weight carries an unknown measurement date; it is distinct from a dated measurement. No absent historical revision is reconstructed.
 
 - [ ] Inspect what the actual rendered example includes and omits; verify no record is silently added by selecting another family.
 - [ ] Confirm disclosure of attached originals versus structured summaries and of preview versus confirmed release.
 - [ ] Review who is authorized to approve a release; clinical signing, operator sharing-policy acceptance and recipient authorization are separate decisions.
-- [ ] Re-review D02 after the pending coverage extension; do not mark full coverage accepted using this baseline.
+- [ ] Review the schema-3 example: resolved high-importance vaccine reaction with prior active history; allergy text; undated legacy weight versus dated kg measurement; historical medication with retained correction. Confirm that resolved does not hide important reaction history.
+- [ ] Confirm that empty allergy text never establishes absence of allergy, imported/transcribed treatment text is not a new prescription, and missing audit evidence remains explicitly missing.
+- [ ] Verify selection and history completeness against known synthetic source records before accepting D02; the rendered fixture does not prove every production record is covered.
 
 ## D03 — Reminder messages (wording and operational authorization)
 
