@@ -132,7 +132,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="top-right" closeButton />
         <RouterProvider router={router} />
       </AuthProvider>
     </TooltipProvider>

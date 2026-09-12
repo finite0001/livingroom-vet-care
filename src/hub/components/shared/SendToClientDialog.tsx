@@ -116,7 +116,7 @@ export function SendToClientDialog({
       const result = await queue.send({ conversation_id: conversationId, channel, to, subject: channel === "EMAIL" ? subject : "", body, attachment_ids: [] });
       toast.success(result.state === "pending" ? "Message queued" : `Message recorded: ${result.state}`);
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Queue confirmation unavailable; retry the unchanged draft.");

@@ -1,311 +1,295 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Filter, Archive, Inbox, MessageSquare, CheckCheck, X } from "lucide-react";
+import { Archive, CheckCheck, Inbox, Plus, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { ConversationListItem } from "@/hub/components/conversations/ConversationListItem";
 import { ConversationActionSheet } from "@/hub/components/conversations/ConversationActionSheet";
 import { NewMessageSheet } from "@/hub/components/conversations/NewMessageSheet";
-import { EmptyState } from "@/hub/components/shared/EmptyState";
 import {
   useConversations,
   useToggleRead,
-  useArchiveConversation,
-  useDeleteConversation,
+  useUpdateConversationMetadata,
   useMarkAllRead,
+  useUnreadCount,
   type ConversationWithClient,
-  type ConversationPriority,
+  type InboxFilters,
 } from "@/hub/hooks/use-conversations";
 import { useProfiles } from "@/hub/hooks/use-profiles";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePageTitle } from "@/hooks/use-page-title";
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
 
-type ReadFilter = "all" | "unread" | "read";
-
+const selectClass =
+  "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
 export default function ConversationsPage() {
   usePageTitle("Messages");
   const navigate = useNavigate();
-  const { data: conversations, isLoading, isError } = useConversations();
-  const toggleRead = useToggleRead();
-  const archiveConv = useArchiveConversation();
-  const deleteConv = useDeleteConversation();
-  const markAllRead = useMarkAllRead();
-  const { data: profiles } = useProfiles();
-
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"active" | "archived">("active");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<InboxFilters>({ status: "ACTIVE" });
+  const [tag, setTag] = useState("");
   const [newMsgOpen, setNewMsgOpen] = useState(false);
-  const [actionConv, setActionConv] = useState<ConversationWithClient | null>(null);
-
-  // Filters
-  const [priorityFilter, setPriorityFilter] = useState<ConversationPriority | null>(null);
-  const [readFilter, setReadFilter] = useState<ReadFilter>("all");
-  const [assignedFilter, setAssignedFilter] = useState<string | null>(null);
-
-  const activeFilterCount = [priorityFilter, readFilter !== "all" ? readFilter : null, assignedFilter].filter(Boolean).length;
-
-  const filtered = useMemo(() => {
-    if (!conversations) return [];
-    let list = conversations.filter((c) =>
-      tab === "active" ? c.status === "ACTIVE" : c.status === "ARCHIVED"
-    );
-    if (priorityFilter) {
-      list = list.filter((c) => c.priority === priorityFilter);
-    }
-    if (readFilter === "unread") {
-      list = list.filter((c) => !c.is_read);
-    } else if (readFilter === "read") {
-      list = list.filter((c) => c.is_read);
-    }
-    if (assignedFilter) {
-      list = list.filter((c) => c.assigned_to_id === assignedFilter);
-    }
-    if (search.trim()) {
-      const s = search.toLowerCase();
-      list = list.filter(
-        (c) =>
-          c.client.full_name.toLowerCase().includes(s) ||
-          c.client.primary_phone?.includes(s) ||
-          c.pets.some((p) => p.name.toLowerCase().includes(s))
-      );
-    }
-    return list;
-  }, [conversations, search, tab, priorityFilter, readFilter, assignedFilter]);
-
-  const unreadInView = useMemo(() => filtered.filter((c) => !c.is_read).length, [filtered]);
-
-  const clearFilters = () => {
-    setPriorityFilter(null);
-    setReadFilter("all");
-    setAssignedFilter(null);
+  const [actionConv, setActionConv] = useState<ConversationWithClient | null>(
+    null,
+  );
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchTerm(search), 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+  const list = useConversations({
+    ...filters,
+    search: searchTerm,
+    tags: tag.trim() ? [tag.trim()] : [],
+  });
+  const count = useUnreadCount();
+  const toggle = useToggleRead();
+  const metadata = useUpdateConversationMetadata();
+  const markAll = useMarkAllRead();
+  const profiles = useProfiles();
+  const busy = toggle.isPending || metadata.isPending || markAll.isPending;
+  const set = (change: Partial<InboxFilters>) =>
+    setFilters((old) => ({ ...old, ...change }));
+  const archive = (conversation: ConversationWithClient) =>
+    metadata.mutateAsync({
+      conversation,
+      status: conversation.status === "ARCHIVED" ? "ACTIVE" : "ARCHIVED",
+    });
+  const reloadSelected = async () => {
+    const result = await list.refetch();
+    const row = result.data?.pages.flat().find((c) => c.id === actionConv?.id);
+    if (row) setActionConv(row);
+    else if (!result.isError) setActionConv(null);
   };
-
-  const handleAssign = async (convId: string, dvmId: string | null) => {
-    const { error } = await supabase
-      .from("conversations")
-      .update({ assigned_to_id: dvmId })
-      .eq("id", convId);
-    if (error) toast.error("Failed to assign");
-  };
-
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b px-4 py-3 space-y-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Chats</h1>
-          <div className="flex items-center gap-1.5">
-            {tab === "active" && unreadInView > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-1 text-xs"
-                onClick={() => markAllRead.mutate()}
-                disabled={markAllRead.isPending}
-                aria-label="Mark all as read"
-              >
-                <CheckCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Read all</span>
-              </Button>
-            )}
-            <Button size="sm" className="h-8 gap-1" onClick={() => setNewMsgOpen(true)}>
-              <Plus className="h-4 w-4" /> New
+    <div className="flex h-full flex-col">
+      <div className="space-y-3 border-b px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h1 className="text-lg font-bold">Inbox</h1>
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {count.isError
+                ? "Your unread count is unavailable"
+                : count.isLoading
+                  ? "Loading your unread count…"
+                  : `${count.data ?? 0} active conversations unread for you`}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void list.refetch()}
+              disabled={list.isFetching}
+              aria-label="Refresh inbox"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markAll.mutate()}
+              disabled={busy || count.isError || !count.data}
+            >
+              <CheckCheck className="mr-1 h-4 w-4" /> Read all active
+            </Button>
+            <Button size="sm" onClick={() => setNewMsgOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" /> New
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search clients, pets, phones..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
+        <Label htmlFor="inbox-search">Search household, pet or message</Label>
+        <Input
+          id="inbox-search"
+          value={search}
+          maxLength={200}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Name, phone, email or message text"
+        />
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
+          <div>
+            <Label htmlFor="inbox-status">Status</Label>
+            <select
+              id="inbox-status"
+              className={selectClass}
+              value={filters.status}
+              onChange={(e) =>
+                set({ status: e.target.value as InboxFilters["status"] })
+              }
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="PENDING">Pending</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9 shrink-0 relative" aria-label="Filter conversations">
-                <Filter className="h-4 w-4" />
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Filters</p>
-                {activeFilterCount > 0 && (
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearFilters}>Clear all</Button>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Priority</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {(["URGENT", "NORMAL", "LOW"] as ConversationPriority[]).map((p) => (
-                    <Button
-                      key={p}
-                      variant={priorityFilter === p ? "default" : "outline"}
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => setPriorityFilter(priorityFilter === p ? null : p)}
-                    >
-                      {p.charAt(0) + p.slice(1).toLowerCase()}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Read status</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {([["all", "All"], ["unread", "Unread"], ["read", "Read"]] as [ReadFilter, string][]).map(([val, label]) => (
-                    <Button
-                      key={val}
-                      variant={readFilter === val ? "default" : "outline"}
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => setReadFilter(val)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {profiles && profiles.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-muted-foreground">Assigned to</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    <Button
-                      variant={assignedFilter === null ? "default" : "outline"}
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => setAssignedFilter(null)}
-                    >
-                      Anyone
-                    </Button>
-                    {profiles.slice(0, 6).map((p) => (
-                      <Button
-                        key={p.id}
-                        variant={assignedFilter === p.id ? "default" : "outline"}
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => setAssignedFilter(assignedFilter === p.id ? null : p.id)}
-                      >
-                        {p.first_name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Active filter chips */}
-        {activeFilterCount > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {priorityFilter && (
-              <Badge variant="secondary" className="gap-1 text-xs cursor-pointer" onClick={() => setPriorityFilter(null)}>
-                {priorityFilter.charAt(0) + priorityFilter.slice(1).toLowerCase()} <X className="h-3 w-3" />
-              </Badge>
-            )}
-            {readFilter !== "all" && (
-              <Badge variant="secondary" className="gap-1 text-xs cursor-pointer" onClick={() => setReadFilter("all")}>
-                {readFilter === "unread" ? "Unread" : "Read"} <X className="h-3 w-3" />
-              </Badge>
-            )}
-            {assignedFilter && profiles && (
-              <Badge variant="secondary" className="gap-1 text-xs cursor-pointer" onClick={() => setAssignedFilter(null)}>
-                {profiles.find((p) => p.id === assignedFilter)?.first_name ?? "Staff"} <X className="h-3 w-3" />
-              </Badge>
+          <div>
+            <Label htmlFor="inbox-read">Read status</Label>
+            <select
+              id="inbox-read"
+              className={selectClass}
+              value={filters.read ?? "all"}
+              onChange={(e) =>
+                set({ read: e.target.value as InboxFilters["read"] })
+              }
+            >
+              <option value="all">All</option>
+              <option value="unread">Unread for me</option>
+              <option value="read">Read by me</option>
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="inbox-assignment">Assigned staff</Label>
+            <select
+              id="inbox-assignment"
+              className={selectClass}
+              value={filters.assignment ?? "all"}
+              onChange={(e) => set({ assignment: e.target.value })}
+            >
+              <option value="all">Anyone</option>
+              <option value="unassigned">Unassigned</option>
+              {profiles.data?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name}
+                </option>
+              ))}
+            </select>
+            {profiles.isError && (
+              <p className="text-xs text-destructive">Staff list unavailable</p>
             )}
           </div>
-        )}
-
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "active" | "archived")}>
-          <TabsList className="w-full h-8">
-            <TabsTrigger value="active" className="flex-1 text-xs gap-1">
-              <Inbox className="h-3.5 w-3.5" /> Inbox
-            </TabsTrigger>
-            <TabsTrigger value="archived" className="flex-1 text-xs gap-1">
-              <Archive className="h-3.5 w-3.5" /> Archived
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* List */}
-      <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="space-y-1 p-4">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : isError ? (
-          <EmptyState
-            icon={MessageSquare}
-            title="Failed to load conversations"
-            description="Something went wrong. Please try again."
-          />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={MessageSquare}
-            title={search || activeFilterCount > 0 ? "No results" : tab === "archived" ? "No archived chats" : "No conversations yet"}
-            description={search || activeFilterCount > 0 ? "Try adjusting your search or filters" : "Start a new message to begin"}
-            actionLabel={!search && activeFilterCount === 0 ? "New Message" : activeFilterCount > 0 ? "Clear Filters" : undefined}
-            onAction={!search && activeFilterCount === 0 ? () => setNewMsgOpen(true) : activeFilterCount > 0 ? clearFilters : undefined}
-          />
-        ) : (
-          filtered.map((conv) => (
-            <ConversationListItem
-              key={conv.id}
-              conversation={conv}
-              onSelect={(id) => navigate(`/hub/conversation/${id}`)}
-              onLongPress={setActionConv}
-              onArchive={(id) =>
-                archiveConv.mutate({
-                  conversationId: id,
-                  status: tab === "active" ? "ARCHIVED" : "ACTIVE",
+          <div>
+            <Label htmlFor="inbox-priority">Priority</Label>
+            <select
+              id="inbox-priority"
+              className={selectClass}
+              value={filters.priority ?? ""}
+              onChange={(e) =>
+                set({
+                  priority:
+                    (e.target.value as InboxFilters["priority"]) || null,
                 })
               }
-              onToggleRead={(id, isRead) =>
-                toggleRead.mutate({ conversationId: id, isRead: !isRead })
+            >
+              <option value="">Any priority</option>
+              <option value="URGENT">Urgent</option>
+              <option value="NORMAL">Normal</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="inbox-channel">Channel</Label>
+            <select
+              id="inbox-channel"
+              className={selectClass}
+              value={filters.channel ?? ""}
+              onChange={(e) =>
+                set({
+                  channel: (e.target.value as InboxFilters["channel"]) || null,
+                })
+              }
+            >
+              <option value="">Any channel</option>
+              <option value="EMAIL">Email</option>
+              <option value="SMS">SMS</option>
+              <option value="CALL_INBOUND">Incoming call</option>
+              <option value="CALL_OUTBOUND">Outgoing call</option>
+              <option value="VOICEMAIL">Voicemail</option>
+              <option value="NOTE">Note</option>
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="inbox-tag">Tag</Label>
+            <Input
+              id="inbox-tag"
+              className="h-9"
+              maxLength={40}
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              placeholder="Exact tag"
+            />
+          </div>
+        </div>
+        <Button
+          variant="link"
+          size="sm"
+          className="px-0"
+          onClick={() => {
+            setFilters({ status: "ACTIVE" });
+            setSearch("");
+            setTag("");
+          }}
+        >
+          Clear filters
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto" aria-busy={list.isFetching}>
+        {list.isError && (
+          <div className="p-4 text-sm text-destructive" role="alert">
+            Unable to refresh conversations. Displayed details may be stale.
+            Refresh before editing.
+          </div>
+        )}
+        {list.isLoading ? (
+          <p className="p-6 text-muted-foreground">Loading conversations…</p>
+        ) : list.data.length === 0 && !list.isError ? (
+          <div className="space-y-2 p-8 text-center text-muted-foreground">
+            {filters.status === "ARCHIVED" ? (
+              <Archive className="mx-auto h-6 w-6" />
+            ) : (
+              <Inbox className="mx-auto h-6 w-6" />
+            )}
+            <p>No conversations match these filters.</p>
+          </div>
+        ) : (
+          list.data.map((conversation) => (
+            <ConversationListItem
+              key={conversation.id}
+              conversation={conversation}
+              disabled={busy || list.isError}
+              onSelect={(id) => navigate(`/hub/conversation/${id}`)}
+              onLongPress={(selected) => {
+                metadata.reset();
+                toggle.reset();
+                setActionConv(selected);
+              }}
+              onArchive={() => {
+                void archive(conversation).catch(() => undefined);
+              }}
+              onToggleRead={() =>
+                toggle.mutate({ conversation, isRead: !conversation.is_read })
               }
             />
           ))
         )}
+        {list.hasNextPage && (
+          <div className="p-4 text-center">
+            <Button
+              variant="outline"
+              disabled={list.isFetching}
+              onClick={() => void list.fetchNextPage()}
+            >
+              {list.isFetchingNextPage ? "Loading…" : "Load more conversations"}
+            </Button>
+          </div>
+        )}
       </div>
-
       <NewMessageSheet open={newMsgOpen} onOpenChange={setNewMsgOpen} />
       <ConversationActionSheet
+        key={actionConv?.id}
         conversation={actionConv}
         open={!!actionConv}
-        onOpenChange={(open) => !open && setActionConv(null)}
-        onToggleRead={(id, currentIsRead) =>
-          toggleRead.mutate({ conversationId: id, isRead: !currentIsRead })
+        onOpenChange={(open) => {
+          if (!open) setActionConv(null);
+        }}
+        busy={busy}
+        hasError={metadata.isError || toggle.isError}
+        onReload={reloadSelected}
+        onToggleRead={(c) =>
+          toggle.mutateAsync({ conversation: c, isRead: !c.is_read })
         }
-        onArchive={(id) =>
-          archiveConv.mutate({
-            conversationId: id,
-            status: tab === "active" ? "ARCHIVED" : "ACTIVE",
-          })
+        onArchive={archive}
+        onMetadata={(c, changes) =>
+          metadata.mutateAsync({ conversation: c, ...changes })
         }
-        onDelete={(id) => deleteConv.mutate(id)}
-        onAssign={handleAssign}
-        isArchiveView={tab === "archived"}
       />
     </div>
   );

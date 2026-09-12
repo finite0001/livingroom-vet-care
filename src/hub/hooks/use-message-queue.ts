@@ -53,9 +53,9 @@ export function useMessageQueue(scope: string) {
         },
       });
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["messages", payload.conversation_id] }),
+        queryClient.invalidateQueries({ queryKey: ["messages"] }),
         queryClient.invalidateQueries({ queryKey: ["conversations"] }),
-        queryClient.invalidateQueries({ queryKey: ["communication-outbox", payload.conversation_id] }),
+        queryClient.invalidateQueries({ queryKey: ["communication-outbox"] }),
       ]);
       return result;
     } finally { setPending(false); }

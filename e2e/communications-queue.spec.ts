@@ -100,3 +100,37 @@ test('consent records server version and preserves stale entry without bypassing
  expect(saved).toMatchObject({p_actor_id:staff,p_client_id:client,p_expected_updated_at:'2026-09-12T13:00:00Z',p_opted_in:true});
  await expect(panel).toContainText('SMS is blocked');
 });
+for (const mobile of [false,true]) test(`older messages preserve position and unread visibility on ${mobile?'mobile':'desktop'}`,async({page})=>{
+ if(mobile)await page.setViewportSize({width:390,height:844});
+ await fixture(page,'rejected');
+ const row=(index:number)=>({id:`55555555-5555-4555-8555-${String(index).padStart(12,'0')}`,conversation_id:conversation,type:'EMAIL',sender_type:'CLIENT',content:`Synthetic history ${index}`,is_internal:false,created_at:new Date(Date.UTC(2026,8,12,12,0,index)).toISOString()});
+ const latest=Array.from({length:50},(_,index)=>row(50-index));
+ const reads:string[]=[];const cursors:string[]=[];
+ await page.route(`${backend}/rest/v1/conversation_read_cursors*`,route=>route.fulfill({json:null}));
+ await page.route(`${backend}/rest/v1/conversation_unread_flags*`,route=>route.fulfill({json:{forced:true}}));
+ await page.route(`${backend}/rest/v1/rpc/mark_conversation_read`,route=>{const body=route.request().postDataJSON();expect(body.p_actor_id).toBe(staff);reads.push(body.p_message_id);return route.fulfill({json:null});});
+ await page.route(`${backend}/rest/v1/messages*`,route=>{
+  const url=new URL(route.request().url());
+  if(route.request().method()==='HEAD')return route.fulfill({headers:{'content-range':'0-0/1'},body:''});
+  if(url.searchParams.get('limit')==='1')return route.fulfill({json:[latest[0]]});
+  expect(url.searchParams.get('limit')).toBe('50');
+  const cursor=url.searchParams.get('or');if(cursor)cursors.push(cursor);
+  return route.fulfill({json:cursor?[row(0)]:latest.slice(0,50)});
+ });
+ await page.goto(`/hub/conversation/${conversation}`);
+ await expect.poll(()=>reads).toContain(row(50).id);
+ await expect(page.getByRole('button',{name:'Send message',exact:true})).toBeInViewport();
+ const history=page.getByRole('region',{name:'Conversation messages'});
+ await history.evaluate(element=>{element.scrollTop=0;});
+ await page.getByRole('button',{name:'Load older messages'}).click();
+ await expect(history.getByText('Synthetic history 0',{exact:true})).toBeAttached();
+ expect(cursors[0]).toContain(row(1).id);
+ const remaining=await history.evaluate(element=>element.scrollHeight-element.scrollTop-element.clientHeight);
+ expect(remaining).toBeGreaterThan(300);
+ latest.unshift(row(51));
+ // Polling observes the arrival without simulating a user reading the bottom.
+ await expect(history.getByText('Synthetic history 51',{exact:true})).toBeAttached({timeout:22000});
+ expect(reads).not.toContain(row(51).id);
+ await history.evaluate(element=>{element.scrollTop=element.scrollHeight;});
+ await expect.poll(()=>reads).toContain(row(51).id);
+});

@@ -1,9 +1,25 @@
 import { useState } from "react";
 import {
-  CalendarDays, Home, MessageSquare, Users, Phone, Settings,
-  ClipboardList, AudioWaveform, FileText, Megaphone,
-  AlertTriangle, BarChart3, Pill, Stethoscope,
-  LayoutDashboard, Upload, ChevronDown, LogOut, Clock, History,
+  CalendarDays,
+  Home,
+  MessageSquare,
+  Users,
+  Phone,
+  Settings,
+  ClipboardList,
+  AudioWaveform,
+  FileText,
+  Megaphone,
+  AlertTriangle,
+  BarChart3,
+  Pill,
+  Stethoscope,
+  LayoutDashboard,
+  Upload,
+  ChevronDown,
+  LogOut,
+  Clock,
+  History,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -44,7 +60,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const navigate = useNavigate();
   const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
-  const { data: unreadCount } = useUnreadCount();
+  const { data: unreadCount, isError: unreadError } = useUnreadCount();
   const { data: voicemailUnread } = useUnreadVoicemailCount();
 
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
@@ -55,27 +71,42 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
     return location.pathname.startsWith(path);
   };
 
-  const renderItem = (item: { path: string; label: string; icon: React.ElementType; exact?: boolean; badge?: number }) => {
+  const renderItem = (item: {
+    path: string;
+    label: string;
+    icon: React.ElementType;
+    exact?: boolean;
+    badge?: number;
+  }) => {
     const active = isActive(item.path, item.exact);
     return (
       <button
         key={item.path}
         onClick={() => navigate(item.path)}
         aria-current={active ? "page" : undefined}
+        aria-label={
+          item.path === "/hub/chats"
+            ? `Inbox, ${unreadError ? "unread count unavailable" : `${unreadCount ?? 0} unread for you`}`
+            : undefined
+        }
         className={cn(
           "relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
           active
             ? "bg-primary/10 text-primary font-semibold border-l-[3px] border-primary"
-            : "text-sidebar-foreground hover:bg-sidebar-accent/80 hover:translate-x-0.5 transition-all duration-150"
+            : "text-sidebar-foreground hover:bg-sidebar-accent/80 hover:translate-x-0.5 transition-all duration-150",
         )}
       >
         <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="flex-1 text-left">{item.label}</span>
-        {(item.badge ?? 0) > 0 && (
-          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
-            {item.badge! > 99 ? "99+" : item.badge}
-          </span>
+        {item.path === "/hub/chats" && unreadError && (
+          <span className="text-xs text-muted-foreground">?</span>
         )}
+        {!(item.path === "/hub/chats" && unreadError) &&
+          (item.badge ?? 0) > 0 && (
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
+              {item.badge! > 99 ? "99+" : item.badge}
+            </span>
+          )}
       </button>
     );
   };
@@ -90,20 +121,30 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
         </div>
         <span className="text-base font-bold text-primary">Hub</span>
       </div>
-      <nav className="flex-1 overflow-y-auto p-3 space-y-2" aria-label="Hub navigation">
+      <nav
+        className="flex-1 overflow-y-auto p-3 space-y-2"
+        aria-label="Hub navigation"
+      >
         <div className="border-b border-sidebar-border/50 pb-2">
           <button
             onClick={() => setWorkspaceOpen((v) => !v)}
             className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
             Workspace
-            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", workspaceOpen && "rotate-180")} />
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 transition-transform duration-200",
+                workspaceOpen && "rotate-180",
+              )}
+            />
           </button>
           {workspaceOpen && (
             <div className="mt-0.5 space-y-0.5">
               {workspaceItems.map((item) => {
-                if (item.path === "/hub/chats") return renderItem({ ...item, badge: unreadCount });
-                if (item.path === "/hub/voicemails") return renderItem({ ...item, badge: voicemailUnread });
+                if (item.path === "/hub/chats")
+                  return renderItem({ ...item, badge: unreadCount });
+                if (item.path === "/hub/voicemails")
+                  return renderItem({ ...item, badge: voicemailUnread });
                 return renderItem(item);
               })}
             </div>
@@ -116,7 +157,12 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
             className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
             Tools
-            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", toolsOpen && "rotate-180")} />
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 transition-transform duration-200",
+                toolsOpen && "rotate-180",
+              )}
+            />
           </button>
           {toolsOpen && (
             <div className="mt-0.5 space-y-0.5">
@@ -127,14 +173,20 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
 
         {isAdmin && (
           <div className="space-y-0.5">
-            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Admin</p>
+            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Admin
+            </p>
             {adminItems.map(renderItem)}
           </div>
         )}
       </nav>
 
       <div className="border-t p-3 space-y-0.5">
-        {renderItem({ path: "/hub/settings", label: "Settings", icon: Settings })}
+        {renderItem({
+          path: "/hub/settings",
+          label: "Settings",
+          icon: Settings,
+        })}
         <button
           onClick={() => signOut()}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"

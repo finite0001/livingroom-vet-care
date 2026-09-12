@@ -64,3 +64,7 @@ Living Room Vet is the primary record system. ezyVet imports are staged and revi
 PRs 3–15 remain draft increments except previously merged foundations. PR12 is a parallel brand review artifact; the functional dependency chain proceeds through PR13 outbox, PR14 care charts and PR15 dental/navigation protection. Inbound and message-queue UI integration are being stacked next. Counts above describe implemented and locally verified features, not cloud deployments or commercial acceptance.
 
 Latest synthetic message browser tests verify lost queue response recovery, unchanged UUID retry, changed-payload rejection and disabled delivery preserving drafts. Legacy direct-send endpoints are retired in the UI integration branch. Provider secrets, controlled sends and production release have not been performed.
+
+## Payment account decision
+
+The owner selected a new Stripe account dedicated to Living Room Vet. Do not configure payments against an existing unrelated account. Stripe connector reauthentication and practice business onboarding are still required; no account has been created or payment processed in this workflow.

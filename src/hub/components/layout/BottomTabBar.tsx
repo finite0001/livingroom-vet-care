@@ -1,15 +1,34 @@
 import { useState } from "react";
 import {
-  CalendarDays, Home, MessageSquare, Phone, ClipboardList, MoreHorizontal,
-  Users, FileText, Megaphone, BarChart3, AlertTriangle,
-  Pill, Stethoscope, Settings, LayoutDashboard, Upload, X, Clock, History,
+  CalendarDays,
+  Home,
+  MessageSquare,
+  Phone,
+  ClipboardList,
+  MoreHorizontal,
+  Users,
+  FileText,
+  Megaphone,
+  BarChart3,
+  AlertTriangle,
+  Pill,
+  Stethoscope,
+  Settings,
+  LayoutDashboard,
+  Upload,
+  X,
+  Clock,
+  History,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
 
 const tabs = [
@@ -45,14 +64,16 @@ export function BottomTabBar() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const [moreOpen, setMoreOpen] = useState(false);
-  const { data: unreadCount } = useUnreadCount();
+  const { data: unreadCount, isError: unreadError } = useUnreadCount();
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
-  const isMoreActive = [...moreItems, ...adminMoreItems].some((item) => isActive(item.path));
+  const isMoreActive = [...moreItems, ...adminMoreItems].some((item) =>
+    isActive(item.path),
+  );
 
   return (
     <>
@@ -67,16 +88,37 @@ export function BottomTabBar() {
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
-              aria-label={tab.label}
+              aria-label={
+                tab.path === "/hub/chats"
+                  ? `Inbox, ${unreadError ? "unread count unavailable" : `${unreadCount ?? 0} unread for you`}`
+                  : tab.label
+              }
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-3 transition-all duration-200",
-                active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                active
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <tab.icon className={cn("h-5 w-5", active && "text-primary")} aria-hidden="true" />
-              <span className={cn("text-[11px]", active ? "font-semibold" : "font-medium")}>{tab.label}</span>
-              {badge > 0 && (
+              <tab.icon
+                className={cn("h-5 w-5", active && "text-primary")}
+                aria-hidden="true"
+              />
+              <span
+                className={cn(
+                  "text-[11px]",
+                  active ? "font-semibold" : "font-medium",
+                )}
+              >
+                {tab.label}
+              </span>
+              {tab.path === "/hub/chats" && unreadError && (
+                <span className="absolute right-1 top-0.5 text-xs text-muted-foreground">
+                  ?
+                </span>
+              )}
+              {!(tab.path === "/hub/chats" && unreadError) && badge > 0 && (
                 <span className="absolute top-0.5 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
                   {badge > 99 ? "99+" : badge}
                 </span>
@@ -90,11 +132,20 @@ export function BottomTabBar() {
           aria-label="More"
           className={cn(
             "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-3 transition-all duration-200",
-            isMoreActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+            isMoreActive
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-          <span className={cn("text-[11px]", isMoreActive ? "font-semibold" : "font-medium")}>More</span>
+          <span
+            className={cn(
+              "text-[11px]",
+              isMoreActive ? "font-semibold" : "font-medium",
+            )}
+          >
+            More
+          </span>
         </button>
       </nav>
 
@@ -107,29 +158,44 @@ export function BottomTabBar() {
             {moreItems.map((item) => (
               <button
                 key={item.path}
-                onClick={() => { navigate(item.path); setMoreOpen(false); }}
+                onClick={() => {
+                  navigate(item.path);
+                  setMoreOpen(false);
+                }}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
-                  isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
+                  isActive(item.path)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent",
                 )}
               >
                 <item.icon className="h-5 w-5" />
-                <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
+                <span className="text-[11px] font-medium text-center leading-tight">
+                  {item.label}
+                </span>
               </button>
             ))}
-            {isAdmin && adminMoreItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => { navigate(item.path); setMoreOpen(false); }}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
-                  isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
-              </button>
-            ))}
+            {isAdmin &&
+              adminMoreItems.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => {
+                    navigate(item.path);
+                    setMoreOpen(false);
+                  }}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
+                    isActive(item.path)
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent",
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-[11px] font-medium text-center leading-tight">
+                    {item.label}
+                  </span>
+                </button>
+              ))}
           </div>
         </SheetContent>
       </Sheet>
