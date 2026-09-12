@@ -224,3 +224,15 @@ begin
 end $$;
 revoke all on function public.reconcile_communication(uuid,text,text,text) from public,anon,authenticated,service_role;
 grant execute on function public.reconcile_communication(uuid,text,text,text) to service_role;
+
+-- The conversation display must remain consistent with immutable outbound intent.
+create function public.guard_outbox_message() returns trigger language plpgsql security definer set search_path=public as $$
+begin
+ if exists(select 1 from public.communication_outbox where message_id=OLD.id) then
+  if TG_OP='DELETE' then raise exception 'Queued communication history cannot be deleted' using errcode='23514'; end if;
+  if (to_jsonb(NEW)-array['triage_priority','triage_confidence','triage_reason']) is distinct from (to_jsonb(OLD)-array['triage_priority','triage_confidence','triage_reason']) then raise exception 'Queued communication content is immutable' using errcode='23514'; end if;
+ end if;
+ return case when TG_OP='DELETE' then OLD else NEW end;
+end $$;
+create trigger guard_outbox_message before update or delete on public.messages for each row execute function public.guard_outbox_message();
+revoke all on function public.guard_outbox_message() from public,anon,authenticated,service_role;

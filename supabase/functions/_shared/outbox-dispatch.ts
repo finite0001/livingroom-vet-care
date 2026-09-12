@@ -101,6 +101,7 @@ export async function dispatchOne(
   try {
     const response = await transport(endpoint, {
       method: "POST",
+      redirect: "error",
       signal: AbortSignal.timeout(30000),
       headers:
         row.channel === "EMAIL"

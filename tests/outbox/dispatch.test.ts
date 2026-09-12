@@ -181,3 +181,20 @@ test("provider acceptance followed by persistence failure never triggers another
   );
   assert.equal(f.requests.length, 1);
 });
+
+test("provider redirects cannot forward message data and remain uncertain", async () => {
+  const f = fixture();
+  const transport = (async (
+    _url: string | URL | Request,
+    init?: RequestInit,
+  ) => {
+    assert.equal(init?.redirect, "error");
+    throw new TypeError("Redirect blocked");
+  }) as typeof fetch;
+  const result = await dispatchOne(f.db, f.env, transport);
+  assert.equal(result.state, "uncertain");
+  assert.equal(
+    f.calls.at(-1)?.args?.p_error_code,
+    "provider_transport_unknown",
+  );
+});
