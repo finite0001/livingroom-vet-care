@@ -47,7 +47,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, opening hours, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, domain provider access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, GoDaddy DNS access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
@@ -74,3 +74,7 @@ The owner selected a new Stripe account dedicated to Living Room Vet. Do not con
 PR21 anesthesia and PR22 message recovery passed frontend/database CI. PR23 invoice documents passed 109 local unit tests and all 58 combined browser tests, including an actual PDF artifact. PR24 due plans are mounted in the patient workspace and staff navigation; its local SQL and browser checks passed. Record-release selection/export, website-inquiry triage and automatic reminder dispatch are active implementation work. No providers were contacted and no public deployment occurred.
 
 General certificates now separately preserve reviewed due plans at issuance and per-administration recorded dates. Later plan revisions do not rewrite signed copies; updated client copies require new review/issuance. Standalone invoice documents similarly do not claim payment activity or immutable delivery snapshots. These distinctions remain relevant when attaching documents to outbound messages.
+
+## Confirmed public launch settings
+
+The owner confirmed on September 12, 2026 that GoDaddy currently manages DNS for `thelivingroom.vet`. Planned hours are Monday through Saturday, 9 am to 5 pm in the practice’s America/Denver timezone. The practice phone number is not yet selected and remains unpublished; the emergency referral contact is still undecided. The website labels these as planned hours while services remain planned. These display hours do not silently create bookable staff availability or change the existing opening targets. No DNS or mail records were modified.

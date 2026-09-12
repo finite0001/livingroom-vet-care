@@ -85,7 +85,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
 
 
               <div className="pt-2 text-sm text-cream-light/70">
-                <p className="font-medium text-cream-light mb-1">Hours</p>
+                <p className="font-medium text-cream-light mb-1">{practice.launchStages.some((stage) => stage.status === "open") ? "Hours" : "Planned hours"}</p>
                 <p>{practice.hours ?? "Hours will be announced before opening."}</p>
                 <p className="mt-2">{practiceLaunchSummary}. Targets subject to change.</p>
                 <Link to={practice.contactPath} className="inline-block mt-3 underline">Contact the practice</Link>
