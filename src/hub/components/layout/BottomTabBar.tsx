@@ -44,6 +44,7 @@ const moreItems = [
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
+  { path: "/hub/tools/care-reminders", label: "Care reminders", icon: CalendarDays },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText },
   { path: "/hub/tools/campaigns", label: "Campaigns", icon: Megaphone },
   { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },

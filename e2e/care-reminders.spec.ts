@@ -106,6 +106,10 @@ test('reviewed patient vaccine plan only offers explicitly mapped products, pres
  await page.getByLabel('Plan status',{exact:true}).selectOption('current');
  await page.getByLabel('Enable reminder eligibility for this plan').check();
  await page.getByLabel('Plan review / correction rationale').fill('Reviewed patient plan');
+ await page.getByRole('link',{name:'Synthetic Household',exact:true}).click();
+ await expect(page.getByRole('alertdialog')).toHaveCount(1);
+ await page.getByRole('button',{name:'Keep editing',exact:true}).click();
+ await expect(page.getByLabel('Reviewed patient next due date',{exact:true})).toHaveValue('2026-01-15');
  await page.getByRole('button',{name:'Save vaccine due plan',exact:true}).click();
  await expect(page.getByRole('status').filter({hasText:'Reviewed vaccine due plan saved.'})).toBeVisible();
  await page.reload();await page.getByRole('button',{name:'Open vaccine due plan',exact:true}).click();
@@ -120,7 +124,10 @@ test('reviewed patient vaccine plan only offers explicitly mapped products, pres
  expect(new Set(state.saves).size).toBe(1);
 });
 test('mobile administrator approves wording without enabling provider dispatch',async({page})=>{
- await page.setViewportSize({width:390,height:844});const state=await fixture(page,true);await page.goto('/hub/tools/care-reminders');
+ await page.setViewportSize({width:390,height:844});const state=await fixture(page,true);await page.goto(`/hub/patient/${petId}`);
+ await page.getByRole('button',{name:'More',exact:true}).click();
+ await page.getByRole('button',{name:'Care reminders',exact:true}).click();
+ await expect(page).toHaveURL(/\/hub\/tools\/care-reminders$/);
  await page.getByRole('button',{name:'New reviewed reminder wording',exact:true}).click();
  await page.getByLabel('Reviewed setting name').fill('Synthetic follow-up wording');
  await expect(page.getByLabel('Reviewed days before due date')).toHaveValue('');

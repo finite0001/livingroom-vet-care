@@ -41,6 +41,7 @@ const workspaceItems = [
 ];
 
 const toolItems = [
+  { path: "/hub/tools/care-reminders", label: "Care reminders", icon: CalendarDays },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText },
   { path: "/hub/tools/campaigns", label: "Campaigns", icon: Megaphone },
   { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },
