@@ -43,9 +43,11 @@ async function fixture(page: Page, verified = true) {
     ambiguous: false,
     stale: false,
     missing: false,
+    duePlans: undefined as typeof certificate.snapshot.due_plans,
   };
   await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === new URL(test.info().project.use.baseURL as string).origin
+    new URL(route.request().url()).origin ===
+    new URL(test.info().project.use.baseURL as string).origin
       ? route.continue()
       : route.abort(),
   );
@@ -141,8 +143,12 @@ async function fixture(page: Page, verified = true) {
       const args = route.request().postDataJSON();
       const snapshot = structuredClone(certificate.snapshot);
       snapshot.kind = args.p_kind;
-      snapshot.details = args.p_details;
+      snapshot.details = args.p_kind === "rabies" ? args.p_details : {};
       snapshot.vaccinations[0].next_due_on = null;
+      if (state.duePlans !== undefined && args.p_kind === "vaccine_history") {
+        snapshot.schema_version = 2;
+        snapshot.due_plans = structuredClone(state.duePlans);
+      }
       return route.fulfill({ json: snapshot });
     }
     if (path === "/rest/v1/rpc/issue_vaccine_certificate") {
@@ -357,4 +363,80 @@ test("editing and a stale source response require a fresh review and signature",
     }),
   ).toHaveCount(0);
   expect(state.issued).toHaveLength(0);
+});
+
+test("general certificate reviews due-plan dates and prints the issued snapshot after later plan changes", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  state.duePlans = [
+    {
+      plan_id: "plan",
+      plan_version: 2,
+      group_key: "reviewed-group",
+      group_name: "Reviewed group",
+      template_id: "template",
+      template_version: 1,
+      product_id: "product",
+      treatment_id: null,
+      last_administered_on: "2026-01-01",
+      status: "current",
+      reviewed_due_on: "2026-02-01",
+    },
+    {
+      plan_id: "proposal",
+      plan_version: 1,
+      group_key: "pending",
+      group_name: "Proposed group",
+      template_id: "template",
+      template_version: 1,
+      product_id: "product",
+      treatment_id: null,
+      last_administered_on: "2026-01-02",
+      status: "proposed",
+      reviewed_due_on: null,
+    },
+  ];
+  const panel = page.getByRole("region", { name: "Patient certificates" });
+  await panel
+    .getByRole("button", { name: "Review certificate preview", exact: true })
+    .click();
+  await expect(
+    panel.getByText("Reviewed next due date: 2026-02-01", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    panel.getByText("Awaiting review — no due date certified", { exact: true }),
+  ).toBeVisible();
+  await panel
+    .getByLabel(
+      "I reviewed every displayed field and date and explicitly sign this certificate.",
+    )
+    .check();
+  await panel.getByLabel("Type your verified name: Dr Test").fill("Dr Test");
+  await panel
+    .getByRole("button", { name: "Sign and issue certificate", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("button", { name: "Open print dialog", exact: true }),
+  ).toBeVisible();
+  expect(
+    state.requests[0].p_reviewed_snapshot.due_plans?.[0].reviewed_due_on,
+  ).toBe("2026-02-01");
+  state.duePlans[0].reviewed_due_on = "2026-03-01";
+  const popupPromise = page.waitForEvent("popup");
+  await panel
+    .getByRole("button", { name: "Open print dialog", exact: true })
+    .click();
+  const popup = await popupPromise;
+  await expect(
+    popup.getByRole("heading", {
+      name: "Patient due plans reviewed at issuance",
+    }),
+  ).toBeVisible();
+  await expect(popup.getByText("2026-02-01", { exact: true })).toBeVisible();
+  await expect(popup.getByText("2026-03-01", { exact: true })).toHaveCount(0);
+  await expect(
+    popup.getByText(/Later care-plan changes do not update this signed copy/),
+  ).toBeVisible();
+  await popup.close();
 });
