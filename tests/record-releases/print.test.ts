@@ -91,3 +91,42 @@ test("incomplete original references and invalid byte sizes fail closed", () => 
   malformed.preview.snapshot.attachments[0].file_size = NaN;
   assert.throws(() => renderRecordRelease(malformed), /metadata is invalid/);
 });
+
+test("schema-v2 chart export includes full signed addenda and corrected body-map history", async () => {
+  const { chartArtifact } = await import("./charts-fixture.ts");
+  const html = renderRecordRelease(chartArtifact);
+  for (const value of [
+    "Signed dental chart",
+    "Tooth 101",
+    "Manual measurement: 2 mm",
+    "Signed qualitative QOL observation",
+    "Eating normally",
+    "Signed anesthesia record",
+    "Documentary event",
+    "Recovery notes",
+    "Body-map history: Mass A",
+    "Original measurement corrected",
+    "historical measurement",
+    "Species-neutral location schematic",
+  ])
+    assert.ok(html.includes(value), value);
+  assert.equal((html.match(/Complete chart addendum/g) || []).length, 3);
+  assert.ok(!html.includes("<script>"));
+  assert.ok(html.includes("<svg"));
+  assert.ok(!html.includes("PRIVATE-STORAGE-PATH"));
+  const bad = structuredClone(chartArtifact);
+  bad.preview.snapshot.lesions![0].observations[0].x = Infinity;
+  assert.throws(() => renderRecordRelease(bad), /coordinates/);
+});
+
+test("select-all never silently truncates a reviewed source family", async () => {
+  const { mergeReleaseSelection } =
+    await import("../../src/hub/features/record-releases/selection.ts");
+  const existing = Array.from({ length: 100 }, (_, i) => String(i));
+  assert.deepEqual(mergeReleaseSelection(existing, ["1"]), existing);
+  assert.throws(
+    () => mergeReleaseSelection(existing, ["new"]),
+    /no selections were changed/,
+  );
+  assert.equal(existing.length, 100);
+});

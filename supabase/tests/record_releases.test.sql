@@ -48,7 +48,7 @@ select is((select v#>>'{snapshot,attachments,0,mime_type}' from data where k='pr
 select is((select length(v->>'source_hash') from data where k='preview'),64,'Server source SHA-256 returned');
 select throws_ok($$select pg_temp.confirm_release('59000000-0000-4000-8000-000000000006',(select v from data where k='preview'))$$,'42501','Clinical acceptance of the release form and workflow is required before confirmation','Operator clinical acceptance gate is closed by default');
 reset role;
-insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference) values(true,true,'Synthetic clinical reviewer',now(),'TEST ONLY');
+insert into public.record_release_policy(id,enabled,accepted_schema_version,accepted_by,accepted_at,acceptance_reference) values(true,true,2,'Synthetic clinical reviewer',now(),'TEST ONLY');
 set local role authenticated;
 select throws_ok($$select pg_temp.confirm_release('59000000-0000-4000-8000-000000000006',(select v from data where k='preview'),false)$$,'23514',null,'Explicit recipient/content review required');
 select throws_ok($$select pg_temp.confirm_release('59000000-0000-4000-8000-000000000006',(select v||'{"source_hash":"bad"}' from data where k='preview'))$$,'40001',null,'Tampered review hash rejected');
