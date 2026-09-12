@@ -17,6 +17,7 @@ test('housecall booking shows alerts, retains conflicts and saves Denver instant
   if(path === '/rest/v1/profiles') return route.fulfill({json:[{id:staff,full_name:'Synthetic Staff',first_name:'Synthetic',last_name:'Staff',is_active:true,role:'STAFF'}]});
   if(path === '/rest/v1/user_roles') return route.fulfill({json:[{user_id:staff,role:'STAFF'}]});
   if(path === '/rest/v1/rpc/schedule_clinicians') return route.fulfill({json:[{id:staff,full_name:'Synthetic Staff'}]});
+  if(path === '/rest/v1/rpc/search_clients') return route.fulfill({json:route.request().postDataJSON().p_search === 'No match' ? [] : [{id:client,full_name:'Synthetic Family',housecall_address:'100 Synthetic Street, Boulder, CO'}]});
   if(path === '/rest/v1/clients') return route.fulfill({json:[{id:client,full_name:'Synthetic Family',housecall_address:'100 Synthetic Street, Boulder, CO'}]});
   if(path === '/rest/v1/pets') return route.fulfill({json:[{id:pet,client_id:client,name:'Synthetic Juniper',archived_at:null,deceased_at:null}]});
   if(path === '/rest/v1/patient_problems') return route.fulfill({json:[{id:'problem',title:'Historical vaccine reaction',status:'resolved'}]});
@@ -32,6 +33,10 @@ test('housecall booking shows alerts, retains conflicts and saves Denver instant
  await page.getByRole('button',{name:'Book appointment',exact:true}).click();
  await page.getByLabel('Household',{exact:true}).selectOption(client);
  await page.getByLabel('Patient',{exact:true}).selectOption(pet);
+ await expect(page.getByRole('note')).toContainText('Historical vaccine reaction (resolved)');
+ await page.getByLabel('Find household by name').fill('No match');
+ await expect(page.getByLabel('Household',{exact:true})).toHaveValue(client);
+ await expect(page.getByLabel('Patient',{exact:true})).toHaveValue(pet);
  await expect(page.getByRole('note')).toContainText('Historical vaccine reaction (resolved)');
  await page.getByLabel('Visit reason').fill('Wellness visit');
  await page.getByLabel('Clinician',{exact:true}).selectOption(staff);
