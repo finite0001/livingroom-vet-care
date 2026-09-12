@@ -13,6 +13,8 @@ import { PatientFormDialog } from "@/hub/features/patients/PatientFormDialog";
 import { EditClientDialog } from "@/hub/components/clients/EditClientDialog";
 import { usePageTitle } from "@/hooks/use-page-title";
 
+import { HouseholdInvoices } from "@/hub/features/billing/HouseholdInvoices";
+
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -128,6 +130,7 @@ export default function ClientProfilePage() {
         </Card>
 
         {/* Notes */}
+        <HouseholdInvoices key={client.id} clientId={client.id} />
         <ClientNotesCard clientId={id!} />
 
         {/* Recent messages */}
