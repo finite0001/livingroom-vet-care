@@ -21,6 +21,18 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      // Named props interfaces follow the project convention, even without added fields.
+      "@typescript-eslint/no-empty-object-type": ["error", { allowInterfaces: "with-single-extends" }],
+    },
+  },
+  {
+    files: ["src/components/ui/*.tsx"],
+    rules: {
+      // shadcn intentionally colocates these helpers with their components.
+      "react-refresh/only-export-components": ["warn", {
+        allowConstantExport: true,
+        allowExportNames: ["badgeVariants", "buttonVariants", "cardVariants", "useFormField", "navigationMenuTriggerStyle", "useSidebar", "toast", "toggleVariants"],
+      }],
     },
   },
 );

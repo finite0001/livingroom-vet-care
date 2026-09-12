@@ -1,3 +1,4 @@
+import { practiceLaunchSummary } from "@/config/practice";
 import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,10 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, Heart, Leaf, Users, CreditCard, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import aboutPracticeImage from "@/assets/about-practice.jpg";
-import drSarahImage from "@/assets/team-dr-sarah.jpg";
-import drJamesImage from "@/assets/team-dr-james.jpg";
-import emilyImage from "@/assets/team-emily.jpg";
-import marcusImage from "@/assets/team-marcus.jpg";
 
 const values = [
   {
@@ -22,7 +19,7 @@ const values = [
   {
     icon: ShieldCheck,
     title: "Low Stress Handling",
-    description: "We're trained in low-stress handling techniques that minimize fear and anxiety from the moment your pet arrives.",
+    description: "Comfort and gentle handling guide the care experience we are building for pets and their families.",
   },
   {
     icon: Leaf,
@@ -36,52 +33,17 @@ const values = [
   },
 ];
 
-const team = [
-  {
-    name: "Dr. Susan Edler",
-    role: "Founder & Lead Veterinarian",
-    image: drSarahImage,
-    credentials: ["DVM, Colorado State University", "Fear Free Trained", "AAHA Member"],
-    bio: "With years of experience in small animal medicine, Dr. Edler founded The Living Room Vet to create the practice she always wished existed—one where every visit feels less stressful for pets and their people.",
-    funFact: "Mom to two rescue dogs and a very opinionated cat named Biscuit.",
-  },
-  {
-    name: "Dr. James Chen",
-    role: "Associate Veterinarian",
-    image: drJamesImage,
-    credentials: ["DVM, UC Davis", "Fear Free Trained", "Special Interest: Senior Care"],
-    bio: "Dr. Chen brings a gentle, methodical approach to every patient. His passion for geriatric medicine and pain management makes him a perfect fit for our senior care program.",
-    funFact: "Avid trail runner who can often be found on Boulder's Flatirons with his border collie, Scout.",
-  },
-  {
-    name: "Emily Torres",
-    role: "Lead Veterinary Technician",
-    image: emilyImage,
-    credentials: ["CVT, Licensed Vet Tech", "Fear Free Trained", "Laser Therapy Specialist"],
-    bio: "Emily's calm presence and expert handling skills put even the most anxious pets at ease. She oversees our laser therapy program and low-stress handling protocols.",
-    funFact: "Volunteers at Boulder Humane Society every weekend and fosters kittens year-round.",
-  },
-  {
-    name: "Marcus Rivera",
-    role: "Veterinary Technician",
-    image: marcusImage,
-    credentials: ["CVT, Licensed Vet Tech", "Fear Free Trained", "Dental Care Specialist"],
-    bio: "Marcus brings warmth and humor to every visit. His expertise in dental care and patient comfort makes him a favorite among our regular families.",
-    funFact: "Amateur chef who bakes homemade dog treats for all our patients on their birthdays.",
-  },
-];
 
 const paymentInfo = [
   {
     icon: CreditCard,
     title: "Payment Options",
     description:
-      "We aim to make care accessible. We accept the following so you can choose what works best for your family:",
+      "Payment options will be confirmed before appointments open. Our planned approach includes:",
     details: [
-      "Credit and debit cards",
-      "Cash",
-      "Scratchpay (including Scratchpay Payment Plans)",
-      "Cherry financing",
+      "Secure online payment through Stripe",
+      "Clear invoices and estimates",
+      "Payment details shared before your visit",
     ],
   },
   {
@@ -115,12 +77,11 @@ const About = () => {
                   <span className="text-gradient-warm">For Pet Lovers</span>
                 </h1>
                 <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                  The Living Room Vet was born from a simple frustration: why do vet visits have to be 
-                  so stressful? We knew there had to be a better way—so we built it.
+                  The Living Room Vet was born from a simple frustration: why do vet visits have to be
+                  so stressful? We knew there had to be a better way—we are building one.
                 </p>
                 <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                  Located in Boulder, Colorado, we're an independently owned practice that has 
-                  reimagined every detail of veterinary care around one goal: making trips to 
+                  Located in Boulder, Colorado, we're building a practice around one goal: making trips to
                   the vet much less stressful.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -138,7 +99,7 @@ const About = () => {
                   <div className="absolute -inset-4 bg-gradient-warm rounded-3xl opacity-20 blur-2xl" />
                   <img
                     src={aboutPracticeImage}
-                    alt="The Living Room Vet practice interior with comfortable sofa and mountain views"
+                    alt="Concept image for a living room inspired veterinary clinic"
                     className="relative w-full rounded-2xl shadow-elevated object-cover aspect-[16/10]"
                   />
                 </div>
@@ -157,27 +118,8 @@ const About = () => {
                 A Better Way to Care
               </h2>
               <div className="text-muted-foreground text-lg leading-relaxed space-y-6 text-left">
-                <p>
-                  After years of watching pets tremble in crowded waiting rooms—and apologizing 
-                  to owners for their pet's anxiety—Dr. Susan Edler decided something had to 
-                  change. Not just a little. Everything.
-                </p>
-                <p>
-                  She studied Fear Free practices, visited innovative clinics around the country, 
-                  and talked to hundreds of pet parents about what they wished veterinary care 
-                  could be. The answer was always the same: <em className="text-foreground font-medium">they wanted it to feel less stressful.</em>
-                </p>
-                <p>
-                  So that's exactly what we built. From the ground up, The Living Room Vet was 
-                  designed with no traditional waiting room, private living room exam spaces, 
-                  separate pathways for cats and dogs, and a team trained in gentle, 
-                  stress-free handling.
-                </p>
-                <p className="text-foreground font-medium">
-                  The result? Pets who walk in wagging their tails. Cats who purr through their 
-                  exams. Appointments structured to give owners time to ask questions. And 
-                  families who no longer dread the vet visit.
-                </p>
+                <p>We are building The Living Room Vet around comfortable care and a lasting relationship with each pet and family. Housecalls will bring that approach into your home, with our future Boulder clinic as the practice home base.</p>
+                <p>{practiceLaunchSummary}. These are target windows, and we will share confirmed availability before scheduling visits.</p>
               </div>
             </ScrollReveal>
           </div>
@@ -226,54 +168,11 @@ const About = () => {
                 Meet the People Behind the Care
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Every member of our team shares a deep love for animals and a commitment 
-                to making veterinary care a positive experience.
+                We are preparing a team focused on thoughtful care for pets and clear communication with their families.
               </p>
             </ScrollReveal>
 
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8" staggerDelay={0.12}>
-              {team.map((member) => (
-                <StaggerItem key={member.name}>
-                  <Card variant="elevated" className="overflow-hidden h-full">
-                    <CardContent className="p-0">
-                      <div className="flex flex-col sm:flex-row">
-                        <div className="sm:w-48 shrink-0">
-                          <img
-                            src={member.image}
-                            alt={`${member.name} - ${member.role}`}
-                            className="w-full h-48 sm:h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-6 flex-grow">
-                          <h3 className="font-heading text-lg font-semibold text-foreground">
-                            {member.name}
-                          </h3>
-                          <p className="text-primary font-medium text-sm mb-3">
-                            {member.role}
-                          </p>
-                          <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                            {member.bio}
-                          </p>
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {member.credentials.map((cred) => (
-                              <span
-                                key={cred}
-                                className="px-2 py-1 rounded-md bg-sage/20 text-sage-dark text-xs font-medium"
-                              >
-                                {cred}
-                              </span>
-                            ))}
-                          </div>
-                          <p className="text-muted-foreground text-xs italic">
-                            🐾 {member.funFact}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
+            <p className="text-center text-muted-foreground">Team introductions and verified professional credentials will be shared as we prepare to open.</p>
           </div>
         </section>
 
@@ -286,7 +185,7 @@ const About = () => {
                 Transparent Care, Transparent Costs
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                We believe great care starts with clear communication—about your pet's health 
+                We believe great care starts with clear communication—about your pet's health
                 and what it costs.
               </p>
             </ScrollReveal>

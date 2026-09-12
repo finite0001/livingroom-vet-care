@@ -1,3 +1,4 @@
+import { practice, practiceLaunchSummary } from "@/config/practice";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -76,13 +77,14 @@ const ServiceDetailLayout = ({
                 <p className="text-lg text-muted-foreground leading-relaxed mb-8">
                   {description}
                 </p>
+                <p className="text-sm text-muted-foreground mb-6">Planned service: availability, equipment, and suitability for housecalls or clinic visits will be confirmed before scheduling. {practiceLaunchSummary}.</p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/contact">
+                  <Link to={practice.contactPath}>
                     <Button variant="default" size="lg">
-                      Book This Service
+                      Ask About This Service
                     </Button>
                   </Link>
-                  <Link to="/contact">
+                  <Link to={practice.contactPath}>
                     <Button variant="outline" size="lg">
                       Ask a Question
                     </Button>
@@ -238,15 +240,14 @@ const ServiceDetailLayout = ({
                 Ready to Get Started?
               </h2>
               <p className="text-primary-foreground/80 text-lg mb-8">
-                Schedule your appointment today and experience Fear Free trained care in our 
-                comfortable living room environment.
+                {practiceLaunchSummary}. Contact us to discuss your pet’s needs and planned availability.
               </p>
-              <Link to="/contact">
+              <Link to={practice.contactPath}>
                 <Button 
                   size="xl" 
                   className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
                 >
-                  Book Your Appointment
+                  Request a Visit
                 </Button>
               </Link>
             </div>

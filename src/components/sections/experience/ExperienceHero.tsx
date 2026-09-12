@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { practice, practiceLaunchSummary } from "@/config/practice";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import catRoomImage from "@/assets/experience-cat-room.jpg";
@@ -32,8 +34,7 @@ const ExperienceHero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.35 }}
             >
-              We've completely redesigned the vet visit to eliminate stress before it starts. 
-              No crowded waiting rooms, no anxious encounters with other animals, no cold exam tables.
+              We're planning a more comfortable vet visit, from housecalls to private, living room inspired clinic spaces.
             </motion.p>
             <motion.p
               className="text-lg text-muted-foreground leading-relaxed mb-8"
@@ -41,8 +42,7 @@ const ExperienceHero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
             >
-              Just a calm, direct path from your car to a private living room space where 
-              your pet can relax—and actually enjoy their visit.
+              {practiceLaunchSummary}. These images illustrate our vision for the future clinic; final spaces and services may change.
             </motion.p>
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
@@ -50,11 +50,11 @@ const ExperienceHero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.65 }}
             >
-              <Button variant="default" size="lg">
-                Book Your First Visit
+              <Button variant="default" size="lg" asChild>
+                <Link to={practice.contactPath}>Request a Visit</Link>
               </Button>
-              <Button variant="outline" size="lg">
-                Watch How It Works
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/services">Explore Planned Services</Link>
               </Button>
             </motion.div>
           </div>
@@ -70,7 +70,7 @@ const ExperienceHero = () => {
               <div className="absolute -inset-4 bg-gradient-warm rounded-3xl opacity-20 blur-2xl" />
               <img
                 src={catRoomImage}
-                alt="A calm cat relaxing in our cozy exam room with mountain views"
+                alt="Concept image of a calm cat in a living room inspired exam room"
                 className="relative w-full rounded-2xl shadow-elevated object-cover aspect-square"
               />
               <motion.div
@@ -79,8 +79,8 @@ const ExperienceHero = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
-                <p className="font-heading font-semibold text-foreground">100% Stress-Free</p>
-                <p className="text-sm text-muted-foreground">Pets never see each other</p>
+                <p className="font-heading font-semibold text-foreground">Designed for Comfort</p>
+                <p className="text-sm text-muted-foreground">Future clinic concept</p>
               </motion.div>
             </div>
           </motion.div>

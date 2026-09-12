@@ -11,8 +11,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Role = "ADMIN" | "DVM" | "TECH" | "STAFF";
 const ROLES: Role[] = ["ADMIN", "DVM", "TECH", "STAFF"];
@@ -32,6 +34,7 @@ export default function AdminStaffPage() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const qc = useQueryClient();
+  const [invite, setInvite] = useState({ email: "", first_name: "", last_name: "" });
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const { data: staff, isLoading, error } = useQuery({
@@ -46,6 +49,23 @@ export default function AdminStaffPage() {
       return data as StaffRow[];
     },
     enabled: isAdmin,
+  });
+
+  const inviteStaff = useMutation({
+    mutationFn: async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session?.user.id) throw new Error("Sign in again to invite staff.");
+      const { data, error } = await supabase.functions.invoke("invite-staff", { body: invite });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Invitation failed");
+    },
+    onSuccess: () => {
+      toast.success("Invitation sent. The new account starts with the STAFF role.");
+      setInvite({ email: "", first_name: "", last_name: "" });
+      void qc.invalidateQueries({ queryKey: ["admin-staff"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Invitation failed"),
   });
 
   const toggleActive = useMutation({
@@ -102,15 +122,18 @@ export default function AdminStaffPage() {
         </p>
       </div>
 
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertTitle>Invitations</AlertTitle>
-        <AlertDescription>
-          Self-service signup is disabled. To onboard a new staff member, create their
-          account from the Lovable Cloud backend (Users → Add user), then activate and
-          assign a role here.
-        </AlertDescription>
-      </Alert>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Invite a staff member</CardTitle></CardHeader>
+        <CardContent>
+          <p className="mb-4 text-sm text-muted-foreground">An email invitation lets staff set their own password. New accounts start as STAFF; assign a clinical or admin role below afterward.</p>
+          <form className="grid gap-4 md:grid-cols-3" onSubmit={(event) => { event.preventDefault(); inviteStaff.mutate(); }}>
+            <div className="space-y-2"><Label htmlFor="invite-first">First name</Label><Input id="invite-first" required maxLength={100} value={invite.first_name} onChange={(event) => setInvite({ ...invite, first_name: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="invite-last">Last name</Label><Input id="invite-last" required maxLength={100} value={invite.last_name} onChange={(event) => setInvite({ ...invite, last_name: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="invite-email">Email</Label><Input id="invite-email" type="email" required maxLength={254} value={invite.email} onChange={(event) => setInvite({ ...invite, email: event.target.value })} /></div>
+            <Button type="submit" disabled={inviteStaff.isPending}>{inviteStaff.isPending ? "Sending invitation…" : "Send invitation"}</Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

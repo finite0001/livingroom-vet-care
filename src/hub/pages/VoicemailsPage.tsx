@@ -51,7 +51,6 @@ function VoicemailCard({ vm, onMarkRead, marking }: { vm: Voicemail; onMarkRead:
         ) : null}
 
         {vm.recording_url && (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
           <audio controls preload="none" src={vm.recording_url} className="h-9 w-full" />
         )}
       </CardContent>

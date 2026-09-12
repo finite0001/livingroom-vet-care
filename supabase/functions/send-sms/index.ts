@@ -1,3 +1,4 @@
+import { authorizeDelivery, DeliveryPolicyError, normalizePhone } from "../_shared/delivery-policy.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -15,13 +16,13 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function normalizePhone(phone: string) {
-  return phone.replace(/\D/g, "");
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
+  let accepted = false;
+  let acceptanceUnknown = false;
   try {
     const authHeader = req.headers.get("Authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -38,13 +39,13 @@ serve(async (req) => {
     }
 
     const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("id, is_active, role").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("id, is_active").eq("id", user.id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", user.id),
     ]);
     if (profileRes.error) throw profileRes.error;
+    if (rolesRes.error) throw rolesRes.error;
 
-    const profileRole = typeof profileRes.data?.role === "string" ? profileRes.data.role : null;
-    const roles = new Set([profileRole, ...(rolesRes.data ?? []).map((row: { role: string }) => row.role)].filter(Boolean));
+    const roles = new Set((rolesRes.data ?? []).map((row: { role: string }) => row.role));
     const isActiveStaff = profileRes.data?.is_active === true && [...roles].some((role) => STAFF_ROLES.has(role as string));
     if (!isActiveStaff) {
       return jsonResponse({ error: "Forbidden" }, 403);
@@ -74,7 +75,7 @@ serve(async (req) => {
       .eq("id", conversation.client_id)
       .maybeSingle();
     if (clientError) throw clientError;
-    if (!client?.primary_phone || normalizePhone(client.primary_phone) !== normalizePhone(String(to))) {
+    if (!normalizePhone(to) || !client?.primary_phone || normalizePhone(client.primary_phone) !== normalizePhone(to)) {
       return jsonResponse({ error: "Recipient does not match the conversation client" }, 403);
     }
 
@@ -83,14 +84,27 @@ serve(async (req) => {
       .select("phone_number, opted_in")
       .eq("client_id", conversation.client_id);
     if (consentError) throw consentError;
-    const consentForNumber = (consentRows ?? []).find(
-      (r) => normalizePhone(r.phone_number ?? "") === normalizePhone(String(to))
+    const consentForNumber = (consentRows ?? []).filter(
+      (r) => normalizePhone(r.phone_number ?? "") === normalizePhone(to)
     );
-    if (consentForNumber?.opted_in !== true) {
+    if (!consentForNumber.length || consentForNumber.some((row) => row.opted_in !== true)) {
       return jsonResponse({ error: "No SMS consent on record for this number" }, 403);
     }
 
 
+
+    const delivery = authorizeDelivery({
+      APP_ENV: Deno.env.get("APP_ENV"),
+      OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE"),
+      OUTBOUND_TEST_EMAILS: Deno.env.get("OUTBOUND_TEST_EMAILS"),
+      OUTBOUND_TEST_PHONES: Deno.env.get("OUTBOUND_TEST_PHONES"),
+    }, "SMS", to);
+    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const fromNumber = normalizePhone(Deno.env.get("TWILIO_FROM_NUMBER"));
+    if (!accountSid || !/^AC[a-fA-F0-9]{32}$/.test(accountSid) || !authToken || !fromNumber) {
+      throw new DeliveryPolicyError("SMS delivery requires valid Twilio configuration.");
+    }
 
     const { data: inserted, error: msgError } = await supabase.from("messages").insert({
       conversation_id,
@@ -102,57 +116,64 @@ serve(async (req) => {
     }).select("id").single();
     if (msgError) throw msgError;
 
-    await supabase.from("conversations").update({
+    const { error: updateError } = await supabase.from("conversations").update({
       last_message_at: new Date().toISOString(),
       is_read: true,
     }).eq("id", conversation_id);
+    if (updateError) throw updateError;
 
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const fromNumber = Deno.env.get("TWILIO_FROM_NUMBER");
-    const twilioConfigured = !!(accountSid && authToken && fromNumber);
-    let delivered = false;
-    let statusNote = "Message recorded. SMS delivery pending Twilio configuration.";
+    const delivered = false;
+    let statusNote = "";
     let errorText: string | null = null;
-    if (accountSid && authToken && fromNumber) {
-      try {
-        const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-          method: "POST",
-          headers: {
-            Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({ To: String(to), From: fromNumber, Body: body.trim() }).toString(),
-        });
-        if (resp.ok) { delivered = true; statusNote = "SMS sent via Twilio."; }
-        else { errorText = `Twilio ${resp.status}: ${await resp.text()}`; statusNote = "Twilio send failed."; }
-      } catch (e) { errorText = e instanceof Error ? e.message : "Twilio request failed"; statusNote = "Twilio send failed."; }
+    try {
+      const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        method: "POST",
+        headers: { Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ To: delivery.recipient, From: fromNumber, Body: body.trim() }).toString(),
+      });
+      accepted = resp.ok;
+      statusNote = accepted
+        ? "Twilio accepted the request; delivery is unconfirmed (callbacks are not configured)."
+        : "Twilio rejected the request; message was not accepted.";
+      if (!accepted) errorText = `Twilio HTTP ${resp.status}`;
+    } catch {
+      acceptanceUnknown = true;
+      errorText = "Provider request failed; acceptance is unknown.";
+      statusNote = "Provider acceptance is unknown after a connection failure. Check provider activity before retrying.";
     }
 
-    await supabase.from("outbound_message_attempts").insert({
+    const { error: logError } = await supabase.from("outbound_message_attempts").insert({
       user_id: user.id,
       conversation_id,
       client_id: conversation.client_id,
       message_id: inserted?.id ?? null,
       channel: "SMS",
-      recipient: String(to),
+      recipient: delivery.recipient,
       delivered,
-      provider: twilioConfigured ? "twilio" : null,
+      provider: "twilio",
       status_note: statusNote,
       error_text: errorText,
     });
 
-    console.log(`[send-sms] Recorded message ${inserted?.id} for conversation ${conversation_id} (delivered=${delivered}).`);
+
+    if (logError) {
+      return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, delivered, retry_safe: false,
+        error: "Could not save the delivery audit record. Check provider activity before retrying.", note: statusNote }, 500);
+    }
 
     return jsonResponse({
-      success: true,
+      success: accepted,
+      accepted,
+      acceptance_unknown: acceptanceUnknown,
+      retry_safe: false,
       delivered,
       note: statusNote,
       message_id: inserted?.id ?? null,
     });
 
   } catch (e) {
-    console.error("send-sms error:", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    if (e instanceof DeliveryPolicyError) return jsonResponse({ success: false, accepted: false, delivered: false, error: e.message }, e.status);
+    // Database/provider exceptions can contain personal data; do not return or log raw errors.
+    return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, retry_safe: false, delivered: false, error: "Unable to process this delivery request. Check provider activity before retrying if a send was attempted." }, 500);
   }
 });

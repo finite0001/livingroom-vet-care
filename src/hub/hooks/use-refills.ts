@@ -36,7 +36,7 @@ export function useRefills(status: RefillStatus | "ALL" = "ALL") {
       if (status !== "ALL") q = q.eq("status", status);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []).map((r: any) => ({
+      return (data ?? []).map((r) => ({
         ...r,
         client_name: r.clients?.full_name ?? null,
         pet_name: r.pets?.name ?? null,

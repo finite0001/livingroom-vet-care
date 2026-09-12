@@ -1,6 +1,9 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { createAuthRequestState } from "./auth-request-state";
+import type { AuthRequest } from "./auth-request-state";
 
 interface Profile {
   id: string;
@@ -17,6 +20,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   roles: string[];
+  authError: string | null;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -27,60 +31,76 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-    ]);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const requests = useRef(createAuthRequestState());
+  const invalidateRequests = useCallback(() => { requests.current.invalidate(); }, []);
 
-    if (profileRes.error) {
-      console.error("[Auth] Failed to fetch profile:", profileRes.error);
-      return;
+  const fetchProfile = useCallback(async (request: AuthRequest) => {
+    if (!requests.current.isCurrent(request) || !request.userId) return;
+    const userId = request.userId;
+    if (!request.preserveAccess) {
+      setLoading(true);
+      setProfile(null);
+      setRoles([]);
+      setAuthError(null);
     }
-    setProfile(profileRes.data as Profile | null);
-    setRoles((rolesRes.data ?? []).map((r: any) => r.role));
+    try {
+      const [profileRes, rolesRes] = await Promise.all([
+        supabase.from("profiles").select("id, first_name, last_name, full_name, role, is_active").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+      if (profileRes.error) throw profileRes.error;
+      if (rolesRes.error) throw rolesRes.error;
+      if (!profileRes.data || !rolesRes.data?.length) throw new Error("Your staff access could not be verified. Contact an administrator or retry.");
+      if (!requests.current.resolve(request, profileRes.data.is_active)) return;
+      setAuthError(null);
+      setProfile(profileRes.data);
+      setRoles(profileRes.data.is_active ? rolesRes.data.map((row) => row.role) : []);
+    } catch {
+      if (!requests.current.resolve(request, false)) return;
+      setProfile(null);
+      setRoles([]);
+      setAuthError("Your staff access could not be verified. Contact an administrator or retry.");
+    } finally {
+      if (requests.current.isCurrent(request)) setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    // Set up listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, s) => {
-        setSession(s);
-        setUser(s?.user ?? null);
-        if (s?.user) {
-          // Re-show loading on the events where roles are (re)fetched from scratch
-          // — initial load and fresh sign-in — so ProtectedRoute never evaluates
-          // requiredRole against an empty roles[]. Deliberately NOT on TOKEN_REFRESHED
-          // / USER_UPDATED, which would flicker the spinner mid-session.
-          if (_event === "SIGNED_IN" || _event === "INITIAL_SESSION") setLoading(true);
-          // Defer the supabase call out of the auth callback (avoids deadlocks),
-          // and only drop loading once profile + roles have resolved.
-          setTimeout(() => {
-            fetchProfile(s.user.id).finally(() => setLoading(false));
-          }, 0);
-        } else {
-          setProfile(null);
-          setRoles([]);
-          setLoading(false);
-        }
+    let alive = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!alive) return;
+      const request = requests.current.begin(nextSession?.user.id ?? null);
+      if (request.identityChanged) queryClient.clear();
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      if (!request.preserveAccess) {
+        setProfile(null);
+        setRoles([]);
+        setAuthError(null);
+        setLoading(Boolean(nextSession));
       }
-    );
-
-    // Then check existing session
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (!s) {
-        setLoading(false);
+      if (nextSession) {
+        // Do not call Supabase inside its auth callback: the auth lock is held.
+        setTimeout(() => {
+          if (alive && requests.current.isCurrent(request)) void fetchProfile(request);
+        }, 0);
       }
     });
-
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    // INITIAL_SESSION owns initialization; a second getSession request can race it.
+    return () => {
+      alive = false;
+      invalidateRequests();
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile, invalidateRequests, queryClient]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -92,19 +112,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    requests.current.invalidate();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setProfile(null);
+      setRoles([]);
+      setLoading(false);
+      setAuthError("Sign out failed. Retry or close this browser session.");
+      throw error;
+    }
     setProfile(null);
     setRoles([]);
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user) await fetchProfile(user.id);
+    const request = user ? requests.current.refresh(user.id) : null;
+    if (request) await fetchProfile(request);
   }, [user, fetchProfile]);
 
   const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, roles, signIn, signUp, signOut, refreshProfile, hasRole }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, roles, authError, signIn, signUp, signOut, refreshProfile, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

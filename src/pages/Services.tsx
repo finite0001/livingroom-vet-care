@@ -1,3 +1,4 @@
+import { practice, practiceLaunchSummary } from "@/config/practice";
 import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -85,13 +86,11 @@ const Services = () => {
                 <span className="text-gradient-warm">Every Stage of Life</span>
               </h1>
               <p className="text-lg text-muted-foreground leading-relaxed mb-8 animate-fade-up" style={{ animationDelay: "0.2s" }}>
-                From puppy vaccinations to senior wellness, we provide comprehensive 
-                veterinary services in our stress-free living room environment. Every visit 
-                is tailored to your pet's unique needs.
+                {practiceLaunchSummary}. Explore our planned services below; availability and suitability for housecalls or clinic visits will be confirmed before scheduling.
               </p>
-              <Link to="/contact">
+              <Link to={practice.contactPath}>
                 <Button variant="default" size="lg" className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
-                  Book an Appointment
+                  Ask About Care
                 </Button>
               </Link>
             </div>
@@ -104,10 +103,10 @@ const Services = () => {
             <ScrollReveal variant="fadeUp" className="text-center max-w-2xl mx-auto mb-16">
               <p className="text-primary font-medium mb-3">Featured Services</p>
               <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                What We're Known For
+                Care We're Planning
               </h2>
               <p className="text-muted-foreground text-lg">
-                Our most sought-after services, delivered with Fear Free trained care.
+                Services under development for our housecall and clinic practice.
               </p>
             </ScrollReveal>
 
@@ -210,7 +209,7 @@ const Services = () => {
                 tailored to your pet's age, breed, and lifestyle.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/contact">
+                <Link to={practice.contactPath}>
                   <Button 
                     size="xl" 
                     className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
@@ -218,7 +217,7 @@ const Services = () => {
                     Schedule a Consultation
                   </Button>
                 </Link>
-                <Link to="/contact">
+                <Link to={practice.contactPath}>
                   <Button 
                     variant="heroOutline" 
                     size="xl"

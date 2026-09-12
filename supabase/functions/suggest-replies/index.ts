@@ -129,7 +129,7 @@ serve(async (req) => {
       const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       suggestions = JSON.parse(cleaned);
       if (!Array.isArray(suggestions)) suggestions = [];
-      suggestions = suggestions.filter((s: any) => typeof s === "string").slice(0, 3);
+      suggestions = suggestions.filter((s: unknown) => typeof s === "string").slice(0, 3);
     } catch {
       suggestions = ["Thank you for your message!", "Let me check on that for you.", "We'll get back to you shortly."];
     }

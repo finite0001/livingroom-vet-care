@@ -1,6 +1,7 @@
+import { practice } from "@/config/practice";
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Phone, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -61,16 +62,9 @@ const Header = React.forwardRef<HTMLElement>((_, ref) => {
 
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center gap-4">
-          <a
-            href="tel:+13035551234"
-            className="flex items-center gap-2 text-sm font-medium text-charcoal hover:text-primary transition-colors"
-          >
-            <Phone className="h-4 w-4" />
-            (303) 555-1234
-          </a>
-          <Link to="/contact">
+          <Link to={practice.contactPath}>
             <Button variant="default" size="default">
-              Book Appointment
+              Request a Visit
             </Button>
           </Link>
         </div>
@@ -105,16 +99,9 @@ const Header = React.forwardRef<HTMLElement>((_, ref) => {
               </Link>
             ))}
             <hr className="border-border my-2" />
-            <a
-              href="tel:+13035551234"
-              className="flex items-center gap-2 text-base font-medium text-charcoal py-2"
-            >
-              <Phone className="h-5 w-5" />
-              (303) 555-1234
-            </a>
-            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
+            <Link to={practice.contactPath} onClick={() => setMobileMenuOpen(false)}>
               <Button variant="default" size="lg" className="mt-2 w-full">
-                Book Appointment
+                Request a Visit
               </Button>
             </Link>
           </nav>

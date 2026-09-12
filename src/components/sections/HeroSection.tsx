@@ -1,3 +1,4 @@
+import { practice, practiceLaunchSummary } from "@/config/practice";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge, Heart, MapPin } from "lucide-react";
@@ -12,7 +13,7 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
       <div className="absolute inset-0">
         <motion.img
           src={heroImage}
-          alt="A happy golden retriever relaxing on a comfortable sofa in our living room exam space"
+          alt="Concept image of a dog relaxing in a living room inspired exam space"
           className="w-full h-full object-cover"
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
@@ -57,7 +58,7 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.65 }}
           >
-            No Waiting Room. No Stress. Just Wellness.
+            Housecalls first. A clinic to call home.
           </motion.p>
 
           <motion.p
@@ -66,8 +67,7 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            Direct-to-exam-room care in comfortable living room spaces designed 
-            to make every visit feel like a house call.
+            {practiceLaunchSummary}. Our future clinic home base is {practice.address.street} in Boulder.
           </motion.p>
 
           <motion.p
@@ -76,7 +76,7 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.85 }}
           >
-            An independent, female-owned private practice in Boulder.
+            Opening targets are subject to change. Contact us to register your interest.
           </motion.p>
 
           <motion.div
@@ -85,14 +85,14 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.95 }}
           >
-            <Link to="/contact">
+            <Link to={practice.contactPath}>
               <Button variant="hero" size="xl">
-                Book Appointment
+                Request a Visit
               </Button>
             </Link>
             <Link to="/experience">
               <Button variant="heroOutline" size="xl">
-                Take a Virtual Tour
+                Explore Our Vision
               </Button>
             </Link>
           </motion.div>
@@ -105,11 +105,11 @@ const HeroSection = React.forwardRef<HTMLElement>((_, ref) => {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <Badge className="h-4 w-4 text-gold" />
-              <span className="text-sm font-medium text-cream-light">Fear Free Trained</span>
+              <span className="text-sm font-medium text-cream-light">Comfort-Focused Care</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <Heart className="h-4 w-4 text-terracotta-light" />
-              <span className="text-sm font-medium text-cream-light">Independent · Female-Owned</span>
+              <span className="text-sm font-medium text-cream-light">Housecall & Clinic Care</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-cream-light/10 backdrop-blur-sm border border-cream-light/20">
               <MapPin className="h-4 w-4 text-sage" />
