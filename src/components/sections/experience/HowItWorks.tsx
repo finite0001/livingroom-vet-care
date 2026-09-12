@@ -60,8 +60,8 @@ const steps = [
   {
     number: "05",
     icon: Heart,
-    title: "Experience Fear Free Trained Care",
-    description: "Our Fear Free trained team meets your pet at their level—often on the floor. We use gentle handling, treats, and patience to make every moment comfortable.",
+    title: "Experience Comfort-Focused Care",
+    description: "Our planned approach combines gentle handling, treats, and patience, with care adapted to each pet’s comfort.",
     details: [
       "Treats and positive reinforcement",
       "Low-stress handling techniques",

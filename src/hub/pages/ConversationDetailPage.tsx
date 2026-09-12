@@ -1,3 +1,4 @@
+import { deliveryErrorNote, isDeliveryAccepted } from "@/hub/lib/delivery-result";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, User } from "lucide-react";
@@ -21,7 +22,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 export default function ConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
   const { data: conversation, isLoading: convLoading } = useConversation(id);
   // Strict opt-in: SMS is blocked unless the client has an explicit opted_in=true
@@ -30,9 +31,10 @@ export default function ConversationDetailPage() {
   // composer would auto-switch off SMS before we know an opted-in client is fine.
   const { data: consent, isFetched: consentFetched } = useClientConsent(conversation?.client.id);
   const smsOptedOut = consentFetched && consent?.opted_in !== true;
-  const markRead = useMarkRead();
+  const { mutate: markRead } = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
+  const sendingRef = useRef(false);
   // AI smart-reply suggestions populate the composer for staff review rather than
   // sending immediately — a one-tap auto-send of AI text to a client is too risky.
   const [draft, setDraft] = useState<string | undefined>(undefined);
@@ -41,10 +43,10 @@ export default function ConversationDetailPage() {
   usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
   useEffect(() => {
-    if (id && conversation && !conversation.is_read) {
-      markRead.mutate(id);
+    if (id && conversation?.is_read === false) {
+      markRead(id);
     }
-  }, [id, conversation?.is_read]);
+  }, [id, conversation?.is_read, markRead]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -57,8 +59,9 @@ export default function ConversationDetailPage() {
     else navigate("/hub/chats");
   };
 
-  const handleSend = async (content: string, channel: "SMS" | "EMAIL" | "NOTE", subject?: string) => {
-    if (!id || !conversation || isSending) return;
+  const handleSend = async (content: string, channel: "SMS" | "EMAIL" | "NOTE", subject?: string): Promise<boolean> => {
+    if (!id || !conversation || sendingRef.current || !session?.user.id) return false;
+    sendingRef.current = true;
     setIsSending(true);
     try {
       if (channel === "NOTE") {
@@ -67,34 +70,46 @@ export default function ConversationDetailPage() {
           content,
           type: "NOTE",
           sender_type: "STAFF",
-          sender_id: profile?.id ?? null,
+          sender_id: session.user.id,
           is_internal: true,
         });
         if (error) throw error;
         toast.success("Note added");
+        return true;
       } else if (channel === "SMS") {
-        if (smsOptedOut) { toast.error("No SMS consent on record for this client"); return; }
+        if (!consentFetched || consent?.opted_in !== true || !conversation.client.primary_phone || consent.phone_number?.replace(/\D/g, "") !== conversation.client.primary_phone.replace(/\D/g, "")) { toast.error("No SMS consent on record for this number"); return false; }
         const phone = conversation.client.primary_phone;
-        if (!phone) { toast.error("Client has no phone number"); return; }
+        if (!phone) { toast.error("Client has no phone number"); return false; }
         const { data, error } = await supabase.functions.invoke("send-sms", {
           body: { to: phone, body: content, conversation_id: id },
         });
         if (error) throw error;
-        if (data?.delivered) toast.success("SMS delivered");
-        else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
+        if (isDeliveryAccepted(data)) {
+          toast.success("SMS accepted by provider; delivery is not yet confirmed");
+          return true;
+        }
+        toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
+        return false;
       } else if (channel === "EMAIL") {
         const email = conversation.client.primary_email;
-        if (!email) { toast.error("Client has no email address"); return; }
+        if (!email) { toast.error("Client has no email address"); return false; }
         const { data, error } = await supabase.functions.invoke("send-email", {
           body: { to: email, subject: subject ?? "", body: content, conversation_id: id },
         });
         if (error) throw error;
-        if (data?.delivered) toast.success("Email sent");
-        else toast(data?.note ?? "Message recorded. Email delivery pending configuration.");
+        if (isDeliveryAccepted(data)) {
+          toast.success("Email accepted by provider; delivery is not yet confirmed");
+          return true;
+        }
+        toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
+        return false;
       }
+      return false;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send");
+      toast.error(channel === "NOTE" ? "Unable to save the internal note. Your draft has been kept." : await deliveryErrorNote(err));
+      return false;
     } finally {
+      sendingRef.current = false;
       setIsSending(false);
     }
   };
@@ -185,6 +200,7 @@ export default function ConversationDetailPage() {
       {/* Composer */}
       {conversation && (
         <ReplyComposer
+          key={id}
           onSend={handleSend}
           defaultChannel={conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"}
           smsOptedOut={smsOptedOut}

@@ -1,3 +1,4 @@
+import { practice, practiceAddress, practiceMapsUrl, practiceLaunchSummary } from "@/config/practice";
 import { useState } from "react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
@@ -10,11 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import ScrollReveal from "@/components/ScrollReveal";
-import { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { Link } from "react-router-dom";
 import {
-  Phone,
-  Mail,
   MapPin,
   Clock,
   Send,
@@ -52,13 +50,13 @@ const contactSchema = z.object({
     .max(2000, "Message must be under 2000 characters"),
 });
 
-type ContactFormData = z.infer<typeof contactSchema>;
-
-const hours = [
-  { day: "Monday – Friday", time: "8:00 AM – 6:00 PM" },
-  { day: "Saturday", time: "9:00 AM – 2:00 PM" },
-  { day: "Sunday", time: "Closed" },
-];
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
 
 const Contact = () => {
   usePageTitle("Contact Us");
@@ -110,16 +108,16 @@ const Contact = () => {
       if (error) throw error;
 
       toast({
-        title: "Message sent!",
+        title: "Request received",
         description:
-          "Thank you for reaching out. We'll get back to you within one business day.",
+          "Your request has been saved for our team. This is not a confirmed appointment.",
       });
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       setErrors({});
     } catch {
       toast({
         title: "Something went wrong",
-        description: "Please try again or call us directly.",
+        description: "Your request was not saved. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -149,16 +147,14 @@ const Contact = () => {
                 className="text-lg text-muted-foreground leading-relaxed animate-fade-up"
                 style={{ animationDelay: "0.2s" }}
               >
-                Whether you have questions about our services, want to schedule
-                an appointment, or just want to say hello—we're here for you and
-                your furry family.
+                {practiceLaunchSummary}. Tell us whether you are interested in a housecall or a visit to our future clinic. Opening targets are subject to change.
               </p>
             </div>
           </div>
         </section>
 
         {/* Contact Form + Info */}
-        <section className="py-20 bg-background">
+        <section id="contact-form" className="py-20 bg-background scroll-mt-24">
           <div className="container">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
               {/* Form */}
@@ -166,8 +162,9 @@ const Contact = () => {
                 <Card variant="warm" className="h-full">
                   <CardContent className="p-8 sm:p-10">
                     <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-                      Send Us a Message
+                      Request a Visit or Ask a Question
                     </h2>
+                    <p className="text-sm text-muted-foreground mb-6">Submitting this form requests follow-up; it does not reserve an appointment. Please avoid including medical records or sensitive payment information.</p>
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div className="space-y-2">
@@ -222,7 +219,7 @@ const Contact = () => {
                             type="tel"
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="(303) 555-1234"
+                            placeholder="Your phone number"
                           />
                         </div>
                         <div className="space-y-2">
@@ -234,7 +231,7 @@ const Contact = () => {
                             name="subject"
                             value={formData.subject}
                             onChange={handleChange}
-                            placeholder="Appointment, question, etc."
+                            placeholder="Housecall, future clinic visit, or question"
                             aria-invalid={!!errors.subject}
                             aria-describedby={errors.subject ? "subject-error" : undefined}
                             className={
@@ -296,46 +293,18 @@ const Contact = () => {
                 <Card variant="elevated">
                   <CardContent className="p-6 space-y-5">
                     <h3 className="font-heading text-lg font-semibold text-foreground">
-                      Contact Info
+                      Contact & Launch
                     </h3>
-                    <a
-                      href="tel:+13035551234"
-                      className="flex items-center gap-3 group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-sage/30 flex items-center justify-center group-hover:bg-gradient-warm transition-colors">
-                        <Phone className="h-5 w-5 text-sage-dark group-hover:text-primary-foreground transition-colors" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Phone</p>
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
-                          (303) 555-1234
-                        </p>
-                      </div>
-                    </a>
-                    <a
-                      href="mailto:hello@livingroomvet.com"
-                      className="flex items-center gap-3 group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-sage/30 flex items-center justify-center group-hover:bg-gradient-warm transition-colors">
-                        <Mail className="h-5 w-5 text-sage-dark group-hover:text-primary-foreground transition-colors" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
-                          hello@livingroomvet.com
-                        </p>
-                      </div>
-                    </a>
+
+
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-sage/30 flex items-center justify-center shrink-0">
                         <MapPin className="h-5 w-5 text-sage-dark" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Address</p>
+                        <p className="text-sm text-muted-foreground">Future clinic home base</p>
                         <p className="font-medium text-foreground">
-                          2619 Spruce Street
-                          <br />
-                          Boulder, CO 80302
+                          {practiceAddress}
                         </p>
                       </div>
                     </div>
@@ -353,35 +322,14 @@ const Contact = () => {
                         Hours of Operation
                       </h3>
                     </div>
-                    <div className="space-y-3">
-                      {hours.map((h) => (
-                        <div
-                          key={h.day}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span className="font-medium text-foreground">
-                            {h.day}
-                          </span>
-                          <span
-                            className={
-                              h.time === "Closed"
-                                ? "text-destructive font-medium"
-                                : "text-muted-foreground"
-                            }
-                          >
-                            {h.time}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-4">
-                      For after-hours emergencies, please call{" "}
-                      <a
-                        href="tel:+13035559999"
-                        className="text-primary hover:underline"
-                      >
-                        (303) 555-9999
-                      </a>
+                    <p className="text-sm text-muted-foreground">
+                      {practice.hours ?? "Opening hours will be announced before launch."}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-4">
+                      Phone and email details will be published once confirmed. Please use the request form to reach the practice.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-4">
+                      This form is not monitored for emergencies. For urgent care, contact an open veterinary emergency hospital directly.
                     </p>
                   </CardContent>
                 </Card>
@@ -394,7 +342,7 @@ const Contact = () => {
                     </h3>
                     <div className="space-y-2">
                       {[
-                        { label: "Book an Appointment", href: "/contact" },
+                        { label: "Request a Visit", href: practice.contactPath },
                         { label: "Our Services", href: "/services" },
                         { label: "The Experience", href: "/experience" },
                       ].map((link) => (
@@ -422,10 +370,10 @@ const Contact = () => {
               <div className="text-center max-w-2xl mx-auto mb-12">
                 <p className="text-primary font-medium mb-3">Find Us</p>
                 <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                  Visit Our Practice
+                  Our Future Clinic Home Base
                 </h2>
                 <p className="text-muted-foreground text-lg">
-                  Conveniently located on Spruce Street in the heart of Boulder.
+                  {practiceAddress}. Clinic opening targeted for {practice.launchStages.find((stage) => stage.serviceMode === "clinic")?.targetWindow.toLowerCase()}; visits are not yet available.
                 </p>
               </div>
             </ScrollReveal>
@@ -436,7 +384,7 @@ const Contact = () => {
                 <div className="rounded-2xl overflow-hidden shadow-elevated aspect-[16/9]">
                   <iframe
                     title="The Living Room Vet location on Google Maps"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3055.6!2d-105.2749!3d40.0176!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDAxJzAzLjQiTiAxMDXCsDE2JzI5LjYiVw!5e0!3m2!1sen!2sus!4v1690000000000"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(practiceAddress)}&output=embed`}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -460,45 +408,17 @@ const Contact = () => {
                         Getting Here
                       </h3>
                     </div>
-                    <div className="space-y-5 text-sm">
-                      <div>
-                        <h4 className="font-heading font-semibold text-foreground mb-1">
-                          From Denver / US-36
-                        </h4>
-                        <p className="text-muted-foreground leading-relaxed">
-                          Take US-36 West to Boulder. Exit at Baseline Road,
-                          head north on Broadway, then turn left on Spruce Street.
-                          We're on the right near 26th Street.
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-heading font-semibold text-foreground mb-1">
-                          From Longmont / US-287
-                        </h4>
-                        <p className="text-muted-foreground leading-relaxed">
-                          Take US-287 South into Boulder. Turn right on Spruce
-                          Street. Continue west past Folsom. We're on the left
-                          near 26th Street.
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-heading font-semibold text-foreground mb-1">
-                          Parking
-                        </h4>
-                        <p className="text-muted-foreground leading-relaxed">
-                          Free 2-hour street parking is available on Spruce
-                          Street and surrounding blocks.
-                        </p>
-                      </div>
-                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Our clinic at {practice.address.street} will be the home base for both clinic visits and housecalls. Housecall coverage and travel details will be confirmed before scheduling. Access and parking details will be shared before the clinic opens.
+                    </p>
                     <a
-                      href="https://www.google.com/maps/dir/?api=1&destination=2619+Spruce+Street+Boulder+CO+80302"
+                      href={practiceMapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-6 inline-block"
                     >
                       <Button variant="outline" size="default">
-                        Get Directions
+                        View Future Clinic Location
                         <ArrowRight className="h-4 w-4 ml-1" />
                       </Button>
                     </a>
@@ -509,31 +429,6 @@ const Contact = () => {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="py-20 bg-gradient-warm">
-          <div className="container">
-            <ScrollReveal variant="scaleUp">
-              <div className="max-w-2xl mx-auto text-center">
-                <h2 className="font-heading text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
-                  Prefer to Call?
-                </h2>
-                <p className="text-primary-foreground/80 text-lg mb-8">
-                  Our friendly team is ready to help you schedule an appointment
-                  or answer any questions about your pet's care.
-                </p>
-                <a href="tel:+13035551234">
-                  <Button
-                    size="xl"
-                    className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
-                  >
-                    <Phone className="h-5 w-5 mr-2" />
-                    Call (303) 555-1234
-                  </Button>
-                </a>
-              </div>
-            </ScrollReveal>
-          </div>
-        </section>
       </main>
       <Footer />
     </div>

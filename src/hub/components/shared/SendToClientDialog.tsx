@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { deliveryErrorNote, isDeliveryAccepted } from "@/hub/lib/delivery-result";
+import { useEffect, useRef, useState } from "react";
 import { Mail, MessageSquare } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
@@ -73,6 +74,7 @@ export function SendToClientDialog({
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
 
   const phone = client?.primary_phone ?? null;
   const email = client?.primary_email ?? null;
@@ -84,9 +86,12 @@ export function SendToClientDialog({
   const emailAllowed = !!email;
   const contactsFetched = clientFetched && consentFetched;
 
-  // Reset the compose state each time the dialog opens.
+  const previouslyOpen = useRef(false);
+  // Defaults populate only on opening, never when a parent rerenders mid-draft.
   useEffect(() => {
-    if (!isOpen) return;
+    const opening = isOpen && !previouslyOpen.current;
+    previouslyOpen.current = isOpen;
+    if (!opening || sendingRef.current) return;
     setSubject(defaultSubject);
     setBody(defaultBody);
     setChannel(null);
@@ -108,11 +113,16 @@ export function SendToClientDialog({
   const nothingAllowed = contactsFetched && !smsAllowed && !emailAllowed;
 
   const handleSend = async () => {
-    if (!channel || !body.trim() || sending) return;
+    if (!channel || !body.trim() || sendingRef.current) return;
+    if ((channel === "SMS" && !smsAllowed) || (channel === "EMAIL" && !emailAllowed)) {
+      toast.error("No permitted recipient is available for this channel");
+      return;
+    }
     if (channel === "EMAIL" && !subject.trim()) {
       toast.error("Please enter a subject");
       return;
     }
+    sendingRef.current = true;
     setSending(true);
     try {
       const conversationId = await findOrCreateActiveConversation(clientId);
@@ -122,29 +132,36 @@ export function SendToClientDialog({
           body: { to: phone, body, conversation_id: conversationId },
         });
         if (error) throw error;
-        if (data?.delivered) toast.success("SMS delivered");
-        else toast(data?.note ?? "Message recorded. SMS delivery pending configuration.");
+        if (!isDeliveryAccepted(data)) {
+          toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
+          return;
+        }
+        toast.success("SMS accepted by provider; delivery is not yet confirmed");
       } else {
         if (!email) throw new Error("Client has no email address");
         const { data, error } = await supabase.functions.invoke("send-email", {
           body: { to: email, subject, body, conversation_id: conversationId },
         });
         if (error) throw error;
-        if (data?.delivered) toast.success("Email sent");
-        else toast(data?.note ?? "Message recorded. Email delivery pending configuration.");
+        if (!isDeliveryAccepted(data)) {
+          toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
+          return;
+        }
+        toast.success("Email accepted by provider; delivery is not yet confirmed");
       }
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
       setOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send");
+      toast.error(await deliveryErrorNote(err));
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={(nextOpen) => { if (!sendingRef.current) setOpen(nextOpen); }}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -168,7 +185,7 @@ export function SendToClientDialog({
                   type="button"
                   size="sm"
                   variant={channel === "SMS" ? "default" : "outline"}
-                  disabled={!smsAllowed}
+                  disabled={!smsAllowed || sending}
                   onClick={() => setChannel("SMS")}
                   className="flex-1 gap-1.5"
                 >
@@ -178,7 +195,7 @@ export function SendToClientDialog({
                   type="button"
                   size="sm"
                   variant={channel === "EMAIL" ? "default" : "outline"}
-                  disabled={!emailAllowed}
+                  disabled={!emailAllowed || sending}
                   onClick={() => setChannel("EMAIL")}
                   className="flex-1 gap-1.5"
                 >
@@ -197,13 +214,13 @@ export function SendToClientDialog({
             {channel === "EMAIL" && (
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Subject</Label>
-                <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
+                <Input disabled={sending} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
               </div>
             )}
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Message</Label>
-              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={6} placeholder="Type message…" />
+              <Textarea disabled={sending} value={body} onChange={(e) => setBody(e.target.value)} rows={6} placeholder="Type message…" />
             </div>
 
             <Button

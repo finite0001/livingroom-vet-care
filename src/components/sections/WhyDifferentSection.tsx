@@ -7,19 +7,19 @@ const features = [
   {
     icon: DoorOpen,
     title: "No Waiting Room",
-    description: "Text when you arrive and walk straight into your private exam space. Your pet never encounters other animals—eliminating 100% of waiting room stress.",
-    highlight: "Only practice in Boulder with this model",
+    description: "Our clinic concept centers on private exam spaces and a calm arrival experience. Final arrival details will be shared before opening.",
+    highlight: "A calmer arrival, by design",
   },
   {
     icon: Sofa,
     title: "Living Room Exam Spaces",
-    description: "Forget sterile exam tables. Our rooms feature comfortable sofas, warm lighting, and calming decor—designed to feel like your living room at home.",
+    description: "Forget sterile exam tables. Our planned rooms feature comfortable sofas, warm lighting, and calming decor—designed to feel like your living room at home.",
     highlight: "Home-like comfort, not clinical anxiety",
   },
   {
     icon: ShieldCheck,
-    title: "Fear Free Trained",
-    description: "Our entire team is trained in Fear Free handling methods—nationally recognized techniques that minimize anxiety and maximize comfort for every pet.",
+    title: "Comfort-Focused Handling",
+    description: "Gentle handling, patience, and attention to each pet’s comfort are central to the practice we are building.",
     highlight: "Low-stress handling",
   },
   {
@@ -30,21 +30,21 @@ const features = [
   },
   {
     icon: Dog,
-    title: "Senior Care Experts",
-    description: "Dedicated expertise for aging pets including mobility support, pain management, and quality of life assessments for their golden years.",
+    title: "Senior Care",
+    description: "Planned support for aging pets including mobility support, pain management, and quality of life assessments for their golden years.",
     highlight: "Extended quality of life",
   },
   {
     icon: Sparkles,
     title: "Laser Therapy",
-    description: "Advanced therapeutic laser for drug-free pain relief, arthritis treatment, post-surgical healing, and chronic pain management.",
-    highlight: "Drug-free pain relief",
+    description: "We are exploring therapeutic laser as part of our future care offering. Availability will be confirmed before scheduling.",
+    highlight: "Planned service",
   },
 ];
 
 const WhyDifferentSection = React.forwardRef<HTMLElement>((_, ref) => {
   return (
-    <section className="py-24 bg-background">
+    <section ref={ref} className="py-24 bg-background">
       <div className="container">
         {/* Section Header */}
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">

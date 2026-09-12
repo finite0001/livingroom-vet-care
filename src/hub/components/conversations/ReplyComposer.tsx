@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export interface AttachmentFile { file: File; id: string; }
 
 interface ReplyComposerProps {
-  onSend: (content: string, channel: "SMS" | "EMAIL" | "NOTE", subject?: string, attachments?: AttachmentFile[], cc?: string[], includeSignature?: boolean) => void;
+  onSend: (content: string, channel: "SMS" | "EMAIL" | "NOTE", subject?: string, attachments?: AttachmentFile[], cc?: string[], includeSignature?: boolean) => Promise<boolean>;
   defaultChannel?: "SMS" | "EMAIL" | "NOTE";
   smsOptedOut?: boolean;
   draft?: string;
@@ -22,9 +22,17 @@ const SMS_SEGMENT_LENGTH = 160;
 
 export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDraftConsumed, disabled }: ReplyComposerProps) {
   const [content, setContent] = useState("");
+  const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
+  const busy = pending || disabled;
   // Only populate from a suggestion/draft when the composer is empty, so tapping a
   // smart-reply can never silently overwrite a reply the staffer is mid-typing.
-  useEffect(() => { if (draft && !content.trim()) { setContent(draft); onDraftConsumed?.(); } }, [draft]);
+  useEffect(() => {
+    if (!draft || pendingRef.current) return;
+    if (!content.trim()) setContent(draft);
+    // Consume rejected suggestions too, so clearing a typed reply cannot revive one.
+    onDraftConsumed?.();
+  }, [draft, content, onDraftConsumed, pending]);
 
   const [channel, setChannel] = useState<"SMS" | "EMAIL" | "NOTE">(defaultChannel || "SMS");
   const [subject, setSubject] = useState("");
@@ -52,11 +60,22 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
 
   const emailMissingSubject = channel === "EMAIL" && !subject.trim();
 
-  const handleSubmit = () => {
-    if (!content.trim() || emailMissingSubject) return;
-    onSend(content, channel, channel === "EMAIL" ? subject.trim() : undefined);
-    setContent("");
-    setSubject("");
+  const handleSubmit = async () => {
+    if (pendingRef.current || disabled || !content.trim() || emailMissingSubject) return;
+    pendingRef.current = true;
+    setPending(true);
+    try {
+      const completed = await onSend(content, channel, channel === "EMAIL" ? subject.trim() : undefined);
+      if (completed) {
+        setContent("");
+        setSubject("");
+      }
+    } catch {
+      // The parent reports delivery errors. Keep the draft if a callback rejects.
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -71,13 +90,13 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
       <div className="flex items-center gap-2">
         <Tabs value={channel} onValueChange={(v) => setChannel(v as "SMS" | "EMAIL" | "NOTE")}>
           <TabsList className="h-8">
-            <TabsTrigger value="SMS" className="text-xs gap-1 h-6" disabled={smsOptedOut}>
+            <TabsTrigger value="SMS" className="text-xs gap-1 h-6" disabled={smsOptedOut || busy}>
               <MessageSquare className="h-3 w-3" /> SMS
             </TabsTrigger>
-            <TabsTrigger value="EMAIL" className="text-xs gap-1 h-6">
+            <TabsTrigger value="EMAIL" disabled={busy} className="text-xs gap-1 h-6">
               <Mail className="h-3 w-3" /> Email
             </TabsTrigger>
-            <TabsTrigger value="NOTE" className="text-xs gap-1 h-6">
+            <TabsTrigger value="NOTE" disabled={busy} className="text-xs gap-1 h-6">
               <StickyNote className="h-3 w-3" /> Note
             </TabsTrigger>
           </TabsList>
@@ -85,6 +104,7 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
       </div>
       {channel === "EMAIL" && (
         <Input
+          disabled={busy}
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Subject"
@@ -94,6 +114,7 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
       <div className="flex gap-2">
         <Textarea
           ref={textareaRef}
+          disabled={busy}
           value={content}
           onChange={(e) => { setContent(e.target.value); autoResize(); }}
           onKeyDown={handleKeyDown}
@@ -102,10 +123,10 @@ export function ReplyComposer({ onSend, defaultChannel, smsOptedOut, draft, onDr
           rows={1}
         />
         <div className="flex flex-col gap-1 shrink-0">
-          <Button size="icon" onClick={handleSubmit} disabled={!content.trim() || emailMissingSubject || disabled} className="h-[44px] w-[44px]" aria-label="Send message">
+          <Button size="icon" onClick={handleSubmit} disabled={!content.trim() || emailMissingSubject || busy} className="h-[44px] w-[44px]" aria-label={pending ? "Sending message" : "Send message"} aria-busy={pending}>
             <Send className="h-4 w-4" />
           </Button>
-          {channel !== "NOTE" && <TemplateSelector onSelect={(text) => setContent(text)} />}
+          {channel !== "NOTE" && !busy && <TemplateSelector onSelect={(text) => { if (!pendingRef.current) setContent(text); }} />}
         </div>
       </div>
       {channel === "SMS" && content.length > 0 && (

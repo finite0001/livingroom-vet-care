@@ -20,12 +20,14 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      toast({ title: "Login failed", description: error, variant: "destructive" });
-    } else {
+    try {
+      const { error } = await signIn(email.trim(), password);
+      if (error) throw new Error(error);
       navigate("/hub");
+    } catch (cause) {
+      toast({ title: "Login failed", description: cause instanceof Error ? cause.message : "Unable to sign in. Try again.", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,14 +38,16 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/hub/login`,
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/hub/reset-password`,
+      });
+      if (error) throw error;
       setResetSent(true);
+    } catch (cause) {
+      toast({ title: "Reset request failed", description: cause instanceof Error ? cause.message : "Unable to request a reset. Try again.", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,7 +80,7 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <h2 className="text-base font-semibold text-foreground">Check your email</h2>
-                <p className="text-sm text-muted-foreground">We sent a password reset link to <strong className="text-foreground">{email}</strong></p>
+                <p className="text-sm text-muted-foreground">If an account exists, a password reset link will be sent to <strong className="text-foreground">{email}</strong></p>
                 <Button variant="ghost" size="sm" onClick={() => { setResetMode(false); setResetSent(false); }}>
                   Back to sign in
                 </Button>

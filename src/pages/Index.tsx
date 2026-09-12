@@ -8,7 +8,7 @@ import CTASection from "@/components/sections/CTASection";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 const Index = forwardRef<HTMLDivElement>((_props, ref) => {
-  usePageTitle("Fear Free Trained Veterinary Care in Boulder");
+  usePageTitle("Housecall & Clinic Veterinary Care Coming to Boulder");
   return (
     <div ref={ref} className="min-h-screen flex flex-col">
       <Header />

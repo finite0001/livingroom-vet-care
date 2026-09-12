@@ -1,3 +1,4 @@
+import { authorizeDelivery, DeliveryPolicyError, normalizeEmail, requireEmailConfiguration } from "../_shared/delivery-policy.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -12,6 +13,9 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  let accepted = false;
+  let acceptanceUnknown = false;
   try {
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -21,11 +25,12 @@ serve(async (req) => {
     if (authError || !user) return jsonResponse({ error: "Unauthorized" }, 401);
 
     const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("id, is_active, role").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("id, is_active").eq("id", user.id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", user.id),
     ]);
     if (profileRes.error) throw profileRes.error;
-    const roles = new Set([profileRes.data?.role, ...(rolesRes.data ?? []).map((r: { role: string }) => r.role)].filter(Boolean));
+    if (rolesRes.error) throw rolesRes.error;
+    const roles = new Set((rolesRes.data ?? []).map((r: { role: string }) => r.role));
     const isActiveStaff = profileRes.data?.is_active === true && [...roles].some((r) => STAFF_ROLES.has(r as string));
     if (!isActiveStaff) return jsonResponse({ error: "Forbidden" }, 403);
 
@@ -40,42 +45,64 @@ serve(async (req) => {
 
     const { data: client, error: clientError } = await supabase.from("clients").select("primary_email").eq("id", conversation.client_id).maybeSingle();
     if (clientError) throw clientError;
-    if (!client?.primary_email || client.primary_email.toLowerCase() !== String(to).toLowerCase()) {
+    if (!normalizeEmail(to) || !client?.primary_email || normalizeEmail(client.primary_email) !== normalizeEmail(to)) {
       return jsonResponse({ error: "Recipient does not match the conversation client" }, 403);
     }
+
+    const delivery = authorizeDelivery({
+      APP_ENV: Deno.env.get("APP_ENV"),
+      OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE"),
+      OUTBOUND_TEST_EMAILS: Deno.env.get("OUTBOUND_TEST_EMAILS"),
+      OUTBOUND_TEST_PHONES: Deno.env.get("OUTBOUND_TEST_PHONES"),
+    }, "EMAIL", to);
+    const emailConfig = requireEmailConfiguration({
+      RESEND_API_KEY: Deno.env.get("RESEND_API_KEY"),
+      RESEND_FROM: Deno.env.get("RESEND_FROM"),
+      RESEND_REPLY_TO: Deno.env.get("RESEND_REPLY_TO"),
+    });
 
     const { data: inserted, error: msgError } = await supabase.from("messages").insert({
       conversation_id, content: body.trim(), type: "EMAIL", sender_type: "STAFF", sender_id: user.id, is_internal: false,
     }).select("id").single();
     if (msgError) throw msgError;
 
-    await supabase.from("conversations").update({ last_message_at: new Date().toISOString(), is_read: true }).eq("id", conversation_id);
+    const { error: updateError } = await supabase.from("conversations").update({ last_message_at: new Date().toISOString(), is_read: true }).eq("id", conversation_id);
+    if (updateError) throw updateError;
 
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    const fromAddress = Deno.env.get("RESEND_FROM");
-    let delivered = false;
-    let statusNote = "Message recorded. Email delivery pending Resend configuration.";
+    const delivered = false;
+    let statusNote = "";
     let errorText: string | null = null;
-    if (resendKey && fromAddress) {
-      try {
-        const resp = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: fromAddress, to: [String(to)], subject: String(subject), text: body.trim() }),
-        });
-        if (resp.ok) { delivered = true; statusNote = "Email sent via Resend."; }
-        else { errorText = `Resend ${resp.status}: ${await resp.text()}`; statusNote = "Resend send failed."; }
-      } catch (e) { errorText = e instanceof Error ? e.message : "Resend request failed"; statusNote = "Resend send failed."; }
+    try {
+      const resp = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${emailConfig.apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: emailConfig.from, reply_to: emailConfig.replyTo, to: [delivery.recipient], subject: String(subject), text: body.trim() }),
+      });
+      accepted = resp.ok;
+      statusNote = accepted
+        ? "Resend accepted the request; delivery is unconfirmed (callbacks are not configured)."
+        : "Resend rejected the request; message was not accepted.";
+      if (!accepted) errorText = `Resend HTTP ${resp.status}`;
+    } catch {
+      acceptanceUnknown = true;
+      errorText = "Provider request failed; acceptance is unknown.";
+      statusNote = "Provider acceptance is unknown after a connection failure. Check provider activity before retrying.";
     }
 
-    await supabase.from("outbound_message_attempts").insert({
+    const { error: logError } = await supabase.from("outbound_message_attempts").insert({
       user_id: user.id, conversation_id, client_id: conversation.client_id, message_id: inserted?.id ?? null,
-      channel: "EMAIL", recipient: String(to), delivered, provider: resendKey ? "resend" : null, status_note: statusNote, error_text: errorText,
+      channel: "EMAIL", recipient: delivery.recipient, delivered, provider: "resend", status_note: statusNote, error_text: errorText,
     });
 
-    return jsonResponse({ success: true, delivered, note: statusNote, message_id: inserted?.id ?? null });
+    if (logError) {
+      return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, delivered, retry_safe: false,
+        error: "Could not save the delivery audit record. Check provider activity before retrying.", note: statusNote }, 500);
+    }
+
+    return jsonResponse({ success: accepted, accepted, acceptance_unknown: acceptanceUnknown, retry_safe: false, delivered, note: statusNote, message_id: inserted?.id ?? null });
   } catch (e) {
-    console.error("send-email error:", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    if (e instanceof DeliveryPolicyError) return jsonResponse({ success: false, accepted: false, delivered: false, error: e.message }, e.status);
+    // Database/provider exceptions can contain personal data; do not return or log raw errors.
+    return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, retry_safe: false, delivered: false, error: "Unable to process this delivery request. Check provider activity before retrying if a send was attempted." }, 500);
   }
 });

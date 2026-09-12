@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getFaviconCandidates, getCachedFavicon, setCachedFavicon, markFaviconFailed, isFaviconFailed, FAVICON_MIN_SIZE } from "@/hub/lib/favicon";
 import { getAvatarColor, getInitial } from "@/hub/lib/avatar-colors";
 import { cn } from "@/lib/utils";
@@ -12,8 +12,8 @@ interface BrandAvatarProps {
 
 export function BrandAvatar({ email, name, className, imgClassName = "h-5 w-5 object-contain" }: BrandAvatarProps) {
   const cached = getCachedFavicon(email);
-  const candidates = getFaviconCandidates(email);
-  const firstViable = (startIdx: number) => candidates.findIndex((url, i) => i >= startIdx && !isFaviconFailed(url));
+  const candidates = useMemo(() => getFaviconCandidates(email), [email]);
+  const firstViable = useCallback((startIdx: number) => candidates.findIndex((url, i) => i >= startIdx && !isFaviconFailed(url)), [candidates]);
 
   const [candidateIdx, setCandidateIdx] = useState<number>(() => {
     if (cached === null) return -1;
@@ -29,7 +29,7 @@ export function BrandAvatar({ email, name, className, imgClassName = "h-5 w-5 ob
     if (c === null) { setCandidateIdx(-1); return; }
     if (c !== undefined) { const idx = candidates.indexOf(c); setCandidateIdx(idx >= 0 ? idx : -1); return; }
     setCandidateIdx(firstViable(0));
-  }, [email]);
+  }, [email, candidates, firstViable]);
 
   const currentUrl = candidateIdx >= 0 ? candidates[candidateIdx] : null;
 
@@ -39,7 +39,7 @@ export function BrandAvatar({ email, name, className, imgClassName = "h-5 w-5 ob
     if (url) markFaviconFailed(url);
     const next = firstViable(idx + 1);
     if (next >= 0) { setCandidateIdx(next); } else { setCandidateIdx(-1); setCachedFavicon(email, null); }
-  }, [candidates, email]);
+  }, [candidates, email, firstViable]);
 
   const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const idx = candidateIdxRef.current;
