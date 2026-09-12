@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Home, MessageSquare, Users, Phone, Settings,
+  CalendarDays, Home, MessageSquare, Users, Phone, Settings,
   ClipboardList, AudioWaveform, FileText, Megaphone,
   AlertTriangle, BarChart3, Pill, Stethoscope,
   LayoutDashboard, Upload, ChevronDown, LogOut, Clock, History,
@@ -12,6 +12,7 @@ import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import { useUnreadVoicemailCount } from "@/hub/hooks/use-telephony";
 
 const workspaceItems = [
+  { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
   { path: "/hub", label: "Home", icon: Home, exact: true },
   { path: "/hub/chats", label: "Communication", icon: MessageSquare },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },

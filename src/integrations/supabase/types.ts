@@ -55,6 +55,7 @@ export type Database = {
       appointment_reminders: {
         Row: {
           appointment_id: string
+          appointment_version: number
           channel: string
           created_at: string
           error_message: string | null
@@ -65,6 +66,7 @@ export type Database = {
         }
         Insert: {
           appointment_id: string
+          appointment_version?: number
           channel?: string
           created_at?: string
           error_message?: string | null
@@ -75,6 +77,7 @@ export type Database = {
         }
         Update: {
           appointment_id?: string
+          appointment_version?: number
           channel?: string
           created_at?: string
           error_message?: string | null
@@ -95,6 +98,7 @@ export type Database = {
       }
       appointments: {
         Row: {
+          address_snapshot: string
           appointment_type: string
           assigned_dvm_id: string | null
           client_id: string
@@ -104,11 +108,19 @@ export type Database = {
           id: string
           notes: string | null
           pet_id: string | null
+          reminder_offsets: number[]
+          resource_name: string | null
           scheduled_at: string
           status: Database["public"]["Enums"]["appointment_status"]
+          travel_after_minutes: number
+          travel_before_minutes: number
           updated_at: string
+          updated_by: string | null
+          version: number
+          visit_type: string
         }
         Insert: {
+          address_snapshot?: string
           appointment_type: string
           assigned_dvm_id?: string | null
           client_id: string
@@ -118,11 +130,19 @@ export type Database = {
           id?: string
           notes?: string | null
           pet_id?: string | null
+          reminder_offsets?: number[]
+          resource_name?: string | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
+          travel_after_minutes?: number
+          travel_before_minutes?: number
           updated_at?: string
+          updated_by?: string | null
+          version?: number
+          visit_type?: string
         }
         Update: {
+          address_snapshot?: string
           appointment_type?: string
           assigned_dvm_id?: string | null
           client_id?: string
@@ -132,9 +152,16 @@ export type Database = {
           id?: string
           notes?: string | null
           pet_id?: string | null
+          reminder_offsets?: number[]
+          resource_name?: string | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
+          travel_after_minutes?: number
+          travel_before_minutes?: number
           updated_at?: string
+          updated_by?: string | null
+          version?: number
+          visit_type?: string
         }
         Relationships: [
           {
@@ -2656,6 +2683,55 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      save_appointment: {
+        Args: {
+          p_actor_id: string
+          p_address_snapshot: string
+          p_appointment_type: string
+          p_assigned_dvm_id: string
+          p_client_id: string
+          p_duration_minutes: number
+          p_expected_version: number
+          p_id: string
+          p_notes: string
+          p_pet_id: string
+          p_reminder_offsets: number[]
+          p_resource_name: string
+          p_scheduled_at: string
+          p_status: Database["public"]["Enums"]["appointment_status"]
+          p_travel_after_minutes: number
+          p_travel_before_minutes: number
+          p_visit_type: string
+        }
+        Returns: {
+          address_snapshot: string
+          appointment_type: string
+          assigned_dvm_id: string | null
+          client_id: string
+          created_at: string
+          duration_minutes: number
+          ezyvet_appointment_id: string | null
+          id: string
+          notes: string | null
+          pet_id: string | null
+          reminder_offsets: number[]
+          resource_name: string | null
+          scheduled_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          travel_after_minutes: number
+          travel_before_minutes: number
+          updated_at: string
+          updated_by: string | null
+          version: number
+          visit_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       save_client: {
         Args: {
           p_actor_id: string
@@ -2806,6 +2882,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      schedule_clinicians: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+        }[]
       }
       search_clients: {
         Args: { p_limit?: number; p_search: string }
@@ -3170,3 +3253,4 @@ export const Constants = {
     },
   },
 } as const
+
