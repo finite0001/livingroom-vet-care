@@ -1,4 +1,4 @@
-import { deliveryErrorNote, isDeliveryAccepted } from "@/hub/lib/delivery-result";
+import { useMessageQueue } from "@/hub/hooks/use-message-queue";
 import { useRef, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,8 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [newFirstName, setNewFirstName] = useState("");
-  const [newLastName, setNewLastName] = useState("");
   const queryClient = useQueryClient();
+  const queue = useMessageQueue("new-message");
   const { data: clients } = useClients();
 
   const filteredClients = search.length >= 2 ? clients?.filter((c) => {
@@ -33,61 +32,30 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
 
   const selectClient = (client: ClientWithPets) => { setSelectedClientId(client.id); setRecipient(client.primary_phone || ""); setSearch(client.full_name); };
 
-  const isNewClient = !selectedClientId && recipient.trim().length > 0;
 
   const reset = () => {
     setRecipient(""); setBody(""); setSearch(""); setSelectedClientId(null);
-    setNewFirstName(""); setNewLastName("");
   };
 
   const handleSend = async () => {
     if (!body.trim() || !recipient.trim() || sendingRef.current) return;
-    if (isNewClient && !newFirstName.trim()) {
-      toast.error("Please enter the client's first name");
-      return;
-    }
+    if (!selectedClientId) { toast.error("Choose a household with recorded SMS consent first."); return; }
     sendingRef.current = true;
     setSending(true);
     try {
-      let clientId = selectedClientId;
-      if (!clientId) {
-        const first = newFirstName.trim();
-        const last = newLastName.trim();
-        const full = last ? `${first} ${last}` : first;
-        const { data: newClient, error: clientError } = await supabase
-          .from("clients")
-          .insert({ first_name: first, last_name: last || "", full_name: full, primary_phone: recipient, preferred_channel: "SMS" })
-          .select("id").single();
-        if (clientError) throw clientError;
-        clientId = newClient?.id;
-        // Preserve the newly created client across a blocked send, avoiding duplicates on retry.
-        if (clientId) setSelectedClientId(clientId);
-      }
-      if (!clientId) throw new Error("Failed to resolve client");
+      const clientId = selectedClientId;
 
-      const { data: existingConversation, error: findError } = await supabase.from("conversations").select("id").eq("client_id", clientId).eq("status", "ACTIVE").order("last_message_at", { ascending: false }).limit(1).maybeSingle();
-      if (findError) throw findError;
-      let conv = existingConversation;
-      if (!conv) {
-        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ client_id: clientId, status: "ACTIVE", is_read: true }).select("id").single();
-        if (convError) throw convError;
-        conv = newConv;
-      }
-      if (!conv) throw new Error("Failed to create conversation");
-
-      const { data, error } = await supabase.functions.invoke("send-sms", { body: { to: recipient, body, conversation_id: conv.id } });
+      const { data: conv, error } = await supabase.rpc("ensure_active_conversation", { p_client_id: clientId });
       if (error) throw error;
-      if (!isDeliveryAccepted(data)) {
-        toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
-        return;
-      }
-      toast.success("SMS accepted by provider; delivery is not yet confirmed");
+
+      const result = await queue.send({ conversation_id: conv.id, channel: "SMS", to: recipient, subject: "", body, attachment_ids: [] });
+      toast.success(result.state === "pending" ? "SMS queued" : `Message recorded: ${result.state}`);
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       onOpenChange(false);
       reset();
     } catch (err) {
-      toast.error(await deliveryErrorNote(err));
+      toast.error(err instanceof Error ? err.message : "Queue confirmation unavailable; retry the unchanged draft.");
     } finally { sendingRef.current = false; setSending(false); }
   };
 
@@ -110,21 +78,13 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
               </div>
             )}
           </div>
-          <Input disabled={sending} placeholder="Phone number (e.g. +14155551234)" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="h-10" type="tel" />
+          <Input readOnly placeholder="Phone number (e.g. +14155551234)" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="h-10" type="tel" />
 
-          {isNewClient && (
-            <div className="space-y-2 rounded-lg border border-dashed p-3">
-              <p className="text-xs font-medium text-muted-foreground">New client — enter their name</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Input disabled={sending} placeholder="First name *" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="h-9" />
-                <Input disabled={sending} placeholder="Last name" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="h-9" />
-              </div>
-            </div>
-          )}
+          <p className="text-xs text-muted-foreground">Choose an existing household. To message a new client, create their household and record SMS consent in Clients first.</p>
 
           <Textarea disabled={sending} placeholder="Type message..." value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
-          <Button onClick={handleSend} disabled={!body.trim() || !recipient.trim() || sending || (isNewClient && !newFirstName.trim())} className="w-full">
-            <MessageSquare className="h-4 w-4 mr-2" /> {sending ? "Sending..." : "Send SMS"}
+          <Button onClick={handleSend} disabled={!body.trim() || !recipient.trim() || sending || !selectedClientId} className="w-full">
+            <MessageSquare className="h-4 w-4 mr-2" /> {sending ? "Queueing..." : "Send SMS"}
           </Button>
 
         </div>

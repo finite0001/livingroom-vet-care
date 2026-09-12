@@ -1,3 +1,4 @@
+import { SmsConsentPanel } from "@/hub/features/communications/SmsConsentPanel";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Phone, Mail, MessageSquare, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,7 @@ export default function ClientProfilePage() {
 
         {/* Notes */}
         <HouseholdInvoices key={client.id} clientId={client.id} />
+        <SmsConsentPanel key={`consent:${client.id}`} clientId={client.id} />
         <ClientNotesCard clientId={id!} />
 
         {/* Recent messages */}
