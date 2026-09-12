@@ -6,7 +6,7 @@ The application uses React 18, TypeScript, Vite, Tailwind, shadcn/ui, React Rout
 
 ## Development
 
-Use Node 22 and npm. `package-lock.json` is the validated install path; see [dependency notes](docs/dependency-baseline.md) for legacy Bun lockfiles.
+Use Node 22.12 or newer and npm. `package-lock.json` is the validated install path; see [dependency notes](docs/dependency-baseline.md) for legacy Bun lockfiles.
 
 ```sh
 npm ci
