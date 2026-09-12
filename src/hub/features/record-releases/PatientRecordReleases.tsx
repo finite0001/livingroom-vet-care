@@ -1,3 +1,4 @@
+import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
 import { mergeReleaseSelection } from "./selection";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -46,6 +47,7 @@ export function PatientRecordReleases({
 }: PatientRecordReleasesProps) {
   const { user, profile } = useAuth();
   const cache = useQueryClient();
+  const [emailDirty, setEmailDirty] = useState(false);
   const [selection, setSelection] = useState<ReleaseSelection>({});
   const [allSelectionNotice, setAllSelectionNotice] = useState("");
   const [channel, setChannel] = useState<"EMAIL" | "SMS">("EMAIL");
@@ -70,7 +72,12 @@ export function PatientRecordReleases({
     0,
   );
   const dirty =
-    selectedCount > 0 || !!preview || !!pending || !!withdrawReason || busy;
+    emailDirty ||
+    selectedCount > 0 ||
+    !!preview ||
+    !!pending ||
+    !!withdrawReason ||
+    busy;
   useEffect(() => {
     onDirtyChange?.(dirty);
     return () => onDirtyChange?.(false);
@@ -385,7 +392,7 @@ export function PatientRecordReleases({
             </div>
             <Button
               variant="outline"
-              disabled={busy || !!withdrawalRef.current}
+              disabled={busy || emailDirty || !!withdrawalRef.current}
               onClick={() => void open(b.release.id)}
             >
               Open release package
@@ -417,12 +424,17 @@ export function PatientRecordReleases({
             artifact={artifactFor(opened)}
             refreshConfirmed={freshArtifact}
           />
+          <ReleaseEmailComposer
+            key={opened.release.id}
+            bundle={opened}
+            onDirtyChange={setEmailDirty}
+          />
           <Label htmlFor={`withdraw-${petId}`}>Withdrawal reason</Label>
           <Input
             id={`withdraw-${petId}`}
             maxLength={2000}
             value={withdrawReason}
-            disabled={busy || !!withdrawalRef.current}
+            disabled={busy || emailDirty || !!withdrawalRef.current}
             onChange={(e) => setWithdrawReason(e.target.value)}
           />
           <Button
@@ -645,7 +657,10 @@ export function PatientRecordReleases({
                   </label>
                   <Button
                     disabled={
-                      busy || !candidates.data.policy_accepted || !reviewed
+                      busy ||
+                      emailDirty ||
+                      !candidates.data.policy_accepted ||
+                      !reviewed
                     }
                     onClick={() => void confirm()}
                   >
