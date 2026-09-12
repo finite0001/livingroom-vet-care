@@ -35,25 +35,9 @@ function normalizePhone(phone: string) {
  * message lands in the inbox thread. Mirrors NewMessageSheet's find-or-create.
  */
 async function findOrCreateActiveConversation(clientId: string): Promise<string> {
-  const { data: existing, error: findError } = await supabase
-    .from("conversations")
-    .select("id")
-    .eq("client_id", clientId)
-    .eq("status", "ACTIVE")
-    .order("last_message_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (findError) throw findError;
-  if (existing) return existing.id;
-
-  const { data: created, error: createError } = await supabase
-    .from("conversations")
-    .insert({ client_id: clientId, status: "ACTIVE", is_read: true })
-    .select("id")
-    .single();
-  if (createError) throw createError;
-  if (!created) throw new Error("Failed to create conversation");
-  return created.id;
+  const { data, error } = await supabase.rpc("ensure_active_conversation", { p_client_id: clientId });
+  if (error) throw error;
+  return data.id;
 }
 
 export function SendToClientDialog({
@@ -82,7 +66,7 @@ export function SendToClientDialog({
   const smsAllowed =
     !!phone &&
     consentFetched &&
-    consent?.opted_in === true &&
+    consent?.can_message === true &&
     normalizePhone(consent.phone_number ?? "") === normalizePhone(phone);
   const emailAllowed = !!email;
   const contactsFetched = clientFetched && consentFetched;

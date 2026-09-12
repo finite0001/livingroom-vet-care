@@ -10,9 +10,9 @@ export function useOutboxStatus(messageIds: string[]) {
     refetchInterval: 15000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const rows: Record<string, {state: string; last_error: string | null}> = {};
+      const rows: Record<string, {state: string; last_error: string | null; delivery_failure_kind: string | null}> = {};
       for (let offset = 0; offset < ids.length; offset += 100) {
-        const { data, error } = await supabase.from("communication_outbox").select("message_id,state,last_error").in("message_id", ids.slice(offset, offset + 100));
+        const { data, error } = await supabase.from("communication_outbox").select("message_id,state,last_error,delivery_failure_kind").in("message_id", ids.slice(offset, offset + 100));
         if (error) throw error;
         for (const row of data) rows[row.message_id] = row;
       }

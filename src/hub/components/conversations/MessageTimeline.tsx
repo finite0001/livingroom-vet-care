@@ -118,6 +118,7 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
               {!isClient && !msg.is_internal && ["SMS", "EMAIL"].includes(msg.type) && (
                 <p className="mt-2 text-xs text-muted-foreground" role="status">
                   {outbox.data?.[msg.id] ? outboxStateLabel(outbox.data[msg.id].state) : outbox.isError ? "Delivery status unavailable" : outbox.isLoading ? "Checking delivery status…" : "No tracked delivery receipt"}
+                  {outbox.data?.[msg.id]?.delivery_failure_kind && ` · ${outbox.data[msg.id].delivery_failure_kind}`}
                   {outbox.data?.[msg.id]?.last_error && ` · ${outbox.data[msg.id].last_error}`}
                 </p>
               )}

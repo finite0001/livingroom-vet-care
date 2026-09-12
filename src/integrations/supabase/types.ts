@@ -15,6 +15,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_sms_consent: { Args: { p_client_id: string }; Returns: Json }
       graphql: {
         Args: {
           extensions?: Json
@@ -4268,6 +4269,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_sms_consent: { Args: { p_client_id: string }; Returns: Json }
       abandon_patient_document: {
         Args: { p_id: string }
         Returns: {

@@ -20,7 +20,7 @@ async function fixture(page:Page, mode:'lost'|'offline'|'rejected') {
   if(path==='/rest/v1/user_roles')return route.fulfill({json:[{role:'STAFF'}]});
   if(path==='/rest/v1/conversations')return route.fulfill({json:{id:conversation,client_id:client,status:'ACTIVE',is_read:true,priority:'NORMAL',tags:[],last_message_at:'2026-09-12T12:00:00Z'}});
   if(path==='/rest/v1/clients')return route.fulfill({json:{id:client,full_name:'Synthetic Household',first_name:'Synthetic',last_name:'Household',primary_email:'synthetic@example.test',primary_phone:'+13035550123',preferred_channel:'EMAIL'}});
-  if(path==='/rest/v1/sms_consent')return route.fulfill({json:{opted_in:true,phone_number:'+13035550123'}});
+  if(path==='/rest/v1/rpc/current_sms_consent')return route.fulfill({json:{client_id:client,opted_in:true,can_message:true,phone_number:'+13035550123',updated_at:null}});
   if(path==='/functions/v1/send-email'||path==='/functions/v1/send-sms'){state.legacyCalls++;return route.fulfill({status:500,json:{error:'Legacy bypass'}});}
   if(path==='/functions/v1/enqueue-message'){
    const payload=route.request().postDataJSON();state.requests.push(payload);
@@ -72,4 +72,31 @@ test('disabled delivery leaves the draft and never claims queued',async({page})=
  await expect(page.getByText('Delivery disabled in this environment')).toBeVisible();
  await expect(page.getByPlaceholder('Send EMAIL...')).toHaveValue('Synthetic queue test');
  expect(state.stored).toBe(false);expect(state.legacyCalls).toBe(0);
+});
+test('consent records server version and preserves stale entry without bypassing suppression',async({page})=>{
+ await fixture(page,'rejected');
+ let version='2026-09-12T12:00:00Z';let conflict=true;let saved:Record<string,unknown>|null=null;
+ await page.route(`${backend}/rest/v1/rpc/current_sms_consent`,route=>route.fulfill({json:{id:'consent',client_id:client,phone_number:'+13035550123',opted_in:true,can_message:false,updated_at:version,consent_details:'Existing synthetic record'}}));
+ await page.route(`${backend}/rest/v1/rpc/record_sms_consent`,route=>{
+  const args=route.request().postDataJSON();
+  if(conflict){conflict=false;version='2026-09-12T13:00:00Z';return route.fulfill({status:409,json:{code:'40001',message:'Consent changed; reload before saving'}});}
+  saved=args;return route.fulfill({json:{id:'consent',updated_at:'2026-09-12T14:00:00Z'}});
+ });
+ await page.goto(`/hub/client/${client}`);
+ const panel=page.getByRole('region',{name:'SMS consent'});
+ await expect(panel).toContainText('SMS is blocked');
+ await panel.getByRole('button',{name:'Record consent or withdrawal'}).click();
+ await panel.getByLabel('Preference',{exact:true}).selectOption('yes');
+ await panel.getByLabel('Consent evidence',{exact:true}).fill('Synthetic written preference, reviewed today');
+ await panel.getByRole('button',{name:'Save consent record'}).click();
+ await expect(panel.getByRole('alert')).toContainText('Your entry is preserved');
+ await expect(panel.getByLabel('Consent evidence',{exact:true})).toHaveValue('Synthetic written preference, reviewed today');
+ page.once('dialog',dialog=>dialog.accept());await panel.getByRole('button',{name:'Discard and reload'}).click();
+ await panel.getByRole('button',{name:'Record consent or withdrawal'}).click();
+ await panel.getByLabel('Preference',{exact:true}).selectOption('yes');
+ await panel.getByLabel('Consent evidence',{exact:true}).fill('Synthetic reviewed replacement evidence');
+ await panel.getByRole('button',{name:'Save consent record'}).click();
+ await expect(panel.getByRole('status')).toContainText('Consent record saved');
+ expect(saved).toMatchObject({p_actor_id:staff,p_client_id:client,p_expected_updated_at:'2026-09-12T13:00:00Z',p_opted_in:true});
+ await expect(panel).toContainText('SMS is blocked');
 });

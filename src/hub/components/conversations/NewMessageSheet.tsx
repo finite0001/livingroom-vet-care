@@ -45,15 +45,8 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
     try {
       const clientId = selectedClientId;
 
-      const { data: existingConversation, error: findError } = await supabase.from("conversations").select("id").eq("client_id", clientId).eq("status", "ACTIVE").order("last_message_at", { ascending: false }).limit(1).maybeSingle();
-      if (findError) throw findError;
-      let conv = existingConversation;
-      if (!conv) {
-        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ client_id: clientId, status: "ACTIVE", is_read: true }).select("id").single();
-        if (convError) throw convError;
-        conv = newConv;
-      }
-      if (!conv) throw new Error("Failed to create conversation");
+      const { data: conv, error } = await supabase.rpc("ensure_active_conversation", { p_client_id: clientId });
+      if (error) throw error;
 
       const result = await queue.send({ conversation_id: conv.id, channel: "SMS", to: recipient, subject: "", body, attachment_ids: [] });
       toast.success(result.state === "pending" ? "SMS queued" : `Message recorded: ${result.state}`);

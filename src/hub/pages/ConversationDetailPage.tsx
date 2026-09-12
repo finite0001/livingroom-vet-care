@@ -31,7 +31,7 @@ export default function ConversationDetailPage() {
   // optimistic (SMS enabled) while consent is still loading — otherwise the empty
   // composer would auto-switch off SMS before we know an opted-in client is fine.
   const { data: consent, isFetched: consentFetched } = useClientConsent(conversation?.client.id);
-  const smsOptedOut = consentFetched && consent?.opted_in !== true;
+  const smsOptedOut = consentFetched && consent?.can_message !== true;
   const { mutate: markRead } = useMarkRead();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
@@ -78,7 +78,7 @@ export default function ConversationDetailPage() {
         toast.success("Note added");
         return true;
       } else if (channel === "SMS") {
-        if (!consentFetched || consent?.opted_in !== true || !conversation.client.primary_phone || consent.phone_number?.replace(/\D/g, "") !== conversation.client.primary_phone.replace(/\D/g, "")) { toast.error("No SMS consent on record for this number"); return false; }
+        if (!consentFetched || consent?.can_message !== true || !conversation.client.primary_phone || consent.phone_number?.replace(/\D/g, "") !== conversation.client.primary_phone.replace(/\D/g, "")) { toast.error("No SMS consent on record for this number"); return false; }
         const phone = conversation.client.primary_phone;
         if (!phone) { toast.error("Client has no phone number"); return false; }
         const result = await queue.send({ conversation_id: id, channel, to: phone, subject: "", body: content, attachment_ids: [] });
