@@ -67,7 +67,7 @@ export interface MessageRecovery {
   receipt: QueueReceipt | null;
   error?: string;
 }
-export function useMessageQueue(scope: string) {
+export function useMessageQueue(scope: string, active = true) {
   const { session } = useAuth();
   const actor = session?.user.id ?? null;
   const current = useRef(actor);
@@ -216,10 +216,10 @@ export function useMessageQueue(scope: string) {
     }
     setRecovery(null);
     setPending(false);
-    if (actor) void recover().catch(() => {});
+    if (actor && active) void recover().catch(() => {});
     // Actor/scope changes start a fresh authorized recovery, never a send.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actor, scope]);
+  }, [actor, scope, active]);
   const send = async (payload: MessageIntent) => {
     check();
     setPending(true);

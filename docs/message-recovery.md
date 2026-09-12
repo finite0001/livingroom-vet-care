@@ -16,7 +16,7 @@ The public `enqueue_communication` contract keeps its arguments but now requires
 
 ## Hook contract for composer integration
 
-`useMessageQueue(scope)` retains `send(payload)` and `pending`, and adds:
+`useMessageQueue(scope, active=true)` retains `send(payload)` and `pending`, and adds:
 
 - `recovery`: null or `{status,requestId,payload,receipt,error?}`. Status is `loading`, `prepared`, `queued` or `unavailable`.
 - `recover()`: authenticated reload of the saved request; never sends.
@@ -28,6 +28,12 @@ Restore channel, subject, body and recipient only after the user reviews `recove
 An interrupted preparation in the same page retains its exact in-memory payload and UUID for retry. After reload, a missing server snapshot blocks sending until recovery succeeds or the user explicitly discards the opaque request. A failed enqueue preserves the immutable prepared draft; edits require explicit discard and a new request. Even a definitive queue rejection does not silently recycle the UUID.
 
 Signing out or switching accounts clears in-memory drafts and invalidates in-flight preparation. Opaque pointers remain keyed to their original actor, so that actor can recover after signing in again; another account cannot read the server payload. Hook recovery state is keyed by actor and scope and is hidden immediately when either changes. Blocked session storage fails before preparation rather than silently falling back to unrecoverable browser-only state.
+
+## Composer behavior
+
+Conversation replies, the new-message sheet and client-send dialogs now display the shared recovery panel. Restoring a saved draft requires an explicit click; replacing a nonempty current draft requires confirmation. Exact saved recipients remain visible and retries retain the original conversation, channel, subject and body. Editing a prepared draft blocks retry until staff restore it exactly or explicitly discard its saved request.
+
+Acknowledging an old queue receipt clears the visible draft only when its channel, recipient, subject and body match that old request. A different newly typed draft remains intact. Closed dialogs recheck their server claim on reopening. Actor changes remount composer state and hide the old actor’s recovery immediately. Unresolved requests remain recoverable across navigation and across tabs through the server scope claim; no recovery action sends automatically.
 
 ## Validation and deployment gate
 
