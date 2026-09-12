@@ -70,5 +70,15 @@ set local role anon;
 select throws_ok($$select * from public.patient_treatments$$,'42501',null,'Anonymous clinical stock records denied');
 reset role;
 select ok(exists(select 1 from public.audit_logs where table_name='inventory_movements' and user_id='34000000-0000-4000-8000-000000000001'),'Stock audit attributes actor');
+
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"34000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($$select public.receive_inventory(gen_random_uuid(),gen_random_uuid(),(select id from fx where k='product'),'NAN',current_date+365,'Clinic','NaN'::numeric,'Bad')$$,'23514',null,'NaN receipt rejected');
+select throws_ok($$select public.adjust_inventory(gen_random_uuid(),'35000000-0000-4000-8000-000000000002','NaN'::numeric,'Bad')$$,'23514',null,'NaN adjustment rejected');
+select throws_ok($$select public.record_patient_treatment(gen_random_uuid(),(select v||'{"quantity":"NaN"}' from requests where k='historical'))$$,'23514',null,'NaN historical quantity rejected');
+select throws_ok($$select public.record_patient_treatment(gen_random_uuid(),(select v||'{"administered_at":"-infinity"}' from requests where k='historical'))$$,'23514',null,'Infinite administration rejected');
+select throws_ok($$select public.record_patient_treatment(gen_random_uuid(),(select v||'{"next_due_on":"infinity"}' from requests where k='historical'))$$,'23514',null,'Infinite due date rejected');
+select throws_ok($$select public.receive_inventory(gen_random_uuid(),gen_random_uuid(),(select id from fx where k='product'),'INF','infinity'::date,'Clinic',1,'Bad')$$,'23514',null,'Infinite lot expiry rejected');
+reset role;
 select * from finish();
 rollback;

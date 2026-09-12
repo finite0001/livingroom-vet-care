@@ -7,13 +7,13 @@ create table public.catalog_products (
 );
 create table public.inventory_lots (
  id uuid primary key, product_id uuid not null references public.catalog_products(id) on delete restrict,
- lot_number text not null check(length(trim(lot_number)) between 1 and 200), expires_on date not null,
+ lot_number text not null check(length(trim(lot_number)) between 1 and 200), expires_on date not null check(isfinite(expires_on)),
  location text not null check(length(trim(location)) between 1 and 200), created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
  unique(product_id,lot_number,expires_on,location)
 );
 create table public.inventory_movements (
  id uuid primary key, lot_id uuid not null references public.inventory_lots(id) on delete restrict,
- quantity numeric(14,3) not null check(quantity<>0), kind text not null check(kind in ('receive','adjust','dispense')),
+ quantity numeric(14,3) not null check(quantity<>0 and quantity::text not in ('NaN','Infinity','-Infinity')), kind text not null check(kind in ('receive','adjust','dispense')),
  reason text not null check(length(trim(reason)) between 1 and 2000), created_by uuid not null references auth.users(id), created_at timestamptz not null default now()
 );
 create index inventory_movements_lot_idx on public.inventory_movements(lot_id);
@@ -26,7 +26,7 @@ create table public.billing_invoices (
 create table public.billing_invoice_items (
  id uuid primary key, invoice_id uuid not null references public.billing_invoices(id) on delete restrict,
  pet_id uuid references public.pets(id) on delete restrict, product_id uuid not null references public.catalog_products(id) on delete restrict,
- description text not null, quantity numeric(14,3) not null check(quantity>0), unit_price_cents bigint not null check(unit_price_cents>=0),
+ description text not null, quantity numeric(14,3) not null check(quantity>0 and quantity::text not in ('NaN','Infinity','-Infinity')), unit_price_cents bigint not null check(unit_price_cents>=0),
  amount_cents bigint generated always as (round(quantity*unit_price_cents)::bigint) stored,
  created_by uuid not null references auth.users(id), created_at timestamptz not null default now()
 );
@@ -42,10 +42,10 @@ create table public.patient_treatments (
  invoice_id uuid references public.billing_invoices(id) on delete restrict,
  kind text not null check(kind in ('medication','vaccine')), historical boolean not null,
  product_name text not null check(length(trim(product_name)) between 1 and 200), manufacturer text not null check(length(manufacturer)<=200),
- lot_number text not null check(length(lot_number)<=200), expires_on date, quantity numeric(14,3) not null check(quantity>0),
+ lot_number text not null check(length(lot_number)<=200), expires_on date check(expires_on is null or isfinite(expires_on)), quantity numeric(14,3) not null check(quantity>0 and quantity::text not in ('NaN','Infinity','-Infinity')),
  dose text not null check(length(trim(dose)) between 1 and 200), route text not null check(length(trim(route)) between 1 and 100), site text not null check(length(site)<=200),
  veterinarian text not null check(length(trim(veterinarian)) between 1 and 200), veterinarian_license text not null check(length(veterinarian_license)<=100),
- administered_at timestamptz not null, next_due_on date, source text not null check(length(source)<=500),
+ administered_at timestamptz not null check(isfinite(administered_at)), next_due_on date check(next_due_on is null or isfinite(next_due_on)), source text not null check(length(source)<=500),
  request jsonb not null, created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
  check(next_due_on is null or next_due_on >= (administered_at at time zone 'America/Denver')::date),
  check(historical or (lot_id is not null and invoice_id is not null and product_id is not null))
@@ -95,7 +95,7 @@ end $$;
 create function public.receive_inventory(p_id uuid,p_lot_id uuid,p_product_id uuid,p_lot_number text,p_expires_on date,p_location text,p_quantity numeric,p_reason text) returns public.inventory_movements language plpgsql security definer set search_path=public as $$
 declare actor uuid:=public.clinical_require_staff(); result public.inventory_movements; lot public.inventory_lots;
 begin
- if p_quantity is null or p_quantity<=0 or p_quantity<>round(p_quantity,3) then raise exception 'Receipt quantity must be positive with at most 3 decimals' using errcode='23514'; end if;
+ if p_quantity is null or p_quantity::text in ('NaN','Infinity','-Infinity') or p_quantity<=0 or p_quantity<>round(p_quantity,3) then raise exception 'Receipt quantity must be positive with at most 3 decimals' using errcode='23514'; end if;
  perform pg_advisory_xact_lock(hashtextextended(p_id::text,0));
  select * into result from public.inventory_movements where id=p_id;
  if found then
@@ -114,7 +114,7 @@ end $$;
 create function public.adjust_inventory(p_id uuid,p_lot_id uuid,p_quantity numeric,p_reason text) returns public.inventory_movements language plpgsql security definer set search_path=public as $$
 declare actor uuid:=public.clinical_require_staff(); result public.inventory_movements;
 begin
- if p_quantity is null or p_quantity=0 or p_quantity<>round(p_quantity,3) then raise exception 'Adjustment must be nonzero with at most 3 decimals' using errcode='23514'; end if;
+ if p_quantity is null or p_quantity::text in ('NaN','Infinity','-Infinity') or p_quantity=0 or p_quantity<>round(p_quantity,3) then raise exception 'Adjustment must be nonzero with at most 3 decimals' using errcode='23514'; end if;
  perform pg_advisory_xact_lock(hashtextextended(p_id::text,0));
  select * into result from public.inventory_movements where id=p_id;
  if found then
@@ -141,7 +141,7 @@ begin
  select * into result from public.patient_treatments where id=p_id;
  if found then if result.created_by<>actor or result.request<>p_request then raise exception 'Treatment identifier already used' using errcode='23514'; end if; return result; end if;
  historical:=coalesce((p_request->>'historical')::boolean,false); pet:=(p_request->>'pet_id')::uuid; qty:=(p_request->>'quantity')::numeric; admin_at:=(p_request->>'administered_at')::timestamptz;
- if qty is null or qty<=0 or qty<>round(qty,3) or admin_at is null or admin_at>now()+interval '5 minutes' then raise exception 'Invalid quantity or administration time' using errcode='23514'; end if;
+ if qty is null or qty::text in ('NaN','Infinity','-Infinity') or qty<=0 or qty<>round(qty,3) or admin_at is null or not isfinite(admin_at) or admin_at>now()+interval '5 minutes' then raise exception 'Invalid quantity or administration time' using errcode='23514'; end if;
  if historical then
   if p_request->>'lot_id' is not null or p_request->>'invoice_id' is not null or length(trim(coalesce(p_request->>'source','')))=0 then raise exception 'Historical records require source and cannot bill or debit stock' using errcode='23514'; end if;
   insert into public.patient_treatments(id,pet_id,kind,historical,product_name,manufacturer,lot_number,expires_on,quantity,dose,route,site,veterinarian,veterinarian_license,administered_at,next_due_on,source,request,created_by)
@@ -168,7 +168,7 @@ end $$;
 create function public.add_invoice_service(p_id uuid,p_invoice_id uuid,p_pet_id uuid,p_product_id uuid,p_quantity numeric) returns public.billing_invoice_items language plpgsql security definer set search_path=public as $$
 declare actor uuid:=public.clinical_require_staff(); result public.billing_invoice_items; product public.catalog_products; inv public.billing_invoices;
 begin
- if p_quantity is null or p_quantity<=0 or p_quantity<>round(p_quantity,3) then raise exception 'Invalid service quantity' using errcode='23514'; end if;
+ if p_quantity is null or p_quantity::text in ('NaN','Infinity','-Infinity') or p_quantity<=0 or p_quantity<>round(p_quantity,3) then raise exception 'Invalid service quantity' using errcode='23514'; end if;
  perform pg_advisory_xact_lock(hashtextextended(p_id::text,0));
  select * into result from public.billing_invoice_items where id=p_id;
  if found then if result.created_by<>actor or row(result.invoice_id,result.pet_id,result.product_id,result.quantity) is distinct from row(p_invoice_id,p_pet_id,p_product_id,p_quantity) then raise exception 'Line identifier already used' using errcode='23514'; end if; return result; end if;
