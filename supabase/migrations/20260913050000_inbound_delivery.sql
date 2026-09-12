@@ -78,7 +78,7 @@ begin
 end $$;
 
 create function public.complete_inbound_communication(p_event_id uuid,p_lease_token uuid,p_sender text,p_recipient text,p_subject text,p_body text,p_html text,p_rfc_message_id text,p_reply_ids text[],p_attachments jsonb,p_occurred_at timestamptz,p_opt_action text default null) returns public.communication_inbound language plpgsql security definer set search_path=public as $$
-declare event public.communication_provider_events; result public.communication_inbound; channel text; sender text;recipient text;client uuid;conversation uuid;matches integer;message uuid;preference public.communication_phone_preferences;
+declare event public.communication_provider_events; result public.communication_inbound; channel text; sender text;recipient text;client uuid;conversation uuid;matches integer;message uuid;preference public.communication_phone_preferences;consent_watermark timestamptz;
 begin
  perform public.communication_require_service();
  select * into event from public.communication_provider_events where id=p_event_id for update;
@@ -111,7 +111,11 @@ begin
  -- Provider-fetched occurrence time makes older STOP/START deliveries unable to reverse newer consent.
  if channel='SMS' and p_opt_action in ('STOP','START') then
   select * into preference from public.communication_phone_preferences where phone=sender for update;
-  if not found or p_occurred_at>preference.occurred_at or (p_occurred_at=preference.occurred_at and p_opt_action='STOP') then
+  -- Legacy/manual consent timestamps are also authoritative: an older START must
+  -- not erase a later staff-recorded opt-out which predates this provider table.
+  select max(greatest(opted_in_at,opted_out_at)) into consent_watermark from public.sms_consent where public.communication_recipient('SMS',phone_number)=sender;
+  if (preference.phone is null or p_occurred_at>preference.occurred_at or (p_occurred_at=preference.occurred_at and p_opt_action='STOP'))
+   and (consent_watermark is null or p_occurred_at>consent_watermark or (p_occurred_at=consent_watermark and p_opt_action='STOP')) then
    insert into public.communication_phone_preferences(phone,opted_in,occurred_at,resource_id,event_id) values(sender,p_opt_action='START',p_occurred_at,event.resource_id,event.id)
    on conflict(phone) do update set opted_in=excluded.opted_in,occurred_at=excluded.occurred_at,resource_id=excluded.resource_id,event_id=excluded.event_id,updated_at=now();
    if p_opt_action='STOP' then
@@ -119,7 +123,7 @@ begin
     update public.sms_consent set opted_in=false,opted_out_at=p_occurred_at where public.communication_recipient('SMS',phone_number)=sender;
     update public.communication_outbox o set state='failed',last_error='recipient_suppressed' where o.channel='SMS' and o.recipient=sender and o.state='pending';
    else
-    delete from public.communication_suppressions s where s.channel='SMS' and s.recipient=sender and s.reason='provider_sms_stop';
+    delete from public.communication_suppressions s where s.channel='SMS' and s.recipient=sender and s.reason in ('provider_sms_stop','staff_sms_opt_out');
     -- START applies only to an unambiguous household, without overriding other suppression reasons.
     if client is not null then
      update public.sms_consent set opted_in=true,opted_in_at=p_occurred_at,opted_out_at=null where client_id=client and public.communication_recipient('SMS',phone_number)=sender;
@@ -217,3 +221,33 @@ begin
 end $$;
 create trigger guard_inbound_message before update or delete on public.messages for each row execute function public.guard_inbound_message();
 revoke all on function public.guard_inbound_message() from public,anon,authenticated,service_role;
+
+
+-- Timestamp/actor ownership is server-side; browsers cannot backdate consent.
+revoke insert,update,delete on public.sms_consent from authenticated,service_role;
+create function public.record_sms_consent(p_actor_id uuid,p_client_id uuid,p_phone text,p_opted_in boolean,p_method public.consent_method,p_details text,p_expected_updated_at timestamptz default null) returns public.sms_consent language plpgsql security definer set search_path=public as $$
+declare actor uuid;normalized_phone text;latest timestamptz;result public.sms_consent;
+begin
+ actor:=public.clinical_require_staff();if actor is distinct from p_actor_id then raise exception 'Actor mismatch' using errcode='42501';end if;
+ normalized_phone:=public.communication_recipient('SMS',p_phone);
+ if normalized_phone is null or p_opted_in is null or p_method is null or p_method not in ('VERBAL','WRITTEN','WEB_FORM') or p_details is null or length(trim(p_details)) not between 5 and 1000 or not exists(select 1 from public.clients where id=p_client_id and public.communication_recipient('SMS',primary_phone)=normalized_phone) then raise exception 'Matching household number and documented consent method required' using errcode='23514';end if;
+ perform pg_advisory_xact_lock(hashtextextended('SMS:'||normalized_phone,936));
+ if p_opted_in and (select count(*) from public.clients where public.communication_recipient('SMS',primary_phone)=normalized_phone)<>1 then raise exception 'Shared phone numbers require separate consent review' using errcode='23514';end if;
+ select max(updated_at) into latest from public.sms_consent where client_id=p_client_id and public.communication_recipient('SMS',phone_number)=normalized_phone;
+ if latest is distinct from p_expected_updated_at then raise exception 'Consent changed; reload before saving' using errcode='40001';end if;
+ insert into public.sms_consent(client_id,phone_number,opted_in,opted_in_at,opted_out_at,consent_method,consent_details)
+ values(p_client_id,normalized_phone,p_opted_in,case when p_opted_in then now() else null end,case when not p_opted_in then now() else null end,p_method,trim(p_details))
+ on conflict(client_id,phone_number) do update set opted_in=excluded.opted_in,opted_in_at=excluded.opted_in_at,opted_out_at=excluded.opted_out_at,consent_method=excluded.consent_method,consent_details=excluded.consent_details;
+ update public.sms_consent set opted_in=p_opted_in,opted_in_at=case when p_opted_in then now() else null end,opted_out_at=case when not p_opted_in then now() else null end,consent_method=p_method,consent_details=trim(p_details)
+ where client_id=p_client_id and public.communication_recipient('SMS',phone_number)=normalized_phone;
+ if p_opted_in then
+  delete from public.communication_suppressions where channel='SMS' and communication_suppressions.recipient=normalized_phone and reason='staff_sms_opt_out';
+ else
+  insert into public.communication_suppressions(channel,recipient,reason,created_by) values('SMS',normalized_phone,'staff_sms_opt_out',actor) on conflict(channel,recipient) do nothing;
+  update public.communication_outbox set state='failed',last_error='recipient_suppressed' where channel='SMS' and communication_outbox.recipient=normalized_phone and state='pending';
+ end if;
+ select * into result from public.sms_consent where client_id=p_client_id and phone_number=normalized_phone;
+ return result;
+end $$;
+revoke all on function public.record_sms_consent(uuid,uuid,text,boolean,public.consent_method,text,timestamptz) from public,anon,authenticated,service_role;
+grant execute on function public.record_sms_consent(uuid,uuid,text,boolean,public.consent_method,text,timestamptz) to authenticated;

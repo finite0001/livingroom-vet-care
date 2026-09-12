@@ -47,7 +47,18 @@ Only active staff can assign. The conversation must belong to the selected house
 
 A durably received, signed STOP immediately blocks outbox dispatch while its provider timestamp is fetched. The shared suppression helper treats pending/claimed/review STOP events as suppressed. This is effective before the webhook response acknowledges receipt.
 
-The processor applies STOP/START by normalized sender phone and provider creation time. Older deliveries cannot reverse newer consent, and ties favor STOP. START removes only a `provider_sms_stop` suppression and updates consent only for a unique household; it cannot remove staff, bounce or complaint exclusions. Unknown senders remain suppressed/reviewable. Provider-managed opt-out responses are not duplicated by this application; Twilio receives empty TwiML. See [Twilio Advanced Opt-Out](https://www.twilio.com/docs/messaging/tutorials/advanced-opt-out).
+The processor applies STOP/START by normalized sender phone and provider creation time, checking both provider history and the newest manual/legacy consent timestamp. Older deliveries cannot reverse newer consent, and ties favor STOP. A newer verified START removes only client opt-out suppressions (`provider_sms_stop` and `staff_sms_opt_out`) and updates consent only for a unique household; unrelated staff blocks, bounce and complaint exclusions remain. Unknown senders remain suppressed/reviewable. Provider-managed opt-out responses are not duplicated by this application; Twilio receives empty TwiML. See [Twilio Advanced Opt-Out](https://www.twilio.com/docs/messaging/tutorials/advanced-opt-out).
+
+Staff consent changes must use the authenticated RPC below. Direct `sms_consent` insert/update/delete privileges are revoked for browser and service roles, so the legacy `useUpdateConsent` direct-table hook must migrate before release.
+
+```text
+record_sms_consent(
+  p_actor_id, p_client_id, p_phone, p_opted_in,
+  p_method, p_details, p_expected_updated_at = null
+) -> sms_consent
+```
+
+Use the session actor, the household’s current phone, a method of `VERBAL`, `WRITTEN` or `WEB_FORM`, and 5–1000 characters of supporting detail. Pass the latest `updated_at` across that household’s consent rows for the normalized phone, or null only when no row exists. Stale writes fail with SQLSTATE `40001`. The server normalizes the phone, owns consent timestamps, and serializes changes with provider processing. It updates legacy formatting variants together. Shared numbers cannot receive a manual opt-in. A staff-recorded opt-out immediately suppresses pending dispatch; manual opt-in removes only `staff_sms_opt_out`, preserving provider STOP and unrelated exclusions. Consent audit attribution uses the authenticated actor.
 
 `sent`/`queued`/`sending` never imply delivery. `delivered` invokes the outbox delivery receipt RPC. Failed/undelivered events retain their receipt; bounced/complained email additionally suppresses the immutable intended recipient. A historical delivery receipt remains recorded, while `delivery_failure_kind` exposes subsequent bounce/complaint evidence. Complaint evidence cannot be downgraded to a bounce. The UI must display this failure indicator alongside historical delivery state.
 

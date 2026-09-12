@@ -57,7 +57,9 @@ select is((select state from public.communication_outbox where id=(select id fro
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+reset role;
 insert into public.sms_consent(client_id,phone_number,opted_in) values((select id from fixture_ids where kind='client'),'+13035550100',true);
+set local role authenticated;
 insert into fixture_ids select 'sms',id from public.enqueue_communication(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic SMS');
 reset role;
 set local role service_role;
