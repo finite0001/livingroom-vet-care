@@ -1,3 +1,4 @@
+import { Logo } from "@/components/Logo";
 import { practice } from "@/config/practice";
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -30,16 +31,7 @@ const Header = React.forwardRef<HTMLElement>((_, ref) => {
       <header ref={ref} className="fixed top-0 left-0 right-0 z-50 bg-cream-light/95 backdrop-blur-md border-b border-border">
         <div className="container flex items-center justify-between h-20">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex flex-col">
-            <span className="font-heading text-xl font-bold text-charcoal tracking-tight">
-              The Living Room Vet
-            </span>
-            <span className="text-xs text-muted-foreground font-serif italic">
-              Where Wellness Feels Like Home
-            </span>
-          </div>
-        </Link>
+        <Logo />
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-8" aria-label="Main navigation">
