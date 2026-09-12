@@ -3171,6 +3171,285 @@ export type Database = {
           },
         ]
       }
+      communication_attempts: {
+        Row: {
+          attempt_number: number
+          error_code: string | null
+          finished_at: string | null
+          id: string
+          lease_token: string
+          outbox_id: string
+          outcome: string | null
+          provider_message_id: string | null
+          started_at: string
+        }
+        Insert: {
+          attempt_number: number
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_token: string
+          outbox_id: string
+          outcome?: string | null
+          provider_message_id?: string | null
+          started_at?: string
+        }
+        Update: {
+          attempt_number?: number
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          lease_token?: string
+          outbox_id?: string
+          outcome?: string | null
+          provider_message_id?: string | null
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_attempts_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_delivery_events: {
+        Row: {
+          event_id: string
+          outbox_id: string
+          outcome: string
+          provider: string
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          outbox_id: string
+          outcome: string
+          provider: string
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          outbox_id?: string
+          outcome?: string
+          provider?: string
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_delivery_events_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_outbox: {
+        Row: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          attachment_ids?: string[]
+          attempt_count?: number
+          attempt_started_at?: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at?: string
+          created_by: string
+          delivered_at?: string | null
+          delivery_failure_kind?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          message_id: string
+          provider: string
+          provider_config?: Json | null
+          provider_message_id?: string | null
+          recipient: string
+          request_id: string
+          state?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          attachment_ids?: string[]
+          attempt_count?: number
+          attempt_started_at?: string | null
+          body?: string
+          channel?: string
+          client_id?: string
+          conversation_id?: string
+          created_at?: string
+          created_by?: string
+          delivered_at?: string | null
+          delivery_failure_kind?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          message_id?: string
+          provider?: string
+          provider_config?: Json | null
+          provider_message_id?: string | null
+          recipient?: string
+          request_id?: string
+          state?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_outbox_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_reconciliations: {
+        Row: {
+          created_at: string
+          evidence_reference: string
+          id: string
+          outbox_id: string
+          outcome: string
+          previous_state: string
+          provider_message_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          evidence_reference: string
+          id?: string
+          outbox_id: string
+          outcome: string
+          previous_state: string
+          provider_message_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          evidence_reference?: string
+          id?: string
+          outbox_id?: string
+          outcome?: string
+          previous_state?: string
+          provider_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_reconciliations_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_retry_audit: {
+        Row: {
+          created_at: string
+          id: string
+          outbox_id: string
+          previous_state: string
+          requested_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outbox_id: string
+          previous_state: string
+          requested_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outbox_id?: string
+          previous_state?: string
+          requested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_retry_audit_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "communication_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_suppressions: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          reason: string
+          recipient: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          reason: string
+          recipient: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          reason?: string
+          recipient?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -4178,6 +4457,279 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      claim_communication: {
+        Args: never
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      communication_is_suppressed: {
+        Args: { p_channel: string; p_client_id: string; p_recipient: string }
+        Returns: boolean
+      }
+      communication_recipient: {
+        Args: { p_channel: string; p_recipient: string }
+        Returns: string
+      }
+      communication_require_service: { Args: never; Returns: undefined }
+      enqueue_communication: {
+        Args: {
+          p_actor_id: string
+          p_attachment_ids?: string[]
+          p_body: string
+          p_channel: string
+          p_conversation_id: string
+          p_recipient: string
+          p_request_id: string
+          p_subject: string
+        }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      finish_communication_attempt: {
+        Args: {
+          p_error_code: string
+          p_id: string
+          p_lease_token: string
+          p_outcome: string
+          p_provider_message_id: string
+        }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reconcile_communication: {
+        Args: {
+          p_evidence_reference: string
+          p_id: string
+          p_outcome: string
+          p_provider_message_id: string
+        }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_communication_delivery: {
+        Args: {
+          p_event_id: string
+          p_outcome: string
+          p_provider: string
+          p_provider_message_id: string
+        }
+        Returns: undefined
+      }
+      release_communication_claim: {
+        Args: { p_error_code: string; p_id: string; p_lease_token: string }
+        Returns: undefined
+      }
+      retry_communication: {
+        Args: { p_actor_id: string; p_id: string }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_communication_attempt: {
+        Args: { p_id: string; p_lease_token: string; p_provider_config: Json }
+        Returns: {
+          accepted_at: string | null
+          attachment_ids: string[]
+          attempt_count: number
+          attempt_started_at: string | null
+          body: string
+          channel: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_failure_kind: string | null
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          message_id: string
+          provider: string
+          provider_config: Json | null
+          provider_message_id: string | null
+          recipient: string
+          request_id: string
+          state: string
+          subject: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communication_outbox"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      suppress_communication: {
+        Args: {
+          p_actor_id: string
+          p_channel: string
+          p_reason: string
+          p_recipient: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
