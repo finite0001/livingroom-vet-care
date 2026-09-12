@@ -36,7 +36,7 @@ Project: `livingroom-vet-care` / `mgadheotkdnrsatfivjy`, region `us-west-1`.
 
 - `npm run check`: lint (zero errors; one existing Fast Refresh warning), application/tooling TypeScript, 28 unit/handler assertions, production build all pass.
 - Isolated database: clean migration replay and 19 rollback-only pgTAP authorization assertions pass.
-- Browser coverage and final result are recorded in the accompanying pull request; fixtures mock backend/provider traffic and send no real messages.
+- `npm run test:e2e`: all four Chromium checks pass together (expired reset, contact workflow, authorization denial, and draft preservation during token refresh). Fixtures mock backend/provider traffic and send no real messages.
 - Deno checks pass for reviewed invitation and delivery functions. Handler tests use doubles; hosted provider round-trips are not yet verified.
 
 ## Open work and launch gates
