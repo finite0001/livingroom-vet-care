@@ -174,10 +174,7 @@ export function useMarkRead() {
   const actor = useActor();
   const refresh = useRefreshInbox();
   return useMutation({
-    // The string shape is retained only to fail closed during the detail-page cutover.
-    mutationFn: async (boundary: ReadBoundary | string) => {
-      if (typeof boundary === "string")
-        throw new Error("A rendered message boundary is required.");
+    mutationFn: async (boundary: ReadBoundary) => {
       const { error } = await supabase.rpc("mark_conversation_read", {
         p_actor_id: requireActor(actor),
         p_conversation_id: boundary.conversationId,

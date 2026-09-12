@@ -1,5 +1,5 @@
 import { useMessageQueue } from "@/hub/hooks/use-message-queue";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,8 @@ export default function ConversationDetailPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const queue = useMessageQueue(`conversation:${id}`);
-  const { data: messages, isLoading: msgsLoading } = useConversationMessages(id);
+  const messageQuery = useConversationMessages(id);
+  const { data: messages, isLoading: msgsLoading } = messageQuery;
   const { data: conversation, isLoading: convLoading } = useConversation(id);
   // Strict opt-in: SMS is blocked unless the client has an explicit opted_in=true
   // record, matching the server's send-sms gate. Gate on consentFetched so we stay
@@ -32,7 +33,8 @@ export default function ConversationDetailPage() {
   // composer would auto-switch off SMS before we know an opted-in client is fine.
   const { data: consent, isFetched: consentFetched } = useClientConsent(conversation?.client.id);
   const smsOptedOut = consentFetched && consent?.can_message !== true;
-  const { mutate: markRead } = useMarkRead();
+  const readMutation = useMarkRead();
+  const { mutate: markRead } = readMutation;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
   const sendingRef = useRef(false);
@@ -43,17 +45,51 @@ export default function ConversationDetailPage() {
   const conversationNotFound = !convLoading && !conversation;
   usePageTitle(conversation ? `Chat — ${conversation.client.full_name}` : "Chat");
 
+  const newestMessageId = messages?.[messages.length - 1]?.id;
+  const lastReadAttempt = useRef<string>();
+  const olderScroll = useRef<{ height: number; top: number } | null>(null);
+  const nearBottom = useRef(true);
   useEffect(() => {
-    if (id && conversation?.is_read === false) {
-      markRead(id);
-    }
-  }, [id, conversation?.is_read, markRead]);
-
+    lastReadAttempt.current = undefined;
+    nearBottom.current = true;
+    olderScroll.current = null;
+  }, [id]);
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const recordRenderedBoundary = () => {
+      if (document.visibilityState !== "visible" || !id || !newestMessageId || conversation?.is_read !== false) return;
+      const element = scrollRef.current;
+      if (!element || element.scrollHeight - element.scrollTop - element.clientHeight > 80) return;
+      const boundary = `${id}:${newestMessageId}`;
+      if (lastReadAttempt.current === boundary) return;
+      lastReadAttempt.current = boundary;
+      markRead({ conversationId: id, messageId: newestMessageId });
+    };
+    recordRenderedBoundary();
+    document.addEventListener("visibilitychange", recordRenderedBoundary);
+    const element = scrollRef.current;
+    element?.addEventListener("scroll", recordRenderedBoundary);
+    return () => {
+      document.removeEventListener("visibilitychange", recordRenderedBoundary);
+      element?.removeEventListener("scroll", recordRenderedBoundary);
+    };
+  }, [id, newestMessageId, conversation?.is_read, markRead]);
+  useLayoutEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+    if (olderScroll.current) {
+      element.scrollTop = olderScroll.current.top + element.scrollHeight - olderScroll.current.height;
+      olderScroll.current = null;
+    } else if (nearBottom.current) {
+      element.scrollTop = element.scrollHeight;
     }
-  }, [messages?.length]);
+  }, [messages?.length, newestMessageId, convLoading, msgsLoading]);
+  const loadOlder = async () => {
+    const element = scrollRef.current;
+    if (element) olderScroll.current = { height: element.scrollHeight, top: element.scrollTop };
+    const result = await messageQuery.fetchNextPage();
+    if (result.isError) olderScroll.current = null;
+    requestAnimationFrame(() => { olderScroll.current = null; });
+  };
 
   const goBack = () => {
     if (window.history.length > 2) navigate(-1);
@@ -103,7 +139,7 @@ export default function ConversationDetailPage() {
 
   if (conversationNotFound) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex min-h-0 flex-col h-full">
         <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card">
           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={goBack} aria-label="Go back">
             <ArrowLeft className="h-4 w-4" />
@@ -125,7 +161,7 @@ export default function ConversationDetailPage() {
     : "";
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 flex-col h-full">
       {/* Top bar */}
       <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card">
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={goBack} aria-label="Go back">
@@ -160,7 +196,13 @@ export default function ConversationDetailPage() {
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background">
+      <div role="region" aria-label="Conversation messages" ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-background" onScroll={() => {
+        const element = scrollRef.current;
+        if (element) nearBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
+      }}>
+        {messageQuery.hasNextPage && <div className="p-2 text-center"><Button variant="outline" size="sm" disabled={messageQuery.isFetchingNextPage} onClick={() => void loadOlder()}>{messageQuery.isFetchingNextPage ? "Loading older messages…" : "Load older messages"}</Button></div>}
+        {messageQuery.isError && <p role="alert" className="p-3 text-sm text-destructive">Messages could not be loaded. <button className="underline" onClick={() => void messageQuery.refetch()}>Retry</button></p>}
+        {readMutation.isError && id && newestMessageId && <p role="alert" className="p-3 text-sm text-muted-foreground">Your read status could not be saved. <button className="underline" onClick={() => markRead({ conversationId: id, messageId: newestMessageId })}>Retry read receipt</button></p>}
         {msgsLoading || convLoading ? (
           <div className="space-y-3 p-4">
             {[...Array(5)].map((_, i) => (
