@@ -11,7 +11,7 @@ export function AppShell() {
   const isConversation = /^\/hub\/conversation\/[^/]+$/.test(location.pathname);
 
   return (
-    <div className={`flex bg-background ${isConversation ? "h-dvh overflow-hidden" : "min-h-screen"}`}>
+    <div className="flex h-dvh overflow-hidden bg-background">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium">
         Skip to main content
       </a>
@@ -21,7 +21,7 @@ export function AppShell() {
         <main
           id="main-content"
           key={location.pathname}
-          className={`mx-auto min-w-0 w-full max-w-screen-xl flex-1 animate-fade-in ${isConversation ? "min-h-0 overflow-hidden" : ""} ${navHidden ? "pb-0" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}`}
+          className={`mx-auto min-w-0 w-full max-w-screen-xl flex-1 animate-fade-in ${isConversation ? "min-h-0 overflow-hidden" : "min-h-0 overflow-y-auto"} ${navHidden ? "pb-0" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}`}
         >
           <ErrorBoundary>
             <Outlet />
