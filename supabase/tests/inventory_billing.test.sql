@@ -20,6 +20,7 @@ select throws_ok($$select public.adjust_inventory(gen_random_uuid(),'35000000-00
 select lives_ok($$select public.create_billing_invoice('35000000-0000-4000-8000-000000000003',(select id from fx where k='client'))$$,'Create draft invoice');
 select throws_ok($$select public.issue_billing_invoice('35000000-0000-4000-8000-000000000003',1)$$,'23514',null,'Empty invoice cannot issue');
 insert into requests values('live',jsonb_build_object('pet_id',(select id from fx where k='pet'),'lot_id','35000000-0000-4000-8000-000000000002','invoice_id','35000000-0000-4000-8000-000000000003','quantity',1,'dose','1 mL','route','SC','site','right rear leg','veterinarian','Dr Test','veterinarian_license','TEST-ONLY','administered_at',now(),'next_due_on',current_date+365));
+update requests set v=v||jsonb_build_object('alert_review',jsonb_build_object('source_hash',read_patient_treatment_alerts((v->>'pet_id')::uuid)->>'source_hash','acknowledged',true)) where k='live';
 select lives_ok($$select public.record_patient_treatment('35000000-0000-4000-8000-000000000004',(select v from requests where k='live'))$$,'Atomic administration');
 select lives_ok($$select public.record_patient_treatment('35000000-0000-4000-8000-000000000004',(select v from requests where k='live'))$$,'Administration retry idempotent');
 select is((select sum(quantity) from public.inventory_movements),9::numeric,'Exactly one dose removed');

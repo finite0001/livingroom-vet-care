@@ -1,3 +1,5 @@
+import { alertAcknowledgmentMatches } from "../clinical/alert-review-policy";
+import { usePatientAlertReview } from "../clinical/alert-review";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { denverInstant } from "../scheduling/time";
@@ -50,7 +52,10 @@ function CorrectionForm({ record }: { record: Tables<"patient_treatments"> }) {
           The original remains in history. This does not return stock or credit
           an invoice.
         </p>
-        <fieldset disabled={state.locked} className="grid min-w-0 gap-2 md:grid-cols-2">
+        <fieldset
+          disabled={state.locked}
+          className="grid min-w-0 gap-2 md:grid-cols-2"
+        >
           <StockField label="Correction reason">
             <Input name="reason" required maxLength={2000} />
           </StockField>
@@ -76,39 +81,21 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
   const [page, setPage] = useState(0);
   const [validation, setValidation] = useState("");
   const state = useStockMutation(`treatment:${petId}`);
-  const alerts = useQuery({
-    queryKey: ["treatments", "alerts", petId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("patient_problems")
-        .select("id,title,notes,status")
-        .eq("pet_id", petId)
-        .eq("importance", "high");
-      if (error) throw error;
-      return data;
-    },
-  });
-  const legacy = useQuery({
-    queryKey: ["patient", petId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pets")
-        .select("*")
-        .eq("id", petId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
+  const alerts = usePatientAlertReview(petId);
+  const [acknowledgedHash, setAcknowledgedHash] = useState<string | null>(null);
   const hasAlerts = Boolean(
-    alerts.data?.length || legacy.data?.allergies?.trim(),
+    alerts.data?.snapshot.important_problems.length ||
+    alerts.data?.snapshot.legacy_allergies.text?.trim(),
   );
   const alertsUnavailable =
     alerts.isPending ||
+    alerts.isFetching ||
     Boolean(alerts.error) ||
-    legacy.isPending ||
-    Boolean(legacy.error) ||
-    !legacy.data;
+    !alerts.data;
+  const acknowledged = alertAcknowledgmentMatches(
+    alerts.data,
+    acknowledgedHash,
+  );
   const stock = useQuery({
     queryKey: ["inventory", "treatment-lots", lotSearch],
     queryFn: () => lots(lotSearch),
@@ -168,13 +155,16 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
     setValidation("");
     if (state.uncertain) {
       const form = e.currentTarget;
-      if (await state.retry()) form.reset();
+      if (await state.retry()) {
+        form.reset();
+        setAcknowledgedHash(null);
+      }
       return;
     }
     const form = e.currentTarget;
     const v = new FormData(form);
     try {
-      if (!historical && alertsUnavailable)
+      if (!historical && (alertsUnavailable || !acknowledged))
         throw new Error(
           "Review the patient's important alerts before recording treatment. Reload if alerts could not load.",
         );
@@ -201,6 +191,10 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
               source: String(v.get("source")),
             }
           : {
+              alert_review: {
+                source_hash: alerts.data!.source_hash,
+                acknowledged: true,
+              },
               lot_id: String(v.get("lot_id")),
               invoice_id: String(v.get("invoice_id")),
             }),
@@ -210,8 +204,13 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
           p_id: crypto.randomUUID(),
           p_request: request,
         })
-      )
+      ) {
         form.reset();
+        setAcknowledgedHash(null);
+      } else if (!historical) {
+        setAcknowledgedHash(null);
+        void alerts.refetch();
+      }
     } catch (error) {
       setValidation(errorMessage(error));
     }
@@ -224,27 +223,45 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {alerts.isPending && <p role="status">Loading important alerts…</p>}
+          {!alerts.error && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={alerts.isFetching}
+              onClick={() => void alerts.refetch()}
+            >
+              Refresh patient alerts
+            </Button>
+          )}
           {alerts.error && (
-            <p role="alert" className="text-clinical-alert">
-              Important alerts could not load: {errorMessage(alerts.error)}
-            </p>
+            <div role="alert" className="text-clinical-alert">
+              <p>
+                Important alerts could not load: {errorMessage(alerts.error)}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void alerts.refetch()}
+              >
+                Reload patient alerts
+              </Button>
+            </div>
           )}
-          {legacy.error && (
-            <p role="alert" className="text-clinical-alert">
-              Existing allergy information could not load:{" "}
-              {errorMessage(legacy.error)}
-            </p>
-          )}
-          {legacy.data?.allergies?.trim() && (
+          {alerts.data?.snapshot.legacy_allergies.text?.trim() && (
             <div
               role="alert"
               className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
             >
               <h3 className="font-semibold">Existing allergy information</h3>
-              <p className="text-sm">{legacy.data.allergies}</p>
+              <p className="text-sm">
+                {alerts.data?.snapshot.legacy_allergies.text}
+              </p>
+              <p className="text-sm">
+                {alerts.data?.snapshot.legacy_allergies.provenance}
+              </p>
             </div>
           )}
-          {!!alerts.data?.length && (
+          {!!alerts.data?.snapshot.important_problems.length && (
             <div
               role="alert"
               className="rounded-md border border-destructive bg-destructive/10 p-3"
@@ -252,7 +269,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
               <h3 className="font-semibold text-clinical-alert">
                 Important patient alerts
               </h3>
-              {alerts.data.map((a) => (
+              {alerts.data!.snapshot.important_problems.map((a) => (
                 <p key={a.id} className="text-sm text-clinical-alert">
                   <strong>
                     {a.title}
@@ -393,10 +410,22 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
               <StockField label="Next due date (clinician chosen, optional)">
                 <Input name="due" type="date" />
               </StockField>
-              {!historical && hasAlerts && (
+              {!historical && (
                 <label className="flex items-center gap-2 text-sm md:col-span-2">
-                  <input type="checkbox" required />I reviewed the important
-                  patient alerts before recording this treatment.
+                  <input
+                    type="checkbox"
+                    required
+                    checked={acknowledged}
+                    disabled={alertsUnavailable}
+                    onChange={(event) =>
+                      setAcknowledgedHash(
+                        event.target.checked ? alerts.data!.source_hash : null,
+                      )
+                    }
+                  />
+                  {hasAlerts
+                    ? "I reviewed the important patient history and recorded allergy information before recording this treatment."
+                    : "I reviewed the current patient alert summary. No important problems or allergy text are recorded; this does not establish absence of allergies."}
                 </label>
               )}
             </fieldset>

@@ -1,3 +1,4 @@
+import { patientProblemsKey } from "../clinical/alert-review";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -80,7 +81,7 @@ export function PatientFormDialog({ clientId, patient }: PatientFormDialogProps)
       });
       if (saveError) { if (saveError.code === "40001") setConflict(true); throw saveError; }
       if (!data) throw new Error("Patient could not be saved. Reload before retrying.");
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ["client", clientId] }), queryClient.invalidateQueries({ queryKey: ["clients"] }), queryClient.invalidateQueries({ queryKey: ["patient", data.id] })]);
+      await Promise.all([queryClient.invalidateQueries({ queryKey: ["client", clientId] }), queryClient.invalidateQueries({ queryKey: ["clients"] }), queryClient.invalidateQueries({ queryKey: ["patient", data.id] }), queryClient.invalidateQueries({ queryKey: patientProblemsKey(data.id) })]);
       setOpen(false); toast.success("Patient details saved");
       if (!patient) navigate(`/hub/patient/${data.id}`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : typeof cause === "object" && cause && "message" in cause ? String(cause.message) : "Patient could not be saved. Your entries are still here."); }

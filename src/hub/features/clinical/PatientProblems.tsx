@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { patientProblemsKey } from './alert-review';
 import { usePatientProblems } from './queries';
 import { errorText } from './editor-state';
 
@@ -44,7 +45,7 @@ export function PatientProblems({ petId, disabled, onDirtyChange }: PatientProbl
       if (error) throw error;
       if (!data) throw new Error('No saved problem was returned. Reload before retrying.');
       const next = toDraft(data); setRecord(data); setDraft(next); setBaseline(JSON.stringify(next)); setMessage('Problem saved.');
-      void cache.invalidateQueries({ queryKey: ['patient-problems', petId] });
+      void cache.invalidateQueries({ queryKey: patientProblemsKey(petId) });
     } catch (error) { setError(errorText(error)); }
     finally { busyRef.current = false; setBusy(false); }
   };

@@ -1,3 +1,4 @@
+import { usePatientAlertReview } from "../clinical/alert-review";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -237,19 +238,7 @@ function AppointmentEditor({ appointment, initialDay, close }: EditorProps) {
       };
     },
   });
-  const alerts = useQuery({
-    queryKey: ["booking-alerts", petId],
-    enabled: Boolean(petId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("patient_problems")
-        .select("id,title,status")
-        .eq("pet_id", petId)
-        .eq("importance", "high");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const alerts = usePatientAlertReview(petId);
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (lock.current || !session?.user.id) return;
@@ -378,24 +367,16 @@ function AppointmentEditor({ appointment, initialDay, close }: EditorProps) {
                   </select>
                 </div>
               </div>
-              {petId &&
-                lookups.data.pets
-                  .find((pet) => pet.id === petId)
-                  ?.allergies?.trim() && (
-                  <div
-                    role="note"
-                    aria-label="Recorded patient allergies"
-                    className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
-                  >
-                    <p className="font-semibold">Recorded patient allergies</p>
-                    <p>
-                      {
-                        lookups.data.pets.find((pet) => pet.id === petId)
-                          ?.allergies
-                      }
-                    </p>
-                  </div>
-                )}
+              {petId && alerts.data?.snapshot.legacy_allergies.text?.trim() && (
+                <div
+                  role="note"
+                  aria-label="Recorded patient allergies"
+                  className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
+                >
+                  <p className="font-semibold">Recorded patient allergies</p>
+                  <p>{alerts.data?.snapshot.legacy_allergies.text}</p>
+                </div>
+              )}
               {petId &&
                 (alerts.isPending ? (
                   <p role="status">Loading patient alerts…</p>
@@ -407,13 +388,13 @@ function AppointmentEditor({ appointment, initialDay, close }: EditorProps) {
                     </Button>
                   </div>
                 ) : (
-                  Boolean(alerts.data?.length) && (
+                  Boolean(alerts.data?.snapshot.important_problems.length) && (
                     <div
                       role="note"
                       className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
                     >
                       <p className="font-semibold">Important patient history</p>
-                      {alerts.data?.map((alert) => (
+                      {alerts.data?.snapshot.important_problems.map((alert) => (
                         <p key={alert.id}>
                           {alert.title}
                           {alert.status === "resolved" ? " (resolved)" : ""}

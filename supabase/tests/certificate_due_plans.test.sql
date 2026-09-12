@@ -19,6 +19,7 @@ insert into fx select 'product',id from public.save_catalog_product(null,null,'T
 select public.receive_inventory('49000000-0000-4000-8000-000000000001','49000000-0000-4000-8000-000000000002',(select id from fx where k='product'),'TEST-LOT',current_date+365,'Clinic',10,'Synthetic test stock');
 select public.create_billing_invoice('49000000-0000-4000-8000-000000000003',(select id from fx where k='client'));
 insert into requests values('live',jsonb_build_object('pet_id',(select id from fx where k='pet'),'lot_id','49000000-0000-4000-8000-000000000002','invoice_id','49000000-0000-4000-8000-000000000003','quantity',1,'dose','1 mL','route','SC','site','right rear leg','veterinarian','Dr Test','veterinarian_license','TEST-ONLY','administered_at',now(),'next_due_on',current_date+365));
+update requests set v=v||jsonb_build_object('alert_review',jsonb_build_object('source_hash',read_patient_treatment_alerts((v->>'pet_id')::uuid)->>'source_hash','acknowledged',true)) where k='live';
 select public.record_patient_treatment('49000000-0000-4000-8000-000000000004',(select v from requests where k='live'));
 insert into requests values('details','{"administrator":"Test technician","rabies_tag_number":"TEST-TAG","usda_duration":"1 year","vaccine_type":"Killed virus","size_description":"20–50 lb","initial_or_booster":"initial","owner_business_phone_unavailable":true,"supervision_attested":true}');
 
