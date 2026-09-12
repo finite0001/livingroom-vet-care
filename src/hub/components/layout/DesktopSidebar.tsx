@@ -4,18 +4,12 @@ import {
   Home,
   MessageSquare,
   Users,
-  Phone,
   Settings,
   ClipboardList,
-  AudioWaveform,
   FileText,
-  Megaphone,
-  AlertTriangle,
-  BarChart3,
   Pill,
   Stethoscope,
   LayoutDashboard,
-  Upload,
   ChevronDown,
   LogOut,
   Clock,
@@ -25,7 +19,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
-import { useUnreadVoicemailCount } from "@/hub/hooks/use-telephony";
 
 const workspaceItems = [
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
@@ -35,18 +28,17 @@ const workspaceItems = [
   { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
   { path: "/hub/clients", label: "Clients", icon: Users },
-  { path: "/hub/call", label: "Phone", icon: Phone },
-  { path: "/hub/voicemails", label: "Voicemails", icon: AudioWaveform },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
 ];
 
 const toolItems = [
-  { path: "/hub/tools/care-reminders", label: "Care reminders", icon: CalendarDays },
+  {
+    path: "/hub/tools/care-reminders",
+    label: "Care reminders",
+    icon: CalendarDays,
+  },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText },
-  { path: "/hub/tools/campaigns", label: "Campaigns", icon: Megaphone },
-  { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },
-  { path: "/hub/tools/alerts", label: "Alerts", icon: AlertTriangle },
   { path: "/hub/tools/refills", label: "Refills", icon: Pill },
 ];
 
@@ -54,7 +46,6 @@ const adminItems = [
   { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
   { path: "/hub/admin", label: "Dashboard", icon: LayoutDashboard },
   { path: "/hub/admin/staff", label: "Staff", icon: Users },
-  { path: "/hub/admin/import", label: "Import", icon: Upload },
 ];
 
 export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
@@ -62,8 +53,11 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const navigate = useNavigate();
   const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
-  const { data: unreadCount, isError: unreadError } = useUnreadCount();
-  const { data: voicemailUnread } = useUnreadVoicemailCount();
+  const {
+    data: unreadCount,
+    isError: unreadError,
+    isPending: unreadPending,
+  } = useUnreadCount();
 
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
@@ -88,7 +82,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
         aria-current={active ? "page" : undefined}
         aria-label={
           item.path === "/hub/chats"
-            ? `Inbox, ${unreadError ? "unread count unavailable" : `${unreadCount ?? 0} unread for you`}`
+            ? `Inbox, ${unreadError ? "unread count unavailable" : unreadPending ? "loading unread count" : `${unreadCount} unread for you`}`
             : undefined
         }
         className={cn(
@@ -145,8 +139,6 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
               {workspaceItems.map((item) => {
                 if (item.path === "/hub/chats")
                   return renderItem({ ...item, badge: unreadCount });
-                if (item.path === "/hub/voicemails")
-                  return renderItem({ ...item, badge: voicemailUnread });
                 return renderItem(item);
               })}
             </div>

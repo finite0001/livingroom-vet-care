@@ -27,6 +27,7 @@ import { AppShell } from "@/hub/components/layout/AppShell";
 
 const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
+const UnavailableToolPage = lazy(() => import("@/hub/pages/UnavailableToolPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
 const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const WebsiteInquiriesPage = lazy(() => import("@/hub/features/inquiries/WebsiteInquiriesPage"));
@@ -45,15 +46,9 @@ const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
 const TimeClockPage = lazy(() => import("@/hub/pages/TimeClockPage"));
 const TemplatesPage = lazy(() => import("@/hub/pages/TemplatesPage"));
 const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
-const CampaignsPage = lazy(() => import("@/hub/pages/CampaignsPage"));
-const CallPage = lazy(() => import("@/hub/pages/CallPage"));
-const VoicemailsPage = lazy(() => import("@/hub/pages/VoicemailsPage"));
 const TicketsPage = lazy(() => import("@/hub/pages/TicketsPage"));
 const TicketDetailPage = lazy(() => import("@/hub/pages/TicketDetailPage"));
 const RefillsPage = lazy(() => import("@/hub/pages/RefillsPage"));
-const SurveysPage = lazy(() => import("@/hub/pages/SurveysPage"));
-const AlertsPage = lazy(() => import("@/hub/pages/AlertsPage"));
-const ImportPage = lazy(() => import("@/hub/pages/ImportPage"));
 
 function HubLoader() {
   return (
@@ -101,16 +96,16 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/patient/:id" element={<PatientPage />} />
                   <Route path="/hub/tickets" element={<TicketsPage />} />
                   <Route path="/hub/ticket/:id" element={<TicketDetailPage />} />
-                  <Route path="/hub/call" element={<CallPage />} />
-                  <Route path="/hub/voicemails" element={<VoicemailsPage />} />
+                  <Route path="/hub/call" element={<UnavailableToolPage />} />
+                  <Route path="/hub/voicemails" element={<UnavailableToolPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />
                   <Route path="/hub/tools/care-reminders" element={<CareRemindersPage />} />
                   <Route path="/hub/tools/templates" element={<TemplatesPage />} />
-                  <Route path="/hub/tools/campaigns" element={<CampaignsPage />} />
-                  <Route path="/hub/tools/surveys" element={<SurveysPage />} />
-                  <Route path="/hub/tools/alerts" element={<AlertsPage />} />
+                  <Route path="/hub/tools/campaigns" element={<UnavailableToolPage />} />
+                  <Route path="/hub/tools/surveys" element={<UnavailableToolPage />} />
+                  <Route path="/hub/tools/alerts" element={<UnavailableToolPage />} />
                   <Route path="/hub/tools/refills" element={<RefillsPage />} />
                 </Route>
               </Route>
@@ -120,7 +115,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route element={<AppShell />}>
                   <Route path="/hub/tools/ezyvet" element={<EzyVetImportPage />} />
                   <Route path="/hub/admin" element={<AdminDashboardPage />} />
-                  <Route path="/hub/admin/import" element={<ImportPage />} />
+                  <Route path="/hub/admin/import" element={<UnavailableToolPage />} />
                   <Route path="/hub/admin/staff" element={<AdminStaffPage />} />
                 </Route>
               </Route>

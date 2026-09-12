@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageTimeline } from "@/hub/components/conversations/MessageTimeline";
 import { ReplyComposer } from "@/hub/components/conversations/ReplyComposer";
-import { SmartReplySuggestions } from "@/hub/components/conversations/SmartReplySuggestions";
 import { BrandAvatar } from "@/hub/components/conversations/BrandAvatar";
 import {
   useConversationMessages,
@@ -45,9 +44,6 @@ function ConversationDetailContent() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
   const sendingRef = useRef(false);
-  // AI smart-reply suggestions populate the composer for staff review rather than
-  // sending immediately — a one-tap auto-send of AI text to a client is too risky.
-  const [draft, setDraft] = useState<string | undefined>(undefined);
 
   const conversationNotFound = !convLoading && !conversation;
   usePageTitle(
@@ -374,14 +370,6 @@ function ConversationDetailContent() {
         )}
       </div>
 
-      {/* Smart replies */}
-      {id && messages && messages.length > 0 && (
-        <SmartReplySuggestions
-          conversationId={id}
-          onSelect={(text) => setDraft(text)}
-        />
-      )}
-
       {/* Composer */}
       {conversation && (
         <ReplyComposer
@@ -397,8 +385,6 @@ function ConversationDetailContent() {
             conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"
           }
           smsOptedOut={smsOptedOut}
-          draft={draft}
-          onDraftConsumed={() => setDraft(undefined)}
           disabled={isSending}
         />
       )}

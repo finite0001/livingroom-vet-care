@@ -3,19 +3,14 @@ import {
   CalendarDays,
   Home,
   MessageSquare,
-  Phone,
   ClipboardList,
   MoreHorizontal,
   Users,
   FileText,
-  Megaphone,
-  BarChart3,
-  AlertTriangle,
   Pill,
   Stethoscope,
   Settings,
   LayoutDashboard,
-  Upload,
   X,
   Clock,
   History,
@@ -35,20 +30,21 @@ const tabs = [
   { path: "/hub", label: "Home", icon: Home, exact: true },
   { path: "/hub/chats", label: "Comm", icon: MessageSquare },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
-  { path: "/hub/call", label: "Call", icon: Phone },
+  { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
 ];
 
 const moreItems = [
-  { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
+  { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList },
   { path: "/hub/inventory", label: "Inventory", icon: Pill },
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
-  { path: "/hub/tools/care-reminders", label: "Care reminders", icon: CalendarDays },
+  {
+    path: "/hub/tools/care-reminders",
+    label: "Care reminders",
+    icon: CalendarDays,
+  },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText },
-  { path: "/hub/tools/campaigns", label: "Campaigns", icon: Megaphone },
-  { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },
-  { path: "/hub/tools/alerts", label: "Alerts", icon: AlertTriangle },
   { path: "/hub/tools/refills", label: "Refills", icon: Pill },
   { path: "/hub/settings", label: "Settings", icon: Settings },
 ];
@@ -56,7 +52,6 @@ const moreItems = [
 const adminMoreItems = [
   { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
   { path: "/hub/admin", label: "Admin Dashboard", icon: LayoutDashboard },
-  { path: "/hub/admin/import", label: "Import Clients", icon: Upload },
 ];
 
 export function BottomTabBar() {
@@ -65,7 +60,11 @@ export function BottomTabBar() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const [moreOpen, setMoreOpen] = useState(false);
-  const { data: unreadCount, isError: unreadError } = useUnreadCount();
+  const {
+    data: unreadCount,
+    isError: unreadError,
+    isPending: unreadPending,
+  } = useUnreadCount();
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
@@ -91,7 +90,7 @@ export function BottomTabBar() {
               onClick={() => navigate(tab.path)}
               aria-label={
                 tab.path === "/hub/chats"
-                  ? `Inbox, ${unreadError ? "unread count unavailable" : `${unreadCount ?? 0} unread for you`}`
+                  ? `Inbox, ${unreadError ? "unread count unavailable" : unreadPending ? "loading unread count" : `${unreadCount} unread for you`}`
                   : tab.label
               }
               aria-current={active ? "page" : undefined}
