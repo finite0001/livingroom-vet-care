@@ -36,6 +36,10 @@ npx playwright test
 
 The new dedicated Supabase project is `mgadheotkdnrsatfivjy`; the original Lovable backend remains unchanged. Connection cutover, data migration, provider credentials and public deployment require the commissioning steps below.
 
+## Clinical core increment
+
+The patient workspace adds identity details, weight history, SOAP drafts/signing/addenda and important historical problems. Household contacts and addresses can be edited, with server search and duplicate review. See [clinical workflow and deployment gates](docs/clinical-core.md). Apply the clinical migration to the active backend before frontend rollout; the original Lovable connection has not been switched.
+
 ## Working documents
 
 - [Implementation plan and feature audit](plans/2026-09-12-practice-platform/plan.md)

@@ -9,6 +9,8 @@
 - Local validation stack: `/private/tmp/livingroom-vet-foundation`, database port 56322, API port 56321. Disposable synthetic data only; never use its development keys in cloud environments.
 - Vercel team is available; project deployment has not yet been commissioned. `vercel.json` provides npm build and SPA rewrites.
 
+The subsequent [clinical-core increment](clinical-core.md) adds migration `20260912210000` to the dedicated project (16 total). Its new frontend requires this migration on the active application backend before rollout.
+
 ## Local verification
 
 Use `npm ci`, then `npm run check`. Browser tests: `npx playwright install chromium`, then `npx playwright test`. Tests set synthetic environment values and mock network traffic; do not reuse a running dev server pointed at real data.

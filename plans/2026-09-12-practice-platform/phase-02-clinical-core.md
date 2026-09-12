@@ -1,6 +1,6 @@
 # Phase 2 — clients, patients and clinical records
 
-Priority: P0 for housecalls. Status: planned. Depends on: phase 1. Context: [architecture](architecture.md).
+Priority: P0 for housecalls. Status: in progress; first clinical-core increment implemented. Depends on: phase 1. Context: [architecture](architecture.md).
 
 ## Requirements and design
 
@@ -27,3 +27,7 @@ Support households with multiple pets, multiple contacts and distinct mailing/ho
 Create two patients in one household, save/reload every requested field, record weight in different units, sign SOAP, add a correction and reopen history. Important reaction remains visible with keyboard/screen-reader support and on mobile. A second staff edit cannot overwrite newer content unnoticed. A document from a different practice/patient cannot be attached to the current encounter. Archiving preserves history. Veterinarian accepts note structure and alerts before pilot.
 
 Next: vaccination/inventory domain and patient-linked communications. Offline clinical sync is not assumed; if mandatory for housecalls, rescope before October commitment.
+
+## Delivered increment — 2026-09-12
+
+See [clinical-core implementation and deployment gates](../../docs/clinical-core.md). Household addresses/edit/search, patient fields/age/weights, versioned SOAP/sign/addenda and important-history alerts are implemented and tested. The broader checklist above remains open where it includes multiple contacts/ownership, merge tooling, documents, QOL/consents and alerts in future modules. SOAP uses explicit save with visible status and navigation protection; autosave has not been implemented.
