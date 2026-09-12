@@ -47,6 +47,7 @@ export function PatientRecordReleases({
   const { user, profile } = useAuth();
   const cache = useQueryClient();
   const [selection, setSelection] = useState<ReleaseSelection>({});
+  const [allSelectionNotice, setAllSelectionNotice] = useState("");
   const [channel, setChannel] = useState<"EMAIL" | "SMS">("EMAIL");
   const [sourcePage, setSourcePage] = useState(0);
   const [historyPage, setHistoryPage] = useState(0);
@@ -150,6 +151,7 @@ export function PatientRecordReleases({
   const edit = () => {
     if (pending) return;
     setPreview(null);
+    setAllSelectionNotice("");
     setReviewed(false);
     previewArgsRef.current = null;
   };
@@ -181,6 +183,23 @@ export function PatientRecordReleases({
       setError((e as Error).message);
     }
   };
+  const selectAllEligible = () =>
+    run(async () => {
+      const { data, error } = await releases.rpc(
+        "select_all_record_release_sources",
+        { p_pet_id: petId },
+      );
+      if (error) throw error;
+      if (!data)
+        throw new Error(
+          "No all-record selection returned; selections were not changed.",
+        );
+      edit();
+      setSelection(data.selection);
+      setAllSelectionNotice(
+        `${data.scope} Excluded unavailable originals: ${data.excluded_unavailable_originals}. Resulted labs without a shareable original: ${data.excluded_labs_without_shareable_original}.`,
+      );
+    });
   const loadPreview = () =>
     run(async () => {
       if (!candidates.data || !recipient)
@@ -452,13 +471,29 @@ export function PatientRecordReleases({
               {!candidates.data.policy_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
-                  acceptance of release form version 2 by the practice operator.
+                  acceptance of release form version 3 by the practice operator.
                 </p>
               )}
               <fieldset
                 disabled={busy || !!preview || !!pending}
                 className="space-y-4"
               >
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void selectAllEligible()}
+                >
+                  Select all eligible records across every page
+                </Button>
+                {allSelectionNotice && (
+                  <p role="status" className="text-sm">
+                    {allSelectionNotice}
+                  </p>
+                )}
+                <p className="text-sm">
+                  Review all selected clinical notes and provenance for
+                  disclosure. No automatic redaction is performed.
+                </p>
                 {kinds.map((kind) => (
                   <div key={kind} className="space-y-2 rounded-md border p-3">
                     <h5 className="font-medium">
@@ -469,17 +504,17 @@ export function PatientRecordReleases({
                       type="button"
                       size="sm"
                       variant="outline"
-                      disabled={!candidates.data![kind].length}
+                      disabled={!(candidates.data![kind] || []).length}
                       onClick={() => selectShown(kind)}
                     >
                       Select all shown: {sourceLabels[kind]}
                     </Button>
-                    {candidates.data![kind].length === 0 ? (
+                    {(candidates.data![kind] || []).length === 0 ? (
                       <p className="text-sm text-muted-foreground">
                         No eligible records on this source page.
                       </p>
                     ) : (
-                      candidates.data![kind].map((item) => (
+                      (candidates.data![kind] || []).map((item) => (
                         <div key={item.id} className="space-y-1">
                           <label className="flex items-start gap-2">
                             <input
@@ -491,9 +526,20 @@ export function PatientRecordReleases({
                                 setChosen(kind, item.id, e.target.checked)
                               }
                             />
-                            <span>
+                            <span
+                              className={
+                                item.importance === "high"
+                                  ? "text-clinical-alert"
+                                  : undefined
+                              }
+                            >
                               {item.label} ·{" "}
-                              {denverLocal(item.recorded_at).replace("T", " ")}{" "}
+                              {/^\d{4}-\d{2}-\d{2}$/.test(item.recorded_at)
+                                ? item.recorded_at
+                                : denverLocal(item.recorded_at).replace(
+                                    "T",
+                                    " ",
+                                  )}{" "}
                               America/Denver · Version {item.version}
                             </span>
                           </label>
@@ -540,7 +586,9 @@ export function PatientRecordReleases({
                     busy ||
                     !!preview ||
                     !!pending ||
-                    !kinds.some((k) => candidates.data![k].length === 100)
+                    !kinds.some(
+                      (k) => (candidates.data![k] || []).length === 100,
+                    )
                   }
                   onClick={() => setSourcePage((v) => v + 1)}
                 >

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { chartArtifact } from "../tests/record-releases/charts-fixture";
+import { historyArtifact as chartArtifact } from "../tests/record-releases/history-fixture";
 import {
   sourceLabels,
   type SourceKind,
@@ -11,6 +11,10 @@ const petId = "22222222-2222-4222-8222-222222222222",
   staffId = "11111111-1111-4111-8111-111111111111",
   clientId = "33333333-3333-4333-8333-333333333333";
 const groups = {
+  problem_ids: "problems",
+  patient_summary_ids: "patient_summaries",
+  weight_ids: "weights",
+  treatment_ids: "treatments",
   encounter_ids: "encounters",
   certificate_ids: "certificates",
   lab_order_ids: "lab_results",
@@ -55,6 +59,8 @@ async function fixture(page: Page, accepted = true) {
     malformedSources: false,
     rows: [] as ReleaseBundle[],
     requests: [] as ReleaseConfirmArgs[],
+    oversized: false,
+    allCalls: 0,
     ambiguous: false,
     stale: false,
   };
@@ -128,6 +134,31 @@ async function fixture(page: Page, accepted = true) {
           }),
         );
       return route.fulfill({ json: candidates });
+    }
+    if (path === "/rest/v1/rpc/select_all_record_release_sources") {
+      state.allCalls++;
+      if (state.oversized)
+        return route.fulfill({
+          status: 400,
+          json: {
+            code: "23514",
+            message:
+              "More than 100 records in weight_ids. Split this patient history into explicitly reviewed packages; no partial all-record selection was returned",
+          },
+        });
+      return route.fulfill({
+        json: {
+          selection: Object.fromEntries(
+            Object.entries(groups).map(([key, array]) => [
+              key,
+              (chartArtifact.preview.snapshot[array] || []).map((x) => x.id),
+            ]),
+          ),
+          excluded_unavailable_originals: 0,
+          excluded_labs_without_shareable_original: 0,
+          scope: "All eligible records across every page; fixed selection.",
+        },
+      });
     }
     if (path === "/rest/v1/record_releases")
       return route.fulfill({ json: state.rows.map((v) => v.release) });
@@ -406,4 +437,90 @@ test("malformed release sources show a local retry error without crashing the pa
     .getByRole("button", { name: "Retry release data", exact: true })
     .click();
   await expect(page.getByLabel("Household delivery contact")).toBeVisible();
+});
+
+test("all-eligible selection is server-collected and the locked review includes clinical histories", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await panel
+    .getByRole("button", {
+      name: "Select all eligible records across every page",
+      exact: true,
+    })
+    .click();
+  expect(state.allCalls).toBe(1);
+  await expect(
+    panel.getByText(
+      "All eligible records across every page; fixed selection.",
+      { exact: false },
+    ),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  const frame = panel.frameLocator("iframe");
+  await expect(
+    frame
+      .getByRole("heading", {
+        name: "IMPORTANT — Vaccine reaction",
+        exact: true,
+      })
+      .first(),
+  ).toBeVisible();
+  await expect(
+    frame.getByText("Penicillin reaction", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    frame.getByText("External record provenance", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    frame.getByRole("heading", { name: "2026-09-01 · 12.3 kg" }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("button", {
+      name: "Select all eligible records across every page",
+    }),
+  ).toBeDisabled();
+});
+test("oversized all-record request preserves prior explicit selection and requires splitting", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  state.oversized = true;
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await panel
+    .getByRole("button", {
+      name: "Select all shown: Problem and diagnosis history",
+      exact: true,
+    })
+    .click();
+  await panel
+    .getByRole("button", {
+      name: "Select all eligible records across every page",
+      exact: true,
+    })
+    .click();
+  await expect(
+    panel.getByText("More than 100 records in weight_ids.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    panel.getByText("Problem and diagnosis history · 1 selected", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  await expect(
+    panel
+      .frameLocator("iframe")
+      .getByRole("heading", { name: "IMPORTANT — Vaccine reaction" })
+      .first(),
+  ).toBeVisible();
 });

@@ -130,3 +130,23 @@ test("select-all never silently truncates a reviewed source family", async () =>
   );
   assert.equal(existing.length, 100);
 });
+
+import { historyArtifact } from "./history-fixture.ts";
+test("v3 includes critical clinical revisions, allergies, weights and corrected treatment provenance without executing authored markup", () => {
+  const html = renderRecordRelease(historyArtifact);
+  for (const value of [
+    "IMPORTANT — Vaccine reaction",
+    "Original reaction history",
+    "Penicillin reaction",
+    "12.3 kg",
+    "External record provenance",
+    "CORRECTED HISTORICAL RECORD",
+    "Dose uncertain, original retained",
+    "Measurement date unknown.",
+    "&lt;script&gt;alert(1)&lt;/script&gt;",
+  ])
+    assert.ok(html.includes(value), value);
+  assert.ok(html.includes('class="clinical-alert"'));
+  assert.ok(!html.includes("<script>"));
+  assert.equal(html, renderRecordRelease(structuredClone(historyArtifact)));
+});

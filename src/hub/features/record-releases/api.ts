@@ -13,6 +13,7 @@ export interface ReleaseCandidate {
   version: number;
   recorded_at: string;
   label: string;
+  importance?: string;
   required_document_id?: string | null;
   file_size?: number;
   mime_type?: string;
@@ -24,6 +25,10 @@ export interface ReleaseCandidates {
   email: string | null;
   phone: string | null;
   policy_accepted: boolean;
+  problem_ids: ReleaseCandidate[];
+  patient_summary_ids: ReleaseCandidate[];
+  weight_ids: ReleaseCandidate[];
+  treatment_ids: ReleaseCandidate[];
   encounter_ids: ReleaseCandidate[];
   certificate_ids: ReleaseCandidate[];
   lab_order_ids: ReleaseCandidate[];
@@ -59,6 +64,15 @@ interface ReleaseDatabase {
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
     Functions: {
+      select_all_record_release_sources: {
+        Args: { p_pet_id: string };
+        Returns: {
+          selection: ReleaseSelection;
+          excluded_unavailable_originals: number;
+          excluded_labs_without_shareable_original: number;
+          scope: string;
+        };
+      };
       list_record_release_sources: {
         Args: { p_pet_id: string; p_offset: number };
         Returns: ReleaseCandidates;

@@ -1,4 +1,8 @@
 export const sourceLabels = {
+  problem_ids: "Problem and diagnosis history",
+  patient_summary_ids: "Allergy and legacy profile summary",
+  weight_ids: "Dated weights",
+  treatment_ids: "Medication and vaccine history",
   encounter_ids: "Signed SOAP and all addenda",
   certificate_ids: "Valid issued certificates",
   lab_order_ids: "Resulted laboratory records",
