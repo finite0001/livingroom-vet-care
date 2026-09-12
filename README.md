@@ -53,6 +53,7 @@ The patient workspace includes identity details, weight history, SOAP drafts/sig
 - [Staff access and first-admin bootstrap](docs/staff-access.md)
 - [Commercial readiness and current CI evidence](docs/commercial-readiness.md)
 - [Clinical review register](docs/clinical-review/README.md) and [form-by-form decisions](docs/clinical-review/forms-and-decisions.md)
+- [Pending Resend domain and proposed GoDaddy records](docs/email-domain-setup.md)
 - [Messaging environments](docs/messaging-environments.md), [durable outbox](docs/communications-outbox.md), [inbound processing](docs/inbound-communications.md) and [reload recovery](docs/message-recovery.md)
 - [Care plans](docs/care-reminders.md) and [guarded reminder scheduler](docs/reminder-dispatch.md)
 - [Reminder policy controls — PR34 branch documentation](https://github.com/finite0001/livingroom-vet-care/blob/codex/reminder-policy-ui/docs/features/reminder-delivery-settings.md)
