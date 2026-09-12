@@ -15,6 +15,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { careDb, selectClass } from "./model";
+import { ReminderDeliverySettings } from "./ReminderDeliverySettings";
 import { CareReminderSettings } from "./CareReminderSettings";
 import { denverCalendarDay, addCareDays } from "./date-tools";
 interface DueItem {
@@ -26,7 +27,9 @@ interface DueItem {
   detail: string;
 }
 export function CareRemindersPage() {
-  const [dirty, setDirty] = useState(false);
+  const [settingsDirty, setSettingsDirty] = useState(false);
+  const [deliveryDirty, setDeliveryDirty] = useState(false);
+  const dirty = settingsDirty || deliveryDirty;
   const blocker = useBlocker(dirty);
   useEffect(() => {
     if (!dirty) return;
@@ -377,7 +380,8 @@ export function CareRemindersPage() {
             Open schedule
           </Link>
         </section>
-        <CareReminderSettings onDirtyChange={setDirty} />
+        <CareReminderSettings onDirtyChange={setSettingsDirty} />
+        <ReminderDeliverySettings onDirtyChange={setDeliveryDirty} />
       </div>
     </section>
   );
