@@ -389,7 +389,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   }
   if (invoice.isPending || details.isPending)
     return <p role="status">Loading invoice details…</p>;
-  if (invoice.isError || details.isError)
+  if (!invoice.data || !details.data)
     return (
       <p role="alert">
         Invoice details unavailable.{" "}
@@ -404,7 +404,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     (sum, item) => sum + item.amount_cents,
     0,
   );
-  const disabled = busy || Boolean(pending) || emailDirty;
+  const readFailed = invoice.isError || details.isError;
+  const disabled = busy || Boolean(pending) || emailDirty || readFailed;
   return (
     <section
       aria-label="Invoice details"
@@ -429,6 +430,15 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
+      {readFailed && (
+        <p role="alert">
+          Current invoice details could not be refreshed. Your open work is
+          retained; reload current details before continuing.{" "}
+          <Button variant="outline" onClick={() => void refresh()}>
+            Retry current invoice details
+          </Button>
+        </p>
+      )}
       {pending && (
         <div className="space-y-2">
           <p className="text-sm">
@@ -630,7 +640,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={busy || Boolean(pending)}
+          disabled={busy || Boolean(pending) || readFailed}
           onDirtyChange={setEmailDirty}
         />
       )}

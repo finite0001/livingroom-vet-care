@@ -5,7 +5,11 @@ const backend = "http://127.0.0.1:54321",
   client = "22222222-2222-4222-8222-222222222222",
   invoice = "55555555-5555-4555-8555-555555555555",
   conversation = "66666666-6666-4666-8666-666666666666";
-async function fixture(page: Page, baseURL: string | undefined) {
+async function fixture(
+  page: Page,
+  baseURL: string | undefined,
+  emptyHousehold = false,
+) {
   const exp = Math.floor(Date.now() / 1000) + 3600,
     user = {
       id: actor,
@@ -33,9 +37,10 @@ async function fixture(page: Page, baseURL: string | undefined) {
     hash: "a".repeat(64),
     invoiceStatus: "issued",
     failAuth: false,
+    invoiceFail: false,
     prepares: [] as Record<string, string>[],
     queues: [] as Record<string, string>[],
-    hasConversation: true,
+    hasConversation: !emptyHousehold,
     losePrepare: false,
     loseBeforeSave: false,
     loseQueue: false,
@@ -85,6 +90,11 @@ async function fixture(page: Page, baseURL: string | undefined) {
         },
       });
     record.status = state.invoiceStatus;
+    if (path === "/rest/v1/billing_invoices" && state.invoiceFail)
+      return route.fulfill({
+        status: 403,
+        json: { code: "42501", message: "Current read unavailable" },
+      });
     if (path === "/rest/v1/billing_invoices")
       return route.fulfill({
         json: url.searchParams.has("id")
@@ -384,8 +394,7 @@ test("fresh household can create conversation and mobile draft blocks invoice an
   baseURL,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const state = await fixture(page, baseURL);
-  state.hasConversation = false;
+  await fixture(page, baseURL, true);
   const email = page.getByRole("region", {
     name: "Invoice email",
     exact: true,
@@ -548,3 +557,39 @@ for (const failure of [false, true])
       ),
     ).toBe(0);
   });
+
+test("failed invoice refresh preserves captured copy and dirty guard until successful retry", async ({
+  page,
+  baseURL,
+}) => {
+  const state = await fixture(page, baseURL);
+  const email = await prepare(page);
+  state.invoiceFail = true;
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(
+    page.getByText("Current invoice details could not be refreshed.", {
+      exact: false,
+    }),
+  ).toBeVisible({ timeout: 15000 });
+  await expect(email.frameLocator("iframe").getByRole("heading")).toHaveText(
+    "Synthetic frozen invoice",
+  );
+  await email.getByRole("checkbox").check();
+  await expect(
+    email.getByRole("button", { name: "Queue reviewed invoice email" }),
+  ).toBeDisabled();
+  state.invoiceFail = false;
+  await page
+    .getByRole("button", { name: "Retry current invoice details" })
+    .click();
+  await expect(
+    page.getByText("Current invoice details could not be refreshed.", {
+      exact: false,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    email.getByRole("button", { name: "Queue reviewed invoice email" }),
+  ).toBeEnabled();
+});
