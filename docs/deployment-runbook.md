@@ -5,7 +5,7 @@
 - Source: `finite0001/livingroom-vet-care`; foundation branch `codex/practice-foundation`.
 - Owned domain: `thelivingroom.vet`. Domain ownership is confirmed by the owner; DNS cutover and email domain verification are not yet performed.
 - New dedicated Supabase project: `mgadheotkdnrsatfivjy` / `livingroom-vet-care`, US West, in the owner-approved Camp Sequoia Lake organization. Its data/auth/storage are isolated from the camp projects; organization billing and administrators are shared. Owner approved the quoted $10/month project cost.
-- Original Lovable backend: `ugpyjacqganaqtsiekay`. The connected Supabase MCP account cannot access it. No data was copied or connection changed; current `.env` and `supabase/config.toml` still identify the original backend.
+- Original Lovable backend: `ugpyjacqganaqtsiekay`. The Supabase connector cannot access it; the Lovable connector was subsequently verified to have SQL access (see commercial-readiness.md). No data was copied or connection changed; current `.env` and `supabase/config.toml` still identify the original backend.
 - Local validation stack: `/private/tmp/livingroom-vet-foundation`, database port 56322, API port 56321. Disposable synthetic data only; never use its development keys in cloud environments.
 - Vercel team is available; project deployment has not yet been commissioned. `vercel.json` provides npm build and SPA rewrites.
 
