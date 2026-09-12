@@ -8,31 +8,31 @@ Goal: complete all requested practice software and website components, then perf
 | --- | --- | --- |
 | Client name/address/phone/email | PR2 household create/edit/search, separate mailing/housecall addresses, duplicate review tests | Owner review and hosted staff test |
 | Pet name/age/species/breed/weight/birthday/color/microchip | PR2 patient workspace, exact/estimated/unknown dates, dated units, mobile persistence test | Hosted clinician review |
-| Vaccine upcoming/last dates | Stock-backed and historical vaccine administration, frozen metadata and clinician-chosen due dates implemented | PR24 due plans implemented; connect automatic dispatch and obtain clinician acceptance |
-| SOAP records | PR2 versioned save/sign/addenda and concurrency/immutability tests | Full clinical acceptance, document exports and restore proof |
-| Important historical diagnoses highlighted red | PR2 problem history and prominent red/icon/text flags | Propagation into booking/medication/vaccine/export workflows |
-| Text/email with records and labs | Durable outbox plus verified inbound/status processing implemented; provider delivery remains disabled | Real authorized attachments and controlled provider round-trips; PR22 reload recovery implemented |
-| Standard and per-patient vaccine/lab reminders | PR19 lab interval templates and PR24 standard/patient vaccine due plans with immutable unsent jobs | Automatic scheduler/outbox bridge and controlled provider acceptance |
+| Vaccine upcoming/last dates | Stock-backed and historical vaccine administration, frozen metadata and clinician-chosen due dates implemented | PR24 due plans and PR29 guarded outbox bridge implemented; obtain clinician acceptance and controlled provider proof |
+| SOAP records | PR2 versioned save/sign/addenda and concurrency/immutability tests | Full clinical acceptance, hosted selected-record export acceptance and restore proof |
+| Important historical diagnoses highlighted red | PR2 problem history and red/icon/text flags; PR31 selected diagnosis revisions and critical-history export | Review propagation into booking/medication/vaccine workflows and accept exported history |
+| Text/email with records and labs | Durable outbox plus verified inbound/status processing implemented; provider delivery remains disabled | PR35 frozen report/original-file email preparation and guarded outbox delivery implemented; controlled authorized provider round-trips remain |
+| Standard and per-patient vaccine/lab reminders | PR19 lab interval templates and PR24 standard/patient vaccine due plans with immutable unsent jobs | PR29 disabled-by-default scheduler/outbox bridge and PR34 versioned administrator policy UI implemented; reviewed wording/policies, deployment configuration and controlled provider acceptance remain |
 | Vaccine certificates with due dates | PR20 immutable vaccine history and Current certificate integration adds reviewed patient due-plan snapshots; print/correction tests pass | Veterinarian acceptance and hosted issuance |
 | Rabies certificates with complete vaccine information | PR20 separate required-metadata template, verified issuer registry and immutable issuance | Verified practice issuer setup and Dr. Edler review |
 | Invoices and payment by text/email | Invoice/item/credit ledgers, household billing UI and PR23 print/download documents implemented | Payment ledger/Stripe sandbox reconciliation and invoice delivery integration; Stripe connector needs reauthentication |
-| Select all/some medical records/certificates for email | Private patient documents: 46 SQL checks and 3 browser scenarios | Exact authorized package snapshots, export, delivery and privacy tests |
+| Select all/some medical records/certificates for email | PR26/31 selected-record snapshots/history, PR35 exact frozen email report/originals and PR38 schema-4 imported-weight provenance; private originals remain protected | Dr. Edler/operator disclosure acceptance, hosted privacy checks and controlled recipient/provider delivery |
 | Medication inventory, expiration/lot/billing | Product/lot/location stock ledger and atomic treatment-plus-charge workflow implemented | Hosted stock acceptance, invoice/payment reconciliation and real opening balances |
 | Vaccine inventory and billing | Frozen vaccine lot/expiry metadata and atomic stock decrement/billing implemented | Certificate acceptance, inventory import/opening balances and hosted workflow |
 | Clinic/housecall schedule + Maps | Day/week clinic/housecall schedule, Denver time, travel buffers and atomic overlap checks in PR5 | Maps usability and hosted acceptance |
-| Automatic appointment reminders | Versioned appointment reminder jobs invalidate on reschedule/cancel | Actual reminder dispatcher/outbox and controlled delivery proof |
-| Dental charting in patient record | PR15 dog/cat dentition charts, signed history and shared draft navigation protection | Dr. Edler review, print/export and hosted acceptance |
+| Automatic appointment reminders | Versioned appointment reminder jobs invalidate on reschedule/cancel | PR29 guarded scheduler/outbox implemented; approved appointment wording, explicit activation and controlled delivery proof remain |
+| Dental charting in patient record | PR15 dog/cat dentition charts, signed history and shared draft navigation protection | PR26 selected signed-chart export implemented; Dr. Edler review and hosted acceptance remain |
 | Automatic anesthesia records | PR21 native monitoring, manual/source-document transcription, immutable signatures/addenda and patient draft protection | Dr. Edler review; vendor selection and actual automatic-import adapter/sample/round-trip evidence |
-| QOL charting | PR14 versioned qualitative observations, sign/addenda and reopen/conflict tests | Dr. Edler instrument acceptance, longitudinal presentation and print/export |
-| Reopen/update mass body maps | PR14 stable lesions, keyboard schematic, dated observations and patient-photo validation | Clinician acceptance of schematic and measurements, print/export |
-| Unified inbox without Gmail dependence | PR16–18 signed Resend/Twilio ingestion, sender review, durable outbox, consent UI, personal read state and paginated inbox implemented | Controlled inbound/provider callback proof, attachment release and website-inquiry triage |
-| ezyVet API connection | PR11 bounded staging and administrator-reviewed household/patient promotion with provenance | Authorized ezyVet account and actual API/mapping acceptance; clinical resources beyond household/patient identity need reviewed promotion |
-| Logo/new visuals | PR12 approved armchair/dog/cat direction; medical-cross/descriptor refinement proposed | Consistent final master, small-size/readability checks, responsive brand integration and final owner acceptance |
+| QOL charting | PR14 versioned qualitative observations, sign/addenda and reopen/conflict tests | PR26 selected history export implemented; Dr. Edler instrument/longitudinal presentation acceptance remains |
+| Reopen/update mass body maps | PR14 stable lesions, keyboard schematic, dated observations and patient-photo validation | PR26 selected body-map history export implemented; clinician acceptance of schematic and measurements remains |
+| Unified inbox without Gmail dependence | PR16–18 signed Resend/Twilio ingestion, sender review, durable outbox, consent UI, personal read state and paginated inbox implemented | PR26/31 releases and PR28 website-inquiry triage implemented; controlled inbound/provider callbacks and hosted acceptance remain |
+| ezyVet API connection | PR11 reviewed household/patient promotion; PR36 reviewed historical weight create/link and discrepancy history; PR38 release provenance | Authorized ezyVet account and actual API/mapping acceptance; clinical resources beyond household/patient identity and reviewed historical weights need a separate implementation and acceptance |
+| Logo/new visuals | PR12 approved armchair/dog/cat direction; PR33 medical-cross PNG with live descriptor integrated into public header/footer, responsive previews checked | Final owner acceptance and optimized/vector master; raster texture/fringe and print/monochrome reproduction review remain |
 | Supabase/Vercel + owned domain | Dedicated Supabase provisioned; Vercel config; domain known | Frontend environment parity, staff/Auth SMTP, DNS/HTTPS, backups/restore, monitoring and cutover |
 
 ## Deployment inventory revalidated 2026-09-12
 
-- PR1 and PR2 are merged; baseline for current documents work is `56f8315`.
+- PR1 and PR2 are merged. The original deployment audit baseline was `56f8315`; the current integrated release-provenance implementation baseline is `63414e8`. These are different checkpoints.
 - The original backend is accessible through the Lovable connector, despite being inaccessible through the Supabase connector. Lovable project `7ea421c9-31d9-4bc4-acc7-d206c92b4b42` is associated with repository `livingroom-vet-care`, previews merged commit `56f8315`, and has a published `livingroom-vet-care.lovable.app` site.
 - Original database has 14 migrations, 1 Auth user, 1 profile, 1 role, 8 app settings; every other public table has zero rows and Storage has zero objects. These are exact count queries, not estimated statistics. No row contents or credentials were exported. Recheck immediately before cutover because counts can change.
 - Dedicated project `mgadheotkdnrsatfivjy` has the reviewed foundation/clinical migrations. It is still empty and outbound is disabled. Subsequent migration counts and commissioning checks are recorded per increment.
@@ -55,15 +55,35 @@ Build and test focused dependent branches, with each subsequent PR based on its 
 
 ## Confirmed clinical integration decisions
 
-The user selected Antech (entered as “Antec”) as the lab provider and Dr. Susan Edler as the reviewer for clinical forms. Anesthesia recording vendor remains undecided. Clinical forms and certificate samples must be reviewed with Dr. Edler; provider selection alone does not supply API credentials, a supported integration contract or an acceptance result.
+The user selected Antech (entered as “Antec”) as the lab provider and Dr. Susan Edler as the reviewer for clinical forms. Anesthesia recording vendor remains undecided. Clinical forms and certificate samples must be reviewed with Dr. Edler; provider selection alone does not supply API credentials, a supported integration contract or an acceptance result. The [Antech commissioning checklist](antech-commissioning.md) records the official public evidence, required approved contract/sample account, and patient/result/acknowledgment acceptance cases before an adapter.
 
 Living Room Vet is the primary record system. ezyVet imports are staged and reviewed; matching must preserve local edits and must never delete local records absent from a later import. No outbound clinical synchronization into ezyVet is planned.
 
 ## Current implementation evidence (2026-09-12)
 
-PRs 3–21 are draft increments following the merged foundations. PR12 is a parallel brand review artifact. The functional chain now includes inbound integration, consent and message queue UI, personal inbox state, lab work, vaccine certificates and native anesthesia records. PR20 passed frontend and database CI, including all 46 combined browser tests. PR21 passed local project checks, 38 SQL assertions and two mounted anesthesia browser workflows; its CI remains pending at this checkpoint. Counts above describe implemented and locally verified features, not cloud deployments or commercial acceptance.
+PRs 3–36 have green frontend/database CI at this checkpoint; PR37 at `109b891` has green frontend, database and frozen Edge checks. PR38 schema-4 provenance at `63414e8` has completed local verification; its Edge CI is green while frontend/database CI remain pending at this checkpoint. PR32's earlier published documentation tip was green; the newly aligned documentation tip requires its own CI run after push. [The clinician acceptance pack](clinical-review/README.md) remains a technical review artifact with every clinical decision pending. No CI result proves hosted deployment, provider activation or commercial acceptance.
 
-Latest synthetic message browser tests verify lost queue response recovery, unchanged UUID retry, changed-payload rejection and disabled delivery preserving drafts. Legacy direct-send endpoints are retired in the UI integration branch. Provider secrets, controlled sends and production release have not been performed.
+| Increment | Implemented evidence | Remaining gate |
+| --- | --- | --- |
+| PR26 | Explicit selected clinical-record packages, retained preview/confirmation snapshots, private original references and offline rendering | Clinician/operator disclosure acceptance and controlled delivery |
+| PR27 | Planned Monday–Saturday 9 am–5 pm hours and GoDaddy ownership disclosure; unpublished phone remains unset | Owner content acceptance and actual DNS/hosting cutover |
+| PR28 | Staff website-inquiry triage and reviewed reply destinations | Hosted intake-to-inbox and authorized provider round-trip |
+| PR29 | Disabled-by-default reminder scheduler, durable outbox origin and final source/consent checks on attempts and retries | Exact wording/policy approval, server activation and controlled delivery |
+| PR30 | Verified, recoverable public contact submission hardening | Production verification configuration and hosted acceptance |
+| PR31 | Schema-3 selected diagnosis revisions, highlighted critical history, allergy/legacy summary, dated weights and treatment corrections | Dr. Edler review of selected history and hosted evidence |
+| PR32 | Editable clinical acceptance register, exact form checklist and synthetic production-rendered examples | Dr. Susan Edler and operational reviewers must record versioned decisions |
+| PR33 | Reusable medical-logo candidate in public header/footer with accessible home links and mobile/desktop previews | Final owner approval and optimized/vector master |
+| PR34 | Six administrator reminder-policy slots, versioned save/retry/reload, retired-wording disable control and shared draft guard | Exact wording/policy review and provider commissioning |
+| PR35 | Exact frozen HTML report and original attachments, preparation/queue recovery and final guarded email delivery | Staff-authenticated hosted Edge gateway check, verified sender/inbound configuration, recipient acceptance and controlled delivery |
+| PR36 | Reviewed historical ezyVet weight creation/linking, durable approval/recovery and retained discrepancy reviews | Authorized account/sample contract, live source mapping evidence and Dr. Edler review |
+| PR37 | All 14 Edge entry points checked with frozen Deno dependencies; shared renderers remain deployable | Hosted gateway/runtime commissioning, not just module checks |
+| PR38 | Schema-4 selected-weight source provenance, original versus reviewed values, source-review history and separate form-version acceptance | Current CI, Dr. Edler/operator v4 acceptance and hosted release/delivery checks |
+
+PR numbering is not a linear dependency order. PR30 intake hardening is based on PR31 history; the later functional chain reaches PR37 through logo, policy controls, release delivery and reviewed weights. PR38 extends PR37. The documentation review branch is aligned to PR38.
+
+At `63414e8`, the implementation owner reports 1,039 SQL assertions, 148 unit tests, ten targeted release browser tests and frozen checks for all 14 Edge entry points passing. These targeted browser results are not a claim of a fresh complete browser-suite run. Historical evidence remains available: PR26 had a local 66/67 browser run with one reminder timeout followed by two passing targeted reminder tests; that older result is not the latest integrated test count.
+
+Synthetic message tests verify lost-response recovery, unchanged UUID retry, changed-payload rejection and disabled delivery preserving drafts. Provider secrets, controlled sends and production release have not been performed by these increments.
 
 ## Payment account decision
 
@@ -71,10 +91,26 @@ The owner selected a new Stripe account dedicated to Living Room Vet. Do not con
 
 ## Latest integration checkpoint
 
-PR21 anesthesia and PR22 message recovery passed frontend/database CI. PR23 invoice documents passed 109 local unit tests and all 58 combined browser tests, including an actual PDF artifact. PR24 due plans are mounted in the patient workspace and staff navigation; its local SQL and browser checks passed. Record-release selection/export, website-inquiry triage and automatic reminder dispatch are active implementation work. No providers were contacted and no public deployment occurred.
+The implementation chain now includes record-release selection/export (PR26/31), website-inquiry triage (PR28), public intake hardening (PR30), guarded reminder queuing (PR29), public logo integration (PR33), administrator reminder-policy controls (PR34), frozen email attachments (PR35), reviewed weight promotion (PR36), Edge module verification (PR37) and weight-release provenance (PR38). They are implemented increments awaiting the specific hosted, provider and clinical acceptance gates above, not unimplemented placeholders. The clinical review pack provides editable acceptance rows and synthetic rendered examples without claiming approval. No provider activation or public rollout is implied by these checks.
 
 General certificates now separately preserve reviewed due plans at issuance and per-administration recorded dates. Later plan revisions do not rewrite signed copies; updated client copies require new review/issuance. Standalone invoice documents similarly do not claim payment activity or immutable delivery snapshots. These distinctions remain relevant when attaching documents to outbound messages.
 
 ## Confirmed public launch settings
 
 The owner confirmed on September 12, 2026 that GoDaddy currently manages DNS for `thelivingroom.vet`. Planned hours are Monday through Saturday, 9 am to 5 pm in the practice’s America/Denver timezone. The practice phone number is not yet selected and remains unpublished; the emergency referral contact is still undecided. The website labels these as planned hours while services remain planned. These display hours do not silently create bookable staff availability or change the existing opening targets. No DNS or mail records were modified.
+
+## Read-only DNS observation — 2026-09-12
+
+The root rollout audit observed nameservers `ns07.domaincontrol.com` and `ns08.domaincontrol.com`, A records `3.33.130.190` and `15.197.148.33`, and no MX answers for `thelivingroom.vet`. These are dated DNS observations, not proof of website or email commissioning. No DNS changes were made. Domain email and Auth SMTP remain configuration/verification tasks; recheck records immediately before an authorized cutover.
+
+## Review and feature documents
+
+- [Editable clinical review register](clinical-review/README.md), [exact form decisions](clinical-review/forms-and-decisions.md) and [offline synthetic examples](clinical-review/review-examples.html). All acceptance rows remain pending.
+- [Frozen release email](release-email-delivery.md), [reviewed historical weight import](ezyvet-reviewed-weights.md) and [schema-4 release provenance](release-weight-provenance.md).
+- [Outbox](communications-outbox.md), [inbound processing](inbound-communications.md), [message recovery](message-recovery.md), [selected-record releases](record-releases.md) and [website inquiries](features/website-inquiries.md).
+- [Care due plans](care-reminders.md), [scheduler and final delivery guards](reminder-dispatch.md), and [policy controls](features/reminder-delivery-settings.md). The controls select reviewed versions; they do not activate the deployment.
+- [Logo candidate and responsive previews](brand/public-logo-integration.md).
+
+## Pending email-domain preparation
+
+The pending Resend domain `thelivingroom.vet` was created in `us-east-1` with sending requested On; receiving is saved Off and the domain remains NotStarted/unverified. Enforced TLS was saved. Tracking behavior remains a controlled-message verification gate; no tracking configuration was submitted. No DNS changes, webhook/API-key setup, messages or billing upgrade/charge flow were performed in that preparation. [Exact proposed GoDaddy records and mail-routing gates](email-domain-setup.md) keep sending verification separate from root MX cutover. Mailbox names remain unpublished until actual verified ingestion and controlled delivery are demonstrated.
