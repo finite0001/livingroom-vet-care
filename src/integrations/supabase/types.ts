@@ -2823,6 +2823,354 @@ export type Database = {
           },
         ]
       }
+      ezyvet_identity_heads: {
+        Row: {
+          external_id: string
+          observed_at: string
+          resource: string
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+          version: number
+        }
+        Insert: {
+          external_id: string
+          observed_at?: string
+          resource: string
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+          version?: number
+        }
+        Update: {
+          external_id?: string
+          observed_at?: string
+          resource?: string
+          snapshot_id?: string
+          source_origin?: string
+          source_site_uid?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_identity_heads_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_page_items: {
+        Row: {
+          page: number
+          run_id: string
+          snapshot_id: string
+        }
+        Insert: {
+          page: number
+          run_id: string
+          snapshot_id: string
+        }
+        Update: {
+          page?: number
+          run_id?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_page_items_run_id_page_fkey"
+            columns: ["run_id", "page"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_pages"
+            referencedColumns: ["run_id", "page"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_page_items_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_pages: {
+        Row: {
+          fetched_at: string
+          item_count: number
+          page: number
+          run_id: string
+        }
+        Insert: {
+          fetched_at?: string
+          item_count: number
+          page: number
+          run_id: string
+        }
+        Update: {
+          fetched_at?: string
+          item_count?: number
+          page?: number
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_pages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_reviews: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          decision: string
+          id: string
+          pet_id: string | null
+          reason: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+          pet_id?: string | null
+          reason: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+          pet_id?: string | null
+          reason?: string
+          reviewed_by?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_reviews_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_reviews_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_import_reviews_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_runs: {
+        Row: {
+          created_at: string
+          id: string
+          last_error_code: string | null
+          lease_id: string | null
+          lease_until: string | null
+          next_page: number
+          requested_by: string
+          resource: string
+          retry_after: string | null
+          source_origin: string
+          source_site_uid: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          last_error_code?: string | null
+          lease_id?: string | null
+          lease_until?: string | null
+          next_page?: number
+          requested_by: string
+          resource: string
+          retry_after?: string | null
+          source_origin: string
+          source_site_uid: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error_code?: string | null
+          lease_id?: string | null
+          lease_until?: string | null
+          next_page?: number
+          requested_by?: string
+          resource?: string
+          retry_after?: string | null
+          source_origin?: string
+          source_site_uid?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_runs_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_import_snapshots: {
+        Row: {
+          created_at: string
+          external_id: string
+          first_seen_by: string
+          id: string
+          payload: Json
+          payload_hash: string
+          resource: string
+          source_origin: string
+          source_site_uid: string
+        }
+        Insert: {
+          created_at?: string
+          external_id: string
+          first_seen_by: string
+          id?: string
+          payload: Json
+          payload_hash: string
+          resource: string
+          source_origin: string
+          source_site_uid: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string
+          first_seen_by?: string
+          id?: string
+          payload?: Json
+          payload_hash?: string
+          resource?: string
+          source_origin?: string
+          source_site_uid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_import_snapshots_first_seen_by_fkey"
+            columns: ["first_seen_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ezyvet_record_links: {
+        Row: {
+          action: string
+          approved_by: string
+          client_id: string | null
+          created_at: string
+          external_id: string
+          head_version: number
+          id: string
+          local_version: number
+          pet_id: string | null
+          reason: string
+          request_hash: string
+          request_id: string
+          resource: string
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+        }
+        Insert: {
+          action: string
+          approved_by: string
+          client_id?: string | null
+          created_at?: string
+          external_id: string
+          head_version: number
+          id?: string
+          local_version: number
+          pet_id?: string | null
+          reason: string
+          request_hash: string
+          request_id: string
+          resource: string
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+        }
+        Update: {
+          action?: string
+          approved_by?: string
+          client_id?: string | null
+          created_at?: string
+          external_id?: string
+          head_version?: number
+          id?: string
+          local_version?: number
+          pet_id?: string | null
+          reason?: string
+          request_hash?: string
+          request_id?: string
+          resource?: string
+          snapshot_id?: string
+          source_origin?: string
+          source_site_uid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ezyvet_record_links_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_record_links_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_record_links_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ezyvet_record_links_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ezyvet_import_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -3696,6 +4044,141 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      claim_ezyvet_import: {
+        Args: {
+          p_actor: string
+          p_id: string
+          p_resource: string
+          p_site_uid: string
+          p_source_origin: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_error_code: string | null
+          lease_id: string | null
+          lease_until: string | null
+          next_page: number
+          requested_by: string
+          resource: string
+          retry_after: string | null
+          source_origin: string
+          source_site_uid: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_import_runs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ezyvet_is_active_admin: { Args: { p_actor: string }; Returns: boolean }
+      fail_ezyvet_import_page: {
+        Args: {
+          p_actor: string
+          p_code: string
+          p_id: string
+          p_lease_id: string
+          p_retry_seconds: number
+        }
+        Returns: undefined
+      }
+      promote_ezyvet_identity: {
+        Args: {
+          p_action: string
+          p_client_id: string
+          p_expected_hash: string
+          p_expected_local_version: number
+          p_head_version: number
+          p_pet_id: string
+          p_reason: string
+          p_request_id: string
+          p_snapshot_id: string
+          p_values: Json
+        }
+        Returns: {
+          action: string
+          approved_by: string
+          client_id: string | null
+          created_at: string
+          external_id: string
+          head_version: number
+          id: string
+          local_version: number
+          pet_id: string | null
+          reason: string
+          request_hash: string
+          request_id: string
+          resource: string
+          snapshot_id: string
+          source_origin: string
+          source_site_uid: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_record_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_ezyvet_snapshot: {
+        Args: {
+          p_client_id: string
+          p_decision: string
+          p_pet_id: string
+          p_reason: string
+          p_snapshot_id: string
+        }
+        Returns: {
+          client_id: string | null
+          created_at: string
+          decision: string
+          id: string
+          pet_id: string | null
+          reason: string
+          reviewed_by: string
+          snapshot_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_import_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      stage_ezyvet_import_page: {
+        Args: {
+          p_actor: string
+          p_complete: boolean
+          p_id: string
+          p_items: Json
+          p_lease_id: string
+          p_page: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_error_code: string | null
+          lease_id: string | null
+          lease_until: string | null
+          next_page: number
+          requested_by: string
+          resource: string
+          retry_after: string | null
+          source_origin: string
+          source_site_uid: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ezyvet_import_runs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       appointment_status:
