@@ -1351,6 +1351,87 @@ export type Database = {
           },
         ]
       }
+      patient_documents: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          document_date: string | null
+          encounter_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          finalized_at: string | null
+          id: string
+          mime_type: string
+          pet_id: string
+          source: string
+          status: string
+          version: number
+          visibility: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by: string
+          document_date?: string | null
+          encounter_id?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          finalized_at?: string | null
+          id: string
+          mime_type: string
+          pet_id: string
+          source?: string
+          status?: string
+          version?: number
+          visibility?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          document_date?: string | null
+          encounter_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          finalized_at?: string | null
+          id?: string
+          mime_type?: string
+          pet_id?: string
+          source?: string
+          status?: string
+          version?: number
+          visibility?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_encounter_id_fkey"
+            columns: ["encounter_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_encounters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_documents_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_problems: {
         Row: {
           created_at: string
@@ -2310,6 +2391,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      abandon_patient_document: {
+        Args: { p_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          created_by: string
+          document_date: string | null
+          encounter_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          finalized_at: string | null
+          id: string
+          mime_type: string
+          pet_id: string
+          source: string
+          status: string
+          version: number
+          visibility: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       add_clinical_addendum: {
         Args: { p_content: string; p_encounter_id: string }
         Returns: {
@@ -2377,6 +2488,36 @@ export type Database = {
         Args: { conv_id: string }
         Returns: undefined
       }
+      finalize_patient_document: {
+        Args: { p_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          created_by: string
+          document_date: string | null
+          encounter_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          finalized_at: string | null
+          id: string
+          mime_type: string
+          pet_id: string
+          source: string
+          status: string
+          version: number
+          visibility: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_consent_submission: {
         Args: { p_token: string }
         Returns: {
@@ -2429,6 +2570,55 @@ export type Database = {
         Returns: boolean
       }
       is_active_staff: { Args: { _user_id: string }; Returns: boolean }
+      patient_document_storage_read: {
+        Args: { p_path: string }
+        Returns: boolean
+      }
+      patient_document_storage_write: {
+        Args: { p_path: string }
+        Returns: boolean
+      }
+      prepare_patient_document: {
+        Args: {
+          p_category: string
+          p_document_date: string
+          p_encounter_id: string
+          p_file_name: string
+          p_file_size: number
+          p_id: string
+          p_mime_type: string
+          p_pet_id: string
+          p_source: string
+          p_visibility: string
+        }
+        Returns: {
+          category: string
+          created_at: string
+          created_by: string
+          document_date: string | null
+          encounter_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          finalized_at: string | null
+          id: string
+          mime_type: string
+          pet_id: string
+          source: string
+          status: string
+          version: number
+          visibility: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       process_due_reminders: {
         Args: never
         Returns: {
@@ -2664,6 +2854,36 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "clinical_encounters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      void_patient_document: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: {
+          category: string
+          created_at: string
+          created_by: string
+          document_date: string | null
+          encounter_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          finalized_at: string | null
+          id: string
+          mime_type: string
+          pet_id: string
+          source: string
+          status: string
+          version: number
+          visibility: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_documents"
           isOneToOne: true
           isSetofReturn: false
         }

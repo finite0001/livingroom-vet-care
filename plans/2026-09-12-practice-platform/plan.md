@@ -1,6 +1,6 @@
 # Living Room Vet — practice platform plan
 
-Date: 2026-09-12. Planning baseline: `77e08d1`. Status: approved direction; foundation implementation in progress. See [commissioning and verification](../../docs/foundation-progress-2026-09-12.md).
+Date: 2026-09-12. Planning baseline: `77e08d1`. Status: full commercial-readiness goal active; implementation and verified rollout in progress. See [commissioning and verification](../../docs/foundation-progress-2026-09-12.md).
 Practice: Living Room Vet, 2619 Spruce Street, Boulder, Colorado.
 
 ## Recommendation
@@ -58,3 +58,7 @@ One technical owner should manage schema/deployments; one veterinarian should ap
 - Logo direction: warm residential, Boulder botanical, or quiet contemporary?
 
 This plan covers the complete requested scope. Foundation commissioning is recorded separately; later phases and logo production remain outstanding. It is not live-system certification. The Perplexity reference could not be accessed; the GitHub hub was reviewed directly.
+
+## Commercial rollout tracking
+
+The user requested stacked PRs followed by one coordinated rollout. Track every original requirement and actual acceptance evidence in [commercial-readiness.md](../../docs/commercial-readiness.md). No phase is complete merely because its first implementation increment merged.
