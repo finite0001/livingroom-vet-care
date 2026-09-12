@@ -1039,6 +1039,7 @@ export type Database = {
           is_read: boolean
           last_message_at: string
           priority: Database["public"]["Enums"]["conversation_priority"]
+          revision: number
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[]
         }
@@ -1053,6 +1054,7 @@ export type Database = {
           is_read?: boolean
           last_message_at?: string
           priority?: Database["public"]["Enums"]["conversation_priority"]
+          revision?: number
           status?: Database["public"]["Enums"]["conversation_status"]
           tags?: string[]
         }
@@ -1067,6 +1069,7 @@ export type Database = {
           is_read?: boolean
           last_message_at?: string
           priority?: Database["public"]["Enums"]["conversation_priority"]
+          revision?: number
           status?: Database["public"]["Enums"]["conversation_status"]
           tags?: string[]
         }
@@ -4155,6 +4158,111 @@ export type Database = {
           },
         ]
       }
+      conversation_activity_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_value: Json | null
+          before_value: Json | null
+          conversation_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_activity_audit_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_activity_audit_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_workspace_rows"
+            referencedColumns: ["conversation_id"]
+          },
+        ]
+      }
+      conversation_unread_flags: {
+        Row: {
+          conversation_id: string
+          forced: boolean
+          revision: number
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          forced?: boolean
+          revision?: number
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          forced?: boolean
+          revision?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_unread_flags_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_unread_flags_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_workspace_rows"
+            referencedColumns: ["conversation_id"]
+          },
+        ]
+      }
+      inbox_read_snapshots: {
+        Row: {
+          applied_at: string | null
+          boundaries: Json
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          boundaries: Json
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          boundaries?: Json
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -5885,6 +5993,117 @@ export type Database = {
           p_review?: boolean
         }
         Returns: undefined
+      }
+      apply_inbox_read_snapshot: {
+        Args: { p_actor_id: string; p_snapshot_id: string }
+        Returns: undefined
+      }
+      capture_inbox_read_snapshot: { Args: never; Returns: string }
+      ensure_active_conversation: {
+        Args: { p_client_id: string }
+        Returns: {
+          archived_at: string | null
+          assigned_to_id: string | null
+          client_id: string
+          created_at: string
+          first_message_at: string | null
+          first_response_at: string | null
+          id: string
+          is_read: boolean
+          last_message_at: string
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          revision: number
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      inbox_unread_totals: {
+        Args: never
+        Returns: {
+          unread_conversations: number
+          unread_messages: number
+        }[]
+      }
+      list_inbox_workspace: {
+        Args: {
+          p_assigned_to_id?: string
+          p_assignment?: string
+          p_before_at?: string
+          p_before_id?: string
+          p_channel?: Database["public"]["Enums"]["message_type"]
+          p_limit?: number
+          p_priority?: Database["public"]["Enums"]["conversation_priority"]
+          p_read?: string
+          p_search?: string
+          p_status?: Database["public"]["Enums"]["conversation_status"]
+          p_tags?: string[]
+        }
+        Returns: {
+          assigned_to_id: string | null
+          client_id: string | null
+          client_name: string | null
+          conversation_id: string | null
+          is_unread: boolean | null
+          latest_content: string | null
+          latest_message_id: string | null
+          latest_type: Database["public"]["Enums"]["message_type"] | null
+          primary_email: string | null
+          primary_phone: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"] | null
+          revision: number | null
+          status: Database["public"]["Enums"]["conversation_status"] | null
+          tags: string[] | null
+          unread_count: number | null
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "inbox_workspace_rows"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      mark_conversation_unread: {
+        Args: { p_actor_id: string; p_conversation_id: string }
+        Returns: undefined
+      }
+      update_conversation_metadata: {
+        Args: {
+          p_actor_id: string
+          p_assigned_to_id: string
+          p_conversation_id: string
+          p_expected_revision: number
+          p_priority: Database["public"]["Enums"]["conversation_priority"]
+          p_status: Database["public"]["Enums"]["conversation_status"]
+          p_tags: string[]
+        }
+        Returns: {
+          archived_at: string | null
+          assigned_to_id: string | null
+          client_id: string
+          created_at: string
+          first_message_at: string | null
+          first_response_at: string | null
+          id: string
+          is_read: boolean
+          last_message_at: string
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          revision: number
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
