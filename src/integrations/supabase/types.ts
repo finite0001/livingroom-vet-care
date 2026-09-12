@@ -5187,6 +5187,108 @@ export type Database = {
           },
         ]
       }
+      website_inquiry_history: {
+        Row: {
+          action: string
+          actor_id: string
+          after_value: Json | null
+          before_value: Json | null
+          created_at: string
+          id: string
+          inquiry_id: string
+          reason: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          inquiry_id: string
+          reason: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          inquiry_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_inquiry_history_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "website_inquiry_triage"
+            referencedColumns: ["inquiry_id"]
+          },
+        ]
+      }
+      website_inquiry_triage: {
+        Row: {
+          assigned_to_id: string | null
+          client_id: string | null
+          inquiry_id: string
+          reply_channel: string | null
+          reply_recipient: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          assigned_to_id?: string | null
+          client_id?: string | null
+          inquiry_id: string
+          reply_channel?: string | null
+          reply_recipient?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          assigned_to_id?: string | null
+          client_id?: string | null
+          inquiry_id?: string
+          reply_channel?: string | null
+          reply_recipient?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_inquiry_triage_assigned_to_id_fkey"
+            columns: ["assigned_to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_inquiry_triage_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_inquiry_triage_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: true
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -7467,6 +7569,90 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      authorize_website_inquiry_reply: {
+        Args: { p_actor_id: string; p_expected_version: number; p_id: string }
+        Returns: Json
+      }
+      list_website_inquiries: {
+        Args: {
+          p_assigned_to_id?: string
+          p_before_at?: string
+          p_before_id?: string
+          p_limit?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: {
+          assigned_to_id: string
+          claimed_name: string
+          client_id: string
+          inquiry_id: string
+          status: string
+          subject: string
+          submitted_at: string
+          version: number
+        }[]
+      }
+      read_website_inquiry: { Args: { p_id: string }; Returns: Json }
+      review_website_inquiry_household: {
+        Args: {
+          p_actor_id: string
+          p_channel: string
+          p_client_id: string
+          p_confirmed: boolean
+          p_evidence: string
+          p_expected_version: number
+          p_id: string
+          p_recipient: string
+        }
+        Returns: {
+          assigned_to_id: string | null
+          client_id: string | null
+          inquiry_id: string
+          reply_channel: string | null
+          reply_recipient: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "website_inquiry_triage"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_website_inquiry: {
+        Args: {
+          p_actor_id: string
+          p_assigned_to_id: string
+          p_expected_version: number
+          p_id: string
+          p_reason: string
+          p_status: string
+        }
+        Returns: {
+          assigned_to_id: string | null
+          client_id: string | null
+          inquiry_id: string
+          reply_channel: string | null
+          reply_recipient: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "website_inquiry_triage"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      website_inquiry_open_count: { Args: never; Returns: number }
     }
     Enums: {
       appointment_status:

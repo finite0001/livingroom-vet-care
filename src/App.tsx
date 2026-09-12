@@ -29,6 +29,7 @@ const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
 const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
+const WebsiteInquiriesPage = lazy(() => import("@/hub/features/inquiries/WebsiteInquiriesPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
@@ -90,6 +91,7 @@ const router = createBrowserRouter(createRoutesFromElements(
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route path="/hub" element={<HubHomePage />} />
+                  <Route path="/hub/inquiries" element={<WebsiteInquiriesPage />} />
                   <Route path="/hub/chats" element={<ConversationsPage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
                   <Route path="/hub/schedule" element={<SchedulePage />} />

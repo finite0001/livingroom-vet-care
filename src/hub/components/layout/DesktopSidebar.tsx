@@ -32,6 +32,7 @@ const workspaceItems = [
   { path: "/hub/inventory", label: "Inventory", icon: Pill },
   { path: "/hub", label: "Home", icon: Home, exact: true },
   { path: "/hub/chats", label: "Communication", icon: MessageSquare },
+  { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/call", label: "Phone", icon: Phone },
