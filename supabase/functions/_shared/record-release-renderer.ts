@@ -1,5 +1,11 @@
-import { renderReleaseHistory, type HistorySources } from "./record-release-history.ts";
-import { renderReleaseCharts, type ChartSources } from "./record-release-charts.ts";
+import {
+  renderReleaseHistory,
+  type HistorySources,
+} from "./record-release-history.ts";
+import {
+  renderReleaseCharts,
+  type ChartSources,
+} from "./record-release-charts.ts";
 import {
   renderVaccineCertificate,
   type IssuedCertificate,
@@ -16,7 +22,7 @@ export interface ReleaseAttachment {
   category: string;
 }
 export interface ReleaseSnapshot extends ChartSources, HistorySources {
-  schema_version: 1 | 2 | 3;
+  schema_version: 1 | 2 | 3 | 4;
   patient: {
     id: string;
     version: number;
@@ -134,8 +140,30 @@ const instant = (value: string) => `${escape(value)} (ISO 8601 instant)`;
  */
 export function renderRecordRelease(artifact: ReleaseArtifact): string {
   const { snapshot: s, source_hash: hash } = artifact.preview;
-  if (![1, 2, 3].includes(s.schema_version) || !/^[a-f0-9]{64}$/.test(hash))
+  if (![1, 2, 3, 4].includes(s.schema_version) || !/^[a-f0-9]{64}$/.test(hash))
     throw new Error("Unsupported release snapshot or missing review hash.");
+  if (
+    s.schema_version === 4 &&
+    (!Array.isArray(s.weights) ||
+      s.weights.some(
+        (w) =>
+          !Array.isArray(w.import_provenance) ||
+          w.import_provenance.some(
+            (p) =>
+              !p ||
+              !["create", "link"].includes(p.action) ||
+              !p.original ||
+              !p.reviewed_values ||
+              !Array.isArray(p.source_reviews) ||
+              typeof p.latest_source_reviewed !== "boolean",
+          ),
+      ))
+  ) {
+    throw new Error(
+      "Incomplete version 4 weight provenance; obtain a fresh reviewed snapshot.",
+    );
+  }
+
   if (
     s.encounters.length +
       s.certificates.length +

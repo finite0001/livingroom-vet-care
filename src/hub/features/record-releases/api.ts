@@ -25,6 +25,7 @@ export interface ReleaseCandidates {
   email: string | null;
   phone: string | null;
   policy_accepted: boolean;
+  policy_v4_accepted?: boolean;
   problem_ids: ReleaseCandidate[];
   patient_summary_ids: ReleaseCandidate[];
   weight_ids: ReleaseCandidate[];
@@ -77,7 +78,7 @@ interface ReleaseDatabase {
         Args: { p_pet_id: string; p_offset: number };
         Returns: ReleaseCandidates;
       };
-      preview_record_release: {
+      preview_record_release_v4: {
         Args: { [K in keyof ReleasePreviewArgs]: ReleasePreviewArgs[K] };
         Returns: ReleasePreview;
       };

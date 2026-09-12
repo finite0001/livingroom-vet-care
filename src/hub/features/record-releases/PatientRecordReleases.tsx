@@ -219,7 +219,7 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release",
+        "preview_record_release_v4",
         args,
       );
       if (error) throw error;
@@ -480,10 +480,14 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_accepted && (
+              {!(selection.weight_ids?.length
+                ? candidates.data.policy_v4_accepted
+                : candidates.data.policy_accepted) && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
-                  acceptance of release form version 3 by the practice operator.
+                  acceptance of the applicable release form by the practice
+                  operator (version 4 for dated weights, including historical
+                  source provenance).
                 </p>
               )}
               <fieldset
@@ -659,7 +663,9 @@ export function PatientRecordReleases({
                     disabled={
                       busy ||
                       emailDirty ||
-                      !candidates.data.policy_accepted ||
+                      !(selection.weight_ids?.length
+                        ? candidates.data.policy_v4_accepted
+                        : candidates.data.policy_accepted) ||
                       !reviewed
                     }
                     onClick={() => void confirm()}

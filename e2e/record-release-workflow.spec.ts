@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { historyArtifact as chartArtifact } from "../tests/record-releases/history-fixture";
+import { provenanceArtifact } from "../tests/record-releases/provenance-fixture";
+const chartArtifact = provenanceArtifact();
 import {
   sourceLabels,
   type SourceKind,
@@ -24,7 +25,7 @@ const groups = {
   anesthesia_ids: "anesthesia_records",
   lesion_ids: "lesions",
 } as const;
-async function fixture(page: Page, accepted = true) {
+async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
   const user = {
     id: staffId,
     aud: "authenticated",
@@ -251,6 +252,7 @@ async function fixture(page: Page, accepted = true) {
         email: "owner@example.test",
         phone: "+13035550100",
         policy_accepted: accepted,
+        policy_v4_accepted: v4Accepted,
       };
       for (const [key, array] of Object.entries(groups))
         candidates[key] = (chartArtifact.preview.snapshot[array] || []).map(
@@ -299,7 +301,7 @@ async function fixture(page: Page, accepted = true) {
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release") {
+    if (path === "/rest/v1/rpc/preview_record_release_v4") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -609,7 +611,13 @@ test("all-eligible selection is server-collected and the locked review includes 
     frame.getByText("External record provenance", { exact: true }),
   ).toBeVisible();
   await expect(
-    frame.getByRole("heading", { name: "2026-09-01 · 12.3 kg" }),
+    frame.getByRole("heading", { name: "2026-09-01 · 11.34 kg" }),
+  ).toBeVisible();
+  await expect(
+    frame.getByText("Source clinician unknown", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    frame.getByText("Retain local measurement", { exact: false }),
   ).toBeVisible();
   await expect(
     panel.getByRole("button", {
@@ -823,4 +831,31 @@ test("new package confirmation cannot replace an active release email draft", as
   await expect(email.getByLabel("Email subject", { exact: true })).toHaveValue(
     "Unsaved clinical email draft",
   );
+});
+
+test("v3 acceptance does not enable confirmation of the expanded weight form", async ({
+  page,
+}) => {
+  await fixture(page, true, false);
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await panel
+    .getByRole("button", {
+      name: "Select all eligible records across every page",
+      exact: true,
+    })
+    .click();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  await expect(
+    panel.getByText("version 4 for dated weights", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("button", {
+      name: "Confirm reviewed package",
+      exact: true,
+    }),
+  ).toBeDisabled();
 });
