@@ -1,6 +1,6 @@
 # Reviewed care due plans and unsent reminder jobs
 
-This module supplies `PatientVaccineDuePlans({ petId, onDirtyChange? })` and `CareRemindersPage`. It does not dispatch messages or enable a production scheduler. All job statuses are **pending (prepared, unsent)** or **invalidated**; there is no sent/delivered state or provider call in this implementation.
+This module supplies `PatientVaccineDuePlans({ petId, onDirtyChange? })` and `CareRemindersPage`. Care job statuses describe preparation (pending or invalidated), not delivery. The optional, disabled-by-default [outbox bridge](reminder-dispatch.md) tracks delivery separately. No production scheduler is enabled by these changes.
 
 ## Clinical due plans
 
@@ -14,7 +14,7 @@ Corrections to linked treatment records automatically demote affected plans to p
 
 Every plan/template change stamps its authenticated actor and appends an immutable snapshot. RPCs enforce active staff, with ADMIN additionally required for practice settings. Stable UUIDs and expected versions protect unchanged retries and conflicting edits. Direct mutation/deletion of plans, templates and job history is not granted to browsers or service users. New/changed due plans require active patients. Technical interval bounds are not clinical recommendations.
 
-## Service enqueue contract for the next worker
+## Service preparation contract
 
 The migration exposes these functions only to `service_role`; the browser cannot enqueue or discover candidates:
 
@@ -23,7 +23,7 @@ The migration exposes these functions only to `service_role`; the browser cannot
 - Call `enqueue_care_reminder(p_id uuid, p_source_kind text, p_source_id uuid, p_expected_source_version integer, p_message_template_id uuid, p_expected_template_version integer)`. Retain `p_id` across an unchanged retry. The service must explicitly choose the reviewed template(s) and schedule policy; this module does not select a template by guessing. The server locks and revalidates patient/source/template, derives the household, due date, scheduled date and rendered text, and returns one durable row. A second request ID for the same source/template versions returns the existing canonical job. Changed reuse of an ID fails; stale versions fail. Multiple deliberately approved template schedules can produce different jobs; the future worker must not select redundant templates for the same intended notification.
 - Read `care_reminder_jobs` as the service user to reconcile an uncertain enqueue response. The key is `(source_kind, source_id, source_version, message_template_id, message_template_version)`. Source and message snapshots are retained; a pending job is never rewritten. An invalidated job is never resurrected. Changing patient identity/household may invalidate a job without changing its source version; that job requires a newly reviewed source/template revision, not reuse of its old message.
 
-No cron, HTTP edge endpoint, job-claim lease, outbox insertion, recipient resolution or delivery acknowledgment is supplied yet. Before any future send, a worker must atomically revalidate current source/patient/template/job state, consent, suppressions, current destination, approved deployment/provider settings and its selected schedule; then hand off through the durable communication outbox with idempotency and honest delivery states. Queue presence alone is not authorization to contact a client. Do not treat the current `pending` table as a send-and-mark-sent API.
+The optional [reminder scheduler](reminder-dispatch.md) now supplies a service-only HTTP endpoint and guarded outbox handoff. It requires separately approved automation policies and explicit deployment enablement. Queue presence alone is not authorization to contact a client; pending care-job status is never a delivery acknowledgment.
 
 Pending jobs are invalidated on any vaccine-plan or lab-order revision (including rescheduling, cancellation, disabling and retirement), message-template revision/retirement, and patient archival/death/name/household changes. Linked vaccine administration corrections revise the plan and therefore invalidate jobs. Existing appointment reminders are shown as a separate read-only queue; their existing appointment-version invalidation continues, and no duplicate appointment jobs are generated here.
 

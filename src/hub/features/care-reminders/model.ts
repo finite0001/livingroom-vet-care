@@ -95,6 +95,19 @@ export interface SaveVaccinePlanArgs {
   p_override_reason: string;
   p_review_note: string;
 }
+export interface ReminderOutboxLink {
+  job_kind: string;
+  job_id: string;
+  outbox_id: string | null;
+  state: string;
+  reason: string | null;
+  invalidated_at: string | null;
+  policy_id: string;
+  policy_version: number;
+  approving_actor_id: string | null;
+  frozen_context: Json | null;
+  created_at: string;
+}
 interface Table<Row> {
   Row: { [K in keyof Row]: Row[K] };
   Insert: never;
@@ -109,6 +122,7 @@ export interface CareDatabase {
       care_message_templates: Table<CareMessageTemplate>;
       care_plan_revisions: Table<CareRevision>;
       care_reminder_jobs: Table<CareReminderJob>;
+      reminder_outbox_links: Table<ReminderOutboxLink>;
     };
     Views: Database["public"]["Views"];
     Enums: Database["public"]["Enums"];

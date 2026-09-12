@@ -176,6 +176,60 @@ export function CareRemindersPage() {
       return data;
     },
   });
+  const jobIds = [
+    ...(jobs.data?.map((job) => job.id) ?? []),
+    ...(appointments.data?.map((job) => job.id) ?? []),
+  ];
+  const links = useQuery({
+    queryKey: ["reminder-outbox-links", jobIds],
+    enabled: jobIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await careDb
+        .from("reminder_outbox_links")
+        .select("job_kind,job_id,outbox_id,state,reason,invalidated_at")
+        .in("job_id", jobIds);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const outboxIds =
+    links.data
+      ?.map((link) => link.outbox_id)
+      .filter((id): id is string => Boolean(id)) ?? [];
+  const outcomes = useQuery({
+    queryKey: ["reminder-outbox-outcomes", outboxIds],
+    enabled: outboxIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("communication_outbox")
+        .select("id,state,last_error")
+        .in("id", outboxIds);
+      if (error) throw error;
+      return data;
+    },
+  });
+  function deliveryState(kind: string, id: string) {
+    if (links.isError || outcomes.isError) return "Delivery status unavailable";
+    if (links.isLoading) return "Loading delivery status…";
+    const link = links.data?.find(
+      (item) => item.job_kind === kind && item.job_id === id,
+    );
+    if (!link) return "Prepared; no outbox handoff";
+    if (link.state === "blocked") return "Blocked before enqueue; not sent";
+    if (outcomes.isLoading) return "Loading outbox status…";
+    const outcome = outcomes.data?.find((item) => item.id === link.outbox_id);
+    const labels: Record<string, string> = {
+      pending: "Queued in outbox",
+      claimed: "Delivery attempt in progress",
+      accepted: "Provider accepted; delivery unconfirmed",
+      delivered: "Delivered",
+      failed: "Outbox failed",
+      uncertain: "Delivery uncertain; review required",
+    };
+    return outcome
+      ? (labels[outcome.state] ?? "Outbox status unavailable")
+      : "Outbox status unavailable";
+  }
   return (
     <section className="h-full overflow-y-auto">
       <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
@@ -185,9 +239,10 @@ export function CareRemindersPage() {
             Care due dates and reminders
           </h1>
           <p className="text-sm text-muted-foreground">
-            Reviewed vaccine plans and native lab due orders. Queue entries are
-            unsent; provider dispatch is not configured. Appointment reminders
-            remain in their existing queue.
+            Reviewed vaccine plans and native lab due orders. Delivery status
+            comes from the durable outbox; provider acceptance is distinct from
+            delivery. Automation requires reviewed enabled policies and
+            deployment configuration.
           </p>
         </header>
         <div className="max-w-sm">
@@ -254,8 +309,8 @@ export function CareRemindersPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Latest care reminder jobs</h2>
           <p className="text-sm text-muted-foreground">
-            Most recent 30 jobs. Pending means prepared and unsent. Invalidated
-            snapshots remain as history and cannot be reused.
+            Most recent 30 prepared jobs, with separate outbox delivery status.
+            Invalidated snapshots remain as history and cannot be reused.
           </p>
           {jobs.isError && (
             <p role="alert">
@@ -265,12 +320,28 @@ export function CareRemindersPage() {
               </Button>
             </p>
           )}
+          {(links.isError || outcomes.isError) && (
+            <p role="alert">
+              Delivery status could not load.{" "}
+              <Button
+                onClick={() =>
+                  void Promise.all([
+                    links.refetch(),
+                    ...(outboxIds.length ? [outcomes.refetch()] : []),
+                  ])
+                }
+              >
+                Retry reminder delivery status
+              </Button>
+            </p>
+          )}
           {jobs.data?.map((job) => (
             <div key={job.id} className="rounded-md border p-3">
               <p>
                 {job.source_kind} · {job.channel} · {job.status} · scheduled{" "}
                 {job.scheduled_on} · due {job.due_on}
               </p>
+              <p className="text-sm">{deliveryState("care", job.id)}</p>
               <p className="whitespace-pre-wrap text-sm">{job.rendered_body}</p>
               {job.invalidation_reason && (
                 <p className="text-sm">{job.invalidation_reason}</p>
@@ -298,7 +369,8 @@ export function CareRemindersPage() {
           {appointments.data?.map((a) => (
             <p key={a.id} className="rounded-md border p-3 text-sm">
               {denverCalendarDay(a.remind_at)} · {a.channel} · {a.status} ·
-              appointment version {a.appointment_version}
+              appointment version {a.appointment_version} ·{" "}
+              {deliveryState("appointment", a.id)}
             </p>
           ))}
           <Link className="text-primary underline" to="/hub/schedule">
