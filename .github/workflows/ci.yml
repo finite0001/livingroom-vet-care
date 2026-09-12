@@ -38,3 +38,12 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify actual private Storage round-trip
+        run: node scripts/verify-local-storage.mjs
+        env:
+          RUN_ISOLATED_STORAGE_TEST: '1'
