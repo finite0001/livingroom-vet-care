@@ -293,8 +293,13 @@ export function ReminderDeliverySettings({
                   {source.label} · {channel === "EMAIL" ? "Email" : "Text"}
                 </h3>
                 <p className="text-sm">
-                  {row?.enabled ? "Enabled policy" : "Off"}
-                  {row ? ` · revision ${row.version}` : " · not configured"}
+                  {policies.isLoading
+                    ? "Loading policy…"
+                    : policies.isError
+                      ? "Policy status unavailable"
+                      : row
+                        ? `${row.enabled ? "Enabled policy" : "Off"} · revision ${row.version}`
+                        : "Off · not configured"}
                 </p>
                 {row && (
                   <p className="text-sm text-muted-foreground">
