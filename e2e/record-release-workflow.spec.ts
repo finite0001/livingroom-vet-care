@@ -788,3 +788,39 @@ test("malformed email recovery remains a local error and cannot create another e
   ).toBeDisabled();
   expect(state.emailPrepareCalls).toHaveLength(0);
 });
+
+test("new package confirmation cannot replace an active release email draft", async ({
+  page,
+}) => {
+  await emailFixture(page);
+  const email = page.getByRole("region", { name: "Reviewed release email" });
+  await email
+    .getByLabel("Email subject", { exact: true })
+    .fill("Unsaved clinical email draft");
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await panel
+    .getByRole("button", {
+      name: "Select all shown: Problem and diagnosis history",
+      exact: true,
+    })
+    .click();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  await panel
+    .getByLabel(
+      "I reviewed the complete selected records, original attachments and household recipient.",
+    )
+    .check();
+  await expect(
+    panel.getByRole("button", {
+      name: "Confirm reviewed package",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(email.getByLabel("Email subject", { exact: true })).toHaveValue(
+    "Unsaved clinical email draft",
+  );
+});

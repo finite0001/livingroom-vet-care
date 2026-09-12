@@ -2,7 +2,7 @@ import {
   buildReleaseEmailPayload,
   type ReleaseEmailIntent,
 } from "./release-email-payload.ts";
-import type { ReleaseBundle } from "../../../src/hub/features/record-releases/print.ts";
+import type { ReleaseBundle } from "./record-release-renderer.ts";
 export interface ReleaseEmailDatabase {
   rpc(
     name: string,

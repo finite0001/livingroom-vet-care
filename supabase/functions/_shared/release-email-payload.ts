@@ -1,7 +1,7 @@
 import {
   renderRecordRelease,
   type ReleaseBundle,
-} from "../../../src/hub/features/record-releases/print.ts";
+} from "./record-release-renderer.ts";
 import { normalizeEmail } from "./delivery-policy.ts";
 export const RELEASE_EMAIL_MAX_BYTES = 32 * 1024 * 1024;
 export const RELEASE_EMAIL_MAX_ATTACHMENTS = 25;
