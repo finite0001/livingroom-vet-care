@@ -1,6 +1,6 @@
 # Dependency and CI baseline
 
-Audited 2026-09-12 with `npm audit --json`; applied `npm audit fix --ignore-scripts` without force or major framework changes. Compatible updates changed 30 installed packages, including React Router DOM 6.30.6, its router 1.23.4, PostCSS 8.5.28, and Vite 5.4.21. React remains on 18, React Router on 6, Tailwind on 3, and the Lovable SWC/tagger configuration remains intact.
+Audited 2026-09-12 with `npm audit --json`. The validated npm lock now uses Vite 7.3.6, `@vitejs/plugin-react-swc` 4.x and React Router DOM **7.18.3**, with **zero reported vulnerabilities**. React remains on 18, Tailwind on 3, and the Lovable SWC/tagger configuration remains intact. The user explicitly approved React Router v7 for this repository; see [project instructions](../AGENTS.md).
 
 ## Reproducible checks
 
@@ -12,16 +12,13 @@ Use Node 22.12 or newer and `npm ci`, then `npm run check`. The check command ru
 
 The dedicated compatibility increment upgrades Vite to 7.3.6 and `@vitejs/plugin-react-swc` to 4.x while preserving React 18, Tailwind 3, the Lovable tagger and existing route behavior. Node 22.12 or newer is declared in the manifest to satisfy Vite 7's runtime requirement. Vite 7 uses a newer default browser baseline; staff browser acceptance must use currently maintained browsers. See the [official Vite 7 migration guide](https://v7.vite.dev/guide/migration).
 
-`npm run check` passes after the upgrade. Browser evidence is recorded with the stacked PR. The npm audit now reports **two moderate affected package entries, no high or critical findings**; Vite/esbuild findings are resolved in this npm lockfile.
+## Router security upgrade
 
-## Remaining advisories
+The user authorized replacing the inherited React Router v6 convention with patched v7 while keeping existing routes and React 18. The installed version is pinned to 7.18.3 in `package.json` and the npm lock. The package's declared React/React DOM peer requirement is `>=18`; its Node requirement is `>=20`, covered by this project's Node 22.12 minimum. The existing `react-router-dom` imports remain supported, so the application route tree and `useBlocker` implementation require no source changes.
 
-| Package | Audit severity | Finding and disposition |
-| --- | --- | --- |
-| react-router 6.30.6 | Moderate | Untrusted navigation paths can cause external redirects; SSR error hydration can inject constructors. This frontend uses client-side rendering, but user-controlled navigation still needs validation. A patched v7 upgrade conflicts with the user's v6 convention and awaits clarification. [Redirect advisory](https://github.com/advisories/GHSA-wrjc-x8rr-h8h6), [SSR advisory](https://github.com/advisories/GHSA-337j-9hxr-rhxg). |
-| react-router-dom 6.30.6 | Moderate | Parent dependency affected by the react-router advisories above. |
+Reviewed the [official migration guidance](https://reactrouter.com/6.30.1/upgrading/future) and [7.18.3 release](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.3). This application uses `createBrowserRouter` with client-side routes, module-scope lazy components and no multi-segment splat branches, router fetchers, SSR hydration or route loader/action APIs. The migration-sensitive draft navigation flow is covered by the existing browser test that keeps a SOAP draft on canceled navigation and discards it only after explicit confirmation.
 
-These are affected-package counts, not independently exploitable application flaws. No audit findings are suppressed. Resolve the router upgrade decision before the clinical pilot and rerun the audit before releases because advisory status changes.
+Validation passed `npm run check` (44 unit/handler tests, frontend/config TypeScript and production build) plus all 14 existing browser checks on isolated port 8092, with the same synthetic backend fixtures and strict denial of unrelated network traffic. No production backend or provider calls are needed. The resolved npm audit is zero across critical/high/moderate/low levels; no findings or packages are suppressed. This is an audit snapshot, not a guarantee against future advisories: rerun before release.
 
 ## Lint scope
 

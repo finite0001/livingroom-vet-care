@@ -2,7 +2,7 @@
 
 Boulder veterinary practice website and staff workspace. Home base: 2619 Spruce Street. Housecalls target late October 2026; the clinic targets early 2027. Owned domain: **thelivingroom.vet**.
 
-The application uses React 18, TypeScript, Vite, Tailwind, shadcn/ui, React Router 6 and Supabase. Lovable remains connected through GitHub. This is an evolving practice platform; the clinical checklist is not yet fully implemented.
+The application uses React 18, TypeScript, Vite, Tailwind, shadcn/ui, React Router 7 and Supabase. Lovable remains connected through GitHub. This is an evolving practice platform; the clinical checklist is not yet fully implemented.
 
 ## Development
 
