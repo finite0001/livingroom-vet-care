@@ -5289,6 +5289,56 @@ export type Database = {
           },
         ]
       }
+      contact_intake_budgets: {
+        Row: {
+          attempts: number
+          bucket: string
+          window_start: string
+        }
+        Insert: {
+          attempts: number
+          bucket: string
+          window_start: string
+        }
+        Update: {
+          attempts?: number
+          bucket?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      contact_intake_requests: {
+        Row: {
+          capability_hash: string
+          created_at: string
+          payload: Json
+          request_id: string
+          submission_id: string
+        }
+        Insert: {
+          capability_hash: string
+          created_at?: string
+          payload: Json
+          request_id: string
+          submission_id: string
+        }
+        Update: {
+          capability_hash?: string
+          created_at?: string
+          payload?: Json
+          request_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_intake_requests_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: true
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -7653,6 +7703,20 @@ export type Database = {
         }
       }
       website_inquiry_open_count: { Args: never; Returns: number }
+      accept_contact_intake: {
+        Args: {
+          p_capability_hash: string
+          p_email_budget_hash: string
+          p_payload: Json
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      consume_contact_intake_budget: { Args: never; Returns: boolean }
+      contact_intake_receipt: {
+        Args: { p_capability_hash: string; p_request_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       appointment_status:
