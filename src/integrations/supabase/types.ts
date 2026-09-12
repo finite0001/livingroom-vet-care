@@ -3450,6 +3450,266 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_lesion_corrections: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          observation_id: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id: string
+          observation_id: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          observation_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_lesion_corrections_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: true
+            referencedRelation: "patient_lesion_observations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_lesion_observations: {
+        Row: {
+          body_view: string
+          created_at: string
+          created_by: string
+          depth_mm: number | null
+          id: string
+          label: string
+          length_mm: number | null
+          lesion_id: string
+          notes: string
+          observed_at: string
+          photo_document_id: string | null
+          request: Json
+          width_mm: number | null
+          x: number
+          y: number
+        }
+        Insert: {
+          body_view: string
+          created_at?: string
+          created_by: string
+          depth_mm?: number | null
+          id: string
+          label: string
+          length_mm?: number | null
+          lesion_id: string
+          notes?: string
+          observed_at: string
+          photo_document_id?: string | null
+          request: Json
+          width_mm?: number | null
+          x: number
+          y: number
+        }
+        Update: {
+          body_view?: string
+          created_at?: string
+          created_by?: string
+          depth_mm?: number | null
+          id?: string
+          label?: string
+          length_mm?: number | null
+          lesion_id?: string
+          notes?: string
+          observed_at?: string
+          photo_document_id?: string | null
+          request?: Json
+          width_mm?: number | null
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_lesion_observations_lesion_id_fkey"
+            columns: ["lesion_id"]
+            isOneToOne: false
+            referencedRelation: "patient_lesions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_lesion_observations_photo_document_id_fkey"
+            columns: ["photo_document_id"]
+            isOneToOne: false
+            referencedRelation: "patient_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_lesions: {
+        Row: {
+          body_view: string
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          pet_id: string
+          updated_at: string
+          updated_by: string
+          version: number
+          x: number
+          y: number
+        }
+        Insert: {
+          body_view: string
+          created_at?: string
+          created_by: string
+          id: string
+          label: string
+          pet_id: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+          x: number
+          y: number
+        }
+        Update: {
+          body_view?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          pet_id?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_lesions_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_qol_addenda: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          qol_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id: string
+          qol_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          qol_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_qol_addenda_qol_id_fkey"
+            columns: ["qol_id"]
+            isOneToOne: false
+            referencedRelation: "patient_qol_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_qol_records: {
+        Row: {
+          appetite: string
+          comfort: string
+          created_at: string
+          created_by: string
+          drinking: string
+          good_days: string
+          id: string
+          mobility: string
+          notes: string
+          observed_at: string
+          observer: string
+          pet_id: string
+          signed_at: string | null
+          signed_by: string | null
+          social_engagement: string
+          status: string
+          template_version: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          appetite?: string
+          comfort?: string
+          created_at?: string
+          created_by: string
+          drinking?: string
+          good_days?: string
+          id: string
+          mobility?: string
+          notes?: string
+          observed_at: string
+          observer: string
+          pet_id: string
+          signed_at?: string | null
+          signed_by?: string | null
+          social_engagement?: string
+          status?: string
+          template_version?: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          appetite?: string
+          comfort?: string
+          created_at?: string
+          created_by?: string
+          drinking?: string
+          good_days?: string
+          id?: string
+          mobility?: string
+          notes?: string
+          observed_at?: string
+          observer?: string
+          pet_id?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          social_engagement?: string
+          status?: string
+          template_version?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_qol_records_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -4730,6 +4990,154 @@ export type Database = {
           p_recipient: string
         }
         Returns: undefined
+      }
+      add_patient_qol_addendum: {
+        Args: { p_content: string; p_id: string; p_qol_id: string }
+        Returns: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          qol_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_qol_addenda"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      correct_lesion_observation: {
+        Args: { p_id: string; p_observation_id: string; p_reason: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          observation_id: string
+          reason: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_lesion_corrections"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_lesion_observation: {
+        Args: {
+          p_body_view: string
+          p_depth_mm: number
+          p_expected_version: number
+          p_id: string
+          p_label: string
+          p_length_mm: number
+          p_lesion_id: string
+          p_notes: string
+          p_observed_at: string
+          p_pet_id: string
+          p_photo_document_id: string
+          p_width_mm: number
+          p_x: number
+          p_y: number
+        }
+        Returns: {
+          body_view: string
+          created_at: string
+          created_by: string
+          depth_mm: number | null
+          id: string
+          label: string
+          length_mm: number | null
+          lesion_id: string
+          notes: string
+          observed_at: string
+          photo_document_id: string | null
+          request: Json
+          width_mm: number | null
+          x: number
+          y: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_lesion_observations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_patient_qol: {
+        Args: {
+          p_appetite: string
+          p_comfort: string
+          p_drinking: string
+          p_expected_version: number
+          p_good_days: string
+          p_id: string
+          p_mobility: string
+          p_notes: string
+          p_observed_at: string
+          p_observer: string
+          p_pet_id: string
+          p_social_engagement: string
+        }
+        Returns: {
+          appetite: string
+          comfort: string
+          created_at: string
+          created_by: string
+          drinking: string
+          good_days: string
+          id: string
+          mobility: string
+          notes: string
+          observed_at: string
+          observer: string
+          pet_id: string
+          signed_at: string | null
+          signed_by: string | null
+          social_engagement: string
+          status: string
+          template_version: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_qol_records"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      sign_patient_qol: {
+        Args: { p_expected_version: number; p_id: string }
+        Returns: {
+          appetite: string
+          comfort: string
+          created_at: string
+          created_by: string
+          drinking: string
+          good_days: string
+          id: string
+          mobility: string
+          notes: string
+          observed_at: string
+          observer: string
+          pet_id: string
+          signed_at: string | null
+          signed_by: string | null
+          social_engagement: string
+          status: string
+          template_version: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_qol_records"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
