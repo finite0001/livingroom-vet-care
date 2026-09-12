@@ -92,6 +92,28 @@ export function PatientRecordReleases({
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
+      if (
+        !data ||
+        Array.isArray(data) ||
+        data.pet_id !== petId ||
+        typeof data.client_id !== "string" ||
+        typeof data.client_name !== "string" ||
+        typeof data.policy_accepted !== "boolean" ||
+        !kinds.every(
+          (kind) =>
+            Array.isArray(data[kind]) &&
+            data[kind].every(
+              (item) =>
+                item &&
+                typeof item.id === "string" &&
+                typeof item.label === "string",
+            ),
+        )
+      ) {
+        throw new Error(
+          "Release source response is incomplete. Retry loading this patient’s sources.",
+        );
+      }
       return data;
     },
   });

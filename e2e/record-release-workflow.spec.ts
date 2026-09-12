@@ -52,6 +52,7 @@ async function fixture(page: Page, accepted = true) {
     session,
   );
   const state = {
+    malformedSources: false,
     rows: [] as ReleaseBundle[],
     requests: [] as ReleaseConfirmArgs[],
     ambiguous: false,
@@ -105,6 +106,7 @@ async function fixture(page: Page, accepted = true) {
         json: { id: clientId, full_name: "Test family" },
       });
     if (path === "/rest/v1/rpc/list_record_release_sources") {
+      if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
         pet_id: petId,
         client_id: clientId,
@@ -385,4 +387,23 @@ test("clinical form acceptance gate permits preview but prevents confirmation", 
       exact: true,
     }),
   ).toBeDisabled();
+});
+
+test("malformed release sources show a local retry error without crashing the patient record", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  state.malformedSources = true;
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Retry release data", exact: true }),
+  ).toBeVisible({ timeout: 15000 });
+  await expect(
+    page.getByRole("region", { name: "Clinical records", exact: true }),
+  ).toBeVisible();
+  state.malformedSources = false;
+  await page
+    .getByRole("button", { name: "Retry release data", exact: true })
+    .click();
+  await expect(page.getByLabel("Household delivery contact")).toBeVisible();
 });
