@@ -4823,6 +4823,36 @@ export type Database = {
           },
         ]
       }
+      communication_prepared_requests: {
+        Row: {
+          actor_id: string
+          created_at: string
+          payload: Json | null
+          request_id: string
+          resolved_at: string | null
+          scope: string
+          state: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          payload?: Json | null
+          request_id: string
+          resolved_at?: string | null
+          scope: string
+          state: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          payload?: Json | null
+          request_id?: string
+          resolved_at?: string | null
+          scope?: string
+          state?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -6910,6 +6940,33 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      prepare_message_request: {
+        Args: {
+          p_actor_id: string
+          p_attachment_ids?: string[]
+          p_body: string
+          p_channel: string
+          p_conversation_id: string
+          p_recipient: string
+          p_request_id: string
+          p_scope: string
+          p_subject: string
+        }
+        Returns: Json
+      }
+      recover_message_request: {
+        Args: { p_actor_id: string; p_request_id?: string; p_scope: string }
+        Returns: Json
+      }
+      resolve_message_request: {
+        Args: {
+          p_abandon?: boolean
+          p_actor_id: string
+          p_request_id: string
+          p_scope: string
+        }
+        Returns: Json
       }
     }
     Enums: {
