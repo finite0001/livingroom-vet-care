@@ -39,7 +39,7 @@ const patient = {
   allergies: null,
   version: 1,
 };
-async function fixture(page: Page, admin=false) {
+async function fixture(page: Page, baseURL: string | undefined, admin=false) {
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const payload = Buffer.from(
     JSON.stringify({
@@ -64,7 +64,7 @@ async function fixture(page: Page, admin=false) {
  const productId='55555555-5555-4555-8555-555555555555';
  const template={id:'44444444-4444-4444-8444-444444444444',group_key:'reviewed-group',name:'Reviewed synthetic group',product_ids:[productId],interval_days:30,version:1,active:true,review_note:'Clinical review'};
  const state={row:null as Record<string,unknown>|null,revisions:[] as Record<string,unknown>[],failNext:false,settings:[] as Record<string,unknown>[],saves:[] as string[],jobs:[] as Record<string,unknown>[],links:[] as Record<string,unknown>[],outcomes:[] as Record<string,unknown>[]};
- await page.route('**/*',route=>new URL(route.request().url()).origin==='http://127.0.0.1:8080'?route.continue():route.abort());
+ await page.route('**/*',route=>new URL(route.request().url()).origin===new URL(baseURL ?? 'http://127.0.0.1:8080').origin?route.continue():route.abort());
  await page.route(`${backend}/**`,async route=>{
   const url=new URL(route.request().url());const path=url.pathname;
   if(path==='/auth/v1/token')return route.fulfill({json:session});if(path==='/auth/v1/user')return route.fulfill({json:user});
@@ -72,6 +72,7 @@ async function fixture(page: Page, admin=false) {
   if(path==='/rest/v1/user_roles')return route.fulfill({json:[{role:admin?'ADMIN':'STAFF'}]});
   if(path==='/rest/v1/pets')return route.fulfill({json:[patient]});
   if(path==='/rest/v1/clients')return route.fulfill({json:{id:clientId,full_name:'Synthetic Household'}});
+  if(path==='/rest/v1/rpc/list_record_release_sources')return route.fulfill({json:{pet_id:petId,client_id:clientId,client_name:'Synthetic Household',email:null,phone:null,policy_accepted:false,encounter_ids:[],certificate_ids:[],lab_order_ids:[],document_ids:[],dental_ids:[],qol_ids:[],anesthesia_ids:[],lesion_ids:[]}});
   if(path==='/rest/v1/vaccine_due_templates')return route.fulfill({json:[template]});
   if(path==='/rest/v1/catalog_products')return route.fulfill({json:[{id:productId,name:'Explicitly mapped vaccine',kind:'vaccine'},{id:'66666666-6666-4666-8666-666666666666',name:'Unmapped similar vaccine',kind:'vaccine'}]});
   if(path==='/rest/v1/patient_vaccine_due_plans')return route.fulfill({json:url.searchParams.has('id')?state.row:state.row?[state.row]:[]});
@@ -92,8 +93,8 @@ async function fixture(page: Page, admin=false) {
   return route.fulfill({json:[]});
  });return state;
 }
-test('reviewed patient vaccine plan only offers explicitly mapped products, preserves overrides and stale drafts',async({page})=>{
- const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);
+test('reviewed patient vaccine plan only offers explicitly mapped products, preserves overrides and stale drafts',async({page,baseURL})=>{
+ const state=await fixture(page,baseURL);await page.goto(`/hub/patient/${petId}`);
  await page.getByRole('button',{name:'New vaccine due plan',exact:true}).click();
  await expect(page.getByLabel('Reviewed patient next due date',{exact:true})).toHaveValue('');
  await page.getByLabel('Reviewed vaccine group template').selectOption('44444444-4444-4444-8444-444444444444');
@@ -126,8 +127,8 @@ test('reviewed patient vaccine plan only offers explicitly mapped products, pres
  await expect(page.getByLabel('Plan review / correction rationale')).toHaveValue('Remote reviewed correction');
  expect(new Set(state.saves).size).toBe(1);
 });
-test('mobile administrator approves wording without enabling provider dispatch',async({page})=>{
- await page.setViewportSize({width:390,height:844});const state=await fixture(page,true);await page.goto(`/hub/patient/${petId}`);
+test('mobile administrator approves wording without enabling provider dispatch',async({page,baseURL})=>{
+ await page.setViewportSize({width:390,height:844});const state=await fixture(page,baseURL,true);await page.goto(`/hub/patient/${petId}`);
  await page.getByRole('button',{name:'More',exact:true}).click();
  await page.getByRole('button',{name:'Care reminders',exact:true}).click();
  await expect(page).toHaveURL(/\/hub\/tools\/care-reminders$/);
@@ -144,8 +145,8 @@ test('mobile administrator approves wording without enabling provider dispatch',
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 
-test('prepared job displays provider acceptance separately from delivery',async({page})=>{
- const state=await fixture(page);
+test('prepared job displays provider acceptance separately from delivery',async({page,baseURL})=>{
+ const state=await fixture(page,baseURL);
  state.jobs=[{id:'77777777-7777-4777-8777-777777777777',source_kind:'lab',channel:'email',status:'pending',scheduled_on:'2026-01-01',due_on:'2026-01-02',rendered_body:'Synthetic approved reminder'}];
  state.links=[{job_kind:'care',job_id:'77777777-7777-4777-8777-777777777777',outbox_id:'88888888-8888-4888-8888-888888888888',state:'queued'}];
  state.outcomes=[{id:'88888888-8888-4888-8888-888888888888',state:'accepted'}];
