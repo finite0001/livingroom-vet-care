@@ -1,3 +1,4 @@
+import { PatientCertificates } from "@/hub/features/certificates/PatientCertificates";
 import { PatientLabWork } from "@/hub/features/lab-work/PatientLabWork";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -28,7 +29,8 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [careDirty, setCareDirty] = useState(false);
   const [dentalDirty, setDentalDirty] = useState(false);
   const [labDirty, setLabDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(clinicalDirty || careDirty || dentalDirty || labDirty);
+  const [certificateDirty, setCertificateDirty] = useState(false);
+  const navigationGuard = useUnsavedChanges(clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -59,6 +61,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientTreatments petId={petId} clientId={patient.client_id} />
     <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
+    <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />
     <PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} />
     <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} />
     <ClinicalWorkspace petId={petId} disabled={inactive} onDirtyChange={setClinicalDirty} />

@@ -48,4 +48,12 @@ General certificates include **all uncorrected vaccine records in the reviewed s
 
 Dr. Edler should inspect printed rabies and general samples, including estimated birth date, missing microchip, external records, missing historical due date, unavailable business phone, multi-page output, void/correction and reissue. Confirm acceptance of typed electronic signatures and the custom format with intended recipients; decide product duration vocabulary, ferret/other-species policy, tag workflow, and clinical due-date review. The software captures a clinician decision; it does not supply vaccine appropriateness or legal supervision advice.
 
-Root integration owns a reviewed issuance UI, authenticated routes/patient panel, generated Supabase types, full combined migration replay, and deployment. No PatientPage wiring, cloud write, or external send is included here.
+The patient issuance panel is implemented below. Root integration owns the shared SPA dirty-state blocker, generated Supabase types, full combined migration replay, and deployment. No cloud write or external send is included.
+
+## Patient-panel UI
+
+`PatientCertificates({ petId, onDirtyChange? })` is the named React export. The patient panel is wired locally for browser validation. It lists issued certificates in pages of 25, loads each current event history, opens the immutable snapshot, and refreshes the coherent read RPC again immediately before opening the browser print dialog. It offers no fake PDF-download or send button.
+
+Only an apparently eligible verified DVM sees preparation/signature controls; server authorization remains authoritative. Supplemental fields lock after preview. Editing clears the reviewed snapshot/signature/attestation; issuing transmits the exact returned snapshot, with no client-derived replacement values. Ambiguous issue and void responses retain their UUID and original arguments for retry. Definitive issue rejection requires a new review. Reissue requires a reason and a fresh preview. Unsaved form changes register `beforeunload` and the optional `onDirtyChange` callback; root must fold this into the existing shared SPA blocker. No competing router blocker is registered here.
+
+Browser coverage includes unknown historical due dates, locked preview fields, identical UUID/payload after an ambiguous response, reopening a corrected certificate, invalidation visible in the print popup, reload persistence, missing rabies metadata, and an unverified DVM. The backend SQL assertions remain the authority for actual role/record checks; browser tests use synthetic API fixtures and never issue real certificates.
