@@ -1,4 +1,5 @@
 import { PatientVaccineDuePlans } from "@/hub/features/care-reminders/PatientVaccineDuePlans";
+import { PatientRecordReleases } from "@/hub/features/record-releases/PatientRecordReleases";
 import { PatientAnesthesiaRecords } from "@/hub/features/anesthesia/PatientAnesthesiaRecords";
 import { PatientCertificates } from "@/hub/features/certificates/PatientCertificates";
 import { PatientLabWork } from "@/hub/features/lab-work/PatientLabWork";
@@ -27,6 +28,7 @@ export default function PatientPage() {
   return id ? <PatientWorkspace key={id} petId={id} /> : <p role="alert">Patient not found.</p>;
 }
 function PatientWorkspace({ petId }: { petId: string }) {
+  const [releaseDirty, setReleaseDirty] = useState(false);
   const [clinicalDirty, setClinicalDirty] = useState(false);
   const [careDirty, setCareDirty] = useState(false);
   const [dentalDirty, setDentalDirty] = useState(false);
@@ -34,7 +36,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
+  const navigationGuard = useUnsavedChanges(releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -70,6 +72,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} />
     <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} />
     <PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} onDirtyChange={setAnesthesiaDirty} />
+    <PatientRecordReleases key={`release-${petId}`} petId={petId} onDirtyChange={setReleaseDirty} />
     <ClinicalWorkspace petId={petId} disabled={inactive} onDirtyChange={setClinicalDirty} />
   </div></section>;
 }
