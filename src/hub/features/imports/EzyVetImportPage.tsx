@@ -1,3 +1,4 @@
+import { EzyVetWeightImports } from "./EzyVetWeightImports";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +36,6 @@ const resources = [
   "consult",
   "history",
   "vaccination",
-  "diagnostic",
 ];
 const selectClass =
   "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
@@ -329,6 +329,7 @@ export function EzyVetImportPage() {
   return (
     <section className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-6xl space-y-5">
+        <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
         <header>
           <h1 className="text-2xl font-semibold">ezyVet import review</h1>
           <p className="mt-2 text-sm text-muted-foreground">

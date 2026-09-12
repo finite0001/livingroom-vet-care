@@ -13,6 +13,7 @@ export interface ImportRun {
   next_page: number;
   status: string;
   lease_id: string | null;
+  animal_external_id?: string;
 }
 export interface ImportGateway {
   authenticate: (
@@ -24,6 +25,13 @@ export interface ImportGateway {
     site: string,
     resource: Resource,
     sourceOrigin: string,
+  ) => Promise<ImportRun>;
+  claimWeight?: (
+    id: string,
+    actor: string,
+    site: string,
+    sourceOrigin: string,
+    animalLinkId: string,
   ) => Promise<ImportRun>;
   stage: (
     run: ImportRun,
@@ -115,7 +123,7 @@ export function createHandler(dependencies: HandlerDependencies) {
         Array.isArray(body) ||
         typeof body !== "object" ||
         Object.keys(body).some(
-          (key) => !["run_id", "resource"].includes(key),
+          (key) => !["run_id", "resource", "animal_link_id"].includes(key),
         ) ||
         typeof body.run_id !== "string" ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -126,13 +134,30 @@ export function createHandler(dependencies: HandlerDependencies) {
         return respond({ error: "INVALID_REQUEST" }, 400);
       if (!config.readResources.includes(body.resource as Resource))
         return respond({ error: "RESOURCE_NOT_CONFIGURED" }, 400);
-      run = await dependencies.gateway.claim(
-        body.run_id,
-        actor,
-        config.siteUid,
-        body.resource as Resource,
-        config.baseUrl,
-      );
+      if (
+        body.resource === "healthstatus" &&
+        (typeof body.animal_link_id !== "string" ||
+          !/^[0-9a-f-]{36}$/i.test(body.animal_link_id))
+      )
+        return respond({ error: "PATIENT_MAPPING_REQUIRED" }, 400);
+      if (body.resource !== "healthstatus" && body.animal_link_id !== undefined)
+        return respond({ error: "INVALID_REQUEST" }, 400);
+      run =
+        body.resource === "healthstatus"
+          ? await dependencies.gateway.claimWeight!(
+              body.run_id,
+              actor,
+              config.siteUid,
+              config.baseUrl,
+              body.animal_link_id as string,
+            )
+          : await dependencies.gateway.claim(
+              body.run_id,
+              actor,
+              config.siteUid,
+              body.resource as Resource,
+              config.baseUrl,
+            );
       const summary = (value: ImportRun) => ({
         run_id: value.id,
         status: value.status,
@@ -145,7 +170,11 @@ export function createHandler(dependencies: HandlerDependencies) {
         adapter = createAdapter(config, dependencies);
         adapterKey = key;
       }
-      const page = await adapter.page(run.resource, run.next_page);
+      const page = await adapter.page(
+        run.resource,
+        run.next_page,
+        run.animal_external_id,
+      );
       const result = await dependencies.gateway.stage(run, actor, page);
       return respond(
         { ...summary(result), staged_count: page.items.length },

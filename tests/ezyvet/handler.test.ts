@@ -152,3 +152,80 @@ test("stage failure preserves cursor and persists safe error code, never raw err
   assert.equal(f.state.run.next_page, 1);
   assert.deepEqual(f.state.failures, ["IMPORT_FAILED"]);
 });
+
+test("healthstatus accepts only reviewed mapping input and uses server-derived animal ID", async () => {
+  const env: Record<string, string> = {
+    APP_URL: "https://thelivingroom.vet",
+    APP_ENV: "staging",
+    EZYVET_IMPORT_MODE: "staging",
+    EZYVET_SITE_UID: "site",
+    EZYVET_PARTNER_ID: "partner",
+    EZYVET_CLIENT_ID: "client",
+    EZYVET_CLIENT_SECRET: "secret",
+    EZYVET_READ_RESOURCES: "healthstatus",
+  };
+  const urls: string[] = [];
+  const handler = createHandler({
+    env: (k) => env[k],
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input) => {
+      const url = String(input);
+      urls.push(url);
+      return url.endsWith("access_token")
+        ? Response.json({ access_token: "token", expires_in: 43200 })
+        : Response.json({
+            meta: { items_page: 1, items_page_total: 1 },
+            items: [{ healthstatus: { id: 9, animal_id: 77 } }],
+          });
+    },
+    gateway: {
+      authenticate: async () => ({ id: "actor", activeAdmin: true }),
+      claim: async () => {
+        throw new Error("Generic claim must not run");
+      },
+      claimWeight: async (run, actor, site, origin, mapping) => {
+        assert.equal(mapping, "e5200000-0000-4000-8000-000000000001");
+        return {
+          id: run,
+          requested_by: actor,
+          source_site_uid: site,
+          resource: "healthstatus",
+          status: "running",
+          next_page: 1,
+          lease_id: "lease",
+          animal_external_id: "77",
+        };
+      },
+      stage: async (run) => ({ ...run, status: "review_ready", next_page: 2 }),
+      fail: async () => {},
+    },
+  });
+  const req = (extra: Record<string, unknown>) =>
+    new Request("https://edge.test", {
+      method: "POST",
+      headers: { Authorization: "Bearer token" },
+      body: JSON.stringify({ run_id: id, resource: "healthstatus", ...extra }),
+    });
+  assert.equal((await handler(req({}))).status, 400);
+  assert.equal(
+    (
+      await handler(
+        req({
+          animal_link_id: "e5200000-0000-4000-8000-000000000001",
+          animal_id: "999",
+        }),
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await handler(
+        req({ animal_link_id: "e5200000-0000-4000-8000-000000000001" }),
+      )
+    ).status,
+    200,
+  );
+  assert.match(urls.at(-1)!, /animal_id=77$/);
+});

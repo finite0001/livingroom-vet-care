@@ -72,7 +72,8 @@ async function fixture(page: Page, admin = true) {
     reviewReads: 0,
   };
   await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === "http://127.0.0.1:8080"
+    new URL(route.request().url()).origin ===
+    new URL(String(test.info().project.use.baseURL)).origin
       ? route.continue()
       : route.abort(),
   );
@@ -247,7 +248,9 @@ test("nonadministrator cannot query staged source records", async ({
   const state = await fixture(page, false);
   await page.goto("/hub/tools/ezyvet");
   await expect(page).toHaveURL(/\/hub$/);
-  await expect(page.getByRole("button", { name: "ezyVet imports", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "ezyVet imports", exact: true }),
+  ).toHaveCount(0);
   expect(state.reviewReads).toBe(0);
   expect(state.stageRequests).toBe(0);
 });
