@@ -319,7 +319,7 @@ const Contact = () => {
                         <Clock className="h-5 w-5 text-sage-dark" />
                       </div>
                       <h3 className="font-heading text-lg font-semibold text-foreground">
-                        Hours of Operation
+                        {practice.launchStages.some((stage) => stage.status === "open") ? "Hours of Operation" : "Planned Hours"}
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground">

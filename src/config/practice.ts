@@ -28,7 +28,7 @@ export const practice: PracticeSettings = {
   email: null,
   emergencyPhone: null,
   domain: "thelivingroom.vet",
-  hours: null,
+  hours: "Monday–Saturday, 9 am–5 pm Mountain Time",
   contactPath: "/contact#contact-form",
   launchStages: [
     { serviceMode: "housecall", label: "Housecalls", status: "planned", targetWindow: "Late October 2026" },
