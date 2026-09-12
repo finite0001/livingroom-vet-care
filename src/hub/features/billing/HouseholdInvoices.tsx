@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { dollarsToCents, money } from "./money";
+import { InvoiceEmailComposer } from "./InvoiceEmailComposer";
 import { InvoiceDocumentPreview } from "./InvoiceDocumentPreview";
 
 interface HouseholdInvoicesProps {
@@ -122,10 +123,11 @@ export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                Leave an unconfirmed billing request?
+                Leave unfinished invoice work?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                The request may already be recorded. If you leave, review
+                Unsaved email text will be discarded. A submitted request may
+                already be recorded; recover the saved invoice email or review
                 invoice history before submitting it again.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -144,8 +146,9 @@ export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
           </AlertDialogContent>
         </AlertDialog>
         <p className="text-sm text-muted-foreground">
-          USD charges and accounting credits. Payment collection and invoice
-          delivery are not connected yet.
+          USD charges and accounting credits. Payment collection is not
+          connected. Issued invoices can be prepared for reviewed email
+          queueing; delivery is tracked separately.
         </p>
         {error && (
           <p role="alert" className="text-destructive">
@@ -235,10 +238,11 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [emailDirty, setEmailDirty] = useState(false);
   useEffect(() => {
-    onPending(busy || Boolean(pending));
+    onPending(busy || Boolean(pending) || emailDirty);
     return () => onPending(false);
-  }, [busy, pending, onPending]);
+  }, [busy, pending, emailDirty, onPending]);
   const invoice = useQuery({
     queryKey: ["invoice", invoiceId, clientId],
     queryFn: async () => {
@@ -400,7 +404,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     (sum, item) => sum + item.amount_cents,
     0,
   );
-  const disabled = busy || Boolean(pending);
+  const disabled = busy || Boolean(pending) || emailDirty;
   return (
     <section
       aria-label="Invoice details"
@@ -620,6 +624,15 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             </Button>
           </div>
         </fieldset>
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <InvoiceEmailComposer
+          invoiceId={invoiceId}
+          clientId={clientId}
+          canPrepare={record.status === "issued"}
+          disabled={busy || Boolean(pending)}
+          onDirtyChange={setEmailDirty}
+        />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}
       {Boolean(details.data.credits.length) && (
