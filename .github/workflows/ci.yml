@@ -77,6 +77,12 @@ jobs:
         run: node --experimental-strip-types tests/payment-access/local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache payment delivery HTTP dependencies
+        run: deno check --frozen tests/payment-access/delivery-local-server.ts
+      - name: Verify actual payment delivery HTTP, queue and worker roundtrip
+        run: node --experimental-strip-types tests/payment-access/delivery-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify actual private Storage round-trip
         run: node scripts/verify-local-storage.mjs
         env:

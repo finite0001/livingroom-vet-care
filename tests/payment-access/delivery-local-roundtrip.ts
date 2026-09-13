@@ -3,7 +3,9 @@ import {execFileSync, spawn} from "node:child_process";
 import {readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {randomUUID} from "node:crypto";
+import {randomUUID,createHash} from "node:crypto";
+import {dispatchOne,type OutboxEnvironment} from "../../supabase/functions/_shared/outbox-dispatch.ts";
+import {buildInvoiceEmailPayload} from "../../supabase/functions/_shared/invoice-email-payload.ts";
 import assert from "node:assert/strict";
 import {materializePaymentAccess,paymentAccessConfig,paymentGrantFromContext} from "../../supabase/functions/_shared/payment-access-capability.ts";
 let project = process.env.PAYMENT_TEST_PROJECT || "/tmp/livingroom-vet-foundation";
@@ -39,6 +41,7 @@ async function api(path:string,args:unknown,headers=serviceHeaders){
 }
 const rpc=(name:string,args:Record<string,unknown>,staff=false)=>api("/rest/v1/rpc/"+name,args,staff?staffHeaders:serviceHeaders);
 try{
+ check(sql("select count(*) from public.communication_outbox where state in ('pending','claimed');") === "0", "No unrelated queued work before isolated dispatch test");
  const profiles=JSON.parse(sql("select coalesce(jsonb_agg(to_jsonb(p)),'[]') from public.payment_provider_profiles p;"));
  check(!profiles.length || (profiles.length===1 && profiles[0].return_origin===origin && profiles[0].livemode===false),"Only compatible local test provider profile reused");
  if(profiles.length)account=profiles[0].account_id;else{account="acct_Local"+randomUUID().replaceAll("-","");await rpc("configure_payment_provider",{p_account_id:account,p_livemode:false,p_return_origin:origin});createdProfile=true;}
@@ -46,9 +49,9 @@ try{
  const user=await api("/auth/v1/admin/users",{email,password,email_confirm:true});actor=user.id;ids.push(actor);
  const auth=await api("/auth/v1/token?grant_type=password",{email,password},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
- const c=await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Payment roundtrip",p_primary_phone:null,p_primary_email:"delivery@example.test",p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null},true);client=c.id;ids.push(client);
+ const c=await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Payment roundtrip",p_primary_phone:"+13035550102",p_primary_email:"delivery@example.test",p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null},true);client=c.id;ids.push(client);
  const p=await rpc("save_catalog_product",{p_id:null,p_expected_version:null,p_name:"Synthetic visit",p_kind:"service",p_manufacturer:"",p_unit:"visit",p_unit_price_cents:10000,p_active:true},true);product=p.id;ids.push(product);
- server=spawn("deno",["run","--cached-only","--allow-env","--allow-net=127.0.0.1","tests/payment-access/delivery-local-server.ts"],{env:{...process.env,SUPABASE_URL:local.API_URL,SUPABASE_SERVICE_ROLE_KEY:local.SERVICE_ROLE_KEY,SUPABASE_ANON_KEY:local.ANON_KEY,APP_URL:origin,PAYMENT_DELIVERY_STAFF_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"",TWILIO_AUTH_TOKEN:""},stdio:"ignore"});
+ server=spawn("deno",["run","--cached-only","--allow-env","--allow-net=127.0.0.1","tests/payment-access/delivery-local-server.ts"],{env:{...process.env,SUPABASE_URL:local.API_URL,SUPABASE_SERVICE_ROLE_KEY:local.SERVICE_ROLE_KEY,SUPABASE_ANON_KEY:local.ANON_KEY,APP_URL:origin,PAYMENT_DELIVERY_STAFF_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"",TWILIO_AUTH_TOKEN:"",TWILIO_FROM_NUMBER:"+13035550101",TWILIO_ACCOUNT_SID:"AC"+"a".repeat(32)},stdio:"ignore"});
  let ready=false;for(let i=0;i<80;i++){if(server.exitCode!==null)throw new Error("Local Deno handler failed to boot");try{ready=await(await fetch(root+"/health")).text()==="ready";if(ready)break;}catch{/* Boot pending. */}await new Promise(resolve=>setTimeout(resolve,100));}
  check(ready,"Actual localhost Deno HTTP server booted with external network denied");
  const post=(args:unknown,authenticated=true)=>fetch(root+"/prepare",{method:"POST",headers:{Origin:origin,...(authenticated?staffHeaders:{"Content-Type":"application/json"})},body:JSON.stringify(args)});
@@ -75,8 +78,59 @@ try{
  check((await post(args)).status===200,"Exact captured preparation retry succeeds");
  const persisted=sql(`select to_jsonb(r) from public.payment_delivery_requests r where id=${quote(delivery)};select to_jsonb(c) from public.payment_delivery_captures c where request_id=${quote(delivery)};`);
  check(!persisted.includes(access.collection_token) && !persisted.includes(access.status_token),"Only templates and hashes enter durable delivery rows");
+
+ const workerEnv:OutboxEnvironment={APP_ENV:"staging",OUTBOUND_DELIVERY_MODE:"test",OUTBOUND_TEST_EMAILS:"delivery@example.test",OUTBOUND_TEST_PHONES:"+13035550102",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"synthetic-never-transmitted",TWILIO_FROM_NUMBER:"+13035550101",TWILIO_ACCOUNT_SID:"AC"+"a".repeat(32),TWILIO_AUTH_TOKEN:"synthetic-never-transmitted",PAYMENT_DELIVERY_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true"};
+ const workerDb={rpc:async(name:string,args:Record<string,unknown>={})=>({data:await rpc(name,args),error:null})};
+ let transports=0;
+ interface ReviewedDelivery {delivery:{capture:{message_hash:string;payload_hash:string};request:{channel:string}};preview:{message:string}}
+ async function sendReviewed(requestId:string,preview:ReviewedDelivery,expectedAttachment?:unknown,uncertain=false){
+  const capture=preview.delivery.capture;
+  const queued=await rpc("enqueue_payment_delivery",{p_request_id:requestId,p_reviewed_message_hash:capture.message_hash,p_reviewed_payload_hash:capture.payload_hash,p_attest:true},true);
+  ids.push(queued.id,queued.message_id);
+  const duplicate=await rpc("enqueue_payment_delivery",{p_request_id:requestId,p_reviewed_message_hash:capture.message_hash,p_reviewed_payload_hash:capture.payload_hash,p_attest:true},true);
+  check(duplicate.id===queued.id,"Exact queue retry recovers one durable outbox receipt");
+  const result=await dispatchOne(workerDb,workerEnv,(async(input:unknown,init:RequestInit)=>{
+   transports++;const body=String(init.body);
+   check(createHash("sha256").update(body).digest("hex")===capture.payload_hash,"Actual worker transport matches captured payload digest");
+   const email=preview.delivery.request.channel==="EMAIL";
+   check(String(input).startsWith(email?"https://api.resend.com/":"https://api.twilio.com/"),"Worker selects expected provider endpoint without contacting it");
+   if(email){const payload=JSON.parse(body);check(payload.text===preview.preview.message,"Actual email matches staff review");if(expectedAttachment)check(JSON.stringify(payload.attachments[0])===JSON.stringify(expectedAttachment),"Actual worker preserves reviewed invoice attachment bytes");}
+   else check(new URLSearchParams(body).get("Body")===preview.preview.message,"Actual SMS matches staff review");
+   if(uncertain)throw new Error("Synthetic lost provider response");
+   return new Response(JSON.stringify(email?{id:randomUUID()}:{sid:"SM"+"a".repeat(32)}),{status:200});
+  }) as typeof fetch);
+  check(result.outbox_id===queued.id && result.state===(uncertain?"uncertain":"accepted"),"Production dispatcher records real guarded attempt outcome");
+  const recovery=await(await post({action:"recover",p_request_id:requestId})).json();
+  check(recovery.delivery.receipt.outbox_id===queued.id && recovery.delivery.receipt.state===(uncertain?"uncertain":"accepted") && recovery.delivery.receipt.delivered===false,"Receipt recovery distinguishes acceptance/uncertainty from delivery");
+  const stored=sql(`select to_jsonb(o) from public.communication_outbox o where id=${quote(queued.id)};`);
+  check(!stored.includes(access.collection_token) && !stored.includes(access.status_token),"Provider attempt stores no usable payment capability");
+ }
+ await sendReviewed(delivery,review);
+ const attachmentRequest=randomUUID(),attachedDelivery=randomUUID();ids.push(attachmentRequest,attachedDelivery);
+ const invoicePreview=await rpc("read_invoice_email_preview",{p_invoice_id:invoice,p_client_id:client},true);
+ await rpc("prepare_invoice_email",{p_request_id:attachmentRequest,p_invoice_id:invoice,p_client_id:client,p_conversation_id:conversation,p_recipient:args.p_recipient,p_subject:args.p_subject,p_body:args.p_body_template,p_invoice_hash:invoicePreview.source_hash},true);
+ const invoiceContext=await rpc("invoice_email_capture_context",{p_request_id:attachmentRequest,p_actor_id:actor});
+ const frozen=await buildInvoiceEmailPayload(invoiceContext.request,invoiceContext.bundle,{from:workerEnv.RESEND_FROM!,replyTo:workerEnv.RESEND_REPLY_TO!},{name:"The Living Room Vet",address:"2619 Spruce Street, Boulder, CO",domain:"thelivingroom.vet"});
+ await rpc("capture_invoice_email_payload",{p_request_id:attachmentRequest,p_actor_id:actor,p_payload_text:frozen.payload_text});
+ check((await post({...args,p_request_id:attachedDelivery,p_invoice_email_request_id:attachmentRequest,p_invoice_payload_hash:frozen.payload_hash})).status===200,"Actual preparation captures payment email with original renderer attachment");
+ const attachedReview=await(await post({action:"review",p_request_id:attachedDelivery})).json();
+ await sendReviewed(attachedDelivery,attachedReview,JSON.parse(frozen.payload_text).attachments[0]);
+ await rpc("record_sms_consent",{p_actor_id:actor,p_client_id:client,p_phone:"+13035550102",p_opted_in:true,p_method:"WRITTEN",p_details:"Synthetic local test",p_expected_updated_at:null},true);
+ const smsDelivery=randomUUID(),blockedDelivery=randomUUID();ids.push(smsDelivery,blockedDelivery);
+ const smsArgs={...args,p_channel:"SMS",p_recipient:"+13035550102",p_subject:"",p_request_id:smsDelivery};
+ check((await post(smsArgs)).status===200,"Actual SMS preparation validates current consent");
+ const smsReview=await(await post({action:"review",p_request_id:smsDelivery})).json();
+ await sendReviewed(smsDelivery,smsReview,undefined,true);
+ const beforeRetry=transports;check((await dispatchOne(workerDb,workerEnv,(async()=>{transports++;throw new Error("Must not retry uncertainty");}) as typeof fetch)).processed===false && transports===beforeRetry,"Uncertain provider response never automatically resends");
+ check((await post({...smsArgs,p_request_id:blockedDelivery})).status===200,"Prepare separate delivery for revoke-before-send check");
+ const blockedReview=await(await post({action:"review",p_request_id:blockedDelivery})).json();
+ const blockedOutbox=await rpc("enqueue_payment_delivery",{p_request_id:blockedDelivery,p_reviewed_message_hash:blockedReview.delivery.capture.message_hash,p_reviewed_payload_hash:blockedReview.delivery.capture.payload_hash,p_attest:true},true);ids.push(blockedOutbox.id,blockedOutbox.message_id);
  await rpc("revoke_payment_collection",{p_request_id:grantId,p_reason:"Synthetic local revocation"},true);
- check((await post({action:"review",p_request_id:delivery})).status===404,"Revoked grant blocks fresh capability review");
+ const beforeBlocked=transports;
+ await dispatchOne(workerDb,workerEnv,(async()=>{transports++;throw new Error("Revocation must block transport");}) as typeof fetch);
+ check(transports===beforeBlocked,"Revoked queued grant stops production worker before provider transport");
+ const receiptReview=await(await post({action:"review",p_request_id:delivery})).json();
+ check(receiptReview.delivery.receipt && !receiptReview.preview,"Queued receipt recovery after revocation never rematerializes a link");
  const recovered=await(await post({action:"recover",p_request_id:delivery})).json();check(recovered.delivery.capture.message_hash===prepared.delivery.capture.message_hash,"Revoked delivery still recovers immutable digest metadata");
 }catch(error){failures.push(error);}finally{
  if(server){server.kill("SIGTERM");await new Promise<void>(resolve=>{if(server!.exitCode!==null || server!.signalCode!==null)resolve();else server!.once("exit",()=>resolve());});}
@@ -86,4 +140,4 @@ try{
  }catch(error){failures.push(error);}
 }
 if(failures.length)throw new AggregateError(failures,"Local payment roundtrip or cleanup failed");
-console.log(`Local delivery HTTP/Auth/SQL roundtrip: ${assertions} checks passed. No provider requests or messages sent.`);
+console.log(`Local delivery HTTP/Auth/SQL roundtrip: ${assertions} checks passed. Provider transport simulated; no real provider requests or messages sent.`);
