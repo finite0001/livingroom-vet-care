@@ -1,6 +1,6 @@
 # Phase2 — scheduler evidence and operations screen
 
-Priority: launch readiness. Status: pending phase1 contract. Root paths below are relative to `/Users/davidedler/livingroom-vet-operations-readiness-plan/`.
+Priority: launch readiness. Status: implemented and locally verified against phase1. Root paths below are relative to `/Users/davidedler/livingroom-vet-operations-readiness-plan/`.
 
 Worker ownership: modify `supabase/functions/_shared/reminder-scheduler.ts` and its focused tests. Preserve method/auth/environment/body validation and the disabled-before-database boundary. Create a stable run UUID after valid enabled invocation and confirm its idempotent start receipt before queueing. Invoke the service-only wrapper that queues through the canonical function and records validated counts atomically. Recover that same receipt after an ambiguous response; a missing terminal receipt leaves outcome unknown, not failed or zero. Never queue until the start receipt is confirmed. Distinguish queue failure from lost completion acknowledgment; never automatically execute queue again to repair only a missing run receipt. Keep externally returned errors sanitized and `dispatched:false`. Add actual local HTTP/Auth/PostgREST evidence with synthetic reminder fixtures and no provider transport. Verify fixtures and run receipts clean up under test-only service authority.
 
