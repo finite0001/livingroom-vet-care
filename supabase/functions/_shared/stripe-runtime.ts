@@ -1,3 +1,5 @@
+import {paymentAccessConfig, paymentGrantFromContext, materializePaymentCheckout} from "./payment-access-capability.ts";
+import type {PaymentScopedCheckoutIntent} from "./payment-access-capability.ts";
 import {createStripeRefundHandler} from "./stripe-refund.ts";
 import type {RefundContext} from "./stripe-refund.ts";
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2.110.3";
@@ -32,6 +34,14 @@ function rpcClient(key?: string) {
     },
   };
 }
+async function createVersionedCheckout(intent: PaymentScopedCheckoutIntent) {
+  if ((intent.return_context_version ?? 1) === 1) return provider().createCheckout(intent);
+  if (intent.return_context_version !== 2 || !intent.return_scope_id) throw new Error("Payment access unavailable");
+  const captured = await rpcClient().rpc<unknown>("payment_collection_access_context", {p_grant_id:intent.return_scope_id});
+  const config = paymentAccessConfig({origin:Deno.env.get("PAYMENT_ACCESS_ORIGIN"),activeKeyVersion:Deno.env.get("PAYMENT_ACCESS_ACTIVE_KEY_VERSION"),keys:Deno.env.get("PAYMENT_ACCESS_KEYS")});
+  const exact = await materializePaymentCheckout(intent,paymentGrantFromContext(captured),config);
+  return provider().createCheckout(exact);
+}
 export function stripeCheckoutRuntime() {
   // Delay client/provider construction until the authenticated handler needs them.
   return createStripeCheckoutHandler({
@@ -45,7 +55,7 @@ export function stripeCheckoutRuntime() {
     },
     context: (requestId, actorId) => rpcClient().rpc<CheckoutContext>("checkout_payment_context", {p_request_id: requestId, p_actor_id: actorId}),
     provider: {
-      createCheckout: intent => provider().createCheckout(intent),
+      createCheckout: intent => createVersionedCheckout(intent),
       retrieveCheckout: id => provider().retrieveCheckout(id),
       expireCheckout: (id,key) => provider().expireCheckout(id,key),
     },

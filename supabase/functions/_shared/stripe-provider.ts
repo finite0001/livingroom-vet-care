@@ -19,6 +19,10 @@ export interface CheckoutIntent {
   idempotency_key: string;
   session_expires_at: string;
   retry_before: string;
+  return_context_version?: number;
+  return_scope_id?: string | null;
+  return_key_version?: string | null;
+  return_origin?: string | null;
 }
 export interface RefundIntent {
   id: string;
@@ -109,7 +113,18 @@ export function createStripeProvider(env: StripeEnvironment, fetcher: typeof fet
         intent.livemode !== live || intent.currency !== "usd" ||
         !/^[A-Za-z0-9:_-]{16,200}$/.test(intent.idempotency_key)) fail("intent");
     cents(intent.amount_cents);
-    returnUrl(intent.success_url, origin.origin, "/payment/return"); returnUrl(intent.cancel_url, origin.origin, "/payment/cancel");
+    if ((intent.return_context_version ?? 1) === 1) {
+      returnUrl(intent.success_url, origin.origin, "/payment/return"); returnUrl(intent.cancel_url, origin.origin, "/payment/cancel");
+    } else if (intent.return_context_version === 2) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(intent.return_scope_id ?? "") ||
+          !/^[A-Za-z0-9_-]{1,40}$/.test(intent.return_key_version ?? "") || intent.return_origin !== origin.origin) fail("intent");
+      let statusHash = "";
+      for (const [value, path] of [[intent.success_url,"return"],[intent.cancel_url,"cancel"]]) {
+        let url: URL; try {url=new URL(value);} catch {fail("intent");}
+        if (url.origin!==origin.origin || url.username || url.password || url.search || url.pathname!==`/payment/${path}/${intent.return_scope_id}` || !/^#s1\.[A-Za-z0-9_-]{43}$/.test(url.hash)) fail("intent");
+        if (statusHash && statusHash!==url.hash) fail("intent"); statusHash=url.hash;
+      }
+    } else fail("intent");
   }
   return {
     async createCheckout(intent: CheckoutIntent) {
