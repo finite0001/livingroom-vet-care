@@ -38,6 +38,7 @@ begin
  if older_count=0 and jsonb_array_length(ids)>0 then
   -- Original core validates recipient/patient with no fabricated implicit source.
   result:=public.preview_record_release_v1(p_pet_id,p_client_id,p_channel,p_recipient,'{}');s:=result->'snapshot';
+  s:=s||jsonb_build_object('selection',coalesce(s->'selection','{}')||jsonb_build_object('imported_vaccination_ids','[]'::jsonb));
   foreach k in array array['dental_charts','qol_records','anesthesia_records','lesions','problems','weights','treatments','patient_summaries','lab_reports','external_records','imported_histories','imported_vaccinations','problem_source_extractions'] loop s:=s||jsonb_build_object(k,'[]'::jsonb);end loop;
  else result:=public.release_preview_v7_internal(p_pet_id,p_client_id,p_channel,p_recipient,older);s:=result->'snapshot';end if;
  s:=s||jsonb_build_object('schema_version',8,'selection',coalesce(s->'selection','{}')||jsonb_build_object('imported_prescription_ids',ids),'imported_prescriptions',prescriptions);
