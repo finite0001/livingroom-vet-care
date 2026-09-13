@@ -134,5 +134,7 @@ update public.profiles set is_active=false where id='73400000-0000-4000-8000-000
 set local role service_role;
 select throws_ok($$select public.inspect_payment_collection((select id from fx where k='deadline45-grant'),repeat('c',64),'https://thelivingroom.vet','local-v1')$$,'42501',null,'Deactivated originating staff blocks existing attempt URL release');
 reset role;
+select throws_ok($$insert into public.payment_collection_events(grant_id,actor_id,kind,reason) values((select id from fx where k='deadline30-grant'),'73400000-0000-4000-8000-000000000001','revoked','Quoted p1.'||repeat('a',43))$$,'23514','Use the reviewed private-link workflow; private capabilities cannot be stored in message history','Payment p1 cannot leak through revocation history');
+select throws_ok($$insert into public.payment_collection_events(grant_id,actor_id,kind,reason) values((select id from fx where k='deadline30-grant'),'73400000-0000-4000-8000-000000000001','revoked','Quoted s1.'||repeat('a',43))$$,'23514','Use the reviewed private-link workflow; private capabilities cannot be stored in message history','Payment s1 cannot leak through revocation history');
 select * from finish();
 rollback;
