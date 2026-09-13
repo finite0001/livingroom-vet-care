@@ -1,6 +1,6 @@
 # Reviewed payment reconciliation resolution
 
-Status: **planned, not implemented**. Defer implementation until the reviewed public payment endpoint increment is integrated. This document does not commission a provider or authorize a live financial action.
+Status: **matching-object database workflow implemented in migration 3500**. The original design below is followed by the implemented scope and evidence checkpoint. Service proof retrieval, administrator UI and inbox retry cycles remain pending. This document does not commission a provider or authorize a live financial action.
 
 ## Scope and authorization
 
@@ -112,3 +112,26 @@ Preserve the 3300 corrections: refund late-success protection checks immutable a
 14. Public collection eligibility and staff UI both unblock only after the corresponding unresolved blockers are resolved; unrelated and newly received blockers continue to prevent action.
 
 Database and mocked-handler tests establish local invariants only. Actual Stripe evidence, signed webhook processing and practice review are still required for operational acceptance.
+
+
+## Implemented database increment (3500; local verification only)
+
+Migration `20260913350000_payment_reconciliation_resolution.sql` implements an administrator-reviewed workflow for a previously accepted, exact provider object. Service verification adapter and administrator UI are **not implemented**; no production resolution is enabled by this database work alone.
+
+RPC sequence:
+
+1. Authenticated active ADMIN calls `preview_payment_reconciliation(invoice_id, family, request_id, provider_object_id)` to obtain immutable context, eligible `blocker_refs` and `snapshot_hash`.
+2. The same administrator calls `prepare_payment_reconciliation(case_id, invoice_id, family, request_id, provider_object_id, blocker_refs, expected_case_hash)` with an exact, nonempty subset of reviewed blocker references.
+3. A future trusted service adapter retrieves and verifies the exact provider object, then calls service-only `capture_payment_reconciliation(case_id, reviewer_id, provider_evidence)`. It must set `provider_observed_at` after the verified retrieval, never accept that proof from a browser.
+4. The administrator reviews `read_payment_reconciliation(case_id)` and calls `complete_payment_reconciliation(case_id, reviewed_proof_hash, expected_case_hash, attest)` with explicit true attestation. Completion applies ordinary ledger evidence and appends resolution targets in one invoice-locked transaction. UUID retries recover the exact case/capture/completion; altered inputs are rejected.
+
+Proof has exact common fields: `family`, `request_id`, `object_id`, `account_id`, `livemode` (boolean), `amount_cents` (string), `currency`, `provider_observed_at` and `status`. Checkout additionally requires `payment_id` (nullable) and `source_hash`; refund additionally requires `provider_payment_id`. No URL, free-text reason or full payload is accepted. Capture and completion require proof no more than five minutes old. Changed financial facts require a new case.
+
+Accepted scope is known Checkout objects with `session_open`, `session_expired` or `payment_succeeded`, and known refund objects with `pending`, `failed` or `succeeded`. Only unavailable/reconciliation-required observations and Checkout `provider_reconciliation_required` quarantines can be targeted. Any open context-mismatch observation or other quarantined financial evidence blocks this workflow. Previously failed refunds without settled cash remain outside scope, including fresh matching failed proof; late success after that release remains quarantined. Unknown objects, absence claims, external adjustments, disputes and inbox retry cycles remain planned.
+
+Resolved observations remain visible with `resolved: true`; same-reason recurrence creates a fresh blocking occurrence. Open Checkout and pending refund proofs retain their ordinary reservations. Expiration releases only the Checkout reservation; success posts cash once. The five changed call sites are `checkout_state_internal`, `refund_state_internal`, `guard_payment_reconciliation`, `inspect_payment_collection` and `read_invoice_payment_state`. Migration application fails if expected original definition patterns are missing. Existing 3600 redaction code is preserved. Staff UI must use the new resolved flag before presenting a resolved observation as still blocking.
+
+Local verification: 45 focused pgTAP assertions; existing ledger 64, observations 58, collection access 51, event inbox 44 and inventory/billing 58 all pass. `payment_reconciliation_concurrency.py` passes 32 checks across five observed lock-contention scenarios: expiration resolution before credit, a new observation before completion, duplicate simultaneous completion, and provider refund settlement versus resolution in both orders. Both refund orders preserve one refund, exact net cash, zero duplicate pending reservation and correct remaining capacity; a settlement that wins invalidates the stale review without hiding the observation. Fixtures are removed afterward. Dedicated service-role SQL inspection verifies that resolved observations permit inspection after verified expiration, inspection creates no attempt, and a new observation blocks inspection again. Terminal compatibility regressions reject open proof after authoritative expiration and non-success proof against settled checkout/refund cash. No provider or hosted database calls were made.
+
+
+Review correction: capture now rejects a verified-open Checkout proof if historical accepted expiration exists. Otherwise the state reducer would still report expired and permit replacement despite the contradictory fresh open proof. Non-success proof for already settled payment/refund is likewise retained for separate review. Matching paid proof may still supersede expiration through the ordinary ledger rules. These checks add no manual expiration or absence path.
