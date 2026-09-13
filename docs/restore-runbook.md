@@ -30,3 +30,18 @@ Verified evidence:
 - Outbox empty; pg_cron absent; no Edge runtime or provider credentials. Every stop command succeeded, and resource inspection confirmed generated containers and volumes absent before result.json or PASS was written. Existing local projects and cloud projects were untouched.
 
 Protected evidence is retained outside Git in the operator's temporary `lrv-restore-synthetic-e4rdfqms` directory. Database archive SHA-256: `f3154b9e0228e17af91b84b1f2cc61cb954edb472dcecf6db3c484188376a4bf`. The result includes exact runner/fixture hashes so this pre-commit local run can be tied to the tested source. Earlier retained diagnostic artifacts preserve the initial partition-constraint failure and successful destination-only retry; neither the backup nor restore errors were filtered to manufacture a pass.
+
+
+### Current-stack rehearsal — September 13, 2026 UTC
+
+A fresh rehearsal at `d26517703e6c9c2e3cb7687f5b0e67b9e34bebbe` completed source backup, separate destination restore, verification and checked cleanup successfully. The captured/restored migration ledger contains all65 repository migrations, latest `20260913450000`. Neither the existing foundation stack nor a hosted project was reset.
+
+Fresh local login, identical captured rows/IDs, signed SOAP/addendum,9000-cent invoice,500-cent credit,8-unit stock balance, private78-byte original checksum, anonymous/public denial and immutable-history checks all passed. The complete physical file inventory matched. Outbox remained empty and cron absent. Every generated container/volume was removed before PASS. This fixture does not populate the newer payment, scheduler-run or outbox-retry tables; full schema restoration is verified, while populated evidence for those workflows remains outside this rehearsal's claims.
+
+Backup took12.43seconds; restore/verification after destination startup took5.08seconds; total including starts and checked cleanup was116.88seconds. These tiny synthetic timings are not a promised production RTO/RPO. Protected artifacts remain outsideGit at the operator's temporary `lrv-restore-synthetic-ggu8etoj` directory; do not publish its credentials or database archive.
+
+- Database archive SHA-256: `d7a61a54f983755f6e7ecc7079cc37b68549f080396dbf9c6f397ce091d3e3dd`.
+- Runner SHA-256: `3371c900e3d0ee34c31fe889d3c82211935169152adc766092f504c5afb72244`.
+- Fixture SHA-256: `31a761212e4aeddb17407b9bece6e31b826d4e94949b298e3b6fa8c9aa739d85`.
+
+Hosted backup/PITR settings, physical Storage backup ownership, recovery objectives, provider reconfiguration and real incident cutover remain pending.

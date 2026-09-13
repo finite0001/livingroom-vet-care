@@ -2,6 +2,20 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+
+-- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
+create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
+declare result jsonb;actor uuid;begin
+ begin
+  select created_by into actor from communication_outbox where id=p_id;
+  perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',actor)::text,true);
+  update communication_outbox set state='failed',lease_token=null,lease_expires_at=null where id=p_id;
+  if p_change is not null then execute p_change;end if;
+  result:=preview_outbox_retry(p_id);
+  raise exception 'rollback probe';
+ exception when raise_exception then return result;end;
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values('97000000-0000-4000-8000-000000000001','invoice-email@example.test','{}'),('97000000-0000-4000-8000-000000000002','other-invoice@example.test','{}');
 insert into user_roles(user_id,role) values('97000000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
@@ -61,6 +75,8 @@ select ok(recover_invoice_email('98000000-0000-4000-8000-000000000001') is null,
 select throws_ok($$select read_invoice_email_attachment('98000000-0000-4000-8000-000000000004',0)$$,'42501',null,'Another actor cannot download frozen report');
 reset role;set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select is(pg_temp.retry_source_probe((select id from fx where k='outbox'))->>'eligible','true','Current frozen invoice can be reviewed for retry');
+select is(pg_temp.retry_source_probe((select id from fx where k='outbox'),$$select void_billing_invoice('98000000-0000-4000-8000-000000000001',(select version from billing_invoices where id='98000000-0000-4000-8000-000000000001'),'Synthetic retry probe')$$)->>'reason','source_ineligible','Voided invoice blocks retry');
 insert into fx select 'lease',lease_token from claim_communication();
 select is(read_frozen_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'payload_text',(select v::text from data where k='payload'),'Generic adapter returns exact serialized invoice request');
 select is(read_frozen_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'artifact_kind','invoice','Dispatcher receives invoice proof requirement');
@@ -69,7 +85,7 @@ select ok(read_release_email_payload((select id from fx where k='outbox'),(selec
 select is((start_communication_attempt((select id from fx where k='outbox'),(select id from fx where k='lease'),'{"from":"care@example.test","reply_to":"care@example.test"}')).state,'failed','Old plain-text dispatcher fails closed without invoice payload proof');
 reset role;set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"97000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select retry_communication(auth.uid(),(select id from fx where k='outbox'));
+select public.requeue_outbox_retry(gen_random_uuid(),(select id from fx where k='outbox'),public.preview_outbox_retry((select id from fx where k='outbox'))->>'expected_work_hash','configuration_repaired',true);
 reset role;set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 update fx set id=(claim_communication()).lease_token where k='lease';

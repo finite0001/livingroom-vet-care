@@ -2,7 +2,22 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+
+-- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
+create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
+declare result jsonb;actor uuid;begin
+ begin
+  select created_by into actor from communication_outbox where id=p_id;
+  perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',actor)::text,true);
+  update communication_outbox set state='failed',lease_token=null,lease_expires_at=null where id=p_id;
+  if p_change is not null then execute p_change;end if;
+  result:=preview_outbox_retry(p_id);
+  raise exception 'rollback probe';
+ exception when raise_exception then return result;end;
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values('88000000-0000-4000-8000-000000000001','release-email@example.test','{}'),('88000000-0000-4000-8000-000000000099','other-email@example.test','{}');
+insert into user_roles(user_id,role) values('88000000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
 set local role authenticated;
@@ -56,6 +71,8 @@ select ok(public.recover_release_email('89000000-0000-4000-8000-000000000003') i
 select throws_ok($$select public.read_release_email_attachment('89000000-0000-4000-8000-000000000004',1)$$,'42501',null,'Other actor cannot download frozen original');
 reset role;set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select is(pg_temp.retry_source_probe((select id from fx where k='outbox'))->>'eligible','true','Current frozen release can be reviewed for retry');
+select is(pg_temp.retry_source_probe((select id from fx where k='outbox'),$$update record_release_policy set enabled=false$$)->>'reason','source_ineligible','Disabled clinical release policy blocks retry');
 insert into fx select 'lease',lease_token from public.claim_communication();
 select is(public.read_release_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'payload_text',(select v::text from data where k='payload'),'Dispatcher reads exact frozen serialized provider request');
 select throws_ok($$select public.read_release_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'40001',null,'Wrong lease cannot read payload');
@@ -68,7 +85,7 @@ reset role;
 update public.record_release_policy set enabled=true;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"88000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select public.retry_communication(auth.uid(),(select id from fx where k='outbox'));
+select public.requeue_outbox_retry(gen_random_uuid(),(select id from fx where k='outbox'),public.preview_outbox_retry((select id from fx where k='outbox'))->>'expected_work_hash','configuration_repaired',true);
 reset role;set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 update fx set id=(public.claim_communication()).lease_token where k='lease';
