@@ -26,8 +26,10 @@ export function verifyDeploymentEnvironment(explicit, resolved) {
       throw new Error(`Resolved ${name} differs from the explicit deployment configuration.`);
     }
   }
-  if (Object.keys(resolved).some((name) => name.startsWith("VITE_") && !publicNames.has(name))) {
-    throw new Error("An unreviewed VITE_ variable would be exposed to browsers. Review the public configuration allowlist.");
+  const unexpectedNames = Object.keys(resolved).filter((name) => name.startsWith("VITE_") && !publicNames.has(name));
+  if (unexpectedNames.length) {
+    const labels = unexpectedNames.map((name) => /^[A-Z0-9_]{1,100}$/.test(name) ? name : "[invalid variable name]").sort();
+    throw new Error(`An unreviewed VITE_ variable would be exposed to browsers: ${labels.join(", ")}. Review the public configuration allowlist.`);
   }
   const project = explicit.VITE_SUPABASE_PROJECT_ID;
   if (!/^[a-z]{20}$/.test(project) || project === originalProject) {
