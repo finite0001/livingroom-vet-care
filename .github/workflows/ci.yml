@@ -84,6 +84,8 @@ jobs:
         run: python3 supabase/tests/release_source_provenance_concurrency.py --project-config supabase/config.toml
       - name: Verify patient-scoped clinical import leases and observation versions
         run: python3 supabase/tests/ezyvet_clinical_runs_concurrency.py --project-config supabase/config.toml
+      - name: Verify consult-scoped vaccination import races
+        run: python3 supabase/tests/ezyvet_vaccination_runs_concurrency.py --project-config supabase/config.toml
       - name: Verify reviewed history, local problem and release concurrency
         run: python3 supabase/tests/ezyvet_history_provenance_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
@@ -151,6 +153,10 @@ jobs:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify patient-scoped clinical imports through actual HTTP and Auth
         run: node --experimental-strip-types tests/ezyvet/clinical-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify consult-scoped vaccination imports through actual HTTP and Auth
+        run: node --experimental-strip-types tests/ezyvet/vaccination-local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify source-bound release artifacts in disposable Auth and Storage
