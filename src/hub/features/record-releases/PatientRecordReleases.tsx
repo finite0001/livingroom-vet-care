@@ -1,3 +1,4 @@
+import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
 import { mergeReleaseSelection } from "./selection";
 import { useEffect, useRef, useState } from "react";
@@ -48,6 +49,7 @@ export function PatientRecordReleases({
   const { user, profile } = useAuth();
   const cache = useQueryClient();
   const [emailDirty, setEmailDirty] = useState(false);
+  const [smsDirty, setSmsDirty] = useState(false);
   const [selection, setSelection] = useState<ReleaseSelection>({});
   const [allSelectionNotice, setAllSelectionNotice] = useState("");
   const [channel, setChannel] = useState<"EMAIL" | "SMS">("EMAIL");
@@ -73,6 +75,7 @@ export function PatientRecordReleases({
   );
   const dirty =
     emailDirty ||
+    smsDirty ||
     selectedCount > 0 ||
     !!preview ||
     !!pending ||
@@ -392,7 +395,9 @@ export function PatientRecordReleases({
             </div>
             <Button
               variant="outline"
-              disabled={busy || emailDirty || !!withdrawalRef.current}
+              disabled={
+                busy || emailDirty || smsDirty || !!withdrawalRef.current
+              }
               onClick={() => void open(b.release.id)}
             >
               Open release package
@@ -429,17 +434,27 @@ export function PatientRecordReleases({
             bundle={opened}
             onDirtyChange={setEmailDirty}
           />
+          {opened.release.channel === "SMS" && (
+            <DocumentSmsComposer
+              family="record_release"
+              sourceId={opened.release.id}
+              clientId={opened.release.client_id}
+              canPrepare={opened.eligible}
+              disabled={busy || emailDirty || !!pending}
+              onDirtyChange={setSmsDirty}
+            />
+          )}
           <Label htmlFor={`withdraw-${petId}`}>Withdrawal reason</Label>
           <Input
             id={`withdraw-${petId}`}
             maxLength={2000}
             value={withdrawReason}
-            disabled={busy || emailDirty || !!withdrawalRef.current}
+            disabled={busy || emailDirty || smsDirty || !!withdrawalRef.current}
             onChange={(e) => setWithdrawReason(e.target.value)}
           />
           <Button
             variant="outline"
-            disabled={busy || !!pending || !withdrawReason.trim()}
+            disabled={busy || smsDirty || !!pending || !withdrawReason.trim()}
             onClick={() => void withdraw()}
           >
             {withdrawalRef.current
@@ -663,6 +678,7 @@ export function PatientRecordReleases({
                     disabled={
                       busy ||
                       emailDirty ||
+                      smsDirty ||
                       !(selection.weight_ids?.length
                         ? candidates.data.policy_v4_accepted
                         : candidates.data.policy_accepted) ||

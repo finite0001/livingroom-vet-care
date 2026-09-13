@@ -1,3 +1,4 @@
+import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { useEffect, useRef, useState } from "react";
 import { useBlocker } from "react-router-dom";
 import {
@@ -239,10 +240,11 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [emailDirty, setEmailDirty] = useState(false);
+  const [smsDirty, setSmsDirty] = useState(false);
   useEffect(() => {
-    onPending(busy || Boolean(pending) || emailDirty);
+    onPending(busy || Boolean(pending) || emailDirty || smsDirty);
     return () => onPending(false);
-  }, [busy, pending, emailDirty, onPending]);
+  }, [busy, pending, emailDirty, smsDirty, onPending]);
   const invoice = useQuery({
     queryKey: ["invoice", invoiceId, clientId],
     queryFn: async () => {
@@ -405,7 +407,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     0,
   );
   const readFailed = invoice.isError || details.isError;
-  const disabled = busy || Boolean(pending) || emailDirty || readFailed;
+  const disabled =
+    busy || Boolean(pending) || emailDirty || smsDirty || readFailed;
   return (
     <section
       aria-label="Invoice details"
@@ -640,8 +643,18 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={busy || Boolean(pending) || readFailed}
+          disabled={busy || Boolean(pending) || smsDirty || readFailed}
           onDirtyChange={setEmailDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <DocumentSmsComposer
+          family="invoice"
+          sourceId={invoiceId}
+          clientId={clientId}
+          canPrepare={record.status === "issued"}
+          disabled={busy || Boolean(pending) || emailDirty || readFailed}
+          onDirtyChange={setSmsDirty}
         />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}
