@@ -23,16 +23,40 @@ The wrapper creates a uniquely named local project on ports 60320/60321/60322/60
 
 ## Exact synthetic receipt
 
-Receipt: `/var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-vaccination-5fe6425275d5-result.json`.
+Receipt: `/var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-vaccination-6061e45a22ae-result.json`.
 
 | Input | SHA-256 |
 | --- | --- |
 | Runtime harness | `9a54633ffcf53089e2ff44220a62ed95c8ee52b8ef885cf7305b0fef134ddf92` |
 | Disposable wrapper | `a6591d2b9e536414f4596dd3444df74be8223bcb236375cb482a736446a0e5bc` |
-| Migration 20260913520000 | `7fd36018c0d3204c23cdd1f5593461f467836a6ffa335210d2c4c0d56ac2607c` |
+| Migration 20260913520000 | `f5e52dffeb5e074d8f09496e968cb4392d098d27cad983600b88746115d11238` |
 
-The receipt records Edge dependency revision `90a7c88cf96cab8d18635889636dbf4116b47447` and hashes all 72 migrations. The new migration was supplied as an explicit development overlay; the hash above identifies the tested bytes. The harness hash was checked unchanged across execution.
+The receipt records source revision `b26d9048f9eb32c525ea625dbb94e827f4b3b91c` and hashes all 72 migrations. The final run used all 72 checked-out migrations, including the committed vaccination migration; the hash above identifies its tested bytes. The harness hash was checked unchanged across execution.
 
 An earlier run exposed numeric-string IDs accepted by the adapter but rejected by SQL. The final run used the aligned number/string contract. A fixture-only timing issue was corrected by advancing the owned synthetic consult run's two-second cooldown before its next observation; production pacing code was unchanged.
 
-This is synthetic runtime evidence, not production-source acceptance, hosted Edge acceptance, interpreted vaccine history, certificate eligibility or clinical approval. The frozen restore inventory now expects 72 migrations; restoration evidence is tracked separately.
+This is synthetic runtime evidence, not production-source acceptance, hosted Edge acceptance, interpreted vaccine history, certificate eligibility or clinical approval. The matching 72-migration restoration evidence is recorded below.
+
+
+## Database and private Storage upgrade/restore
+
+The final rehearsal passed using the same committed vaccination migration. It upgraded the observed 51-migration ordering to canonical 72, reproduced and corrected the prior direct-grant drift, and compared application routines, grants and triggers against a fresh canonical destination.
+
+After upgrade, the owned synthetic source creates one scoped consult and one vaccination through the real claim/staging RPCs. The fixture temporarily adds an administrator role only when necessary, removes it in the same transaction, and checks that the existing clinical, billing, Auth and Storage snapshot is unchanged. Twelve import/provenance tables are captured before backup and compared exactly after restoration, including the vaccination context, page fingerprint, observation revision, consult and source snapshots.
+
+- Vaccination contexts/pages/observations restored: **1 / 1 / 1**, with all captured source and receipt rows identical.
+- Fresh Auth login, signed SOAP/addendum immutability, invoice/credit and stock balances, original private file bytes, anonymous/public denial, empty outbox and absent cron: **passed**.
+- Owned source and destination containers/volumes: **cleanup verified**.
+- Total rehearsal: **163.85 seconds**; backup: **15.17 seconds**; restore and verification: **5.70 seconds**.
+
+Result: `/var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-restore-synthetic-mafkb8uk/result.json`.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Restore runner | `a3f76dad718f91b9f2dd030e38a3afb4fe165751feb61c58bae1c38581d33bd9` |
+| Database archive | `f5be931552792ddf53d1b38e81bea2425c6b4e576fa85c14126106f5d559bf53` |
+| Vaccination source/receipt fixture | `8435204f22c54da669cd5ba84ef6e8f6336e1e76a35e4d625a71e0e1580f6853` |
+
+```sh
+python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-observed-hosted-gaps
+```
