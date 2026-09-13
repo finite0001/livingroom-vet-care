@@ -10,6 +10,7 @@ import {
   checkoutUrl,
   formatCents,
   parsePaymentState,
+  requiresReconciliation,
   parseProfile,
   validateIntent,
   verifyPrepared,
@@ -196,12 +197,7 @@ function PaymentSession({
       if (active.current) setBusy(false);
     }
   };
-  const blocked = Boolean(
-    state &&
-      (state.reconciliation_observations.length ||
-        state.attempts.some((a) => a.state === "reconciliation") ||
-        state.refund_requests.some((a) => a.state === "reconciliation")),
-  );
+  const blocked = Boolean(state && requiresReconciliation(state));
   const unresolved = Boolean(
     state &&
       (state.attempts.some((a) => !["paid", "expired"].includes(a.state)) ||
@@ -494,7 +490,11 @@ function PaymentSession({
         <ul>
           {state.reconciliation_observations.map((o) => (
             <li key={o.id}>
-              {o.family === "refund" ? "Refund" : "Checkout"} review required ·{" "}
+              {o.family === "refund" ? "Refund" : "Checkout"}{" "}
+              {o.resolved === true
+                ? "review resolved (history)"
+                : "review required"}{" "}
+              ·{" "}
               {new Date(o.created_at).toLocaleString("en-US", {
                 timeZone: "America/Denver",
               })}{" "}
