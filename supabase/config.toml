@@ -61,3 +61,6 @@ verify_jwt = true
 
 [functions.prepare-payment-delivery]
 verify_jwt = true
+
+[functions.prepare-lab-report]
+verify_jwt = true
