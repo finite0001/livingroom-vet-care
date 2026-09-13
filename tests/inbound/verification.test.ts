@@ -21,11 +21,29 @@ test("official Svix proof validates raw body and rejects changed body or expired
   const verify = (body: string, values: Record<string, string>) =>
     verifier.verify(body, values);
   assert.equal(verifiedResend(raw, headers, verify).id, id);
+  assert.deepEqual(verifiedResend(raw, headers, verify).event, {
+    type: "email.received",
+  });
   assert.throws(() => verifiedResend(raw + " ", headers, verify), /Invalid/);
   const old = new Date(Date.now() - 600000);
   headers.set("svix-timestamp", String(Math.floor(old.getTime() / 1000)));
   headers.set("svix-signature", verifier.sign(id, old, raw));
   assert.throws(() => verifiedResend(raw, headers, verify), /expired/);
+});
+test("verified Resend parses only the signed body and rejects non-object JSON", () => {
+  for (const raw of ["null", "[]", '"string"', "{"]) {
+    const id = "msg_synthetic_json";
+    const now = new Date();
+    const headers = new Headers({
+      "svix-id": id,
+      "svix-timestamp": String(Math.floor(now.getTime() / 1000)),
+      "svix-signature": verifier.sign(id, now, raw),
+    });
+    assert.throws(
+      () => verifiedResend(raw, headers, (body, proof) => verifier.verify(body, proof)),
+      /Invalid webhook JSON object/,
+    );
+  }
 });
 test("official Twilio validator covers every form field and exact configured URL", () => {
   const url = "https://hooks.example.test/sms?route=a%2Fb";
