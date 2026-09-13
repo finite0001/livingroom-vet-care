@@ -16,6 +16,9 @@ import {
 } from "../../supabase/functions/_shared/document-link-capability.ts";
 import { createStaffDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
 import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
+const prescriptionMode = process.env.INCLUDE_PRESCRIPTION_EXPORT === "true";
+const releaseVersion = prescriptionMode ? 8 : 7;
+const previewRpc = `preview_record_release_v${releaseVersion}`;
 const project = process.env.PAYMENT_TEST_PROJECT;
 assert.ok(
   project,
@@ -653,14 +656,139 @@ try {
       vaccineApproved.receipt.original.date_of_administration === "ambiguous",
     "Actual DVM vaccination review preserves unknown date and raw evidence",
   );
+  let prescriptionId: string | null = null;
+  let prescriptionPayload: Record<string, unknown> | null = null;
+  let prescriptionHash = "";
+  if (prescriptionMode) {
+    const headerRun = randomUUID(),
+      itemRun = randomUUID(),
+      reviewId = randomUUID();
+    ids.push(headerRun, itemRun, reviewId);
+    const headerLease = await rpc("claim_ezyvet_prescription_import", {
+      p_id: headerRun,
+      p_actor: actor,
+      p_site_uid: site,
+      p_resource: "prescription",
+      p_source_origin: "https://api.trial.ezyvet.com",
+      p_animal_link_id: animalLink,
+    });
+    await rpc("stage_ezyvet_import_page", {
+      p_id: headerRun,
+      p_actor: actor,
+      p_lease_id: headerLease.lease_id,
+      p_page: 1,
+      p_complete: true,
+      p_items: [{
+        external_id: "950",
+        payload: {
+          id: 950,
+          animal_id: 77,
+          date_of_prescription: "unresolved date",
+          prescribing_vet_user_id: "outside-vet",
+          prescription_item_list: [951, 952],
+        },
+      }],
+    });
+    const header = (await staff("list_ezyvet_prescription_candidates", {
+      p_animal_link_id: animalLink,
+      p_resource: "prescription",
+    })).candidates.find((row: { external_id: string }) =>
+      row.external_id === "950"
+    );
+    check(!!header, "Actual patient-scoped prescription header discovered");
+    ids.push(header.id);
+    const itemLease = await rpc("claim_ezyvet_prescriptionitem_import", {
+      p_id: itemRun,
+      p_actor: actor,
+      p_site_uid: site,
+      p_resource: "prescriptionitem",
+      p_source_origin: "https://api.trial.ezyvet.com",
+      p_animal_link_id: animalLink,
+      p_prescription_snapshot_id: header.id,
+      p_prescription_payload_hash: header.payload_hash,
+      p_prescription_observed_head_version: header.observed_head_version,
+    });
+    await rpc("stage_ezyvet_import_page", {
+      p_id: itemRun,
+      p_actor: actor,
+      p_lease_id: itemLease.lease_id,
+      p_page: 1,
+      p_complete: true,
+      p_items: [951, 952].map((id) => ({
+        external_id: String(id),
+        payload: {
+          id,
+          prescription_id: 950,
+          qty: "outside units",
+          remaining: "unresolved remainder",
+          date_start: "uninterpreted date",
+          instructions: id === 951
+            ? "<script>outside prescription</script>"
+            : "Omitted original prescription item",
+        },
+      })),
+    });
+    const candidate = await staff("get_ezyvet_prescription_review_candidate", {
+      p_pet_id: pet,
+      p_item_run_id: itemRun,
+    });
+    check(
+      candidate.eligible_for_review &&
+        candidate.source_context.reconciliation.status === "matched",
+      "Actual scoped item scan reconciles before DVM interpretation",
+    );
+    prescriptionPayload = {
+      item_run_id: itemRun,
+      patient_version: candidate.patient_version,
+      interpretation: {
+        prescribed_on: null,
+        prescription_date_status: "uninterpreted",
+        status: "unknown",
+        outside_author: null,
+        reason: "Synthetic outside prescription interpretation",
+        completeness: "partial",
+        partial_reason: "One source item intentionally remains uninterpreted",
+        replaces_id: null,
+        expected_predecessor_hash: null,
+        items: [{
+          snapshot_id: candidate.source_context.items[0].snapshot_id,
+          start_on: null,
+          start_date_status: "uninterpreted",
+          product_id: null,
+          product_version: null,
+          note: "Preserve source quantities",
+        }],
+      },
+    };
+    const preparedPrescription = await staff(
+      "prepare_ezyvet_prescription_review",
+      { p_id: reviewId, p_pet_id: pet, p_payload: prescriptionPayload },
+    );
+    const approvedPrescription = await staff(
+      "approve_ezyvet_prescription_review",
+      {
+        p_id: reviewId,
+        p_pet_id: pet,
+        p_expected_hash: preparedPrescription.request.request_hash,
+        p_confirmed: true,
+      },
+    );
+    prescriptionId = approvedPrescription.receipt.id;
+    prescriptionHash = approvedPrescription.receipt.version_hash;
+    check(
+      approvedPrescription.receipt.context.omitted_items.length === 1,
+      "Actual DVM approval preserves omitted-item evidence and partial account",
+    );
+  }
   sql(
     `select set_config('request.jwt.claims',${
       quote(JSON.stringify({ sub: actor, role: "authenticated" }))
     },false);insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,${
       quote(actor)
-    },now(),'Synthetic test policy only',7) on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_schema_version=7,accepted_at=now();`,
+    },now(),'Synthetic test policy only',${releaseVersion}) on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_schema_version=${releaseVersion},accepted_at=now();`,
   );
   const selection = {
+    ...(prescriptionId ? { imported_prescription_ids: [prescriptionId] } : {}),
     imported_vaccination_ids: [vaccineApproved.receipt.id],
     document_ids: [document],
     lab_report_ids: [report],
@@ -676,7 +804,7 @@ try {
       p_recipient: channel === "EMAIL" ? email : "+13035550481",
       p_selection: selection,
     };
-    const preview = await staff("preview_record_release_v7", args);
+    const preview = await staff(previewRpc, args);
     const id = randomUUID();
     ids.push(id);
     await staff("confirm_record_release", {
@@ -693,7 +821,7 @@ try {
     e.release.snapshot.attachments[0].content_sha256 ===
         captured.content_sha256 &&
       e.release.snapshot.lab_reports[0].capture_hash === captured.capture_hash,
-    "Actual schema7 snapshot binds selected original to immutable lab capture",
+    `Actual schema${releaseVersion} snapshot binds selected original to immutable lab capture`,
   );
   check(
     [e, s].every((value) => {
@@ -715,14 +843,14 @@ try {
           proof.capture_hash === externalCaptured.capture_hash
         );
     }),
-    "Both real schema7 release projections retain external and lab proof on one deduplicated private original",
+    `Both real schema${releaseVersion} release projections retain external and lab proof on one deduplicated private original`,
   );
   check(
     e.release.snapshot.imported_histories[0].id === historyApproval &&
       e.release.snapshot.problem_source_extractions[0].problem_id ===
         problemId &&
       e.release.snapshot.problem_source_extractions[0].locally_edited,
-    "Real schema7 projection connects imported history, native problem and preserved original extraction",
+    `Real schema${releaseVersion} projection connects imported history, native problem and preserved original extraction`,
   );
   const rendered = renderRecordRelease({ preview: e.release });
   check(
@@ -732,6 +860,20 @@ try {
       rendered.includes("&lt;script&gt;unsafe()&lt;/script&gt;"),
     "Actual frozen projection renders outside attribution, local edits and escaped narrative",
   );
+  if (prescriptionMode) {
+    check(
+      e.release.snapshot.imported_prescriptions[0].id === prescriptionId &&
+        rendered.includes("Clinician-reviewed outside prescription history") &&
+        rendered.includes(
+          "&lt;script&gt;outside prescription&lt;/script&gt;",
+        ) &&
+        rendered.includes("Omitted original prescription item") &&
+        rendered.includes(
+          "One source item intentionally remains uninterpreted",
+        ),
+      "Actual mixed release renders approved prescription, partial disclosure and omitted source evidence",
+    );
+  }
   const requestId = randomUUID();
   ids.push(requestId);
   const emailArgs = {
@@ -772,6 +914,14 @@ try {
       actualEmailHtml.includes("Imported outside history"),
     "Actual email HTML equals print and retains both raw vaccine meaning and outside narrative",
   );
+  if (prescriptionMode) {
+    check(
+      actualEmailHtml.includes(
+        "Clinician-reviewed outside prescription history",
+      ),
+      "Actual email and print both include selected prescription evidence",
+    );
+  }
   const altered = bytes.slice();
   altered[altered.length - 1] ^= 1;
   const alteredEmail = JSON.parse(frozen.payload_text);
@@ -1162,7 +1312,7 @@ try {
     p_expected_hash: discrepancyPrepared.request.request_hash,
     p_confirmed: true,
   });
-  const afterReview = await staff("preview_record_release_v7", {
+  const afterReview = await staff(previewRpc, {
     p_pet_id: pet,
     p_client_id: client,
     p_channel: "EMAIL",
@@ -1225,6 +1375,65 @@ try {
       recoveredVaccination.receipt.reviewed.outside_author === null,
     "Exact original vaccination review recovers after correction without adopting later attribution",
   );
+  if (prescriptionMode && prescriptionId && prescriptionPayload) {
+    const args = {
+      p_pet_id: pet,
+      p_client_id: client,
+      p_channel: "EMAIL",
+      p_recipient: email,
+      p_selection: { imported_prescription_ids: [prescriptionId] },
+    };
+    const preview = await staff(previewRpc, args), releaseId = randomUUID();
+    ids.push(releaseId);
+    const confirmArgs = {
+      ...args,
+      p_id: releaseId,
+      p_reviewed_snapshot: preview.snapshot,
+      p_reviewed_hash: preview.source_hash,
+      p_attest_review: true,
+    };
+    await staff("confirm_record_release", confirmArgs);
+    const correctionId = randomUUID();
+    ids.push(correctionId);
+    const correction = await staff("prepare_ezyvet_prescription_review", {
+      p_id: correctionId,
+      p_pet_id: pet,
+      p_payload: {
+        ...prescriptionPayload,
+        interpretation: {
+          ...(prescriptionPayload.interpretation as Record<string, unknown>),
+          replaces_id: prescriptionId,
+          expected_predecessor_hash: prescriptionHash,
+          outside_author: "Reviewed outside clinician",
+          reason:
+            "Synthetic attribution correction preserves original evidence",
+        },
+      },
+    });
+    await staff("approve_ezyvet_prescription_review", {
+      p_id: correctionId,
+      p_pet_id: pet,
+      p_expected_hash: correction.request.request_hash,
+      p_confirmed: true,
+    });
+    const invalidated = await staff("read_record_release", { p_id: releaseId });
+    check(
+      !invalidated.eligible &&
+        JSON.stringify(invalidated.release.snapshot) ===
+          JSON.stringify(preview.snapshot),
+      "Actual prescription correction invalidates delivery without rewriting the frozen package",
+    );
+    const recovered = await staff("confirm_record_release", confirmArgs);
+    check(
+      JSON.stringify(recovered.snapshot) === JSON.stringify(preview.snapshot),
+      "Actual exact prescription release confirmation recovers after correction",
+    );
+    await assert.rejects(staff(previewRpc, args), /SQL 40001/);
+    check(
+      true,
+      "Superseded prescription cannot create a fresh runtime release",
+    );
+  }
 } catch (error) {
   failures.push(error);
 } finally {

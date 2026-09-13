@@ -1,6 +1,6 @@
 # Synthetic local database and Storage restore rehearsal
 
-Requirements: Docker, the repository-pinned Supabase CLI (2.115.0), Node22+, Python3, and `npm ci --ignore-scripts` in this worktree. No hosted credentials are needed. Ports58320/58321/58322/58324 and59320/59321/59322/59324 must be unused.
+Requirements: Docker, the repository-pinned Supabase CLI (2.115.0), Node22+, Python3, and `npm ci --ignore-scripts` in this worktree. No hosted credentials are needed. Source ports58320/58321/58322/58324 must be unused. The default destination ports are59320/59321/59322/59324; use `--destination-api-port PORT` to select another unused group (PORT-1, PORT, PORT+1, PORT+3), including when resuming a retained backup. Existing services are never stopped to free ports.
 
 Run from this repository:
 
@@ -11,6 +11,8 @@ python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal
 The explicit flag is mandatory. The runner creates randomly named local projects and private temporary artifact directories. It never resets or backs up an existing practice/project. Source and destination use separate database and Storage volumes. All source migrations are replayed; the destination starts with only the platform baseline before restoring the full database archive, including Auth, Storage metadata, application rows, migration ledger, owners and grants. Physical Storage files are copied separately while writers are stopped.
 
 Synthetic fixtures include a confirmed local Auth identity/password, signed SOAP and immutable addendum, a linked private PDF original uploaded through the real Storage API, an issued invoice and accounting credit, and reasoned stock movements. Restored login, RLS, relationships, original IDs, original byte hashes, signed URL retrieval, denied public/anonymous access and immutable writes are checked. Read/denied-write checks must leave the captured clinical/audit/ledger snapshot unchanged. The complete physical file inventory must match before and after restoration.
+
+Prescription fixtures also retain patient/parent-scoped header and item page observations, unfinished scans, two immutable approved review versions, an unapproved prepared request and a schema8 export with selected/omitted item evidence. Their complete rows are compared after restoration. The fixture preserves all prior import rows and permits only explicitly attributed release audit additions to the original clinical/Auth/Storage baseline; every other baseline row must remain unchanged. It restores the prior staff roles and release policy before backup. This verifies saved state, not provider reconnection or fresh clinical approval after restoration.
 
 No Edge runtime, providers, SMTP delivery or scheduled workers are commissioned. Auth uses the local mail catcher; fixture users are confirmed via admin API without requesting email. The restored outbox is empty and pg_cron absent. These are no-sends-by-construction checks, not a claim of a hosted disabled-worker HTTP probe.
 
@@ -24,15 +26,17 @@ Privileged immutability probes retain the database administrator role while sett
 
 ## Rehearse the observed hosted migration gaps locally
 
+The gap inventory is explicitly pinned to85 migrations after review of the current schema8 checkout. The full51→85 backfill, canonical routine/grant/trigger comparison and populated database/private-file restore passed on2026-09-13; see [sanitized evidence](../../docs/evidence/prescription-full-gap-upgrade-restore-local-20260913.json). A successful normal or resumed restore does not establish upgrade coverage; require the full gap-mode result and its canonical routine/permission/trigger comparison.
+
 ```sh
 python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-observed-hosted-gaps
 ```
 
-This optional mode recreates the observed 51-version subset through2700 plus3000/3100/3300/3400 in a randomly named local source. It creates the synthetic records before applying the missing2800/2900/3200 and3500–5100 migrations. It requires ordinary local push to refuse the three old gaps, then performs explicit local `--include-all` dry run and application. The final71-version ledger must match the repository, and every captured fixture row except the migration ledger must remain identical.
+This optional mode recreates the observed 51-version subset through2700 plus3000/3100/3300/3400 in a randomly named local source. It creates the synthetic records before applying the missing2800/2900/3200 and3500–6400 and9000 migrations. It requires ordinary local push to refuse the three old gaps, then performs explicit local `--include-all` dry run and application. The final85-version ledger must match the repository, and every captured fixture row except the migration ledger must remain identical.
 
-Before restoring the archive, the separate destination applies all71 migrations in canonical order. Every public function definition, security-definer flag, configuration, effective anon/authenticated/service-role execution permission and application trigger binding must match the backfilled source. The normal physical Storage/database restoration and access checks then run. `result.json` includes the initial, missing and final version lists, migration hashes and successful comparison evidence only after cleanup passes.
+Before restoring the archive, the separate destination applies all85 migrations in canonical order. Every public function definition, security-definer flag, configuration, effective anon/authenticated/service-role execution permission and application trigger binding must match the backfilled source. The normal physical Storage/database restoration and access checks then run. `result.json` includes the initial, missing and final version lists, migration hashes and successful comparison evidence only after cleanup passes.
 
-The gap mode rejects `--resume-backup`: a resumed destination does not repeat the upgrade and cannot attest to it. A normal restore-only resume remains available but reports no gap-rehearsal result. This mode has a frozen71/51 inventory and exact missing-version list; future migration additions require reviewing and updating it. It never links to a hosted project. This synthetic rehearsal does not establish who applied the hosted migrations, approve a hosted backfill, or test provider delivery.
+The gap mode rejects `--resume-backup`: a resumed destination does not repeat the upgrade and cannot attest to it. A normal restore-only resume remains available but reports no gap-rehearsal result. This mode has a frozen85/51 inventory and exact missing-version list; future migration additions require reviewing and updating it. It never links to a hosted project. This synthetic rehearsal does not establish who applied the hosted migrations, approve a hosted backfill, or test provider delivery.
 
 ## Compare a hosted read-only routine inventory
 
@@ -47,4 +51,4 @@ The comparison exits nonzero for different migration versions, function bodies, 
 
 This is a public-function/trigger inventory, not a complete schema, RLS-policy, role-membership, data, provider or deployment audit. Matching inventories do not authorize a hosted mutation. The canonical backfill comparison also checks function ownership and trigger enable mode in addition to its existing checks.
 
-The current gap rehearsal also reproduces the six observed extra direct execution grants on its generated local source before capturing the initial inventory. Migration4600 must remove those extras while retaining the intended staff/consent access; the final71-migration canonical comparison verifies convergence. This fixture changes only local function ACLs and records that reproduction in the protected result. The separate `supabase/tests/explicit_rpc_grants_upgrade.py` runner also proves correction and rollback without changing bodies, owners or global default ACLs.
+The current gap rehearsal also reproduces the six observed extra direct execution grants on its generated local source before capturing the initial inventory. Migration4600 must remove those extras while retaining the intended staff/consent access; the final85-migration canonical comparison verifies convergence. This fixture changes only local function ACLs and records that reproduction in the protected result. The separate `supabase/tests/explicit_rpc_grants_upgrade.py` runner also proves correction and rollback without changing bodies, owners or global default ACLs.

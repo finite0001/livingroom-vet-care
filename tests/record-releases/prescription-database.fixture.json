@@ -1,0 +1,257 @@
+{
+  "snapshot": {
+    "lesions": [],
+    "patient": {
+      "id": "3d8be58d-1ac8-46be-8d3c-c8fff99e04a2",
+      "dob": null,
+      "name": "Scoped dog",
+      "breed": null,
+      "species": "Dog",
+      "version": 1,
+      "microchip_id": null,
+      "birth_date_precision": "unknown"
+    },
+    "weights": [],
+    "problems": [],
+    "recipient": {
+      "name": "Clinical Import",
+      "address": "clinical-import@example.test",
+      "channel": "EMAIL",
+      "client_id": "858d0d20-ae3e-4b79-be82-eb6ccd6078cd",
+      "client_version": 1
+    },
+    "selection": {
+      "imported_vaccination_ids": [],
+      "imported_prescription_ids": [
+        "21309511-9079-48f9-8270-2217912e0c96"
+      ]
+    },
+    "encounters": [],
+    "treatments": [],
+    "attachments": [],
+    "lab_reports": [],
+    "lab_results": [],
+    "qol_records": [],
+    "certificates": [],
+    "dental_charts": [],
+    "schema_version": 8,
+    "external_records": [],
+    "patient_summaries": [],
+    "anesthesia_records": [],
+    "imported_histories": [],
+    "imported_vaccinations": [],
+    "imported_prescriptions": [
+      {
+        "id": "21309511-9079-48f9-8270-2217912e0c96",
+        "items": [
+          {
+            "source": {
+              "page": 1,
+              "original": {
+                "id": 501,
+                "qty": "outside units",
+                "remaining": "unknown",
+                "date_start": null,
+                "product_id": null,
+                "instructions": "<script>outside prose</script>",
+                "serial_number": "outside author",
+                "prescription_id": 101
+              },
+              "external_id": "501",
+              "snapshot_id": "91432181-8162-4a1b-ab38-4a0e4b7e8fb4",
+              "payload_hash": "4abe419531fceecced1609aa0bcdc1897392f260e7fe6400b5f2f36b0ce3fd5e",
+              "observed_head_version": 1
+            },
+            "product": {
+              "id": "e3e2a571-a005-4780-a478-8ffc26ea793a",
+              "kind": "medication",
+              "name": "Synthetic medication",
+              "unit": "tablet",
+              "version": 1
+            },
+            "reviewed": {
+              "note": "No dose or refill inferred",
+              "start_on": null,
+              "start_date_status": "unknown"
+            }
+          }
+        ],
+        "pet_id": "3d8be58d-1ac8-46be-8d3c-c8fff99e04a2",
+        "reason": "Historical interpretation only",
+        "context": {
+          "items": [
+            {
+              "page": 1,
+              "original": {
+                "id": 501,
+                "qty": "outside units",
+                "remaining": "unknown",
+                "date_start": null,
+                "product_id": null,
+                "instructions": "<script>outside prose</script>",
+                "serial_number": "outside author",
+                "prescription_id": 101
+              },
+              "external_id": "501",
+              "snapshot_id": "91432181-8162-4a1b-ab38-4a0e4b7e8fb4",
+              "payload_hash": "4abe419531fceecced1609aa0bcdc1897392f260e7fe6400b5f2f36b0ce3fd5e",
+              "observed_head_version": 1
+            },
+            {
+              "page": 1,
+              "original": {
+                "id": 502,
+                "qty": "unreviewed source amount",
+                "instructions": "Omitted original evidence",
+                "prescription_id": 101
+              },
+              "external_id": "502",
+              "snapshot_id": "3b7a1dc0-9411-4727-a403-c25bb82c31ca",
+              "payload_hash": "80c3e85019be7527947448077575e366c327e69f4d19ac5b564d08f861ac8562",
+              "observed_head_version": 1
+            }
+          ],
+          "parent": {
+            "original": {
+              "id": 101,
+              "animal_id": 77,
+              "instructions": "Source prescriptionation"
+            },
+            "external_id": "101",
+            "snapshot_id": "80d61f4f-c7b7-4f2c-94d0-f6d046def7e0",
+            "payload_hash": "d8cbeab506f741a83f0a463345b4eb8310f5460d3e4357184c23f2673300585c",
+            "observed_head_version": 1
+          },
+          "source": {
+            "origin": "https://api.trial.ezyvet.com",
+            "site_uid": "prescriptionitem-test-site",
+            "animal_id": "77"
+          },
+          "consult": {
+            "status": "not_supplied",
+            "reference": null
+          },
+          "item_run": {
+            "id": "9f0f1483-b98d-4c81-a504-49fca3d618d0",
+            "status": "review_ready",
+            "next_page": 2
+          },
+          "reviewed": {
+            "reason": "Historical interpretation only",
+            "status": "unknown",
+            "completeness": "partial",
+            "prescribed_on": null,
+            "outside_author": null,
+            "partial_reason": "Parent source list not supplied",
+            "prescription_date_status": "uninterpreted"
+          },
+          "client_id": "858d0d20-ae3e-4b79-be82-eb6ccd6078cd",
+          "patient_id": "3d8be58d-1ac8-46be-8d3c-c8fff99e04a2",
+          "omitted_items": [
+            {
+              "page": 1,
+              "original": {
+                "id": 502,
+                "qty": "unreviewed source amount",
+                "instructions": "Omitted original evidence",
+                "prescription_id": 101
+              },
+              "external_id": "502",
+              "snapshot_id": "3b7a1dc0-9411-4727-a403-c25bb82c31ca",
+              "payload_hash": "80c3e85019be7527947448077575e366c327e69f4d19ac5b564d08f861ac8562",
+              "observed_head_version": 1
+            }
+          ],
+          "animal_link_id": "3b459d9f-c68f-4568-8221-483c358812b5",
+          "reconciliation": {
+            "status": "unresolved",
+            "missingIds": [],
+            "expectedIds": [],
+            "observedIds": [
+              "501",
+              "502"
+            ],
+            "scanComplete": true,
+            "unexpectedIds": [
+              "501",
+              "502"
+            ],
+            "sourceListPresent": false,
+            "duplicateSourceIds": [],
+            "duplicateObservedIds": [],
+            "invalidSourceReferences": [
+              {
+                "index": -1,
+                "value": null
+              }
+            ],
+            "invalidObservedReferences": []
+          },
+          "selected_items": [
+            {
+              "source": {
+                "page": 1,
+                "original": {
+                  "id": 501,
+                  "qty": "outside units",
+                  "remaining": "unknown",
+                  "date_start": null,
+                  "product_id": null,
+                  "instructions": "<script>outside prose</script>",
+                  "serial_number": "outside author",
+                  "prescription_id": 101
+                },
+                "external_id": "501",
+                "snapshot_id": "91432181-8162-4a1b-ab38-4a0e4b7e8fb4",
+                "payload_hash": "4abe419531fceecced1609aa0bcdc1897392f260e7fe6400b5f2f36b0ce3fd5e",
+                "observed_head_version": 1
+              },
+              "product": {
+                "id": "e3e2a571-a005-4780-a478-8ffc26ea793a",
+                "kind": "medication",
+                "name": "Synthetic medication",
+                "unit": "tablet",
+                "version": 1
+              },
+              "reviewed": {
+                "note": "No dose or refill inferred",
+                "start_on": null,
+                "start_date_status": "unknown"
+              }
+            }
+          ],
+          "patient_version": 1
+        },
+        "current": {
+          "is_latest": true,
+          "is_current": true,
+          "identity_valid": true
+        },
+        "version": 1,
+        "client_id": "858d0d20-ae3e-4b79-be82-eb6ccd6078cd",
+        "approved_at": "2026-09-13T22:25:15.063609+00:00",
+        "approved_by": "db560000-0000-4000-8000-000000000001",
+        "replaces_id": null,
+        "version_hash": "dfef7dba2ed1d6bb0c068cdb3fbbb47933a7d1a3accf6a08093e6ca189ac0fd1",
+        "source_origin": "https://api.trial.ezyvet.com",
+        "animal_link_id": "3b459d9f-c68f-4568-8221-483c358812b5",
+        "source_site_uid": "prescriptionitem-test-site",
+        "correction_history": [
+          {
+            "id": "21309511-9079-48f9-8270-2217912e0c96",
+            "reason": "Historical interpretation only",
+            "version": 1,
+            "approved_at": "2026-09-13T22:25:15.063609+00:00",
+            "approved_by": "db560000-0000-4000-8000-000000000001",
+            "replaces_id": null,
+            "version_hash": "dfef7dba2ed1d6bb0c068cdb3fbbb47933a7d1a3accf6a08093e6ca189ac0fd1"
+          }
+        ],
+        "prescription_external_id": "101",
+        "expected_predecessor_hash": null
+      }
+    ],
+    "problem_source_extractions": []
+  },
+  "source_hash": "2f48eee60f54a2922aabb882cf732a1a5669e7b45b0d728c2cd8f39883286dfa"
+}

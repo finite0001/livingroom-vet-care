@@ -79,6 +79,35 @@ def contended(first_query, second_query, second_expected):
     check(first.returncode == 0, first_error)
     check(second_expected(second.returncode, second_output, second_error), second_error or second_output)
 
+def contended_three(first_query, second_query, third_query):
+    """Release holds locks while a correction and real item writer both wait."""
+    tag = 'lrv_rx_three_' + uuid.uuid4().hex[:20]
+    processes = []
+    for suffix, query in [('holder', first_query), ('correction', second_query), ('source', third_query)]:
+        name = tag + '_' + suffix
+        owned_sessions.append(name)
+        process = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        processes.append(process)
+        process.stdin.write(f"set application_name='{name}';begin;{query}" + ('\n' if suffix == 'holder' else 'commit;'))
+        process.stdin.flush()
+        if suffix != 'holder':process.stdin.close()
+        deadline = time.monotonic() + 8
+        observed = False
+        while time.monotonic() < deadline:
+            condition = "state='idle in transaction'" if suffix == 'holder' else "wait_event_type='Lock'"
+            if scalar(f"select count(*) from pg_stat_activity where application_name='{name}' and {condition};") == '1':
+                observed = True;break
+            time.sleep(.03)
+        check(observed, 'Observed three-session ' + suffix + ' lock state')
+    processes[0].stdin.write('commit;\n');processes[0].stdin.close()
+    for process in processes:process.wait(timeout=10)
+    check(processes[0].returncode == 0, processes[0].stderr.read())
+    correction_error = processes[1].stderr.read()
+    check(processes[1].returncode == 0 or 'SOURCE_PRESCRIPTION_ITEM_STALE' in correction_error,
+          'Correction must commit before source change or reject its stale evidence: ' + correction_error)
+    check(processes[2].returncode == 0, processes[2].stderr.read())
+    return processes[1].returncode == 0
+
 # Isolated schema-only database, no API workers or source access.
 import re
 inspection=subprocess.run(['docker','inspect',CONTAINER],capture_output=True,text=True,check=True)
@@ -113,6 +142,7 @@ try:
     pending=[
       ('20260913520000',"to_regclass('public.ezyvet_vaccination_runs')"),
       ('20260913530000',"to_regclass('public.ezyvet_imported_vaccinations')"),
+      ('20260913540000',"to_regprocedure('public.preview_record_release_v7(uuid,uuid,text,text,jsonb)')"),
       ('20260913550000',"to_regclass('public.ezyvet_prescription_runs')"),
       ('20260913560000',"to_regclass('public.ezyvet_prescriptionitem_runs')"),
       ('20260913570000',"to_regprocedure('public.ezyvet_reconcile_prescription_items(jsonb,jsonb,boolean)')"),
@@ -121,6 +151,8 @@ try:
       ('20260913600000',"to_regprocedure('public.ezyvet_prescription_interpretation_context(jsonb,jsonb)')"),
       ('20260913610000',"to_regclass('public.ezyvet_imported_prescriptions')"),
       ('20260913620000',"to_regprocedure('public.get_ezyvet_prescription_review_candidate(uuid,uuid)')"),
+      ('20260913630000',"to_regprocedure('public.ezyvet_validate_reviewed_prescriptions(uuid,jsonb)')"),
+      ('20260913640000',"to_regprocedure('public.preview_record_release_v8(uuid,uuid,text,text,jsonb)')"),
     ]
     for version,probe in pending:
         if scalar(f'select {probe} is null;')=='t':
@@ -129,7 +161,7 @@ try:
             sql(paths[0].read_text())
     for migration in args.overlay_migration:sql(migration.read_text())
     regression_count=0
-    for filename in ['ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
+    for filename in ['release_imported_prescription.test.sql','release_imported_vaccination.test.sql','ezyvet_prescription_release_validation.test.sql','ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
         result=sql(Path(__file__).with_name(filename).read_text())
         plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
         check('not ok' not in result.stdout and bool(plans),filename+'\n'+result.stdout)
@@ -256,6 +288,183 @@ try:
         check(scalar(f"select status from ezyvet_prescription_review_requests where id='{pending}';")=='approved','Real review-first ingestion preserves committed approval')
         check(scalar(f"select ezyvet_prescription_current('{pending}')->>'is_current';")=='false','Subsequent real source change visibly invalidates approved currentness')
         print(f'Observed actual {resource} page ingestion versus approval in both orders.',flush=True)
+
+    # Export confirmation must serialize against real source ingestion and
+    # clinical correction, preserving the exact reviewed package on recovery.
+    sql("insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic race reviewer',now(),'TEST ONLY',8);")
+    def export_candidate():
+        p,_=rescan();review=fresh(p)
+        sql('begin;'+staff+approve(review)+'commit;')
+        record=json.loads(scalar(f"select to_jsonb(v) from ezyvet_imported_prescriptions v join ezyvet_prescription_review_requests r on r.approved_record_id=v.id where r.id='{review}';"))
+        selection={'imported_prescription_ids':[record['id']]}
+        args=f"'{pet}','{fx['client']}','EMAIL','clinical-import@example.test',{quote(json.dumps(selection))}::jsonb"
+        preview=json.loads(scalar('begin;'+staff+f"select preview_record_release_v8({args});commit;"))
+        release_id=str(uuid.uuid4())
+        confirm=staff+f"select confirm_record_release('{release_id}',{args},{quote(json.dumps(preview['snapshot']))}::jsonb,'{preview['source_hash']}',true);"
+        return p,record,release_id,preview,confirm
+    def release_eligible(release_id):
+        return scalar('begin;'+staff+f"select read_record_release('{release_id}')->>'eligible';commit;")
+    for resource in ['prescription','prescriptionitem','consult']:
+        def release_writer():
+            if resource=='prescription':items=[{'external_id':'101','payload':original_parent|{'instructions':'Changed parent during export'}}]
+            elif resource=='prescriptionitem':items=[{'external_id':'501','payload':original_items[0]['payload']|{'instructions':'Changed item during export'}}]
+            else:items=[{'external_id':'201','payload':original_consult|{'description':'Changed consultation during export'}}]
+            return intake_page(resource,items)[2]
+        p,record,release_id,preview,confirm=export_candidate();change=release_writer()
+        contended(change,confirm,lambda c,o,e:c!=0 and 'Current latest same-patient reviewed prescription required' in e)
+        check(scalar(f"select count(*) from record_releases where id='{release_id}';")=='0','Source-first export race creates no stale package')
+        p,record,release_id,preview,confirm=export_candidate();change=release_writer()
+        contended(confirm,change,lambda c,o,e:c==0)
+        check(release_eligible(release_id)=='false','Export-first source race invalidates subsequent delivery')
+        check(json.loads(scalar(f"select snapshot from record_releases where id='{release_id}';"))==preview['snapshot'],'Source race preserves immutable confirmed export evidence')
+        check(sql('begin;'+confirm+'commit;',False).returncode==0,'Exact confirmation retry survives source race')
+        print(f'Observed actual {resource} ingestion versus export confirmation in both orders.',flush=True)
+    for correction_first in [True,False]:
+        p,record,release_id,preview,confirm=export_candidate()
+        corrected=p|{'interpretation':p['interpretation']|{'replaces_id':record['id'],'expected_predecessor_hash':record['version_hash'],'outside_author':'Export race clinician','reason':'Correct attribution during export review'}}
+        correction_id=fresh(corrected);change=staff+approve(correction_id)
+        if correction_first:
+            contended(change,confirm,lambda c,o,e:c!=0 and 'Current latest same-patient reviewed prescription required' in e)
+            check(scalar(f"select count(*) from record_releases where id='{release_id}';")=='0','Correction-first race rejects obsolete export')
+        else:
+            contended(confirm,change,lambda c,o,e:c==0)
+            check(release_eligible(release_id)=='false','Export-first correction race invalidates delivery')
+            check(json.loads(scalar(f"select snapshot from record_releases where id='{release_id}';"))==preview['snapshot'],'Correction race never rewrites saved export')
+    print('Observed clinical correction versus export confirmation in both orders.',flush=True)
+    p,record,release_id,preview,confirm=export_candidate()
+    corrected=p|{'interpretation':p['interpretation']|{'replaces_id':record['id'],'expected_predecessor_hash':record['version_hash'],'outside_author':'Three-session clinician','reason':'Reviewed correction while source import competes'}}
+    correction_id=fresh(corrected)
+    change=intake_page('prescriptionitem',[{'external_id':'501','payload':original_items[0]['payload']|{'instructions':'Source changes during three-session export race'}}])[2]
+    correction_committed=contended_three(confirm,staff+approve(correction_id),change)
+    check(release_eligible(release_id)=='false','Three-session source/correction race leaves package ineligible')
+    check(json.loads(scalar(f"select snapshot from record_releases where id='{release_id}';"))==preview['snapshot'],'Three-session race preserves exact saved package')
+    check(scalar(f"select status from ezyvet_prescription_review_requests where id='{correction_id}';")==('approved' if correction_committed else 'prepared'),'Correction receipt matches the observed source ordering')
+    check(sql('begin;'+confirm+'commit;',False).returncode==0,'Three-session race retains exact confirmation recovery')
+    print('Observed confirmation, clinical correction and actual item ingestion contending together.',flush=True)
+
+    # Distinct patient/source fixture: two catalog matches deliberately listed high UUID first.
+    multi_actor = 'db562000-0000-4000-8000-000000000001'
+    low_product = 'db562000-0000-4000-8000-000000000010'
+    high_product = 'db562000-0000-4000-8000-000000000020'
+    multi_fixture = fixture.replace('db560000', 'db562000').replace('prescriptionitem-test-site', 'multi-product-test-site').replace('@example.test', '@multi-product-example.test')
+    multi_fixture = multi_fixture.replace("insert into fx values('product',gen_random_uuid());", f"insert into fx values('product','{low_product}');")
+    item_extension = "update data set v=v||jsonb_build_array(jsonb_build_object('external_id','502','payload',jsonb_build_object('id',502,'prescription_id',101,'qty','second outside units','instructions','Second original item'))) where k='items';"
+    multi_fixture = multi_fixture.replace("insert into data select 'legacy',", item_extension + "insert into data select 'legacy',", 1)
+    multi_saved = json.loads(scalar('begin;set local search_path=public,extensions;' + multi_fixture + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
+    multi_pet = multi_saved['fx']['pet']
+    sql("begin;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': multi_actor, 'role': 'authenticated'})) + f",true);insert into catalog_products(id,name,kind,unit,unit_price_cents,created_by) values('{high_product}','Second synthetic medication','medication','tablet',1000,'{multi_actor}');commit;")
+    multi_staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': multi_actor, 'role': 'authenticated'})) + ",true);"
+    multi_payload = multi_saved['data']['payload']
+    original_match = multi_payload['interpretation']['items'][0]
+    source_by_id = {item['external_id']: item for item in multi_saved['data']['context']['items']}
+    multi_payload['interpretation']['items'] = [original_match | {'snapshot_id': source_by_id['502']['snapshot_id'], 'product_id': high_product}, original_match | {'snapshot_id': source_by_id['501']['snapshot_id'], 'product_id': low_product}]
+
+    def observe_catalog_order(operation, version):
+        tag = 'lrv_catalog_order_' + uuid.uuid4().hex
+        holder_tag, reviewer_tag, writer_tag = [tag + suffix for suffix in ['_holder', '_reviewer', '_writer']]
+        owned_sessions.extend([holder_tag, reviewer_tag, writer_tag])
+        sessions = []
+        def start(name, query, commit=False):
+            process = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            sessions.append(process)
+            process.stdin.write(f"set application_name='{name}';begin;{query}" + ('commit;' if commit else '') + '\n')
+            process.stdin.flush()
+            if commit: process.stdin.close()
+            return process
+        def observed(predicate, message):
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if scalar('select ' + predicate + ';') == 't':
+                    check(True, message)
+                    return
+                time.sleep(.03)
+            raise AssertionError(message)
+        def finish(process):
+            process.stdin.write('commit;\n');process.stdin.close();process.wait(timeout=10)
+            check(process.returncode == 0, process.stderr.read())
+        try:
+            holder = start(holder_tag, f"select 1 from catalog_products where id='{high_product}' for update;")
+            observed(f"exists(select 1 from pg_stat_activity where application_name='{holder_tag}' and state='idle in transaction')", 'High medication row lock is held before review')
+            reviewer = start(reviewer_tag, multi_staff + operation)
+            observed(f"exists(select 1 from pg_stat_activity r join pg_stat_activity h on h.pid=any(pg_blocking_pids(r.pid)) where r.application_name='{reviewer_tag}' and h.application_name='{holder_tag}')", 'Reversed-input review waits on the high medication holder')
+            writer = start(writer_tag, multi_staff + f"select save_catalog_product('{low_product}',{version},'Synthetic medication','medication','','tablet',1000,true);", commit=True)
+            observed(f"exists(select 1 from pg_stat_activity w join pg_stat_activity r on r.pid=any(pg_blocking_pids(w.pid)) where w.application_name='{writer_tag}' and r.application_name='{reviewer_tag}')", 'Review already holds the lower medication despite reversed selection order')
+            finish(holder)
+            observed(f"exists(select 1 from pg_stat_activity where application_name='{reviewer_tag}' and state='idle in transaction')", 'Review completes after high medication unlocks')
+            finish(reviewer)
+            writer.wait(timeout=10)
+            check(writer.returncode == 0, writer.stderr.read())
+        finally:
+            # Only these three named sessions belong to this observation.
+            sql("select pg_terminate_backend(pid) from pg_stat_activity where datname=current_database() and application_name in(" + ','.join(map(quote, [holder_tag, reviewer_tag, writer_tag])) + ');')
+            for process in sessions:
+                if process.stdin and not process.stdin.closed: process.stdin.close()
+                process.wait(timeout=10)
+
+    reversed_prepare_id = str(uuid.uuid4())
+    prepare_multi = lambda request_id: f"do $order$ begin perform prepare_ezyvet_prescription_review('{request_id}','{multi_pet}',{quote(json.dumps(multi_payload))}::jsonb);end $order$;"
+    observe_catalog_order(prepare_multi(reversed_prepare_id), 1)
+    check(scalar(f"select review_context#>>'{{selected_items,1,product,version}}' from ezyvet_prescription_review_requests where id='{reversed_prepare_id}';") == '1', 'Prepared review preserves catalog revision before waiting edit')
+    multi_payload['interpretation']['items'][1]['product_version'] = 2
+    reversed_approval_id = str(uuid.uuid4())
+    sql('begin;' + multi_staff + prepare_multi(reversed_approval_id) + 'commit;')
+    multi_hash = scalar(f"select request_hash from ezyvet_prescription_review_requests where id='{reversed_approval_id}';")
+    observe_catalog_order(f"do $order$ begin perform approve_ezyvet_prescription_review('{reversed_approval_id}','{multi_pet}','{multi_hash}',true);end $order$;", 2)
+    approved_products = json.loads(scalar(f"select jsonb_agg(item->'product' order by ordinal) from ezyvet_imported_prescriptions p cross join lateral jsonb_array_elements(p.context->'selected_items') with ordinality x(item,ordinal) where p.id='{reversed_approval_id}';"))
+    check([product['id'] for product in approved_products] == [high_product, low_product] and [product['version'] for product in approved_products] == [1, 2], 'Approval preserves reviewed order and exact frozen versions after concurrent edit')
+    check(scalar(f"select version from catalog_products where id='{low_product}';") == '3', 'Both catalog edits commit after the review releases its ordered locks')
+    print('Observed reversed two-product locking for preparation and approval with an actual catalog writer.', flush=True)
+
+    # Mixed families share a patient release lock but retain independent source invalidations.
+    mixed_fixture_source = Path(__file__).with_name('release_imported_prescription.test.sql').read_text().split("insert into data select 'selection',")[0]
+    for scenario_index, (resource, ordering) in enumerate([('vaccination', 'source-first'), ('vaccination', 'release-first'), ('prescriptionitem', 'source-first'), ('prescriptionitem', 'release-first'), ('both', 'release-first')], start=563):
+        prefix = f'db{scenario_index}000'
+        mixed_actor = prefix + '-0000-4000-8000-000000000001'
+        mixed_reviewer = prefix + '-0000-4000-8000-000000000002'
+        mixed_site = f'mixed-release-race-{scenario_index}'
+        source = mixed_fixture_source.replace('db560000', prefix).replace('prescriptionitem-test-site', mixed_site).replace('@example.test', f'@mixed-{scenario_index}-example.test')
+        mixed = json.loads(scalar(source + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
+        mixed_fx, mixed_data = mixed['fx'], mixed['data']
+        mixed_pet, mixed_client = mixed_fx['pet'], mixed_fx['client']
+        mixed_staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': mixed_reviewer, 'role': 'authenticated'})) + ",true);"
+        selection = {'imported_prescription_ids': [mixed_data['approved']['receipt']['id']], 'imported_vaccination_ids': [mixed_data['vaccine-approved']['receipt']['id']]}
+        recipient = f'clinical-import@mixed-{scenario_index}-example.test'
+        mixed_preview = json.loads(scalar('begin;' + mixed_staff + f"select preview_record_release_v8('{mixed_pet}','{mixed_client}','EMAIL','{recipient}',{quote(json.dumps(selection))}::jsonb);commit;"))
+        check(len(mixed_preview['snapshot']['imported_prescriptions']) == 1 and len(mixed_preview['snapshot']['imported_vaccinations']) == 1, 'Race package explicitly contains both reviewed source families')
+        mixed_release_id = str(uuid.uuid4())
+        mixed_confirm = mixed_staff + f"do $mixed$ begin perform confirm_record_release('{mixed_release_id}','{mixed_pet}','{mixed_client}','EMAIL','{recipient}',{quote(json.dumps(selection))}::jsonb,{quote(json.dumps(mixed_preview['snapshot']))}::jsonb,'{mixed_preview['source_hash']}',true);end $mixed$;"
+        def mixed_page(kind):
+            # Advance only this owned synthetic source's cooldown before the next scan.
+            sql(f"update ezyvet_import_runs set retry_after=null,lease_until=null where source_site_uid='{mixed_site}' and resource='{kind}';")
+            run_id = str(uuid.uuid4())
+            common = f"'{run_id}','{mixed_actor}','{mixed_site}','{kind}','https://api.trial.ezyvet.com','{mixed_fx['mapping']}'"
+            if kind == 'vaccination':
+                parent = mixed_data['vconsult']
+                claim = f"select claim_ezyvet_vaccination_import({common},'{parent['id']}','{parent['payload_hash']}',{parent['head_version']});"
+                items = [{'external_id': '902', 'payload': {'id': '902', 'consult_id': '901', 'description': 'Changed original vaccine during mixed release race', 'date_of_administration': 'ambiguous', 'date_of_next_administration': None, 'active': 'unknown'}}]
+            else:
+                parent = mixed_data['prescription']
+                claim = f"select claim_ezyvet_prescriptionitem_import({common},'{parent['id']}','{parent['payload_hash']}',{parent['observed_head_version']});"
+                items = [item | {'payload': item['payload'] | ({'instructions': 'Omitted item changed during mixed release race'} if item['external_id'] == '502' else {})} for item in mixed_data['items']]
+            claimed = json.loads(service_call(claim))
+            return service + f"select stage_ezyvet_import_page('{run_id}','{mixed_actor}','{claimed['lease_id']}',1,true,{quote(json.dumps(items))}::jsonb);"
+        change = mixed_page('vaccination' if resource == 'both' else resource)
+        if resource == 'both':
+            other_change = mixed_page('prescriptionitem')
+            check(contended_three(mixed_confirm, change, other_change), 'Both independent mixed-source writers commit after confirmation')
+        elif ordering == 'source-first':
+            expected = 'Current latest same-patient reviewed ' + ('vaccination' if resource == 'vaccination' else 'prescription') + ' required'
+            contended(change, mixed_confirm, lambda code, output, error: code != 0 and expected in error)
+            check(scalar(f"select count(*) from record_releases where id='{mixed_release_id}';") == '0', 'Source-first mixed release cannot persist stale selected history')
+        else:
+            contended(mixed_confirm, change, lambda code, output, error: code == 0)
+        if ordering == 'release-first':
+            read = json.loads(scalar('begin;' + mixed_staff + f"select read_record_release('{mixed_release_id}');commit;"))
+            check(read['eligible'] is False, 'Selected source change makes mixed package ineligible')
+            check(read['release']['snapshot'] == mixed_preview['snapshot'], 'Mixed source races preserve exact original package')
+            check(sql('begin;' + mixed_confirm + 'commit;', False).returncode == 0, 'Mixed source race preserves exact committed confirmation retry')
+            check(scalar(f"select count(*) from record_release_sources where release_id='{mixed_release_id}';") == '2', 'Mixed package retains both source registry entries')
+        print(f'Observed mixed vaccination/prescription release against {resource} ingestion: {ordering}.', flush=True)
 
     sql(f"delete from user_roles where user_id='{actor}' and role='DVM';")
     denied=sql('begin;'+staff+f"select recover_ezyvet_prescription_review('{a}','{pet}');commit;",False)

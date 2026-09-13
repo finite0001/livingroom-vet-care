@@ -16,7 +16,10 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local-rehearsal', action='store_true')
 parser.add_argument('--resume-backup', type=Path, help='Retry only a retained synthetic backup destination')
 parser.add_argument('--rehearse-observed-hosted-gaps', action='store_true')
+parser.add_argument('--destination-api-port', type=int, default=59321, help='Unused local destination API port; also reserves port-1, port+1 and port+3')
 args = parser.parse_args()
+if not 1025 <= args.destination_api_port <= 65532:
+    parser.error('Destination API port must be between1025 and65532')
 if args.rehearse_observed_hosted_gaps and args.resume_backup:
     parser.error('Gap rehearsal requires a fresh run; resume cannot prove the upgrade')
 if not args.run_synthetic_local_rehearsal:
@@ -26,8 +29,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,55)]
-    assert len(migration_files)==74 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,65)] + ['20260913900000']
+    assert len(migration_files)==85 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -187,6 +190,47 @@ def seed_vaccination_receipt(project):
     (run/'vaccination-receipt-fixture.json').write_text(json.dumps(captured, sort_keys=True))
 
 
+
+def prescription_snapshot(project):
+    tables = ['ezyvet_prescription_runs','ezyvet_prescription_pages','ezyvet_prescription_page_observations',
+              'ezyvet_prescriptionitem_runs','ezyvet_prescriptionitem_pages','ezyvet_prescriptionitem_page_observations',
+              'ezyvet_prescription_review_requests','ezyvet_imported_prescriptions','ezyvet_imported_prescription_items',
+              'record_release_policy','record_releases','record_release_sources','record_release_events']
+    parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
+    return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
+
+def seed_prescription_receipt(project):
+    state = json.loads((run/'synthetic-fixture.json').read_text())
+    source = (root/'scripts/restore-rehearsal/prescription-fixture.sql').read_text()
+    for token,key in [('ACTOR','user'),('PET','pet'),('CLIENT','client')]:
+        source=source.replace('__'+token+'__',str(uuid.UUID(state[key])))
+    source=source.replace('__SITE__','Synthetic-Restore-'+run_id)
+    assert '__' not in source
+    sql(project,source)
+    captured=prescription_snapshot(project)
+    assert len(captured['ezyvet_prescription_page_observations'])==1
+    assert len(captured['ezyvet_prescriptionitem_page_observations'])==2
+    assert len(captured['ezyvet_imported_prescriptions'])==2
+    assert len(captured['ezyvet_imported_prescription_items'])==2
+    assert sorted(row['status'] for row in captured['ezyvet_prescription_review_requests'])==['approved','approved','prepared']
+    assert len(captured['record_releases'])==1 and captured['record_releases'][0]['snapshot']['schema_version']==8
+    assert captured['record_releases'][0]['snapshot']['imported_prescriptions'][0]['context']['reconciliation']['scanComplete'] is False
+    (run/'prescription-receipt-fixture.json').write_text(json.dumps(captured,sort_keys=True))
+    previous=json.loads((run/'vaccination-receipt-fixture.json').read_text())
+    current=vaccination_snapshot(project)
+    assert all(row in current[table] for table,rows in previous.items() for row in rows), 'Prescription fixture altered prior import evidence'
+    (run/'vaccination-receipt-fixture.json').write_text(json.dumps(current,sort_keys=True))
+    # Only the explicitly expected export audit append is added to the original
+    # baseline. verify-upgrade still checks every other clinical/Auth/Storage row.
+    audits=json.loads(sql(project,"select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]') from audit_logs t;"))
+    prior={row['id']:row for row in state['snapshot']['audit_logs']}
+    assert all(row in audits for row in prior.values()), 'Prior audit rows changed'
+    added=[row for row in audits if row['id'] not in prior]
+    assert added and all(row['table_name'] in ['record_release_policy','record_releases','record_release_sources','record_release_events'] and row['user_id']==state['user'] for row in added), 'Unexpected fixture audit side effects'
+    state['snapshot']['audit_logs']=audits
+    (run/'synthetic-fixture.json').write_text(json.dumps(state))
+
+
 def services(project):
     return [docker_name(project,kind) for kind in ['kong','auth','rest','storage','inbucket']]
 
@@ -222,6 +266,9 @@ try:
             seed_vaccination_receipt(source)
             # The preexisting clinical/billing/Auth/Storage snapshot must still be unchanged.
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
+        if any(p.name.startswith('20260913640000_') for p in migration_files):
+            seed_prescription_receipt(source)
+            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])
@@ -248,7 +295,7 @@ try:
             assert path.is_relative_to((run/'storage').resolve())
             assert path.stat().st_size==file['bytes'] and hashlib.sha256(path.read_bytes()).hexdigest()==file['sha256']
     print('Source backup complete; starting separate restore destination',flush=True)
-    destination=project('destination',59321,args.rehearse_observed_hosted_gaps)
+    destination=project('destination',args.destination_api_port,args.rehearse_observed_hosted_gaps)
     if args.rehearse_observed_hosted_gaps:
         assert functions_snapshot(destination)==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'
         evidence=json.loads((run/'backfill-evidence.json').read_text())
@@ -289,13 +336,18 @@ try:
                                'review_request_rows': len(expected_vaccinations['ezyvet_vaccination_review_requests']),
                                'source_and_receipt_rows_match': True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
+    prescription_evidence = None
+    if (run/'prescription-receipt-fixture.json').exists():
+        expected_prescriptions=json.loads((run/'prescription-receipt-fixture.json').read_text())
+        assert prescription_snapshot(destination)==expected_prescriptions, 'Restored prescription observations, requests, corrections or export provenance differ'
+        prescription_evidence={'source_and_receipt_rows_match':True,'row_counts':{table:len(rows) for table,rows in expected_prescriptions.items()},'fixture_sha256':hashlib.sha256((run/'prescription-receipt-fixture.json').read_bytes()).hexdigest()}
     # Compare the restored physical files as well as authorized downloaded original bytes.
     command(['docker','cp',docker_name(destination,'storage')+':/mnt/.',str(run/'restored-storage')])
     restored=[]
     for file in sorted((run/'restored-storage').rglob('*')):
         if file.is_file(): restored.append({'path':str(file.relative_to(run/'restored-storage')),'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
     assert manifest==restored, 'Physical Storage inventory/hash mismatch'
-    results={'synthetic_only':True,'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
+    results={'synthetic_only':True,'prescription_receipt_restore':prescription_evidence,'prescription_fixture_sql_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/prescription-fixture.sql').read_bytes()).hexdigest(),'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
 finally:
     cleanup_errors=[]
     for item in projects:
