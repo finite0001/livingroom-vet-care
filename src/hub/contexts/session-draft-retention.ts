@@ -19,6 +19,8 @@ export function clearOtherInvoiceEmailIntents(
     "outbox-retry-intent:",
     "lrv-ezyvet-clinical-run:",
     "lrv-ezyvet-vaccination-run:",
+    "lrv-ezyvet-prescription-run:",
+    "lrv-ezyvet-prescriptionitem-run:",
     "ezyvet-history-intent:",
     "ezyvet-vaccination-review:",
   ];
