@@ -120,6 +120,7 @@ try:
       ('20260913590000',"to_regclass('public.ezyvet_prescription_review_requests')"),
       ('20260913600000',"to_regprocedure('public.ezyvet_prescription_interpretation_context(jsonb,jsonb)')"),
       ('20260913610000',"to_regclass('public.ezyvet_imported_prescriptions')"),
+      ('20260913620000',"to_regprocedure('public.get_ezyvet_prescription_review_candidate(uuid,uuid)')"),
     ]
     for version,probe in pending:
         if scalar(f'select {probe} is null;')=='t':
@@ -128,7 +129,7 @@ try:
             sql(paths[0].read_text())
     for migration in args.overlay_migration:sql(migration.read_text())
     regression_count=0
-    for filename in ['ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
+    for filename in ['ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
         result=sql(Path(__file__).with_name(filename).read_text())
         plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
         check('not ok' not in result.stdout and bool(plans),filename+'\n'+result.stdout)
