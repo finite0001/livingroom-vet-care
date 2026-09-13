@@ -55,3 +55,6 @@ verify_jwt = false
 verify_jwt = true
 [functions.recover-payment-collection]
 verify_jwt = true
+
+[functions.prepare-payment-delivery]
+verify_jwt = true
