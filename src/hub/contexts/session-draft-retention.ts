@@ -17,6 +17,7 @@ export function clearOtherInvoiceEmailIntents(
     "inbound-assignment-intent:",
     "communication-processing-intent:",
     "outbox-retry-intent:",
+    "lrv-ezyvet-clinical-run:",
   ];
   for (const prefix of prefixes) {
     const retained = actorId ? `${prefix}${actorId}:` : null;
