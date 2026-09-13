@@ -1,0 +1,14 @@
+/.git
+/.env*
+/.github
+/.lovable
+/node_modules
+/dist
+/supabase
+/tests
+/e2e
+/test-results
+/playwright-report
+/docs
+/plans
+*.log
