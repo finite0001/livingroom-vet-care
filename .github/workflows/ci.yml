@@ -60,6 +60,8 @@ jobs:
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks
         run: python3 supabase/tests/payment_collection_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent reconciliation and financial evidence
+        run: python3 supabase/tests/payment_reconciliation_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
         with:
           node-version: 22
