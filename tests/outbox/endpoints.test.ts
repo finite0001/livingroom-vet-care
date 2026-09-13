@@ -1,3 +1,4 @@
+import { authenticateWorker } from "../../supabase/functions/_shared/worker-auth.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -58,6 +59,7 @@ async function invoke(
   }).outputText;
   runInNewContext(compiled, {
     ...policy,
+    authenticateWorker,
     serve: (fn: typeof handler) => {
       handler = fn;
     },

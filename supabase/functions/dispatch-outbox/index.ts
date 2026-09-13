@@ -1,3 +1,4 @@
+import { authenticateWorker } from "../_shared/worker-auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
@@ -11,9 +12,11 @@ const json = (body: unknown, status = 200) =>
   });
 serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!key || req.headers.get("Authorization") !== `Bearer ${key}`)
-    return json({ error: "Service authorization required" }, 401);
+  const key = authenticateWorker(req, {
+    SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
+    SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  });
+  if (!key) return json({ error: "Service authorization required" }, 401);
   try {
     const env: OutboxEnvironment = {};
     for (const name of [

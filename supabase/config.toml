@@ -9,8 +9,15 @@ verify_jwt = false
 [functions.twilio-webhook]
 verify_jwt = false
 
+# Service workers validate managed secret apikeys in the shared server-only handler.
 [functions.process-inbound]
-verify_jwt = true
+verify_jwt = false
+
+[functions.dispatch-outbox]
+verify_jwt = false
+
+[functions.queue-reminders]
+verify_jwt = false
 
 [functions.public-contact]
 verify_jwt = false
