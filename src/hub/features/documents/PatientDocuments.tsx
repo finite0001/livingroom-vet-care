@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +75,10 @@ export function PatientDocuments({ petId }: PatientDocumentsProps) {
   const [voiding, setVoiding] = useState<DocumentRow | null>(null);
   const [reason, setReason] = useState("");
   const refresh = () =>
-    cache.invalidateQueries({ queryKey: ["patient-documents", petId] });
+    Promise.all([
+      cache.invalidateQueries({ queryKey: ["patient-documents", petId] }),
+      refreshPatientReleases(cache, petId),
+    ]);
   async function action(work: () => Promise<void>) {
     if (lock.current) return;
     lock.current = true;

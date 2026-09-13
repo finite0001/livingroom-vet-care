@@ -2,6 +2,12 @@
 
 This module creates an actual review artifact and immutable confirmed package. The separately reviewed [email delivery adapter](release-email-delivery.md) can prepare and queue its exact HTML report and authorized originals. Package confirmation itself does not send records or generate a PDF. Confirmation remains disabled until a trusted operator records Dr. Edler's acceptance of the release form and workflow in `record_release_policy`. The table starts empty, is not writable by staff or service-role callers, and has an audit trigger. Preview remains available for clinical review before activation.
 
+## Current schema5 workflow
+
+The patient release panel uses `preview_record_release_v5`, `list_record_release_sources_v5` and `select_all_record_release_sources_v5`. Selection adds `lab_report_ids` and `external_record_ids` to the twelve legacy families below. Every selected source requires its exact original in `document_ids`, and every approved source associated with a selected original must be disclosed. Historical versions remain explicitly selectable when their identity is valid. Source review changes refresh the candidates and release history without discarding selections or uncertain confirmation requests.
+
+Schema5 freezes source identity, replacement history, exact-version acknowledgments and captured original SHA256. Later source changes prevent new delivery; exact committed recovery and old schema1–4 artifacts remain immutable. Ordinary documents do not acquire a retrospective byte-verification claim. See the [versioned contract](plans/release-source-v5-contract.md), [byte-binding checks](release-source-byte-binding.md) and [pending clinical review](clinical-review/release-source-provenance.md). Schema5 clinical acceptance remains disabled.
+
 ## Dependencies and stacking
 
 Release commits are stacked onto the clinical/inbox/lab/anesthesia/care-reminder foundation. The earlier duplicate certificate backend cherry-pick was removed during rebase; no certificate schema or UI commit is replayed by this branch. Certificate content is delegated to the shared frozen-certificate renderer, including future supported certificate snapshot versions. No enqueue/recovery function or raw `attachment_ids` contract is changed.

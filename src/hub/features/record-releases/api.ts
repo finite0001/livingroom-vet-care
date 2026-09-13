@@ -1,13 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type {
-  ReleaseSelection,
+  ReleaseSelection as SharedReleaseSelection,
   ReleasePreview,
   ReleaseRow,
   ReleaseBundle,
   ReleaseEvent,
 } from "./print";
 export { sourceLabels, type SourceKind } from "./selection";
+export interface ReleaseSelection extends SharedReleaseSelection {
+  lab_report_ids?: string[];
+  external_record_ids?: string[];
+}
 export interface ReleaseCandidate {
   id: string;
   version: number;
@@ -15,6 +19,13 @@ export interface ReleaseCandidate {
   label: string;
   importance?: string;
   required_document_id?: string | null;
+  required_document_version?: number;
+  kind?: "original" | "corrected" | "replacement";
+  historical?: boolean;
+  source_label?: string;
+  acknowledgment_count?: number;
+  required_lab_report_ids?: string[];
+  required_external_record_ids?: string[];
   file_size?: number;
   mime_type?: string;
 }
@@ -26,6 +37,10 @@ export interface ReleaseCandidates {
   phone: string | null;
   policy_accepted: boolean;
   policy_v4_accepted?: boolean;
+  policy_v5_accepted: boolean;
+  has_more: Record<import("./selection").SourceKind, boolean>;
+  lab_report_ids: ReleaseCandidate[];
+  external_record_ids: ReleaseCandidate[];
   problem_ids: ReleaseCandidate[];
   patient_summary_ids: ReleaseCandidate[];
   weight_ids: ReleaseCandidate[];
@@ -65,7 +80,7 @@ interface ReleaseDatabase {
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
     Functions: {
-      select_all_record_release_sources: {
+      select_all_record_release_sources_v5: {
         Args: { p_pet_id: string };
         Returns: {
           selection: ReleaseSelection;
@@ -74,11 +89,11 @@ interface ReleaseDatabase {
           scope: string;
         };
       };
-      list_record_release_sources: {
+      list_record_release_sources_v5: {
         Args: { p_pet_id: string; p_offset: number };
         Returns: ReleaseCandidates;
       };
-      preview_record_release_v4: {
+      preview_record_release_v5: {
         Args: { [K in keyof ReleasePreviewArgs]: ReleasePreviewArgs[K] };
         Returns: ReleasePreview;
       };

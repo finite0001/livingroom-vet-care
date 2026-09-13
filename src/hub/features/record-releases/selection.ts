@@ -6,6 +6,8 @@ export const sourceLabels = {
   encounter_ids: "Signed SOAP and all addenda",
   certificate_ids: "Valid issued certificates",
   lab_order_ids: "Resulted laboratory records",
+  lab_report_ids: "Verified laboratory report versions",
+  external_record_ids: "Approved imported record originals",
   document_ids: "Shareable original documents",
   dental_ids: "Signed dental charts",
   qol_ids: "Signed QOL observations",

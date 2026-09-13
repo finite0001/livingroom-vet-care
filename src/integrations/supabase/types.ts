@@ -5564,6 +5564,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      list_record_release_sources_v5: {
+        Args: { p_offset?: number; p_pet_id: string }
+        Returns: Json
+      }
+      preview_record_release_v5: {
+        Args: {
+          p_channel: string
+          p_client_id: string
+          p_pet_id: string
+          p_recipient: string
+          p_selection: Json
+        }
+        Returns: Json
+      }
+      select_all_record_release_sources_v5: {
+        Args: { p_pet_id: string }
+        Returns: Json
+      }
       read_invoice_document: {
         Args: { p_invoice_id: string; p_client_id: string }
         Returns: Json

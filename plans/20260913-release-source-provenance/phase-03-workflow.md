@@ -1,6 +1,6 @@
 # Phase3 — Staff selection, integration and review evidence
 
-Priority: high. Status: pending. Depends on frozen phase1/2 contracts; UI work may start against typed fixtures while backend work proceeds.
+Priority: high. Status: implemented and locally verified; see integration evidence in docs/release-source-byte-binding.md. Clinical acceptance remains pending. Depends on frozen phase1/2 contracts; UI work may start against typed fixtures while backend work proceeds.
 
 ## Workflow
 
@@ -28,12 +28,13 @@ Root owns integration, CI, generated type reconciliation and evidence updates. D
 
 ## Review and tests
 
-- [ ] Browser cases cover explicit source/original selection across pages, new format acceptance, stale correction/review/document rejection, acknowledgment labels and unsaved-navigation protection.
-- [ ] Add synthetic original/corrected lab and original/replacement ezyVet examples with both absent and exact-version DVM acknowledgments.
-- [ ] Generate a schema5 example with the production renderer and extend D02 disclosure plus C09/C10 source review checklists. Keep all decisions pending with exact source revision; do not activate policy.
-- [ ] Update `docs/record-releases.md`, `docs/release-email-delivery.md`, `docs/plans/ezyvet-historical-records.md`, the clinician register/examples and `docs/commercial-readiness.md` to describe final behavior and limits.
-- [ ] Run focused SQL, actual contention, renderer/payload unit tests, browser workflow tests and an actual local Auth/Storage release→email/link capture workflow. Temporary clinical-policy acceptance must stay inside rolled-back tests or disposable generated projects, never hosted.
-- [ ] Run repository check/frozen Edge checks and required CI. Revalidate the final migration inventory and update the deliberately frozen local backfill rehearsal only after reviewing the added versions; run restore validation for the integrated source.
+- [x] Browser cases cover explicit source/original selection across pages, new format acceptance, stale correction/review/document rejection, acknowledgment labels and unsaved-navigation protection.
+- [x] Add synthetic original/corrected lab and original/replacement ezyVet examples with both absent and exact-version DVM acknowledgments.
+- [x] Generate a schema5 example with the production renderer and extend D02 disclosure plus C09/C10 source review checklists. Keep all decisions pending with exact source revision; do not activate policy.
+- [x] Update `docs/record-releases.md`, `docs/release-email-delivery.md`, `docs/plans/ezyvet-historical-records.md`, the clinician register/examples and `docs/commercial-readiness.md` to describe final behavior and limits.
+- [x] Run focused SQL, actual contention, renderer/payload unit tests, browser workflow tests and an actual local Auth/Storage release→email/link capture workflow. The final runner confines temporary clinical-policy acceptance to a disposable generated project. The earlier restored local-foundation fixture and subsequent guard are disclosed in `docs/release-source-byte-binding.md`; hosted policy was never changed.
+- [x] Repository check/frozen Edge checks, reviewed68-migration inventory, local backfill and restore validation passed.
+- [ ] Required PR CI must pass.
 - [ ] Stack reviewed draft PRs with concrete local evidence and explicit provider/hosted/clinical limits. No main merge or public deployment.
 
 ## Completion boundary

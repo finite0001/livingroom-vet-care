@@ -2,6 +2,16 @@
 
 Goal: complete all requested practice software and website components, then perform one coordinated rollout. Stacked PRs are implementation increments; merging them is not evidence that a commercial launch is ready. The original scope is preserved below.
 
+## Current release checkpoint
+
+- PR103 (`d6cd859`) and its PR102 implementation base have all three CI jobs green. The schema5 release-source implementation is now integrated at `38fdc90`, with382 unit tests,41 browser cases, frozen Edge checks and24 disposable source-capture checks passing; its draft PR CI remains separate. See [integrated evidence](release-source-byte-binding.md).
+- Last read-only hosted verification: dedicated project `mgadheotkdnrsatfivjy` has51 migration receipts through3400 with older gaps. Its259 application routines and168 trigger bindings match the observed subset except the six direct grants documented in [hosted preflight](hosted-upgrade-preflight.md). The4600 correction is implemented and locally tested, but remains unapplied there.
+- The observed51-version history plus grant differences was reproduced locally and upgraded through68 migrations. Canonical permissions, captured records, private Storage/database restore and cleanup passed. This does not establish hosted recovery coverage or authorize a hosted backfill.
+- No public cutover, provider commissioning, clinical approval or full hosted staff acceptance is claimed. Main remains outside this stacked-PR rollout; revalidate its actual state before merging.
+- Original Lovable and dedicated future-production environments must remain distinct. Separate staging, mail/Auth commissioning, Stripe reauthentication, provider contracts and owner/clinical acceptance remain open as detailed below.
+
+The tables below preserve the complete requested scope. Dated narrative checkpoints later in this document are historical evidence, not instructions to deploy those old revisions or claims that their counts describe today's hosted database.
+
 ## User requirements
 
 | Requirement | Current evidence | Still required for acceptance |
@@ -30,7 +40,7 @@ Goal: complete all requested practice software and website components, then perf
 | Logo/new visuals | PR12 approved armchair/dog/cat direction; PR33 medical-cross PNG with live descriptor integrated into public header/footer, responsive previews checked | Final owner acceptance and optimized/vector master; raster texture/fringe and print/monochrome reproduction review remain |
 | Supabase/Vercel + owned domain | Dedicated Supabase provisioned; Vercel config; domain known | Frontend environment parity, staff/Auth SMTP, DNS/HTTPS, backups/restore, monitoring and cutover |
 
-## Deployment inventory revalidated 2026-09-12
+## Historical deployment inventory — 2026-09-12
 
 - PR1 and PR2 are merged. The original deployment audit baseline was `56f8315`; the current integrated release-provenance implementation baseline is `63414e8`. These are different checkpoints.
 - The original backend is accessible through the Lovable connector, despite being inaccessible through the Supabase connector. Lovable project `7ea421c9-31d9-4bc4-acc7-d206c92b4b42` is associated with repository `livingroom-vet-care`, previews merged commit `56f8315`, and has a published `livingroom-vet-care.lovable.app` site.
@@ -59,7 +69,7 @@ The user selected Antech (entered as “Antec”) as the lab provider and Dr. Su
 
 Living Room Vet is the primary record system. ezyVet imports are staged and reviewed; matching must preserve local edits and must never delete local records absent from a later import. No outbound clinical synchronization into ezyVet is planned.
 
-## Current implementation evidence (2026-09-12)
+## Historical implementation evidence — 2026-09-12
 
 PRs 3–36 have green frontend/database CI at this checkpoint. PRs 37–44 have green frontend, database and frozen Edge checks, including PR41 at `5896463`; the aligned PR32 documentation tip `a75dce4` also passed all three checks. Subsequent increments require their own CI runs. [The clinician acceptance pack](clinical-review/README.md) remains a technical review artifact with every clinical decision pending. No CI result proves hosted deployment, provider activation or commercial acceptance.
 
@@ -94,7 +104,7 @@ Synthetic message tests verify lost-response recovery, unchanged UUID retry, cha
 
 The owner selected a new Stripe account dedicated to Living Room Vet. Do not configure payments against an existing unrelated account. Stripe connector reauthentication and practice business onboarding are still required; no account has been created or payment processed in this workflow.
 
-## Latest integration checkpoint
+## Historical integration checkpoint through PR43
 
 The implementation chain now includes record-release selection/export (PR26/31), website-inquiry triage (PR28), public intake hardening (PR30), guarded reminder queuing (PR29), public logo integration (PR33), administrator reminder-policy controls (PR34), frozen email attachments (PR35), reviewed weight promotion (PR36), Edge module verification (PR37) and weight-release provenance (PR38). They are implemented increments awaiting the specific hosted, provider and clinical acceptance gates above, not unimplemented placeholders. The clinical review pack provides editable acceptance rows and synthetic rendered examples without claiming approval. No provider activation or public rollout is implied by these checks.
 

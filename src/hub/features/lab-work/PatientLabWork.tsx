@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useRef, useState } from "react";
 import { PatientLabResults } from "./PatientLabResults";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -178,6 +179,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
       setReason("");
       setMessage("Lab work saved.");
       await Promise.all([
+        refreshPatientReleases(cache, petId),
         cache.invalidateQueries({ queryKey: ["lab-orders", petId] }),
         cache.invalidateQueries({ queryKey: ["lab-history", data.id] }),
       ]);

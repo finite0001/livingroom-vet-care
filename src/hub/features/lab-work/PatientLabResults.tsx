@@ -1,3 +1,5 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
@@ -72,6 +74,7 @@ function LabResults({
   admin,
   dvm,
 }: InnerProps) {
+  const releaseCache = useQueryClient();
   const [history, setHistory] = useState<LabResultHistory | null>(null),
     [documents, setDocuments] = useState<ReadyDocument[]>([]),
     [busy, setBusy] = useState(false),
@@ -194,6 +197,7 @@ function LabResults({
     if (v && p && !receiptMatchesIntent(v.receipt, p))
       throw new Error("Original request differs");
     if (alive.current && v) {
+      if (v.report) void refreshPatientReleases(releaseCache, order.pet_id);
       setSelected(v);
       clearReview();
       if (v.capture) {
@@ -242,6 +246,8 @@ function LabResults({
     const row = rows.find((r) => r.id === p.args.p_id && r.actor_id === actor);
     if (row) {
       validateResult(row, p);
+      if (p.kind !== "source")
+        void refreshPatientReleases(releaseCache, order.pet_id);
       clearPending();
       setDraft(false);
       setNotice("The original action is saved in history.");
@@ -286,6 +292,8 @@ function LabResults({
     if (p.kind === "verify") acceptVerification(value, p);
     else {
       validateResult(value, p);
+      if (p.kind !== "source")
+        void refreshPatientReleases(releaseCache, order.pet_id);
       if (p.kind === "link") setSelected(null);
       clearPending();
       setDraft(false);

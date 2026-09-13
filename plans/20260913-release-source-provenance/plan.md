@@ -1,6 +1,6 @@
 # Selected lab and external-original provenance in medical releases
 
-Status: planned; implementation and acceptance remain open.
+Status: implementation and local integration checks completed; PR CI, clinical acceptance and hosted/provider commissioning remain open.
 Base: PR102, `a07f07f`; migrations through4600. This is an extension of the requested ability to select and send medical records/lab results, not an ezyVet or Antech API adapter.
 
 ## Outcome
@@ -19,9 +19,9 @@ Staff can explicitly select a verified lab report version or approved ezyVet man
 
 ## Phases
 
-1. [Database snapshot and lifecycle](phase-01-database.md) — pending. Versioned selection, source projection, locks, invalidation and compatibility.
-2. [Rendering and exact-byte delivery](phase-02-artifacts.md) — pending. Shared schema5 renderer and both materialization/capture paths. Can proceed alongside phase1 after the frozen contract is agreed.
-3. [Staff workflow and acceptance](phase-03-workflow.md) — pending. Explicit source/original selection, recovery, browser/runtime evidence and clinician review examples.
+1. [Database snapshot and lifecycle](phase-01-database.md) — implemented and locally verified. Versioned selection, source projection, locks, invalidation and compatibility.
+2. [Rendering and exact-byte delivery](phase-02-artifacts.md) — implemented and locally verified. Shared schema5 renderer and both materialization/capture paths. Can proceed alongside phase1 after the frozen contract is agreed.
+3. [Staff workflow and acceptance](phase-03-workflow.md) — implemented; clinical acceptance pending. Explicit source/original selection, recovery, browser/runtime evidence and clinician review examples.
 
 ## Delivery sequence
 

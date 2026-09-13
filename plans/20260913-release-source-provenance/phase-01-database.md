@@ -1,6 +1,6 @@
 # Phase1 — Database snapshot and lifecycle
 
-Priority: high. Status: pending. Depends on PR102 and an agreed schema5 projection shared with phase2.
+Priority: high. Status: implemented and locally verified; see integration evidence in docs/release-source-byte-binding.md. Clinical acceptance remains pending. Depends on PR102 and an agreed schema5 projection shared with phase2.
 
 ## Source context
 
@@ -31,12 +31,12 @@ Create an additive migration after4600; focused pgTAP and actual contention test
 
 ## Acceptance
 
-- [ ] Same-patient, exact-document/capture, private/void/missing object and stale-version rejection.
-- [ ] Accurate unacknowledged, acknowledged, original and historical projections; escaped free text is phase2's responsibility.
-- [ ] Absent/older acceptance blocks v5 confirmation; exact committed retries survive later invalidation, changed retries fail.
-- [ ] Old snapshots/hash/UUID recovery remain unchanged; legacy fresh-confirmation downgrade rejected.
-- [ ] Real lock tests cover both orders for confirmation versus correction/replacement, acknowledgment and document void; mixed source selections do not deadlock.
-- [ ] Source invalidation blocks release email and document-link final preflight with zero attempts.
-- [ ] Schema migration preserves original metadata, native notes, inventory and financial ledgers. No provider or hosted mutations.
+- [x] Same-patient, exact-document/capture, private/void/missing object and stale-version rejection.
+- [x] Accurate unacknowledged, acknowledged, original and historical projections; escaped free text is phase2's responsibility.
+- [x] Absent/older acceptance blocks v5 confirmation; exact committed retries survive later invalidation, changed retries fail.
+- [x] Old snapshots/hash/UUID recovery remain unchanged; legacy fresh-confirmation downgrade rejected.
+- [x] Real lock tests cover both orders for confirmation versus correction/replacement, acknowledgment and document void; mixed source selections do not deadlock.
+- [x] Source invalidation blocks release email and document-link final preflight with zero attempts.
+- [x] Schema migration preserves original metadata, native notes, inventory and financial ledgers. No provider or hosted mutations.
 
 Risk: frozen fields becoming live lookups would change old artifacts or misattribute external authorship. Mitigation: explicit versioned snapshots, whitelisted projection and compatibility fixtures; review by phase2 owner before integration.

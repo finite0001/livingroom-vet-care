@@ -1,3 +1,4 @@
+import { sourceLabels } from "../src/hub/features/record-releases/selection";
 import { createHash } from "node:crypto";
 import { test, expect, type Page } from "@playwright/test";
 
@@ -144,6 +145,7 @@ async function fixture(page: Page, role = "ADMIN") {
     failAckAfter: false,
     failAckRecovery: false,
     petVersion: 1,
+    sourceLoads: 0,
     onePerPage: false,
   };
   const expires = Math.floor(Date.now() / 1000) + 3600,
@@ -175,6 +177,40 @@ async function fixture(page: Page, role = "ADMIN") {
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
+    if (path === "/rest/v1/rpc/list_record_release_sources_v5") {
+      state.sourceLoads++;
+      return route.fulfill({
+        json: {
+          pet_id: petId,
+          client_id: clientId,
+          client_name: "Synthetic family",
+          email: "synthetic@example.test",
+          phone: "+13035550100",
+          policy_accepted: true,
+          policy_v4_accepted: true,
+          policy_v5_accepted: true,
+          ...Object.fromEntries(Object.keys(sourceLabels).map((k) => [k, []])),
+          has_more: Object.fromEntries(
+            Object.keys(sourceLabels).map((k) => [k, false]),
+          ),
+          external_record_ids: state.records.map((r) => ({
+            id: r.id,
+            version: r.version,
+            recorded_at: date,
+            label: `Available export ${r.version}`,
+            required_document_id: r.document_id,
+            required_document_version: r.document_version,
+            file_size: original.length,
+            mime_type: "application/pdf",
+            kind: r.kind,
+            historical: true,
+            source_label: "ezyVet",
+            acknowledgment_count: state.acks.filter((a) => a.record_id === r.id)
+              .length,
+          })),
+        },
+      });
+    }
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/rest/v1/profiles")
@@ -455,6 +491,7 @@ test("ADMIN recovers lost verification and approval with unchanged source intent
   expect(
     state.calls.filter((c) => c.body.action === "prepare").map((c) => c.body),
   ).toEqual([initial, initial]);
+  const sourceLoadsBeforeApproval = state.sourceLoads;
   state.failApproveAfter = true;
   await approve(page);
   await expect(
@@ -462,6 +499,14 @@ test("ADMIN recovers lost verification and approval with unchanged source intent
       name: "export-1 · version 1 · original",
       exact: true,
     }),
+  ).toBeVisible();
+  await expect
+    .poll(() => state.sourceLoads)
+    .toBeGreaterThan(sourceLoadsBeforeApproval);
+  await expect(
+    page
+      .getByRole("region", { name: "Patient medical-record releases" })
+      .getByText("Available export 1", { exact: false }),
   ).toBeVisible();
   expect(state.records).toHaveLength(1);
   expect(
@@ -696,4 +741,42 @@ test("replacement review freezes prior export identity and participates in the p
   expect(prepared.p_animal_link_id).toBe(mappingId);
   expect(prepared.p_export_reference).toBe("export-1");
   expect(state.acks).toHaveLength(0);
+});
+
+test("DVM acknowledgment refreshes release source evidence without remounting the patient", async ({
+  page,
+}) => {
+  const state = await fixture(page, "DVM");
+  const original = seed("66666666-6666-4666-8666-666666666666");
+  state.receipts.push(original.receipt);
+  state.captures[original.receipt.id] = original.capture;
+  state.records.push(original.record);
+  await open(page);
+  const releases = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await expect(
+    releases.getByText(/No DVM acknowledgment recorded for this exact version/),
+  ).toBeVisible();
+  const loads = state.sourceLoads;
+  await page
+    .getByRole("button", { name: "Download export-1 version 1", exact: true })
+    .click();
+  await page
+    .getByLabel(
+      "I reviewed the clinical original for export-1, version 1. This acknowledgment applies only to this version.",
+      { exact: true },
+    )
+    .check();
+  await page
+    .getByRole("button", {
+      name: "Acknowledge export-1 version 1",
+      exact: true,
+    })
+    .click();
+  await expect.poll(() => state.sourceLoads).toBeGreaterThan(loads);
+  await expect(
+    releases.getByText(/1 exact-version DVM acknowledgment\(s\)/),
+  ).toBeVisible();
+  expect(state.acks).toHaveLength(1);
 });

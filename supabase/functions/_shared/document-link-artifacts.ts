@@ -44,6 +44,7 @@ export async function buildDocumentLinkArtifacts(
   ) => Promise<Uint8Array>,
 ) {
   let report: string;
+  let sourceSchema5 = false;
   let originals: ReleaseBundle["release"]["snapshot"]["attachments"] = [];
   if (grant.family === "invoice")
     report = renderInvoiceDocument(
@@ -63,6 +64,7 @@ export async function buildDocumentLinkArtifacts(
     )
       throw new Error("Reviewed SMS release unavailable");
     originals = b.release.snapshot.attachments;
+    sourceSchema5 = b.release.snapshot.schema_version === 5;
     report = renderRecordRelease({
       preview: b.release,
       confirmed: {
@@ -128,6 +130,8 @@ export async function buildDocumentLinkArtifacts(
             );
     if (original.length !== d.file_size || !matches)
       throw new Error("Original bytes differ");
+    if (sourceSchema5 && d.content_sha256 !== undefined && await sha256Hex(original) !== d.content_sha256)
+      throw new Error("Original bytes differ from captured source provenance.");
     artifacts.push({
       filename: releaseAttachmentFilename(index + 1, d.file_name, d.mime_type),
       mime_type: d.mime_type,
