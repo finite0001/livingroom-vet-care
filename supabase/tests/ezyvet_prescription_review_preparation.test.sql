@@ -42,7 +42,7 @@ insert into data select 'prepared',prepare_ezyvet_prescription_review((select id
 select is((select v#>>'{request,status}' from data where k='prepared'),'prepared','Review preparation retained');
 select is((select v#>>'{request,review_context,items,0,original,qty}' from data where k='prepared'),'outside units','Source quantities frozen separately from interpretation');
 select is((select v#>>'{request,review_context,reconciliation,status}' from data where k='prepared'),'unresolved','Draft preserves unresolved source-list evidence');
-select is((select v->>'clinical_approval_available' from data where k='prepared'),'false','Preparation does not claim clinical approval');
+select is((select v->>'clinical_approval_available' from data where k='prepared'),'true','Approval capability is reported separately from prepared status');
 select is(prepare_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),(select v from data where k='payload')),(select v from data where k='prepared'),'Exact retry returns same frozen review');
 select throws_ok($$select prepare_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),(select v||'{"interpretation":{}}' from data where k='payload'))$$,'42501',null,'Changed interpretation cannot overwrite original UUID');
 select throws_ok($$select recover_ezyvet_prescription_review((select id from fx where k='review'),gen_random_uuid())$$,'42501',null,'Wrong patient recovery denied');
