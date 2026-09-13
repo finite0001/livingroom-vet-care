@@ -44,3 +44,7 @@ Deployed 28 functions from the unchanged PR107 source (`f1c7764`) using an isola
 All 28 endpoints received a single anonymous empty POST: 21 returned401 and seven returned503 (unconfigured public contact, provider webhooks, document retrieval and public payment endpoints). These are negative boundary checks, not staff/provider workflow acceptance. The protected retired send handlers returned401 at the gateway, so this check does not claim their internal410 behavior was exercised.
 
 Post-deployment SQL confirms zero Auth accounts, clients, pets, Storage objects and communication outbox rows. Release and reminder policy tables remain empty; pg_cron is not installed. The live deployment manifest is recorded in `staging-edge-manifest.json`.
+
+## Vaccination intake update
+
+Staging now has72 migrations through5200 and ezyvet-import version3 from the green PR109 stack. Hosted permissions and anonymous-denial checks pass; no imports or staff accounts were created. See [the commissioning record](vaccination-staging-commissioning.md).
