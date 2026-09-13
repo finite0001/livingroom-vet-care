@@ -39,7 +39,7 @@ function fixture(channel: "EMAIL" | "SMS" = "EMAIL") {
       calls.push({ name, args });
       return {
         data:
-          name === "read_frozen_email_payload"
+          ["read_frozen_email_payload", "document_link_delivery_context"].includes(name)
             ? null
             : name === "claim_communication"
               ? row
