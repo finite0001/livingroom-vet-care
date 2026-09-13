@@ -30,7 +30,7 @@ test("inspect and narrow status verify capability without provider calls",async(
 });
 test("default-off flags and malformed requests do no database work",async()=>{
  const off=setup({config:()=>({...config,collectionEnabled:false})});assert.equal((await off.handler(req())).status,503);assert.equal(off.calls.length,0);
- for(const patch of [{token:access.status_token},{paid:true},{grant_id:"invalid"},{action:"expire"}]){const s=setup();assert.equal((await s.handler(req("inspect","collection",patch))).status,404);assert.equal(s.calls.length,0);}
+ for(const patch of [{token:access.status_token},{paid:true},{grant_id:"invalid"},{action:"expire"},{action:["inspect"]},{action:["activate"]},{action:{value:"inspect"}}]){const s=setup();assert.equal((await s.handler(req("inspect","collection",patch))).status,404);assert.equal(s.calls.length,0);}
  const big=setup();assert.equal((await big.handler(new Request(origin,{method:"POST",headers:{"Content-Type":"application/json"},body:" ".repeat(1025)}))).status,404);assert.equal(big.calls.length,0);
 });
 test("wrong HMAC, cross-grant context, captured hash and removed keys deny",async()=>{
