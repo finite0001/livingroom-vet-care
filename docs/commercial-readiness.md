@@ -1,5 +1,9 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — shared-team Auth callback separation implemented
+
+[Reserved-sender callback separation](auth-mail-webhook-separation.md) keeps signed Auth delivery statuses out of the client ledger while preserving unknown-client retries. All28 inbound tests, TypeScript, focused lint and the Edge entrypoint check pass. No deployment, mailbox creation, Auth SMTP configuration or sending is claimed. The owner has supplied the first administrator's mailbox; authoritative root DNS still has no MX record, so actual private-mail delivery remains unverified.
+
 ## September 13 — protected frontend preview available
 
 The current application now has a [protected Vercel preview](protected-frontend-preview.md) against the separately commissioned staging database. Its guarded hosted build passes; HTTP checks and the served bundle verify payment routes, staging backend selection and private-route headers. Staff/rendered/provider acceptance remains open. The public Lovable site and `thelivingroom.vet` were not cut over.
