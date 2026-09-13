@@ -132,7 +132,7 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
           "vet_id",
           "active",
           "consult_id",
-        ].every((k) => Object.hasOwn(h.original, k)),
+        ].every((k) => Object.prototype.hasOwnProperty.call(h.original, k)),
     );
     require(
       object(h.consult) &&
@@ -146,14 +146,14 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
       );
     } else {require(
         ["snapshot_id", "payload_hash", "observed_head_version", "external_id"]
-          .every((k) => !Object.hasOwn(h.consult, k)),
+          .every((k) => !Object.prototype.hasOwnProperty.call(h.consult, k)),
       );}
     require(
       object(h.current) && uuid(h.current.snapshot_id) &&
         positive(h.current.head_version) &&
         typeof h.current.scoped === "boolean" &&
         typeof h.current.is_current === "boolean" &&
-        Object.hasOwn(h.current, "source_active"),
+        Object.prototype.hasOwnProperty.call(h.current, "source_active"),
     );
     require(
       !h.current.is_current ||
@@ -299,10 +299,8 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
   }
 }
 const escape = (v: unknown) =>
-  String(v).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(
-    ">",
-    "&gt;",
-  ).replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+  String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const literal = (v: unknown) =>
   v === null || v === undefined
     ? "Not recorded"
