@@ -1,6 +1,6 @@
 # Phase2 — Imported history and reviewed problems/reactions
 
-Priority: high. Status: implementation in progress on `codex/ezyvet-reviewed-history`, based on PR106 (`e80cf62`); acceptance remains unverified. Goal: make API-backed history usable in the patient's primary chart while retaining outside attribution and explicit local clinical authority. See [source contracts](research/source-contracts.md).
+Priority: high. Status: implemented and locally verified at `ddf3d80` on `codex/ezyvet-reviewed-history`, based on PR106 (`e80cf62`); the 71-migration restore rehearsal passed and PR CI remains pending. Clinical acceptance remains separate and pending. Goal: make API-backed history usable in the patient's primary chart while retaining outside attribution and explicit local clinical authority. See [source contracts](research/source-contracts.md).
 
 ## Model and workflow
 
@@ -33,16 +33,17 @@ Implementation base: PR106 (`e80cf62`); integration worktree `/Users/davidedler/
 
 ## Acceptance
 
-- [ ] Wrong patient/site/actor/source head and conflicting consult identity fail before any clinical write.
-- [ ] Source A→B→A changes cannot make old preparations current merely because the payload hash repeats.
-- [ ] Actual concurrent approval, source revision, local edit, patient change and treatment alert review preserve locking and clinical alerts.
-- [ ] Lost approval responses recover exactly once; pointer loss, abandonment and delayed replies do not duplicate or resurrect operations.
-- [ ] Multiple distinct problems can share a history; linking preserves local fields and duplicate decisions remain auditable.
-- [ ] Imported prose/date/category/author references remain explicit and escaped; unknowns cannot become local signatures, diagnoses or timestamps automatically.
-- [ ] Important-reaction creation refreshes the problem list, booking/treatment alerts and release candidates/history without remounting or losing unrelated drafts.
-- [ ] Later source changes leave native fields untouched and create discoverable discrepancy work; local edits preserve the immutable original extraction.
-- [ ] Frozen exports include the agreed provenance; schema1–5 legacy artifacts, exact recovery and final delivery source guards remain valid.
-- [ ] Actual local Auth/HTTP/SQL workflow plus repository/Edge/browser/SQL/contention/restore checks and CI pass; Dr. Edler's actual acceptance remains separately recorded and pending until provided.
+- [x] Wrong patient/site/actor/source head and conflicting consult identity fail before any clinical write.
+- [x] Source A→B→A changes cannot make old preparations current merely because the payload hash repeats.
+- [x] Actual concurrent approval, source revision, local edit, patient change and treatment alert review preserve locking and clinical alerts.
+- [x] Lost approval responses recover exactly once; pointer loss, abandonment and delayed replies do not duplicate or resurrect operations.
+- [x] Multiple distinct problems can share a history; linking preserves local fields and duplicate decisions remain auditable.
+- [x] Imported prose/date/category/author references remain explicit and escaped; unknowns cannot become local signatures, diagnoses or timestamps automatically.
+- [x] Important-reaction creation refreshes the problem list, booking/treatment alerts and release candidates/history without remounting or losing unrelated drafts.
+- [x] Later source changes leave native fields untouched and create discoverable discrepancy work; local edits preserve the immutable original extraction.
+- [x] Frozen exports include the agreed provenance; schema1–5 legacy artifacts, exact recovery and final delivery source guards remain valid.
+- [x] Local Auth/HTTP/SQL workflow, repository/Edge/browser/SQL/contention checks and 71-migration restore passed; see [integrated evidence](../../docs/release-imported-history-artifacts.md).
+- [ ] Required PR CI must pass. Dr. Edler's actual acceptance remains separately recorded and pending until provided.
 
 ## Clinical decisions requiring review
 

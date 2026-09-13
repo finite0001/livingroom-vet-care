@@ -27,3 +27,18 @@ The tested migration overlays were:
 - `20260913510000_release_imported_history.sql`: SHA-256 `9e33b3b8cb741e8c4df1e1278400b3fe4da0144a196ab0549cc775a1161c373d`
 
 The sanitized runner result also records the Git revision and hashes of all migrations and test scripts. Database review and contention work continued after this initial run; final integrated acceptance must use the final migration hashes. This evidence does not substitute for commissioning or clinical acceptance.
+
+## Final integrated local acceptance
+
+At `ddf3d801426625214e4acdfaa85788122bdce459`, the final guarded fixture again passed all 37 actual Auth/Storage/PostgREST checks with cleanup verified and zero provider requests. The final migration hashes are:
+
+- `20260913500000_reviewed_imported_history.sql`: `934ce9f93334f9c2b8ca363a8241f62d09fd0f4231d3a223136013cc1a171178`
+- `20260913510000_release_imported_history.sql`: `0cf7d1430aa717c00ed8c1cc702af1fe05555013f184d29050c0c77c16910ea9`
+
+Runner SHA-256: `8adcc8de44728762759796890232108478e1c78b4854453f85914d0d4c17d707`. Harness SHA-256: `4d698c52f3eec2046666d952fe7810b60b9fe1f91d5ff69344fc2466fc33349f`. The final integrated frontend passed 399 unit tests, 36 affected browser cases, lint, TypeScript and production build; all Edge entry points passed frozen checks. Database verification passed 65 focused SQL assertions, 522 existing regressions and 63 observed-lock checks. CI and the final restore rehearsal are tracked separately; this remains synthetic local evidence, not clinical or provider commissioning.
+
+## Final 71-migration upgrade and restore
+
+At `ddf3d801426625214e4acdfaa85788122bdce459`, the guarded local rehearsal reproduced the observed 51-version subset and six extra direct grants, required ordinary push to refuse the older gaps, then explicitly upgraded the generated source to all 71 migrations. Captured fixture records were preserved. The upgraded source matched a canonical 71-migration destination's function definitions, execution permissions and trigger bindings.
+
+Database and private Storage restoration passed fresh local login, identical records/IDs, signed-history immutability, invoice/credit/stock totals, original-file bytes and anonymous/public denial. Outbox remained empty, cron was absent and cleanup was verified. Total elapsed time was 121.75s (backup 12.26s; restore/verification 5.05s). Runner SHA-256: `ef3e37aac6ea464ef3a194d58acb84734e45c024826c3a37b8be9ef58a6c31a8`. Database archive SHA-256: `b90dfd985cd7e07c04eb52ad65a95231d90a2e67496211d713e87c45ca861ff6`. These are disposable synthetic results; hosted recovery and rollout remain separately pending.

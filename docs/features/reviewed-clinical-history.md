@@ -1,6 +1,6 @@
 # Reviewed ezyVet clinical history
 
-Implementation is in progress on `codex/ezyvet-reviewed-history`, based on PR106. This document describes the intended staff workflow for the integrated increment; hosted acceptance, real ezyVet access and Dr. Susan Edler's clinical review remain pending.
+Implemented and locally verified at `ddf3d80` on `codex/ezyvet-reviewed-history`, based on PR106. This document describes the staff workflow for the integrated increment. CI, hosted acceptance, real ezyVet access and Dr. Susan Edler's clinical review remain pending; see the [acceptance evidence](../release-imported-history-artifacts.md).
 
 Living Room Vet owns the local clinical record. Imported history is evidence from another system, with its original wording and references preserved. Importing it does not sign a SOAP note, infer a diagnosis, resolve a problem or establish a complete migration.
 
