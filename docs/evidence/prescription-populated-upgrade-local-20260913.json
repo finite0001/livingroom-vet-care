@@ -1,0 +1,35 @@
+{
+  "checks": [
+    "Clone starts before schema8",
+    "Pre-upgrade pending correction retained",
+    "Pre-upgrade schema7 packages eligible",
+    "Pre-upgrade approved correction chain populated",
+    "Every public/Auth/Storage table row preserved exactly by upgrade",
+    "Approved, pending and schema7 staff recovery responses unchanged",
+    "vaccine-release exact confirmation retry returns original row after upgrade",
+    "mixed-release exact confirmation retry returns original row after upgrade",
+    "Existing approved correction renders in new schema8 preview",
+    "Upgrade does not silently grant clinical acceptance for schema8",
+    "Recovery and new preview introduce no persisted side effects"
+  ],
+  "cleanup_verified": true,
+  "hosted_changes": false,
+  "migrations": {
+    "20260913630000_prescription_release_validation.sql": "bc9ba77f16747bc26e0f5ed043cca322568f0a6709f0096f692b745fec6ca165",
+    "20260913640000_record_release_prescription_history.sql": "86a0b53aba6b59451711bc7ac26d43058a8161e1cecaabfcaa35449e4f8bb472"
+  },
+  "provider_requests": 0,
+  "row_count": 116,
+  "scope": "local populated pre6300/6400 upgrade only",
+  "table_count": 218,
+  "source_revision": "e5dcbe985050695a6b7e5afc491bf0983fd9d44c",
+  "source_sha256": {
+    "supabase/tests/prescription_release_upgrade.py": "0828c2027194f5299059b5bec671cbffbbb19427fa79ed15603079ff809b3b37",
+    "supabase/tests/ezyvet_prescription_review.test.sql": "c377399bf38de6f7c9d808517a5cc2dfccd9bd24177f21c9eedd1b7da7a07f47",
+    "supabase/tests/release_imported_vaccination.test.sql": "56794dcd557fc62539ef14cdbeefa69d82e9414becb6063ea6c6592df54af2e3"
+  },
+  "limitations": [
+    "Local schema-only foundation clone; does not prove hosted migration-gap backfill or canonical full-schema equivalence.",
+    "Does not test pre6000 prepared-context transition, provider delivery, deployed Edge functions or clinical acceptance."
+  ]
+}
