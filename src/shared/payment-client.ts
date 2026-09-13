@@ -122,7 +122,8 @@ export function parsePaymentStatus(
     ...(action === "activate" ? ["checkout_url"] : []),
   ]);
   if (Object.keys(p).some((key) => !allowed.has(key))) throw unavailable();
-  paymentCents(p.amount_cents);
+  const requested = paymentCents(p.amount_cents);
+  if (requested < 50n || requested > 99999999n) throw unavailable();
   const paid = paymentCents(p.confirmed_paid_cents),
     refunded = paymentCents(p.confirmed_refunded_cents);
   if (refunded > paid) throw unavailable();
@@ -137,14 +138,19 @@ export function parsePaymentStatus(
   if (action !== "status" && typeof p.collection_available !== "boolean")
     throw unavailable();
   if (
-    (p.state === "paid" && (paid === 0n || refunded !== 0n)) ||
+    (p.state === "paid" && (paid < requested || refunded !== 0n)) ||
     (p.state === "partially_refunded" &&
-      (refunded === 0n || refunded >= paid)) ||
-    (p.state === "refunded" && (paid === 0n || refunded !== paid))
+      (paid < requested || refunded === 0n || refunded >= paid)) ||
+    (p.state === "refunded" && (paid < requested || refunded !== paid))
   )
     throw unavailable();
   if (p.state === "checkout_ready") {
-    if (action !== "activate" || p.collection_available !== true)
+    if (
+      action !== "activate" ||
+      p.collection_available !== true ||
+      paid !== 0n ||
+      refunded !== 0n
+    )
       throw unavailable();
     p.checkout_url = safeCheckoutUrl(p.checkout_url);
   } else if ("checkout_url" in p) throw unavailable();

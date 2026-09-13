@@ -207,3 +207,68 @@ test("requests omit ambient identity and forbid redirects; malformed or oversize
     globalThis.fetch = original;
   }
 });
+
+test("requested amount bounds and payment labels require sufficient confirmed cash", () => {
+  for (const amount of ["0", "49", "100000000"])
+    assert.throws(() =>
+      parsePaymentStatus({ ...details, amount_cents: amount }, "inspect"),
+    );
+  for (const amount of ["50", "99999999"])
+    assert.equal(
+      parsePaymentStatus({ ...details, amount_cents: amount }, "inspect")
+        .amount_cents,
+      amount,
+    );
+  assert.throws(() =>
+    parsePaymentStatus(
+      {
+        ...details,
+        state: "paid",
+        amount_cents: "10000",
+        confirmed_paid_cents: "1",
+      },
+      "inspect",
+    ),
+  );
+  assert.equal(
+    parsePaymentStatus(
+      { ...details, state: "paid", confirmed_paid_cents: "12500" },
+      "inspect",
+    ).state,
+    "paid",
+  );
+  assert.equal(
+    parsePaymentStatus(
+      { ...details, state: "paid", confirmed_paid_cents: "15000" },
+      "inspect",
+    ).state,
+    "paid",
+  );
+  for (const state of ["partially_refunded", "refunded"])
+    assert.throws(() =>
+      parsePaymentStatus(
+        {
+          ...details,
+          state,
+          confirmed_paid_cents: "100",
+          confirmed_refunded_cents: state === "refunded" ? "100" : "50",
+        },
+        "inspect",
+      ),
+    );
+  for (const cash of [
+    { confirmed_paid_cents: "1", confirmed_refunded_cents: "0" },
+    { confirmed_paid_cents: "1", confirmed_refunded_cents: "1" },
+  ])
+    assert.throws(() =>
+      parsePaymentStatus(
+        {
+          ...details,
+          ...cash,
+          state: "checkout_ready",
+          checkout_url: "https://checkout.stripe.com/c/pay/test",
+        },
+        "activate",
+      ),
+    );
+});

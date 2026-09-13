@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   fetchPayment,
@@ -36,11 +36,13 @@ export default function PaymentPage({ access }: Props) {
     setClosed(true);
     setBusy(false);
   };
-  useEffect(() => {
+  useLayoutEffect(() => {
     const onHide = () => clear();
     window.addEventListener("pagehide", onHide);
+    window.addEventListener("hashchange", onHide);
     return () => {
       window.removeEventListener("pagehide", onHide);
+      window.removeEventListener("hashchange", onHide);
       retired.current = true;
       request.current?.abort();
       access.token = "";

@@ -276,3 +276,71 @@ test("pagehide erases capability and malformed links remain isolated without req
     false,
   );
 });
+
+for (const kind of ["collection", "status"] as const)
+  test(`${kind} hash navigation strips new capability and retires open details`, async ({
+    page,
+  }) => {
+    const state = await fixture(page);
+    const path =
+      kind === "collection" ? `/pay/${grant}` : `/payment/return/${grant}`;
+    await page.goto(
+      `${path}#${kind === "collection" ? collection : statusToken}`,
+    );
+    await page
+      .getByRole("button", {
+        name: kind === "collection" ? "Open payment" : "Check payment status",
+        exact: true,
+      })
+      .click();
+    await expect(page.getByText("$125.00 USD")).toBeVisible();
+    await page.evaluate(
+      (token) => {
+        history.replaceState(null, "", location.pathname + "?paid=true");
+        location.hash = token;
+      },
+      "p1." + "z".repeat(43),
+    );
+    await expect(page).toHaveURL("http://127.0.0.1:8080" + path);
+    await expect(
+      page.getByRole("heading", {
+        name: "Open the original link from your message",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("$125.00 USD")).toHaveCount(0);
+    await page.evaluate(() => {
+      location.hash = "s1." + "y".repeat(43);
+    });
+    await expect(page).toHaveURL("http://127.0.0.1:8080" + path);
+    expect(state.calls).toHaveLength(1);
+  });
+test("hash change before payment module loads erases the capability before first render", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  let release: () => void = () => {};
+  let waiting = false;
+  await page.route("**/src/shared/PaymentPage.tsx", async (route) => {
+    waiting = true;
+    await new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await route.continue();
+  });
+  await page.goto(`/pay/${grant}#${collection}`, {
+    waitUntil: "domcontentloaded",
+  });
+  await expect.poll(() => waiting).toBe(true);
+  await page.evaluate(() => {
+    history.replaceState(null, "", location.pathname + "?paid=true");
+    location.hash = "p1." + "z".repeat(43);
+  });
+  await expect(page).toHaveURL(`http://127.0.0.1:8080/pay/${grant}`);
+  release();
+  await expect(
+    page.getByRole("heading", {
+      name: "Open the original link from your message",
+    }),
+  ).toBeVisible();
+  expect(state.calls).toHaveLength(0);
+});

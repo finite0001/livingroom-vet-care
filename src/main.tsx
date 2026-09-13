@@ -15,6 +15,10 @@ if (paymentAccess) {
     },
     { once: true },
   );
+  window.addEventListener("hashchange", () => {
+    paymentAccess.token = "";
+    window.history.replaceState(null, "", window.location.pathname);
+  });
   window.history.replaceState(null, "", window.location.pathname);
   const referrer = document.createElement("meta");
   referrer.name = "referrer";

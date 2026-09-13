@@ -2,7 +2,7 @@
 
 The browser isolates collection (`/pay/:grantId`), scoped return/cancel (`/payment/return/:grantId`, `/payment/cancel/:grantId`) and neutral v1 return/cancel routes before importing the staff application. Query strings and fragments are removed immediately. Payment pages do not initialize staff Auth, marketing fonts, application query caches, browser storage, analytics, or messaging.
 
-Collection capabilities use `p1.` plus 43 base64url characters; scoped status capabilities use the separate `s1.` format. A mutable bootstrap access object lets Close and pagehide erase the token rather than retaining it in immutable React props. Bootstrap installs pagehide cleanup before the page's dynamic import. Invalid routes/capability families never make a payment request. Reloading the sanitized URL requires reopening the original message.
+Collection capabilities use `p1.` plus 43 base64url characters; scoped status capabilities use the separate `s1.` format. A mutable bootstrap access object lets Close and pagehide erase the token rather than retaining it in immutable React props. Bootstrap installs pagehide and persistent hashchange cleanup before the page's dynamic import. A same-document fragment change immediately strips the new fragment/query and retires access; the mounted page aborts outstanding work and clears prior details. Invalid routes/capability families never make a payment request. Reloading the sanitized URL requires reopening the original message.
 
 ## Client actions
 
@@ -11,7 +11,7 @@ Collection capabilities use `p1.` plus 43 base64url characters; scoped status ca
 - **Check payment status** and **Refresh confirmed status** read server-confirmed ledger state. They never activate Checkout. Inspect can remain available after collection expiry/revocation until the separate status deadline, without enabling payment.
 - Neutral `/payment/return` and `/payment/cancel` pages instruct clients to use the original practice link or contact the practice. They never derive paid, canceled, or failed status from navigation, query flags, session IDs, or fragments.
 
-Requested amount, confirmed paid and confirmed refunded amounts are displayed separately using exact USD cent strings and BigInt formatting. Partial refund and full refund labels must agree with the confirmed cash fields. Confirmation pending and reconciliation remain explicit; neither is presented as payment failure or success.
+Requested amount, confirmed paid and confirmed refunded amounts are displayed separately using exact USD cent strings and BigInt formatting. Requested amounts must be between 50 and 99,999,999 cents. Paid, partial refund and full refund labels require confirmed gross cash at least equal to the requested amount and must agree with refund arithmetic. A Checkout-ready response must carry zero confirmed paid/refunded cash. Confirmation pending and reconciliation remain explicit; neither is presented as payment failure or success.
 
 ## Request and response limits
 
