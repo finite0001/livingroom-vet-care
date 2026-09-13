@@ -1,0 +1,15 @@
+# Staff document SMS review
+
+The issued/void invoice history and confirmed SMS record-release view now expose a common document-text composer. New preparation requires an issued invoice or currently eligible SMS release. Historical recovery and revocation remain available after invoice void, clinical withdrawal, or capability-key removal. EMAIL releases continue using their email workflow.
+
+Preparation uses the household's current consented primary phone and `ensure_active_conversation`; the backend verifies that context again. Staff choose an explicit expiry in their device's local time, within the server's seven-day limit. Frozen expiry is displayed in Mountain time. The template retains exactly one `{{document_link}}` placeholder and rejects literal URLs/capabilities.
+
+Each request has a stable UUID. Before capture, only its nine non-capability arguments are stored in actor-scoped session storage. Authentication transitions clear other actors' intents; signout and failed staff verification clear all of them. Materialized messages, URLs, reports, and original bytes stay in component memory, outside query caches and browser storage. Blob URLs are revoked when replaced or unmounted.
+
+Staff must open every frozen artifact before checking the delivery-review attestation. Each file is read through `read_document_link_artifact` and its name, MIME, byte length, and SHA-256 are checked before display/download. HTML/PDF frames are sandboxed; images use the verified local blob. The exact displayed SMS digest must also match the server's message hash before the UI calls `attest_document_link`, followed by `enqueue_document_link_sms`.
+
+Queue responses are recovered through the immutable grant receipt, including after a lost network response. A queue receipt is not delivery. Staff are directed to reconcile the outbox before a separate send; this interface never automatically repeats an ambiguous provider SMS. A metadata-only history selector lists the original staff member’s 50 latest grants for this source, including earlier receipts and revoked links. Normal recovery pins the displayed grant ID so a concurrent newer preparation cannot replace it. A fresh draft cannot be overwritten by manual recovery of an old request. Both invoice switching and record-package replacement participate in the parents' existing unsaved-work guards.
+
+The Edge recovery response supplies transient materialization. If that is unavailable, authenticated SQL recovery still permits historical inspection and revocation, but cannot enable sending. Revocation always requires a reason and does not erase already downloaded copies.
+
+Validation covers normal and lost capture/queue responses, reload with the same request, document digest and identity boundaries, absence of capabilities from session storage, auth cleanup, parent draft guards, and withdrawal/key-loss recovery. Browser fixtures are synthetic; they establish UI behavior, not clinical approval or provider delivery. Live sending still requires the reviewed backend subtype, server keys, enabled delivery configuration, and provider commissioning.

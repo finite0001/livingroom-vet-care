@@ -286,7 +286,7 @@ export function ReleaseEmailComposer({
     return (
       <p className="text-sm">
         Email attachments require a release reviewed for the household email
-        address. Secure text-message record links are not enabled.
+        address. Use the secure document text review below for this SMS release.
       </p>
     );
   return (

@@ -8,15 +8,17 @@ export function clearOtherInvoiceEmailIntents(
   storage: DraftStorage,
   actorId: string | null,
 ): void {
-  const prefix = "invoice-email-intent:";
-  const retained = actorId ? `${prefix}${actorId}:` : null;
-  const remove: string[] = [];
-  for (let index = 0; index < storage.length; index++) {
-    const key = storage.key(index);
-    if (key?.startsWith(prefix) && (!retained || !key.startsWith(retained)))
-      remove.push(key);
+  const prefixes = ["invoice-email-intent:", "document-link-intent:"];
+  for (const prefix of prefixes) {
+    const retained = actorId ? `${prefix}${actorId}:` : null;
+    const remove: string[] = [];
+    for (let index = 0; index < storage.length; index++) {
+      const key = storage.key(index);
+      if (key?.startsWith(prefix) && (!retained || !key.startsWith(retained)))
+        remove.push(key);
+    }
+    for (const key of remove) storage.removeItem(key);
   }
-  for (const key of remove) storage.removeItem(key);
 }
 
 export function clearInvoiceEmailSession(actorId: string | null): void {
