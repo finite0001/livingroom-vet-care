@@ -885,6 +885,8 @@ test("SMS release draft protects package selection and recovery preserves revoca
   let recovery: unknown = null;
   await page.route("**/*document*", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("read_document_link_history"))
+      return route.fulfill({ json: [] });
     if (path.endsWith("recover-document-link"))
       return route.fulfill({ status: 503, json: { error: "Key removed" } });
     if (path.endsWith("recover_document_link"))
@@ -909,7 +911,8 @@ test("SMS release draft protects package selection and recovery preserves revoca
   });
   await expect(sms.getByLabel("Link expiry")).toBeEnabled();
   await sms
-    .getByRole("textbox").first()
+    .getByRole("textbox")
+    .first()
     .fill("Please review {{document_link}}");
   await expect(
     page.getByRole("button", { name: "Open release package", exact: true }),

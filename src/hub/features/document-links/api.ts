@@ -8,6 +8,20 @@ interface LinkDatabase {
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
     Functions: {
+      read_document_link_history: {
+        Args: {
+          p_family: DocumentFamily;
+          p_source_id: string;
+        };
+        Returns: Array<{
+          id: string;
+          created_at: string;
+          expires_at: string;
+          state: string;
+          recipient: string;
+          receipt_state: string | null;
+        }>;
+      };
       preview_document_link: {
         Args: {
           p_family: DocumentFamily;

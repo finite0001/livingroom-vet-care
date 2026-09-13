@@ -51,6 +51,31 @@ function Composer({
       "Your documents from The Living Room Veterinary Care: {{document_link}}",
     ),
     [expiry, setExpiry] = useState("");
+  const [historyId, setHistoryId] = useState("");
+  const [history, setHistory] = useState<
+    Array<{
+      id: string;
+      created_at: string;
+      expires_at: string;
+      state: string;
+      recipient: string;
+      receipt_state: string | null;
+    }>
+  >([]);
+  const [historyError, setHistoryError] = useState(false);
+  const loadHistory = async () => {
+    const result = await db.rpc("read_document_link_history", {
+      p_family: family,
+      p_source_id: sourceId,
+    });
+    if (!active.current) return;
+    if (result.error || !Array.isArray(result.data)) {
+      setHistoryError(true);
+      return;
+    }
+    setHistory(result.data);
+    setHistoryError(false);
+  };
   const [checked, setChecked] = useState(false),
     [opened, setOpened] = useState<number[]>([]),
     [file, setFile] = useState<{
@@ -67,6 +92,7 @@ function Composer({
   const accept = (p: LinkPreparation) => {
     if (!active.current) return;
     setSaved(p);
+    void loadHistory();
     setUncertain(false);
     setDraft(false);
     setChecked(false);
@@ -89,7 +115,7 @@ function Composer({
       sessionStorage.removeItem(storageKey);
     }
   };
-  const recover = async () => {
+  const recover = async (requestId?: string) => {
     if (!pending.current) {
       const raw = sessionStorage.getItem(storageKey);
       if (raw)
@@ -103,8 +129,11 @@ function Composer({
     const args = {
       p_family: family,
       p_source_id: sourceId,
-      ...(pending.current
-        ? { p_request_id: pending.current.p_request_id }
+      ...(requestId || pending.current?.p_request_id || saved?.grant.id
+        ? {
+            p_request_id:
+              requestId || pending.current?.p_request_id || saved?.grant.id,
+          }
         : {}),
     };
     // Edge response contains capability material: local component memory only, never query cache.
@@ -144,6 +173,7 @@ function Composer({
             clientId,
           );
         const found = await recover();
+        await loadHistory();
         if (active.current) {
           setReady(true);
           if (!found && pending.current) {
@@ -377,6 +407,55 @@ function Composer({
       >
         Recover document text and receipt
       </Button>
+      <details>
+        <summary>Earlier document texts</summary>
+        <p className="text-sm">
+          The 50 most recent saved document texts are shown.
+        </p>
+        <label className="block">
+          Saved document text
+          <select
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={historyId}
+            disabled={busy || dirty}
+            onChange={(e) => setHistoryId(e.target.value)}
+          >
+            <option value="">Choose an earlier document text</option>
+            {history.map((item) => (
+              <option key={item.id} value={item.id}>
+                {new Date(item.created_at).toLocaleString("en-US", {
+                  timeZone: "America/Denver",
+                })}{" "}
+                Mountain · {item.receipt_state ?? item.state} · {item.recipient}
+              </option>
+            ))}
+          </select>
+        </label>
+        {historyError && (
+          <p role="status">Earlier document texts could not be loaded.</p>
+        )}
+        <Button
+          variant="outline"
+          disabled={busy}
+          onClick={() => void run(loadHistory)}
+        >
+          Refresh document text history
+        </Button>
+        <Button
+          variant="outline"
+          disabled={
+            busy || dirty || !history.some((item) => item.id === historyId)
+          }
+          onClick={() =>
+            void run(async () => {
+              const found = await recover(historyId);
+              if (!found) throw new Error("Saved request not found.");
+            })
+          }
+        >
+          Review earlier document text
+        </Button>
+      </details>
       {!saved && (
         <>
           <fieldset

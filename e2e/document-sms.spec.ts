@@ -28,6 +28,34 @@ for (const losePreparation of [false, true, "before"] as const)
     await fixture(page, baseURL);
     await page.route(`${backend}/**/*document*`, async (route) => {
       const path = new URL(route.request().url()).pathname;
+      const earlierId = "77777777-7777-4777-8777-777777777777";
+      if (path.endsWith("read_document_link_history"))
+        return route.fulfill({
+          json: saved
+            ? [saved.grant.id, earlierId].map((id) => ({
+                id,
+                created_at: "2026-09-12T18:00:00Z",
+                expires_at: saved!.grant.expires_at,
+                state: "reviewed",
+                recipient: saved!.grant.recipient,
+                receipt_state: "queued",
+              }))
+            : [],
+        });
+      if (
+        (path.endsWith("recover-document-link") ||
+          path.endsWith("recover_document_link")) &&
+        route.request().postDataJSON().p_request_id === earlierId &&
+        saved
+      )
+        return route.fulfill({
+          json: {
+            ...saved,
+            grant: { ...saved.grant, id: earlierId },
+            receipt: { ...saved.receipt, outbox_id: "earlier-queue" },
+          },
+        });
+
       if (
         path.endsWith("recover-document-link") ||
         path.endsWith("recover_document_link")
@@ -169,6 +197,17 @@ for (const losePreparation of [false, true, "before"] as const)
       .click();
     await expect(sms.getByText(/Saved queue receipt: queue-1/)).toBeVisible();
     expect(queued).toBe(1);
+    await sms.getByText("Earlier document texts", { exact: true }).click();
+    await sms
+      .getByLabel("Saved document text")
+      .selectOption("77777777-7777-4777-8777-777777777777");
+    await sms
+      .getByRole("button", { name: "Review earlier document text" })
+      .click();
+    await expect(
+      sms.getByText(/Saved queue receipt: earlier-queue/),
+    ).toBeVisible();
+
     await sms
       .getByRole("button", { name: "Compose a separate document text" })
       .click();
