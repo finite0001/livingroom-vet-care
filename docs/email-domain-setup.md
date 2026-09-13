@@ -48,13 +48,11 @@ Resend's verification action was then submitted. After reloading, its status cha
 
 The owner's `admin@` response was interpreted and stated as **`admin@thelivingroom.vet`** for the intended first administrator. This records intended account setup only: no mailbox or Supabase Auth account has been created. Mailbox publication, receiving and Auth SMTP remain separate commissioning tasks.
 
-## Root-domain receiving — reviewed mail-routing cutover only
+## Receiving topology — proposed, not commissioned
 
-| Type | GoDaddy host/name | Value / destination | Priority |
-| --- | --- | --- | --- |
-| MX | `@` | `inbound-smtp.us-east-1.amazonaws.com` | 10 |
+The earlier Resend root-MX candidate is superseded by the [mail commissioning proposal](mail-commissioning-plan.md). Reserve root-domain receiving for private staff/administrator mailboxes. Route only the explicit client reply subdomain into the practice inbox. Do not apply Resend receiving MX at `@` from an old setup screen.
 
-**Do not apply this root MX record merely to prepare sending.** It routes incoming domain email and belongs in a reviewed mail-routing cutover with an agreed receiving workflow and recovery plan. Receiving is currently saved Off in Resend; any later activation must be reviewed alongside this routing change. The earlier read-only DNS query returned no MX answers on 2026-09-12; that is a dated observation, not authorization to replace records. Recheck immediately before any write and preserve any mail records added since that query. Confirm the intended effect with the domain owner before changing existing routing.
+A fresh authoritative query on 2026-09-13 returned no root or `reply` MX answers; the existing DMARC quarantine policy remains present. This is evidence of missing receiving configuration, not permission to change routing. Recheck before any authorized write.
 
 ## Verification and publication gates
 
@@ -63,6 +61,6 @@ The owner's `admin@` response was interpreted and stated as **`admin@thelivingro
 3. Commission the signed inbound webhook and authenticated receiving/read API worker, with durable attachment/content ingestion, idempotency, sender/household review, retry handling and a recoverable failure queue. A registered domain is not a shared mailbox, and webhook registration alone does not prove ingestion works.
 4. Test an authorized synthetic inbound message and an authorized controlled outgoing message, including reply routing, attachments, delivery status, enforced-TLS behavior and actual click/open-tracking behavior. Retain evidence before advertising a contact mailbox. No such messages have been sent by this setup step.
 5. Review Supabase Auth SMTP separately, including invitation/password-reset sender and return URLs. Use server secret storage for all future API keys and webhook signing secrets; the public DKIM key above does not authorize API access.
-6. Perform root MX cutover only with the reviewed receiving workflow ready and an explicit operational decision. Publish mailbox names only after actual inbound/read-worker and controlled-delivery evidence is complete.
+6. Perform root MX cutover only for the selected private mailbox provider, with its recovery workflow ready and an explicit operational decision. Publish mailbox names only after actual inbound/read-worker and controlled-delivery evidence is complete.
 
 See [messaging environments](messaging-environments.md), [inbound processing](inbound-communications.md), [deployment runbook](deployment-runbook.md) and [commercial-readiness tracker](commercial-readiness.md). The sending DNS additions are saved and authoritative values are confirmed. Resend sending-domain verification is complete; inboxes, Auth SMTP and application delivery have not been commissioned.
