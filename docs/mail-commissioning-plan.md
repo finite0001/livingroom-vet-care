@@ -6,7 +6,7 @@ Status: owner selected Fastmail + one Resend team for automated client communica
 
 | Purpose | Address | Service and boundary |
 | --- | --- | --- |
-| Owner administration | `admin@thelivingroom.vet` | Private Fastmail business mailbox; owner access and recovery, never forwarded to the client inbox |
+| Owner administration | Owner-designated named administrator mailbox (confirmed privately) | Private Fastmail business mailbox; owner access and recovery, never forwarded to the client inbox; supersedes the earlier proposed `admin@` alias |
 | Individual staff mail | Named addresses at `thelivingroom.vet` | Separate identities/mailboxes as staff are designated; no shared password |
 | Automated non-clinical client notices | `care@reply.thelivingroom.vet` (proposed address) | One Living Room Vet Resend team for appointment reminders, portal notices, receipts, intake confirmations and non-clinical status updates; controlled reply handling remains subject to acceptance |
 | Authentication and security mail | `access@auth.thelivingroom.vet` | The same Resend team, using a separate Auth sender and credentials for Supabase Auth; authentication events must be distinguished from client-outbox events |

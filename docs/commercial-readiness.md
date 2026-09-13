@@ -78,7 +78,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet clinical-resource samples and migration acceptance, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet clinical-resource samples and migration acceptance, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The owner has now explicitly supplied a named first-administrator mailbox privately, superseding the earlier inferred `admin@` address; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
