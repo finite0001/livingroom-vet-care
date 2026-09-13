@@ -1,18 +1,18 @@
-# Email domain setup — proposed DNS, not activated
+# Email domain setup — sending DNS saved, verification pending
 
 ## Current preparation
 
-Resend domain `thelivingroom.vet` was created through the existing signed-in account on 2026-09-12. Domain ID: `d0425972-bcaa-4a5b-ba4a-5566bdec519c`; region: `us-east-1`. Saved domain state is `NotStarted` / unverified. Sending is requested On; **receiving is saved Off**. The onboarding screen showed proposed receiving DNS but did not persist receiving activation.
+Resend domain `thelivingroom.vet` was created through the existing signed-in account on 2026-09-12. Domain ID: `d0425972-bcaa-4a5b-ba4a-5566bdec519c`; region: `us-east-1`. After the owner-approved DNS save and verification request, the latest observed domain state is **Pending**, not verified. Sending is requested On; **receiving is saved Off**. The onboarding screen showed proposed receiving DNS but did not persist receiving activation.
 
-No DNS records were changed, domain verification completed, webhook configured, API key created or messages sent as part of this preparation. Mailbox names remain unpublished. Domain registration in Resend alone does not establish working practice email or Supabase Auth SMTP.
+The three sending-verification DNS records below are now saved and confirmed through authoritative DNS. Domain verification has not completed; no webhook was configured, API key created or message sent. Mailbox names remain unpublished. Domain registration in Resend alone does not establish working practice email or Supabase Auth SMTP.
 
 TLS was changed from Opportunistic to **Enforced** and visibly saved. Recipient servers that cannot negotiate TLS will fail delivery rather than receive an unencrypted message. No tracking subdomain was configured and the new tracking form was not submitted. No click/open tracking was enabled by this preparation; the exact effective tracking behavior remains a controlled-message verification gate, not an inferred Off flag. The account banner concerning shared tracking on two other domains was left unchanged.
 
 The domain occupies the tenth of ten domain slots on the existing Pro account. No billing upgrade or charge flow was performed.
 
-## Proposed GoDaddy records for sending verification
+## Saved GoDaddy records for sending verification
 
-The following exact values were supplied by the pending Resend domain UI and rechecked on 2026-09-12. GoDaddy's new-record form defaults to **1/2 Hour (1,800 seconds)**; the three prepared, unsaved rows use that default. Enter host labels as shown rather than appending the domain twice.
+The following exact values were supplied by the Resend domain UI and saved with the owner's approval on 2026-09-12. The saved GoDaddy rows display **1 hour (3,600 seconds)**, despite the earlier form's 30-minute default. Queries directed to authoritative nameserver `ns07.domaincontrol.com` confirmed all three record values. Host labels below are relative to `thelivingroom.vet`.
 
 | Type | GoDaddy host/name | Value / destination | Priority |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ The `send` MX/TXT entries configure the provider's sending subdomain; they do no
 
 ## GoDaddy review checkpoint — 2026-09-12
 
-The signed-in GoDaddy domain settings were accessible and showed these seven existing records. This is the current read-only checkpoint, not a new zone configuration:
+The signed-in GoDaddy domain settings were accessible and showed these seven existing records. These form the preserved baseline preceding the three additions:
 
 | Type | Host | Existing value | TTL |
 | --- | --- | --- | --- |
@@ -42,9 +42,11 @@ The signed-in GoDaddy domain settings were accessible and showed these seven exi
 | SOA | `@` | Primary nameserver `ns07.domaincontrol.com.` | 1 hour |
 | TXT | `_dmarc` | `v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;` | 1 hour |
 
-There were no MX records and no existing `send` or `resend._domainkey` records. Resend still showed Not Started, sending requested On and receiving Off. All three proposed sending rows were entered into GoDaddy's **unsaved** form and visually checked; Save All Records and Resend verification were not submitted. The form alone does not alter DNS and may expire. Recheck both the zone and provider values immediately before any authorized save.
+Before the save there were no MX records and no existing `send` or `resend._domainkey` records. After the owner authorized saving and verification, GoDaddy displayed **10 records**: the seven preserved baseline entries and the three correct sending-verification entries above. Authoritative DNS queries confirmed the DKIM TXT, sending-subdomain MX (priority 10) and SPF TXT values.
 
-The proposed change adds only those three rows. It preserves the parked website, nameservers, root mail routing and existing DMARC policy. Root receiving, website cutover, mailbox publication and application sending remain separate decisions. No registrant contact information is included in this checkpoint.
+Resend's verification action was then submitted. Its latest observed status is **Pending**; this is not evidence of completed verification. Sending remains requested On and receiving remains saved Off. The parked website, nameservers and existing DMARC policy were preserved. No root-domain MX, webhook, API key or provider send was added by this step.
+
+The owner's `admin@` response was interpreted and stated as **`admin@thelivingroom.vet`** for the intended first administrator. This records intended account setup only: no mailbox or Supabase Auth account has been created. Mailbox publication, receiving and Auth SMTP remain separate commissioning tasks.
 
 ## Root-domain receiving — reviewed mail-routing cutover only
 
@@ -63,4 +65,4 @@ The proposed change adds only those three rows. It preserves the parked website,
 5. Review Supabase Auth SMTP separately, including invitation/password-reset sender and return URLs. Use server secret storage for all future API keys and webhook signing secrets; the public DKIM key above does not authorize API access.
 6. Perform root MX cutover only with the reviewed receiving workflow ready and an explicit operational decision. Publish mailbox names only after actual inbound/read-worker and controlled-delivery evidence is complete.
 
-See [messaging environments](messaging-environments.md), [inbound processing](inbound-communications.md), [deployment runbook](deployment-runbook.md) and [commercial-readiness tracker](commercial-readiness.md). This document contains proposed records and acceptance steps, not evidence that DNS, inboxes or delivery are live.
+See [messaging environments](messaging-environments.md), [inbound processing](inbound-communications.md), [deployment runbook](deployment-runbook.md) and [commercial-readiness tracker](commercial-readiness.md). The sending DNS additions are saved and authoritative values are confirmed. Resend verification is still pending; inboxes and delivery have not been commissioned.
