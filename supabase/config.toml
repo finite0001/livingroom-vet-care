@@ -58,3 +58,6 @@ verify_jwt = true
 
 [functions.verify-payment-reconciliation]
 verify_jwt = true
+
+[functions.prepare-payment-delivery]
+verify_jwt = true

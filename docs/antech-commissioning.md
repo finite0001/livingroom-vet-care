@@ -41,3 +41,7 @@ These are Living Room Vet's implementation requirements to validate against the 
 Status: **pending**. Required reviewers: authorized practice operator, Antech integration representative and Dr. Susan Edler for clinical mapping/report presentation. Record contract version, account/environment identity (no secrets), adapter revision, synthetic case results, approved permissions, unresolved exclusions and activation decision. Production activation requires separate hosted verification and monitoring/recovery ownership.
 
 Provider selection, a public development form, successful mock tests or a prepared checklist is not evidence of a working production lab integration. The [clinical review register](clinical-review/README.md) and [commercial-readiness tracker](commercial-readiness.md) retain this distinction.
+
+## Implementation sequence
+
+The [Antech integration gap audit and phased plan](plans/antech-integration.md) records the current code boundary, verified public-contract limits, inbound-first implementation scope and partner handoff packet. No provider adapter is enabled by that plan.

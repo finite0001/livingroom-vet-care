@@ -64,6 +64,8 @@ jobs:
         run: python3 supabase/tests/payment_reconciliation_concurrency.py --project-config supabase/config.toml
       - name: Verify concurrent reviewed payment delivery guards
         run: python3 supabase/tests/payment_delivery_concurrency.py --project-config supabase/config.toml
+      - name: Verify audited payment event retry concurrency
+        run: python3 supabase/tests/stripe_event_retry_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -83,6 +85,12 @@ jobs:
         run: deno check --frozen tests/payment-reconciliation/local-server.ts
       - name: Verify actual administrator reconciliation HTTP and proof capture
         run: node --experimental-strip-types tests/payment-reconciliation/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache payment delivery HTTP dependencies
+        run: deno check --frozen tests/payment-access/delivery-local-server.ts
+      - name: Verify actual payment delivery HTTP, queue and worker roundtrip
+        run: node --experimental-strip-types tests/payment-access/delivery-local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify actual private Storage round-trip
