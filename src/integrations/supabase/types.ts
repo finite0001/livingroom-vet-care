@@ -506,35 +506,144 @@ export type Database = {
           ezyvet_id: string | null
           first_name: string
           full_name: string
+          housecall_address: string | null
           id: string
           last_name: string
+          mailing_address: string | null
           preferred_channel: Database["public"]["Enums"]["channel_type"] | null
           primary_email: string | null
           primary_phone: string | null
+          version: number
         }
         Insert: {
           created_at?: string
           ezyvet_id?: string | null
           first_name: string
           full_name: string
+          housecall_address?: string | null
           id?: string
           last_name: string
+          mailing_address?: string | null
           preferred_channel?: Database["public"]["Enums"]["channel_type"] | null
           primary_email?: string | null
           primary_phone?: string | null
+          version?: number
         }
         Update: {
           created_at?: string
           ezyvet_id?: string | null
           first_name?: string
           full_name?: string
+          housecall_address?: string | null
           id?: string
           last_name?: string
+          mailing_address?: string | null
           preferred_channel?: Database["public"]["Enums"]["channel_type"] | null
           primary_email?: string | null
           primary_phone?: string | null
+          version?: number
         }
         Relationships: []
+      }
+      clinical_addenda: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          encounter_id: string
+          id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          encounter_id: string
+          id?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          encounter_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_addenda_encounter_id_fkey"
+            columns: ["encounter_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_encounters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_encounters: {
+        Row: {
+          assessment: string
+          created_at: string
+          created_by: string
+          id: string
+          location: string
+          objective: string
+          pet_id: string
+          plan: string
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          subjective: string
+          updated_at: string
+          updated_by: string
+          version: number
+          visit_at: string
+          visit_type: string
+        }
+        Insert: {
+          assessment?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          location?: string
+          objective?: string
+          pet_id: string
+          plan?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string
+          subjective?: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+          visit_at: string
+          visit_type: string
+        }
+        Update: {
+          assessment?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          location?: string
+          objective?: string
+          pet_id?: string
+          plan?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string
+          subjective?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+          visit_at?: string
+          visit_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_encounters_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       consent_form_templates: {
         Row: {
@@ -1222,6 +1331,97 @@ export type Database = {
           },
         ]
       }
+      patient_problems: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          importance: string
+          notes: string
+          onset_date: string | null
+          pet_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          importance?: string
+          notes?: string
+          onset_date?: string | null
+          pet_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          importance?: string
+          notes?: string
+          onset_date?: string | null
+          pet_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_problems_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_weights: {
+        Row: {
+          created_at: string
+          id: string
+          measured_at: string
+          pet_id: string
+          recorded_by: string
+          unit: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          measured_at: string
+          pet_id: string
+          recorded_by: string
+          unit: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          measured_at?: string
+          pet_id?: string
+          recorded_by?: string
+          unit?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_weights_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_links: {
         Row: {
           amount_cents: number
@@ -1339,47 +1539,68 @@ export type Database = {
       pets: {
         Row: {
           allergies: string | null
+          archived_at: string | null
+          birth_date_precision: string
           breed: string | null
           client_id: string
+          color: string | null
           created_at: string
+          deceased_at: string | null
           dob: string | null
           id: string
           last_visit_at: string | null
           medications: string | null
           microchip_id: string | null
           name: string
+          neuter_status: string
+          sex: string
           species: string
           vaccination_notes: string | null
+          version: number
           weight_lbs: number | null
         }
         Insert: {
           allergies?: string | null
+          archived_at?: string | null
+          birth_date_precision?: string
           breed?: string | null
           client_id: string
+          color?: string | null
           created_at?: string
+          deceased_at?: string | null
           dob?: string | null
           id?: string
           last_visit_at?: string | null
           medications?: string | null
           microchip_id?: string | null
           name: string
+          neuter_status?: string
+          sex?: string
           species: string
           vaccination_notes?: string | null
+          version?: number
           weight_lbs?: number | null
         }
         Update: {
           allergies?: string | null
+          archived_at?: string | null
+          birth_date_precision?: string
           breed?: string | null
           client_id?: string
+          color?: string | null
           created_at?: string
+          deceased_at?: string | null
           dob?: string | null
           id?: string
           last_visit_at?: string | null
           medications?: string | null
           microchip_id?: string | null
           name?: string
+          neuter_status?: string
+          sex?: string
           species?: string
           vaccination_notes?: string | null
+          version?: number
           weight_lbs?: number | null
         }
         Relationships: [
@@ -2069,6 +2290,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_clinical_addendum: {
+        Args: { p_content: string; p_encounter_id: string }
+        Returns: {
+          content: string
+          created_at: string
+          created_by: string
+          encounter_id: string
+          id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clinical_addenda"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_staff_active: {
         Args: { _is_active: boolean; _target_user: string }
         Returns: undefined
@@ -2081,6 +2318,7 @@ export type Database = {
         Returns: undefined
       }
       apply_retention_policies: { Args: never; Returns: undefined }
+      clinical_require_staff: { Args: never; Returns: string }
       clock_in: {
         Args: never
         Returns: {
@@ -2184,6 +2422,231 @@ export type Database = {
           reminder_id: string
           scheduled_at: string
         }[]
+      }
+      record_patient_weight: {
+        Args: {
+          p_measured_at: string
+          p_pet_id: string
+          p_unit: string
+          p_weight: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          measured_at: string
+          pet_id: string
+          recorded_by: string
+          unit: string
+          weight: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_weights"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_client: {
+        Args: {
+          p_actor_id: string
+          p_client_id: string
+          p_expected_version: number
+          p_first_name: string
+          p_housecall_address: string
+          p_last_name: string
+          p_mailing_address: string
+          p_preferred_channel: Database["public"]["Enums"]["channel_type"]
+          p_primary_email: string
+          p_primary_phone: string
+        }
+        Returns: {
+          created_at: string
+          ezyvet_id: string | null
+          first_name: string
+          full_name: string
+          housecall_address: string | null
+          id: string
+          last_name: string
+          mailing_address: string | null
+          preferred_channel: Database["public"]["Enums"]["channel_type"] | null
+          primary_email: string | null
+          primary_phone: string | null
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clients"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_clinical_encounter: {
+        Args: {
+          p_assessment: string
+          p_expected_version: number
+          p_id: string
+          p_location: string
+          p_objective: string
+          p_pet_id: string
+          p_plan: string
+          p_subjective: string
+          p_visit_at: string
+          p_visit_type: string
+        }
+        Returns: {
+          assessment: string
+          created_at: string
+          created_by: string
+          id: string
+          location: string
+          objective: string
+          pet_id: string
+          plan: string
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          subjective: string
+          updated_at: string
+          updated_by: string
+          version: number
+          visit_at: string
+          visit_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clinical_encounters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_patient: {
+        Args: {
+          p_archived_at: string
+          p_birth_date_precision: string
+          p_breed: string
+          p_client_id: string
+          p_color: string
+          p_deceased_at: string
+          p_dob: string
+          p_expected_version: number
+          p_id: string
+          p_microchip_id: string
+          p_name: string
+          p_neuter_status: string
+          p_sex: string
+          p_species: string
+        }
+        Returns: {
+          allergies: string | null
+          archived_at: string | null
+          birth_date_precision: string
+          breed: string | null
+          client_id: string
+          color: string | null
+          created_at: string
+          deceased_at: string | null
+          dob: string | null
+          id: string
+          last_visit_at: string | null
+          medications: string | null
+          microchip_id: string | null
+          name: string
+          neuter_status: string
+          sex: string
+          species: string
+          vaccination_notes: string | null
+          version: number
+          weight_lbs: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_patient_problem: {
+        Args: {
+          p_expected_version: number
+          p_id: string
+          p_importance: string
+          p_notes: string
+          p_onset_date: string
+          p_pet_id: string
+          p_status: string
+          p_title: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          importance: string
+          notes: string
+          onset_date: string | null
+          pet_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_problems"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      search_clients: {
+        Args: { p_limit?: number; p_search: string }
+        Returns: {
+          created_at: string
+          ezyvet_id: string | null
+          first_name: string
+          full_name: string
+          housecall_address: string | null
+          id: string
+          last_name: string
+          mailing_address: string | null
+          preferred_channel: Database["public"]["Enums"]["channel_type"] | null
+          primary_email: string | null
+          primary_phone: string | null
+          version: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "clients"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      sign_clinical_encounter: {
+        Args: { p_expected_version: number; p_id: string }
+        Returns: {
+          assessment: string
+          created_at: string
+          created_by: string
+          id: string
+          location: string
+          objective: string
+          pet_id: string
+          plan: string
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          subjective: string
+          updated_at: string
+          updated_by: string
+          version: number
+          visit_at: string
+          visit_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clinical_encounters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
