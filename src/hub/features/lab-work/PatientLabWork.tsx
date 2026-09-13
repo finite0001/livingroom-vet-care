@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PatientLabResults } from "./PatientLabResults";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,10 +53,12 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
   const [templateDays, setTemplateDays] = useState("");
   const [reviewNote, setReviewNote] = useState("");
   const templateId = useRef<string>(crypto.randomUUID());
-  const dirty =
+  const [resultDirty, setResultDirty] = useState(false);
+  const nativeDirty =
     Boolean(form && JSON.stringify(form) !== baseline) ||
     Boolean(reason.trim() || templateName || templateDays || reviewNote) ||
     busy;
+  const dirty = nativeDirty || resultDirty;
   useEffect(() => {
     onDirtyChange?.(dirty);
     return () => onDirtyChange?.(false);
@@ -124,6 +127,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
   function open(row: LabOrder | null) {
     if (
       busyRef.current ||
+      resultDirty ||
       (dirty && !window.confirm("Discard unsaved lab work changes?"))
     )
       return;
@@ -140,7 +144,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
     setForm((previous) => previous && { ...previous, [key]: value });
   }
   async function run(action: () => Promise<void>) {
-    if (busyRef.current) return;
+    if (busyRef.current || resultDirty) return;
     busyRef.current = true;
     setBusy(true);
     setError("");
@@ -233,7 +237,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
             </Button>
           </p>
         )}
-        <Button disabled={busy} onClick={() => open(null)}>
+        <Button disabled={busy || resultDirty} onClick={() => open(null)}>
           New lab order
         </Button>
         <ul className="space-y-2">
@@ -251,7 +255,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
               </div>
               <Button
                 variant="outline"
-                disabled={busy}
+                disabled={busy || resultDirty}
                 onClick={() => open(row)}
               >
                 Open lab order
@@ -262,21 +266,24 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            disabled={page === 0}
+            disabled={dirty || page === 0}
             onClick={() => setPage(page - 1)}
           >
             Previous lab orders
           </Button>
           <Button
             variant="outline"
-            disabled={(orders.data?.length ?? 0) <= 20}
+            disabled={dirty || (orders.data?.length ?? 0) <= 20}
             onClick={() => setPage(page + 1)}
           >
             Next lab orders
           </Button>
         </div>
         {form && (
-          <fieldset disabled={busy} className="space-y-4 rounded-md border p-4">
+          <fieldset
+            disabled={busy || resultDirty}
+            className="space-y-4 rounded-md border p-4"
+          >
             <legend className="px-1 font-medium">
               {record ? "Edit saved lab work" : "New lab work"}
               {record ? ` · version ${record.version}` : ""}
@@ -528,6 +535,13 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
           </fieldset>
         )}
         {record && (
+          <PatientLabResults
+            order={record}
+            disabled={nativeDirty}
+            onDirtyChange={setResultDirty}
+          />
+        )}
+        {record && (
           <details>
             <summary className="cursor-pointer">Lab version history</summary>
             {history.isError && (
@@ -569,7 +583,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
                   {t.active ? "active" : "retired"}{" "}
                   <Button
                     variant="outline"
-                    disabled={busy}
+                    disabled={busy || resultDirty}
                     onClick={() => {
                       if (
                         (templateName || templateDays || reviewNote) &&
@@ -589,7 +603,7 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
                 </li>
               ))}
             </ul>
-            <fieldset disabled={busy} className="space-y-2">
+            <fieldset disabled={busy || resultDirty} className="space-y-2">
               <p>
                 {templateRecord
                   ? `Reviewing standard version ${templateRecord.version}`
