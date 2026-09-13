@@ -1,5 +1,7 @@
 # Protected frontend preview — September 13, 2026
 
+The [reviewed-vaccination staging report](reviewed-vaccination-staging.md) records the newer preview deployment and matching backend. The deployment details below describe the initial preview checkpoint.
+
 Preview: https://livingroom-vet-care-ghauhti0c-daves-projects-e0da43ba.vercel.app
 
 Vercel deployment `dpl_5tny8bc9T2rroXczmE9X6z33Dewm` is READY, target `staging` (preview environment). Project `prj_Dn1g9AIBEth78S7V3pqhYHueICl7` belongs to `daves-projects-e0da43ba`. Source is the current implementation stack plus payment trigger hardening (`d9dd2bb`), with the deployment diagnostic/build and ignore-file changes in this increment.
