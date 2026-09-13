@@ -1,0 +1,19 @@
+# ezyVet attachment metadata contract
+
+This pure parser is the first contract increment for Animal-scoped attachment discovery. It is not wired to the importer, introduces no database or Storage writes, and cannot fetch files. Metadata discovery is not migration completion or clinical approval.
+
+## Primary contract verification
+
+Refreshed September 13, 2026 from the public [Attachment operation](https://developers.ezyvet.com/#get-attachment) and [Paging guide](https://developers.ezyvet.com/#paging). The public HTML was fetched directly after the web reader rejected its size. The operation documents GET `/v1/attachment`, `read-attachment`, parent filters `record_type`/`record_id`, and the `items[].attachment` envelope. Its response fields are attachment/file identity, parent identity, active status, created/modified epoch values, MIME type, name, primary-image flag, notes and a download reference. General paging documents `page` (default 1), `limit` (default 10; up to 200 for most endpoints), and `items_page`, `items_page_total`, `items_page_size`, `items_total`. The parser's cap of 10 is an application limit, not an attachment-specific provider maximum. It accepts an advertised positive effective page size up to the requested limit, requires count/totals arithmetic to agree with that effective size, and accepts empty first-page totals of zero or one. This detects inconsistent pagination; it does not prove the provider returned a consistent full export. No practice API or patient sample was accessed; these strict assumptions require sample acceptance before commissioning.
+
+## Pure API
+
+`parseAttachmentMetadataPage(body, { animalId, page, limit? })` returns a promise containing contract version, exact Animal parent, numeric pagination evidence, completion status, ordered observations and a safe page SHA-256. Each observation contains canonical attachment/file IDs, an allowlisted metadata projection, a canonical raw-record SHA-256, a stable projection SHA-256 and explicit `file_sha256: null`.
+
+Metadata retains original scalar representations and distinguishes omitted fields from explicit nulls. IDs normalize safe numeric values to canonical decimal strings. Clinical strings are preserved without date, flag or MIME interpretation; Unicode is not normalized. Lone surrogates, malformed records, unsupported parents, invalid IDs, non-JSON values, inconsistent pagination and excess sizes reject the complete page with fixed error codes. Duplicate observations remain in order.
+
+The raw-record digest hashes canonical JSON of the observed attachment record, including unknown fields and its download reference; it is not a wire-response checksum. The stable digest hashes only safe documented metadata, excluding the download URL and unknown fields. A URL-only change changes raw evidence without changing the stable fingerprint. Returned results and fixed errors contain no download-reference field or unknown provider fields. Documented free-text fields remain source content and are not promised to be free of information entered by a clinician. UTF-8 limits are 256 KiB per canonical page, 32 KiB per record, 16 KiB for notes and 1 KiB per other metadata string. JSON depth, node count, key count and IDs are independently bounded.
+
+## Remaining gates
+
+The runtime resource allowlist and dispatch remain unchanged. Durable actor/mapping-bound runs, leases, atomic staging/recovery and private ledgers are next. File download authentication, permitted destinations/redirects and byte limits still need a verified contract. Actual capture must compute a byte checksum and retain distinct API provenance; metadata hashes cannot stand in for originals. Staff review, release integration, source acceptance and commissioning remain separate gates.
