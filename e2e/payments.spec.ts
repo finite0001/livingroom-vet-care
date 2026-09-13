@@ -160,8 +160,14 @@ test("empty configuration and provider-disabled responses preserve recorded bala
   await panel
     .getByRole("button", { name: "Prepare $125.00 Checkout", exact: true })
     .click();
+  await expect(
+    panel.getByText("Saved Checkout: $125.00 · prepared", { exact: true }),
+  ).toBeVisible();
   state.disabled = true;
-  await panel.getByRole("checkbox").check();
+  await panel.getByRole("checkbox", {
+    name: "I reviewed this saved $125.00 Checkout. The next action may create or recover its Stripe payment page.",
+    exact: true,
+  }).check();
   await panel
     .getByRole("button", {
       name: "Create or recover this same Stripe Checkout",
