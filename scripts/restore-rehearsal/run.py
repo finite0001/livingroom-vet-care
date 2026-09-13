@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,49)]
-    assert len(migration_files)==68 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,50)]
+    assert len(migration_files)==69 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))

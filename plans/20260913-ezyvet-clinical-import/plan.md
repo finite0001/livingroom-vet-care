@@ -1,6 +1,6 @@
 # ezyVet clinical migration into Living Room Vet
 
-Status: planned. Base: PR104, `c85b5f0`, migrations through4800. Living Room Vet remains primary; ezyVet is a read-only import source. This plan preserves the full clinical migration scope and sequences implementation without treating manual originals or raw staging as a completed migration.
+Status: phase1 implemented and locally verified; later phases and commissioning remain unfinished. Base: PR104, `c85b5f0`, migrations through4800. Living Room Vet remains primary; ezyVet is a read-only import source. This plan preserves the full clinical migration scope and sequences implementation without treating manual originals or raw staging as a completed migration.
 
 ## Required outcome
 
@@ -15,7 +15,7 @@ An authorized operator imports the selected patient's clinical history, reviews 
 
 ## Phases and implementation order
 
-1. [Patient-scoped clinical API ingestion](phase-01-patient-scoped-ingestion.md) — next implementation. Correct history bounds; tie consult/history runs and every stored page to an approved patient mapping, preserve leases/recovery, and expose the bounded workflow in the administrator page.
+1. [Patient-scoped clinical API ingestion](phase-01-patient-scoped-ingestion.md) — implemented with local evidence; implementation PR CI pending. Correct history bounds; tie consult/history runs and every stored page to an approved patient mapping, preserve leases/recovery, and expose the bounded workflow in the administrator page.
 2. [Reviewed history and actionable diagnoses/reactions](phase-02-reviewed-chart-history.md) — follows phase1. Immutable imported-history representation plus explicit locally authored create/link decisions for native problems, source discrepancy handling, clinical alerts and frozen-release provenance.
 3. [Vaccinations, prescriptions, attachments and migration reconciliation](phase-03-complete-migration.md) — required subsequent work. Do not omit these resources from completion because phase1/2 passes.
 

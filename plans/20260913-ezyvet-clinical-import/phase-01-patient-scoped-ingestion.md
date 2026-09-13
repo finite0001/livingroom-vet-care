@@ -1,6 +1,6 @@
 # Phase1 — Patient-scoped consult/history ingestion
 
-Priority: high. Status: next implementation. Depends on PR104 and the [source audit](research/source-contracts.md). This phase delivers API-backed patient history staging and review access; it does not yet create native clinical entries.
+Priority: high. Status: implemented and locally verified; required PR CI and real source commissioning remain pending. Depends on PR104 and the [source audit](research/source-contracts.md). This phase delivers API-backed patient history staging and review access; it does not yet create native clinical entries.
 
 ## Contract and architecture
 
@@ -28,16 +28,19 @@ Use active administrator checks and actor-bound run ownership consistently with 
 
 ## Acceptance
 
-- [ ] Actual adapter requests use animal filters and history limit10; response envelopes, IDs and paging reject malformed/mixed-patient input.
-- [ ] SQL independently rejects forged scope, wrong site/patient, missing mapping, changed actor, altered retry and legacy generic bypass.
-- [ ] A generic-only snapshot is ineligible; identical bytes actually observed in a valid scoped run become eligible without cloning the snapshot. Generic run UUIDs, including terminal ones, cannot acquire scoped context; late legacy pages cannot advance cursor or heads.
-- [ ] Lost page response, durable continuation, terminal-run recovery and source reversion preserve correct snapshots/head versions without duplicates.
-- [ ] Concurrency observes real blocking/leases; competing runs and mapping checks cannot race into another patient or duplicate cursor advancement.
-- [ ] Browser covers mapped patient selection, bounded paging, escaped history, disabled upstream, wrong scopes, retained UUID recovery and navigation/account-switch guards.
-- [ ] Actual local Auth/HTTP/PostgREST fixture exercises both resources against a synthetic upstream; no live source access or clinical policy activation.
-- [ ] Native notes/problems/treatments/prescriptions/stock/charges remain unchanged in this ingestion phase. Phase2 must then make the reviewed data usable in the chart.
-- [ ] Repository check, frozen Edge checks, focused regressions, required CI and updated local migration/restore rehearsal pass.
+- [x] Actual adapter requests use animal filters and history limit10; response envelopes, IDs and paging reject malformed/mixed-patient input.
+- [x] SQL independently rejects forged scope, wrong site/patient, missing mapping, changed actor, altered retry and legacy generic bypass.
+- [x] A generic-only snapshot is ineligible; identical bytes actually observed in a valid scoped run become eligible without cloning the snapshot. Generic run UUIDs, including terminal ones, cannot acquire scoped context; late legacy pages cannot advance cursor or heads.
+- [x] Lost page response, durable continuation, terminal-run recovery and source reversion preserve correct snapshots/head versions without duplicates.
+- [x] Concurrency observes real blocking/leases; competing runs and mapping checks cannot race into another patient or duplicate cursor advancement.
+- [x] Browser covers mapped patient selection, bounded paging, escaped history, disabled upstream, wrong scopes, retained UUID recovery and navigation/account-switch guards.
+- [x] Actual local Auth/HTTP/PostgREST fixture exercises both resources against a synthetic upstream; no live source access or clinical policy activation.
+- [x] Native notes/problems/treatments/prescriptions/stock/charges remain unchanged in this ingestion phase. Phase2 must then make the reviewed data usable in the chart.
+- [x] Repository check, frozen Edge checks, focused regressions and updated69-migration local upgrade/restore rehearsal passed.
+- [ ] Required implementation PR CI must pass.
 
 ## Remaining gates
 
 Real account entitlement, approved source scope and representative response samples are required for commissioning. Page traversal is not a transactional source export; this phase cannot claim complete migration based on `review_ready` alone.
+
+Integrated evidence: [runtime and restore validation](../../docs/ezyvet-clinical-runtime-acceptance.md), [database contract](../../docs/plans/ezyvet-clinical-runs-contract.md). All clinical promotion remains in phase2.
