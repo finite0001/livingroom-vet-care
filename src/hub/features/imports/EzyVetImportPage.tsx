@@ -1,8 +1,18 @@
 import { EzyVetVaccinationImports } from "./EzyVetVaccinationImports";
 import { EzyVetClinicalImports } from "./EzyVetClinicalImports";
 import { EzyVetWeightImports } from "./EzyVetWeightImports";
-import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useBlocker } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
@@ -48,6 +58,19 @@ export function EzyVetImportPage() {
   const enabled = Boolean(
     session?.user.id && profile?.is_active && hasRole("ADMIN"),
   );
+  const [clinicalDirty, setClinicalDirty] = useState(false);
+  const [vaccinationDirty, setVaccinationDirty] = useState(false);
+  const importDirty = enabled && (clinicalDirty || vaccinationDirty);
+  const blocker = useBlocker(importDirty);
+  useEffect(() => {
+    if (!importDirty) return;
+    const prevent = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", prevent);
+    return () => window.removeEventListener("beforeunload", prevent);
+  }, [importDirty]);
   const cache = useQueryClient();
   const [resource, setResource] = useState("contact");
   const [page, setPage] = useState(0);
@@ -332,13 +355,45 @@ export function EzyVetImportPage() {
   return (
     <section className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-6xl space-y-5">
+        <AlertDialog open={blocker.state === "blocked"}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {clinicalDirty && !vaccinationDirty
+                  ? "Leave clinical import recovery?"
+                  : vaccinationDirty && !clinicalDirty
+                    ? "Leave vaccination import recovery?"
+                    : "Leave import recovery?"}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Original request references remain saved for recovery. Leaving
+                does not cancel an in-flight scan or approve source records.
+                Unsaved review fields may be lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => blocker.state === "blocked" && blocker.reset()}
+              >
+                Stay with this run
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => blocker.state === "blocked" && blocker.proceed()}
+              >
+                Leave and retain recovery
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <EzyVetClinicalImports
           key={`clinical:${session.user.id}`}
           actor={session.user.id}
+          onDirtyChange={setClinicalDirty}
         />
         <EzyVetVaccinationImports
           key={`vaccination:${session.user.id}`}
           actor={session.user.id}
+          onDirtyChange={setVaccinationDirty}
         />
         <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
         <header>

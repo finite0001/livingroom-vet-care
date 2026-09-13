@@ -1,19 +1,8 @@
 import { SourceHistoryApproval } from "./SourceHistoryApproval";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useBlocker } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
 import {
   searchMappings,
   listClinicalRuns,
@@ -30,15 +19,20 @@ import type {
 } from "./clinical-api";
 interface Props {
   actor: string;
+  onDirtyChange: (dirty: boolean) => void;
 }
 const message = (e: unknown) =>
   e instanceof Error
     ? e.message
     : "Clinical import unavailable. Recover the original run.";
-export function EzyVetClinicalImports({ actor }: Props) {
+export function EzyVetClinicalImports({ actor, onDirtyChange }: Props) {
   const [search, setSearch] = useState("");
   const [mapping, setMapping] = useState<ClinicalMapping | null>(null);
   const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    onDirtyChange(locked);
+  }, [locked, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const maps = useQuery({
     queryKey: ["ezyvet-clinical", actor, "mapping", search],
     enabled: search.trim().length >= 2,
@@ -88,7 +82,8 @@ export function EzyVetClinicalImports({ actor }: Props) {
     </section>
   );
 }
-interface PatientProps extends Props {
+interface PatientProps {
+  actor: string;
   mapping: ClinicalMapping;
   onLocked: (locked: boolean) => void;
 }
@@ -133,7 +128,6 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
   });
   const [approvalDirty, setApprovalDirty] = useState(false);
   const dirty = busy || uncertain || approvalDirty;
-  const blocker = useBlocker(dirty);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -144,15 +138,6 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
   useEffect(() => {
     onLocked(dirty);
   }, [dirty, onLocked]);
-  useEffect(() => {
-    if (!dirty) return;
-    const prevent = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", prevent);
-    return () => window.removeEventListener("beforeunload", prevent);
-  }, [dirty]);
   useEffect(() => {
     let stored: string | null = null;
     try {
@@ -493,29 +478,6 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
         disabled={busy || uncertain}
         onDirtyChange={setApprovalDirty}
       />
-      <AlertDialog open={blocker.state === "blocked"}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Leave clinical import recovery?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The original run reference is retained for recovery. Leaving does
-              not cancel an in-flight scan or approve source records.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => blocker.state === "blocked" && blocker.reset()}
-            >
-              Stay with this run
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => blocker.state === "blocked" && blocker.proceed()}
-            >
-              Leave and retain recovery
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

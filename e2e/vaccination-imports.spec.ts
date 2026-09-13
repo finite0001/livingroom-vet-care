@@ -460,3 +460,68 @@ test("late consult response cannot replace another selected patient's view", asy
     panel(page).getByRole("button", { name: "Start consult vaccination scan" }),
   ).toBeDisabled();
 });
+
+test("one page guard protects both selected import workspaces and preserves cancel or leave", async ({
+  page,
+}) => {
+  const warnings: string[] = [];
+  page.on("console", (message) => {
+    if (/blocker/i.test(message.text())) warnings.push(message.text());
+  });
+  const { state } = await fixture(page);
+  state.disabled = true;
+  await page.route("**/rest/v1/rpc/recover_ezyvet_clinical_run", (r) =>
+    r.fulfill({ json: null }),
+  );
+  await page.route("**/rest/v1/rpc/list_ezyvet_clinical_runs", (r) =>
+    r.fulfill({ json: { runs: [], has_more: false, next_cursor: null } }),
+  );
+  await open(page);
+  const clinical = page.getByRole("region", {
+    name: "Patient-scoped clinical import",
+  });
+  await clinical.getByLabel("Find clinical import patient").fill("Juniper");
+  await clinical
+    .getByRole("button", {
+      name: "Synthetic Juniper · Synthetic Family · synthetic-site",
+      exact: true,
+    })
+    .click();
+  await clinical
+    .getByRole("button", { name: "Start mapped clinical scan" })
+    .click();
+  await expect(
+    clinical.getByText(/Source access is not commissioned/),
+  ).toBeVisible();
+  // Vaccination is mounted and clean here; it must not override the clinical guard.
+  await page.getByRole("button", { name: "Home", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Leave clinical import recovery?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Stay with this run" }).click();
+  await panel(page)
+    .getByRole("button", { name: "Start consult vaccination scan" })
+    .click();
+  await expect(
+    panel(page).getByText(/Source access is not commissioned/),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Home", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Leave import recovery?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Stay with this run" }).click();
+  await expect(page).toHaveURL(/\/hub\/tools\/ezyvet$/);
+  await expect(clinical.getByText(/Run reference:/)).toBeVisible();
+  await expect(panel(page).getByText(/Run reference:/)).toBeVisible();
+  await page.getByRole("button", { name: "Home", exact: true }).click();
+  await page.getByRole("button", { name: "Leave and retain recovery" }).click();
+  await expect(page).not.toHaveURL(/\/hub\/tools\/ezyvet$/);
+  const keys = await page.evaluate(() => Object.keys(sessionStorage));
+  expect(keys.some((key) => key.startsWith("lrv-ezyvet-clinical-run:"))).toBe(
+    true,
+  );
+  expect(
+    keys.some((key) => key.startsWith("lrv-ezyvet-vaccination-run:")),
+  ).toBe(true);
+  expect(warnings).toEqual([]);
+});
