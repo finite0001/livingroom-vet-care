@@ -25,7 +25,7 @@ begin
   result:=public.preview_record_release_v1(p_pet_id,p_client_id,p_channel,p_recipient,'{}');s:=result->'snapshot';
   foreach k in array array['dental_charts','qol_records','anesthesia_records','lesions','problems','weights','treatments','patient_summaries','lab_reports','external_records','imported_histories','problem_source_extractions','imported_vaccinations'] loop s:=s||jsonb_build_object(k,'[]'::jsonb);end loop;
  else result:=public.release_preview_v7_internal(p_pet_id,p_client_id,p_channel,p_recipient,older);s:=result->'snapshot';end if;
- s:=s||jsonb_build_object('schema_version',8,'selection',coalesce(s->'selection','{}')||jsonb_build_object('imported_prescription_ids',ids),'imported_prescriptions',prescriptions);
+ s:=s||jsonb_build_object('schema_version',8,'selection',coalesce(s->'selection','{}')||jsonb_build_object('imported_vaccination_ids',coalesce(s#>'{selection,imported_vaccination_ids}','[]'),'imported_prescription_ids',ids),'imported_prescriptions',prescriptions);
  if octet_length(s::text)>1048576 then raise exception 'Release exceeds maximum reviewed snapshot size' using errcode='23514';end if;
  return jsonb_build_object('snapshot',s,'source_hash',encode(sha256(convert_to(s::text,'UTF8')),'hex'));
 exception when invalid_text_representation then raise exception 'Source IDs must be valid UUIDs' using errcode='23514';end $$;
