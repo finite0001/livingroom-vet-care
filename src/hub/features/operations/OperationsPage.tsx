@@ -252,6 +252,7 @@ function OperationsSession() {
           aria-label="Operations workflows"
           className="flex flex-wrap gap-4 text-primary underline"
         >
+          <Link to="/hub/admin/outbox">Recorded outgoing retries</Link>
           <Link to="/hub/inbox/review">Review unmatched messages</Link>
           <Link to="/hub/inbox/processing">Review incoming processing</Link>
           <Link to="/hub/tools/care-reminders">Care reminders</Link>
@@ -284,6 +285,9 @@ function OperationsSession() {
               {displayTime(r.delivered_at)}
             </p>
             <div className="flex gap-3 text-primary underline">
+              <Link to={`/hub/admin/outbox/${r.id}`}>
+                Review outgoing retry
+              </Link>
               <Link to={conversationLink(r.conversation_id)}>
                 Open conversation
               </Link>
