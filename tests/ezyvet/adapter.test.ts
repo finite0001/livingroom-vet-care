@@ -379,3 +379,143 @@ test("consult and history require mapped animals, bounded pages and intact opaqu
     );
   }
 });
+
+test("vaccination fetch is read-only, consult-scoped and retains unresolved source values", async () => {
+  const calls: { url: string; init: RequestInit }[] = [];
+  const payload = {
+    id: "31",
+    consult_id: "82",
+    product_id: "54",
+    qty: "unknown",
+    date_of_administration: "0",
+    date_of_next_administration: null,
+    vet_id: "outside",
+    active: "false",
+    description: "<script>source</script>",
+    notes: "Uninterpreted vaccine history",
+    nested: { client_secret: "discard-me" },
+  };
+  const adapter = createAdapter({ ...config, readResources: ["vaccination"] }, {
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input, init) => {
+      const url = String(input);
+      calls.push({ url, init: init! });
+      return url.endsWith("access_token") ? token() : Response.json({
+        meta: { items_page: 1, items_page_total: 1 },
+        items: [{ vaccination: payload }],
+      });
+    },
+  });
+  for (const scope of [undefined, "", "oops", "9007199254740992", "-1"]) {
+    await assert.rejects(
+      adapter.page("vaccination", 1, undefined, scope),
+      /CONSULT_MAPPING_REQUIRED/,
+    );
+  }
+  await assert.rejects(
+    adapter.page("vaccination", 1, "77", "82"),
+    /CONSULT_MAPPING_REQUIRED/,
+  );
+  assert.equal(calls.length, 0);
+  const result = await adapter.page("vaccination", 1, undefined, "82");
+  assert.equal(
+    calls[1].url,
+    "https://api.trial.ezyvet.com/v1/vaccination?page=1&limit=10&consult_id=82",
+  );
+  assert.equal(calls[1].init.method, "GET");
+  assert.equal(calls[1].init.redirect, "error");
+  assert.equal(
+    JSON.parse(calls[0].init.body as string).scope,
+    "read-vaccination",
+  );
+  assert.deepEqual(result.items[0].payload, { ...payload, nested: {} });
+  assert.equal(JSON.stringify(result).includes("discard-me"), false);
+});
+
+test("vaccination page rejects malformed identities, duplicate IDs, nested clinical values and over-limit pages", () => {
+  const source = (payload: Record<string, unknown>) => ({
+    meta: { items_page: 1, items_page_total: 1 },
+    items: [{ vaccination: payload }],
+  });
+  const valid = { id: "31", consult_id: 82, product_id: null };
+  for (
+    const change of [
+      { id: "outside-id" },
+      { id: "9007199254740992" },
+      { id: -1 },
+      { consult_id: null },
+      { consult_id: [] },
+      { consult_id: "9007199254740992" },
+      { product_id: {} },
+      { product_id: "n/a" },
+      { qty: {} },
+      { vet_id: [] },
+      { date_of_administration: {} },
+      { date_of_next_administration: [] },
+      { description: [] },
+      { notes: {} },
+      { active: {} },
+    ]
+  ) {
+    assert.throws(
+      () => parsePage(source({ ...valid, ...change }), "vaccination", 1),
+      /INVALID_UPSTREAM_SHAPE|DUPLICATE_OR_INVALID_EXTERNAL_ID/,
+    );
+  }
+  const repeated = {
+    ...source(valid),
+    items: [{ vaccination: valid }, { vaccination: valid }],
+  };
+  assert.throws(
+    () => parsePage(repeated, "vaccination", 1),
+    /DUPLICATE_OR_INVALID_EXTERNAL_ID/,
+  );
+  const tooMany = {
+    ...source(valid),
+    items: Array.from(
+      { length: 11 },
+      (_, id) => ({ vaccination: { ...valid, id } }),
+    ),
+  };
+  assert.throws(
+    () => parsePage(tooMany, "vaccination", 1),
+    /INVALID_UPSTREAM_SHAPE/,
+  );
+  assert.equal(
+    parsePage(source({ ...valid, qty: null, notes: null }), "vaccination", 1)
+      .items.length,
+    1,
+  );
+});
+
+test("mixed-consult vaccination page fails as a whole and unrelated resources reject consult scope", async () => {
+  let calls = 0;
+  const adapter = createAdapter({
+    ...config,
+    readResources: ["vaccination", "contact"],
+  }, {
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input) => {
+      calls++;
+      return String(input).endsWith("access_token") ? token() : Response.json({
+        meta: { items_page: 1, items_page_total: 1 },
+        items: [
+          { vaccination: { id: 1, consult_id: 82 } },
+          { vaccination: { id: 2, consult_id: 83 } },
+        ],
+      });
+    },
+  });
+  await assert.rejects(
+    adapter.page("contact", 1, undefined, "82"),
+    /INVALID_PAGE_REQUEST/,
+  );
+  assert.equal(calls, 0);
+  await assert.rejects(
+    adapter.page("vaccination", 1, undefined, "82"),
+    /SOURCE_CONSULT_MISMATCH/,
+  );
+  assert.equal(calls, 2);
+});

@@ -18,6 +18,7 @@ export const resourceContracts = {
   healthstatus: { path: "/v1/healthstatus", limit: 10 },
   consult: { path: "/v1/consult", limit: 10 },
   history: { path: "/v1/history", limit: 10 },
+  vaccination: { path: "/v1/vaccination", limit: 10 },
 } as const;
 export type ClinicalResource = "consult" | "history";
 export const patientScoped = (resource: Resource) =>
@@ -37,6 +38,17 @@ export interface HistorySourcePayload extends ClinicalSourcePayload {
   chain?: string | number | null;
   timestamp?: string | number | null;
   vet_id?: string | number | null;
+}
+export interface VaccinationSourcePayload extends Record<string, unknown> {
+  id: string | number;
+  consult_id: string | number;
+  product_id?: string | number | null;
+  qty?: string | number | null;
+  date_of_administration?: string | number | null;
+  date_of_next_administration?: string | number | null;
+  vet_id?: string | number | null;
+  description?: string | null;
+  notes?: string | null;
 }
 export type Resource = (typeof resources)[number];
 export interface EzyVetConfig {
@@ -155,7 +167,10 @@ export function parsePage(
     !Array.isArray(body.items) ||
     !record(body.meta) ||
     body.items.length >
-      (resource === "consult" || resource === "history" ? 10 : 50)
+      (resource === "consult" || resource === "history" ||
+          resource === "vaccination"
+        ? 10
+        : 50)
   ) {
     throw new ImportError("INVALID_UPSTREAM_SHAPE");
   }
@@ -219,6 +234,53 @@ export function parsePage(
       if (
         payload[prose] !== undefined && payload[prose] !== null &&
         typeof payload[prose] !== "string"
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+    }
+    if (resource === "vaccination") {
+      // Vaccinations belong to a consult, not directly to an animal. Retain
+      // optional clinical values verbatim; staging does not interpret them.
+      if (
+        !Number.isSafeInteger(integer(id)) || integer(id) < 0 ||
+        !Number.isSafeInteger(integer(payload.consult_id)) ||
+        integer(payload.consult_id) < 0 ||
+        (payload.product_id !== undefined && payload.product_id !== null &&
+          (!Number.isSafeInteger(integer(payload.product_id)) ||
+            integer(payload.product_id) < 0))
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      for (
+        const field of [
+          "qty",
+          "date_of_administration",
+          "date_of_next_administration",
+          "vet_id",
+          "created_at",
+          "modified_at",
+        ]
+      ) {
+        const value = payload[field];
+        if (
+          value !== undefined && value !== null &&
+          typeof value !== "string" &&
+          (typeof value !== "number" || !Number.isFinite(value))
+        ) {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
+      }
+      for (const field of ["description", "notes"]) {
+        if (
+          payload[field] !== undefined && payload[field] !== null &&
+          typeof payload[field] !== "string"
+        ) {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
+      }
+      if (
+        payload.active !== undefined && payload.active !== null &&
+        !["string", "number", "boolean"].includes(typeof payload.active)
       ) {
         throw new ImportError("INVALID_UPSTREAM_SHAPE");
       }
@@ -365,6 +427,7 @@ export function createAdapter(
       resource: Resource,
       page: number,
       animalExternalId?: string,
+      consultExternalId?: string,
     ): Promise<PageResult> {
       if (
         !config.readResources.includes(resource) ||
@@ -380,8 +443,20 @@ export function createAdapter(
       ) {
         throw new ImportError("PATIENT_MAPPING_REQUIRED");
       }
+      if (
+        resource === "vaccination" &&
+        (animalExternalId !== undefined || !consultExternalId ||
+          !Number.isSafeInteger(integer(consultExternalId)) ||
+          integer(consultExternalId) < 0)
+      ) {
+        throw new ImportError("CONSULT_MAPPING_REQUIRED");
+      }
+      if (resource !== "vaccination" && consultExternalId !== undefined) {
+        throw new ImportError("INVALID_PAGE_REQUEST");
+      }
       const contract = resource === "animal" || resource === "healthstatus" ||
-          resource === "consult" || resource === "history"
+          resource === "consult" || resource === "history" ||
+          resource === "vaccination"
         ? resourceContracts[resource]
         : { path: `/v1/${resource}`, limit: 50 };
       const query = new URLSearchParams({
@@ -390,6 +465,9 @@ export function createAdapter(
       });
       if (patientScoped(resource)) {
         query.set("animal_id", animalExternalId!);
+      }
+      if (resource === "vaccination") {
+        query.set("consult_id", consultExternalId!);
       }
       for (let attempt = 0; attempt < 2; attempt++) {
         const bearer = await accessToken();
@@ -421,6 +499,13 @@ export function createAdapter(
           )
         ) {
           throw new ImportError("SOURCE_PATIENT_MISMATCH");
+        }
+        if (
+          resource === "vaccination" && result.items.some(
+            (item) => String(item.payload.consult_id) !== consultExternalId,
+          )
+        ) {
+          throw new ImportError("SOURCE_CONSULT_MISMATCH");
         }
         return result;
       }
