@@ -85,6 +85,8 @@ reset role;
 select is((select count(*)::integer from messages where conversation_id='99100000-0000-4000-8000-000000000003'),2,'Each grant produces exactly one history entry');
 select throws_ok($$update messages set content='https://thelivingroom.vet/shared/11223344-1234-4234-8234-123456789abc#v1.'||repeat('a',43) where id=(select (v->>'message_id')::uuid from data where k='invoice_queue')$$,'23514',null,'Literal capability rejected from message history');
 select throws_ok($$update document_link_grants set message_template='{{document_link}} v1.'||repeat('a',43) where id='99200000-0000-4000-8000-000000000001'$$,'23514',null,'Literal capability cannot be embedded in template');
+select throws_ok($$insert into messages(conversation_id,type,sender_type,content,is_internal) values('99100000-0000-4000-8000-000000000003','SMS','CLIENT','Quoted v1.'||repeat('a',43),false)$$,'23514',null,'Old inbound worker cannot persist quoted capability');
+select throws_ok($$insert into document_link_events(grant_id,actor_id,kind,reason) values('99200000-0000-4000-8000-000000000001','99000000-0000-4000-8000-000000000001','revoked','Quoted v1.'||repeat('a',43))$$,'23514',null,'Revocation reason cannot leak capability to audit');
 select throws_ok($$delete from document_link_outbox_links$$,'23514',null,'Queue association immutable');
 -- Synthetic direct lease setup isolates each final-boundary test from unrelated pending rows.
 update communication_outbox set state='claimed',lease_token=gen_random_uuid(),lease_expires_at=now()+interval '2 minutes' where id in(select (v->>'id')::uuid from data where k in ('invoice_queue','record_queue'));

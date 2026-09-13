@@ -1,3 +1,4 @@
+import { redactDocumentCapabilities } from "./document-capability-redaction.ts";
 import { normalizeEmail, normalizePhone } from "../delivery-policy.ts";
 import {
   boundedBody,
@@ -41,13 +42,14 @@ async function persist(
   resourceId: string,
   type: string,
   metadata: Record<string, unknown>,
+  originalMetadata: Record<string, unknown> = metadata,
 ) {
   const { data, error } = await db.rpc("receive_communication_event", {
     p_provider: provider,
     p_event_id: eventId,
     p_resource_id: resourceId,
     p_event_type: type,
-    p_payload_hash: await digestMetadata(metadata),
+    p_payload_hash: await digestMetadata(originalMetadata),
     p_metadata: metadata,
   });
   if (error)
@@ -154,6 +156,13 @@ export async function receiveTwilio(
       `${values.MessageSid}/inbound`,
       values.MessageSid,
       "inbound",
+      {
+        from: sender,
+        to: recipient,
+        body: redactDocumentCapabilities(values.Body),
+        body_hash: await digestMetadata({ body: values.Body }),
+        opt_action: action,
+      },
       { from: sender, to: recipient, body: values.Body, opt_action: action },
     );
   }

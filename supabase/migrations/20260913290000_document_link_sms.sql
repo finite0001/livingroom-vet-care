@@ -85,7 +85,13 @@ end $$;
 create trigger reject_document_capability before insert or update on public.communication_outbox for each row execute function public.reject_persisted_document_capability();
 create trigger reject_document_capability before insert or update on public.communication_prepared_requests for each row execute function public.reject_persisted_document_capability();
 create trigger reject_document_capability before insert or update on public.document_link_grants for each row execute function public.reject_persisted_document_capability();
-create trigger reject_document_capability before insert or update on public.messages for each row when (NEW.sender_type='STAFF') execute function public.reject_persisted_document_capability();
+create trigger reject_document_capability before insert or update on public.messages for each row execute function public.reject_persisted_document_capability();
+
+create trigger reject_document_capability before insert or update on public.communication_provider_events for each row execute function public.reject_persisted_document_capability();
+create trigger reject_document_capability before insert or update on public.communication_inbound for each row execute function public.reject_persisted_document_capability();
+create trigger reject_document_capability before insert or update on public.document_link_events for each row execute function public.reject_persisted_document_capability();
+create trigger reject_document_capability before insert or update on public.release_email_requests for each row execute function public.reject_persisted_document_capability();
+create trigger reject_document_capability before insert or update on public.invoice_email_requests for each row execute function public.reject_persisted_document_capability();
 
 do $$declare f record;begin
  for f in select p.oid::regprocedure signature,p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('enqueue_document_link_sms','recover_document_link','document_link_delivery_context','start_communication_attempt','reject_persisted_document_capability') loop

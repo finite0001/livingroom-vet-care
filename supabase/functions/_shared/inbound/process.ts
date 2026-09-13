@@ -1,10 +1,11 @@
+import { redactDocumentCapabilities, redactDocumentMetadata } from "./document-capability-redaction.ts";
 import {
   emailAddress,
   type EventDatabase,
   type ProviderEvent,
 } from "./handlers.ts";
 import { normalizePhone } from "../delivery-policy.ts";
-import { boundedBody, WebhookError } from "./verification.ts";
+import { boundedBody, digestMetadata, WebhookError } from "./verification.ts";
 export interface ReceivingEnvironment {
   RESEND_API_KEY?: string;
   TWILIO_AUTH_TOKEN?: string;
@@ -125,7 +126,11 @@ export async function processOneInbound(
         data.direction !== "inbound" ||
         sender !== event.metadata.from ||
         recipient !== event.metadata.to ||
-        data.body !== event.metadata.body
+        typeof data.body !== "string" ||
+        (typeof event.metadata.body_hash === "string"
+          ? await digestMetadata({ body: data.body }) !== event.metadata.body_hash ||
+            redactDocumentCapabilities(data.body) !== event.metadata.body
+          : data.body !== event.metadata.body)
       )
         throw new ReviewError("Provider SMS does not match signed metadata");
       body = data.body;
@@ -150,12 +155,12 @@ export async function processOneInbound(
       p_lease_token: event.lease_token,
       p_sender: sender,
       p_recipient: recipient,
-      p_subject: subject,
-      p_body: body,
-      p_html: html,
-      p_rfc_message_id: rfc,
-      p_reply_ids: replies,
-      p_attachments: attachments,
+      p_subject: redactDocumentCapabilities(subject),
+      p_body: redactDocumentCapabilities(body),
+      p_html: html === null ? null : redactDocumentCapabilities(html),
+      p_rfc_message_id: rfc === null ? null : redactDocumentCapabilities(rfc),
+      p_reply_ids: replies.map(redactDocumentCapabilities),
+      p_attachments: redactDocumentMetadata(attachments),
       p_occurred_at: new Date(occurred).toISOString(),
       p_opt_action: event.metadata.opt_action ?? null,
     });
