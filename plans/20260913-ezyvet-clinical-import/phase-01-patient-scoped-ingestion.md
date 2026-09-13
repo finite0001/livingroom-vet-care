@@ -37,7 +37,7 @@ Use active administrator checks and actor-bound run ownership consistently with 
 - [x] Actual local Auth/HTTP/PostgREST fixture exercises both resources against a synthetic upstream; no live source access or clinical policy activation.
 - [x] Native notes/problems/treatments/prescriptions/stock/charges remain unchanged in this ingestion phase. Phase2 must then make the reviewed data usable in the chart.
 - [x] Repository check, frozen Edge checks, focused regressions and updated69-migration local upgrade/restore rehearsal passed.
-- [ ] Required implementation PR CI must pass.
+- [x] PR106 database, Edge and frontend CI passed at `e80cf62` (run34746522048).
 
 ## Remaining gates
 
