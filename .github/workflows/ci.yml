@@ -65,6 +65,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+          cache: true
+      - name: Check and cache payment HTTP roundtrip dependencies
+        run: deno check --frozen tests/payment-access/local-server.ts
+      - name: Verify actual payment capability HTTP and ledger roundtrip
+        run: node --experimental-strip-types tests/payment-access/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify actual private Storage round-trip
         run: node scripts/verify-local-storage.mjs
         env:

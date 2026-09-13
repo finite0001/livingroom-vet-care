@@ -16,3 +16,5 @@ Thirty checks passed against the existing local database, including the migratio
 Frozen Deno type checking and focused ESLint also pass. The runner deletes only records referencing its random synthetic fixture identifiers and any provider-profile row it created. Existing compatible local provider configuration is reused and retained. Keys, passwords, access tokens and capabilities remain in process memory.
 
 This verifies local HTTP/Auth/PostgREST integration. It does not verify a real Stripe payment, refund, webhook delivery, email/SMS provider, hosted deployment or production commissioning.
+
+The database CI job installs Deno 2.9.6, checks/caches the harness dependency graph with the committed frozen lock, and runs the roundtrip with `PAYMENT_TEST_PROJECT` set to `github.workspace`. It reuses the job’s already-running isolated Supabase instance. The explicit configuration path was also verified locally against a temporary foundation configuration: all thirty checks passed and the temporary directory was removed. This local check is not a claim that the remote CI job has completed.
