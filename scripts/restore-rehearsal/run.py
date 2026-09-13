@@ -320,12 +320,14 @@ try:
     if resume_backfill:
         evidence=json.loads((run/'backfill-evidence.json').read_text())
         assert evidence['migration_sha256']=={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files}, 'Resume canonical migration sources changed'
-    destination=project('destination',59321,args.rehearse_observed_hosted_gaps or resume_backfill)
-    resume_canonical=functions_snapshot(destination) if resume_backfill else None
+    verify_canonical=args.rehearse_observed_hosted_gaps or resume_backfill
+    destination=project('destination',59321,verify_canonical)
+    canonical_inventory=functions_snapshot(destination) if verify_canonical else None
     if args.rehearse_observed_hosted_gaps:
-        assert functions_snapshot(destination)==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'
+        assert canonical_inventory==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'
         evidence=json.loads((run/'backfill-evidence.json').read_text())
         evidence['canonical_functions_grants_triggers_match']=True
+        evidence['post_restore_canonical_match']=False
         (run/'backfill-evidence.json').write_text(json.dumps(evidence,indent=2))
     verify_identity(destination)
     command(['docker','stop',*services(destination)])
@@ -357,9 +359,11 @@ try:
             if attempt==59: raise RuntimeError('Restored Auth/PostgREST/Storage did not become healthy')
             time.sleep(1)
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
-    if resume_backfill:
-        assert functions_snapshot(destination)==resume_canonical, 'Restored backfilled routines/grants/triggers differ from canonical order'
+    if verify_canonical:
+        assert functions_snapshot(destination)==canonical_inventory, 'Restored backfilled routines/grants/triggers differ from canonical order'
         evidence['canonical_functions_grants_triggers_match']=True
+        evidence['post_restore_canonical_match']=True
+        evidence['canonical_inventory_counts']={key:len(rows or []) for key,rows in canonical_inventory.items()}
         (run/'backfill-evidence.json').write_text(json.dumps(evidence,indent=2))
     vaccination_evidence = None
     if (run/'vaccination-receipt-fixture.json').exists():
@@ -402,7 +406,7 @@ finally:
         raise RuntimeError('Rehearsal cleanup failed; no success recorded: '+'; '.join(cleanup_errors))
 # This is reached only if restore/verification and every checked cleanup succeeded.
 results['cleanup_verified']=True
-if args.rehearse_observed_hosted_gaps: results['backfill']=json.loads((run/'backfill-evidence.json').read_text())
+if verify_canonical: results['backfill']=json.loads((run/'backfill-evidence.json').read_text())
 results['total_seconds']=round(time.monotonic()-started,2)
 (run/'result.json').write_text(json.dumps(results,indent=2)+'\n')
 print('PASS: actual isolated database and private Storage restored and cleaned; result:',run/'result.json',flush=True)
