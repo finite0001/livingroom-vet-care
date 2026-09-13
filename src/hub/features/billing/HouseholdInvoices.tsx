@@ -1,3 +1,4 @@
+import { PaymentDeliveryPanel } from "../payments/PaymentDeliveryPanel";
 import { PaymentCollectionPanel } from "../payments/PaymentCollectionPanel";
 import { InvoicePayments } from "../payments/InvoicePayments";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
@@ -245,6 +246,11 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [smsDirty, setSmsDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
   const [collectionDirty, setCollectionDirty] = useState(false);
+  const [deliveryDirty, setDeliveryDirty] = useState(false);
+  const [attachmentRequestId, setAttachmentRequestId] = useState<string | null>(
+    null,
+  );
+  useEffect(() => setAttachmentRequestId(null), [session?.user.id]);
   useEffect(() => {
     onPending(
       busy ||
@@ -252,7 +258,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         emailDirty ||
         smsDirty ||
         paymentDirty ||
-        collectionDirty,
+        collectionDirty ||
+        deliveryDirty,
     );
     return () => onPending(false);
   }, [
@@ -262,6 +269,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     smsDirty,
     paymentDirty,
     collectionDirty,
+    deliveryDirty,
     onPending,
   ]);
   const invoice = useQuery({
@@ -433,6 +441,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     smsDirty ||
     paymentDirty ||
     collectionDirty ||
+    deliveryDirty ||
     readFailed;
   return (
     <section
@@ -674,9 +683,11 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             smsDirty ||
             paymentDirty ||
             collectionDirty ||
+            deliveryDirty ||
             readFailed
           }
           onDirtyChange={setEmailDirty}
+          onPaymentHandoff={setAttachmentRequestId}
         />
       )}
       {(record.status === "issued" || record.status === "void") && (
@@ -691,6 +702,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             paymentDirty ||
             collectionDirty ||
+            deliveryDirty ||
             readFailed
           }
           onDirtyChange={setSmsDirty}
@@ -708,6 +720,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             smsDirty ||
             collectionDirty ||
+            deliveryDirty ||
             readFailed
           }
           onDirtyChange={setPaymentDirty}
@@ -724,9 +737,28 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             smsDirty ||
             paymentDirty ||
+            deliveryDirty ||
             readFailed
           }
           onDirtyChange={setCollectionDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <PaymentDeliveryPanel
+          invoiceId={invoiceId}
+          clientId={clientId}
+          canPrepare={record.status === "issued"}
+          attachmentRequestId={attachmentRequestId}
+          disabled={
+            busy ||
+            Boolean(pending) ||
+            emailDirty ||
+            smsDirty ||
+            paymentDirty ||
+            collectionDirty ||
+            readFailed
+          }
+          onDirtyChange={setDeliveryDirty}
         />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}
