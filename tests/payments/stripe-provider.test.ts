@@ -148,3 +148,10 @@ test("refund evidence distinguishes unsettled money from success and rejects mis
     assert.throws(() => refundEvidence({...value, ...patch}, refund), code("reconcile"));
   }
 });
+test("provider accepts only explicitly versioned scoped status returns and preserves v1",async()=>{
+ const {fetcher,calls}=mock(); const provider=createStripeProvider(env,fetcher,()=>now);
+ const scope=intent.id,token="s1."+"a".repeat(43);
+ const v2={...intent,return_context_version:2,return_scope_id:scope,return_key_version:"first",return_origin:env.STRIPE_RETURN_ORIGIN,success_url:`${env.STRIPE_RETURN_ORIGIN}/payment/return/${scope}#${token}`,cancel_url:`${env.STRIPE_RETURN_ORIGIN}/payment/cancel/${scope}#${token}`};
+ await provider.createCheckout(v2);assert.equal((calls[1].init.body as URLSearchParams).get("success_url"),v2.success_url);
+ for(const patch of [{return_context_version:1},{return_context_version:3},{return_scope_id:"other"},{cancel_url:v2.cancel_url.replace("s1.","p1.")},{success_url:v2.success_url.replace(token,"{{payment_status}}")},{cancel_url:v2.cancel_url.replace(token,"s1."+"b".repeat(43))}]) await assert.rejects(provider.createCheckout({...v2,...patch}),code("intent"));
+});
