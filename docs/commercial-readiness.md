@@ -231,3 +231,14 @@ The processing screen now exposes the migration-4300 safe queue to active staff 
 The integrated branch passes lint (one existing Fast Refresh warning), typecheck, all 362 unit tests and the production build (existing chunk-size warning). Twelve combined processing, sender-review and inbox browser scenarios passed with simulated API responses. Independent review confirmed both requested recovery fixes. The actual database/HTTP evidence remains documented separately in the preceding backend integration; these browser checks do not establish hosted or external-provider acceptance.
 
 Both previously backend-only inbound recovery screens are now integrated. The historical audit entries above describe their state at the named earlier revisions. See [the staff processing workflow](features/communication-processing-review.md). Hosted staging remains [a concrete proposal awaiting approval of a second project charge](hosted-staging-proposal.md); no additional project, hosted migration, provider request or public deployment was performed in this integration.
+
+
+## Operational visibility and durable scheduler evidence
+
+The ADMIN operations workspace now exposes safe global outbox exceptions, reminder candidates and blocked handoffs, inbound review counts and durable scheduler runs. Old unfinished Stripe events are reachable through keyset pagination in the existing reviewed retry panel. Stable source/job/run references and patient/conversation links support investigation; the workspace does not retry sends, alter consent or resolve financial uncertainty.
+
+Migration4400 shares the existing reminder candidate query between queueing and discovery. The enabled worker confirms a stable start receipt, then queues and records completed counts atomically. Ambiguous responses use read-only receipt recovery; missing terminal evidence remains unknown. Disabled workers still create no database client or run.
+
+Validation:374 integrated unit tests, lint/typecheck/build and16 combined operations, Stripe and inbound browser checks passed. The actual local HTTP/Auth/PostgREST workflow passed26 checks, including one queued synthetic email reminder with no provider attempt and verified cleanup. Database validation passed53 focused assertions,20 candidate-equivalence assertions,15 contention checks and123 existing reminder/outbox/Stripe regressions. Independent read-only database review found no blocking issue. CI includes the new contention and actual HTTP runners; the frozen queue-reminders entrypoint check passed. Existing Fast Refresh and bundle-size warnings remain.
+
+See [operations workflow](features/operations-visibility.md) and [scheduler evidence](operations-scheduler-runtime.md). This supplies local operational evidence, not deployed monitoring or cron/provider activation. The newly observed hosted migration gaps remain unmodified and require deployment coordination; staff/provider/clinical acceptance and launch inputs remain open.

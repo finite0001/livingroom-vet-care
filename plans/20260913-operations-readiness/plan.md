@@ -1,11 +1,11 @@
 # Operational work visibility
 
-Status: planned; no implementation or activation yet. Baseline8117a72. Goal: make unfinished communications, reminder scheduling and payment callbacks discoverable before commercial rollout, without changing their recovery authority.
+Status: implemented and locally verified in the operations acceptance integration; hosted commissioning remains pending. Baseline8117a72. Goal: make unfinished communications, reminder scheduling and payment callbacks discoverable before commercial rollout, without changing their recovery authority.
 
 Audit found conversation-scoped outbox status only; bounded30-row reminder views; no durable scheduler run evidence; Stripe latest100 discovery without pagination. Inbound processing and sender review already have dedicated screens. Build on these rather than introduce another recovery system.
 
-1. [Database discovery and run evidence](phase-01-database.md) — pending.
-2. [Worker, UI and integrated acceptance](phase-02-runtime-ui.md) — pending; consumes phase1 contract.
+1. [Database discovery and run evidence](phase-01-database.md) — implemented and locally verified.
+2. [Worker, UI and integrated acceptance](phase-02-runtime-ui.md) — implemented and locally verified against phase1.
 
 Use an ADMIN operations route with safe aggregate counts, bounded keyset pages, observed timestamps and links to existing workflows. Staff retain their existing permitted clinical/inbox views. The new page makes no retry, consent, financial-resolution or send mutation. Show “No recorded run” when appropriate; rows cannot prove that cron, deployment flags or provider credentials are configured.
 

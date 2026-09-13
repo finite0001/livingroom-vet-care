@@ -23,19 +23,27 @@ async function setup(page: Page, baseURL: string | undefined) {
         json: [{ role: state.admin ? "ADMIN" : "STAFF" }],
       });
     }
-    if (path.endsWith("/read_stripe_event_queue")) {
+    if (path.endsWith("/read_stripe_event_queue_page")) {
       return route.fulfill({
-        json: [{
-          id: receiptId,
-          event_type: "checkout.session.completed",
-          work_state: state.cycles.length
-            ? (state.completed ? "completed" : "queued")
-            : "quarantined",
-          attempt_count: 5,
-          cycle_no: state.cycles.length,
-          cycle_attempt_count: state.cycles.length ? 0 : 5,
-          work_reason: state.cycles.length ? "" : "retry_exhausted",
-        }],
+        json: {
+          items: [
+            {
+              created_at: "2026-09-01T12:00:00.123456+00:00",
+              id: receiptId,
+              event_type: "checkout.session.completed",
+              work_state: state.cycles.length
+                ? state.completed
+                  ? "completed"
+                  : "queued"
+                : "quarantined",
+              attempt_count: 5,
+              cycle_no: state.cycles.length,
+              cycle_attempt_count: state.cycles.length ? 0 : 5,
+              work_reason: state.cycles.length ? "" : "retry_exhausted",
+            },
+          ],
+          has_more: false,
+        },
       });
     }
     if (path.endsWith("/preview_stripe_event_retry")) {
@@ -45,7 +53,9 @@ async function setup(page: Page, baseURL: string | undefined) {
           work: {
             receipt_id: receiptId,
             state: state.cycles.length
-              ? (state.completed ? "completed" : "queued")
+              ? state.completed
+                ? "completed"
+                : "queued"
               : "quarantined",
             attempt_count: 5,
             cycle_no: state.cycles.length,
@@ -54,13 +64,15 @@ async function setup(page: Page, baseURL: string | undefined) {
           eligible: state.eligible && !state.cycles.length,
           expected_work_hash: state.hash,
           cycles: state.cycles,
-          history: [{
-            action: "exhausted",
-            reason: "provider_unavailable",
-            attempt_count: 5,
-            cycle_no: 0,
-            created_at: new Date().toISOString(),
-          }],
+          history: [
+            {
+              action: "exhausted",
+              reason: "provider_unavailable",
+              attempt_count: 5,
+              cycle_no: 0,
+              created_at: new Date().toISOString(),
+            },
+          ],
         },
       });
     }
@@ -97,15 +109,19 @@ async function setup(page: Page, baseURL: string | undefined) {
   return state;
 }
 for (const loss of ["before", "after"]) {
-  test(`administrator retry ${loss} lost response preserves exact retry and history`, async ({ page, baseURL }) => {
+  test(`administrator retry ${loss} lost response preserves exact retry and history`, async ({
+    page,
+    baseURL,
+  }) => {
     const state = await setup(page, baseURL);
     state.lose = loss;
     state.completed = loss === "after";
     await page.goto("/hub/admin");
-    await page.getByLabel("Payment notification", { exact: true }).selectOption(
-      receiptId,
-    );
-    await page.getByRole("button", { name: "Review processing history" })
+    await page
+      .getByLabel("Payment notification", { exact: true })
+      .selectOption(receiptId);
+    await page
+      .getByRole("button", { name: "Review processing history" })
       .click();
     await expect(page.getByLabel("Processing attempts")).toContainText(
       "provider unavailable",
@@ -114,38 +130,45 @@ for (const loss of ["before", "after"]) {
       page.getByRole("button", { name: "Queue reviewed processing retry" }),
     ).toBeDisabled();
     await page.getByRole("checkbox").check();
-    await page.getByRole("button", { name: "Queue reviewed processing retry" })
+    await page
+      .getByRole("button", { name: "Queue reviewed processing retry" })
       .click();
     if (loss === "before") {
       await expect(
         page.getByText("Saved retry awaiting confirmation.", { exact: false }),
       ).toBeVisible();
       await page.reload();
-      await expect(page.getByRole("button", { name: "Recover saved retry" }))
-        .toBeVisible();
-      await page.getByRole("button", { name: "Retry same reviewed request" })
+      await expect(
+        page.getByRole("button", { name: "Recover saved retry" }),
+      ).toBeVisible();
+      await page
+        .getByRole("button", { name: "Retry same reviewed request" })
         .click();
       expect(state.calls).toHaveLength(2);
       expect(state.calls[1]).toEqual(state.calls[0]);
     } else expect(state.calls).toHaveLength(1);
-    await expect(page.getByText("Retry cycle 1 recorded.", { exact: false }))
-      .toBeVisible();
+    await expect(
+      page.getByText("Retry cycle 1 recorded.", { exact: false }),
+    ).toBeVisible();
     expect(state.cycles).toHaveLength(1);
     const saved = await page.evaluate(() =>
       Object.keys(sessionStorage).filter((k) =>
-        k.includes("stripe-event-retry")
-      )
+        k.includes("stripe-event-retry"),
+      ),
     );
     expect(saved).toEqual([]);
   });
 }
-test("ineligible and ordinary staff cannot queue administrator processing retries", async ({ page, baseURL }) => {
+test("ineligible and ordinary staff cannot queue administrator processing retries", async ({
+  page,
+  baseURL,
+}) => {
   const state = await setup(page, baseURL);
   state.eligible = false;
   await page.goto("/hub/admin");
-  await page.getByLabel("Payment notification", { exact: true }).selectOption(
-    receiptId,
-  );
+  await page
+    .getByLabel("Payment notification", { exact: true })
+    .selectOption(receiptId);
   await page.getByRole("button", { name: "Review processing history" }).click();
   await expect(
     page.getByText(

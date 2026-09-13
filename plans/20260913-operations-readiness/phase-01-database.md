@@ -1,6 +1,6 @@
 # Phase1 — safe discovery and scheduler receipts
 
-Priority: launch readiness. Status: pending. Base: repository migration4300. Create one additive4400 migration, focused SQL assertions and concurrency coverage under `supabase/`. No hosted writes.
+Priority: launch readiness. Status: implemented and locally verified. Base: repository migration4300. Create one additive4400 migration, focused SQL assertions and concurrency coverage under `supabase/`. No hosted writes.
 
 - Add active-ADMIN safe overview and keyset discovery for uncertain/failed outbox work, expired claims and pending queue age. Include IDs needed to open the conversation/invoice, channel/state, safe reason and timestamps; exclude recipients, bodies, private paths, capabilities, credentials and lease tokens. Use timestamps rather than invented overdue thresholds.
 - Add paginated unfinished Stripe event discovery with deterministic timestamp/ID cursor and explicit state filters. Preserve existing read_stripe_event_queue contract for old consumers. Include exactly the safe fields required by existing reviewed retry controls; no provider payload expansion.
