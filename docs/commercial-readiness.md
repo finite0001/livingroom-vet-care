@@ -323,3 +323,11 @@ Migration 5200 and the administrator intake workflow freeze the approved patient
 Verification passes: 407 unit tests, 24 importer tests, 21 targeted browser tests, 81 focused SQL assertions, 215 existing import regressions, 53 concurrency/runner checks and 43 actual disposable Auth/HTTP checks. Lint, type checking and the production build pass with existing warnings. Receipt backup/restore verification is tracked in [runtime evidence](vaccination-runtime-evidence.md).
 
 This completes source intake implementation only. Product mapping, date interpretation, clinical adoption and Dr. Edler's review remain later work. The new migration and optional-partner importer are now deployed to hosted staging; permission and anonymous-denial checks passed. The direct read-only connection proof remains separate from hosted staff and vaccination sample acceptance. See [staging commissioning](vaccination-staging-commissioning.md).
+
+## Reviewed outside vaccination history — implementation stack
+
+The patient chart now provides DVM-reviewed interpretation of scoped ezyVet vaccinations, immutable correction history, durable request recovery and active-staff read access. Schema7 packages explicitly include outside vaccination history with existing narratives and original-file verification. Approval creates no native treatment, due plan, stock movement, charge, certificate or reminder.
+
+Validation:418 unit tests,45 targeted browser cases,57 focused review SQL assertions,143 existing regressions,59 observed concurrency checks,24 release SQL assertions,70 actual local review API checks and42 actual local mixed-release checks passed. The51→74 upgrade/restore preserved reviewed vaccination/source lineage and existing fixtures, with cleanup verified. [Feature/evidence](features/reviewed-outside-vaccinations.md) and [Dr. Edler's unapproved review cases](clinical-review/outside-vaccination-history.md) are recorded.
+
+This increment is not yet deployed to hosted staging. Active due-plan adoption, global source-product mapping, clinical approval and authorized practice acceptance remain required subsequent work. No public cutover or clinical policy activation occurred.

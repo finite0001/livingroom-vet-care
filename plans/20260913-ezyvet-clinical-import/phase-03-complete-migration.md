@@ -2,7 +2,7 @@
 
 Priority: required for full requested ezyVet migration. Status: vaccination intake implemented; remaining clinical review/resources and account acceptance pending. Phases1/2 cannot substitute for this scope.
 
-Completed intake: [Phase 3a](phase-03a-vaccination-intake.md). Next: [Phase 3b — reviewed outside vaccination history](phase-03b-reviewed-vaccination-history.md).
+Completed intake: [Phase 3a](phase-03a-vaccination-intake.md). Implemented review: [Phase 3b — reviewed outside vaccination history](phase-03b-reviewed-vaccination-history.md).
 
 ## Vaccinations and due dates
 

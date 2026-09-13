@@ -1,3 +1,4 @@
+import { vaccinationArtifact } from "../tests/record-releases/vaccination-fixture";
 import { clinicalHistoryArtifact } from "../tests/record-releases/clinical-history-fixture";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -14,6 +15,7 @@ const petId = "22222222-2222-4222-8222-222222222222",
   staffId = "11111111-1111-4111-8111-111111111111",
   clientId = "33333333-3333-4333-8333-333333333333";
 const groups = {
+  imported_vaccination_ids: "imported_vaccinations",
   imported_history_ids: "imported_histories",
   problem_ids: "problems",
   patient_summary_ids: "patient_summaries",
@@ -36,8 +38,11 @@ async function fixture(
   v4Accepted = accepted,
   sourceMode = false,
   clinicalMode = false,
+  vaccinationMode = false,
 ) {
-  const currentArtifact = clinicalMode
+  const currentArtifact = vaccinationMode
+    ? vaccinationArtifact()
+    : clinicalMode
     ? clinicalHistoryArtifact()
     : sourceMode
       ? sourceProvenanceArtifact()
@@ -261,7 +266,7 @@ async function fixture(
         "abandoned";
       return route.fulfill({ json: null });
     }
-    if (path === "/rest/v1/rpc/list_record_release_sources_v6") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v7") {
       state.sourceLoads++;
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
@@ -272,7 +277,7 @@ async function fixture(
         phone: "+13035550100",
         policy_accepted: accepted,
         policy_v4_accepted: v4Accepted,
-        policy_v6_accepted: v4Accepted,
+        policy_v7_accepted: v4Accepted,
         lab_report_ids: [],
         external_record_ids: [],
         has_more: Object.fromEntries(
@@ -288,8 +293,8 @@ async function fixture(
             recorded_at: "2026-09-12T18:00:00Z",
             label: `Source ${row.id}${state.sourceSuffix}`,
             source_label:
-              key === "imported_history_ids"
-                ? "ezyVet clinical history"
+              (key === "imported_history_ids" || key === "imported_vaccination_ids")
+                ? "ezyVet reviewed outside history"
                 : undefined,
             required_document_id: key === "lab_order_ids" ? "document" : null,
             required_lab_report_ids: key === "document_ids" ? [] : undefined,
@@ -345,7 +350,7 @@ async function fixture(
       }
       return route.fulfill({ json: candidates });
     }
-    if (path === "/rest/v1/rpc/select_all_record_release_sources_v6") {
+    if (path === "/rest/v1/rpc/select_all_record_release_sources_v7") {
       state.allCalls++;
       if (state.oversized)
         return route.fulfill({
@@ -384,7 +389,7 @@ async function fixture(
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release_v6") {
+    if (path === "/rest/v1/rpc/preview_record_release_v7") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -400,7 +405,8 @@ async function fixture(
         });
       const preview = structuredClone(currentArtifact.preview);
       Object.assign(preview.snapshot, {
-        schema_version: 6,
+        schema_version: 7,
+        imported_vaccinations: preview.snapshot.imported_vaccinations || [],
         imported_histories: preview.snapshot.imported_histories || [],
         problem_source_extractions:
           preview.snapshot.problem_source_extractions || [],
@@ -436,6 +442,7 @@ async function fixture(
             })),
           },
         }));
+      preview.snapshot.selection = { ...body.p_selection, imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [] };
       return route.fulfill({ json: preview });
     }
     if (path === "/rest/v1/rpc/confirm_record_release") {
@@ -959,7 +966,7 @@ test("new package confirmation cannot replace an active release email draft", as
   );
 });
 
-test("legacy acceptance does not enable confirmation of the expanded version 6 form", async ({
+test("legacy acceptance does not enable confirmation of the expanded version 7 form", async ({
   page,
 }) => {
   await fixture(page, true, false);
@@ -976,7 +983,7 @@ test("legacy acceptance does not enable confirmation of the expanded version 6 f
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
   await expect(
-    panel.getByText("version 6, including imported clinical narratives", {
+    panel.getByText("version 7, including reviewed outside vaccinations, imported clinical narratives", {
       exact: false,
     }),
   ).toBeVisible();
@@ -1170,7 +1177,7 @@ test("verified lab and imported versions retain explicit matching originals acro
   expect(state.requests[0].p_selection.lab_report_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.external_record_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.document_ids).toHaveLength(4);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(6);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(7);
 });
 
 test("all-source selection includes reciprocal provenance and stale source rejection preserves review workflow", async ({
@@ -1222,7 +1229,7 @@ test("all-source selection includes reciprocal provenance and stale source rejec
   expect(state.rows).toHaveLength(0);
 });
 
-test("schema6 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
+test("schema7 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
   page,
 }) => {
   const state = await fixture(page, true, true, true, true);
@@ -1297,6 +1304,30 @@ test("schema6 explicitly selects outside narratives while retaining compact prob
     .click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(6);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(7);
+  expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
+});
+
+
+test("schema7 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
+  const state = await fixture(page, true, true, true, true, true);
+  state.ambiguous = true;
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  for (const key of ["imported_vaccination_ids", "imported_history_ids"] as const) {
+    await panel.getByRole("button", { name: `Select all shown: ${sourceLabels[key]}`, exact: true }).click();
+  }
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  const artifact = panel.frameLocator("iframe");
+  await expect(artifact.getByRole("heading", { name: "Clinician-reviewed outside vaccination history", exact: true })).toBeVisible();
+  await expect(artifact.getByRole("heading", { name: "Imported outside history", exact: true })).toBeVisible();
+  await expect(artifact.getByText("Outside <script>vaccine</script>", { exact: true })).toBeVisible();
+  await expect(artifact.locator("script")).toHaveCount(0);
+  await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
+  await panel.getByRole("button", { name: "Confirm reviewed package", exact: true }).click();
+  await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
+  expect(state.requests).toHaveLength(2);
+  expect(state.requests[0]).toEqual(state.requests[1]);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(7);
+  expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });

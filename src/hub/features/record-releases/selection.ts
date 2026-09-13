@@ -7,6 +7,7 @@ export const sourceLabels = {
   certificate_ids: "Valid issued certificates",
   lab_order_ids: "Resulted laboratory records",
   lab_report_ids: "Verified laboratory report versions",
+  imported_vaccination_ids: "Clinician-reviewed outside vaccinations",
   imported_history_ids: "Approved ezyVet clinical narratives",
   external_record_ids: "Approved imported record originals",
   document_ids: "Shareable original documents",
@@ -20,11 +21,12 @@ export type SourceKind = keyof typeof sourceLabels;
 export function mergeReleaseSelection(
   existing: readonly string[],
   incoming: readonly string[],
+  limit = 100,
 ): string[] {
   const result = [...new Set([...existing, ...incoming])];
-  if (result.length > 100)
+  if (result.length > limit)
     throw new Error(
-      "Selecting these records would exceed 100 in this family. Use a separate package; no selections were changed.",
+      `Selecting these records would exceed ${limit} in this family. Use a separate package; no selections were changed.`,
     );
   return result;
 }

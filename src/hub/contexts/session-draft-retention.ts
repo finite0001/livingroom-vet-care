@@ -20,6 +20,7 @@ export function clearOtherInvoiceEmailIntents(
     "lrv-ezyvet-clinical-run:",
     "lrv-ezyvet-vaccination-run:",
     "ezyvet-history-intent:",
+    "ezyvet-vaccination-review:",
   ];
   for (const prefix of prefixes) {
     const retained = actorId ? `${prefix}${actorId}:` : null;

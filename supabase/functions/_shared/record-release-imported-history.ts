@@ -111,7 +111,7 @@ function reference(r: ImportedHistoryReference) {
   );
 }
 export function validateImportedHistory(s: ReleaseSnapshot): void {
-  if (s.schema_version !== 6) return;
+  if (s.schema_version !== 6 && s.schema_version !== 7) return;
   require(
     Array.isArray(s.imported_histories) &&
       Array.isArray(s.problem_source_extractions),
@@ -326,7 +326,7 @@ const source = (r: ImportedHistoryReference) =>
     escape(r.approved_by)
   } · ${escape(r.approved_at)}</p>`;
 export function renderImportedHistory(s: ReleaseSnapshot): string {
-  if (s.schema_version !== 6) return "";
+  if (s.schema_version !== 6 && s.schema_version !== 7) return "";
   validateImportedHistory(s);
   const histories = s.imported_histories!.map((h) =>
     `<article><h2>Imported outside history</h2>${source(h)}<dl>${

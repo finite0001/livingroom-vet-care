@@ -49,7 +49,7 @@ def verify_identity():
         assert Path(labels['com.supabase.cli.workdir']).resolve() == project.resolve()
 
 try:
-    for port in [58320, 58321, 58322, 58324]:
+    for port in [61320, 61321, 61322, 61324]:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     assert not command(['docker', 'ps', '-a', '--filter', 'name=' + identity, '--format', '{{.Names}}']).splitlines(), 'Refuse existing matching containers'
@@ -63,22 +63,22 @@ try:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
     if args.fixture == 'clinical-history':
-        assert {'20260913500000', '20260913510000'} <= versions, 'Clinical history and schema6 migrations required'
+        assert {'20260913500000', '20260913510000', '20260913530000', '20260913540000'} <= versions, 'Clinical history and schema7 migrations required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
-port = 58321
+port = 61321
 [db]
-port = 58322
-shadow_port = 58320
+port = 61322
+shadow_port = 61320
 major_version = 17
 [studio]
 enabled = false
 [analytics]
 enabled = false
 [inbucket]
-port = 58324
+port = 61324
 [auth]
-site_url = "http://127.0.0.1:58321"
+site_url = "http://127.0.0.1:61321"
 enable_signup = false
 [storage]
 enabled = true
@@ -91,7 +91,7 @@ enabled = false
     verify_identity()
     output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
     # Only the harness's fixed aggregate evidence line reaches the terminal.
-    matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. No provider requests or clinical approval\.', output.strip())
+    matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. (?:No provider requests or clinical approval|No provider requests; synthetic clinical fixtures only)\.', output.strip())
     assert matched, 'Refuse unexpected harness output'
     checks = int(matched[1])
     print(matched[0], flush=True)

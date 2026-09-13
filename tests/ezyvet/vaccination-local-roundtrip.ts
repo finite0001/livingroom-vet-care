@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
+import { exerciseVaccinationReview } from "./vaccination-review-runtime.ts";
 const project = process.env.PAYMENT_TEST_PROJECT;
 assert.ok(project, "Explicit disposable local project configuration required");
 const projectId = readFileSync(`${project}/supabase/config.toml`, "utf8").match(
@@ -654,6 +655,7 @@ try {
     ),
     "Server run discovery recovers browser-pointer loss",
   );
+  const verifyReviewAfterSourceChange = await exerciseVaccinationReview({ actor, pet, mapping, candidates: candidates.candidates, rpc, sql, quote, check });
   // Advance only this owned synthetic consult cooldown; preserve production pacing code.
   sql(
     `update public.ezyvet_import_runs set retry_after=clock_timestamp()-interval '1 second' where id=${quote(consultRun)};`,
@@ -688,6 +690,7 @@ try {
       ),
     "Changed consult retains frozen vaccination association with stale eligibility",
   );
+  await verifyReviewAfterSourceChange();
   calls = upstreamCalls;
   check(
     (await post(run, "vaccination")).status === 200 && upstreamCalls === calls,
@@ -723,6 +726,8 @@ try {
     "ezyvet_vaccination_runs",
     "ezyvet_vaccination_pages",
     "ezyvet_vaccination_page_observations",
+    "ezyvet_vaccination_review_requests",
+    "ezyvet_imported_vaccinations",
   ]) {
     for (const headers of [anonymous, staffHeaders, serviceHeaders]) {
       const response = await fetch(

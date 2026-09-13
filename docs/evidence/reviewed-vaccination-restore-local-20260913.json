@@ -1,0 +1,38 @@
+{
+  "synthetic_only": true,
+  "vaccination_receipt_restore": {
+    "receipt_rows": 1,
+    "scoped_context_rows": 1,
+    "observation_rows": 1,
+    "approved_vaccination_rows": 1,
+    "review_request_rows": 1,
+    "source_and_receipt_rows_match": true,
+    "fixture_sha256": "6b842938e12e4b02280888261a8a3a8bc271b105f845ae571c7d68d740a3bc88"
+  },
+  "runner_sha256": "2da55bd77f43138c41423d3516821e0f617d1d3a8b4e8f8f754c8346b3a7b844",
+  "fixture_sha256": "cab06b008a38833f2acd44f0a88d2b4c0e9bf83c3429f434a86b29b7004d9bbe",
+  "database_sha256": "886da966aea5942bf9accb5009a6cff4139aec048a48162af5a4bbf5e731e2ef",
+  "total_seconds": 186.45,
+  "cleanup_verified": true,
+  "verification": {
+    "fresh_local_login": true,
+    "identical_rows_and_ids": true,
+    "signed_soap_and_addendum": true,
+    "invoice_total_cents": 9000,
+    "credit_cents": 500,
+    "stock_units": 8,
+    "private_original_sha256": "1fc62aca512802276c79f6f3fc12c6dc743239fde62ad71938e6b698dc1d9c5e",
+    "private_original_bytes": 78,
+    "anonymous_and_public_denied": true,
+    "ready_original_and_signed_history_immutable": true,
+    "outbox_empty": true,
+    "cron_absent": true
+  },
+  "upgrade": {
+    "initial_migrations": 51,
+    "final_migrations": 74,
+    "applied_migrations": 23,
+    "fixture_preserved": true,
+    "canonical_functions_grants_triggers_match": true
+  }
+}
