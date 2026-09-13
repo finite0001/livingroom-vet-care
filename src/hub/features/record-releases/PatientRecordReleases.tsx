@@ -96,10 +96,10 @@ export function PatientRecordReleases({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates-v5", petId, sourcePage],
+    queryKey: ["release-candidates-v6", petId, sourcePage],
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources_v5",
+        "list_record_release_sources_v6",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -110,7 +110,7 @@ export function PatientRecordReleases({
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
-        typeof data.policy_v5_accepted !== "boolean" ||
+        typeof data.policy_v6_accepted !== "boolean" ||
         !data.has_more ||
         !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
@@ -135,6 +135,10 @@ export function PatientRecordReleases({
                     typeof item.source_label === "string" &&
                     Number.isSafeInteger(item.acknowledgment_count) &&
                     item.acknowledgment_count! >= 0)) &&
+                (kind !== "imported_history_ids" ||
+                  (Number.isSafeInteger(item.version) &&
+                    item.version > 0 &&
+                    typeof item.source_label === "string")) &&
                 (kind !== "document_ids" ||
                   (Array.isArray(item.required_lab_report_ids) &&
                     item.required_lab_report_ids.every(
@@ -275,7 +279,7 @@ export function PatientRecordReleases({
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources_v5",
+        "select_all_record_release_sources_v6",
         { p_pet_id: petId },
       );
       if (error) throw error;
@@ -314,10 +318,14 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v5",
+        "preview_record_release_v6",
         args,
       );
       if (error) throw error;
+      if (!data || data.snapshot.schema_version !== 6)
+        throw new Error(
+          "Current source-aware release preview is unavailable. Preserve selections and retry.",
+        );
       previewArgsRef.current = args;
       setPreview(data);
       setReviewed(false);
@@ -606,11 +614,12 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_v5_accepted && (
+              {!candidates.data.policy_v6_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 5, including verified laboratory and
+                  operator (version 6, including imported clinical narratives,
+                  locally reviewed source findings, verified laboratory and
                   imported-record provenance).
                 </p>
               )}
@@ -706,6 +715,14 @@ export function PatientRecordReleases({
                                 separate from clinical acknowledgment.
                               </p>
                             </div>
+                          )}
+                          {kind === "imported_history_ids" && (
+                            <p className="text-sm">
+                              {item.source_label}. Full source narrative is
+                              included only when explicitly selected. Selected
+                              native problems carry their reviewed source
+                              references automatically.
+                            </p>
                           )}
                           {kind === "lab_order_ids" && (
                             <p className="text-xs text-muted-foreground">
@@ -835,7 +852,7 @@ export function PatientRecordReleases({
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !candidates.data.policy_v5_accepted ||
+                      !candidates.data.policy_v6_accepted ||
                       !reviewed
                     }
                     onClick={() => void confirm()}

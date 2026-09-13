@@ -1,3 +1,4 @@
+import { SourceHistoryApproval } from "./SourceHistoryApproval";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useBlocker } from "react-router-dom";
@@ -130,7 +131,8 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
     queryFn: () => listClinicalCandidates(mapping, resource, sourceCursor),
     retry: false,
   });
-  const dirty = busy || uncertain;
+  const [approvalDirty, setApprovalDirty] = useState(false);
+  const dirty = busy || uncertain || approvalDirty;
   const blocker = useBlocker(dirty);
   useEffect(() => {
     alive.current = true;
@@ -292,7 +294,7 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
       {notice && <p role="status">{notice}</p>}
       <div className="flex flex-wrap gap-2">
         <Button
-          disabled={busy || !!blockedRun}
+          disabled={busy || approvalDirty || !!blockedRun}
           onClick={() => void work(stage)}
         >
           {id ? "Fetch next page using this run" : "Start mapped clinical scan"}
@@ -404,7 +406,7 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
           <Button
             key={c.id}
             variant="outline"
-            disabled={busy}
+            disabled={busy || approvalDirty}
             onClick={() => setSelected(c)}
           >
             Read {c.resource} {c.external_id} ·{" "}
@@ -484,6 +486,13 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
           </details>
         </article>
       )}
+      <SourceHistoryApproval
+        actor={actor}
+        mapping={mapping}
+        selected={selected}
+        disabled={busy || uncertain}
+        onDirtyChange={setApprovalDirty}
+      />
       <AlertDialog open={blocker.state === "blocked"}>
         <AlertDialogContent>
           <AlertDialogHeader>

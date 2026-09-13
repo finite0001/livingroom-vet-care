@@ -177,7 +177,7 @@ async function fixture(page: Page, role = "ADMIN") {
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
-    if (path === "/rest/v1/rpc/list_record_release_sources_v5") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v6") {
       state.sourceLoads++;
       return route.fulfill({
         json: {
@@ -188,7 +188,7 @@ async function fixture(page: Page, role = "ADMIN") {
           phone: "+13035550100",
           policy_accepted: true,
           policy_v4_accepted: true,
-          policy_v5_accepted: true,
+          policy_v6_accepted: true,
           ...Object.fromEntries(Object.keys(sourceLabels).map((k) => [k, []])),
           has_more: Object.fromEntries(
             Object.keys(sourceLabels).map((k) => [k, false]),

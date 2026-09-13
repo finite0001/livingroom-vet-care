@@ -7,6 +7,7 @@ export const sourceLabels = {
   certificate_ids: "Valid issued certificates",
   lab_order_ids: "Resulted laboratory records",
   lab_report_ids: "Verified laboratory report versions",
+  imported_history_ids: "Approved ezyVet clinical narratives",
   external_record_ids: "Approved imported record originals",
   document_ids: "Shareable original documents",
   dental_ids: "Signed dental charts",
