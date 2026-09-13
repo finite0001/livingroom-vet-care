@@ -181,3 +181,71 @@ test("schema6 accepts authoritative consult or mapping discrepancy even when the
   h.current.head_version = h.observed_head_version;
   assert.doesNotThrow(() => renderRecordRelease(a));
 });
+
+test("schema6 rejects contradictory or incomplete discrepancy review evidence", () => {
+  for (
+    const mutate of [
+      (
+        e: NonNullable<
+          ReturnType<
+            typeof clinicalHistoryArtifact
+          >["preview"]["snapshot"]["problem_source_extractions"]
+        >[number],
+      ) => {
+        e.discrepancy.reviewed = true;
+      },
+      (
+        e: NonNullable<
+          ReturnType<
+            typeof clinicalHistoryArtifact
+          >["preview"]["snapshot"]["problem_source_extractions"]
+        >[number],
+      ) => {
+        e.discrepancy.reviewed = true;
+        e.discrepancy.required = false;
+        e.discrepancy.review_history = [];
+      },
+      (
+        e: NonNullable<
+          ReturnType<
+            typeof clinicalHistoryArtifact
+          >["preview"]["snapshot"]["problem_source_extractions"]
+        >[number],
+      ) => {
+        e.discrepancy.review_history[0].sources = [];
+      },
+      (
+        e: NonNullable<
+          ReturnType<
+            typeof clinicalHistoryArtifact
+          >["preview"]["snapshot"]["problem_source_extractions"]
+        >[number],
+      ) => {
+        e.discrepancy.review_history[0].source_heads = [];
+      },
+      (
+        e: NonNullable<
+          ReturnType<
+            typeof clinicalHistoryArtifact
+          >["preview"]["snapshot"]["problem_source_extractions"]
+        >[number],
+      ) => {
+        e.discrepancy.review_history[0].source_heads[0].head_version++;
+      },
+      (
+        e: NonNullable<
+          ReturnType<
+            typeof clinicalHistoryArtifact
+          >["preview"]["snapshot"]["problem_source_extractions"]
+        >[number],
+      ) => {
+        e.discrepancy.review_history[0].source_heads[0].history_id =
+          "b6000000-0000-4000-8000-000000000099";
+      },
+    ]
+  ) {
+    const a = clinicalHistoryArtifact();
+    mutate(a.preview.snapshot.problem_source_extractions![0]);
+    assert.throws(() => renderRecordRelease(a), /Imported history provenance/);
+  }
+});

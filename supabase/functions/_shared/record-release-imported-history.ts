@@ -229,6 +229,16 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
         typeof e.discrepancy.changed_from_original === "boolean" &&
         Array.isArray(e.discrepancy.review_history),
     );
+    require(
+      e.discrepancy.required ===
+        (e.discrepancy.changed_from_original && !e.discrepancy.reviewed),
+    );
+    require(!e.discrepancy.reviewed || e.discrepancy.review_history.length > 0);
+    const sameSource = (a: ImportedHistorySource, b: ImportedHistorySource) =>
+      ["origin", "site_uid", "animal_id", "history_id"].every((k) =>
+        a[k as keyof ImportedHistorySource] ===
+          b[k as keyof ImportedHistorySource]
+      );
     const reviewIds = new Set<string>();
     for (const review of e.discrepancy.review_history) {
       require(
@@ -237,8 +247,16 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
           Array.isArray(review.source_heads) && Array.isArray(review.sources),
       );
       reviewIds.add(review.id);
+      require(
+        review.source_heads.length === e.sources.length &&
+          review.sources.length === e.sources.length,
+      );
+      const reviewedOriginals = new Set<string>();
       for (const r of review.sources) {
         reference(r);
+        require(
+          e.sources.some((original) => sameSource(original.source, r.source)),
+        );
         const selected = histories.get(r.id);
         require(r.narrative_included === !!selected);
         if (selected) {
@@ -260,11 +278,23 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
           );
         }
       }
-      require(
-        review.source_heads.every((h) =>
-          uuid(h.history_id) && uuid(h.snapshot_id) && positive(h.head_version)
-        ),
-      );
+      for (const head of review.source_heads) {
+        require(
+          uuid(head.history_id) && uuid(head.snapshot_id) &&
+            positive(head.head_version) &&
+            !reviewedOriginals.has(head.history_id),
+        );
+        reviewedOriginals.add(head.history_id);
+        const original = e.sources.find((r) => r.id === head.history_id);
+        require(
+          original &&
+            review.sources.some((r) =>
+              sameSource(original.source, r.source) &&
+              r.snapshot_id === head.snapshot_id &&
+              r.observed_head_version === head.head_version
+            ),
+        );
+      }
     }
   }
 }
