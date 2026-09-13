@@ -2,6 +2,20 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+
+-- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
+create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
+declare result jsonb;actor uuid;begin
+ begin
+  select created_by into actor from communication_outbox where id=p_id;
+  perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',actor)::text,true);
+  update communication_outbox set state='failed',lease_token=null,lease_expires_at=null where id=p_id;
+  if p_change is not null then execute p_change;end if;
+  result:=preview_outbox_retry(p_id);
+  raise exception 'rollback probe';
+ exception when raise_exception then return result;end;
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values('99000000-0000-4000-8000-000000000001','links@example.test','{}'),('99000000-0000-4000-8000-000000000002','other-links@example.test','{}');
 insert into user_roles(user_id,role) values('99000000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
@@ -91,6 +105,8 @@ select throws_ok($$insert into messages(conversation_id,type,sender_type,content
 select throws_ok($$update document_link_grants set message_template='{{document_link}} p1.'||repeat('a',43) where id='99200000-0000-4000-8000-000000000001'$$,'23514',null,'Payment capability p1 cannot leak through document template');
 select throws_ok($$insert into messages(conversation_id,type,sender_type,content,is_internal) values('99100000-0000-4000-8000-000000000003','SMS','CLIENT','Quoted s1.'||repeat('a',43),false)$$,'23514',null,'Old inbound worker cannot persist s1 payment capability');
 select throws_ok($$update document_link_grants set message_template='{{document_link}} s1.'||repeat('a',43) where id='99200000-0000-4000-8000-000000000001'$$,'23514',null,'Payment capability s1 cannot leak through document template');
+select is(pg_temp.retry_source_probe((select (v->>'id')::uuid from data where k='invoice_queue'))->>'eligible','true','Current reviewed document link can be reviewed for retry');
+select is(pg_temp.retry_source_probe((select (v->>'id')::uuid from data where k='invoice_queue'),$$update document_link_access_budget set used=200$$)->>'reason','source_ineligible','Exhausted document retrieval budget blocks retry');
 select throws_ok($$delete from document_link_outbox_links$$,'23514',null,'Queue association immutable');
 -- Synthetic direct lease setup isolates each final-boundary test from unrelated pending rows.
 update communication_outbox set state='claimed',lease_token=gen_random_uuid(),lease_expires_at=now()+interval '2 minutes' where id in(select (v->>'id')::uuid from data where k in ('invoice_queue','record_queue'));

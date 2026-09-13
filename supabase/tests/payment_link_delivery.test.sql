@@ -2,11 +2,26 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+
+-- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
+create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
+declare result jsonb;actor uuid;begin
+ begin
+  select created_by into actor from communication_outbox where id=p_id;
+  perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',actor)::text,true);
+  update communication_outbox set state='failed',lease_token=null,lease_expires_at=null where id=p_id;
+  if p_change is not null then execute p_change;end if;
+  result:=preview_outbox_retry(p_id);
+  raise exception 'rollback probe';
+ exception when raise_exception then return result;end;
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values
  ('73700000-0000-4000-8000-000000000001','payment-staff@example.test','{}'),
  ('73700000-0000-4000-8000-000000000002','payment-other@example.test','{}'),
  ('73700000-0000-4000-8000-000000000003','payment-inactive@example.test','{}');
 update public.profiles set is_active=false where id='73700000-0000-4000-8000-000000000003';
+insert into user_roles(user_id,role) values('73700000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table snapshots(k text primary key,v jsonb);grant all on snapshots to authenticated,service_role;
 set local role service_role;
@@ -50,6 +65,8 @@ select set_config('request.jwt.claims','{"sub":"73700000-0000-4000-8000-00000000
 select throws_ok($$select public.enqueue_payment_delivery((select id from fx where k='delivery'),repeat('c',64),repeat('d',64),false)$$,'42501',null,'Explicit review required');
 insert into fx select 'outbox',id from public.enqueue_payment_delivery((select id from fx where k='delivery'),repeat('c',64),repeat('d',64),true);
 select is((select body from public.communication_outbox where id=(select id from fx where k='outbox')),'Pay: {{payment_link}}','Outbox stores template only');
+select is(pg_temp.retry_source_probe((select id from fx where k='outbox'))->>'eligible','true','Current payment delivery can be reviewed for retry');
+select is(pg_temp.retry_source_probe((select id from fx where k='outbox'),$$select public.revoke_payment_collection((select id from fx where k='grant'),'Synthetic retry probe')$$)->>'reason','source_ineligible','Revoked payment grant blocks retry');
 select lives_ok($$select public.enqueue_payment_delivery((select id from fx where k='delivery'),repeat('c',64),repeat('d',64),true)$$,'Queue retry recovers same receipt');
 reset role;
 update public.communication_outbox set state='claimed',lease_token='73700000-0000-4000-8000-000000000090',lease_expires_at=now()+interval '5 minutes' where id=(select id from fx where k='outbox');

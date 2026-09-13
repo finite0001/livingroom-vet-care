@@ -47,11 +47,13 @@ select set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-00000000
 reset role;
 update public.communication_outbox set first_attempt_at=now()-interval '24 hours' where id=(select id from fixture_ids where kind='email');
 set local role authenticated;
-select throws_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='email'))$$,'23514',null,'Expired email idempotency window requires reconciliation');
+select throws_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='email'))$$,'42501',null,'Legacy public retry cannot bypass reconciliation');
 reset role;
 update public.communication_outbox set first_attempt_at=now() where id=(select id from fixture_ids where kind='email');
 set local role authenticated;
-select lives_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='email'))$$,'Email uncertainty can retry within provider idempotency window');
+select throws_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='email'))$$,'42501',null,'Uncertain email is now service-reconciliation-only');
+-- Owner-only historical retry fixture independently proves frozen sender/final-attempt guards.
+reset role;update communication_outbox set state='pending',attempt_started_at=null where id=(select id from fixture_ids where kind='email');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
@@ -87,7 +89,7 @@ select is((select outcome from public.communication_attempts where outbox_id=(se
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select throws_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='sms'))$$,'23514',null,'Uncertain SMS cannot blindly retry');
+select throws_ok($$select public.retry_communication(auth.uid(),(select id from fixture_ids where kind='sms'))$$,'42501',null,'Uncertain SMS cannot blindly retry');
 select lives_ok($$select public.suppress_communication(auth.uid(),'SMS','+13035550100','Client requested STOP')$$,'Staff can suppress a recipient');
 select throws_ok($$select pg_temp.queue_prepared(auth.uid(),gen_random_uuid(),'51000000-0000-4000-8000-000000000002','SMS','+13035550100','','Synthetic SMS')$$,'42501',null,'Suppression overrides stored consent');
 select throws_ok($$select public.reconcile_communication((select id from fixture_ids where kind='sms'),'accepted','SMreceipt','Provider dashboard evidence')$$,'42501',null,'Staff cannot manufacture reconciliation outcomes');
