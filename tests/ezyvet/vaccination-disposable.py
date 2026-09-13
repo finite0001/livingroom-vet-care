@@ -61,7 +61,7 @@ try:
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
-    assert '20260913520000' in versions, 'Vaccination migration required'
+    assert {'20260913520000', '20260913530000', '20260913540000'} <= versions, 'Vaccination intake, review and release migrations required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 60321
@@ -88,8 +88,11 @@ enabled = false
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
     harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
+    helper_path = root / 'tests/ezyvet/vaccination-review-runtime.ts'
+    helper_hash = hashlib.sha256(helper_path.read_bytes()).hexdigest()
     output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
     assert hashlib.sha256(harness_path.read_bytes()).hexdigest() == harness_hash, 'Harness changed during execution; rerun exact source'
+    assert hashlib.sha256(helper_path.read_bytes()).hexdigest() == helper_hash, 'Review helper changed during execution'
     # Only the harness's fixed aggregate evidence line reaches the terminal.
     matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. Synthetic upstream only; no ezyVet requests\.', output.strip())
     assert matched, 'Refuse unexpected harness output'
@@ -110,7 +113,7 @@ if success:
     summary = {'synthetic_only': True, 'fixture': 'vaccination', 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-               'harness_sha256': harness_hash,
+               'harness_sha256': harness_hash, 'review_helper_sha256': helper_hash,
                'migration_sha256': migration_hashes, 'provider_requests': 0}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')

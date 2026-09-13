@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,53)]
-    assert len(migration_files)==72 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,55)]
+    assert len(migration_files)==74 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -134,7 +134,8 @@ def vaccination_snapshot(project):
     tables = ['ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
               'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
               'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',
-              'ezyvet_vaccination_runs', 'ezyvet_vaccination_pages', 'ezyvet_vaccination_page_observations']
+              'ezyvet_vaccination_runs', 'ezyvet_vaccination_pages', 'ezyvet_vaccination_page_observations',
+              'ezyvet_vaccination_review_requests', 'ezyvet_imported_vaccinations']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
 
@@ -148,7 +149,7 @@ def seed_vaccination_receipt(project):
     declare a uuid := '{actor}'; p uuid := '{pet}'; client uuid := '{client}';
       animal uuid := gen_random_uuid(); mapping uuid := gen_random_uuid();
       consult_run uuid := gen_random_uuid(); vaccination_run uuid := gen_random_uuid();
-      claimed jsonb; consult public.ezyvet_import_snapshots; head integer; already_admin boolean;
+      claimed jsonb; consult public.ezyvet_import_snapshots; vaccination public.ezyvet_import_snapshots; head integer; already_admin boolean; already_dvm boolean; review_id uuid:=gen_random_uuid(); prepared jsonb;
     begin
       select exists(select 1 from public.user_roles where user_id=a and role='ADMIN') into already_admin;
       if not already_admin then insert into public.user_roles(user_id,role) values(a,'ADMIN'); end if;
@@ -164,11 +165,25 @@ def seed_vaccination_receipt(project):
       claimed := public.claim_ezyvet_vaccination_import(vaccination_run,a,'{site}','vaccination','https://api.trial.ezyvet.com',mapping,consult.id,consult.payload_hash,head);
       perform public.stage_ezyvet_import_page(vaccination_run,a,(claimed->>'lease_id')::uuid,1,true,
         '[{{"external_id":"2","payload":{{"id":"2","consult_id":"1","product_id":"42","date_of_administration":"1700000000","date_of_next_administration":null,"qty":null}}}}]'::jsonb);
+      select exists(select 1 from public.user_roles where user_id=a and role='DVM') into already_dvm;
+      if not already_dvm then insert into public.user_roles(user_id,role) values(a,'DVM'); end if;
+      perform set_config('request.jwt.claim.sub',a::text,true);
+      select * into strict vaccination from public.ezyvet_import_snapshots where source_site_uid='{site}' and resource='vaccination';
+      prepared:=public.prepare_ezyvet_vaccination_review(review_id,p,jsonb_build_object(
+        'animal_link_id',mapping,'patient_version',(select version from public.pets where id=p),
+        'snapshot_id',vaccination.id,'payload_hash',vaccination.payload_hash,'observed_head_version',(select version from public.ezyvet_identity_heads where snapshot_id=vaccination.id),
+        'consult_snapshot_id',consult.id,'consult_payload_hash',consult.payload_hash,'consult_observed_head_version',head,
+        'product_id',null,'product_version',null,'administered_on',null,'administration_date_status','uninterpreted',
+        'source_next_due_on',null,'next_date_status','unknown','status','unknown','outside_author',null,
+        'reason','Synthetic restoration of reviewed outside vaccination evidence','replaces_id',null,'expected_predecessor_hash',null));
+      perform public.approve_ezyvet_vaccination_review(review_id,p,prepared#>>'{{request,request_hash}}',true);
+      if not already_dvm then delete from public.user_roles where user_id=a and role='DVM'; end if;
       if not already_admin then delete from public.user_roles where user_id=a and role='ADMIN'; end if;
     end $fixture$;""")
     captured = vaccination_snapshot(project)
     assert len(captured['ezyvet_vaccination_runs']) == 1 and len(captured['ezyvet_vaccination_pages']) == 1 and len(captured['ezyvet_vaccination_page_observations']) == 1
     assert len(captured['ezyvet_clinical_page_observations']) == 1
+    assert len(captured['ezyvet_vaccination_review_requests']) == 1 and len(captured['ezyvet_imported_vaccinations']) == 1
     (run/'vaccination-receipt-fixture.json').write_text(json.dumps(captured, sort_keys=True))
 
 
@@ -270,6 +285,8 @@ try:
         vaccination_evidence = {'receipt_rows': len(expected_vaccinations['ezyvet_vaccination_pages']),
                                'scoped_context_rows': len(expected_vaccinations['ezyvet_vaccination_runs']),
                                'observation_rows': len(expected_vaccinations['ezyvet_vaccination_page_observations']),
+                               'approved_vaccination_rows': len(expected_vaccinations['ezyvet_imported_vaccinations']),
+                               'review_request_rows': len(expected_vaccinations['ezyvet_vaccination_review_requests']),
                                'source_and_receipt_rows_match': True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
     # Compare the restored physical files as well as authorized downloaded original bytes.

@@ -30,7 +30,7 @@ const sql = (query) =>
       "ON_ERROR_STOP=1",
       "-qAt",
     ],
-    { input: query, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+    { input: query, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"], maxBuffer: 16 * 1024 * 1024 },
   ).trim();
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
 const api = createClient(config.API_URL, config.ANON_KEY, options);
