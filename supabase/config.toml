@@ -64,3 +64,6 @@ verify_jwt = true
 
 [functions.prepare-lab-report]
 verify_jwt = true
+
+[functions.prepare-external-record]
+verify_jwt = true
