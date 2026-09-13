@@ -269,13 +269,35 @@ select jsonb_object_agg(k,id) from fx;commit;`);
     ),
     state.originalHash,
   );
-  // Test definer/trigger protections beyond RLS, with failed statements rolled back.
-  for (const statement of [
-    `update clinical_encounters set assessment='rewrite' where id='${state.encounter}'`,
-    `update clinical_addenda set content='rewrite' where encounter_id='${state.encounter}'`,
-    `delete from inventory_movements where lot_id='${state.lot}'`,
+  // Keep the privileged database role, but supply an actual active synthetic actor.
+  // A missing-staff error must never count as evidence of immutable-history enforcement.
+  for (const [statement, expected] of [
+    [
+      `update clinical_encounters set assessment='rewrite' where id='${state.encounter}'`,
+      "Signed encounters are immutable; add an addendum",
+    ],
+    [
+      `update clinical_addenda set content='rewrite' where encounter_id='${state.encounter}'`,
+      "Clinical history is append-only",
+    ],
+    [
+      `delete from inventory_movements where lot_id='${state.lot}'`,
+      "Inventory and billing history cannot be deleted",
+    ],
   ]) {
-    assert.throws(() => sql(`begin;${statement};rollback;`));
+    sql(`begin;
+select set_config('request.jwt.claims','{"sub":"${state.user}","role":"authenticated"}',true);
+do $$declare rejected boolean := false; begin
+ if current_user <> 'supabase_admin' or clinical_require_staff() <> '${state.user}'::uuid then raise exception 'Privileged synthetic actor setup failed'; end if;
+ begin
+  ${statement};
+ exception when others then
+  if SQLSTATE <> '23514' or SQLERRM <> '${expected}' then raise; end if;
+  rejected := true;
+ end;
+ if not rejected then raise exception 'Expected exact immutable-history rejection was absent'; end if;
+end $$;
+rollback;`);
   }
   assert.equal(sql("select count(*) from communication_outbox"), "0");
   assert.equal(

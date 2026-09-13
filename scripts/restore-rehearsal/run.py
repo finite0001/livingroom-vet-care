@@ -32,6 +32,8 @@ else:
 started = time.monotonic()
 projects = []
 log = (run / 'commands.log').open('a')
+# A resumed failure must not leave an earlier success receipt looking current.
+(run/'result.json').unlink(missing_ok=True)
 
 def command(argv, *, input=None, binary=False):
     # Never log command output to terminal; status JSON contains disposable credentials.
@@ -169,12 +171,25 @@ try:
         if file.is_file(): restored.append({'path':str(file.relative_to(run/'restored-storage')),'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
     assert manifest==restored, 'Physical Storage inventory/hash mismatch'
     results={'synthetic_only':True,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
-    (run/'result.json').write_text(json.dumps(results,indent=2)+'\n')
-    print('PASS: actual isolated database and private Storage restored; result:',run/'result.json',flush=True)
 finally:
+    cleanup_errors=[]
     for item in projects:
-        # Only generated, uniquely named projects are ever stopped/deleted. Existing projects are untouched.
-        assert item['id'].startswith('lrv-restore-'+run_id+'-')
-        verify_identity(item)
-        subprocess.run(['supabase','stop','--workdir',str(item['path']),'--no-backup'],capture_output=True)
+        try:
+            # Verify ownership before cleanup, and never accept failed stop commands.
+            assert item['id'].startswith('lrv-restore-'+run_id+'-')
+            verify_identity(item)
+            command(['supabase','stop','--workdir',str(item['path']),'--no-backup'])
+            containers=command(['docker','ps','-a','--filter','name='+item['id'],'--format','{{.Names}}']).splitlines()
+            volumes=command(['docker','volume','ls','--format','{{.Name}}']).splitlines()
+            assert not containers, 'Generated project containers remain after cleanup'
+            assert not any(name.endswith('_'+item['id']) for name in volumes), 'Generated project volumes remain after cleanup'
+        except Exception as error:
+            cleanup_errors.append(str(error))
     log.close()
+    if cleanup_errors:
+        raise RuntimeError('Rehearsal cleanup failed; no success recorded: '+'; '.join(cleanup_errors))
+# This is reached only if restore/verification and every checked cleanup succeeded.
+results['cleanup_verified']=True
+results['total_seconds']=round(time.monotonic()-started,2)
+(run/'result.json').write_text(json.dumps(results,indent=2)+'\n')
+print('PASS: actual isolated database and private Storage restored and cleaned; result:',run/'result.json',flush=True)

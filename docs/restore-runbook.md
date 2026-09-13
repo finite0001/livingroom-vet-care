@@ -19,14 +19,14 @@ An observed platform-baseline restore failure is now handled explicitly: inherit
 
 ### Completed synthetic rehearsal — September 12, 2026
 
-A fresh source and a separate fresh destination completed the procedure successfully. Backup took 13.93 seconds; database/file restore plus verification took 6.32 seconds after destination startup; total time through verification was 139.60 seconds including both local stack starts. These tiny-fixture timings are observations, not production recovery objectives.
+A fresh source and a separate fresh destination completed the procedure successfully. Backup took 12.93 seconds; database/file restore plus verification took 6.21 seconds after destination startup; total time including verified cleanup was 123.6 seconds including both local stack starts and checked cleanup. These tiny-fixture timings are observations, not production recovery objectives.
 
 Verified evidence:
 
 - Exact captured application rows, IDs, relationships, signed SOAP/addendum, audit entries, migration ledger, Auth identity/password mapping and Storage object metadata survived restoration.
 - Fresh local login, private original download and signed-URL download succeeded. The 78-byte synthetic original matched SHA-256 `1fc62aca512802276c79f6f3fc12c6dc743239fde62ad71938e6b698dc1d9c5e`; the full physical Storage inventory also matched.
 - Issued invoice charges remained 9000 cents, the immutable accounting credit 500 cents, and the stock ledger balance 8 units.
-- Anonymous/public access and ready-original replacement/removal failed or affected zero rows. Clinical/billing/stock mutations affected no rows; privileged signed-history/addendum/ledger rewrites raised errors. Final captured history remained unchanged.
-- Outbox empty; pg_cron absent; no Edge runtime or provider credentials. Generated containers and volumes were cleaned. Existing local projects and cloud projects were untouched.
+- Anonymous/public access and ready-original replacement/removal failed or affected zero rows. Clinical/billing/stock mutations affected no rows; privileged signed-history/addendum/ledger rewrites with a verified active synthetic actor raised SQLSTATE23514 and their exact immutable-history messages. Final captured history remained unchanged.
+- Outbox empty; pg_cron absent; no Edge runtime or provider credentials. Every stop command succeeded, and resource inspection confirmed generated containers and volumes absent before result.json or PASS was written. Existing local projects and cloud projects were untouched.
 
-Protected evidence is retained outside Git in the operator's temporary `lrv-restore-synthetic-pnifuu6d` directory. Database archive SHA-256: `4442db79c2e818191faec83bdcec795d830fb3af5061f448515b1dfd60b60f21`. The result includes exact runner/fixture hashes so this pre-commit local run can be tied to the tested source. Earlier retained diagnostic artifacts preserve the initial partition-constraint failure and successful destination-only retry; neither the backup nor restore errors were filtered to manufacture a pass.
+Protected evidence is retained outside Git in the operator's temporary `lrv-restore-synthetic-e4rdfqms` directory. Database archive SHA-256: `f3154b9e0228e17af91b84b1f2cc61cb954edb472dcecf6db3c484188376a4bf`. The result includes exact runner/fixture hashes so this pre-commit local run can be tied to the tested source. Earlier retained diagnostic artifacts preserve the initial partition-constraint failure and successful destination-only retry; neither the backup nor restore errors were filtered to manufacture a pass.
