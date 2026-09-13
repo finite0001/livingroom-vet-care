@@ -15,10 +15,20 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local-rehearsal', action='store_true')
 parser.add_argument('--resume-backup', type=Path, help='Retry only a retained synthetic backup destination')
+parser.add_argument('--rehearse-observed-hosted-gaps', action='store_true')
 args = parser.parse_args()
+if args.rehearse_observed_hosted_gaps and args.resume_backup:
+    parser.error('Gap rehearsal requires a fresh run; resume cannot prove the upgrade')
 if not args.run_synthetic_local_rehearsal:
     parser.error('Explicit --run-synthetic-local-rehearsal is required')
 root = Path(__file__).resolve().parents[2]
+migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
+initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
+missing_files = [p for p in migration_files if p not in initial_files]
+if args.rehearse_observed_hosted_gaps:
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,46)]
+    assert len(migration_files)==65 and len(initial_files)==51
+    assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
 if args.resume_backup:
@@ -96,7 +106,10 @@ enabled = true
 enabled = false
 '''
     (path/'supabase/config.toml').write_text(config)
-    if migrations: shutil.copytree(root/'supabase/migrations',path/'supabase/migrations')
+    if migrations:
+        (path/'supabase/migrations').mkdir()
+        selected = initial_files if kind=='source' and args.rehearse_observed_hosted_gaps else migration_files
+        for migration in selected: shutil.copy2(migration,path/'supabase/migrations'/migration.name)
     result={'id':identity,'path':path,'port':port}
     projects.append(result)
     command(['supabase','start','--workdir',str(path),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
@@ -104,6 +117,18 @@ enabled = false
     assert status['API_URL']==f'http://127.0.0.1:{port}'
     (path/'status.json').write_text(json.dumps(status))
     return result
+
+def ledger(project):
+    return json.loads(sql(project, 'select json_agg(version order by version) from supabase_migrations.schema_migrations;'))
+
+def functions_snapshot(project):
+    # Compare all application routines, including effective role grants and trigger bindings.
+    return json.loads(sql(project, """select jsonb_build_object(
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,
+        'definition',pg_get_functiondef(p.oid),'security_definer',p.prosecdef,'config',p.proconfig,
+        'grants',(select jsonb_object_agg(r,has_function_privilege(r,p.oid,'EXECUTE')) from unnest(array['anon','authenticated','service_role']) r)) order by p.oid::regprocedure::text)
+        from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f'),
+      'triggers',(select jsonb_agg(pg_get_triggerdef(t.oid) order by pg_get_triggerdef(t.oid)) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and not t.tgisinternal));"""))
 
 def services(project):
     return [docker_name(project,kind) for kind in ['kong','auth','rest','storage','inbucket']]
@@ -113,6 +138,22 @@ try:
         print('Starting isolated synthetic source; artifacts:',run,flush=True)
         source=project('source',58321,True)
         command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
+        if args.rehearse_observed_hosted_gaps:
+            assert ledger(source)==[p.name.split('_')[0] for p in initial_files]
+            for migration in missing_files: shutil.copy2(migration,source['path']/'supabase/migrations'/migration.name)
+            verify_identity(source)
+            push=['supabase','db','push','--local','--skip-vault','--workdir',str(source['path'])]
+            probe=subprocess.run(push+['--dry-run'],capture_output=True,text=True,cwd=root)
+            output=probe.stdout+probe.stderr
+            log.write(output);log.flush()
+            assert probe.returncode!=0 and '20260913280000' in output and '20260913290000' in output and '20260913320000' in output and '--include-all' in output, 'Expected old-gap refusal was not observed'
+            command(push+['--include-all','--dry-run'])
+            verify_identity(source)
+            command(push+['--include-all','--yes'])
+            assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
+            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
+            upgraded_functions=functions_snapshot(source)
+            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True},indent=2))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])
@@ -139,7 +180,12 @@ try:
             assert path.is_relative_to((run/'storage').resolve())
             assert path.stat().st_size==file['bytes'] and hashlib.sha256(path.read_bytes()).hexdigest()==file['sha256']
     print('Source backup complete; starting separate restore destination',flush=True)
-    destination=project('destination',59321,False)
+    destination=project('destination',59321,args.rehearse_observed_hosted_gaps)
+    if args.rehearse_observed_hosted_gaps:
+        assert functions_snapshot(destination)==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'
+        evidence=json.loads((run/'backfill-evidence.json').read_text())
+        evidence['canonical_functions_grants_triggers_match']=True
+        (run/'backfill-evidence.json').write_text(json.dumps(evidence,indent=2))
     verify_identity(destination)
     command(['docker','stop',*services(destination)])
     restore_started=time.monotonic()
@@ -190,6 +236,7 @@ finally:
         raise RuntimeError('Rehearsal cleanup failed; no success recorded: '+'; '.join(cleanup_errors))
 # This is reached only if restore/verification and every checked cleanup succeeded.
 results['cleanup_verified']=True
+if args.rehearse_observed_hosted_gaps: results['backfill']=json.loads((run/'backfill-evidence.json').read_text())
 results['total_seconds']=round(time.monotonic()-started,2)
 (run/'result.json').write_text(json.dumps(results,indent=2)+'\n')
 print('PASS: actual isolated database and private Storage restored and cleaned; result:',run/'result.json',flush=True)

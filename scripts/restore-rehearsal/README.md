@@ -21,3 +21,15 @@ This tests one frozen synthetic point in time on the same local platform version
 The fresh destination realtime schema is dropped before archive restoration because PostgreSQL cannot individually drop inherited primary-key constraints of the platform baseline partitions during `pg_restore --clean`. Its full schema/data are then restored from the archive; no archive errors or managed schemas are skipped. The restore uses `--exit-on-error --single-transaction`. API readiness waits cover Auth, PostgREST and Storage.
 
 Privileged immutability probes retain the database administrator role while setting the real active synthetic actor claims. They require SQLSTATE23514 and the exact signed-record/addendum/ledger message; an authentication or unrelated SQL failure cannot count as proof.
+
+## Rehearse the observed hosted migration gaps locally
+
+```sh
+python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-observed-hosted-gaps
+```
+
+This optional mode recreates the observed 51-version subset through2700 plus3000/3100/3300/3400 in a randomly named local source. It creates the synthetic records before applying the missing2800/2900/3200 and3500–4500 migrations. It requires ordinary local push to refuse the three old gaps, then performs explicit local `--include-all` dry run and application. The final65-version ledger must match the repository, and every captured fixture row except the migration ledger must remain identical.
+
+Before restoring the archive, the separate destination applies all65 migrations in canonical order. Every public function definition, security-definer flag, configuration, effective anon/authenticated/service-role execution permission and application trigger binding must match the backfilled source. The normal physical Storage/database restoration and access checks then run. `result.json` includes the initial, missing and final version lists, migration hashes and successful comparison evidence only after cleanup passes.
+
+The gap mode rejects `--resume-backup`: a resumed destination does not repeat the upgrade and cannot attest to it. A normal restore-only resume remains available but reports no gap-rehearsal result. This mode has a frozen65/51 inventory and exact missing-version list; future migration additions require reviewing and updating it. It never links to a hosted project. This synthetic rehearsal does not establish who applied the hosted migrations, approve a hosted backfill, or test provider delivery.

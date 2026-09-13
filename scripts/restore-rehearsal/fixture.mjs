@@ -5,11 +5,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 const [mode, statusPath, run] = process.argv.slice(2);
-assert.ok(["create", "verify"].includes(mode));
+assert.ok(["create", "verify", "verify-upgrade"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
-assert.equal(url.port, mode === "create" ? "58321" : "59321");
+assert.equal(url.port, mode !== "verify" ? "58321" : "59321");
 const project = readFileSync(
   join(dirname(statusPath), "supabase/config.toml"),
   "utf8",
@@ -131,6 +131,20 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   writeFileSync(statePath, JSON.stringify(state), { mode: 0o600 });
   console.log(
     "Synthetic signed record, private original, issued invoice/credit and stock ledger created.",
+  );
+} else if (mode === "verify-upgrade") {
+  state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(project, `${state.projectRun}-source`);
+  const upgraded = snapshot();
+  assert.deepEqual(
+    { ...upgraded, schema_migrations: state.snapshot.schema_migrations },
+    state.snapshot,
+    "Upgrade preserves all captured clinical/billing/audit/Auth/Storage data",
+  );
+  state.snapshot = upgraded;
+  writeFileSync(statePath, JSON.stringify(state), { mode: 0o600 });
+  console.log(
+    "Upgrade preserved captured fixture rows; migration ledger advanced.",
   );
 } else {
   state = JSON.parse(readFileSync(statePath, "utf8"));
