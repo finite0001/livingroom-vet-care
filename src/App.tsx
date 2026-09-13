@@ -39,6 +39,7 @@ const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetail
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
 const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
+const OperationsPage = lazy(() => import("@/hub/features/operations/OperationsPage"));
 const CareRemindersPage = lazy(() => import("@/hub/features/care-reminders/CareRemindersPage").then(module => ({ default: module.CareRemindersPage })));
 const SchedulePage = lazy(() => import("./hub/features/scheduling/SchedulePage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
@@ -120,6 +121,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route element={<AppShell />}>
                   <Route path="/hub/tools/ezyvet" element={<EzyVetImportPage />} />
                   <Route path="/hub/admin" element={<AdminDashboardPage />} />
+                  <Route path="/hub/admin/operations" element={<OperationsPage />} />
                   <Route path="/hub/admin/import" element={<UnavailableToolPage />} />
                   <Route path="/hub/admin/staff" element={<AdminStaffPage />} />
                 </Route>

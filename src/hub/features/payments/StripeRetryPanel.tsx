@@ -12,7 +12,8 @@ import {
   type StripeRetryPreview,
   stripeRetryPreview,
   type StripeRetryRow,
-  stripeRetryRows,
+  stripeQueuePage,
+  type StripeQueueCursor,
 } from "./StripeRetryState";
 interface RetryDatabase {
   rpc: (
@@ -28,17 +29,19 @@ async function rpc(name: string, args: Record<string, unknown>) {
 }
 export function StripeRetryPanel() {
   const { session, profile, hasRole } = useAuth();
-  return session && profile?.is_active && hasRole("ADMIN")
-    ? <RetrySession key={session.user.id} actor={session.user.id} />
-    : null;
+  return session && profile?.is_active && hasRole("ADMIN") ? (
+    <RetrySession key={session.user.id} actor={session.user.id} />
+  ) : null;
 }
 function RetrySession({ actor }: { actor: string }) {
   const [rows, setRows] = useState<StripeRetryRow[]>([]),
     [selected, setSelected] = useState(""),
+    [cursor, setCursor] = useState<StripeQueueCursor | null>(null),
+    [nextCursor, setNextCursor] = useState<StripeQueueCursor | null>(null),
+    [filter, setFilter] = useState(""),
     [review, setReview] = useState<StripeRetryPreview | null>(null),
-    [reason, setReason] = useState<keyof typeof retryReasons>(
-      "provider_recovered",
-    ),
+    [reason, setReason] =
+      useState<keyof typeof retryReasons>("provider_recovered"),
     [attest, setAttest] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -65,11 +68,26 @@ function RetrySession({ actor }: { actor: string }) {
       if (active.current) setBusy(false);
     }
   };
-  const load = async () => {
-    const data = stripeRetryRows(
-      await rpc("read_stripe_event_queue", { p_limit: 100 }),
+  const load = async (position = cursor, state = filter) => {
+    setRows([]);
+    setNextCursor(null);
+    const data = stripeQueuePage(
+      await rpc("read_stripe_event_queue_page", {
+        p_state: state || null,
+        p_before_at: position?.at ?? null,
+        p_before_id: position?.id ?? null,
+        p_limit: 50,
+      }),
     );
-    if (active.current) setRows(data);
+    if (active.current) {
+      setRows(data.items);
+      setCursor(position);
+      setFilter(state);
+      const last = data.items.at(-1);
+      setNextCursor(
+        data.has_more && last ? { at: last.created_at, id: last.id } : null,
+      );
+    }
   };
   const accept = (cycle: StripeRetryCycle, intent: StripeRetryIntent) => {
     if (!matchingStripeRetry(cycle, intent, actor)) {
@@ -131,7 +149,8 @@ function RetrySession({ actor }: { actor: string }) {
       if (!pending && (!review?.eligible || !attest)) {
         throw new Error("Explicit eligible review required");
       }
-      const intent = pending ??
+      const intent =
+        pending ??
         stripeRetryIntent({
           p_resolution_id: crypto.randomUUID(),
           p_receipt_id: review!.receiptId,
@@ -165,37 +184,42 @@ function RetrySession({ actor }: { actor: string }) {
         problem is fixed. A retry permits up to five more worker attempts. It
         does not confirm payment or resolve conflicting financial evidence.
       </p>
-      {error && <p role="alert" className="text-destructive">{error}</p>}
+      {error && (
+        <p role="alert" className="text-destructive">
+          {error}
+        </p>
+      )}
       {receipt && (
         <p role="status">
           Retry cycle {receipt.cycle_no} recorded. Previous{" "}
-          {receipt.previous_attempt_count}{" "}
-          attempts remain in history. Worker processing is still required.
+          {receipt.previous_attempt_count} attempts remain in history. Worker
+          processing is still required.
         </p>
       )}
-      {pending
-        ? (
-          <div className="space-y-2">
-            <p role="status">
-              Saved retry awaiting confirmation. Its original receipt, reason
-              and reviewed state remain fixed.
-            </p>
-            <Button
-              disabled={busy}
-              onClick={() =>
-                void run(async () => {
-                  await recover(pending);
-                  await load();
-                })}
-            >
-              Recover saved retry
-            </Button>
-            <Button variant="outline" disabled={busy} onClick={submit}>
-              Retry same reviewed request
-            </Button>
-            {review && review.receiptId === pending.p_receipt_id &&
-              !review.cycles.some((c) => c.id === pending.p_resolution_id) &&
-              review.hash !== pending.p_expected_work_hash && (
+      {pending ? (
+        <div className="space-y-2">
+          <p role="status">
+            Saved retry awaiting confirmation. Its original receipt, reason and
+            reviewed state remain fixed.
+          </p>
+          <Button
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                await recover(pending);
+                await load();
+              })
+            }
+          >
+            Recover saved retry
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={submit}>
+            Retry same reviewed request
+          </Button>
+          {review &&
+            review.receiptId === pending.p_receipt_id &&
+            !review.cycles.some((c) => c.id === pending.p_resolution_id) &&
+            review.hash !== pending.p_expected_work_hash && (
               <Button
                 variant="outline"
                 disabled={busy}
@@ -209,57 +233,116 @@ function RetrySession({ actor }: { actor: string }) {
                 Discard stale unsaved review
               </Button>
             )}
-          </div>
-        )
-        : (
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="grid flex-1 gap-1 text-sm">
-              Payment notification<select
-                aria-label="Payment notification"
-                className="min-w-0 rounded-md border bg-background p-2"
-                disabled={busy}
-                value={selected}
-                onChange={(e) => {
-                  setSelected(e.target.value);
-                  setReview(null);
-                  setReceipt(null);
-                  setAttest(false);
-                }}
-              >
-                <option value="">Select a notification</option>
-                {rows.map((row) => (
-                  <option key={row.id} value={row.id}>
-                    {row.event_type} · {row.work_state} · {row.attempt_count}
-                    {" "}
-                    attempts · {row.id.slice(0, 8)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button disabled={busy || !selected} onClick={open}>
-              Review processing history
-            </Button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="grid flex-1 gap-1 text-sm">
+            Payment notification
+            <select
+              aria-label="Payment notification"
+              className="min-w-0 rounded-md border bg-background p-2"
+              disabled={busy}
+              value={selected}
+              onChange={(e) => {
+                setSelected(e.target.value);
+                setReview(null);
+                setReceipt(null);
+                setAttest(false);
+              }}
+            >
+              <option value="">Select a notification</option>
+              {rows.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.event_type} · {row.work_state} · {row.attempt_count}{" "}
+                  attempts · {row.id.slice(0, 8)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Button disabled={busy || !selected} onClick={open}>
+            Review processing history
+          </Button>
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() => void run(() => load())}
+          >
+            Refresh notifications
+          </Button>
+        </div>
+      )}
+      {!pending && (
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="grid gap-1 text-sm">
+            Notification state
+            <select
+              aria-label="Notification state"
+              className="rounded-md border bg-background p-2"
+              value={filter}
+              disabled={busy || !!review}
+              onChange={(e) => {
+                const state = e.target.value;
+                setSelected("");
+                void run(() => load(null, state));
+              }}
+            >
+              <option value="">Unfinished</option>
+              {[
+                "queued",
+                "processing",
+                "quarantined",
+                "completed",
+                "ignored",
+              ].map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Button
+            variant="outline"
+            disabled={busy || !!review || !cursor}
+            onClick={() => {
+              setSelected("");
+              void run(() => load(null));
+            }}
+          >
+            Newest notifications
+          </Button>
+          <Button
+            variant="outline"
+            disabled={busy || !!review || !nextCursor}
+            onClick={() => {
+              setSelected("");
+              void run(() => load(nextCursor));
+            }}
+          >
+            Older notifications
+          </Button>
+          {review && (
             <Button
               variant="outline"
               disabled={busy}
-              onClick={() => void run(load)}
+              onClick={() => {
+                setReview(null);
+                setAttest(false);
+              }}
             >
-              Refresh notifications
+              Close notification review
             </Button>
-          </div>
-        )}
-      {rows.length === 100 && (
-        <p className="text-sm text-muted-foreground">
-          Showing the newest 100 notifications. A saved older retry can still be
-          recovered.
-        </p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            Up to 50 notifications per page. Finish or close the current review
+            before changing pages.
+          </p>
+        </div>
       )}
       {review && (
         <div className="space-y-3">
           <p>
-            State: {review.workState}. Total attempts:{" "}
-            {review.attemptCount}. Cycle {review.cycleNo}:{" "}
-            {review.cycleAttemptCount} of 5 attempts.
+            State: {review.workState}. Total attempts: {review.attemptCount}.
+            Cycle {review.cycleNo}: {review.cycleAttemptCount} of 5 attempts.
           </p>
           <ul aria-label="Processing attempts" className="space-y-1 text-sm">
             {review.history.map((h, i) => (
@@ -276,22 +359,23 @@ function RetrySession({ actor }: { actor: string }) {
                 Cycle {c.cycle_no}: {retryReasons[c.reason]} ·{" "}
                 {new Date(c.created_at).toLocaleString("en-US", {
                   timeZone: "America/Denver",
-                })} Mountain
+                })}{" "}
+                Mountain
               </li>
             ))}
           </ul>
-          {!review.eligible
-            ? (
-              <p role="status">
-                This notification cannot be retried through this workflow.
-                Active work, unknown provider objects and conflicting financial
-                evidence require their own review.
-              </p>
-            )
-            : !pending && (
+          {!review.eligible ? (
+            <p role="status">
+              This notification cannot be retried through this workflow. Active
+              work, unknown provider objects and conflicting financial evidence
+              require their own review.
+            </p>
+          ) : (
+            !pending && (
               <>
                 <label className="grid gap-1 text-sm">
-                  Resolved processing problem<select
+                  Resolved processing problem
+                  <select
                     aria-label="Resolved processing problem"
                     value={reason}
                     disabled={busy}
@@ -302,7 +386,9 @@ function RetrySession({ actor }: { actor: string }) {
                     }}
                   >
                     {Object.entries(retryReasons).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
                     ))}
                   </select>
                 </label>
@@ -312,14 +398,16 @@ function RetrySession({ actor }: { actor: string }) {
                     checked={attest}
                     disabled={busy}
                     onChange={(e) => setAttest(e.target.checked)}
-                  />I reviewed the processing history and confirm the selected
+                  />
+                  I reviewed the processing history and confirm the selected
                   problem has been addressed.
                 </label>
                 <Button disabled={busy || !attest} onClick={submit}>
                   Queue reviewed processing retry
                 </Button>
               </>
-            )}
+            )
+          )}
         </div>
       )}
     </section>

@@ -39,15 +39,13 @@ export interface StripeRetryPreview {
   cycleNo: number;
   cycleAttemptCount: number;
   cycles: StripeRetryCycle[];
-  history: Array<
-    {
-      action: string;
-      reason: string;
-      attemptCount: number;
-      cycleNo: number;
-      createdAt: string;
-    }
-  >;
+  history: Array<{
+    action: string;
+    reason: string;
+    attemptCount: number;
+    cycleNo: number;
+    createdAt: string;
+  }>;
 }
 const uuid =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -71,7 +69,8 @@ function reason(v: unknown): keyof typeof retryReasons {
   if (
     typeof v !== "string" ||
     !Object.prototype.hasOwnProperty.call(retryReasons, v)
-  ) fail();
+  )
+    fail();
   return v as keyof typeof retryReasons;
 }
 export function stripeRetryIntent(v: unknown): StripeRetryIntent {
@@ -84,9 +83,12 @@ export function stripeRetryIntent(v: unknown): StripeRetryIntent {
         "p_expected_work_hash",
         "p_reason",
         "p_attest",
-      ].sort().join() ||
+      ]
+        .sort()
+        .join() ||
     v.p_attest !== true
-  ) fail();
+  )
+    fail();
   return {
     p_resolution_id: text(v.p_resolution_id, uuid),
     p_receipt_id: text(v.p_receipt_id, uuid),
@@ -118,9 +120,13 @@ export function matchingStripeRetry(
   i: StripeRetryIntent,
   actor: string,
 ) {
-  return c.id === i.p_resolution_id && c.receipt_id === i.p_receipt_id &&
-    c.actor_id === actor && c.expected_work_hash === i.p_expected_work_hash &&
-    c.reason === i.p_reason;
+  return (
+    c.id === i.p_resolution_id &&
+    c.receipt_id === i.p_receipt_id &&
+    c.actor_id === actor &&
+    c.expected_work_hash === i.p_expected_work_hash &&
+    c.reason === i.p_reason
+  );
 }
 export function stripeRetryRows(v: unknown): StripeRetryRow[] {
   if (!Array.isArray(v) || v.length > 250) fail();
@@ -145,11 +151,16 @@ export function stripeRetryPreview(
   receiptId: string,
 ): StripeRetryPreview {
   if (
-    !object(v) || !object(v.receipt) || v.receipt.id !== receiptId ||
-    !object(v.work) || v.work.receipt_id !== receiptId ||
-    typeof v.eligible !== "boolean" || !Array.isArray(v.cycles) ||
+    !object(v) ||
+    !object(v.receipt) ||
+    v.receipt.id !== receiptId ||
+    !object(v.work) ||
+    v.work.receipt_id !== receiptId ||
+    typeof v.eligible !== "boolean" ||
+    !Array.isArray(v.cycles) ||
     v.cycles.length > 1000
-  ) fail();
+  )
+    fail();
   if (!Array.isArray(v.history)) fail();
   const history = v.history.map((h) => {
     if (!object(h)) fail();
@@ -165,7 +176,8 @@ export function stripeRetryPreview(
   if (
     cycles.some((c) => c.receipt_id !== receiptId) ||
     new Set(cycles.map((c) => c.id)).size !== cycles.length
-  ) fail();
+  )
+    fail();
   return {
     receiptId,
     eligible: v.eligible,
@@ -179,5 +191,27 @@ export function stripeRetryPreview(
     cycleAttemptCount: count(v.work.cycle_attempt_count, 5),
     cycles,
     history,
+  };
+}
+
+export interface StripeQueueCursor {
+  at: string;
+  id: string;
+}
+export interface StripeQueuePage {
+  items: Array<StripeRetryRow & { created_at: string }>;
+  has_more: boolean;
+}
+export function stripeQueuePage(v: unknown): StripeQueuePage {
+  if (!object(v) || typeof v.has_more !== "boolean") fail();
+  const rows = stripeRetryRows(v.items);
+  return {
+    items: rows.map((row, i) => {
+      const original = (v.items as Record<string, unknown>[])[i];
+      const created_at = text(original.created_at, /./);
+      if (!Number.isFinite(Date.parse(created_at))) fail();
+      return { ...row, created_at };
+    }),
+    has_more: v.has_more,
   };
 }
