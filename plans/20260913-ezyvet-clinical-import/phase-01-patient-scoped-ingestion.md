@@ -1,6 +1,6 @@
 # Phase1 — Patient-scoped consult/history ingestion
 
-Priority: high. Status: implemented and locally verified; required PR CI and real source commissioning remain pending. Depends on PR104 and the [source audit](research/source-contracts.md). This phase delivers API-backed patient history staging and review access; it does not yet create native clinical entries.
+Priority: high. Status: implemented and locally verified; PR106 database, Edge and frontend CI passed at `e80cf62`. Real source commissioning remains pending. Depends on PR104 and the [source audit](research/source-contracts.md). This phase delivers API-backed patient history staging and review access; it does not yet create native clinical entries.
 
 ## Contract and architecture
 

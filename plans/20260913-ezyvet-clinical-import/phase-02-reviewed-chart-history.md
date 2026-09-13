@@ -1,6 +1,6 @@
 # Phase2 — Imported history and reviewed problems/reactions
 
-Priority: high. Status: planned after phase1. Goal: make API-backed history usable in the patient's primary chart while retaining outside attribution and explicit local clinical authority. See [source contracts](research/source-contracts.md).
+Priority: high. Status: implementation in progress on `codex/ezyvet-reviewed-history`, based on PR106 (`e80cf62`); acceptance remains unverified. Goal: make API-backed history usable in the patient's primary chart while retaining outside attribution and explicit local clinical authority. See [source contracts](research/source-contracts.md).
 
 ## Model and workflow
 
@@ -23,7 +23,7 @@ Native problems already enter medical releases. This phase must include a versio
 
 ## Files and ownership
 
-Implementation base: `/Users/davidedler/livingroom-vet-ezyvet-clinical-plan`.
+Implementation base: PR106 (`e80cf62`); integration worktree `/Users/davidedler/livingroom-vet-ezyvet-reviewed-history`. See [the agreed implementation decisions](../../docs/plans/ezyvet-reviewed-history-decisions.md) for source selection, discrepancy review and schema6 disclosure.
 
 - Create additive migrations and SQL/contention fixtures under `supabase/` for imported-history versions, prepared operations, approvals, extraction items and discrepancy review. Do not edit historical migrations or duplicate native problem validators.
 - Create `src/hub/features/imports/PatientImportedHistory.tsx`, `ClinicalHistoryReview.tsx` and typed API helpers; integrate the patient chart and administrator import tools.
