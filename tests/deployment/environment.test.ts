@@ -62,7 +62,12 @@ test("secret, service-role, mismatched and malformed keys never appear in errors
       return true;
     });
   }
-  assert.throws(() => verifyDeploymentEnvironment(valid(), { ...valid(), VITE_PROVIDER_SECRET: "NEVER_PRINT_THIS" }), /unreviewed VITE_/);
+  assert.throws(() => verifyDeploymentEnvironment(valid(), { ...valid(), VITE_PROVIDER_SECRET: "NEVER_PRINT_THIS" }), (error: Error) => {
+    assert.match(error.message, /unreviewed VITE_/);
+    assert.match(error.message, /VITE_PROVIDER_SECRET/);
+    assert.ok(!error.message.includes("NEVER_PRINT_THIS"));
+    return true;
+  });
 });
 
 test("contact configuration cannot route a new site's inquiries into another backend", () => {

@@ -1,5 +1,9 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — protected frontend preview available
+
+The current application now has a [protected Vercel preview](protected-frontend-preview.md) against the separately commissioned staging database. Its guarded hosted build passes; HTTP checks and the served bundle verify payment routes, staging backend selection and private-route headers. Staff/rendered/provider acceptance remains open. The public Lovable site and `thelivingroom.vet` were not cut over.
+
 ## September 13 — payment runtime and security continuation
 
 The owner-selected payment backend remains `mgadheotkdnrsatfivjy`. Its runtime Stripe key has been verified against account `acct_1UF1ewGUaxUNX5Ol` with test mode confirmed. Sandbox webhook `we_1UFEiWGUaxUNX5OlbNtD6lHW` is registered with its signing secret saved; delivery and payment gates remain disabled. Earlier reconnection requests in this historical tracker are superseded by that verified runtime setup.

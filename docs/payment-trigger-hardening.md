@@ -10,4 +10,6 @@ Based on implementation stack `1f515ea`, migration `20260913900000_payment_immut
 - Hosted verification confirms `search_path=pg_catalog`, SECURITY INVOKER, the original append-only exception and 14 trigger bindings.
 - No client data, provider settings, payment activation, frontend or DNS was changed.
 
-The separate staging project has not received this migration in this task. This narrowly resolves the observed mutable-search-path configuration; it does not establish overall security or commercial readiness. Hosted staff/provider acceptance, deployment parity, clinical review, mail and domain commissioning remain required.
+The separate staging project `kothoqicubowyhwfsrte` subsequently received this exact migration after read-only verification of the same original function. Hosted verification confirms `search_path=pg_catalog`, SECURITY INVOKER and 23 bindings in its newer schema. The MCP receipt `20260913194639` was reconciled to `20260913900000` with exact name/version guards. No intervening migration or data change was applied.
+
+This narrowly resolves the observed mutable-search-path configuration on both projects; it does not establish overall security or commercial readiness. Hosted staff/provider acceptance, deployment parity, clinical review, mail and domain commissioning remain required.
