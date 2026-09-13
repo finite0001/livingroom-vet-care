@@ -238,7 +238,7 @@ test("invoice creation and service retries retain operation IDs; issuance and cr
     page.getByRole("button", { name: "Void invoice and retain history" }),
   ).toBeDisabled();
   await expect(
-    page.getByText("No payment or refund is initiated here.", { exact: false }),
+    page.getByText("Net charges show billed services minus accounting credits.", { exact: false }),
   ).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("invoice-credit-history.png"),

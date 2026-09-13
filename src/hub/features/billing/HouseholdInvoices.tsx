@@ -1,3 +1,4 @@
+import { InvoicePayments } from "../payments/InvoicePayments";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { useEffect, useRef, useState } from "react";
 import { useBlocker } from "react-router-dom";
@@ -241,10 +242,13 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [notice, setNotice] = useState("");
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
+  const [paymentDirty, setPaymentDirty] = useState(false);
   useEffect(() => {
-    onPending(busy || Boolean(pending) || emailDirty || smsDirty);
+    onPending(
+      busy || Boolean(pending) || emailDirty || smsDirty || paymentDirty,
+    );
     return () => onPending(false);
-  }, [busy, pending, emailDirty, smsDirty, onPending]);
+  }, [busy, pending, emailDirty, smsDirty, paymentDirty, onPending]);
   const invoice = useQuery({
     queryKey: ["invoice", invoiceId, clientId],
     queryFn: async () => {
@@ -408,7 +412,12 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   );
   const readFailed = invoice.isError || details.isError;
   const disabled =
-    busy || Boolean(pending) || emailDirty || smsDirty || readFailed;
+    busy ||
+    Boolean(pending) ||
+    emailDirty ||
+    smsDirty ||
+    paymentDirty ||
+    readFailed;
   return (
     <section
       aria-label="Invoice details"
@@ -491,8 +500,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         </div>
       </dl>
       <p className="text-sm text-muted-foreground">
-        Net charges do not include payment reconciliation. No payment or refund
-        is initiated here.
+        Net charges show billed services minus accounting credits. See the payment
+        section for confirmed payments and refunds.
       </p>
       {record.status === "draft" && (
         <>
@@ -643,7 +652,9 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={busy || Boolean(pending) || smsDirty || readFailed}
+          disabled={
+            busy || Boolean(pending) || smsDirty || paymentDirty || readFailed
+          }
           onDirtyChange={setEmailDirty}
         />
       )}
@@ -653,8 +664,22 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           sourceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={busy || Boolean(pending) || emailDirty || readFailed}
+          disabled={
+            busy || Boolean(pending) || emailDirty || paymentDirty || readFailed
+          }
           onDirtyChange={setSmsDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <InvoicePayments
+          invoiceId={invoiceId}
+          clientId={clientId}
+          invoiceTotalCents={record.total_cents}
+          canPrepare={record.status === "issued"}
+          disabled={
+            busy || Boolean(pending) || emailDirty || smsDirty || readFailed
+          }
+          onDirtyChange={setPaymentDirty}
         />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}

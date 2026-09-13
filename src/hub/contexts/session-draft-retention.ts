@@ -8,7 +8,11 @@ export function clearOtherInvoiceEmailIntents(
   storage: DraftStorage,
   actorId: string | null,
 ): void {
-  const prefixes = ["invoice-email-intent:", "document-link-intent:"];
+  const prefixes = [
+    "invoice-email-intent:",
+    "document-link-intent:",
+    "invoice-payment-intent:",
+  ];
   for (const prefix of prefixes) {
     const retained = actorId ? `${prefix}${actorId}:` : null;
     const remove: string[] = [];
