@@ -65,7 +65,9 @@ function fixture(initial: ReturnType<typeof envelope> | null = null) {
   let saved = initial,
     lost = false,
     fail = false,
-    missing = false;
+    missing = false,
+    lostPrepare = false,
+    prepareCode: string | null = null;
   const calls: { name: string; args: Record<string, unknown> }[] = [];
   let configs = 0;
   const db = {
@@ -74,10 +76,11 @@ function fixture(initial: ReturnType<typeof envelope> | null = null) {
       if (name === "recover_payment_collection")
         return { data: saved, error: null };
       if (name === "prepare_payment_collection") {
+        if (prepareCode) return { data: null, error: { code: prepareCode } };
         if (Object.entries(args).some(([k, v]) => input[k] !== v))
-          return { data: null, error: new Error("mismatch") };
+          return { data: null, error: { code: "23505", message: "mismatch" } };
         saved ??= envelope();
-        return { data: saved, error: null };
+        return { data: saved, error: lostPrepare ? new Error("lost prepare acknowledgement") : null };
       }
       throw new Error("unexpected actor RPC");
     },
@@ -137,6 +140,12 @@ function fixture(initial: ReturnType<typeof envelope> | null = null) {
     calls,
     get configs() {
       return configs;
+    },
+    set lostPrepare(v: boolean) {
+      lostPrepare = v;
+    },
+    set prepareCode(v: string | null) {
+      prepareCode = v;
     },
     set lost(v: boolean) {
       lost = v;
@@ -232,6 +241,7 @@ test("different frozen arguments never turn prepare rejection into recovered suc
     { p_amount_cents: 12346 },
     { p_source_hash: "b".repeat(64) },
     { p_expires_at: "2026-09-19T03:00:00Z" },
+    { p_expires_at: "2026-09-20T03:00:00.000001Z" },
   ]) {
     const f = fixture(envelope(true));
     assert.equal((await f.send("prepare", { ...args, ...patch })).status, 409);
@@ -334,4 +344,33 @@ test("safe projection strips arbitrary secrets and rejects changed canonical con
       grant.invoice_id,
     ),
   );
+});
+
+test("lost prepare acknowledgement stays uncertain until exact SQL retry succeeds", async () => {
+  for (const initial of [null, envelope(true)]) {
+    const f = fixture(initial);
+    f.lostPrepare = true;
+    const response = await f.send();
+    assert.equal(response.status, 202);
+    assert.deepEqual(await response.json(), {
+      error: "Payment collection preparation unconfirmed",
+      retry_requires_recovery: true,
+      request_id: grant.id,
+    });
+    assert.equal(f.calls.some(call => call.name.includes("capture")), false);
+    f.lostPrepare = false;
+    assert.equal((await f.send()).status, 200);
+    const preparations = f.calls.filter(call => call.name === "prepare_payment_collection");
+    assert.equal(preparations.length, 2);
+    assert.deepEqual(preparations[0].args, preparations[1].args);
+  }
+});
+test("definite SQL preparation failures are conflicts without capture recovery override", async () => {
+  for (const code of ["23505", "23514", "22023", "40001"]) {
+    const f = fixture(envelope(true));
+    f.prepareCode = code;
+    assert.equal((await f.send()).status, 409);
+    assert.equal(f.calls.filter(call => call.name === "recover_payment_collection").length, 1);
+    assert.equal(f.calls.some(call => call.name.includes("capture")), false);
+  }
 });

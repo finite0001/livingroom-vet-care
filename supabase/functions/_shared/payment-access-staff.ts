@@ -375,29 +375,29 @@ export function createStaffPaymentAccessHandler(
       const captured = await recover();
       if (!captured?.capture) throw unavailable();
       return reply(200, captured);
-    } catch {
-      // A capture may have committed before its acknowledgement was lost or a competing capture won.
-      try {
-        const recovered = await recover();
-        if (
-          recovered &&
-          recovered.grant.source_hash === args.p_source_hash &&
-          recovered.grant.amount_cents === String(args.p_amount_cents) &&
-          Date.parse(recovered.grant.expires_at) ===
-            Date.parse(args.p_expires_at!) &&
-          (recovered.capture || recovered.grant.state === "revoked")
-        )
-          return reply(200, recovered);
-      } catch {
-        /* Do not replace the original request after unconfirmed recovery. */
+    } catch (error) {
+      if (!prepared) {
+        // Only SQL can confirm exact timestamp/intent equality, including microseconds.
+        const code = object(error) ? error.code : undefined;
+        if (["23505", "23514", "22023", "40001"].includes(String(code)))
+          return denied(409);
+        if (code === "42501") return denied(404);
+      } else {
+        // Preparation acknowledged this exact intent. Capture may have committed
+        // before a lost acknowledgement, or another capture of that intent won.
+        try {
+          const recovered = await recover();
+          if (recovered && (recovered.capture || recovered.grant.state === "revoked"))
+            return reply(200, recovered);
+        } catch {
+          /* Keep the same request until its acknowledged intent is recoverable. */
+        }
       }
-      return prepared || !saved?.capture
-        ? reply(202, {
-            error: "Payment collection preparation unconfirmed",
-            retry_requires_recovery: true,
-            request_id: args.p_request_id,
-          })
-        : denied(409);
+      return reply(202, {
+        error: "Payment collection preparation unconfirmed",
+        retry_requires_recovery: true,
+        request_id: args.p_request_id,
+      });
     }
   };
 }
