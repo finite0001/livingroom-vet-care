@@ -859,3 +859,100 @@ test("v3 acceptance does not enable confirmation of the expanded weight form", a
     }),
   ).toBeDisabled();
 });
+
+test("SMS release draft protects package selection and recovery preserves revocation after clinical withdrawal", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  const releaseId = "55555555-5555-4555-8555-555555555555";
+  state.rows.push({
+    release: {
+      ...structuredClone(chartArtifact.preview),
+      id: releaseId,
+      pet_id: petId,
+      client_id: clientId,
+      channel: "SMS",
+      recipient: "+13035550123",
+      selection: {},
+      created_by: staffId,
+      created_at: "2026-09-12T18:00:00Z",
+    },
+    events: [],
+    eligible: true,
+    ineligibility_reason: null,
+  });
+  let revoked = false;
+  let recovery: unknown = null;
+  await page.route("**/*document*", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("recover-document-link"))
+      return route.fulfill({ status: 503, json: { error: "Key removed" } });
+    if (path.endsWith("recover_document_link"))
+      return route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(recovery),
+      });
+    if (path.endsWith("revoke_document_link")) {
+      revoked = true;
+      (recovery as { grant: { state: string } }).grant.state = "revoked";
+      return route.fulfill({ contentType: "application/json", body: "null" });
+    }
+    return route.fallback();
+  });
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  const sms = page.getByRole("region", {
+    name: "Document text message",
+    exact: true,
+  });
+  await expect(sms.getByLabel("Link expiry")).toBeEnabled();
+  await sms
+    .getByRole("textbox").first()
+    .fill("Please review {{document_link}}");
+  await expect(
+    page.getByRole("button", { name: "Open release package", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    sms.getByRole("button", { name: "Recover document text and receipt" }),
+  ).toBeDisabled();
+  await sms
+    .getByRole("button", { name: "Discard document text draft" })
+    .click();
+  recovery = {
+    grant: {
+      id: releaseId,
+      family: "record_release",
+      source_id: releaseId,
+      client_id: clientId,
+      actor_id: staffId,
+      conversation_id: releaseId,
+      recipient: "+13035550123",
+      source_hash: "a".repeat(64),
+      message_template: "Documents {{document_link}}",
+      expires_at: new Date(Date.now() + 3600000).toISOString(),
+      state: "preparing",
+    },
+    artifact_hash: null,
+    message_hash: null,
+    manifest: null,
+    report_html: null,
+    receipt: null,
+  };
+  state.rows[0].eligible = false;
+  state.rows[0].ineligibility_reason = "Clinical approval withdrawn";
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  await expect(sms.getByText(/New preparation is unavailable/)).toBeVisible();
+  await sms.getByLabel("Revocation reason").fill("Withdrawn clinical review");
+  await sms
+    .getByRole("button", { name: "Revoke document link", exact: true })
+    .click();
+  await expect(
+    sms.getByText("This link is revoked.", { exact: true }),
+  ).toBeVisible();
+  expect(revoked).toBe(true);
+});
