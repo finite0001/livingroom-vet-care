@@ -2,6 +2,7 @@ import { PatientVaccineDuePlans } from "@/hub/features/care-reminders/PatientVac
 import { PatientRecordReleases } from "@/hub/features/record-releases/PatientRecordReleases";
 import { PatientAnesthesiaRecords } from "@/hub/features/anesthesia/PatientAnesthesiaRecords";
 import { PatientCertificates } from "@/hub/features/certificates/PatientCertificates";
+import { PatientExternalRecords } from "@/hub/features/external-records/PatientExternalRecords";
 import { PatientLabWork } from "@/hub/features/lab-work/PatientLabWork";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -28,6 +29,7 @@ export default function PatientPage() {
   return id ? <PatientWorkspace key={id} petId={id} /> : <p role="alert">Patient not found.</p>;
 }
 function PatientWorkspace({ petId }: { petId: string }) {
+  const [externalDirty, setExternalDirty] = useState(false);
   const [releaseDirty, setReleaseDirty] = useState(false);
   const [clinicalDirty, setClinicalDirty] = useState(false);
   const [careDirty, setCareDirty] = useState(false);
@@ -36,7 +38,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
+  const navigationGuard = useUnsavedChanges(externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -68,6 +70,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} />
     <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
+    <PatientExternalRecords petId={petId} disabled={releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setExternalDirty} />
     <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />
     <PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} />
     <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} />
