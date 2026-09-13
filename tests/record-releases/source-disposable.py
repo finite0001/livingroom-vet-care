@@ -13,11 +13,14 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
+parser.add_argument('--fixture', choices=['source', 'clinical-history'], default='source')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
+fixture = {'source': ('source-local-roundtrip.ts', 'Source original Auth/Storage/PostgREST'), 'clinical-history': ('clinical-history-local-roundtrip.ts', 'Clinical history Auth/Storage/PostgREST')}[args.fixture]
+harness_path = root / 'tests/record-releases' / fixture[0]
 identity = 'lrv-source-artifacts-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
 work = Path(tempfile.mkdtemp(prefix=identity + '-'))
@@ -59,6 +62,8 @@ try:
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
+    if args.fixture == 'clinical-history':
+        assert {'20260913500000', '20260913510000'} <= versions, 'Clinical history and schema6 migrations required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 58321
@@ -84,9 +89,9 @@ enabled = false
     started = True
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
-    output = command(['node', '--experimental-strip-types', str(root / 'tests/record-releases/source-local-roundtrip.ts')], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
+    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
     # Only the harness's fixed aggregate evidence line reaches the terminal.
-    matched = re.fullmatch(r'Source original Auth/Storage/PostgREST: ([0-9]+) checks passed\. No provider requests or clinical approval\.', output.strip())
+    matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. No provider requests or clinical approval\.', output.strip())
     assert matched, 'Refuse unexpected harness output'
     checks = int(matched[1])
     print(matched[0], flush=True)
@@ -102,10 +107,10 @@ finally:
     finally:
         log.close()
 if success:
-    summary = {'synthetic_only': True, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+    summary = {'synthetic_only': True, 'fixture': args.fixture, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-               'harness_sha256': hashlib.sha256((root / 'tests/record-releases/source-local-roundtrip.ts').read_bytes()).hexdigest(),
+               'harness_sha256': hashlib.sha256(harness_path.read_bytes()).hexdigest(),
                'migration_sha256': migration_hashes, 'provider_requests': 0}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
