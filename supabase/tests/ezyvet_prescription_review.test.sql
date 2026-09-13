@@ -37,6 +37,7 @@ insert into user_roles(user_id,role) values('db560000-0000-4000-8000-00000000000
 insert into fx select k,gen_random_uuid() from unnest(array['approval','duplicate','correction','competing','stale','abandon']) k;
 insert into data select 'payload',jsonb_build_object('item_run_id',(select id from fx where k='run'),'patient_version',(select version from pets where id=(select id from fx where k='pet')),'interpretation',v) from data where k='review';
 insert into data values('side-effects',jsonb_build_object('treatments',(select count(*) from patient_treatments),'invoices',(select count(*) from billing_invoices),'stock',(select count(*) from inventory_movements),'certificates',(select count(*) from vaccine_certificates),'reminders',(select count(*) from care_reminder_jobs),'outbox',(select count(*) from communication_outbox)));
+-- FIXTURE_END
 set local role authenticated;
 insert into data select 'prepared',prepare_ezyvet_prescription_review((select id from fx where k='approval'),(select id from fx where k='pet'),(select v from data where k='payload'));
 select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='approval'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='prepared'),false)$$,'23514',null,'Explicit clinical confirmation required');
