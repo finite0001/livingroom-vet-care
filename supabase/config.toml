@@ -49,3 +49,9 @@ verify_jwt = true
 verify_jwt = false
 [functions.payment-status]
 verify_jwt = false
+
+# Staff JWT + actor RPC authorization; separate default-off staff capability capture switch.
+[functions.prepare-payment-collection]
+verify_jwt = true
+[functions.recover-payment-collection]
+verify_jwt = true
