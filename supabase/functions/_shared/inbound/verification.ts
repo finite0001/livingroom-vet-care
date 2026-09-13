@@ -47,16 +47,23 @@ export function verifiedResend(
   if (!id || !timestamp || !signature)
     throw new WebhookError(401, "Webhook proof required");
   try {
-    return {
-      id,
-      event: verify(raw, {
-        "svix-id": id,
-        "svix-timestamp": timestamp,
-        "svix-signature": signature,
-      }) as Record<string, unknown>,
-    };
+    verify(raw, {
+      "svix-id": id,
+      "svix-timestamp": timestamp,
+      "svix-signature": signature,
+    });
   } catch {
     throw new WebhookError(401, "Invalid or expired webhook proof");
+  }
+  // Svix 2.5 verifies authenticity only; it does not return a parsed event.
+  // Parse precisely the signed bytes after verification, never verifier output.
+  try {
+    const event: unknown = JSON.parse(raw);
+    if (!event || typeof event !== "object" || Array.isArray(event))
+      throw new Error("Expected event object");
+    return { id, event: event as Record<string, unknown> };
+  } catch {
+    throw new WebhookError(400, "Invalid webhook JSON object");
   }
 }
 export interface TwilioVerifier {

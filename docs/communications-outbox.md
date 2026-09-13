@@ -1,6 +1,6 @@
 # Durable outbound communications
 
-This increment provides durable text/email intent, worker leases, attempt history and provider delivery state. It does **not** deploy functions, change current sender configuration, send test messages, ingest provider webhooks, dispatch appointment reminders, or authorize patient-record attachments. Existing `send-email` / `send-sms` remain unchanged until the inbox migration adopts this contract.
+The durable text/email queue provides immutable intent, worker leases, attempt history and verified provider delivery state. Subsequent increments integrate inbox sends, signed callbacks, reminders and separately reviewed record/invoice attachments. `send-email` and `send-sms` are retired HTTP410 routes. This document describes the queue contract; [hosted commissioning](hosted-edge-commissioning.md) and [commercial readiness](commercial-readiness.md) track deployment and actual provider acceptance separately.
 
 ## Inbox integration contract
 
@@ -31,7 +31,7 @@ The enqueue endpoint enforces the environment delivery policy before queueing. I
 - `pending`: durable intent awaiting a worker.
 - `claimed`: one worker owns a two-minute lease. Claiming itself does not mean any provider request occurred.
 - `accepted`: provider returned a validated message identifier. Delivery is still unconfirmed.
-- `delivered`: a provider event was durably recorded after signature verification by the future webhook handler.
+- `delivered`: a provider event was durably recorded after signature verification by the signed webhook handler.
 - `failed`: known pre-send rejection or provider rejection. The error code is safe to display without provider bodies, credentials or message text.
 - `uncertain`: a connection failure, ambiguous HTTP response, missing provider identifier, or expired in-flight worker lease prevents determining acceptance.
 
@@ -43,7 +43,7 @@ Twilio's standard Message-create API is treated as lacking a usable request idem
 
 ## Worker and suppression contract
 
-`dispatch-outbox` accepts POST only with the exact configured service-role credential. It processes at most one job per invocation. No browser, staff token or anonymous key can claim or finalize attempts. Schedule repeated service invocations only after controlled provider commissioning.
+`dispatch-outbox` accepts POST only with managed server authentication; see [worker authentication](service-worker-authentication.md). It processes at most one job per invocation. No browser, staff token or anonymous key can claim or finalize attempts. Schedule repeated service invocations only after controlled provider commissioning.
 
 The worker respects `APP_ENV`, `OUTBOUND_DELIVERY_MODE`, test recipient allowlists and sender credentials used by the existing delivery policy. Disabled mode does not even claim pending work. It re-checks eligibility immediately before the provider request, including:
 
@@ -56,14 +56,14 @@ The worker respects `APP_ENV`, `OUTBOUND_DELIVERY_MODE`, test recipient allowlis
 
 Attempts are recorded before making the external request. Failure to persist the outcome leaves an in-flight lease that expires into `uncertain`; the worker never blindly retries after this failure. An unused expired lease safely returns to pending. Credentials are never stored in outbox provider metadata.
 
-`record_communication_delivery(p_provider,p_event_id,p_provider_message_id,p_outcome)` is service-only, with event-ID deduplication. Future webhook handlers must verify authenticity before invoking it. Unknown provider IDs fail; do not guess a patient or message mapping. A late failure cannot regress an already recorded delivered state. Raw webhook payload storage/signature validation is outside this increment.
+`record_communication_delivery(p_provider,p_event_id,p_provider_message_id,p_outcome)` is service-only, with event-ID deduplication. Webhook handlers verify authenticity before invoking it. Unknown provider IDs fail; do not guess a patient or message mapping. A late failure cannot regress an already recorded delivered state. Raw webhook payload storage/signature validation is outside this increment.
 
 ## Rollout gates
 
-1. Apply migration and deploy `enqueue-message` / `dispatch-outbox` with delivery disabled. Both functions use JWT verification in addition to their own authentication checks.
-2. Migrate all UI send paths to stable UUID queue submission and queued/accepted/delivered labels. Retire or block legacy direct-send paths before enabling delivery; otherwise they bypass durable outbox and shared suppression.
-3. Integrate signed provider receipt webhooks and inbound STOP/bounce/complaint suppression. Add provider reconciliation operations and support procedures.
-4. Add authorized record release/attachment snapshot selection and the appointment/lab/vaccine reminder enqueue adapter. Never expose private document storage paths as public attachments.
+1. Apply migration and deploy `enqueue-message` / `dispatch-outbox` with delivery disabled. `enqueue-message` retains gateway JWT verification and active-staff checks. `dispatch-outbox` uses `verify_jwt=false` with managed server-key authentication; staff/anonymous callers are denied.
+2. Verify deployed UI send paths use stable UUID queue submission and queued/accepted/delivered labels. Keep legacy direct-send paths retired.
+3. Commission and test the implemented signed webhooks and inbound STOP/bounce/complaint suppression. Confirm provider reconciliation operations and support procedures.
+4. Commission the implemented reviewed record/invoice attachment paths and appointment/lab/vaccine reminder adapter. Never expose private document storage paths as public attachments.
 5. Configure sender/domain credentials and exact test allowlists, then perform owner-authorized controlled round trips. Verify failed/unknown/duplicate behavior before switching to production live mode.
 
 Tests use synthetic transport and rollback-only database fixtures. Passing them does not establish domain delivery, SMS registration, provider credentials, or real round-trip behavior.
