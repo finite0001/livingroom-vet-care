@@ -4,7 +4,10 @@
 /.lovable
 /node_modules
 /dist
-/supabase
+/supabase/migrations
+/supabase/tests
+/supabase/.temp
+/supabase/config.toml
 /tests
 /e2e
 /test-results
