@@ -548,14 +548,120 @@ try {
     p_status: "active",
     p_importance: "high",
   });
+  const consultRun = randomUUID(),
+    vaccinationRun = randomUUID(),
+    vaccinationReview = randomUUID();
+  ids.push(consultRun, vaccinationRun, vaccinationReview);
+  const consultLease = await rpc("claim_ezyvet_clinical_import", {
+    p_id: consultRun,
+    p_actor: actor,
+    p_site_uid: site,
+    p_resource: "consult",
+    p_source_origin: "https://api.trial.ezyvet.com",
+    p_animal_link_id: animalLink,
+  });
+  await rpc("stage_ezyvet_import_page", {
+    p_id: consultRun,
+    p_actor: actor,
+    p_lease_id: consultLease.lease_id,
+    p_page: 1,
+    p_complete: true,
+    p_items: [{ external_id: "901", payload: { id: 901, animal_id: 77 } }],
+  });
+  const consultCandidate = (await staff("list_ezyvet_clinical_candidates", {
+    p_animal_link_id: animalLink,
+    p_resource: "consult",
+    p_limit: 20,
+  })).candidates.find((c: { external_id: string; is_current: boolean }) =>
+    c.external_id === "901" && c.is_current
+  );
+  ids.push(consultCandidate.id);
+  const vaccinationLease = await rpc("claim_ezyvet_vaccination_import", {
+    p_id: vaccinationRun,
+    p_actor: actor,
+    p_site_uid: site,
+    p_resource: "vaccination",
+    p_source_origin: "https://api.trial.ezyvet.com",
+    p_animal_link_id: animalLink,
+    p_consult_snapshot_id: consultCandidate.id,
+    p_consult_payload_hash: consultCandidate.payload_hash,
+    p_consult_observed_head_version: consultCandidate.head_version,
+  });
+  await rpc("stage_ezyvet_import_page", {
+    p_id: vaccinationRun,
+    p_actor: actor,
+    p_lease_id: vaccinationLease.lease_id,
+    p_page: 1,
+    p_complete: true,
+    p_items: [{
+      external_id: "902",
+      payload: {
+        id: "902",
+        consult_id: "901",
+        description: "Synthetic outside vaccine <script>raw()</script>",
+        date_of_administration: "ambiguous",
+        date_of_next_administration: null,
+        active: "unknown",
+        qty: "1",
+      },
+    }],
+  });
+  const vaccinationCandidate =
+    (await staff("list_ezyvet_vaccination_review_candidates", {
+      p_pet_id: pet,
+      p_animal_link_id: animalLink,
+      p_limit: 20,
+    })).candidates.find((c: { external_id: string }) =>
+      c.external_id === "902"
+    );
+  ids.push(vaccinationCandidate.id);
+  const vaccinePayload = {
+    animal_link_id: animalLink,
+    patient_version: 1,
+    snapshot_id: vaccinationCandidate.id,
+    payload_hash: vaccinationCandidate.payload_hash,
+    observed_head_version: vaccinationCandidate.head_version,
+    consult_snapshot_id: consultCandidate.id,
+    consult_payload_hash: consultCandidate.payload_hash,
+    consult_observed_head_version: consultCandidate.head_version,
+    product_id: null,
+    product_version: null,
+    administered_on: null,
+    administration_date_status: "uninterpreted",
+    source_next_due_on: null,
+    next_date_status: "unknown",
+    status: "unknown",
+    outside_author: null,
+    reason: "Synthetic DVM review retains unknown source meanings",
+    replaces_id: null,
+    expected_predecessor_hash: null,
+  };
+  const vaccinePrepared = await staff("prepare_ezyvet_vaccination_review", {
+    p_id: vaccinationReview,
+    p_pet_id: pet,
+    p_payload: vaccinePayload,
+  });
+  const vaccineApproved = await staff("approve_ezyvet_vaccination_review", {
+    p_id: vaccinationReview,
+    p_pet_id: pet,
+    p_expected_hash: vaccinePrepared.request.request_hash,
+    p_confirmed: true,
+  });
+  ids.push(vaccineApproved.receipt.id);
+  check(
+    vaccineApproved.receipt.reviewed.administered_on === null &&
+      vaccineApproved.receipt.original.date_of_administration === "ambiguous",
+    "Actual DVM vaccination review preserves unknown date and raw evidence",
+  );
   sql(
     `select set_config('request.jwt.claims',${
       quote(JSON.stringify({ sub: actor, role: "authenticated" }))
     },false);insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,${
       quote(actor)
-    },now(),'Synthetic test policy only',6) on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_schema_version=6,accepted_at=now();`,
+    },now(),'Synthetic test policy only',7) on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_schema_version=7,accepted_at=now();`,
   );
   const selection = {
+    imported_vaccination_ids: [vaccineApproved.receipt.id],
     document_ids: [document],
     lab_report_ids: [report],
     external_record_ids: [externalRecord],
@@ -570,7 +676,7 @@ try {
       p_recipient: channel === "EMAIL" ? email : "+13035550481",
       p_selection: selection,
     };
-    const preview = await staff("preview_record_release_v6", args);
+    const preview = await staff("preview_record_release_v7", args);
     const id = randomUUID();
     ids.push(id);
     await staff("confirm_record_release", {
@@ -587,7 +693,7 @@ try {
     e.release.snapshot.attachments[0].content_sha256 ===
         captured.content_sha256 &&
       e.release.snapshot.lab_reports[0].capture_hash === captured.capture_hash,
-    "Actual schema6 snapshot binds selected original to immutable lab capture",
+    "Actual schema7 snapshot binds selected original to immutable lab capture",
   );
   check(
     [e, s].every((value) => {
@@ -609,14 +715,14 @@ try {
           proof.capture_hash === externalCaptured.capture_hash
         );
     }),
-    "Both real schema6 release projections retain external and lab proof on one deduplicated private original",
+    "Both real schema7 release projections retain external and lab proof on one deduplicated private original",
   );
   check(
     e.release.snapshot.imported_histories[0].id === historyApproval &&
       e.release.snapshot.problem_source_extractions[0].problem_id ===
         problemId &&
       e.release.snapshot.problem_source_extractions[0].locally_edited,
-    "Real schema6 projection connects imported history, native problem and preserved original extraction",
+    "Real schema7 projection connects imported history, native problem and preserved original extraction",
   );
   const rendered = renderRecordRelease({ preview: e.release });
   check(
@@ -642,6 +748,29 @@ try {
     e,
     sender,
     download,
+  );
+  const actualEmailHtml = Buffer.from(
+    JSON.parse(frozen.payload_text).attachments[0].content,
+    "base64",
+  ).toString();
+  const actualPrint = renderRecordRelease({
+    preview: e.release,
+    confirmed: {
+      id: e.release.id,
+      created_at: e.release.created_at,
+      created_by: e.release.created_by,
+      eligible: true,
+      events: [],
+      ineligibility_reason: null,
+    },
+  });
+  check(
+    actualEmailHtml === actualPrint &&
+      actualEmailHtml.includes(
+        "Clinician-reviewed outside vaccination history",
+      ) && actualEmailHtml.includes("ambiguous") &&
+      actualEmailHtml.includes("Imported outside history"),
+    "Actual email HTML equals print and retains both raw vaccine meaning and outside narrative",
   );
   const altered = bytes.slice();
   altered[altered.length - 1] ^= 1;
@@ -718,6 +847,17 @@ try {
     address: "Synthetic",
     domain: null,
   }, download);
+  const smsReport = JSON.parse(artifacts.payload_text).artifacts[0];
+  const smsHtml = Buffer.from(smsReport.content, "base64").toString();
+  const outsideSection = (html: string) =>
+    html.match(
+      /<article><h2>Clinician-reviewed outside vaccination history<\/h2>[\s\S]*?<\/article>/,
+    )?.[0];
+  check(
+    !!outsideSection(actualEmailHtml) &&
+      outsideSection(smsHtml) === outsideSection(actualEmailHtml),
+    "Actual email, print and SMS link include identical reviewed vaccination content",
+  );
   const changedArtifacts = JSON.parse(artifacts.payload_text);
   changedArtifacts.artifacts[1].content = Buffer.from(altered).toString(
     "base64",
@@ -1022,7 +1162,7 @@ try {
     p_expected_hash: discrepancyPrepared.request.request_hash,
     p_confirmed: true,
   });
-  const afterReview = await staff("preview_record_release_v6", {
+  const afterReview = await staff("preview_record_release_v7", {
     p_pet_id: pet,
     p_client_id: client,
     p_channel: "EMAIL",
@@ -1042,6 +1182,48 @@ try {
       "reviewed narrative was not selected",
     ),
     "Actual release renders reviewed source provenance separately from optional narrative",
+  );
+  const freshVaccinationPackage = await release("EMAIL");
+  const correctionId = randomUUID();
+  ids.push(correctionId);
+  const correctionPrepared = await staff("prepare_ezyvet_vaccination_review", {
+    p_id: correctionId,
+    p_pet_id: pet,
+    p_payload: {
+      ...vaccinePayload,
+      replaces_id: vaccineApproved.receipt.id,
+      expected_predecessor_hash: vaccineApproved.receipt.version_hash,
+      outside_author: "Explicit synthetic outside clinician",
+      reason: "Synthetic attribution correction after further review",
+    },
+  });
+  const correctedVaccination = await staff(
+    "approve_ezyvet_vaccination_review",
+    {
+      p_id: correctionId,
+      p_pet_id: pet,
+      p_expected_hash: correctionPrepared.request.request_hash,
+      p_confirmed: true,
+    },
+  );
+  ids.push(correctedVaccination.receipt.id);
+  const supersededPackage = await staff("read_record_release", {
+    p_id: freshVaccinationPackage.release.id,
+  });
+  check(
+    !supersededPackage.eligible &&
+      JSON.stringify(supersededPackage.release.snapshot) ===
+        JSON.stringify(freshVaccinationPackage.release.snapshot),
+    "Actual vaccination correction invalidates pending delivery while retaining the immutable issued package",
+  );
+  const recoveredVaccination = await staff(
+    "recover_ezyvet_vaccination_review",
+    { p_id: vaccinationReview, p_pet_id: pet },
+  );
+  check(
+    recoveredVaccination.receipt.id === vaccineApproved.receipt.id &&
+      recoveredVaccination.receipt.reviewed.outside_author === null,
+    "Exact original vaccination review recovers after correction without adopting later attribution",
   );
 } catch (error) {
   failures.push(error);
@@ -1123,5 +1305,5 @@ if (failures.length) {
   );
 }
 console.log(
-  `Clinical history Auth/Storage/PostgREST: ${assertions} checks passed. No provider requests or clinical approval.`,
+  `Clinical history Auth/Storage/PostgREST: ${assertions} checks passed. No provider requests; synthetic clinical fixtures only.`,
 );
