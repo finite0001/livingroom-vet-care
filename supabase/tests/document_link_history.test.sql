@@ -1,0 +1,42 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into auth.users(id,email,raw_user_meta_data) values('98000000-0000-4000-8000-000000000001','link-history@example.test','{}'),('98000000-0000-4000-8000-000000000002','link-history-other@example.test','{}');
+insert into user_roles(user_id,role) values('98000000-0000-4000-8000-000000000001','ADMIN'),('98000000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"98000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'History','Household','+13035550404','history@example.test','SMS',null,null);
+reset role;
+insert into conversations(id,client_id) values('98000000-0000-4000-8000-000000000003',(select id from fx where k='client'));
+-- Deliberately synthetic historical metadata with no live source: this RPC must not invoke source eligibility.
+insert into document_link_grants(id,family,source_id,client_id,actor_id,conversation_id,recipient,source_hash,source_bundle,message_template,origin,key_version,capability_context,expires_at,created_at,state)
+select ('98100000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'invoice','98000000-0000-4000-8000-000000000004',(select id from fx where k='client'),'98000000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000003','+13035550404',repeat('a',64),'{}','History {{document_link}}','https://thelivingroom.vet','synthetic','SYNTHETIC PRIVATE CONTEXT',now()-interval '1 hour',now()-n*interval '1 minute','revoked' from generate_series(1,51)n;
+insert into document_link_grants(id,family,source_id,client_id,actor_id,conversation_id,recipient,source_hash,source_bundle,message_template,origin,key_version,capability_context,expires_at,state)
+values('98200000-0000-4000-8000-000000000001','record_release','98000000-0000-4000-8000-000000000004',(select id from fx where k='client'),'98000000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000003','+13035550404',repeat('b',64),'{}','Records {{document_link}}','https://thelivingroom.vet','synthetic','SYNTHETIC PRIVATE CONTEXT',now()+interval '1 hour','reviewed');
+insert into messages(id,conversation_id,type,sender_type,sender_id,content,is_internal) values('98300000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000003','SMS','STAFF','98000000-0000-4000-8000-000000000001','History {{document_link}}',false);
+insert into communication_outbox(id,request_id,conversation_id,client_id,message_id,created_by,channel,recipient,subject,body,provider,state) values('98300000-0000-4000-8000-000000000002','98100000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000003',(select id from fx where k='client'),'98300000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000001','SMS','+13035550404','','History {{document_link}}','twilio','failed');
+insert into document_link_outbox_links(outbox_id,grant_id,reviewed_artifact_hash,reviewed_message_hash,queued_by) values('98300000-0000-4000-8000-000000000002','98100000-0000-4000-8000-000000000001',repeat('a',64),repeat('b',64),'98000000-0000-4000-8000-000000000001');
+set local role authenticated;
+select is(jsonb_array_length(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')),50,'History capped at latest fifty');
+select is(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')#>>'{0,id}','98100000-0000-4000-8000-000000000001','Newest metadata first');
+select is(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')#>>'{49,id}','98100000-0000-4000-8000-000000000050','Oldest returned row respects cap');
+select is(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')#>>'{0,state}','revoked','Expired revoked grants remain visible without live source');
+select is(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')#>'{1,receipt_state}','null'::jsonb,'Unqueued history has null receipt state');
+select is(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')#>>'{0,receipt_state}','failed','Current delivery state included without private queue fields');
+select is((select array_agg(k order by k) from jsonb_object_keys(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')->0)k),array['created_at','expires_at','id','receipt_state','recipient','state'],'Only safe exact metadata keys returned');
+select is(jsonb_array_length(read_document_link_history('record_release','98000000-0000-4000-8000-000000000004')),1,'Family separates matching source IDs');
+select is(read_document_link_history('invoice',gen_random_uuid()),'[]'::jsonb,'Unknown source yields empty history');
+select throws_ok($$select read_document_link_history('wrong','98000000-0000-4000-8000-000000000004')$$,'22023',null,'Invalid family rejected');
+select throws_ok($$select read_document_link_history('invoice',null)$$,'22023',null,'Source required');
+select set_config('request.jwt.claims','{"sub":"98000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select is(read_document_link_history('invoice','98000000-0000-4000-8000-000000000004'),'[]'::jsonb,'Another active administrator cannot enumerate original actor history');
+reset role;select set_config('request.jwt.claims','{}',true);
+update profiles set is_active=false where id='98000000-0000-4000-8000-000000000001';
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"98000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($$select read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')$$,'42501',null,'Inactive actor cannot read historical metadata');
+reset role;set local role anon;
+select throws_ok($$select read_document_link_history('invoice','98000000-0000-4000-8000-000000000004')$$,'42501',null,'Anonymous access denied');
+select * from finish();
+rollback;
