@@ -69,6 +69,7 @@ export default function ConversationsPage() {
             <h1 className="text-lg font-bold">Inbox</h1>
             <InquiryNavigationLink />
             <Link to="/hub/inbox/review" className="block text-sm text-primary underline">Review unmatched incoming messages</Link>
+            <Link to="/hub/inbox/processing" className="block text-sm text-primary underline">Review communication processing</Link>
             <p className="text-xs text-muted-foreground" aria-live="polite">
               {count.isError
                 ? "Your unread count is unavailable"
