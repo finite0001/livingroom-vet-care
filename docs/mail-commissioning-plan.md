@@ -15,6 +15,8 @@ Fastmail is the selected human mailbox provider; the practice application remain
 
 ## Separate message purposes within one Resend team
 
+The implementation now provides [optional reserved-sender Auth callback separation](auth-mail-webhook-separation.md). It is tested locally but not deployed or configured. The following paragraph describes the original unconfigured callback path and the acceptance requirement; it must remain intact for unknown client statuses.
+
 The owner explicitly corrected the selection to Fastmail + Resend only. Do not commission Postmark or a second Resend team. Separate sender identities and least-privilege credentials remain useful within the selected team.
 
 Current `receiveResend` passes supported status events to `receive_communication_event`, which rejects events without a matching outbox provider-message ID. The handler returns503 to preserve recovery when a callback arrives before the sending worker saves its receipt. Auth SMTP emails have no application outbox row. Before enabling shared-team Auth sending, implement and test explicit identification/routing of authentication events without globally acknowledging unknown client IDs. Sender-domain classification and provider-verified metadata are candidate approaches requiring payload validation; do not assume API-key separation isolates webhooks. Resend documents that [email tags are included in webhook events](https://resend.com/docs/dashboard/emails/tags), but whether the selected Supabase Auth transport can supply the necessary tags remains to be verified.

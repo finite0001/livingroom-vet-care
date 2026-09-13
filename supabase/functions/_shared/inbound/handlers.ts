@@ -17,6 +17,8 @@ export interface EventDatabase {
 }
 export interface WebhookEnvironment {
   RESEND_INBOUND_ADDRESSES?: string;
+  RESEND_FROM?: string;
+  RESEND_AUTH_FROM_ADDRESS?: string;
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_FROM_NUMBER?: string;
   TWILIO_WEBHOOK_URL?: string;
@@ -81,7 +83,27 @@ export async function receiveResend(
   };
   const type = mapping[String(event.type)];
   if (!type) throw new WebhookError(400, "Unsupported webhook event");
+  // Only signed outbound events from a reserved Auth sender may bypass the
+  // client ledger. Missing/unknown client receipts must continue to retry.
+  const authSetting = env.RESEND_AUTH_FROM_ADDRESS;
+  let authSender: string | null = null;
+  if (authSetting !== undefined) {
+    authSender = normalizeEmail(authSetting);
+    const clientSender = emailAddress(env.RESEND_FROM);
+    const inbound = env.RESEND_INBOUND_ADDRESSES?.split(",").map(normalizeEmail) ?? [];
+    if (!authSender || !clientSender || authSender === clientSender ||
+        inbound.some((address) => !address || address === authSender)) {
+      throw new WebhookError(503, "Authentication sender separation unavailable");
+    }
+  }
+  if (type !== "inbound" && authSender && emailAddress(data.from) === authSender) {
+    // Auth delivery history remains in the provider's private dashboard.
+    // Never persist recipients, subjects, bodies or recovery links to the hub.
+    return { purpose: "authentication", status: type };
+  }
   if (type === "inbound") {
+    if (authSender && emailAddress(data.from) === authSender)
+      throw new WebhookError(400, "Authentication mail is not a client reply");
     const allowed =
       env.RESEND_INBOUND_ADDRESSES?.split(",").map(normalizeEmail);
     const recipients = Array.isArray(data.to) ? data.to.map(emailAddress) : [];
