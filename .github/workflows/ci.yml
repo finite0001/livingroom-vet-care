@@ -79,6 +79,12 @@ jobs:
         run: node --experimental-strip-types tests/payment-access/local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache reconciliation HTTP roundtrip dependencies
+        run: deno check --frozen tests/payment-reconciliation/local-server.ts
+      - name: Verify actual administrator reconciliation HTTP and proof capture
+        run: node --experimental-strip-types tests/payment-reconciliation/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify actual private Storage round-trip
         run: node scripts/verify-local-storage.mjs
         env:

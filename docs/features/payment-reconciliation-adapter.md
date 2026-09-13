@@ -46,3 +46,9 @@ Targets come only from already attributed durable provider evidence. Unsupported
 - `deno check --frozen tests/payment-reconciliation/local-server.ts` then `node --experimental-strip-types tests/payment-reconciliation/local-roundtrip.ts` runs 18 checks through real localhost HTTP, Auth, PostgREST, and SQL. `PAYMENT_TEST_PROJECT` optionally names an existing local Supabase configuration. The runner only reads Supabase status and cleans its own synthetic fixtures; it never starts, resets, or stops Supabase.
 
 The HTTP test injects synthetic checkout retrieval and restricts Deno networking to localhost. It proves real proof capture, exact retry, actor completion, recovery without further retrieval, and unchanged cash for an open session. It does **not** prove live Stripe retrieval or acceptance; no Stripe credentials or provider requests are used.
+
+## Combined delivery and reconciliation verification
+
+The integrated branch includes reviewed delivery3700 and administrator discovery3800, proof adapter and staff reconciliation UI. Full lint/typecheck/build and304 unit tests pass. Browser verification covers21 client collection/status, staff grant and administrator reconciliation scenarios, plus the six existing Checkout/refund scenarios in a separate combined run. The actual18-check localhost Auth/PostgREST reconciliation roundtrip passes on the integrated schema, and CI now runs that same harness. Payment delivery's21 PostgreSQL concurrency checks are also wired into CI.
+
+Resolved observations are excluded from current target reason text; they remain available in historical payment data. Proof retrieval remains default-off and no provider credentials, hosted schema or sending configuration were changed. Staff payment delivery preparation/composer integration and actual provider acceptance remain outstanding.

@@ -90,7 +90,7 @@ export async function readReconciliationWorkspace(
     target.reasons = state.reconciliation_observations
       .filter(
         (row) =>
-          row.family === target.family && row.request_id === target.request_id,
+          row.family === target.family && row.request_id === target.request_id && row.resolved !== true,
       )
       .map((row) => row.reason);
   for (const [family, rows] of [
@@ -117,7 +117,7 @@ export async function readReconciliationWorkspace(
           amount_cents: row.amount_cents,
           reviewable: false,
           reasons: state.reconciliation_observations
-            .filter((o) => o.family === family && o.request_id === row.id)
+            .filter((o) => o.family === family && o.request_id === row.id && o.resolved !== true)
             .map((o) => o.reason),
         });
   }
