@@ -1,0 +1,67 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into auth.users(id,email,raw_user_meta_data) values
+ ('73800000-0000-4000-8000-000000000001','payment-staff@example.test','{}'),
+ ('73800000-0000-4000-8000-000000000002','payment-other@example.test','{}'),
+ ('73800000-0000-4000-8000-000000000003','payment-inactive@example.test','{}');
+update public.profiles set is_active=false where id='73800000-0000-4000-8000-000000000003';
+insert into public.user_roles(user_id,role) values ('73800000-0000-4000-8000-000000000001','ADMIN') on conflict do nothing;
+create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
+create temp table snapshots(k text primary key,v jsonb);grant all on snapshots to authenticated,service_role;
+set local role service_role;
+select public.configure_payment_provider('acct_test',false,'https://thelivingroom.vet');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"73800000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Payment','Family',null,null,'EMAIL',null,null);
+insert into fx select 'other-client',id from public.save_client(auth.uid(),null,null,'Different','Family',null,null,'EMAIL',null,null);
+insert into fx select 'product',id from public.save_catalog_product(null,null,'Visit','service','','visit',10000,true);
+insert into fx values('invoice','73800000-0000-4000-8000-000000000010'),('attempt','73800000-0000-4000-8000-000000000020'),('refund','73800000-0000-4000-8000-000000000030');
+select public.create_billing_invoice((select id from fx where k='invoice'),(select id from fx where k='client'));
+select public.add_invoice_service(gen_random_uuid(),(select id from fx where k='invoice'),null,(select id from fx where k='product'),1);
+select public.issue_billing_invoice((select id from fx where k='invoice'),(select version from public.billing_invoices where id=(select id from fx where k='invoice')));
+insert into snapshots select 'before',public.read_invoice_payment_state((select id from fx where k='invoice'),(select id from fx where k='client'));
+
+insert into fx values('grant',gen_random_uuid());
+select public.prepare_payment_collection((select id from fx where k='grant'),(select id from fx where k='invoice'),(select id from fx where k='client'),(select v->>'source_hash' from snapshots where k='before'),10000,now()+interval '6 days');
+set local role service_role;
+insert into snapshots select 'grant_capture',public.capture_payment_collection((select id from fx where k='grant'),'73800000-0000-4000-8000-000000000001','https://thelivingroom.vet','local-v1',repeat('a',64),repeat('b',64));
+set local role authenticated;
+select public.attest_payment_collection((select id from fx where k='grant'),(select v#>>'{capture,context_hash}' from snapshots where k='grant_capture'),true);
+select public.prepare_invoice_checkout((select id from fx where k='attempt'),(select id from fx where k='invoice'),(select id from fx where k='client'),(select v->>'source_hash' from snapshots where k='before'),10000,'acct_test',false,'https://thelivingroom.vet/payment/return','https://thelivingroom.vet/payment/cancel');
+set local role service_role;
+select public.apply_checkout_evidence('evt_reconopen',(select id from fx where k='attempt'),'acct_test',false,'session_open','cs_test_recon',null,10000,'usd',(select v->>'source_hash' from snapshots where k='before'));
+select public.record_payment_reconciliation('checkout',(select id from fx where k='attempt'),'provider_object_unavailable');
+set local role authenticated;
+insert into snapshots select 'preview',public.preview_payment_reconciliation((select id from fx where k='invoice'),'checkout',(select id from fx where k='attempt'),'cs_test_recon');
+select is(jsonb_array_length((select v->'blocker_refs' from snapshots where k='preview')),1,'Preview has exact observation target');
+select throws_ok($$select public.preview_payment_reconciliation((select id from fx where k='invoice'),'checkout',(select id from fx where k='attempt'),'cs_test_unknown')$$,'23514',null,'Unknown object cannot be reviewed');
+insert into fx values('case','73800000-0000-4000-8000-000000000040');
+select public.prepare_payment_reconciliation((select id from fx where k='case'),(select id from fx where k='invoice'),'checkout',(select id from fx where k='attempt'),'cs_test_recon',(select v->'blocker_refs' from snapshots where k='preview'),(select v->>'snapshot_hash' from snapshots where k='preview'));
+select lives_ok($$select public.prepare_payment_reconciliation((select id from fx where k='case'),(select id from fx where k='invoice'),'checkout',(select id from fx where k='attempt'),'cs_test_recon',(select v->'blocker_refs' from snapshots where k='preview'),(select v->>'snapshot_hash' from snapshots where k='preview'))$$,'Exact prepare retry recovers case');
+
+insert into snapshots select 'workspace',public.list_payment_reconciliation_workspace((select id from fx where k='invoice'));
+select is((select v->>'invoice_id' from snapshots where k='workspace'),(select id::text from fx where k='invoice'),'Workspace is invoice scoped');
+select is((select v#>>'{targets,0,provider_object_id}' from snapshots where k='workspace'),'cs_test_recon','Discovery uses known accepted provider object');
+select is((select v#>>'{targets,0,reviewable}' from snapshots where k='workspace'),'true','Eligible known object can enter proof review');
+select is((select v#>>'{cases,0,case,id}' from snapshots where k='workspace'),(select id::text from fx where k='case'),'Owning administrator can recover original case');
+select is((select v->>'has_more_cases' from snapshots where k='workspace'),'false','Small history has no hidden page');
+select ok(not (select v#>'{targets,0}' ?| array['success_url','cancel_url','actor_id','source_hash'] from snapshots where k='workspace'),'Target projection omits private context and return templates');
+select throws_ok($$select public.list_payment_reconciliation_workspace(gen_random_uuid())$$,'42501',null,'Unknown invoice unavailable');
+set local role service_role;
+select public.record_payment_reconciliation('checkout',(select id from fx where k='attempt'),'provider_context_mismatch');
+select throws_ok($$select public.list_payment_reconciliation_workspace((select id from fx where k='invoice'))$$,'42501',null,'Service role cannot use staff discovery');
+set local role authenticated;
+select is(public.list_payment_reconciliation_workspace((select id from fx where k='invoice'))#>>'{targets,0,reviewable}','false','Conflicting evidence stays visible but unreviewable');
+select set_config('request.jwt.claims','{"sub":"73800000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select public.list_payment_reconciliation_workspace((select id from fx where k='invoice'))$$,'42501',null,'Non-admin staff discovery denied');
+reset role;
+insert into public.user_roles(user_id,role) values('73800000-0000-4000-8000-000000000002','ADMIN');
+set local role authenticated;
+select is(jsonb_array_length(public.list_payment_reconciliation_workspace((select id from fx where k='invoice'))->'cases'),0,'Another administrator does not recover someone else case draft');
+select is(jsonb_array_length(public.list_payment_reconciliation_workspace((select id from fx where k='invoice'))->'targets'),1,'Another administrator can discover invoice attributed object');
+set local role anon;
+select throws_ok($$select public.list_payment_reconciliation_workspace(gen_random_uuid())$$,'42501',null,'Anonymous discovery denied');
+reset role;
+select * from finish();rollback;
