@@ -1,22 +1,22 @@
-import { SourceHistoryApproval } from "./SourceHistoryApproval";
+import { searchMappings, listClinicalCandidates } from "./clinical-api";
+import { contextOf } from "./vaccination-api";
+import type { VaccinationContext } from "./vaccination-api";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  searchMappings,
-  listClinicalRuns,
-  listClinicalCandidates,
-  recoverClinicalRun,
-  stageClinicalPage,
-} from "./clinical-api";
+  listVaccinationRuns,
+  listVaccinationCandidates,
+  recoverVaccinationRun,
+  stageVaccinationPage,
+} from "./vaccination-api";
 import type {
-  ClinicalMapping,
-  ClinicalResource,
-  ClinicalRun,
-  ClinicalCursor,
-  ClinicalCandidate,
-} from "./clinical-api";
+  VaccinationMapping,
+  VaccinationRun,
+  VaccinationCursor,
+  VaccinationCandidate,
+} from "./vaccination-api";
 interface Props {
   actor: string;
   onDirtyChange: (dirty: boolean) => void;
@@ -24,33 +24,35 @@ interface Props {
 const message = (e: unknown) =>
   e instanceof Error
     ? e.message
-    : "Clinical import unavailable. Recover the original run.";
-export function EzyVetClinicalImports({ actor, onDirtyChange }: Props) {
+    : "Vaccination import unavailable. Recover the original run.";
+export function EzyVetVaccinationImports({ actor, onDirtyChange }: Props) {
   const [search, setSearch] = useState("");
-  const [mapping, setMapping] = useState<ClinicalMapping | null>(null);
+  const [mapping, setMapping] = useState<VaccinationMapping | null>(null);
   const [locked, setLocked] = useState(false);
   useEffect(() => {
     onDirtyChange(locked);
   }, [locked, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const maps = useQuery({
-    queryKey: ["ezyvet-clinical", actor, "mapping", search],
+    queryKey: ["ezyvet-vaccination", actor, "mapping", search],
     enabled: search.trim().length >= 2,
     queryFn: () => searchMappings(search),
   });
   return (
     <section
-      aria-label="Patient-scoped clinical import"
+      aria-label="Consult-scoped vaccination import"
       className="space-y-4 rounded-md border p-4"
     >
-      <h2 className="text-xl font-semibold">Import patient clinical history</h2>
+      <h2 className="text-xl font-semibold">Import source vaccinations</h2>
       <p>
-        Read consults and history through an approved ezyVet patient mapping. A
-        completed scan preserves source evidence; it does not approve a clinical
-        record or create diagnoses, prescriptions or locally signed SOAP.
+        Read vaccination evidence through an approved patient mapping and a
+        current scoped consult. One completed consult scan is not a complete
+        patient migration. Product, dates and quantity remain uninterpreted
+        source values; this workflow creates no treatments, due dates,
+        certificates, stock movements, charges or reminders.
       </p>
       <label className="block">
-        Find clinical import patient
+        Find vaccination import patient
         <Input
           value={search}
           disabled={locked}
@@ -58,6 +60,9 @@ export function EzyVetClinicalImports({ actor, onDirtyChange }: Props) {
           maxLength={200}
         />
       </label>
+      {maps.data?.length === 0 && search.trim().length >= 2 && (
+        <p>No approved patient mappings found.</p>
+      )}
       {maps.isError && <p role="alert">Mapped patient search unavailable.</p>}
       <div className="flex flex-wrap gap-2">
         {maps.data?.map((m) => (
@@ -72,7 +77,7 @@ export function EzyVetClinicalImports({ actor, onDirtyChange }: Props) {
         ))}
       </div>
       {mapping && (
-        <ClinicalPatient
+        <VaccinationPatient
           key={`${actor}:${mapping.link_id}`}
           actor={actor}
           mapping={mapping}
@@ -84,50 +89,74 @@ export function EzyVetClinicalImports({ actor, onDirtyChange }: Props) {
 }
 interface PatientProps {
   actor: string;
-  mapping: ClinicalMapping;
+  mapping: VaccinationMapping;
   onLocked: (locked: boolean) => void;
 }
-function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
-  const [resource, setResource] = useState<ClinicalResource>("history");
+function VaccinationPatient({ actor, mapping, onLocked }: PatientProps) {
+  const resource = "vaccination";
+  const [context, setContext] = useState<VaccinationContext | null>(null);
+  const contextRef = useRef<VaccinationContext | null>(null);
+  const [consultCursor, setConsultCursor] = useState<VaccinationCursor | null>(
+    null,
+  );
+  const consults = useQuery({
+    queryKey: [
+      "ezyvet-vaccination-consults",
+      actor,
+      mapping.link_id,
+      consultCursor,
+    ],
+    queryFn: () => listClinicalCandidates(mapping, "consult", consultCursor),
+    retry: false,
+  });
   const [id, setId] = useState<string | null>(null);
   const idRef = useRef<string | null>(null);
-  const [run, setRun] = useState<ClinicalRun | null>(null);
+  const [run, setRun] = useState<VaccinationRun | null>(null);
   const [uncertain, setUncertain] = useState(false);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const alive = useRef(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [runCursor, setRunCursor] = useState<ClinicalCursor | null>(null);
-  const [sourceCursor, setSourceCursor] = useState<ClinicalCursor | null>(null);
-  const [selected, setSelected] = useState<ClinicalCandidate | null>(null);
-  const key = `lrv-ezyvet-clinical-run:${actor}:${mapping.link_id}:${resource}`;
+  const [runCursor, setRunCursor] = useState<VaccinationCursor | null>(null);
+  const [sourceCursor, setSourceCursor] = useState<VaccinationCursor | null>(
+    null,
+  );
+  const [selected, setSelected] = useState<VaccinationCandidate | null>(null);
+  const key = `lrv-ezyvet-vaccination-run:${actor}:${mapping.link_id}:${resource}`;
   const runs = useQuery({
     queryKey: [
-      "ezyvet-clinical",
+      "ezyvet-vaccination",
       actor,
       mapping.link_id,
       resource,
       "runs",
       runCursor,
     ],
-    queryFn: () => listClinicalRuns(actor, mapping, resource, runCursor),
+    queryFn: () => listVaccinationRuns(actor, mapping, resource, runCursor),
     retry: false,
   });
   const sources = useQuery({
     queryKey: [
-      "ezyvet-clinical",
+      "ezyvet-vaccination",
       actor,
       mapping.link_id,
       resource,
       "sources",
       sourceCursor,
     ],
-    queryFn: () => listClinicalCandidates(mapping, resource, sourceCursor),
+    queryFn: () => listVaccinationCandidates(mapping, resource, sourceCursor),
     retry: false,
   });
-  const [approvalDirty, setApprovalDirty] = useState(false);
-  const dirty = busy || uncertain || approvalDirty;
+  useEffect(() => {
+    if (sources.data)
+      setSelected((previous) =>
+        previous
+          ? (sources.data.candidates.find((c) => c.id === previous.id) ?? null)
+          : null,
+      );
+  }, [sources.data]);
+  const dirty = busy || uncertain;
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -145,7 +174,20 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
     } catch {
       /* Recover through server discovery. */
     }
-    if (stored && !/^[a-f0-9-]{36}$/i.test(stored)) stored = null;
+    let savedContext: VaccinationContext | null = null;
+    if (stored) {
+      try {
+        const intent = JSON.parse(stored);
+        if (!/^[a-f0-9-]{36}$/i.test(intent.id))
+          throw new Error("Invalid run reference");
+        savedContext = contextOf(intent.context);
+        stored = intent.id;
+      } catch {
+        stored = null;
+      }
+    }
+    contextRef.current = savedContext;
+    setContext(savedContext);
     idRef.current = stored;
     setId(stored);
     setRun(null);
@@ -158,8 +200,14 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
     );
     setError("");
   }, [key]);
-  const persist = (value: string) => {
-    sessionStorage.setItem(key, value);
+  const persist = (value: string, intent = contextRef.current) => {
+    if (!intent) throw new Error("Select a current scoped consult first.");
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({ id: value, context: contextOf(intent) }),
+    );
+    contextRef.current = intent;
+    setContext(intent);
     idRef.current = value;
     setId(value);
   };
@@ -178,8 +226,13 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
     }
   }
   async function recover(target = idRef.current) {
-    if (!target) return;
-    const saved = await recoverClinicalRun(target, actor, mapping, resource);
+    if (!target || !contextRef.current) return;
+    const saved = await recoverVaccinationRun(
+      target,
+      actor,
+      mapping,
+      contextRef.current!,
+    );
     if (!alive.current) return;
     setRun(saved);
     if (!saved) {
@@ -193,23 +246,30 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
         saved.scope === "legacy_unscoped"
           ? "Legacy unscoped evidence is read-only. Continue with a separate mapped scan after any source cooldown."
           : saved.status === "review_ready"
-            ? "Scan complete. Source observations await clinical review; no chart approval occurred."
+            ? "Consult scan complete. This is not a complete patient migration; no clinical approval occurred."
             : saved.status === "page_limit_reached"
               ? "Scan safety limit reached. More source records may remain; this is not complete migration."
               : "Saved run recovered. Continue only when its lease and provider cooldown have ended.",
       );
     }
-    await Promise.all([runs.refetch(), sources.refetch()]);
+    await Promise.all([runs.refetch(), sources.refetch(), consults.refetch()]);
   }
   async function stage() {
+    if (!contextRef.current)
+      throw new Error("Select a current scoped consult first.");
     let target = idRef.current;
     if (target) {
-      const saved = await recoverClinicalRun(target, actor, mapping, resource);
+      const saved = await recoverVaccinationRun(
+        target,
+        actor,
+        mapping,
+        contextRef.current!,
+      );
       if (!alive.current) return;
       if (saved) {
         setRun(saved);
         if (
-          saved.scope !== "patient_scoped" ||
+          saved.scope !== "consult_scoped" ||
           saved.status !== "running" ||
           saved.lease_active ||
           (saved.retry_after && Date.parse(saved.retry_after) > Date.now())
@@ -227,7 +287,7 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
     }
     setUncertain(true);
     try {
-      await stageClinicalPage(target, mapping, resource);
+      await stageVaccinationPage(target, mapping, contextRef.current);
     } catch (e) {
       if (alive.current) setError(message(e));
     }
@@ -235,13 +295,13 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
   }
   const blockedRun =
     run &&
-    (run.scope !== "patient_scoped" ||
+    (run.scope !== "consult_scoped" ||
       run.status !== "running" ||
       run.lease_active ||
       (!!run.retry_after && Date.parse(run.retry_after) > Date.now()));
   const text = (value: unknown) =>
     value === undefined || value === null || value === ""
-      ? "Not supplied"
+      ? "Unknown / not supplied"
       : typeof value === "string"
         ? value
         : JSON.stringify(value);
@@ -254,22 +314,61 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
         {mapping.source_origin} · {mapping.source_site_uid} · source animal{" "}
         {mapping.external_id}
       </p>
-      <label className="block">
-        Clinical source resource
-        <select
-          className="ml-2 rounded-md border bg-background p-2"
-          value={resource}
-          disabled={dirty}
-          onChange={(e) => {
-            setResource(e.target.value as ClinicalResource);
-            setRunCursor(null);
-            setSourceCursor(null);
-          }}
-        >
-          <option value="history">History</option>
-          <option value="consult">Consults</option>
-        </select>
-      </label>
+      <section aria-label="Vaccination consult selection" className="space-y-2">
+        <h3 className="font-semibold">Choose a current scoped consult</h3>
+        {consults.isError && (
+          <p role="alert">
+            Consult evidence unavailable. Import patient-scoped consults first.
+          </p>
+        )}
+        {consults.data?.candidates.length === 0 && (
+          <p>
+            No scoped consults on this page. Import patient-scoped consults
+            first.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {consults.data?.candidates.map((c) => (
+            <Button
+              key={c.id}
+              variant="outline"
+              disabled={dirty || !!id || !c.is_current}
+              onClick={() => {
+                const value = {
+                  consult_snapshot_id: c.id,
+                  consult_payload_hash: c.payload_hash,
+                  consult_observed_head_version: c.observed_head_version,
+                };
+                contextRef.current = value;
+                setContext(value);
+              }}
+            >
+              Consult {c.external_id} · {text(c.payload.description)} ·{" "}
+              {c.is_current ? "current" : "stale"}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            disabled={dirty || !consultCursor}
+            onClick={() => setConsultCursor(null)}
+          >
+            Newest consults
+          </Button>
+          <Button
+            variant="outline"
+            disabled={dirty || !consults.data?.next_cursor}
+            onClick={() => setConsultCursor(consults.data!.next_cursor)}
+          >
+            Older consults
+          </Button>
+        </div>
+        {context && (
+          <p className="break-all text-sm">
+            Selected consult snapshot {context.consult_snapshot_id} · observed
+            revision {context.consult_observed_head_version}
+          </p>
+        )}
+      </section>
       <p className="text-sm text-muted-foreground">
         Requires configured read-{resource} access. Each explicit request reads
         at most 10 source records. Source access remains disabled until
@@ -279,24 +378,26 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
       {notice && <p role="status">{notice}</p>}
       <div className="flex flex-wrap gap-2">
         <Button
-          disabled={busy || approvalDirty || !!blockedRun}
+          disabled={busy || !context || !!blockedRun}
           onClick={() => void work(stage)}
         >
-          {id ? "Fetch next page using this run" : "Start mapped clinical scan"}
+          {id
+            ? "Fetch next page using this run"
+            : "Start consult vaccination scan"}
         </Button>
         <Button
           variant="outline"
           disabled={busy || !id}
           onClick={() => void work(() => recover())}
         >
-          Recheck saved clinical run
+          Recheck saved vaccination run
         </Button>
         <Button
           variant="outline"
           disabled={
             dirty ||
             !run ||
-            (run.status === "running" && run.scope === "patient_scoped")
+            (run.status === "running" && run.scope === "consult_scoped")
           }
           onClick={() => {
             sessionStorage.removeItem(key);
@@ -319,8 +420,8 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
           {run.retry_after ? ` · retry after ${run.retry_after}` : ""}
         </p>
       )}
-      <section aria-label="Clinical scan history" className="space-y-2">
-        <h3 className="font-semibold">Saved clinical scans</h3>
+      <section aria-label="Vaccination scan history" className="space-y-2">
+        <h3 className="font-semibold">Saved vaccination scans</h3>
         {runs.isError && <p role="alert">Run history unavailable.</p>}
         {runs.data?.runs.map((r) => (
           <div key={r.id} className="rounded border p-2">
@@ -328,14 +429,27 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
               {r.created_at} · {r.status} ·{" "}
               {r.scope === "legacy_unscoped"
                 ? "Legacy unscoped — cannot continue"
-                : "Patient scoped"}
+                : `Consult ${r.consult_external_id}`}
             </p>
             <Button
               variant="outline"
               disabled={dirty}
               onClick={() =>
                 void work(async () => {
-                  persist(r.id);
+                  if (
+                    !r.consult_snapshot_id ||
+                    !r.consult_payload_hash ||
+                    !r.consult_observed_head_version
+                  )
+                    throw new Error(
+                      "Legacy unscoped scan cannot resume. Select a current scoped consult for a new scan.",
+                    );
+                  persist(r.id, {
+                    consult_snapshot_id: r.consult_snapshot_id,
+                    consult_payload_hash: r.consult_payload_hash,
+                    consult_observed_head_version:
+                      r.consult_observed_head_version,
+                  });
                   setUncertain(true);
                   setRun(null);
                   await recover(r.id);
@@ -351,11 +465,15 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
           disabled={busy}
           onClick={() =>
             void work(async () => {
-              await Promise.all([runs.refetch(), sources.refetch()]);
+              await Promise.all([
+                runs.refetch(),
+                sources.refetch(),
+                consults.refetch(),
+              ]);
             })
           }
         >
-          Refresh clinical data
+          Refresh vaccination data
         </Button>
         <Button
           variant="outline"
@@ -373,16 +491,16 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
         </Button>
       </section>
       <section
-        aria-label="Staged patient clinical observations"
+        aria-label="Staged patient vaccination observations"
         className="space-y-2"
       >
         <h3 className="font-semibold">Patient-scoped source observations</h3>
         <p>
-          Read-only evidence. Source category, author and dates have not been
-          interpreted as local clinical fields.
+          Read-only evidence. Source product, quantity, author and dates have
+          not been interpreted as local vaccination fields.
         </p>
         {sources.isError && (
-          <p role="alert">Source observations unavailable.</p>
+          <p role="alert">Source vaccinations unavailable.</p>
         )}
         {sources.data?.candidates.length === 0 && (
           <p>No patient-scoped observations on this page.</p>
@@ -391,7 +509,7 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
           <Button
             key={c.id}
             variant="outline"
-            disabled={busy || approvalDirty}
+            disabled={busy}
             onClick={() => setSelected(c)}
           >
             Read {c.resource} {c.external_id} ·{" "}
@@ -424,38 +542,33 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
             Source {selected.resource} {selected.external_id}
           </h3>
           <p>
-            First stored {selected.created_at} · head version{" "}
+            Consult {selected.consult_external_id} ·{" "}
+            {selected.consult_is_current ? "consult current" : "consult stale"}{" "}
+            · First stored {selected.created_at} · head version{" "}
             {selected.head_version} ·{" "}
             {selected.is_current
               ? "Current source observation"
               : "Historical source observation"}
           </p>
           <dl>
-            {(resource === "history"
-              ? [
-                  "animal_id",
-                  "consult_id",
-                  "history_system",
-                  "chain",
-                  "comments",
-                  "timestamp",
-                  "vet_id",
-                  "active",
-                ]
-              : [
-                  "animal_id",
-                  "description",
-                  "presenting_problem_link_list",
-                  "active",
-                ]
-            ).map((field) => (
+            {[
+              "consult_id",
+              "product_id",
+              "date_of_administration",
+              "date_of_next_administration",
+              "qty",
+              "vet_id",
+              "description",
+              "notes",
+              "active",
+            ].map((field) => (
               <div key={field}>
                 <dt className="font-medium">
                   {field === "vet_id"
                     ? "Source clinician reference (unverified)"
                     : field === "timestamp"
                       ? "Original timestamp (uninterpreted)"
-                      : field}
+                      : `${field} (raw source value)`}
                 </dt>
                 <dd className="whitespace-pre-wrap break-words">
                   {text(selected.payload[field])}
@@ -471,13 +584,6 @@ function ClinicalPatient({ actor, mapping, onLocked }: PatientProps) {
           </details>
         </article>
       )}
-      <SourceHistoryApproval
-        actor={actor}
-        mapping={mapping}
-        selected={selected}
-        disabled={busy || uncertain}
-        onDirtyChange={setApprovalDirty}
-      />
     </div>
   );
 }

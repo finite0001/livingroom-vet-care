@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,52)]
-    assert len(migration_files)==71 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,53)]
+    assert len(migration_files)==72 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -130,6 +130,48 @@ def functions_snapshot(project):
         from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f'),
       'triggers',(select jsonb_agg(jsonb_build_object('definition',pg_get_triggerdef(t.oid),'enabled_mode',t.tgenabled) order by pg_get_triggerdef(t.oid) collate "C") from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and not t.tgisinternal));"""))
 
+def vaccination_snapshot(project):
+    tables = ['ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
+              'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
+              'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',
+              'ezyvet_vaccination_runs', 'ezyvet_vaccination_pages', 'ezyvet_vaccination_page_observations']
+    parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
+    return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
+
+def seed_vaccination_receipt(project):
+    # This explicitly owned local fixture uses the same scoped RPCs as runtime acceptance.
+    # A temporary ADMIN role is removed in the same transaction; prior fixture roles remain exact.
+    state = json.loads((run/'synthetic-fixture.json').read_text())
+    actor, pet, client = [str(uuid.UUID(state[key])) for key in ['user', 'pet', 'client']]
+    site = 'Synthetic-Restore-' + run_id
+    sql(project, f"""do $fixture$
+    declare a uuid := '{actor}'; p uuid := '{pet}'; client uuid := '{client}';
+      animal uuid := gen_random_uuid(); mapping uuid := gen_random_uuid();
+      consult_run uuid := gen_random_uuid(); vaccination_run uuid := gen_random_uuid();
+      claimed jsonb; consult public.ezyvet_import_snapshots; head integer; already_admin boolean;
+    begin
+      select exists(select 1 from public.user_roles where user_id=a and role='ADMIN') into already_admin;
+      if not already_admin then insert into public.user_roles(user_id,role) values(a,'ADMIN'); end if;
+      insert into public.ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by)
+        values(animal,'https://api.trial.ezyvet.com','{site}','animal','77','{{"id":77,"contact_id":8}}','synthetic-restore-animal',a);
+      insert into public.ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+        values(mapping,mapping,'synthetic-restore-link','https://api.trial.ezyvet.com','{site}','animal','77',animal,1,client,p,1,'link','SYNTHETIC RESTORE ONLY',a);
+      claimed := public.claim_ezyvet_clinical_import(consult_run,a,'{site}','consult','https://api.trial.ezyvet.com',mapping);
+      perform public.stage_ezyvet_import_page(consult_run,a,(claimed->>'lease_id')::uuid,1,true,
+        '[{{"external_id":"1","payload":{{"id":1,"animal_id":77,"description":"Synthetic restore consult"}}}}]'::jsonb);
+      select * into strict consult from public.ezyvet_import_snapshots where source_site_uid='{site}' and resource='consult';
+      select version into strict head from public.ezyvet_identity_heads where snapshot_id=consult.id;
+      claimed := public.claim_ezyvet_vaccination_import(vaccination_run,a,'{site}','vaccination','https://api.trial.ezyvet.com',mapping,consult.id,consult.payload_hash,head);
+      perform public.stage_ezyvet_import_page(vaccination_run,a,(claimed->>'lease_id')::uuid,1,true,
+        '[{{"external_id":"2","payload":{{"id":"2","consult_id":"1","product_id":"42","date_of_administration":"1700000000","date_of_next_administration":null,"qty":null}}}}]'::jsonb);
+      if not already_admin then delete from public.user_roles where user_id=a and role='ADMIN'; end if;
+    end $fixture$;""")
+    captured = vaccination_snapshot(project)
+    assert len(captured['ezyvet_vaccination_runs']) == 1 and len(captured['ezyvet_vaccination_pages']) == 1 and len(captured['ezyvet_vaccination_page_observations']) == 1
+    assert len(captured['ezyvet_clinical_page_observations']) == 1
+    (run/'vaccination-receipt-fixture.json').write_text(json.dumps(captured, sort_keys=True))
+
+
 def services(project):
     return [docker_name(project,kind) for kind in ['kong','auth','rest','storage','inbucket']]
 
@@ -161,6 +203,10 @@ try:
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
             (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
+        if any(p.name.startswith('20260913520000_') for p in migration_files):
+            seed_vaccination_receipt(source)
+            # The preexisting clinical/billing/Auth/Storage snapshot must still be unchanged.
+            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])
@@ -217,13 +263,22 @@ try:
             if attempt==59: raise RuntimeError('Restored Auth/PostgREST/Storage did not become healthy')
             time.sleep(1)
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
+    vaccination_evidence = None
+    if (run/'vaccination-receipt-fixture.json').exists():
+        expected_vaccinations = json.loads((run/'vaccination-receipt-fixture.json').read_text())
+        assert vaccination_snapshot(destination) == expected_vaccinations, 'Restored scoped vaccination receipts or pinned source evidence differ'
+        vaccination_evidence = {'receipt_rows': len(expected_vaccinations['ezyvet_vaccination_pages']),
+                               'scoped_context_rows': len(expected_vaccinations['ezyvet_vaccination_runs']),
+                               'observation_rows': len(expected_vaccinations['ezyvet_vaccination_page_observations']),
+                               'source_and_receipt_rows_match': True,
+                               'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
     # Compare the restored physical files as well as authorized downloaded original bytes.
     command(['docker','cp',docker_name(destination,'storage')+':/mnt/.',str(run/'restored-storage')])
     restored=[]
     for file in sorted((run/'restored-storage').rglob('*')):
         if file.is_file(): restored.append({'path':str(file.relative_to(run/'restored-storage')),'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
     assert manifest==restored, 'Physical Storage inventory/hash mismatch'
-    results={'synthetic_only':True,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
+    results={'synthetic_only':True,'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
 finally:
     cleanup_errors=[]
     for item in projects:

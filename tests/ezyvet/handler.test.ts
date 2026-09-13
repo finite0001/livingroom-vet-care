@@ -322,3 +322,225 @@ test("clinical claims bind mapping and resource; legacy UUIDs cannot silently re
     assert.equal(calls, before);
   }
 });
+
+function vaccinationFixture() {
+  const mapping = "e5200000-0000-4000-8000-000000000001";
+  const snapshot = "e5200000-0000-4000-8000-000000000002";
+  const hash = "a".repeat(64);
+  const env: Record<string, string> = {
+    APP_URL: "https://thelivingroom.vet",
+    APP_ENV: "staging",
+    EZYVET_IMPORT_MODE: "staging",
+    EZYVET_SITE_UID: "site",
+    EZYVET_PARTNER_ID: "partner",
+    EZYVET_CLIENT_ID: "client",
+    EZYVET_CLIENT_SECRET: "secret",
+    EZYVET_READ_RESOURCES: "vaccination,contact,history",
+  };
+  const state = {
+    claims: 0,
+    calls: [] as string[],
+    stages: 0,
+    terminal: false,
+    claimError: null as { code: string; message: string } | null,
+    missingScope: false,
+    wrongConsult: false,
+    failStage: false,
+    failures: [] as string[],
+  };
+  const handler = createHandler({
+    env: (k) => env[k],
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input) => {
+      const url = String(input);
+      state.calls.push(url);
+      return url.endsWith("access_token")
+        ? Response.json({ access_token: "token", expires_in: 43200 })
+        : Response.json({
+          meta: { items_page: 1, items_page_total: 1 },
+          items: [{
+            vaccination: { id: 3, consult_id: state.wrongConsult ? 83 : 82 },
+          }],
+        });
+    },
+    gateway: {
+      authenticate: async () => ({ id: "actor", activeAdmin: true }),
+      claim: async () => {
+        throw new Error("Generic claim must never handle vaccinations");
+      },
+      claimVaccination: async (
+        run,
+        actor,
+        site,
+        origin,
+        link,
+        consult,
+        digest,
+        version,
+      ) => {
+        state.claims++;
+        assert.equal(link, mapping);
+        assert.equal(consult, snapshot);
+        assert.equal(digest, hash);
+        assert.equal(version, 4);
+        assert.equal(origin, "https://api.trial.ezyvet.com");
+        if (state.claimError) throw state.claimError;
+        return {
+          id: run,
+          requested_by: actor,
+          source_site_uid: site,
+          resource: "vaccination",
+          status: state.terminal ? "review_ready" : "running",
+          next_page: 1,
+          lease_id: "lease",
+          animal_external_id: "77",
+          consult_external_id: state.missingScope ? undefined : "82",
+        };
+      },
+      stage: async (run, actor, page) => {
+        state.stages++;
+        assert.equal(actor, "actor");
+        assert.equal(page.items[0].payload.consult_id, 82);
+        if (state.failStage) {
+          throw { code: "40001", message: "SOURCE_CONSULT_STALE" };
+        }
+        state.terminal = true;
+        return { ...run, status: "review_ready", next_page: 2 };
+      },
+      fail: async (_run, _actor, code) => {
+        state.failures.push(code);
+      },
+    },
+  });
+  const body = {
+    run_id: id,
+    resource: "vaccination",
+    animal_link_id: mapping,
+    consult_snapshot_id: snapshot,
+    consult_payload_hash: hash,
+    consult_observed_head_version: 4,
+  };
+  const request = (value: Record<string, unknown> = body) =>
+    new Request("https://edge.test", {
+      method: "POST",
+      headers: { Authorization: "Bearer staff" },
+      body: JSON.stringify(value),
+    });
+  return { state, env, handler, body, request };
+}
+
+test("vaccination requires complete immutable consult intent and rejects browser-supplied upstream IDs", async () => {
+  const f = vaccinationFixture();
+  for (
+    const field of [
+      "animal_link_id",
+      "consult_snapshot_id",
+      "consult_payload_hash",
+      "consult_observed_head_version",
+    ]
+  ) {
+    const body: Record<string, unknown> = { ...f.body };
+    delete body[field];
+    assert.equal((await f.handler(f.request(body))).status, 400);
+  }
+  for (
+    const patch of [
+      { consult_id: "82" },
+      { consult_external_id: "82" },
+      { animal_id: "77" },
+      { consult_snapshot_id: "bad" },
+      { consult_payload_hash: "A".repeat(64) },
+      { consult_observed_head_version: 0 },
+      { consult_observed_head_version: 1.5 },
+      { consult_observed_head_version: "4" },
+      { consult_observed_head_version: 2147483648 },
+    ]
+  ) {
+    assert.equal(
+      (await f.handler(f.request({ ...f.body, ...patch }))).status,
+      400,
+    );
+  }
+  for (const resource of ["contact", "history"]) {
+    assert.equal(
+      (await f.handler(f.request({ ...f.body, resource }))).status,
+      400,
+    );
+  }
+  assert.equal(f.state.claims, 0);
+  assert.equal(f.state.calls.length, 0);
+  f.env.EZYVET_READ_RESOURCES = "contact";
+  assert.equal((await f.handler(f.request())).status, 400);
+  assert.equal(f.state.claims, 0);
+});
+
+test("vaccination uses claimed consult scope and terminal recovery makes no additional provider request", async () => {
+  const f = vaccinationFixture();
+  const result = await f.handler(f.request());
+  assert.equal(result.status, 200);
+  assert.deepEqual(await result.json(), {
+    run_id: id,
+    status: "review_ready",
+    next_page: 2,
+    review_only: true,
+    staged_count: 1,
+  });
+  assert.match(f.state.calls.at(-1)!, /limit=10&consult_id=82$/);
+  assert.equal(f.state.calls.at(-1)!.includes("animal_id"), false);
+  const calls = f.state.calls.length;
+  assert.equal((await f.handler(f.request())).status, 200);
+  assert.equal(f.state.calls.length, calls);
+  assert.equal(f.state.stages, 1);
+});
+
+test("vaccination missing claimed scope and mixed-consult payload cannot be staged", async () => {
+  for (const missingScope of [true, false]) {
+    const f = vaccinationFixture();
+    f.state.missingScope = missingScope;
+    f.state.wrongConsult = !missingScope;
+    const response = await f.handler(f.request());
+    assert.equal(response.status, 503);
+    const result = await response.json();
+    assert.equal(
+      result.error,
+      missingScope ? "CONSULT_MAPPING_REQUIRED" : "SOURCE_CONSULT_MISMATCH",
+    );
+    assert.equal(f.state.stages, 0);
+    assert.equal(f.state.calls.length, missingScope ? 0 : 2);
+    assert.deepEqual(f.state.failures, [result.error]);
+  }
+});
+
+test("vaccination stale context and legacy run errors are actionable without leaking database bodies", async () => {
+  for (
+    const error of [
+      { code: "22023", message: "VACCINATION_RUN_REQUIRES_NEW_CONTEXT" },
+      { code: "40001", message: "SOURCE_CONSULT_STALE" },
+    ]
+  ) {
+    const f = vaccinationFixture();
+    f.state.claimError = error;
+    const response = await f.handler(f.request());
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), {
+      error: error.message,
+      retry_after_seconds: 5,
+      retry_safe: false,
+    });
+    assert.equal(f.state.calls.length, 0);
+  }
+  const f = vaccinationFixture();
+  f.state.failStage = true;
+  const response = await f.handler(f.request());
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).error, "SOURCE_CONSULT_STALE");
+  assert.deepEqual(f.state.failures, ["SOURCE_CONSULT_STALE"]);
+  const privateError = vaccinationFixture();
+  privateError.state.claimError = {
+    code: "40001",
+    message: "secret source context details",
+  };
+  const redacted = await privateError.handler(privateError.request());
+  assert.equal((await redacted.json()).error, "IMPORT_FAILED");
+});

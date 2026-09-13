@@ -22,7 +22,7 @@ Set secrets through Supabase's server-side secrets management. Never place crede
 | `EZYVET_API_URL`                 | Exact `https://api.trial.ezyvet.com` (default) or `https://api.ezyvet.com`                          |
 | `EZYVET_ALLOW_PRODUCTION_SOURCE` | Must explicitly equal `true` before a production-source read is allowed; leave unset until approved |
 | `EZYVET_SITE_UID`                | Issued source site identifier                                                                       |
-| `EZYVET_PARTNER_ID`              | Issued partner identifier                                                                           |
+| `EZYVET_PARTNER_ID`              | Optional issued partner identifier; omit when the existing clinic credentials authenticate without it                                                                           |
 | `EZYVET_CLIENT_ID`               | Issued client identifier                                                                            |
 | `EZYVET_CLIENT_SECRET`           | Issued client secret                                                                                |
 | `EZYVET_READ_RESOURCES`          | Comma-separated approved resource names; defaults `contact,animal`                                  |

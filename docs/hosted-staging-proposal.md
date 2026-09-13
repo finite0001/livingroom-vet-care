@@ -27,7 +27,7 @@ Server flags were successfully set explicitly on staging: `APP_ENV=staging`, `OU
 
 Protected frontend deployment, its exact APP_URL/Auth redirects and hosted workflow acceptance remain pending. Provider credentials and callbacks, SMTP/mailboxes, staff access and controlled payment/import/delivery tests are not commissioned. The preview build guard must continue rejecting the future-production and original Lovable references.
 
-The owner confirmed authorized ezyVet account and API access are available. The source is GreenTree’s production ezyVet site. Client ID, secret and site UID are stored in staging; partner configuration and actual sample/mapping acceptance remain pending. No real patient import has run.
+The owner confirmed authorized ezyVet account and API access are available. The source is GreenTree’s production ezyVet site. Client ID, secret and site UID are stored in staging; existing credentials have passed production OAuth and a bounded contact read without a partner ID; resource sample/mapping acceptance remains pending. No real patient import has run.
 
 Staging creation does not approve clinical forms, authorize client messages, configure mailboxes or permit public cutover. Dr. Susan Edler’s clinical review and provider acceptance remain separate requirements.
 
