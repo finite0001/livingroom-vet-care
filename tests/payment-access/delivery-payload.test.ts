@@ -168,7 +168,7 @@ test("optional invoice attachment preserves frozen bytes and validates original 
     subject: context.request.subject,
     text: context.request.body_template,
     attachments: [{
-      filename: "invoice.html",
+      filename: `invoice-${grant.invoice_id}.html`,
       content_type: "text/html",
       content: btoa("<html>Reviewed invoice</html>"),
     }],

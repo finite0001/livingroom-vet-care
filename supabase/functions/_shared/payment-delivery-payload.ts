@@ -120,7 +120,7 @@ export async function materializePaymentDelivery(
       if (
         attachments.length !== 1 ||
         attachments[0].content_type !== "text/html" ||
-        typeof attachments[0].filename !== "string" ||
+        attachments[0].filename !== `invoice-${r.invoice_id}.html` ||
         typeof attachments[0].content !== "string"
       ) unavailable();
       let decoded: string;
