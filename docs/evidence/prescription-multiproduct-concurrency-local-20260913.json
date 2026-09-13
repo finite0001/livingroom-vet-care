@@ -1,0 +1,25 @@
+{
+  "scope": "Local PostgreSQL prescription review/export contention with reversed two-product catalog selection",
+  "source_revision": "fa030cbb616edf25fb96d014807609c173a35bd7",
+  "source_sha256": {
+    "supabase/tests/ezyvet_prescription_review_concurrency.py": "6cf275dbcf3eccf33529df4901e2471dc46641d1de0d0807f1cd2d57610cdd10",
+    "supabase/tests/ezyvet_prescription_review.test.sql": "c377399bf38de6f7c9d808517a5cc2dfccd9bd24177f21c9eedd1b7da7a07f47",
+    "supabase/migrations/20260913600000_prescription_interpretation_context.sql": "f384af5b367967f266ccbe784daa4d745c2e336d71ed5447ba596fbb4e397530"
+  },
+  "concurrency_checks": 192,
+  "sql_assertions": 457,
+  "cleanup_verified": true,
+  "observations": [
+    "High product row locked before each review starts",
+    "Preparation and approval with reversed product selections block on high product holder",
+    "Actual low-product catalog writer is observed blocked by the review while review still waits on high product",
+    "Both reviews complete after high-product lock releases; catalog writer then commits",
+    "Prepared and approved evidence preserve reviewed order and original catalog versions"
+  ],
+  "hosted_changes": false,
+  "provider_requests": 0,
+  "limitations": [
+    "Broader mixed-source contention remains separately required.",
+    "Local database evidence does not establish hosted deployment or clinical/provider acceptance."
+  ]
+}

@@ -342,6 +342,79 @@ try:
     check(sql('begin;'+confirm+'commit;',False).returncode==0,'Three-session race retains exact confirmation recovery')
     print('Observed confirmation, clinical correction and actual item ingestion contending together.',flush=True)
 
+    # Distinct patient/source fixture: two catalog matches deliberately listed high UUID first.
+    multi_actor = 'db562000-0000-4000-8000-000000000001'
+    low_product = 'db562000-0000-4000-8000-000000000010'
+    high_product = 'db562000-0000-4000-8000-000000000020'
+    multi_fixture = fixture.replace('db560000', 'db562000').replace('prescriptionitem-test-site', 'multi-product-test-site').replace('@example.test', '@multi-product-example.test')
+    multi_fixture = multi_fixture.replace("insert into fx values('product',gen_random_uuid());", f"insert into fx values('product','{low_product}');")
+    item_extension = "update data set v=v||jsonb_build_array(jsonb_build_object('external_id','502','payload',jsonb_build_object('id',502,'prescription_id',101,'qty','second outside units','instructions','Second original item'))) where k='items';"
+    multi_fixture = multi_fixture.replace("insert into data select 'legacy',", item_extension + "insert into data select 'legacy',", 1)
+    multi_saved = json.loads(scalar('begin;set local search_path=public,extensions;' + multi_fixture + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
+    multi_pet = multi_saved['fx']['pet']
+    sql("begin;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': multi_actor, 'role': 'authenticated'})) + f",true);insert into catalog_products(id,name,kind,unit,unit_price_cents,created_by) values('{high_product}','Second synthetic medication','medication','tablet',1000,'{multi_actor}');commit;")
+    multi_staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': multi_actor, 'role': 'authenticated'})) + ",true);"
+    multi_payload = multi_saved['data']['payload']
+    original_match = multi_payload['interpretation']['items'][0]
+    source_by_id = {item['external_id']: item for item in multi_saved['data']['context']['items']}
+    multi_payload['interpretation']['items'] = [original_match | {'snapshot_id': source_by_id['502']['snapshot_id'], 'product_id': high_product}, original_match | {'snapshot_id': source_by_id['501']['snapshot_id'], 'product_id': low_product}]
+
+    def observe_catalog_order(operation, version):
+        tag = 'lrv_catalog_order_' + uuid.uuid4().hex
+        holder_tag, reviewer_tag, writer_tag = [tag + suffix for suffix in ['_holder', '_reviewer', '_writer']]
+        owned_sessions.extend([holder_tag, reviewer_tag, writer_tag])
+        sessions = []
+        def start(name, query, commit=False):
+            process = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            sessions.append(process)
+            process.stdin.write(f"set application_name='{name}';begin;{query}" + ('commit;' if commit else '') + '\n')
+            process.stdin.flush()
+            if commit: process.stdin.close()
+            return process
+        def observed(predicate, message):
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if scalar('select ' + predicate + ';') == 't':
+                    check(True, message)
+                    return
+                time.sleep(.03)
+            raise AssertionError(message)
+        def finish(process):
+            process.stdin.write('commit;\n');process.stdin.close();process.wait(timeout=10)
+            check(process.returncode == 0, process.stderr.read())
+        try:
+            holder = start(holder_tag, f"select 1 from catalog_products where id='{high_product}' for update;")
+            observed(f"exists(select 1 from pg_stat_activity where application_name='{holder_tag}' and state='idle in transaction')", 'High medication row lock is held before review')
+            reviewer = start(reviewer_tag, multi_staff + operation)
+            observed(f"exists(select 1 from pg_stat_activity r join pg_stat_activity h on h.pid=any(pg_blocking_pids(r.pid)) where r.application_name='{reviewer_tag}' and h.application_name='{holder_tag}')", 'Reversed-input review waits on the high medication holder')
+            writer = start(writer_tag, multi_staff + f"select save_catalog_product('{low_product}',{version},'Synthetic medication','medication','','tablet',1000,true);", commit=True)
+            observed(f"exists(select 1 from pg_stat_activity w join pg_stat_activity r on r.pid=any(pg_blocking_pids(w.pid)) where w.application_name='{writer_tag}' and r.application_name='{reviewer_tag}')", 'Review already holds the lower medication despite reversed selection order')
+            finish(holder)
+            observed(f"exists(select 1 from pg_stat_activity where application_name='{reviewer_tag}' and state='idle in transaction')", 'Review completes after high medication unlocks')
+            finish(reviewer)
+            writer.wait(timeout=10)
+            check(writer.returncode == 0, writer.stderr.read())
+        finally:
+            # Only these three named sessions belong to this observation.
+            sql("select pg_terminate_backend(pid) from pg_stat_activity where datname=current_database() and application_name in(" + ','.join(map(quote, [holder_tag, reviewer_tag, writer_tag])) + ');')
+            for process in sessions:
+                if process.stdin and not process.stdin.closed: process.stdin.close()
+                process.wait(timeout=10)
+
+    reversed_prepare_id = str(uuid.uuid4())
+    prepare_multi = lambda request_id: f"do $order$ begin perform prepare_ezyvet_prescription_review('{request_id}','{multi_pet}',{quote(json.dumps(multi_payload))}::jsonb);end $order$;"
+    observe_catalog_order(prepare_multi(reversed_prepare_id), 1)
+    check(scalar(f"select review_context#>>'{{selected_items,1,product,version}}' from ezyvet_prescription_review_requests where id='{reversed_prepare_id}';") == '1', 'Prepared review preserves catalog revision before waiting edit')
+    multi_payload['interpretation']['items'][1]['product_version'] = 2
+    reversed_approval_id = str(uuid.uuid4())
+    sql('begin;' + multi_staff + prepare_multi(reversed_approval_id) + 'commit;')
+    multi_hash = scalar(f"select request_hash from ezyvet_prescription_review_requests where id='{reversed_approval_id}';")
+    observe_catalog_order(f"do $order$ begin perform approve_ezyvet_prescription_review('{reversed_approval_id}','{multi_pet}','{multi_hash}',true);end $order$;", 2)
+    approved_products = json.loads(scalar(f"select jsonb_agg(item->'product' order by ordinal) from ezyvet_imported_prescriptions p cross join lateral jsonb_array_elements(p.context->'selected_items') with ordinality x(item,ordinal) where p.id='{reversed_approval_id}';"))
+    check([product['id'] for product in approved_products] == [high_product, low_product] and [product['version'] for product in approved_products] == [1, 2], 'Approval preserves reviewed order and exact frozen versions after concurrent edit')
+    check(scalar(f"select version from catalog_products where id='{low_product}';") == '3', 'Both catalog edits commit after the review releases its ordered locks')
+    print('Observed reversed two-product locking for preparation and approval with an actual catalog writer.', flush=True)
+
     sql(f"delete from user_roles where user_id='{actor}' and role='DVM';")
     denied=sql('begin;'+staff+f"select recover_ezyvet_prescription_review('{a}','{pet}');commit;",False)
     check(denied.returncode!=0 and 'veterinarian' in denied.stderr,'Current role required for approved receipt recovery')
