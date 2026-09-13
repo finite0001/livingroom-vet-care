@@ -1,5 +1,11 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — private mailbox verified; application mail capacity pending
+
+The owner-created Fastmail trial now has the designated administrator mailbox. GoDaddy saved six root-mail DNS records; Fastmail verifies MX, DKIM and SPF and reports the domain ready to send and receive mail. [Mail commissioning evidence](mail-commissioning-plan.md) also records the staging APP_URL, Auth Site URL and exact password-reset redirect configuration. Actual message delivery, Auth SMTP, staff onboarding and clinical/provider acceptance remain unverified. Earlier mailbox-creation statements below are historical.
+
+The accessible Resend team is `finite01` (Pro), with 10 of 10 domain slots occupied, including the verified practice root. The provider blocks adding the planned `auth` and `reply` subdomains. Its Usage page offers 100 additional domains for $20/month; the add-on is off. No additional subscription was purchased and no existing domain was removed. Additional capacity or an explicitly selected alternative is needed before those sender domains can be commissioned.
+
 ## September 13 — reviewed vaccination software deployed to staging
 
 PR112 passed combined CI at73abb6a and is merged into the release integration branch. [Staging deployment evidence](reviewed-vaccination-staging.md) records75 migrations, seven matching version3 export functions, selected hosted authorization checks and the refreshed protected frontend. No clinical approval, staff login, provider send or public cutover is claimed. The administrator mailbox still needs creation; Fastmail signup is with the owner for private password entry and terms acceptance.

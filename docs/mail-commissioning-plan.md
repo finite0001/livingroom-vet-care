@@ -1,6 +1,16 @@
 # Practice mail commissioning plan
 
-Status: owner selected Fastmail + one Resend team for automated client communications and authentication/security mail, 2026-09-13. Preparation is authorized; purchases are not. Do not create or purchase a second Resend team. No provider account, purchase, credential, webhook, mailbox, DNS write or message has been created by this proposal. Existing sending verification remains intact.
+Status: Fastmail root-domain setup verified on 2026-09-13 after the owner created the trial account and authorized completing setup. One Resend team remains selected for automated client communications and authentication/security mail. Purchases are not authorized. Do not create or purchase a second Resend team. Existing sending verification remains intact.
+
+## Verified setup checkpoint — 2026-09-13
+
+- Fastmail lists the owner-designated mailbox as an administrator on a trial. No paid subscription was purchased by the agent.
+- GoDaddy confirmed the six-record addition succeeded. Fastmail then reported the domain correctly configured to send and receive mail, with MX, DKIM and SPF all correct.
+- Root MX: priority 10 `us1-smtp.messagingengine.com`, priority 20 `us2-smtp.messagingengine.com`. Root SPF: `v=spf1 include:spf.messagingengine.com ?all`. The three `fm1`–`fm3` DKIM CNAMEs use Fastmail's domain-specific targets. Root MX/SPF were also verified against the authoritative nameserver.
+- Existing website, nameserver, Resend and DMARC records were preserved; authoritative `send` MX/SPF still match the existing Amazon SES transport. No catch-all or additional staff mailbox was created.
+- Staging (`kothoqicubowyhwfsrte`) APP_URL and Supabase Auth Site URL now point to `https://livingroom-vet-care-lcywrby9c-daves-projects-e0da43ba.vercel.app`. Auth shows exactly one allowed redirect: that origin plus `/hub/reset-password`. The ezyVet preflight accepts that exact origin (200) and rejects an unrelated origin (403).
+- The protected preview renders staff login/reset forms and the missing-token payment-return explanation. Anonymous access to `/hub/clients` redirects to login. This is not signed-in staff acceptance or a payment transaction test.
+- Actual mailbox send/receive tests, owner recovery/MFA, dedicated Auth SMTP, invitations and client transport acceptance remain pending. No test message or invitation was sent during this checkpoint.
 
 ## Selected routing
 
@@ -25,6 +35,8 @@ The inbound handler must retain its explicit client-recipient allowlist. Never r
 
 ## Costs and alternatives requiring a checkout review
 
+Actual account check on 2026-09-13: the only accessible Resend team is `finite01` on Pro, with 10/10 domains. Adding a domain is blocked by the plan limit. The [Usage page](https://resend.com/settings/usage) lists a Domains add-on at $20/month for 100 additional domains; its switch remains off. The planned `auth` and `reply` subdomains cannot be added within the current quota. Do not remove another project's domain or purchase the add-on without owner authorization.
+
 - A dedicated Resend Pro client team is publicly listed at $20/month. Additional team creation [documents a paid-plan step](https://resend.com/blog/multiple-teams); do not promise another free team. Check actual account checkout, tax and included receiving/domain limits before purchase. [Pricing](https://resend.com/pricing).
 - Fastmail mailbox count, billing term and current checkout price remain unquoted. Obtain the exact business-plan quote for one initial owner mailbox, then add named staff deliberately. [Business pricing](https://www.fastmail.com/pricing/us/).
 
@@ -44,4 +56,4 @@ The earlier $35/month combined transport estimate is superseded because Postmark
 
 Before routing changes, privately record the exact old DNS and provider configuration. If verification fails, pause the cutover; keep application sends disabled and preserve durable receipts. Do not remove a working mailbox or rotate away the only key able to retrieve pending messages. Returning MX to a prior value affects future routing and does not recover messages already accepted elsewhere.
 
-This plan does not authorize invitations, provider tests, account purchases or root mail cutover. The existing user approval covered only the three completed sending-verification DNS records. Staging frontend commissioning, staff identities, clinical approval and payment/SMS commissioning remain separate rollout gates.
+The owner subsequently authorized completing Fastmail setup, including the root mail DNS configuration recorded above, and completed GoDaddy's identity verification. Invitations, provider message tests and account purchases remain outside that setup authorization. Staff identities, clinical approval and payment/SMS commissioning remain separate rollout gates.
