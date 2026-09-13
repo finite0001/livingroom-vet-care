@@ -131,9 +131,11 @@ try:
             paths=list(migration_dir.glob(version+'_*'))
             assert len(paths)==1,version
             sql(paths[0].read_text())
+    # Additive private-helper replacement follows the deployed schema8 baseline.
+    sql((migration_dir/'20260913650000_prescription_release_reference_hardening.sql').read_text())
     for migration in args.overlay_migration:sql(migration.read_text())
     regression_count=0
-    for filename in ['release_imported_prescription.test.sql','release_imported_vaccination.test.sql','ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
+    for filename in ['ezyvet_prescription_release_reference.test.sql','release_imported_prescription.test.sql','release_imported_vaccination.test.sql','ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
         result=sql(Path(__file__).with_name(filename).read_text())
         plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
         check('not ok' not in result.stdout and bool(plans),filename+'\n'+result.stdout)
