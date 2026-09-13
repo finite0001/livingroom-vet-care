@@ -8,6 +8,7 @@ Vercel deployment `dpl_5tny8bc9T2rroXczmE9X6z33Dewm` is READY, target `staging` 
 
 - Preview-only backend: `kothoqicubowyhwfsrte`, its exact HTTPS Supabase origin and its active publishable browser key. No provider or service-role key is in browser configuration.
 - Staging preflight found 72 migrations through5200, zero Auth users, clients and pets. This deployment did not change the database.
+- Subsequent staging hardening applied only migration9000, pinning the payment-history trigger search path. The newer schema retains its23 trigger bindings; see [deployment evidence](payment-trigger-hardening.md).
 - Vercel Authentication protection remains `all_except_custom_domains`; no custom domain is assigned. An unauthenticated request returns302; authenticated CLI requests use Vercel's generated project bypass credential, which is not recorded here.
 - Automatic Git deployment was disconnected immediately after project linking automatically connected the repository. No production environment variables were set, no main merge occurred, and neither the Lovable site nor domain DNS changed.
 - Automatic system-variable exposure is disabled. Preview explicitly sets `VERCEL_ENV=preview`.
