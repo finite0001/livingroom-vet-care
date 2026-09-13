@@ -347,3 +347,11 @@ This increment is not yet deployed to hosted staging. Active due-plan adoption, 
 PR118 passed frontend, database and Edge CI. The staging database now has77 migrations, including5500/5600, and the matching JWT-protected importer is deployed. Six private table boundaries, six administrator rejection probes, deployed-source comparison and anonymous HTTP denial passed; no patients, imports or outgoing messages were created. See [rollout evidence](prescription-intake-staging.md). The prior reviewed-vaccination deployment is recorded in [its staging report](reviewed-vaccination-staging.md), superseding the earlier not-deployed checkpoint above.
 
 Prescription reconciliation/review, patient chart history, release inclusion, populated restore coverage and live clinical acceptance remain unfinished. The protected frontend has not yet been updated for prescription intake. No production cutover or provider activation occurred.
+
+## Reviewed prescription releases and verified restoration
+
+Schema8 medical-record packages now include explicitly selected DVM-reviewed outside prescriptions with original instructions/quantities, partial-history disclosures, reconciliation and correction history. Print, email and linked-document paths share validation and original-file byte checks. Source changes and corrections invalidate pending packages while preserving frozen content.
+
+Validation passed459 unit tests,31 combined browser cases,441 SQL assertions,161 contention checks and51 actual local Auth/Storage/PostgREST checks. The51→84 populated restore passed and now compares restored routine, table/sequence, RLS and default privileges to canonical state. That stronger check exposed and corrected restore-account creation-default grant leakage. All generated resources were removed; [feature and evidence](features/reviewed-prescription-releases.md) record the scope.
+
+No hosted review/release migration, policy activation, live source read or message occurred. PR CI, staged frontend/staff acceptance, ezyVet resource samples, Dr. Edler's clinical acceptance, attachments and migration reconciliation remain outstanding.

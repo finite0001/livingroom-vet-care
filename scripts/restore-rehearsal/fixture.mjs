@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 const [mode, statusPath, run] = process.argv.slice(2);
-assert.ok(["create", "verify", "verify-upgrade"].includes(mode));
+assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
@@ -132,6 +132,36 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   console.log(
     "Synthetic signed record, private original, issued invoice/credit and stock ledger created.",
   );
+} else if (mode === "capture-review-audit") {
+  state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(project, `${state.projectRun}-source`);
+  const captured = snapshot();
+  const originalIds = new Set(state.snapshot.audit_logs.map((row) => row.id));
+  const additions = captured.audit_logs.filter((row) => !originalIds.has(row.id));
+  const sourceEvidence = JSON.parse(readFileSync(join(run, "vaccination-receipt-fixture.json"), "utf8"));
+  const families = ["record_release_policy", "record_releases", "record_release_sources", "record_release_events"];
+  assert.equal(additions.length, families.length, "Only the four explicit synthetic release audit additions are allowed");
+  for (const family of families) {
+    assert.equal(sourceEvidence[family].length, 1);
+    const audits = additions.filter((row) => row.table_name === family);
+    assert.equal(audits.length, 1, `Exactly one synthetic ${family} audit required`);
+    const audit = audits[0];
+    assert.equal(audit.user_id, state.user);
+    assert.equal(audit.action, "INSERT");
+    assert.equal(audit.old_data, null);
+    assert.deepEqual(audit.new_data, sourceEvidence[family][0], "Audit must exactly match the seeded release evidence");
+    if (family !== "record_release_policy") assert.equal(audit.record_id, sourceEvidence[family][0].id);
+  }
+  assert.equal(sourceEvidence.record_release_policy[0].accepted_schema_version, 8);
+  assert.equal(sourceEvidence.record_release_policy[0].acceptance_reference, "Synthetic isolated restore only");
+  assert.deepEqual(
+    { ...captured, audit_logs: captured.audit_logs.filter((row) => originalIds.has(row.id)) },
+    state.snapshot,
+    "Prescription fixture preserves every original clinical/billing/audit/Auth/Storage row",
+  );
+  state.snapshot = captured;
+  writeFileSync(statePath, JSON.stringify(state), { mode: 0o600 });
+  console.log("Original fixture preserved; four explicit synthetic release audit additions captured for restoration.");
 } else if (mode === "verify-upgrade") {
   state = JSON.parse(readFileSync(statePath, "utf8"));
   assert.equal(project, `${state.projectRun}-source`);

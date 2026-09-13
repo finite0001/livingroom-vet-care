@@ -45,3 +45,15 @@ Backup took12.43seconds; restore/verification after destination startup took5.08
 - Fixture SHA-256: `31a761212e4aeddb17407b9bece6e31b826d4e94949b298e3b6fa8c9aa739d85`.
 
 Hosted backup/PITR settings, physical Storage backup ownership, recovery objectives, provider reconfiguration and real incident cutover remain pending.
+
+### Prescription release restoration and permission checks
+
+The84-migration rehearsal adds approved prescription/item history, a correction, a prepared review, an unfinished item run and a frozen schema8 release. The source upgrade preserves existing51-migration clinical/billing/Auth/Storage fixtures. Four explicit release audit entries are matched to their exact policy/package/source/invalidation rows; prior audit rows cannot change.
+
+The expanded post-restore comparison detected that restoring as `supabase_admin` with ordinary ownership reassignment inherited its permissive creation defaults. Private application functions acquired unintended API-role execution despite matching owners and bodies. Earlier data and pre-restore canonical comparisons did not establish post-restore permission equality. No hosted project was changed by this finding.
+
+The runner temporarily revokes only the owned destination restore account's default public-schema API grants before restoration. The archive still restores all explicit owners, ACLs and default ACLs. PostgreSQL's [session-authorization option](https://www.postgresql.org/docs/17/app-pgrestore.html) was also tested but failed against the platform's realtime cleanup sequence; the scoped creation-default correction preserves the compatible archive path. Verification compares restored functions, effective API-role table/sequence grants, row-level-security flags/policies, default privileges and triggers against a canonical installation. This is a required equality check, not a post-restore blanket permission rewrite.
+
+Local CLI health grace expired under workstation load. The owned runner allows that CLI grace to expire but then independently requires Auth, PostgREST and Storage HTTP readiness within120seconds; missing readiness still fails and cleans up the owned resources. Resume verifies database/private-file hashes and exact migration sources, and performs the same canonical comparison on the restored database. Hosted backup/PITR and production recovery commissioning remain separate.
+
+Final resumed restoration passed using the same checksum-verified populated backup:473 functions,252 triggers,191 relations,235 policies and six public-schema default-privilege records match canonical state. Two prescription versions, three review requests, two item runs and the released snapshot match their original rows. Fresh local login, signed clinical/billing/stock fixtures, private original checksums and checked cleanup passed. [Sanitized evidence](evidence/prescription-release-restore-local-20260913.json) records both runner hashes and the51→84 backfill. Reported resumed timing excludes the earlier startup/failure investigations and is not a production recovery target.

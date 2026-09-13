@@ -1,0 +1,63 @@
+{
+  "synthetic_only": true,
+  "vaccination_receipt_restore": {
+    "receipt_rows": 1,
+    "scoped_context_rows": 1,
+    "observation_rows": 1,
+    "approved_vaccination_rows": 1,
+    "review_request_rows": 1,
+    "approved_prescription_rows": 2,
+    "prescription_review_requests": 3,
+    "prescription_item_runs": 2,
+    "frozen_release_rows": 1,
+    "source_and_receipt_rows_match": true,
+    "fixture_sha256": "07a600de563050ddec5d98441337f6a2603343f8b533a1c8f1d1e33c925b3647"
+  },
+  "source_project": "lrv-restore-2b4cdddcfc-source",
+  "destination_project": "lrv-restore-2b4cdddcfc-destination",
+  "git_commit": "8b93720f1c12dde7f092c4fb4cf3918416e2ad4d",
+  "runner_sha256": "7e3831cf9f05f0910381bc3da3408704378801fa49e12a4265fb925eb6be68b3",
+  "fixture_sha256": "abf884fc7142e571d19a7311b6481d58cafd06109ff567c98d1b0632540508ce",
+  "database_sha256": "c0e34bacc6807b8426a65cc6a0e228624f5aaf5fcd16db91bf01b6b7890e57e4",
+  "storage_files": [
+    {
+      "path": "stub/stub/patient-documents/70ceead5-d5d9-4d4f-be01-347fefe6a645/dd2cd087-00dc-4ea4-b6fe-321d0c4b7774/ff632bef-536f-4268-859e-0c233176a75b/original/ddcc7614-7b66-4df7-997f-b28f90df4de2",
+      "bytes": 78,
+      "sha256": "1fc62aca512802276c79f6f3fc12c6dc743239fde62ad71938e6b698dc1d9c5e"
+    }
+  ],
+  "backup_seconds": 14.49,
+  "restore_and_verify_seconds": 123.01,
+  "total_seconds": 463.91,
+  "verification": {
+    "fresh_local_login": true,
+    "identical_rows_and_ids": true,
+    "signed_soap_and_addendum": true,
+    "invoice_total_cents": 9000,
+    "credit_cents": 500,
+    "stock_units": 8,
+    "private_original_sha256": "1fc62aca512802276c79f6f3fc12c6dc743239fde62ad71938e6b698dc1d9c5e",
+    "private_original_bytes": 78,
+    "anonymous_and_public_denied": true,
+    "ready_original_and_signed_history_immutable": true,
+    "outbox_empty": true,
+    "cron_absent": true
+  },
+  "sending_disabled": "No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.",
+  "cleanup_verified": true,
+  "canonical_comparison": {
+    "policies": 235,
+    "triggers": 252,
+    "functions": 473,
+    "relations": 191,
+    "default_privileges": 6,
+    "all_equal": true
+  },
+  "upgrade": {
+    "initial_migrations": 51,
+    "final_migrations": 84,
+    "fixture_preserved": true,
+    "canonical_functions_grants_triggers_match": true
+  },
+  "resumed_verified_backup": true
+}

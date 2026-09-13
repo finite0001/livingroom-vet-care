@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,55)]
-    assert len(migration_files)==74 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913900000']
+    assert len(migration_files)==84 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -107,15 +107,28 @@ enabled = false
 '''
     (path/'supabase/config.toml').write_text(config)
     if migrations:
-        (path/'supabase/migrations').mkdir()
+        (path/'supabase/migrations').mkdir(exist_ok=bool(args.resume_backup))
         selected = initial_files if kind=='source' and args.rehearse_observed_hosted_gaps else migration_files
         for migration in selected: shutil.copy2(migration,path/'supabase/migrations'/migration.name)
     result={'id':identity,'path':path,'port':port}
     projects.append(result)
-    command(['supabase','start','--workdir',str(path),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
+    command(['supabase','start','--ignore-health-check','--workdir',str(path),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     status=json.loads(command(['supabase','status','--workdir',str(path),'--output','json']))
     assert status['API_URL']==f'http://127.0.0.1:{port}'
     (path/'status.json').write_text(json.dumps(status))
+    # CLI's fixed container grace can expire under load. Never treat its ignored
+    # status as acceptance: actual required APIs must all respond successfully.
+    import urllib.request
+    deadline=time.monotonic()+120
+    while True:
+        try:
+            for endpoint in ['/auth/v1/health','/rest/v1/','/storage/v1/status']:
+                probe=urllib.request.Request(status['API_URL']+endpoint,headers={'apikey':status['SERVICE_ROLE_KEY'],'Authorization':'Bearer '+status['SERVICE_ROLE_KEY']})
+                urllib.request.urlopen(probe,timeout=3).close()
+            break
+        except Exception:
+            if time.monotonic()>=deadline: raise RuntimeError('Owned local Auth/PostgREST/Storage readiness deadline exceeded')
+            time.sleep(1)
     return result
 
 def ledger(project):
@@ -128,14 +141,30 @@ def functions_snapshot(project):
         'definition',pg_get_functiondef(p.oid),'owner',pg_get_userbyid(p.proowner),'security_definer',p.prosecdef,'config',p.proconfig,
         'grants',(select jsonb_object_agg(r,has_function_privilege(r,p.oid,'EXECUTE')) from unnest(array['anon','authenticated','service_role']) r)) order by p.oid::regprocedure::text)
         from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f'),
-      'triggers',(select jsonb_agg(jsonb_build_object('definition',pg_get_triggerdef(t.oid),'enabled_mode',t.tgenabled) order by pg_get_triggerdef(t.oid) collate "C") from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and not t.tgisinternal));"""))
+      'triggers',(select jsonb_agg(jsonb_build_object('definition',pg_get_triggerdef(t.oid),'enabled_mode',t.tgenabled) order by pg_get_triggerdef(t.oid) collate "C") from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and not t.tgisinternal),
+      'relations',(select jsonb_agg(jsonb_build_object('name',c.relname,'kind',c.relkind,'owner',pg_get_userbyid(c.relowner),
+        'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,'grants',
+        (select jsonb_object_agg(r,case when c.relkind='S' then
+          (select jsonb_object_agg(priv,has_sequence_privilege(r,c.oid,priv)) from unnest(array['USAGE','SELECT','UPDATE']) priv)
+         else (select jsonb_object_agg(priv,has_table_privilege(r,c.oid,priv)) from unnest(array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) priv) end)
+         from unnest(array['anon','authenticated','service_role']) r)) order by c.relname)
+        from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in('r','p','v','m','S')),
+      'policies',(select jsonb_agg(to_jsonb(p) order by tablename,policyname) from pg_policies p where schemaname='public'),
+      'default_privileges',(select jsonb_agg(jsonb_build_object('owner',pg_get_userbyid(d.defaclrole),'kind',d.defaclobjtype,
+        'acl',(select jsonb_agg(jsonb_build_object('grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,
+          'grantor',pg_get_userbyid(a.grantor),'privilege',a.privilege_type,'grantable',a.is_grantable) order by a.grantee,a.grantor,a.privilege_type) from aclexplode(d.defaclacl) a)) order by pg_get_userbyid(d.defaclrole),d.defaclobjtype)
+        from pg_default_acl d where d.defaclnamespace='public'::regnamespace));"""))
 
 def vaccination_snapshot(project):
     tables = ['ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
               'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
               'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',
               'ezyvet_vaccination_runs', 'ezyvet_vaccination_pages', 'ezyvet_vaccination_page_observations',
-              'ezyvet_vaccination_review_requests', 'ezyvet_imported_vaccinations']
+              'ezyvet_vaccination_review_requests', 'ezyvet_imported_vaccinations',
+              'ezyvet_prescription_runs', 'ezyvet_prescription_pages', 'ezyvet_prescription_page_observations',
+              'ezyvet_prescriptionitem_runs', 'ezyvet_prescriptionitem_pages', 'ezyvet_prescriptionitem_page_observations',
+              'ezyvet_prescription_review_requests', 'ezyvet_imported_prescriptions', 'ezyvet_imported_prescription_items',
+              'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
 
@@ -150,6 +179,10 @@ def seed_vaccination_receipt(project):
       animal uuid := gen_random_uuid(); mapping uuid := gen_random_uuid();
       consult_run uuid := gen_random_uuid(); vaccination_run uuid := gen_random_uuid();
       claimed jsonb; consult public.ezyvet_import_snapshots; vaccination public.ezyvet_import_snapshots; head integer; already_admin boolean; already_dvm boolean; review_id uuid:=gen_random_uuid(); prepared jsonb;
+      rx_run uuid:=gen_random_uuid(); item_run uuid:=gen_random_uuid(); pending_run uuid:=gen_random_uuid();
+      rx_review uuid:=gen_random_uuid(); correction uuid:=gen_random_uuid(); rx_pending uuid:=gen_random_uuid();
+      rx public.ezyvet_import_snapshots; rx_item public.ezyvet_import_snapshots;
+      rx_payload jsonb; rx_approved jsonb; release_preview jsonb; release_selection jsonb;
     begin
       select exists(select 1 from public.user_roles where user_id=a and role='ADMIN') into already_admin;
       if not already_admin then insert into public.user_roles(user_id,role) values(a,'ADMIN'); end if;
@@ -177,6 +210,37 @@ def seed_vaccination_receipt(project):
         'source_next_due_on',null,'next_date_status','unknown','status','unknown','outside_author',null,
         'reason','Synthetic restoration of reviewed outside vaccination evidence','replaces_id',null,'expected_predecessor_hash',null));
       perform public.approve_ezyvet_vaccination_review(review_id,p,prepared#>>'{{request,request_hash}}',true);
+      claimed:=public.claim_ezyvet_prescription_import(rx_run,a,'{site}','prescription','https://api.trial.ezyvet.com',mapping);
+      perform public.stage_ezyvet_import_page(rx_run,a,(claimed->>'lease_id')::uuid,1,true,
+        '[{{"external_id":"3","payload":{{"id":"3","animal_id":"77","consult_id":"1","prescription_item_list":[4,5]}}}}]'::jsonb);
+      select * into strict rx from public.ezyvet_import_snapshots where source_site_uid='{site}' and resource='prescription';
+      claimed:=public.claim_ezyvet_prescriptionitem_import(item_run,a,'{site}','prescriptionitem','https://api.trial.ezyvet.com',mapping,rx.id,rx.payload_hash,1);
+      perform public.stage_ezyvet_import_page(item_run,a,(claimed->>'lease_id')::uuid,1,true,
+        '[{{"external_id":"4","payload":{{"id":"4","prescription_id":"3","qty":"outside units","remaining":"unknown","instructions":"Synthetic outside instructions"}}}}]'::jsonb);
+      select * into strict rx_item from public.ezyvet_import_snapshots where source_site_uid='{site}' and resource='prescriptionitem';
+      rx_payload:=jsonb_build_object('item_run_id',item_run,'patient_version',(select version from public.pets where id=p),
+        'interpretation',jsonb_build_object('prescribed_on',null,'prescription_date_status','uninterpreted','status','unknown',
+          'outside_author',null,'reason','Synthetic restoration of outside prescription history','completeness','partial',
+          'partial_reason','Source item 5 was not observed','replaces_id',null,'expected_predecessor_hash',null,
+          'items',jsonb_build_array(jsonb_build_object('snapshot_id',rx_item.id,'start_on',null,'start_date_status','unknown',
+            'product_id',null,'product_version',null,'note',null))));
+      prepared:=public.prepare_ezyvet_prescription_review(rx_review,p,rx_payload);
+      rx_approved:=public.approve_ezyvet_prescription_review(rx_review,p,prepared#>>'{{request,request_hash}}',true);
+      insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version)
+        values(true,true,a,now(),'Synthetic isolated restore only',8);
+      release_selection:=jsonb_build_object('imported_prescription_ids',jsonb_build_array(rx_review));
+      release_preview:=public.preview_record_release_v8(p,client,'EMAIL','restore@example.test',release_selection);
+      perform public.confirm_record_release(gen_random_uuid(),p,client,'EMAIL','restore@example.test',release_selection,
+        release_preview->'snapshot',release_preview->>'source_hash',true);
+      rx_payload:=jsonb_set(rx_payload,'{{interpretation}}',(rx_payload->'interpretation')||jsonb_build_object(
+        'reason','Synthetic corrected historical interpretation','replaces_id',rx_review,'expected_predecessor_hash',rx_approved#>>'{{receipt,version_hash}}'));
+      prepared:=public.prepare_ezyvet_prescription_review(correction,p,rx_payload);
+      rx_approved:=public.approve_ezyvet_prescription_review(correction,p,prepared#>>'{{request,request_hash}}',true);
+      rx_payload:=jsonb_set(rx_payload,'{{interpretation}}',(rx_payload->'interpretation')||jsonb_build_object(
+        'reason','Synthetic unfinished review preserved across restore','replaces_id',correction,'expected_predecessor_hash',rx_approved#>>'{{receipt,version_hash}}'));
+      perform public.prepare_ezyvet_prescription_review(rx_pending,p,rx_payload);
+      update public.ezyvet_import_runs set retry_after=now()-interval '1 second' where id=item_run;
+      perform public.claim_ezyvet_prescriptionitem_import(pending_run,a,'{site}','prescriptionitem','https://api.trial.ezyvet.com',mapping,rx.id,rx.payload_hash,1);
       if not already_dvm then delete from public.user_roles where user_id=a and role='DVM'; end if;
       if not already_admin then delete from public.user_roles where user_id=a and role='ADMIN'; end if;
     end $fixture$;""")
@@ -184,6 +248,10 @@ def seed_vaccination_receipt(project):
     assert len(captured['ezyvet_vaccination_runs']) == 1 and len(captured['ezyvet_vaccination_pages']) == 1 and len(captured['ezyvet_vaccination_page_observations']) == 1
     assert len(captured['ezyvet_clinical_page_observations']) == 1
     assert len(captured['ezyvet_vaccination_review_requests']) == 1 and len(captured['ezyvet_imported_vaccinations']) == 1
+    assert len(captured['ezyvet_prescription_runs']) == 1 and len(captured['ezyvet_prescriptionitem_runs']) == 2
+    assert len(captured['ezyvet_imported_prescriptions']) == 2 and len(captured['ezyvet_imported_prescription_items']) == 2
+    assert len(captured['ezyvet_prescription_review_requests']) == 3
+    assert len(captured['record_releases']) == 1 and any(row['source_kind']=='imported_prescription' for row in captured['record_release_sources'])
     (run/'vaccination-receipt-fixture.json').write_text(json.dumps(captured, sort_keys=True))
 
 
@@ -220,8 +288,8 @@ try:
             (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         if any(p.name.startswith('20260913520000_') for p in migration_files):
             seed_vaccination_receipt(source)
-            # The preexisting clinical/billing/Auth/Storage snapshot must still be unchanged.
-            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
+            # Preserve all prior rows and explicitly capture the four new release audit entries.
+            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-review-audit',str(source['path']/'status.json'),str(run)])
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])
@@ -248,7 +316,12 @@ try:
             assert path.is_relative_to((run/'storage').resolve())
             assert path.stat().st_size==file['bytes'] and hashlib.sha256(path.read_bytes()).hexdigest()==file['sha256']
     print('Source backup complete; starting separate restore destination',flush=True)
-    destination=project('destination',59321,args.rehearse_observed_hosted_gaps)
+    resume_backfill=bool(args.resume_backup and (run/'backfill-evidence.json').exists())
+    if resume_backfill:
+        evidence=json.loads((run/'backfill-evidence.json').read_text())
+        assert evidence['migration_sha256']=={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files}, 'Resume canonical migration sources changed'
+    destination=project('destination',59321,args.rehearse_observed_hosted_gaps or resume_backfill)
+    resume_canonical=functions_snapshot(destination) if resume_backfill else None
     if args.rehearse_observed_hosted_gaps:
         assert functions_snapshot(destination)==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'
         evidence=json.loads((run/'backfill-evidence.json').read_text())
@@ -261,6 +334,12 @@ try:
     # drop their inherited constraints individually; remove only this destination
     # schema first, then restore its full archived definition/data without filtering.
     sql(destination, 'drop schema if exists realtime cascade;')
+    # Neutralize only this destination restore-account's creation defaults.
+    # Archive ACL/default-ACL records restore the source policy; no post-restore
+    # object grant rewriting is permitted. Exact canonical comparison follows.
+    sql(destination, '''alter default privileges for role supabase_admin in schema public revoke all on functions from anon,authenticated,service_role;
+      alter default privileges for role supabase_admin in schema public revoke all on tables from anon,authenticated,service_role;
+      alter default privileges for role supabase_admin in schema public revoke all on sequences from anon,authenticated,service_role;''')
     command(['docker','exec','-i',docker_name(destination),'pg_restore','-U','supabase_admin','-d','postgres','--clean','--if-exists','--exit-on-error','--single-transaction'],input=dump,binary=True)
     command(['docker','cp',str(run/'storage')+'/.',docker_name(destination,'storage')+':/mnt'])
     command(['docker','start',*services(destination)])
@@ -278,6 +357,10 @@ try:
             if attempt==59: raise RuntimeError('Restored Auth/PostgREST/Storage did not become healthy')
             time.sleep(1)
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
+    if resume_backfill:
+        assert functions_snapshot(destination)==resume_canonical, 'Restored backfilled routines/grants/triggers differ from canonical order'
+        evidence['canonical_functions_grants_triggers_match']=True
+        (run/'backfill-evidence.json').write_text(json.dumps(evidence,indent=2))
     vaccination_evidence = None
     if (run/'vaccination-receipt-fixture.json').exists():
         expected_vaccinations = json.loads((run/'vaccination-receipt-fixture.json').read_text())
@@ -287,6 +370,10 @@ try:
                                'observation_rows': len(expected_vaccinations['ezyvet_vaccination_page_observations']),
                                'approved_vaccination_rows': len(expected_vaccinations['ezyvet_imported_vaccinations']),
                                'review_request_rows': len(expected_vaccinations['ezyvet_vaccination_review_requests']),
+                               'approved_prescription_rows': len(expected_vaccinations['ezyvet_imported_prescriptions']),
+                               'prescription_review_requests': len(expected_vaccinations['ezyvet_prescription_review_requests']),
+                               'prescription_item_runs': len(expected_vaccinations['ezyvet_prescriptionitem_runs']),
+                               'frozen_release_rows': len(expected_vaccinations['record_releases']),
                                'source_and_receipt_rows_match': True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
     # Compare the restored physical files as well as authorized downloaded original bytes.

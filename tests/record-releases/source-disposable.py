@@ -63,7 +63,7 @@ try:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
     if args.fixture == 'clinical-history':
-        assert {'20260913500000', '20260913510000', '20260913530000', '20260913540000'} <= versions, 'Clinical history and schema7 migrations required'
+        assert {'20260913500000', '20260913510000', '20260913530000', '20260913540000', '20260913610000', '20260913630000'} <= versions, 'Clinical history and schema8 migrations required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 61321
@@ -111,6 +111,7 @@ if success:
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': hashlib.sha256(harness_path.read_bytes()).hexdigest(),
+               'prescription_fixture_sha256': hashlib.sha256((root/'tests/record-releases/prescription-runtime-fixture.ts').read_bytes()).hexdigest(),
                'migration_sha256': migration_hashes, 'provider_requests': 0}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
