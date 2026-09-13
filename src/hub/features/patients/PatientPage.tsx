@@ -1,3 +1,4 @@
+import { PatientImportedPrescriptions } from "@/hub/features/imports/PatientImportedPrescriptions";
 import { PatientImportedVaccinations } from "@/hub/features/imports/PatientImportedVaccinations";
 import { PatientImportedHistory } from "@/hub/features/imports/PatientImportedHistory";
 import { PatientVaccineDuePlans } from "@/hub/features/care-reminders/PatientVaccineDuePlans";
@@ -75,6 +76,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
     <PatientImportedVaccinations petId={petId} patientVersion={patient.version} disabled={importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedVaccinationDirty} />
+    <PatientImportedPrescriptions petId={petId} />
     <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={importedVaccinationDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedHistoryDirty} />
     <PatientExternalRecords petId={petId} disabled={importedVaccinationDirty || importedHistoryDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setExternalDirty} />
     <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />
