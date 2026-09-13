@@ -133,7 +133,7 @@ function ProcessingQueue({ actor, admin }: { actor: string; admin: boolean }) {
       else {
         setAbsent(true);
         setNotice(
-          "No retry receipt was found. The original request is retained for unchanged retry or explicit discard.",
+          "No retry receipt was found. The original request is retained for unchanged retry or review of changed work.",
         );
       }
     }
@@ -290,16 +290,34 @@ function ProcessingQueue({ actor, admin }: { actor: string; admin: boolean }) {
                     await load();
                     return;
                   }
+                  const current = await previewRetry(p.p_event_id);
+                  if (!alive.current) return;
+                  if (
+                    !current ||
+                    current.expected_work_hash === p.p_expected_work_hash
+                  ) {
+                    setNotice(
+                      "The original request could still complete. Keep its exact retry request until the work changes or a receipt is recovered.",
+                    );
+                    return;
+                  }
+                  const committed = await recoverRetry(actor, p.p_id, p);
+                  if (!alive.current) return;
+                  if (committed) {
+                    accept(committed);
+                    await load();
+                    return;
+                  }
                   clearPending();
                   setReview(null);
                   setReason("");
                   setNotice(
-                    "Uncreated retry request discarded. Select current work for a fresh review.",
+                    "The work changed and no original receipt was found. Local retry draft cleared; no server operation was canceled.",
                   );
                 })
               }
             >
-              Discard uncreated processing request
+              Check changed work before clearing draft
             </Button>
           )}
         </div>

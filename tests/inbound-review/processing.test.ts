@@ -90,6 +90,8 @@ test("retry receipt binds exact actor/UUID/hash/reason and preserves lifetime at
     created_at: date,
   };
   assert.equal(retryReceipt(r, id(3), p)?.lifetime_attempts, 10);
+  assert.equal(retryReceipt(r, id(3), undefined, id(2))?.id, id(2));
+  assert.throws(() => retryReceipt(r, id(3), undefined, id(9)));
   assert.throws(() => retryReceipt(r, id(4), p));
   assert.throws(() => retryReceipt({ ...r, cycle_no: 2 }, id(3), p));
   assert.throws(() =>

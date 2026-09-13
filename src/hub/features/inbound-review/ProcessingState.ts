@@ -117,9 +117,12 @@ export function retryReceipt(
   value: unknown,
   actor?: string,
   p?: RetryIntent,
+  expectedId?: string,
 ): RetryReceipt | null {
   if (value === null) return null;
   const r = retrySchema.parse(value) as RetryReceipt;
+  if (expectedId && r.id !== expectedId)
+    throw new Error("Recovered retry ID differs");
   if ((actor && r.actor_id !== actor) || r.cycle_no !== r.previous_cycle_no + 1)
     throw new Error("Retry actor or cycle differs");
   if (

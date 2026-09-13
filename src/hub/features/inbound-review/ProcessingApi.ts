@@ -70,7 +70,7 @@ export async function recoverRetry(
     p_id: id,
   });
   if (error) throw error;
-  return retryReceipt(data, actor, intent);
+  return retryReceipt(data, actor, intent, id);
 }
 export async function requeue(actor: string, p: RetryIntent) {
   const { data, error } = await db.rpc("requeue_communication_event", { ...p });

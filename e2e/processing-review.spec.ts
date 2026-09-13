@@ -129,7 +129,7 @@ async function fixture(page: Page, role = "ADMIN") {
             e.state === "review" &&
             e.cycle_attempts === 10 &&
             e.last_error === "provider_fetch_or_persistence_retry",
-          expected_work_hash: hash,
+          expected_work_hash: state.stale ? "b".repeat(64) : hash,
           history: [
             {
               id: 1,
@@ -321,6 +321,15 @@ test("pre-commit retry preserves exact UUID/hash/reason across reload", async ({
   await page.reload();
   await page
     .getByRole("button", {
+      name: "Check changed work before clearing draft",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText(/The original request could still complete/),
+  ).toBeVisible();
+  await page
+    .getByRole("button", {
       name: "Retry original processing request",
       exact: true,
     })
@@ -368,7 +377,7 @@ test("content failure cannot be retried; stale reviewed hash stays pending until
     .click();
   await expect(
     page.getByRole("button", {
-      name: "Discard uncreated processing request",
+      name: "Check changed work before clearing draft",
       exact: true,
     }),
   ).toBeEnabled();
@@ -387,4 +396,43 @@ test("content failure cannot be retried; stale reviewed hash stays pending until
       ),
     ),
   ).toBe(false);
+});
+
+test("changed work permits local draft cleanup only after another exact receipt check", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await open(page);
+  await review(page);
+  state.stale = true;
+  await page
+    .getByRole("button", {
+      name: "Request reviewed processing retry",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Check changed work before clearing draft",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText(
+      /Local retry draft cleared; no server operation was canceled/,
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Retry original processing request",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const calls = state.calls.map((c) => c.path.split("/").pop());
+  expect(calls.slice(-3)).toEqual([
+    "recover_communication_event_retry",
+    "preview_communication_event_retry",
+    "recover_communication_event_retry",
+  ]);
+  expect(state.receipts).toHaveLength(0);
 });
