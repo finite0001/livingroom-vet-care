@@ -70,6 +70,10 @@ Run a small supervised set of approved cases for both housecalls and the clinic 
 
 Enable one capability at a time. A stop switch pauses new transport while retaining receipts, unresolved work and recovery history. Client reminders, record sharing and unified inbox delivery remain explicit reviewed communication workflows with their own permissions and delivery receipts. No “connected” badge or completed commissioning status before real authorized end-to-end evidence exists.
 
+## Practice onboarding status
+
+The owner confirmed on September12,2026 that Antech has not yet assigned Living Room Vet an account representative or onboarding contact. No production API contract or practice integration credentials have been supplied. Vendor onboarding and a technical contact remain prerequisites for real integration acceptance; no outreach has been authorized or sent.
+
 ## Contract handoff packet to prepare
 
 No message has been sent. The practice's eventual request to Antech should identify Living Room Vet (`thelivingroom.vet`), Boulder clinic home base at 2619 Spruce Street plus housecalls, native primary records, and inbound results before outbound ordering. Ask for:
