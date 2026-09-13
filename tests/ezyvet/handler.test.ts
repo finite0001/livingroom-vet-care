@@ -544,3 +544,16 @@ test("vaccination stale context and legacy run errors are actionable without lea
   const redacted = await privateError.handler(privateError.request());
   assert.equal((await redacted.json()).error, "IMPORT_FAILED");
 });
+
+test("prescription resources cannot fall through to generic claims before scoped intake exists", async () => {
+  const f = fixture();
+  f.env.EZYVET_READ_RESOURCES = "prescription,prescriptionitem";
+  for (const resource of ["prescription", "prescriptionitem"]) {
+    const response = await f.handler(f.request({ run_id: id, resource }));
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: "PRESCRIPTION_INTAKE_UNAVAILABLE" });
+  }
+  assert.equal(f.state.calls, 0);
+  assert.equal(f.state.claims, 0);
+  assert.equal(f.state.stages, 0);
+});

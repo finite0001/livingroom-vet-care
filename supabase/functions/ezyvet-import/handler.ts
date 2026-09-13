@@ -171,6 +171,11 @@ export function createHandler(dependencies: HandlerDependencies) {
       ) {
         return respond({ error: "INVALID_REQUEST" }, 400);
       }
+      // Do not route new clinical resources through the generic database claim.
+      // Remove this guard only alongside their reviewed scoped intake contract.
+      if (body.resource === "prescription" || body.resource === "prescriptionitem") {
+        return respond({ error: "PRESCRIPTION_INTAKE_UNAVAILABLE" }, 503);
+      }
       if (!config.readResources.includes(body.resource as Resource)) {
         return respond({ error: "RESOURCE_NOT_CONFIGURED" }, 400);
       }

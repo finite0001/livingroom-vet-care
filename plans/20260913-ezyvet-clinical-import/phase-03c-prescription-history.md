@@ -2,6 +2,10 @@
 
 Status: implementation contract; not implemented or commissioned. Baseline: integrated vaccination review branch `73abb6a`, including migrations through5400 and payment-trigger hardening9000. The full [Phase 3 scope](phase-03-complete-migration.md) remains required, including attachment transport and migration reconciliation.
 
+Implementation started locally: `prescription-reconciliation.ts` compares source item references with observed IDs, preserving missing/unexpected/duplicate/malformed evidence and distinguishing absent versus empty lists. Five focused tests pass. The helper is not yet connected to runtime intake or review; no prescription resource has been enabled, no provider read performed and no completion gate below is closed by this helper alone. Migrations5300/5400 have since been deployed to staging; the older deployment note at the end is historical.
+
+The adapter now implements bounded prescription/animal and prescription-item/parent reads, validates returned associations and preserves unresolved source values. All33 ezyVet tests, targeted lint and application TypeScript checks pass. The HTTP handler explicitly rejects these two resources until scoped database claims/staging exist, even if configured. This work remains local and incomplete; database recovery, review, UI, releases and actual local HTTP/database integration are still required before deployment.
+
 ## Required outcome
 
 An administrator imports prescriptions for a reviewed patient mapping and imports the associated medication items through verified same-site prescription observations. A veterinarian reviews the outside prescription and its selected items together. Active staff can read the approved history in that patient's chart and explicitly select it for medical-record releases. Source changes and local corrections remain visible; retries recover the original operation.
