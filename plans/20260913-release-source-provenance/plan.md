@@ -1,6 +1,6 @@
 # Selected lab and external-original provenance in medical releases
 
-Status: implementation and local integration checks completed; PR CI, clinical acceptance and hosted/provider commissioning remain open.
+Status: implementation and local integration checks completed; PR104 CI is green; clinical acceptance and hosted/provider commissioning remain open.
 Base: PR102, `a07f07f`; migrations through4600. This is an extension of the requested ability to select and send medical records/lab results, not an ezyVet or Antech API adapter.
 
 ## Outcome

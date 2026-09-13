@@ -34,8 +34,8 @@ Root owns integration, CI, generated type reconciliation and evidence updates. D
 - [x] Update `docs/record-releases.md`, `docs/release-email-delivery.md`, `docs/plans/ezyvet-historical-records.md`, the clinician register/examples and `docs/commercial-readiness.md` to describe final behavior and limits.
 - [x] Run focused SQL, actual contention, renderer/payload unit tests, browser workflow tests and an actual local Auth/Storage release→email/link capture workflow. The final runner confines temporary clinical-policy acceptance to a disposable generated project. The earlier restored local-foundation fixture and subsequent guard are disclosed in `docs/release-source-byte-binding.md`; hosted policy was never changed.
 - [x] Repository check/frozen Edge checks, reviewed68-migration inventory, local backfill and restore validation passed.
-- [ ] Required PR CI must pass.
-- [ ] Stack reviewed draft PRs with concrete local evidence and explicit provider/hosted/clinical limits. No main merge or public deployment.
+- [x] PR104 CI passed all three jobs at `c85b5f0` (run34745342987).
+- [x] Stack reviewed draft PRs with concrete local evidence and explicit provider/hosted/clinical limits. No main merge or public deployment.
 
 ## Completion boundary
 

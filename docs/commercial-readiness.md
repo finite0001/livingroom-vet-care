@@ -4,13 +4,17 @@ Goal: complete all requested practice software and website components, then perf
 
 ## Current release checkpoint
 
-- PR103 (`d6cd859`) and its PR102 implementation base have all three CI jobs green. The schema5 release-source implementation is now integrated at `38fdc90`, with382 unit tests,41 browser cases, frozen Edge checks and24 disposable source-capture checks passing; its draft PR CI remains separate. See [integrated evidence](release-source-byte-binding.md).
+- PR104 (`c85b5f0`) has all three GitHub CI jobs green (run34745342987), as do its PR103/102 bases. Schema5 release-source implementation passed382 unit tests,41 focused browser cases, frozen Edge checks and24 disposable source-capture checks; the CI frontend job also passed the complete browser suite. See [integrated evidence](release-source-byte-binding.md).
 - Last read-only hosted verification: dedicated project `mgadheotkdnrsatfivjy` has51 migration receipts through3400 with older gaps. Its259 application routines and168 trigger bindings match the observed subset except the six direct grants documented in [hosted preflight](hosted-upgrade-preflight.md). The4600 correction is implemented and locally tested, but remains unapplied there.
 - The observed51-version history plus grant differences was reproduced locally and upgraded through68 migrations. Canonical permissions, captured records, private Storage/database restore and cleanup passed. This does not establish hosted recovery coverage or authorize a hosted backfill.
 - No public cutover, provider commissioning, clinical approval or full hosted staff acceptance is claimed. Main remains outside this stacked-PR rollout; revalidate its actual state before merging.
 - Original Lovable and dedicated future-production environments must remain distinct. Separate staging, mail/Auth commissioning, Stripe reauthentication, provider contracts and owner/clinical acceptance remain open as detailed below.
 
 The tables below preserve the complete requested scope. Dated narrative checkpoints later in this document are historical evidence, not instructions to deploy those old revisions or claims that their counts describe today's hosted database.
+
+## Next implementation
+
+The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/plan.md) preserves the remaining API-backed history, diagnoses/reactions, vaccinations, prescriptions, attachments and reconciliation scope. Its next phase corrects the documented history page bound and enforces approved patient mappings throughout consult/history ingestion. Planning does not supply provider access or clinical acceptance.
 
 ## User requirements
 
