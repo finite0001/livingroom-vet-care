@@ -1,6 +1,6 @@
 # Phase 3a — Consult-scoped vaccination intake
 
-Priority: required next increment of Phase 3. Status: planned; no implementation or live-source acceptance claimed.
+Priority: required next increment of Phase 3. Status: implemented on the vaccination-intake stack; local runtime and 72-migration receipt restore verification passed. Live vaccination-source acceptance remains pending.
 
 ## Context and owner decision
 
@@ -12,8 +12,8 @@ References:
 
 - [Full Phase 3 scope](phase-03-complete-migration.md)
 - [Existing source research](research/source-contracts.md)
-- [Patient-scoped clinical ingestion contract](../../docs/plans/ezyvet-clinical-runs-contract.md)
-- [Existing ingestion implementation](../../supabase/functions/ezyvet-import/adapter.ts)
+- [Patient-scoped clinical ingestion contract](../../../docs/plans/ezyvet-clinical-runs-contract.md)
+- [Existing ingestion implementation](../../../supabase/functions/ezyvet-import/adapter.ts)
 
 The source research now records the Phase 1 consult/history limit-10 contracts. Recheck the official vaccination contract when implementing and record the date; do not treat public documentation as practice-sample acceptance.
 
@@ -85,7 +85,7 @@ Run targeted unit/SQL/browser tests, actual disposable Auth/HTTP flow, observed-
 
 ## File ownership map
 
-Base directory for all paths below: `/Users/davidedler/livingroom-vet-staging-commissioning`.
+Base directory for all paths below: `/Users/davidedler/livingroom-vet-vaccination-intake`.
 
 | Action | File under base | Responsibility |
 | --- | --- | --- |
@@ -125,12 +125,12 @@ No deletions. Coordinate shared-file edits with the root agent; implementation w
 
 ## Completion checklist
 
-- [ ] Current primary-source read contract recorded; all clinical values retained without inferred meaning.
-- [ ] Scoped service claim/staging and ADMIN reads enforce immutable patient/consult provenance.
-- [ ] Generic/legacy vaccination bypasses closed without changing prior clinical contracts.
-- [ ] Administrator workflow includes raw candidate inspection and durable recovery/discovery.
-- [ ] Targeted, contention, actual local and regression evidence passes; CI/restore inventory updated.
-- [ ] No clinical or provider side effects; no production-source acceptance claimed.
+- [x] Current primary-source read contract recorded; all clinical values retained without inferred meaning.
+- [x] Scoped service claim/staging and ADMIN reads enforce immutable patient/consult provenance.
+- [x] Generic/legacy vaccination bypasses closed without changing prior clinical contracts.
+- [x] Administrator workflow includes raw candidate inspection and durable recovery/discovery.
+- [x] Targeted, contention, actual local and regression evidence passes; CI/restore inventory updated.
+- [x] No clinical or provider side effects; no production-source acceptance claimed.
 
 ## Risks and subsequent work
 
@@ -139,3 +139,5 @@ The primary risk is an apparently plausible patient association backed only by g
 Later Phase 3 work still requires reviewed product mapping, interpreted historical vaccinations/due dates, prescription history, authenticated attachments and whole-migration reconciliation. Those requirements are not completed by this slice. Any native clinical adoption and certificate eligibility requires its own reviewed contract and Dr. Edler's clinical approval.
 
 Unresolved external dependencies: securely commissioned vaccination source access, authorized vaccination samples including null/date/reference variations, and supported source export/cutover semantics. These do not prevent synthetic implementation, but remain prerequisites to live-source acceptance.
+
+Final evidence: [database contract](../../../docs/plans/ezyvet-vaccination-runs-contract.md), [runtime and receipt restore](../../../docs/vaccination-runtime-evidence.md), and [administrator workflow](../../../docs/features/vaccination-imports.md). Hosted deployment and live vaccination sample acceptance remain pending.

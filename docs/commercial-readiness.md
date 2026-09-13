@@ -299,3 +299,11 @@ Dr. Susan Edler owns the inquiry to her ezyVet representative. Build against rea
 ## Existing read-only API verified
 
 The source GreenTree credentials returned HTTP 200 for OAuth without a partner ID. Issued scope/site claims matched the requested read-contact/read-animal access and exported site; a bounded one-record contact GET returned HTTP 200. Nothing was imported or modified. The mandatory partner-ID gate was removed from the adapter; Dr. Edler’s separate inquiry about two-way access no longer blocks read-only connection work.
+
+## Consult-scoped vaccination intake — implementation stack
+
+Migration 5200 and the administrator intake workflow freeze the approved patient mapping and current scoped consultation, preserve raw vaccination evidence, and support exact-run recovery and server discovery. Generic vaccination ingestion is blocked. Shared navigation protection retains pending clinical and vaccination work together.
+
+Verification passes: 407 unit tests, 24 importer tests, 21 targeted browser tests, 81 focused SQL assertions, 215 existing import regressions, 53 concurrency/runner checks and 43 actual disposable Auth/HTTP checks. Lint, type checking and the production build pass with existing warnings. Receipt backup/restore verification is tracked in [runtime evidence](vaccination-runtime-evidence.md).
+
+This completes source intake implementation only. Product mapping, date interpretation, clinical adoption and Dr. Edler's review remain later work. The new migration and optional-partner importer have not yet been deployed to hosted staging; the direct read-only connection proof is separate from hosted acceptance.
