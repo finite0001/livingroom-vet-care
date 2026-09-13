@@ -173,3 +173,5 @@ jobs:
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture clinical-history
+      - name: Verify reviewed prescriptions and mixed original-file releases in disposable Auth and Storage
+        run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture prescription

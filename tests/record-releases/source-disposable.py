@@ -13,13 +13,13 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
-parser.add_argument('--fixture', choices=['source', 'clinical-history'], default='source')
+parser.add_argument('--fixture', choices=['source', 'clinical-history', 'prescription'], default='source')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
-fixture = {'source': ('source-local-roundtrip.ts', 'Source original Auth/Storage/PostgREST'), 'clinical-history': ('clinical-history-local-roundtrip.ts', 'Clinical history Auth/Storage/PostgREST')}[args.fixture]
+fixture = {'source': ('source-local-roundtrip.ts', 'Source original Auth/Storage/PostgREST'), 'clinical-history': ('clinical-history-local-roundtrip.ts', 'Clinical history Auth/Storage/PostgREST'), 'prescription': ('clinical-history-local-roundtrip.ts', 'Clinical history Auth/Storage/PostgREST')}[args.fixture]
 harness_path = root / 'tests/record-releases' / fixture[0]
 identity = 'lrv-source-artifacts-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
@@ -62,8 +62,10 @@ try:
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
-    if args.fixture == 'clinical-history':
+    if args.fixture in ['clinical-history', 'prescription']:
         assert {'20260913500000', '20260913510000', '20260913530000', '20260913540000'} <= versions, 'Clinical history and schema7 migrations required'
+    if args.fixture == 'prescription':
+        assert {'20260913630000', '20260913640000'} <= versions, 'Schema8 prescription release migrations required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 61321
@@ -89,7 +91,7 @@ enabled = false
     started = True
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
-    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
+    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project), 'INCLUDE_PRESCRIPTION_EXPORT': str(args.fixture == 'prescription').lower()}, cwd=root)
     # Only the harness's fixed aggregate evidence line reaches the terminal.
     matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. (?:No provider requests or clinical approval|No provider requests; synthetic clinical fixtures only)\.', output.strip())
     assert matched, 'Refuse unexpected harness output'
