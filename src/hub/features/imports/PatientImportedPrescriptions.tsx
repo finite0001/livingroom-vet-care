@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { PrescriptionHistoryReview } from "./PrescriptionHistoryReview";
+import type { ImportedPrescription } from "./prescription-review-state";
+import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,22 +9,45 @@ import { listPatientImportedPrescriptions } from "./prescription-review-api";
 import type { PrescriptionCursor } from "./prescription-review-state";
 interface Props {
   petId: string;
+  patientVersion: number;
+  disabled: boolean;
+  onDirtyChange: (dirty: boolean) => void;
 }
-export function PatientImportedPrescriptions({ petId }: Props) {
-  const { user, profile } = useAuth();
+export function PatientImportedPrescriptions(props: Props) {
+  const { user, profile, hasRole } = useAuth();
   return user && profile?.is_active ? (
     <OutsidePrescriptions
-      key={`${user.id}:${petId}`}
+      key={`${user.id}:${props.petId}:${hasRole("DVM")}`}
       actor={user.id}
-      petId={petId}
+      {...props}
+      dvm={hasRole("DVM")}
     />
   ) : null;
 }
 interface InnerProps extends Props {
   actor: string;
+  dvm: boolean;
 }
-function OutsidePrescriptions({ actor, petId }: InnerProps) {
+function OutsidePrescriptions({
+  actor,
+  petId,
+  patientVersion,
+  disabled,
+  onDirtyChange,
+  dvm,
+}: InnerProps) {
   const [cursor, setCursor] = useState<PrescriptionCursor | null>(null);
+  const [correction, setCorrection] = useState<ImportedPrescription | null>(
+      null,
+    ),
+    [reviewDirty, setReviewDirty] = useState(false);
+  const reportDirty = useCallback(
+    (value: boolean) => {
+      setReviewDirty(value);
+      onDirtyChange(value);
+    },
+    [onDirtyChange],
+  );
   const history = useQuery({
     queryKey: ["patient-imported-prescriptions", actor, petId, cursor],
     queryFn: () => listPatientImportedPrescriptions(petId, cursor),
@@ -50,7 +75,19 @@ function OutsidePrescriptions({ actor, petId }: InnerProps) {
         <p>No reviewed outside prescriptions on this page.</p>
       )}
       {history.data?.prescriptions.map((v) => (
-        <ImportedPrescriptionEvidence key={v.id} prescription={v} />
+        <div key={v.id} className="space-y-2">
+          <ImportedPrescriptionEvidence prescription={v} />
+          {dvm && v.current.is_latest && (
+            <Button
+              variant="outline"
+              disabled={disabled || reviewDirty}
+              onClick={() => setCorrection(v)}
+            >
+              Correct prescription {v.prescription_external_id} version{" "}
+              {v.version}
+            </Button>
+          )}
+        </div>
       ))}
       <div className="flex flex-wrap gap-2">
         <Button
@@ -75,6 +112,17 @@ function OutsidePrescriptions({ actor, petId }: InnerProps) {
           Older outside prescriptions
         </Button>
       </div>
+      {dvm && (
+        <PrescriptionHistoryReview
+          actor={actor}
+          petId={petId}
+          patientVersion={patientVersion}
+          disabled={disabled}
+          onDirtyChange={reportDirty}
+          correction={correction}
+          onResetCorrection={() => setCorrection(null)}
+        />
+      )}
     </section>
   );
 }

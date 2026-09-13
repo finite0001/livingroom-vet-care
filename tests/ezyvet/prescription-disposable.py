@@ -61,7 +61,7 @@ try:
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
-    assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000'} <= versions, 'Prescription intake and clinical review migrations required'
+    assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000', '20260913620000'} <= versions, 'Prescription intake and clinical review migrations required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 60321

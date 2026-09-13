@@ -753,6 +753,46 @@ try {
   // Discard the response after an actual committed HTTP preparation; use the
   // retained operation UUID to recover the server's exact saved interpretation.
   await rpc("prepare_ezyvet_prescription_review", prepareArgs, true);
+  const reviewCandidates = await rpc(
+    "list_ezyvet_prescription_review_candidates",
+    { p_pet_id: pet },
+    true,
+  );
+  check(
+    reviewCandidates.candidates.some(
+      (candidate: { id: string }) => candidate.id === run,
+    ),
+    "Actual HTTP DVM discovery finds patient-scoped intake",
+  );
+  const reviewSourcePreview = await rpc(
+    "get_ezyvet_prescription_review_candidate",
+    { p_pet_id: pet, p_item_run_id: run },
+    true,
+  );
+  check(
+    reviewSourcePreview.eligible_for_review === true &&
+      reviewSourcePreview.source_context.items.length === 2 &&
+      reviewSourcePreview.source_context.parent.snapshot_id === prescription.id,
+    "Actual HTTP preview preserves exact parent and both observed items",
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "get_ezyvet_prescription_review_candidate",
+        { p_pet_id: randomUUID(), p_item_run_id: run },
+        true,
+      ),
+    "HTTP preview denies a different patient",
+    "42501",
+  );
+  await expectDenied(
+    () =>
+      rpc("get_ezyvet_prescription_review_candidate", {
+        p_pet_id: pet,
+        p_item_run_id: run,
+      }),
+    "Service API cannot inspect a DVM source preview",
+  );
   const preparedReview = await rpc(
     "recover_ezyvet_prescription_review",
     { p_id: reviewId, p_pet_id: pet },
@@ -827,6 +867,26 @@ try {
   };
   sql(
     `insert into public.user_roles(user_id,role) values(${quote(otherActor)},'DVM');`,
+  );
+  const otherCandidates = await api(
+    "/rest/v1/rpc/list_ezyvet_prescription_review_candidates",
+    { p_pet_id: pet },
+    otherHeaders,
+  );
+  check(
+    otherCandidates.candidates.some(
+      (candidate: { id: string }) => candidate.id === run,
+    ),
+    "Non-admin DVM session discovers another operator intake",
+  );
+  const otherPreview = await api(
+    "/rest/v1/rpc/get_ezyvet_prescription_review_candidate",
+    { p_pet_id: pet, p_item_run_id: run },
+    otherHeaders,
+  );
+  check(
+    otherPreview.eligible_for_review && otherPreview.run.pet_id === pet,
+    "Non-admin DVM reads scoped source through actual Auth session",
   );
   const approveArgs = {
     p_id: reviewId,
@@ -1020,6 +1080,19 @@ try {
     () => rpc("approve_ezyvet_prescription_review", pendingReviewArgs, true),
     "Actual upstream header revision invalidates pending HTTP review",
     "40001",
+  );
+  const stalePreview = await rpc(
+    "get_ezyvet_prescription_review_candidate",
+    { p_pet_id: pet, p_item_run_id: run },
+    true,
+  );
+  check(
+    stalePreview.eligible_for_review === false &&
+      stalePreview.unavailable_reason === "SOURCE_CONTEXT_CHANGED" &&
+      stalePreview.source_context.parent.original.description ===
+        reviewSourcePreview.source_context.parent.original.description &&
+      stalePreview.source_context.items.length === 2,
+    "Stale HTTP preview disables preparation while retaining original header and items",
   );
   const oldReceipt = await rpc(
     "approve_ezyvet_prescription_review",
