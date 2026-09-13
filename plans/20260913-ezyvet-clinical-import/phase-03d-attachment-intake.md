@@ -1,6 +1,6 @@
 # Phase 3d — Animal-scoped attachment metadata intake
 
-Status: implementation plan only. No runtime, migration, source-scope expansion or provider download is introduced by this document. Living Room Vet remains primary and ezyVet access remains read-only.
+Status: the [bounded metadata parser](../../docs/features/ezyvet-attachment-metadata.md) and generic-snapshot exclusion guards are implemented. Durable database runs, scoped HTTP dispatch, operator UI and original-file capture remain unimplemented. No source-scope expansion or provider download is enabled. Living Room Vet remains primary and ezyVet access remains read-only.
 
 ## Outcome and boundary
 
@@ -14,7 +14,7 @@ Refreshed September 13, 2026 from the public [Attachment operation](https://deve
 
 The page lists [GET /v1/file/{id}](https://developers.ezyvet.com/#get-file) but currently lacks its operation section. Supported download authentication, host/redirect rules, expiry, content length and response behavior have not been verified. No authorized practice attachment sample has been used. This does not block synthetic implementation of the metadata contract or imply a new private API registration is required.
 
-Before runtime implementation freezes its request contract, verify the provider's general pagination parameters against current primary documentation. Use a conservative application page cap of 10 only when those parameters are documented; if bounded pagination cannot be established, stop at parser/SQL implementation and leave network dispatch disabled. Never label an application cap a documented provider maximum. Reject an oversized or malformed response rather than silently truncating it.
+The provider's general pagination parameters have now been refreshed against the [official paging guide](https://developers.ezyvet.com/#paging); the parser uses an application page cap of 10 and validates all four documented cursor fields. It accepts a smaller advertised effective page size within that cap and verifies count/totals arithmetic against that size. No actual practice partial/empty-page sample has been accepted. Network dispatch remains disabled until durable scoped staging exists. Never label the application cap a documented provider maximum; reject oversized or inconsistent pages rather than silently truncating them.
 
 ## Parent identity and authorization
 

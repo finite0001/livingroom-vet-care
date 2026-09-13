@@ -16,4 +16,6 @@ The raw-record digest hashes canonical JSON of the observed attachment record, i
 
 ## Remaining gates
 
+The generic `parsePage` and adapter `page` paths explicitly reject attachment resources. Even an accidental future type/allowlist expansion cannot feed these download capabilities into the generic snapshot ledger. Boundary tests verify rejection before OAuth/provider traffic; configuration still rejects `attachment` until durable scoped intake is implemented. CI checks this currently disconnected parser under both Node tests and the frozen Deno toolchain.
+
 The runtime resource allowlist and dispatch remain unchanged. Durable actor/mapping-bound runs, leases, atomic staging/recovery and private ledgers are next. File download authentication, permitted destinations/redirects and byte limits still need a verified contract. Actual capture must compute a byte checksum and retain distinct API provenance; metadata hashes cannot stand in for originals. Staff review, release integration, source acceptance and commissioning remain separate gates.
