@@ -59,6 +59,8 @@ test("auth transitions remove other staff pending text; signout removes all invo
   const map = new Map([
     ["invoice-email-intent:actor:invoice:client", "sensitive"],
     ["invoice-email-intent:other:invoice:client", "other text"],
+    ["lrv-ezyvet-clinical-run:actor:mapping:history", "original-run"],
+    ["lrv-ezyvet-clinical-run:other:mapping:history", "other-run"],
     ["unrelated", "keep"],
   ]);
   const storage = {
@@ -73,6 +75,8 @@ test("auth transitions remove other staff pending text; signout removes all invo
   clearOtherInvoiceEmailIntents(storage, "actor");
   assert.equal(map.has("invoice-email-intent:actor:invoice:client"), true);
   assert.equal(map.has("invoice-email-intent:other:invoice:client"), false);
+  assert.equal(map.has("lrv-ezyvet-clinical-run:actor:mapping:history"), true);
+  assert.equal(map.has("lrv-ezyvet-clinical-run:other:mapping:history"), false);
   clearOtherInvoiceEmailIntents(storage, null);
   assert.deepEqual([...map.entries()], [["unrelated", "keep"]]);
 });

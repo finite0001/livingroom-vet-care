@@ -82,6 +82,8 @@ jobs:
         run: python3 supabase/tests/explicit_rpc_grants_upgrade.py --project-config supabase/config.toml
       - name: Verify selected-source release locking and invalidation
         run: python3 supabase/tests/release_source_provenance_concurrency.py --project-config supabase/config.toml
+      - name: Verify patient-scoped clinical import leases and observation versions
+        run: python3 supabase/tests/ezyvet_clinical_runs_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -143,6 +145,10 @@ jobs:
         run: deno check --frozen tests/external-records/local-server.ts
       - name: Verify actual external record HTTP and private file capture
         run: node --experimental-strip-types tests/external-records/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify patient-scoped clinical imports through actual HTTP and Auth
+        run: node --experimental-strip-types tests/ezyvet/clinical-local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify source-bound release artifacts in disposable Auth and Storage

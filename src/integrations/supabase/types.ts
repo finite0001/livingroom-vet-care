@@ -5564,6 +5564,43 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      search_ezyvet_mapped_patients: {
+        Args: { p_limit?: number; p_search: string }
+        Returns: {
+          external_id: string
+          household_name: string
+          link_id: string
+          patient_name: string
+          patient_version: number
+          pet_id: string
+          source_origin: string
+          source_site_uid: string
+        }[]
+      }
+      recover_ezyvet_clinical_run: {
+        Args: { p_animal_link_id: string; p_id: string; p_resource: string }
+        Returns: Json
+      }
+      list_ezyvet_clinical_runs: {
+        Args: {
+          p_animal_link_id: string
+          p_before_at?: string
+          p_before_id?: string
+          p_limit?: number
+          p_resource: string
+        }
+        Returns: Json
+      }
+      list_ezyvet_clinical_candidates: {
+        Args: {
+          p_animal_link_id: string
+          p_before_at?: string
+          p_before_id?: string
+          p_limit?: number
+          p_resource: string
+        }
+        Returns: Json
+      }
       list_record_release_sources_v5: {
         Args: { p_offset?: number; p_pet_id: string }
         Returns: Json

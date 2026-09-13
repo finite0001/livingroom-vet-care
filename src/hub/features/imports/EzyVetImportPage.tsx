@@ -1,3 +1,4 @@
+import { EzyVetClinicalImports } from "./EzyVetClinicalImports";
 import { EzyVetWeightImports } from "./EzyVetWeightImports";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -238,6 +239,7 @@ export function EzyVetImportPage() {
     setNotice("");
   }
   async function stage() {
+    if (["consult", "history"].includes(resource)) return;
     await perform(async () => {
       const id = runId || crypto.randomUUID();
       setRunId(id);
@@ -329,6 +331,10 @@ export function EzyVetImportPage() {
   return (
     <section className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-6xl space-y-5">
+        <EzyVetClinicalImports
+          key={`clinical:${session.user.id}`}
+          actor={session.user.id}
+        />
         <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
         <header>
           <h1 className="text-2xl font-semibold">ezyVet import review</h1>
@@ -372,7 +378,17 @@ export function EzyVetImportPage() {
               ))}
             </select>
             <div className="flex flex-wrap gap-2">
-              <Button disabled={busy} onClick={() => void stage()}>
+              {["consult", "history"].includes(resource) && (
+                <p>
+                  Generic clinical observations are read-only. Use the mapped
+                  patient clinical import above for new scans; legacy unscoped
+                  runs cannot continue.
+                </p>
+              )}
+              <Button
+                disabled={busy || ["consult", "history"].includes(resource)}
+                onClick={() => void stage()}
+              >
                 {runId ? "Stage next source page" : "Start staged import"}
               </Button>
               {runId && (
@@ -414,6 +430,7 @@ export function EzyVetImportPage() {
                     variant="outline"
                     disabled={
                       busy ||
+                      ["consult", "history"].includes(run.resource) ||
                       run.requested_by !== session.user.id ||
                       run.status !== "running"
                     }

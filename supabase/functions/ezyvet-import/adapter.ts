@@ -16,7 +16,28 @@ export const resources = [
 export const resourceContracts = {
   animal: { path: "/v2/animal", limit: 50 },
   healthstatus: { path: "/v1/healthstatus", limit: 10 },
+  consult: { path: "/v1/consult", limit: 10 },
+  history: { path: "/v1/history", limit: 10 },
 } as const;
+export type ClinicalResource = "consult" | "history";
+export const patientScoped = (resource: Resource) =>
+  ["healthstatus", "consult", "history"].includes(resource);
+export interface ClinicalSourcePayload extends Record<string, unknown> {
+  id: string | number;
+  animal_id: string | number;
+}
+export interface ConsultSourcePayload extends ClinicalSourcePayload {
+  description?: string | null;
+  vet_id?: string | number | null;
+}
+export interface HistorySourcePayload extends ClinicalSourcePayload {
+  consult_id?: string | number | null;
+  comments?: string | null;
+  history_system?: string | number | null;
+  chain?: string | number | null;
+  timestamp?: string | number | null;
+  vet_id?: string | number | null;
+}
 export type Resource = (typeof resources)[number];
 export interface EzyVetConfig {
   baseUrl: string;
@@ -47,20 +68,23 @@ export class ImportError extends Error {
 export function configuration(
   env: (key: string) => string | undefined,
 ): EzyVetConfig {
-  if (env("EZYVET_IMPORT_MODE") !== "staging" || env("APP_ENV") !== "staging")
+  if (env("EZYVET_IMPORT_MODE") !== "staging" || env("APP_ENV") !== "staging") {
     throw new ImportError("IMPORT_DISABLED");
+  }
   const baseUrl = env("EZYVET_API_URL") || "https://api.trial.ezyvet.com";
   if (
     !["https://api.trial.ezyvet.com", "https://api.ezyvet.com"].includes(
       baseUrl,
     )
-  )
+  ) {
     throw new ImportError("INVALID_API_HOST");
+  }
   if (
     baseUrl === "https://api.ezyvet.com" &&
     env("EZYVET_ALLOW_PRODUCTION_SOURCE") !== "true"
-  )
+  ) {
     throw new ImportError("PRODUCTION_SOURCE_DISABLED");
+  }
   const fields = [
     "EZYVET_SITE_UID",
     "EZYVET_PARTNER_ID",
@@ -72,8 +96,9 @@ export function configuration(
     values.some(
       (value) => !value || value.length > 4096 || /[\r\n]/.test(value),
     )
-  )
+  ) {
     throw new ImportError("MISSING_CONFIGURATION");
+  }
   const readResources = (
     env("EZYVET_READ_RESOURCES") || "contact,animal"
   ).split(",");
@@ -81,8 +106,9 @@ export function configuration(
     readResources.length === 0 ||
     readResources.some((value) => !resources.includes(value as Resource)) ||
     new Set(readResources).size !== readResources.length
-  )
+  ) {
     throw new ImportError("INVALID_READ_SCOPES");
+  }
   return {
     readResources: readResources as Resource[],
     baseUrl,
@@ -96,8 +122,9 @@ function record(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 function integer(value: unknown): number {
-  const number =
-    typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
+  const number = typeof value === "string" && /^\d+$/.test(value)
+    ? Number(value)
+    : value;
   return typeof number === "number" && Number.isSafeInteger(number)
     ? number
     : NaN;
@@ -106,14 +133,16 @@ const excluded =
   /^(access_token|refresh_token|authorization|password|client_secret|partner_secret|driver_license_number|driver_license_issuer|driver_license_expiry)$/i;
 function sanitize(value: unknown, depth = 0): unknown {
   if (depth > 20) throw new ImportError("INVALID_UPSTREAM_SHAPE");
-  if (Array.isArray(value))
+  if (Array.isArray(value)) {
     return value.map((item) => sanitize(item, depth + 1));
-  if (record(value))
+  }
+  if (record(value)) {
     return Object.fromEntries(
       Object.entries(value)
         .filter(([key]) => !excluded.test(key))
         .map(([key, item]) => [key, sanitize(item, depth + 1)]),
     );
+  }
   return value;
 }
 export function parsePage(
@@ -125,9 +154,11 @@ export function parsePage(
     !record(body) ||
     !Array.isArray(body.items) ||
     !record(body.meta) ||
-    body.items.length > 50
-  )
+    body.items.length >
+      (resource === "consult" || resource === "history" ? 10 : 50)
+  ) {
     throw new ImportError("INVALID_UPSTREAM_SHAPE");
+  }
   const current = integer(body.meta.items_page);
   const total = integer(body.meta.items_page_total);
   if (
@@ -135,33 +166,73 @@ export function parsePage(
     !Number.isFinite(total) ||
     total < 0 ||
     (total < page && !(page === 1 && total === 0 && body.items.length === 0))
-  )
+  ) {
     throw new ImportError("INVALID_UPSTREAM_CURSOR");
-  if (page < total && body.items.length === 0)
+  }
+  if (page < total && body.items.length === 0) {
     throw new ImportError("EMPTY_INTERMEDIATE_PAGE");
+  }
   const ids = new Set<string>();
   const items = body.items.map((item) => {
-    if (!record(item) || !record(item[resource]))
+    if (!record(item) || !record(item[resource])) {
       throw new ImportError("INVALID_UPSTREAM_SHAPE");
+    }
     const payload = item[resource] as Record<string, unknown>;
-    const id =
-      typeof payload.id === "string"
-        ? payload.id
-        : Number.isSafeInteger(payload.id)
-          ? String(payload.id)
-          : "";
-    if (!/^[A-Za-z0-9_-]{1,128}$/.test(id) || ids.has(id))
+    const id = typeof payload.id === "string"
+      ? payload.id
+      : Number.isSafeInteger(payload.id)
+      ? String(payload.id)
+      : "";
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(id) || ids.has(id)) {
       throw new ImportError("DUPLICATE_OR_INVALID_EXTERNAL_ID");
+    }
+    if (resource === "consult" || resource === "history") {
+      if (
+        !/^[0-9]+$/.test(id) ||
+        !Number.isSafeInteger(integer(payload.animal_id)) ||
+        integer(payload.animal_id) < 0
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      if (
+        resource === "history" && payload.consult_id !== undefined &&
+        payload.consult_id !== null &&
+        (!Number.isSafeInteger(integer(payload.consult_id)) ||
+          integer(payload.consult_id) < 0)
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      for (
+        const field of resource === "history"
+          ? ["history_system", "chain", "timestamp", "vet_id"]
+          : ["vet_id"]
+      ) {
+        if (
+          payload[field] !== undefined && payload[field] !== null &&
+          typeof payload[field] !== "string" &&
+          typeof payload[field] !== "number"
+        ) {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
+      }
+      const prose = resource === "history" ? "comments" : "description";
+      if (
+        payload[prose] !== undefined && payload[prose] !== null &&
+        typeof payload[prose] !== "string"
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+    }
     ids.add(id);
     return {
       external_id: id,
       payload: sanitize(
         resource === "contact"
           ? Object.fromEntries(
-              Object.entries(payload).filter(
-                ([key]) => key !== "date_of_birth",
-              ),
-            )
+            Object.entries(payload).filter(
+              ([key]) => key !== "date_of_birth",
+            ),
+          )
           : payload,
       ) as Record<string, unknown>,
     };
@@ -246,8 +317,9 @@ export function createAdapter(
     }
   }
   async function accessToken(): Promise<string> {
-    if (token && token.expiresAt > dependencies.now() + 60_000)
+    if (token && token.expiresAt > dependencies.now() + 60_000) {
       return token.value;
+    }
     const response = await request(`${config.baseUrl}/v1/oauth/access_token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -272,14 +344,16 @@ export function createAdapter(
       typeof body.access_token !== "string" ||
       !body.access_token ||
       body.access_token.length > 16384
-    )
+    ) {
       throw new ImportError("INVALID_TOKEN_RESPONSE");
+    }
     // Vendor documentation describes both a TTL and epoch expiry; handle either, capped at 12h.
     const expiry = integer(body.expires_in);
     const now = dependencies.now();
     const ttl = expiry > now / 1000 ? expiry * 1000 - now : expiry * 1000;
-    if (!Number.isFinite(ttl) || ttl <= 60_000)
+    if (!Number.isFinite(ttl) || ttl <= 60_000) {
       throw new ImportError("INVALID_TOKEN_RESPONSE");
+    }
     token = {
       value: body.access_token,
       expiresAt: now + Math.min(ttl, 12 * 60 * 60 * 1000),
@@ -297,23 +371,26 @@ export function createAdapter(
         !Number.isInteger(page) ||
         page < 1 ||
         page > 1000
-      )
+      ) {
         throw new ImportError("INVALID_PAGE_REQUEST");
+      }
       if (
-        resource === "healthstatus" &&
+        patientScoped(resource) &&
         (!animalExternalId || !/^[0-9]+$/.test(animalExternalId))
-      )
+      ) {
         throw new ImportError("PATIENT_MAPPING_REQUIRED");
-      const contract =
-        resource === "animal" || resource === "healthstatus"
-          ? resourceContracts[resource]
-          : { path: `/v1/${resource}`, limit: 50 };
+      }
+      const contract = resource === "animal" || resource === "healthstatus" ||
+          resource === "consult" || resource === "history"
+        ? resourceContracts[resource]
+        : { path: `/v1/${resource}`, limit: 50 };
       const query = new URLSearchParams({
         page: String(page),
         limit: String(contract.limit),
       });
-      if (resource === "healthstatus")
+      if (patientScoped(resource)) {
         query.set("animal_id", animalExternalId!);
+      }
       for (let attempt = 0; attempt < 2; attempt++) {
         const bearer = await accessToken();
         const response = await request(
@@ -334,15 +411,17 @@ export function createAdapter(
           );
         }
         const result = parsePage(await json(response), resource, page);
-        if (result.items.length > contract.limit)
+        if (result.items.length > contract.limit) {
           throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
         if (
-          resource === "healthstatus" &&
+          patientScoped(resource) &&
           result.items.some(
             (item) => String(item.payload.animal_id) !== animalExternalId,
           )
-        )
+        ) {
           throw new ImportError("SOURCE_PATIENT_MISMATCH");
+        }
         return result;
       }
       throw new ImportError("UPSTREAM_AUTH_FAILED");

@@ -2,9 +2,15 @@ import {
   configuration,
   createAdapter,
   ImportError,
+  patientScoped,
   resources,
 } from "./adapter.ts";
-import type { AdapterDependencies, PageResult, Resource } from "./adapter.ts";
+import type {
+  AdapterDependencies,
+  ClinicalResource,
+  PageResult,
+  Resource,
+} from "./adapter.ts";
 export interface ImportRun {
   id: string;
   source_site_uid: string;
@@ -30,6 +36,14 @@ export interface ImportGateway {
     id: string,
     actor: string,
     site: string,
+    sourceOrigin: string,
+    animalLinkId: string,
+  ) => Promise<ImportRun>;
+  claimClinical?: (
+    id: string,
+    actor: string,
+    site: string,
+    resource: ClinicalResource,
     sourceOrigin: string,
     animalLinkId: string,
   ) => Promise<ImportRun>;
@@ -74,14 +88,17 @@ export function createHandler(dependencies: HandlerDependencies) {
     if (
       request.headers.get("Origin") &&
       request.headers.get("Origin") !== origin
-    )
+    ) {
       return respond({ error: "ORIGIN_DENIED" }, 403);
+    }
     if (request.method === "OPTIONS") return new Response(null, { headers });
-    if (request.method !== "POST")
+    if (request.method !== "POST") {
       return respond({ error: "METHOD_NOT_ALLOWED" }, 405);
+    }
     const authorization = request.headers.get("Authorization");
-    if (!authorization?.startsWith("Bearer "))
+    if (!authorization?.startsWith("Bearer ")) {
       return respond({ error: "UNAUTHORIZED" }, 401);
+    }
     let run: ImportRun | null = null;
     let actor = "";
     try {
@@ -89,8 +106,9 @@ export function createHandler(dependencies: HandlerDependencies) {
         authorization.slice(7),
       );
       if (!user) return respond({ error: "UNAUTHORIZED" }, 401);
-      if (!user.activeAdmin)
+      if (!user.activeAdmin) {
         return respond({ error: "ACTIVE_ADMIN_REQUIRED" }, 403);
+      }
       actor = user.id;
       const config = configuration(dependencies.env);
       const reader = request.body?.getReader();
@@ -126,38 +144,55 @@ export function createHandler(dependencies: HandlerDependencies) {
           (key) => !["run_id", "resource", "animal_link_id"].includes(key),
         ) ||
         typeof body.run_id !== "string" ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          body.run_id,
-        ) ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+          .test(
+            body.run_id,
+          ) ||
         !resources.includes(body.resource as Resource)
-      )
+      ) {
         return respond({ error: "INVALID_REQUEST" }, 400);
-      if (!config.readResources.includes(body.resource as Resource))
+      }
+      if (!config.readResources.includes(body.resource as Resource)) {
         return respond({ error: "RESOURCE_NOT_CONFIGURED" }, 400);
+      }
       if (
-        body.resource === "healthstatus" &&
+        patientScoped(body.resource as Resource) &&
         (typeof body.animal_link_id !== "string" ||
-          !/^[0-9a-f-]{36}$/i.test(body.animal_link_id))
-      )
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+            .test(body.animal_link_id))
+      ) {
         return respond({ error: "PATIENT_MAPPING_REQUIRED" }, 400);
-      if (body.resource !== "healthstatus" && body.animal_link_id !== undefined)
+      }
+      if (
+        !patientScoped(body.resource as Resource) &&
+        body.animal_link_id !== undefined
+      ) {
         return respond({ error: "INVALID_REQUEST" }, 400);
-      run =
-        body.resource === "healthstatus"
-          ? await dependencies.gateway.claimWeight!(
-              body.run_id,
-              actor,
-              config.siteUid,
-              config.baseUrl,
-              body.animal_link_id as string,
-            )
-          : await dependencies.gateway.claim(
-              body.run_id,
-              actor,
-              config.siteUid,
-              body.resource as Resource,
-              config.baseUrl,
-            );
+      }
+      run = body.resource === "healthstatus"
+        ? await dependencies.gateway.claimWeight!(
+          body.run_id,
+          actor,
+          config.siteUid,
+          config.baseUrl,
+          body.animal_link_id as string,
+        )
+        : body.resource === "consult" || body.resource === "history"
+        ? await dependencies.gateway.claimClinical!(
+          body.run_id,
+          actor,
+          config.siteUid,
+          body.resource,
+          config.baseUrl,
+          body.animal_link_id as string,
+        )
+        : await dependencies.gateway.claim(
+          body.run_id,
+          actor,
+          config.siteUid,
+          body.resource as Resource,
+          config.baseUrl,
+        );
       const summary = (value: ImportRun) => ({
         run_id: value.id,
         status: value.status,
@@ -181,17 +216,21 @@ export function createHandler(dependencies: HandlerDependencies) {
         200,
       );
     } catch (error) {
-      const code =
-        error instanceof ImportError
-          ? error.code
-          : error &&
-              typeof error === "object" &&
-              "code" in error &&
-              error.code === "55P03"
-            ? "IMPORT_BUSY"
-            : "IMPORT_FAILED";
-      const seconds =
-        error instanceof ImportError ? Math.max(2, error.retryAfter) : 5;
+      const code = error && typeof error === "object" && "code" in error &&
+          error.code === "22023" && "message" in error &&
+          error.message === "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
+        ? "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
+        : error instanceof ImportError
+        ? error.code
+        : error &&
+            typeof error === "object" &&
+            "code" in error &&
+            error.code === "55P03"
+        ? "IMPORT_BUSY"
+        : "IMPORT_FAILED";
+      const seconds = error instanceof ImportError
+        ? Math.max(2, error.retryAfter)
+        : 5;
       if (run?.lease_id) {
         try {
           await dependencies.gateway.fail(run, actor, code, seconds);
@@ -200,8 +239,14 @@ export function createHandler(dependencies: HandlerDependencies) {
         }
       }
       return respond(
-        { error: code, retry_after_seconds: seconds, retry_safe: true },
-        code === "IMPORT_BUSY" ? 409 : 503,
+        {
+          error: code,
+          retry_after_seconds: seconds,
+          retry_safe: code !== "CLINICAL_RUN_REQUIRES_NEW_MAPPING",
+        },
+        code === "IMPORT_BUSY" || code === "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
+          ? 409
+          : 503,
       );
     }
   };

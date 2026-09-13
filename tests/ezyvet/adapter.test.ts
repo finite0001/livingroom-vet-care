@@ -106,8 +106,9 @@ test("bounded transient retries and one 401 token renewal", async () => {
         return token();
       }
       gets++;
-      if (gets === 1)
+      if (gets === 1) {
         return new Response("sensitive upstream body", { status: 503 });
+      }
       if (gets === 2) return new Response("", { status: 401 });
       return Response.json(page());
     },
@@ -255,16 +256,16 @@ test("animal reads use documented v2 contract and healthstatus requires scoped p
           meta: { items_page: 1, items_page_total: 1 },
           items: url.includes("healthstatus")
             ? [
-                {
-                  healthstatus: {
-                    id: "9",
-                    animal_id: "77",
-                    weight: "12",
-                    weight_unit: "unknown",
-                    timestamp: "unknown",
-                  },
+              {
+                healthstatus: {
+                  id: "9",
+                  animal_id: "77",
+                  weight: "12",
+                  weight_unit: "unknown",
+                  timestamp: "unknown",
                 },
-              ]
+              },
+            ]
             : [{ animal: { id: 77, contact_id: 8 } }],
         });
       },
@@ -289,16 +290,92 @@ test("healthstatus patient mismatch never stages a plausible unrelated weight", 
       now: () => 1700000000000,
       sleep: async () => {},
       fetch: async (input) =>
-        String(input).endsWith("access_token")
-          ? token()
-          : Response.json({
-              meta: { items_page: 1, items_page_total: 1 },
-              items: [{ healthstatus: { id: 1, animal_id: 999 } }],
-            }),
+        String(input).endsWith("access_token") ? token() : Response.json({
+          meta: { items_page: 1, items_page_total: 1 },
+          items: [{ healthstatus: { id: 1, animal_id: 999 } }],
+        }),
     },
   );
   await assert.rejects(
     () => adapter.page("healthstatus", 1, "77"),
     /SOURCE_PATIENT_MISMATCH/,
   );
+});
+
+test("consult and history require mapped animals, bounded pages and intact opaque source fields", async () => {
+  for (const resource of ["consult", "history"] as const) {
+    const calls: string[] = [];
+    let payload: Record<string, unknown> = {
+      id: "31",
+      animal_id: "77",
+      consult_id: "2",
+      comments: "<script>outside prose</script>",
+      history_system: "opaque",
+      chain: "unknown",
+      timestamp: "1700000000",
+      vet_id: "outside-clinician-opaque",
+    };
+    let count = 1;
+    const adapter = createAdapter({ ...config, readResources: [resource] }, {
+      now: Date.now,
+      sleep: async () => {},
+      fetch: async (input) => {
+        const url = String(input);
+        calls.push(url);
+        return url.endsWith("access_token") ? token() : Response.json({
+          meta: { items_page: 1, items_page_total: 1 },
+          items: Array.from(
+            { length: count },
+            (_, i) => ({ [resource]: { ...payload, id: String(31 + i) } }),
+          ),
+        });
+      },
+    });
+    await assert.rejects(adapter.page(resource, 1), /PATIENT_MAPPING_REQUIRED/);
+    assert.equal(calls.length, 0);
+    const result = await adapter.page(resource, 1, "77");
+    assert.equal(new URL(calls.at(-1)!).pathname, `/v1/${resource}`);
+    assert.equal(
+      new URL(calls.at(-1)!).search,
+      "?page=1&limit=10&animal_id=77",
+    );
+    assert.deepEqual(result.items[0].payload, payload);
+    payload = { ...payload, animal_id: "78" };
+    await assert.rejects(
+      adapter.page(resource, 1, "77"),
+      /SOURCE_PATIENT_MISMATCH/,
+    );
+    payload = { ...payload, animal_id: { id: 77 } };
+    await assert.rejects(
+      adapter.page(resource, 1, "77"),
+      /INVALID_UPSTREAM_SHAPE/,
+    );
+    payload = {
+      ...payload,
+      animal_id: "77",
+      [resource === "history" ? "comments" : "description"]: [],
+    };
+    await assert.rejects(
+      adapter.page(resource, 1, "77"),
+      /INVALID_UPSTREAM_SHAPE/,
+    );
+    payload = {
+      ...payload,
+      [resource === "history" ? "comments" : "description"]: "Synthetic",
+    };
+    count = 11;
+    await assert.rejects(
+      adapter.page(resource, 1, "77"),
+      /INVALID_UPSTREAM_SHAPE/,
+    );
+    assert.throws(
+      () =>
+        parsePage(
+          { meta: { items_page: 2, items_page_total: 1 }, items: [] },
+          resource,
+          2,
+        ),
+      /INVALID_UPSTREAM_CURSOR/,
+    );
+  }
 });
