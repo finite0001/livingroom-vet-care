@@ -74,7 +74,7 @@ export function createPaymentAccessHandler(role: "collection"|"status", deps: Pa
     if (request.method!=="POST" || new URL(request.url).search) return reply(405,{error:"unavailable"});
     if (!(role==="collection"?config.collectionEnabled:config.statusEnabled)) return reply(503,{error:"unavailable"});
     let input: Record<string,unknown>;
-    try {input=await body(request);if(Object.keys(input).sort().join(",")!==(role==="collection"?"action,grant_id,token":"grant_id,token") || typeof input.grant_id!=="string" || !uuid.test(input.grant_id) || !validPaymentCapability(input.token,role) || (role==="collection" && !["inspect","activate"].includes(String(input.action)))) throw new Error("Invalid request");} catch {return reply(404,{error:"unavailable"});}
+    try {input=await body(request);if(Object.keys(input).sort().join(",")!==(role==="collection"?"action,grant_id,token":"grant_id,token") || typeof input.grant_id!=="string" || !uuid.test(input.grant_id) || !validPaymentCapability(input.token,role) || (role==="collection" && (typeof input.action!=="string" || !["inspect","activate"].includes(input.action)))) throw new Error("Invalid request");} catch {return reply(404,{error:"unavailable"});}
     const id=input.grant_id as string,token=input.token as string;
     let grant: ReturnType<typeof paymentGrantFromContext>, access: Awaited<ReturnType<typeof materializePaymentAccess>>;
     let envelope: unknown;
