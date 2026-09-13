@@ -47,7 +47,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend verification is Pending. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
@@ -117,11 +117,11 @@ The root rollout audit observed nameservers `ns07.domaincontrol.com` and `ns08.d
 - [Care due plans](care-reminders.md), [scheduler and final delivery guards](reminder-dispatch.md), and [policy controls](features/reminder-delivery-settings.md). The controls select reviewed versions; they do not activate the deployment.
 - [Logo candidate and responsive previews](brand/public-logo-integration.md).
 
-## Email-domain DNS saved; verification pending
+## Email-domain DNS saved and verified
 
 The Resend domain `thelivingroom.vet` was created in `us-east-1`; sending is requested On and receiving remains saved Off. Enforced TLS was saved. Tracking behavior remains a controlled-message verification gate; no tracking configuration was submitted.
 
-With the owner's approval, the three sending-verification records were saved in GoDaddy: DKIM TXT at `resend._domainkey`, MX at `send` with priority 10 and destination `feedback-smtp.us-east-1.amazonses.com`, and SPF TXT at `send`. GoDaddy displays 10 records, preserving all seven earlier entries. Saved TTLs display one hour despite the earlier form's 30-minute default. Queries to authoritative nameserver `ns07.domaincontrol.com` confirmed all three values. Resend verification was requested and the latest observed status is **Pending**, not verified.
+With the owner's approval, the three sending-verification records were saved in GoDaddy: DKIM TXT at `resend._domainkey`, MX at `send` with priority 10 and destination `feedback-smtp.us-east-1.amazonses.com`, and SPF TXT at `send`. GoDaddy displays 10 records, preserving all seven earlier entries. Saved TTLs display one hour despite the earlier form's 30-minute default. Queries to authoritative nameserver `ns07.domaincontrol.com` confirmed all three values. Resend verification was requested; after reload the provider reports **Verified** and that the domain is ready to send emails. Enforced TLS was rechecked.
 
 [Exact saved records and mail-routing gates](email-domain-setup.md) separate these additions from root MX cutover. No root MX change, webhook/API-key setup or provider send occurred. The owner supplied `admin@`, interpreted and stated as `admin@thelivingroom.vet` for the intended administrator; neither a mailbox nor an Auth account has been created. Public mailbox names remain unpublished until actual receiving and controlled-delivery evidence is complete.
 
@@ -137,4 +137,4 @@ The dedicated Supabase database was commissioned from `191c0fa` using the authen
 
 ## Hosted handler checkpoint
 
-The dedicated project has 13 reviewed ACTIVE handlers, with the three worker authentication corrections from PR46 deployed and verified using managed server keys. The [hosted report](hosted-edge-commissioning.md) records 35 passing denial/configuration/guarded-worker probes, the initial defect and the unchanged exact data counts. This proves runtime and guarded service access, not real staff/provider acceptance. The intended administrator address is now recorded above; account/mailbox creation and Stripe reconnection remain pending. Sending DNS was subsequently saved with owner approval; Resend verification remains Pending.
+The dedicated project has 13 reviewed ACTIVE handlers, with the three worker authentication corrections from PR46 deployed and verified using managed server keys. The [hosted report](hosted-edge-commissioning.md) records 35 passing denial/configuration/guarded-worker probes, the initial defect and the unchanged exact data counts. This proves runtime and guarded service access, not real staff/provider acceptance. The intended administrator address is now recorded above; account/mailbox creation and Stripe reconnection remain pending. Sending DNS was subsequently saved with owner approval; Resend sending-domain verification is complete; receiving, Auth SMTP and application delivery remain uncommissioned.
