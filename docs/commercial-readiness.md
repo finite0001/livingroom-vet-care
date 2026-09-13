@@ -47,7 +47,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. GoDaddy access has been verified; the prepared DNS changes remain unsaved. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
@@ -102,7 +102,7 @@ General certificates now separately preserve reviewed due plans at issuance and 
 
 ## Confirmed public launch settings
 
-The owner confirmed on September 12, 2026 that GoDaddy currently manages DNS for `thelivingroom.vet`. Planned hours are Monday through Saturday, 9 am to 5 pm in the practice’s America/Denver timezone. The practice phone number is not yet selected and remains unpublished; the emergency referral contact is still undecided. The website labels these as planned hours while services remain planned. These display hours do not silently create bookable staff availability or change the existing opening targets. No DNS or mail records were modified.
+The owner confirmed on September 12, 2026 that GoDaddy currently manages DNS for `thelivingroom.vet`. Planned hours are Monday through Saturday, 9 am to 5 pm in the practice’s America/Denver timezone. The practice phone number is not yet selected and remains unpublished; the emergency referral contact is still undecided. The website labels these as planned hours while services remain planned. These display hours do not silently create bookable staff availability or change the existing opening targets. No DNS or mail records were modified by that initial public-settings change; the later owner-approved sending DNS additions are recorded below.
 
 ## Read-only DNS observation — 2026-09-12
 
@@ -117,11 +117,13 @@ The root rollout audit observed nameservers `ns07.domaincontrol.com` and `ns08.d
 - [Care due plans](care-reminders.md), [scheduler and final delivery guards](reminder-dispatch.md), and [policy controls](features/reminder-delivery-settings.md). The controls select reviewed versions; they do not activate the deployment.
 - [Logo candidate and responsive previews](brand/public-logo-integration.md).
 
-## Pending email-domain preparation
+## Email-domain DNS saved and verified
 
-The pending Resend domain `thelivingroom.vet` was created in `us-east-1` with sending requested On; receiving is saved Off and the domain remains NotStarted/unverified. Enforced TLS was saved. Tracking behavior remains a controlled-message verification gate; no tracking configuration was submitted. No DNS changes, webhook/API-key setup, messages or billing upgrade/charge flow were performed in that preparation. [Exact proposed GoDaddy records and mail-routing gates](email-domain-setup.md) keep sending verification separate from root MX cutover. Mailbox names remain unpublished until actual verified ingestion and controlled delivery are demonstrated.
+The Resend domain `thelivingroom.vet` was created in `us-east-1`; sending is requested On and receiving remains saved Off. Enforced TLS was saved. Tracking behavior remains a controlled-message verification gate; no tracking configuration was submitted.
 
-A subsequent signed-in GoDaddy review confirmed seven existing DNS records, including the parked website and a DMARC quarantine policy, with no MX or Resend verification entries. Three sending-verification rows are prepared in an unsaved form with the default 30-minute TTL. This removes DNS-account access as an unknown; it does not establish verification, receiving, sender configuration or delivery. Existing records and the exact unsaved proposal are recorded in the email-domain setup document. No registrant personal details were copied into repository documentation.
+With the owner's approval, the three sending-verification records were saved in GoDaddy: DKIM TXT at `resend._domainkey`, MX at `send` with priority 10 and destination `feedback-smtp.us-east-1.amazonses.com`, and SPF TXT at `send`. GoDaddy displays 10 records, preserving all seven earlier entries. Saved TTLs display one hour despite the earlier form's 30-minute default. Queries to authoritative nameserver `ns07.domaincontrol.com` confirmed all three values. Resend verification was requested; after reload the provider reports **Verified** and that the domain is ready to send emails. Enforced TLS was rechecked.
+
+[Exact saved records and mail-routing gates](email-domain-setup.md) separate these additions from root MX cutover. No root MX change, webhook/API-key setup or provider send occurred. The owner supplied `admin@`, interpreted and stated as `admin@thelivingroom.vet` for the intended administrator; neither a mailbox nor an Auth account has been created. Public mailbox names remain unpublished until actual receiving and controlled-delivery evidence is complete.
 
 ## Invoice delivery checkpoint
 
@@ -131,8 +133,8 @@ Apply the invoice migration before the updated dispatcher/preparer and coordinat
 
 ## Hosted schema checkpoint
 
-The dedicated Supabase database was commissioned from `191c0fa` using the authenticated CLI with an explicit project reference and vault updates disabled. All 31 pending migrations applied successfully, followed by a clean dry run and exact live catalog/count checks. See [the commissioning report](hosted-schema-commissioning.md). This removes the dedicated schema gap; it does not commission Edge handlers, staff/Auth, Storage user workflows, providers, hosting or clinical acceptance. Stripe reconnection and the separate DNS approval remain pending.
+The dedicated Supabase database was commissioned from `191c0fa` using the authenticated CLI with an explicit project reference and vault updates disabled. All 31 pending migrations applied successfully, followed by a clean dry run and exact live catalog/count checks. See [the commissioning report](hosted-schema-commissioning.md). This removes the dedicated schema gap; it does not commission Edge handlers, staff/Auth, Storage user workflows, providers, hosting or clinical acceptance. Stripe reconnection remains pending. The subsequent owner-approved sending DNS save is recorded above; receiving and provider delivery remain uncommissioned.
 
 ## Hosted handler checkpoint
 
-The dedicated project has 13 reviewed ACTIVE handlers, with the three worker authentication corrections from PR46 deployed and verified using managed server keys. The [hosted report](hosted-edge-commissioning.md) records 35 passing denial/configuration/guarded-worker probes, the initial defect and the unchanged exact data counts. This proves runtime and guarded service access, not real staff/provider acceptance. Staff administrator email, Stripe reconnection and DNS approval remain pending.
+The dedicated project has 13 reviewed ACTIVE handlers, with the three worker authentication corrections from PR46 deployed and verified using managed server keys. The [hosted report](hosted-edge-commissioning.md) records 35 passing denial/configuration/guarded-worker probes, the initial defect and the unchanged exact data counts. This proves runtime and guarded service access, not real staff/provider acceptance. The intended administrator address is now recorded above; account/mailbox creation and Stripe reconnection remain pending. Sending DNS was subsequently saved with owner approval; Resend sending-domain verification is complete; receiving, Auth SMTP and application delivery remain uncommissioned.
