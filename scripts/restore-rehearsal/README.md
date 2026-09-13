@@ -33,3 +33,16 @@ This optional mode recreates the observed 51-version subset through2700 plus3000
 Before restoring the archive, the separate destination applies all65 migrations in canonical order. Every public function definition, security-definer flag, configuration, effective anon/authenticated/service-role execution permission and application trigger binding must match the backfilled source. The normal physical Storage/database restoration and access checks then run. `result.json` includes the initial, missing and final version lists, migration hashes and successful comparison evidence only after cleanup passes.
 
 The gap mode rejects `--resume-backup`: a resumed destination does not repeat the upgrade and cannot attest to it. A normal restore-only resume remains available but reports no gap-rehearsal result. This mode has a frozen65/51 inventory and exact missing-version list; future migration additions require reviewing and updating it. It never links to a hosted project. This synthetic rehearsal does not establish who applied the hosted migrations, approve a hosted backfill, or test provider delivery.
+
+## Compare a hosted read-only routine inventory
+
+Gap mode now writes `initial-routine-inventory.json` before applying missing migrations. Run `routine-inventory.sql` through an authorized read-only database connection and save its `inventory` value as JSON outsideGit, then compare:
+
+```sh
+python3 scripts/restore-rehearsal/compare-routine-inventories.py /private/path/initial-routine-inventory.json /private/path/hosted-routine-inventory.json
+python3 -B -m unittest discover -s scripts/restore-rehearsal -p 'test_*.py'
+```
+
+The comparison exits nonzero for different migration versions, function bodies, owners, security-definer settings, search-path configuration, effective execution grants or trigger bindings/enable modes. It reports changed routine names and fields, not function bodies. The SQL sets a consistent deparser search path and C sort ordering, excluding extension-owned routines managed by Supabase. MD5 is used only to detect definition differences, not to authenticate the source. Full artifact SHA256 hashes remain in protected evidence.
+
+This is a public-function/trigger inventory, not a complete schema, RLS-policy, role-membership, data, provider or deployment audit. Matching inventories do not authorize a hosted mutation. The canonical backfill comparison also checks function ownership and trigger enable mode in addition to its existing checks.
