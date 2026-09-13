@@ -19,6 +19,7 @@ interface InvoiceEmailComposerProps {
   disabled?: boolean;
   canPrepare: boolean;
   onDirtyChange: (dirty: boolean) => void;
+  onPaymentHandoff?: (requestId: string | null) => void;
 }
 const defaultBody =
   "Attached is your invoice from The Living Room Veterinary Care. Please contact the practice with any questions.";
@@ -43,8 +44,11 @@ function InvoiceEmailSession({
   disabled,
   canPrepare,
   onDirtyChange,
+  onPaymentHandoff,
 }: InvoiceEmailComposerProps & { actorId: string }) {
   const storageKey = `invoice-email-intent:${actorId}:${invoiceId}:${clientId}`;
+  const handoffKey = `${storageKey}:payment-handoff`;
+  const [handedOff, setHandedOff] = useState(false);
   const [subject, setSubject] = useState(
     "Your invoice from The Living Room Veterinary Care",
   );
@@ -73,6 +77,16 @@ function InvoiceEmailSession({
     parseInvoiceEmail(value, invoiceId, clientId, actorId);
   const accept = (value: InvoiceEmailPreparation) => {
     if (!active.current) return;
+    let handoff = false;
+    try {
+      handoff =
+        value.request.state === "ready" &&
+        sessionStorage.getItem(handoffKey) === value.request.id;
+    } catch {
+      /* Storage failure must not hide a server receipt. */
+    }
+    setHandedOff(handoff);
+    onPaymentHandoff?.(handoff ? value.request.id : null);
     setPrepared(value);
     setAttest(false);
     setUncertain(false);
@@ -179,9 +193,10 @@ function InvoiceEmailSession({
     uncertain ||
     composing ||
     Boolean(
-      pending.current &&
-      !prepared?.receipt &&
-      prepared?.request.state !== "abandoned",
+      !handedOff &&
+        pending.current &&
+        !prepared?.receipt &&
+        prepared?.request.state !== "abandoned",
     );
   useEffect(() => {
     onDirtyChange(dirty);
@@ -323,6 +338,9 @@ function InvoiceEmailSession({
   const clear = () => {
     pending.current = null;
     setPrepared(null);
+    setHandedOff(false);
+    onPaymentHandoff?.(null);
+    sessionStorage.removeItem(handoffKey);
     setUncertain(false);
     setComposing(false);
     setAttest(false);
@@ -347,17 +365,18 @@ function InvoiceEmailSession({
     prepared && prepared.request.state !== "abandoned" ? prepared : null;
   const stale = Boolean(
     frozen &&
-    preview.data &&
-    (frozen.request.invoice_hash !== preview.data.source_hash ||
-      frozen.request.recipient !== preview.data.recipient),
+      preview.data &&
+      (frozen.request.invoice_hash !== preview.data.source_hash ||
+        frozen.request.recipient !== preview.data.recipient),
   );
   const locked = Boolean(
     disabled ||
-    busy ||
-    uncertain ||
-    frozen ||
-    !recoveredOnce ||
-    recovery.isError,
+      handedOff ||
+      busy ||
+      uncertain ||
+      frozen ||
+      !recoveredOnce ||
+      recovery.isError,
   );
   const selectedConversation = frozen?.request.conversation_id ?? conversation;
   return (
@@ -374,7 +393,8 @@ function InvoiceEmailSession({
       )}
       <p className="text-sm text-muted-foreground">
         Prepare and review an exact HTML invoice attachment before queueing.
-        Queueing does not mean delivered. This email contains an invoice attachment; payment requests are reviewed separately.
+        Queueing does not mean delivered. This email contains an invoice
+        attachment; payment requests are reviewed separately.
       </p>
       {recovery.isFetching && !hydrated.current && (
         <p role="status">Checking for a saved invoice email…</p>
@@ -390,7 +410,7 @@ function InvoiceEmailSession({
           Current invoice or household recipient is unavailable.{" "}
           <Button
             variant="outline"
-            disabled={busy}
+            disabled={busy || handedOff || disabled}
             onClick={() => void preview.refetch()}
           >
             Retry current invoice recipient
@@ -405,7 +425,9 @@ function InvoiceEmailSession({
       )}
       <Button
         variant="outline"
-        disabled={busy || (composing && !pending.current)}
+        disabled={
+          busy || handedOff || disabled || (composing && !pending.current)
+        }
         onClick={() =>
           void run(async () => {
             if (composing && !pending.current)
@@ -546,7 +568,7 @@ function InvoiceEmailSession({
               Household conversations unavailable.{" "}
               <Button
                 variant="outline"
-                disabled={busy}
+                disabled={busy || handedOff || disabled}
                 onClick={() => void conversations.refetch()}
               >
                 Retry invoice conversations
@@ -602,7 +624,7 @@ function InvoiceEmailSession({
                 <input
                   type="checkbox"
                   checked={attest}
-                  disabled={busy || stale}
+                  disabled={busy || stale || handedOff}
                   onChange={(e) => setAttest(e.target.checked)}
                 />
                 <span>
@@ -610,12 +632,64 @@ function InvoiceEmailSession({
                   and household recipient.
                 </span>
               </label>
+              {onPaymentHandoff &&
+                (handedOff ? (
+                  <Button
+                    variant="outline"
+                    disabled={busy || disabled}
+                    onClick={() => {
+                      sessionStorage.removeItem(handoffKey);
+                      setHandedOff(false);
+                      onPaymentHandoff(null);
+                      setAttest(false);
+                    }}
+                  >
+                    Resume standalone invoice email
+                  </Button>
+                ) : (
+                  <>
+                    <p className="text-sm">
+                      To include this invoice in a payment message, its frozen
+                      message must contain exactly one {"{{payment_link}}"}{" "}
+                      placeholder. Review the attachment, then continue below.
+                    </p>
+                    <Button
+                      disabled={
+                        busy ||
+                        disabled ||
+                        stale ||
+                        !attest ||
+                        frozen.request.state !== "ready" ||
+                        frozen.request.body.split("{{payment_link}}").length !==
+                          2
+                      }
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem(handoffKey, frozen.request.id);
+                        } catch {
+                          setError(
+                            "Payment handoff could not be saved. Keep this invoice email open and retry.",
+                          );
+                          return;
+                        }
+                        setHandedOff(true);
+                        setAttest(false);
+                        setComposing(false);
+                        onPaymentHandoff(frozen.request.id);
+                      }}
+                    >
+                      Continue with payment link
+                    </Button>
+                  </>
+                ))}
               <Button
                 disabled={
                   busy ||
                   !canPrepare ||
                   disabled ||
                   !attest ||
+                  handedOff ||
+                  frozen.request.body.includes("{{payment_link}}") ||
                   stale ||
                   preview.isError ||
                   Boolean(frozen.purged_at)
@@ -631,7 +705,7 @@ function InvoiceEmailSession({
           {frozen && (
             <Button
               variant="outline"
-              disabled={busy}
+              disabled={busy || handedOff || disabled}
               onClick={() => void abandon()}
             >
               Abandon this unqueued invoice email
@@ -640,7 +714,7 @@ function InvoiceEmailSession({
           {!pending.current && !frozen && composing && (
             <Button
               variant="outline"
-              disabled={busy}
+              disabled={busy || handedOff || disabled}
               onClick={() => {
                 setSubject("Your invoice from The Living Room Veterinary Care");
                 setBody(defaultBody);

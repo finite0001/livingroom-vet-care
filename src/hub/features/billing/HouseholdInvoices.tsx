@@ -1,4 +1,5 @@
 import { ReconciliationPanel } from "../payments/ReconciliationPanel";
+import { PaymentDeliveryPanel } from "../payments/PaymentDeliveryPanel";
 import { PaymentCollectionPanel } from "../payments/PaymentCollectionPanel";
 import { InvoicePayments } from "../payments/InvoicePayments";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
@@ -6,13 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { useBlocker } from "react-router-dom";
 import {
   AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Tables, Database } from "@/integrations/supabase/types";
+import type { Database, Tables } from "@/integrations/supabase/types";
 import { dollarsToCents, money } from "./money";
 import { InvoiceEmailComposer } from "./InvoiceEmailComposer";
 import { InvoiceDocumentPreview } from "./InvoiceDocumentPreview";
@@ -118,8 +119,8 @@ export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
           {busy
             ? "Creating…"
             : createId.current
-              ? "Retry creating invoice"
-              : "New draft invoice"}
+            ? "Retry creating invoice"
+            : "New draft invoice"}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -159,57 +160,61 @@ export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
             {error}
           </p>
         )}
-        {invoices.isPending ? (
-          <p role="status">Loading invoices…</p>
-        ) : invoices.isError ? (
-          <p role="alert">
-            Invoices unavailable.{" "}
-            <Button variant="outline" onClick={() => void invoices.refetch()}>
-              Retry invoices
-            </Button>
-          </p>
-        ) : (
-          <>
-            <ul className="space-y-2">
-              {invoices.data.map((invoice) => (
-                <li key={invoice.id}>
-                  <Button
-                    disabled={unconfirmed}
-                    variant={selected === invoice.id ? "secondary" : "outline"}
-                    className="h-auto w-full justify-start whitespace-normal text-left"
-                    onClick={() => setSelected(invoice.id)}
-                  >
-                    {new Date(invoice.created_at).toLocaleDateString("en-US", {
-                      timeZone: "America/Denver",
-                    })}{" "}
-                    · {invoice.status} ·{" "}
-                    {invoice.total_cents === null
-                      ? "Draft charges"
-                      : money(invoice.total_cents)}{" "}
-                    · {invoice.id.slice(0, 8)}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-            {!invoices.data.length && <p>No invoices on this page.</p>}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                disabled={unconfirmed || !page}
-                onClick={() => setPage((value) => value - 1)}
-              >
-                Previous invoices
+        {invoices.isPending
+          ? <p role="status">Loading invoices…</p>
+          : invoices.isError
+          ? (
+            <p role="alert">
+              Invoices unavailable.{" "}
+              <Button variant="outline" onClick={() => void invoices.refetch()}>
+                Retry invoices
               </Button>
-              <Button
-                variant="outline"
-                disabled={unconfirmed || invoices.data.length < 20}
-                onClick={() => setPage((value) => value + 1)}
-              >
-                More invoices
-              </Button>
-            </div>
-          </>
-        )}
+            </p>
+          )
+          : (
+            <>
+              <ul className="space-y-2">
+                {invoices.data.map((invoice) => (
+                  <li key={invoice.id}>
+                    <Button
+                      disabled={unconfirmed}
+                      variant={selected === invoice.id
+                        ? "secondary"
+                        : "outline"}
+                      className="h-auto w-full justify-start whitespace-normal text-left"
+                      onClick={() => setSelected(invoice.id)}
+                    >
+                      {new Date(invoice.created_at).toLocaleDateString(
+                        "en-US",
+                        {
+                          timeZone: "America/Denver",
+                        },
+                      )} · {invoice.status} · {invoice.total_cents === null
+                        ? "Draft charges"
+                        : money(invoice.total_cents)} · {invoice.id.slice(0, 8)}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              {!invoices.data.length && <p>No invoices on this page.</p>}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  disabled={unconfirmed || !page}
+                  onClick={() => setPage((value) => value - 1)}
+                >
+                  Previous invoices
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={unconfirmed || invoices.data.length < 20}
+                  onClick={() => setPage((value) => value + 1)}
+                >
+                  More invoices
+                </Button>
+              </div>
+            </>
+          )}
         {selected && (
           <InvoiceEditor
             key={selected}
@@ -246,7 +251,12 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [smsDirty, setSmsDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
   const [collectionDirty, setCollectionDirty] = useState(false);
+  const [deliveryDirty, setDeliveryDirty] = useState(false);
   const [reconciliationDirty, setReconciliationDirty] = useState(false);
+  const [attachmentRequestId, setAttachmentRequestId] = useState<string | null>(
+    null,
+  );
+  useEffect(() => setAttachmentRequestId(null), [session?.user.id]);
   useEffect(() => {
     onPending(
       busy ||
@@ -255,7 +265,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         smsDirty ||
         paymentDirty ||
         collectionDirty ||
-        reconciliationDirty,
+        reconciliationDirty || deliveryDirty,
     );
     return () => onPending(false);
   }, [
@@ -265,6 +275,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     smsDirty,
     paymentDirty,
     collectionDirty,
+    deliveryDirty,
     reconciliationDirty,
     onPending,
   ]);
@@ -286,7 +297,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     queryFn: async () => {
       const items: Tables<"billing_invoice_items">[] = [];
       const credits: Tables<"billing_credits">[] = [];
-      for (let offset = 0; ; offset += 500) {
+      for (let offset = 0;; offset += 500) {
         const { data, error } = await supabase
           .from("billing_invoice_items")
           .select("*")
@@ -298,7 +309,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         items.push(...data);
         if (data.length < 500) break;
       }
-      for (let offset = 0; ; offset += 500) {
+      for (let offset = 0;; offset += 500) {
         const { data, error } = await supabase
           .from("billing_credits")
           .select("*")
@@ -412,32 +423,32 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
       setError(messageOf(failure));
     }
   }
-  if (invoice.isPending || details.isPending)
+  if (invoice.isPending || details.isPending) {
     return <p role="status">Loading invoice details…</p>;
-  if (!invoice.data || !details.data)
+  }
+  if (!invoice.data || !details.data) {
     return (
       <p role="alert">
         Invoice details unavailable.{" "}
         <Button onClick={() => void refresh()}>Retry invoice details</Button>
       </p>
     );
+  }
   const record: Invoice = invoice.data;
-  const total =
-    record.total_cents ??
+  const total = record.total_cents ??
     details.data.items.reduce((sum, item) => sum + item.amount_cents, 0);
   const credits = details.data.credits.reduce(
     (sum, item) => sum + item.amount_cents,
     0,
   );
   const readFailed = invoice.isError || details.isError;
-  const disabled =
-    busy ||
+  const disabled = busy ||
     Boolean(pending) ||
     emailDirty ||
     smsDirty ||
     paymentDirty ||
     collectionDirty ||
-    reconciliationDirty ||
+    reconciliationDirty || deliveryDirty ||
     readFailed;
   return (
     <section
@@ -526,79 +537,84 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
       </p>
       {record.status === "draft" && (
         <>
-          {options.isPending ? (
-            <p>Loading services…</p>
-          ) : options.isError ? (
-            <p role="alert">
-              Services unavailable.{" "}
-              <Button onClick={() => void options.refetch()}>
-                Retry services
-              </Button>
-            </p>
-          ) : (
-            <fieldset disabled={disabled} className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="invoice-service-search">Find service</Label>
-                <Input
-                  id="invoice-service-search"
-                  value={serviceSearch}
-                  onChange={(event) => {
-                    setServiceSearch(event.target.value);
-                    setServiceId("");
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Up to 50 matches.
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="invoice-service">Service</Label>
-                <select
-                  id="invoice-service"
-                  className={selectClass}
-                  value={serviceId}
-                  onChange={(event) => setServiceId(event.target.value)}
-                >
-                  <option value="">Choose service</option>
-                  {options.data.products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} · {money(product.unit_price_cents)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="invoice-patient">Patient for charge</Label>
-                <select
-                  id="invoice-patient"
-                  className={selectClass}
-                  value={petId}
-                  onChange={(event) => setPetId(event.target.value)}
-                >
-                  <option value="">Household</option>
-                  {options.data.pets.map((pet) => (
-                    <option key={pet.id} value={pet.id}>
-                      {pet.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="invoice-quantity">Service quantity</Label>
-                <Input
-                  id="invoice-quantity"
-                  type="number"
-                  min="0.001"
-                  step="0.001"
-                  value={quantity}
-                  onChange={(event) => setQuantity(event.target.value)}
-                />
-              </div>
-              <Button onClick={addService} disabled={!serviceId}>
-                Add service charge
-              </Button>
-            </fieldset>
-          )}
+          {options.isPending
+            ? <p>Loading services…</p>
+            : options.isError
+            ? (
+              <p role="alert">
+                Services unavailable.{" "}
+                <Button onClick={() => void options.refetch()}>
+                  Retry services
+                </Button>
+              </p>
+            )
+            : (
+              <fieldset
+                disabled={disabled}
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                <div>
+                  <Label htmlFor="invoice-service-search">Find service</Label>
+                  <Input
+                    id="invoice-service-search"
+                    value={serviceSearch}
+                    onChange={(event) => {
+                      setServiceSearch(event.target.value);
+                      setServiceId("");
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Up to 50 matches.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="invoice-service">Service</Label>
+                  <select
+                    id="invoice-service"
+                    className={selectClass}
+                    value={serviceId}
+                    onChange={(event) => setServiceId(event.target.value)}
+                  >
+                    <option value="">Choose service</option>
+                    {options.data.products.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} · {money(product.unit_price_cents)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="invoice-patient">Patient for charge</Label>
+                  <select
+                    id="invoice-patient"
+                    className={selectClass}
+                    value={petId}
+                    onChange={(event) => setPetId(event.target.value)}
+                  >
+                    <option value="">Household</option>
+                    {options.data.pets.map((pet) => (
+                      <option key={pet.id} value={pet.id}>
+                        {pet.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="invoice-quantity">Service quantity</Label>
+                  <Input
+                    id="invoice-quantity"
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    value={quantity}
+                    onChange={(event) => setQuantity(event.target.value)}
+                  />
+                </div>
+                <Button onClick={addService} disabled={!serviceId}>
+                  Add service charge
+                </Button>
+              </fieldset>
+            )}
           <p className="text-sm text-muted-foreground">
             Medication and vaccine charges are added with their patient
             treatment. Issuing freezes these line items and their total.
@@ -612,8 +628,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
                   p_id: invoiceId,
                   p_expected_version: record.version,
                 }),
-              })
-            }
+              })}
           >
             Issue invoice for {money(total)}
           </Button>
@@ -629,7 +644,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
               id="invoice-correction-reason"
               maxLength={2000}
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={(event) =>
+                setReason(event.target.value)}
             />
           </div>
           <div>
@@ -638,7 +654,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
               id="invoice-credit"
               inputMode="decimal"
               value={credit}
-              onChange={(event) => setCredit(event.target.value)}
+              onChange={(event) =>
+                setCredit(event.target.value)}
             />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -660,8 +677,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
                     p_expected_version: record.version,
                     p_reason: reason.trim(),
                   }),
-                })
-              }
+                })}
             >
               Void invoice and retain history
             </Button>
@@ -673,16 +689,15 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={
-            busy ||
+          disabled={busy ||
             Boolean(pending) ||
             smsDirty ||
             paymentDirty ||
             collectionDirty ||
-            reconciliationDirty ||
-            readFailed
-          }
+            reconciliationDirty || deliveryDirty ||
+            readFailed}
           onDirtyChange={setEmailDirty}
+          onPaymentHandoff={setAttachmentRequestId}
         />
       )}
       {(record.status === "issued" || record.status === "void") && (
@@ -691,15 +706,13 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           sourceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={
-            busy ||
+          disabled={busy ||
             Boolean(pending) ||
             emailDirty ||
             paymentDirty ||
             collectionDirty ||
-            reconciliationDirty ||
-            readFailed
-          }
+            reconciliationDirty || deliveryDirty ||
+            readFailed}
           onDirtyChange={setSmsDirty}
         />
       )}
@@ -709,15 +722,13 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           clientId={clientId}
           invoiceTotalCents={record.total_cents}
           canPrepare={record.status === "issued"}
-          disabled={
-            busy ||
+          disabled={busy ||
             Boolean(pending) ||
             emailDirty ||
             smsDirty ||
             collectionDirty ||
-            reconciliationDirty ||
-            readFailed
-          }
+            reconciliationDirty || deliveryDirty ||
+            readFailed}
           onDirtyChange={setPaymentDirty}
         />
       )}
@@ -726,31 +737,39 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceId={invoiceId}
           clientId={clientId}
           canPrepare={record.status === "issued"}
-          disabled={
-            busy ||
+          disabled={busy ||
             Boolean(pending) ||
             emailDirty ||
             smsDirty ||
             paymentDirty ||
-            reconciliationDirty ||
-            readFailed
-          }
+            reconciliationDirty || deliveryDirty ||
+            readFailed}
           onDirtyChange={setCollectionDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <PaymentDeliveryPanel
+          invoiceId={invoiceId}
+          clientId={clientId}
+          canPrepare={record.status === "issued"}
+          attachmentRequestId={attachmentRequestId}
+          disabled={busy ||
+            Boolean(pending) ||
+            emailDirty ||
+            smsDirty ||
+            paymentDirty ||
+            collectionDirty ||
+            reconciliationDirty ||
+            readFailed}
+          onDirtyChange={setDeliveryDirty}
         />
       )}
       {(record.status === "issued" || record.status === "void") && (
         <ReconciliationPanel
           invoiceId={invoiceId}
           clientId={clientId}
-          disabled={
-            busy ||
-            Boolean(pending) ||
-            emailDirty ||
-            smsDirty ||
-            paymentDirty ||
-            collectionDirty ||
-            readFailed
-          }
+          disabled={busy || Boolean(pending) || emailDirty || smsDirty ||
+            paymentDirty || collectionDirty || deliveryDirty || readFailed}
           onDirtyChange={setReconciliationDirty}
         />
       )}
