@@ -2,7 +2,7 @@
 
 Reviewer: Dr. Susan Edler. No approval or clinical acknowledgment has been recorded by preparing this document. This supplements the original v3 pack; the existing HTML examples do not demonstrate these new workflows.
 
-Scope: lab provenance4100 and staff workflow `c56b4e3`; historical manual-export provenance4200 `bb3320a` and byte verifier `aa14ba4`. The historical-import staff panel is still undergoing separate integration/testing. Record the final integrated revision when conducting review; these component references are not blanket acceptance of a later release.
+Scope: lab provenance4100 and staff workflow `c56b4e3`; historical manual-export provenance4200 `bb3320a` and byte verifier `aa14ba4`. The historical-import staff panel `ce56201` is now integrated and locally tested. Record the final integrated revision when conducting review; these component references are not blanket acceptance of a later release.
 
 ## C09: original and corrected lab reports
 
