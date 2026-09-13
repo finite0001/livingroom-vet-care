@@ -249,3 +249,15 @@ test("schema6 rejects contradictory or incomplete discrepancy review evidence", 
     assert.throws(() => renderRecordRelease(a), /Imported history provenance/);
   }
 });
+
+test("schema6 rejects two versions of one history identity within one extraction", () => {
+  const a = clinicalHistoryArtifact(),
+    e = a.preview.snapshot.problem_source_extractions![0];
+  e.sources.push({
+    ...e.sources[0],
+    id: "b6000000-0000-4000-8000-000000000098",
+    version: 2,
+    narrative_included: false,
+  });
+  assert.throws(() => renderRecordRelease(a), /Imported history provenance/);
+});

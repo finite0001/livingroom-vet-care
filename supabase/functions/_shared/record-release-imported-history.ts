@@ -93,6 +93,8 @@ const object = (v: unknown): v is Record<string, unknown> =>
 function require(valid: unknown): asserts valid {
   if (!valid) throw new Error("Imported history provenance is invalid.");
 }
+const sourceKey = (s: ImportedHistorySource) =>
+  JSON.stringify([s.origin, s.site_uid, s.animal_id, s.history_id]);
 function reference(r: ImportedHistoryReference) {
   require(
     object(r) && uuid(r.id) && positive(r.version) && hash(r.version_hash) &&
@@ -195,10 +197,13 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
     }
     require(Array.isArray(e.sources) && e.sources.length > 0);
     const sourceIds = new Set<string>();
+    const sourceIdentities = new Set<string>();
     for (const r of e.sources) {
       reference(r);
       require(!sourceIds.has(r.id));
       sourceIds.add(r.id);
+      require(!sourceIdentities.has(sourceKey(r.source)));
+      sourceIdentities.add(sourceKey(r.source));
       const selected = histories.get(r.id);
       require(
         typeof r.narrative_included === "boolean" &&
@@ -252,11 +257,14 @@ export function validateImportedHistory(s: ReleaseSnapshot): void {
           review.sources.length === e.sources.length,
       );
       const reviewedOriginals = new Set<string>();
+      const reviewedIdentities = new Set<string>();
       for (const r of review.sources) {
         reference(r);
         require(
           e.sources.some((original) => sameSource(original.source, r.source)),
         );
+        require(!reviewedIdentities.has(sourceKey(r.source)));
+        reviewedIdentities.add(sourceKey(r.source));
         const selected = histories.get(r.id);
         require(r.narrative_included === !!selected);
         if (selected) {
