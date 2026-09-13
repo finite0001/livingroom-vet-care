@@ -64,6 +64,8 @@ jobs:
         run: python3 supabase/tests/payment_reconciliation_concurrency.py --project-config supabase/config.toml
       - name: Verify concurrent reviewed payment delivery guards
         run: python3 supabase/tests/payment_delivery_concurrency.py --project-config supabase/config.toml
+      - name: Verify audited payment event retry concurrency
+        run: python3 supabase/tests/stripe_event_retry_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
         with:
           node-version: 22
