@@ -18,6 +18,7 @@ export function clearOtherInvoiceEmailIntents(
     "communication-processing-intent:",
     "outbox-retry-intent:",
     "lrv-ezyvet-clinical-run:",
+    "lrv-ezyvet-vaccination-run:",
     "ezyvet-history-intent:",
   ];
   for (const prefix of prefixes) {

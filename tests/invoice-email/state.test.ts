@@ -60,6 +60,8 @@ test("auth transitions remove other staff pending text; signout removes all invo
     ["invoice-email-intent:actor:invoice:client", "sensitive"],
     ["invoice-email-intent:other:invoice:client", "other text"],
     ["lrv-ezyvet-clinical-run:actor:mapping:history", "original-run"],
+    ["lrv-ezyvet-vaccination-run:actor:mapping:vaccination", "original-run"],
+    ["lrv-ezyvet-vaccination-run:other:mapping:vaccination", "other-run"],
     ["lrv-ezyvet-clinical-run:other:mapping:history", "other-run"],
     ["ezyvet-history-intent:actor:patient:extraction", "original-review"],
     ["ezyvet-history-intent:other:patient:approval", "other-review"],
@@ -78,6 +80,14 @@ test("auth transitions remove other staff pending text; signout removes all invo
   assert.equal(map.has("invoice-email-intent:actor:invoice:client"), true);
   assert.equal(map.has("invoice-email-intent:other:invoice:client"), false);
   assert.equal(map.has("lrv-ezyvet-clinical-run:actor:mapping:history"), true);
+  assert.equal(
+    map.has("lrv-ezyvet-vaccination-run:actor:mapping:vaccination"),
+    true,
+  );
+  assert.equal(
+    map.has("lrv-ezyvet-vaccination-run:other:mapping:vaccination"),
+    false,
+  );
   assert.equal(map.has("lrv-ezyvet-clinical-run:other:mapping:history"), false);
   assert.equal(map.has("ezyvet-history-intent:actor:patient:extraction"), true);
   assert.equal(map.has("ezyvet-history-intent:other:patient:approval"), false);

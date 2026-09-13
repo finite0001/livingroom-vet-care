@@ -1,3 +1,4 @@
+import { EzyVetVaccinationImports } from "./EzyVetVaccinationImports";
 import { EzyVetClinicalImports } from "./EzyVetClinicalImports";
 import { EzyVetWeightImports } from "./EzyVetWeightImports";
 import { useRef, useState } from "react";
@@ -239,7 +240,7 @@ export function EzyVetImportPage() {
     setNotice("");
   }
   async function stage() {
-    if (["consult", "history"].includes(resource)) return;
+    if (["consult", "history", "vaccination"].includes(resource)) return;
     await perform(async () => {
       const id = runId || crypto.randomUUID();
       setRunId(id);
@@ -335,6 +336,10 @@ export function EzyVetImportPage() {
           key={`clinical:${session.user.id}`}
           actor={session.user.id}
         />
+        <EzyVetVaccinationImports
+          key={`vaccination:${session.user.id}`}
+          actor={session.user.id}
+        />
         <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
         <header>
           <h1 className="text-2xl font-semibold">ezyVet import review</h1>
@@ -378,7 +383,7 @@ export function EzyVetImportPage() {
               ))}
             </select>
             <div className="flex flex-wrap gap-2">
-              {["consult", "history"].includes(resource) && (
+              {["consult", "history", "vaccination"].includes(resource) && (
                 <p>
                   Generic clinical observations are read-only. Use the mapped
                   patient clinical import above for new scans; legacy unscoped
@@ -386,7 +391,10 @@ export function EzyVetImportPage() {
                 </p>
               )}
               <Button
-                disabled={busy || ["consult", "history"].includes(resource)}
+                disabled={
+                  busy ||
+                  ["consult", "history", "vaccination"].includes(resource)
+                }
                 onClick={() => void stage()}
               >
                 {runId ? "Stage next source page" : "Start staged import"}
