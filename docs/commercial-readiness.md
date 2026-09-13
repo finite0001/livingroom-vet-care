@@ -2,7 +2,7 @@
 
 ## September 13 — shared-team Auth callback separation implemented
 
-[Reserved-sender callback separation](auth-mail-webhook-separation.md) keeps signed Auth delivery statuses out of the client ledger while preserving unknown-client retries. All28 inbound tests, TypeScript, focused lint and the Edge entrypoint check pass. No deployment, mailbox creation, Auth SMTP configuration or sending is claimed. The owner has supplied the first administrator's mailbox; authoritative root DNS still has no MX record, so actual private-mail delivery remains unverified.
+[Reserved-sender callback separation](auth-mail-webhook-separation.md) keeps signed Auth delivery statuses out of the client ledger while preserving unknown-client retries. All28 inbound tests and all three PR114 CI jobs pass. Staging webhook version3 matches the tested source; no Resend secrets are installed and the unconfigured endpoint returns503. No mailbox creation, Auth SMTP configuration or sending is claimed. The owner has supplied the first administrator's mailbox; authoritative root DNS still has no MX record, so actual private-mail delivery remains unverified.
 
 ## September 13 — protected frontend preview available
 

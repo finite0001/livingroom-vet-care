@@ -15,7 +15,7 @@ Fastmail is the selected human mailbox provider; the practice application remain
 
 ## Separate message purposes within one Resend team
 
-The implementation now provides [optional reserved-sender Auth callback separation](auth-mail-webhook-separation.md). It is tested locally but not deployed or configured. The following paragraph describes the original unconfigured callback path and the acceptance requirement; it must remain intact for unknown client statuses.
+The implementation now provides [optional reserved-sender Auth callback separation](auth-mail-webhook-separation.md). It passed CI and is deployed to staging, but remains unconfigured with no Resend secrets installed. The following paragraph describes the original unconfigured callback path and the acceptance requirement; it must remain intact for unknown client statuses.
 
 The owner explicitly corrected the selection to Fastmail + Resend only. Do not commission Postmark or a second Resend team. Separate sender identities and least-privilege credentials remain useful within the selected team.
 
