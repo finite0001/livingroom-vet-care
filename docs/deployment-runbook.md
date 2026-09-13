@@ -9,7 +9,7 @@
 - Local validation stack: `/private/tmp/livingroom-vet-foundation`, database port 56322, API port 56321. Disposable synthetic data only; never use its development keys in cloud environments.
 - Vercel team is available; project deployment has not yet been commissioned. `vercel.json` provides npm build and SPA rewrites.
 
-The subsequent [clinical-core increment](clinical-core.md) adds migration `20260912210000` to the dedicated project (16 total). Its new frontend requires this migration on the active application backend before rollout.
+The [clinical-core increment](clinical-core.md) originally brought the dedicated project to 16 migrations. [Hosted schema commissioning](hosted-schema-commissioning.md) subsequently applied the remaining 31 migrations through invoice email: 47 total, with 120 RLS-enabled public tables. Compatible Edge handlers, hosted staff acceptance and the frontend/backend switch remain separate rollout steps.
 
 ## Local verification
 
@@ -29,7 +29,7 @@ The database test file is `supabase/tests/staff_access.test.sql`. Run it only on
 
 Public self-signup is disabled on the new project. Site URL is `https://thelivingroom.vet`; the exact allowed recovery redirect is `https://thelivingroom.vet/hub/reset-password`. Anonymous sign-in remains disabled and email confirmation remains enabled. No staff accounts have been created.
 
-Apply checked-in migrations in chronological order. Prefer authenticated CLI deployment when available; always specify and verify the target project. The MCP migration tool generates receipt timestamps, so this initial empty-project commissioning reconciles each receipt to the exact repository migration version/name after successful execution. Never replay a migration merely because its receipt timestamp differs: inspect history first. Record any reconciliation in the commissioning report.
+Apply checked-in migrations in chronological order. Prefer authenticated CLI deployment when available; always specify and verify the target project. Run CLI database operations sequentially because concurrent temporary login-role initialization can invalidate another operation’s credentials. Use `--skip-vault` for schema-only commissioning. The MCP migration tool generates receipt timestamps, so this initial empty-project commissioning reconciles each receipt to the exact repository migration version/name after successful execution. Never replay a migration merely because its receipt timestamp differs: inspect history first. Record any reconciliation in the commissioning report.
 
 The new project has reviewed `invite-staff`, `send-email`, and `send-sms` functions deployed with JWT verification enabled. `APP_URL=https://thelivingroom.vet`, `APP_ENV=staging`, and `OUTBOUND_DELIVERY_MODE=disabled` are saved. No provider credentials were installed. Deploy only reviewed Edge Functions. `invite-staff` requires fixed `APP_URL` and active-admin authentication. Auth SMTP and real invitations are a separate operational acceptance step; configure them using [staff-access.md](staff-access.md). Keep client/provider delivery disabled by default using [messaging-environments.md](messaging-environments.md). No outbox/inbound/callback capability is implied by deployment of an outbound endpoint.
 
