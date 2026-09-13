@@ -9,6 +9,7 @@ export interface CheckoutContext extends CheckoutIntent {
 export interface CheckoutDependencies {
   origin: string;
   enabled: boolean;
+  collectionsEnabled?: boolean;
   authenticate: (token: string) => Promise<string | null>;
   context: (requestId: string, actorId: string) => Promise<CheckoutContext>;
   provider: {
@@ -55,29 +56,42 @@ export function createStripeCheckoutHandler(deps: CheckoutDependencies) {
     if (intent.actor_id !== actor || intent.id !== body.p_request_id) return reply(404, {error: "checkout_unavailable"});
     if (intent.state === "reconciliation") return reply(409, {state: "reconciliation"});
     if (intent.state === "paid" || intent.state === "expired") return reply(200, {state: intent.state});
+    let observedSession: string | null = intent.session_id;
+    const normalize = (value: StripeObject) => {
+      if (typeof value.id === "string" && /^cs_(test_|live_)?[A-Za-z0-9]+$/.test(value.id)) observedSession = value.id;
+      try { return checkoutEvidence(value, intent); }
+      catch { throw new StripeBoundaryError("reconcile"); }
+    };
     try {
       let value: StripeObject;
       if (intent.session_id) {
         value = await deps.provider.retrieveCheckout(intent.session_id);
-        let evidence = checkoutEvidence(value, intent);
+        let evidence = normalize(value);
         if (evidence.session_id !== intent.session_id) throw new StripeBoundaryError("reconcile");
         if (body.action === "expire" && evidence.state === "session_open") {
           // Expiry can race payment. Always retrieve after the attempt, including a failed expiry response.
           try { await deps.provider.expireCheckout(intent.session_id, `lrv-expire-${intent.id}`); } catch { /* Authoritative retrieval below decides the state. */ }
           value = await deps.provider.retrieveCheckout(intent.session_id);
-          evidence = checkoutEvidence(value, intent);
+          evidence = normalize(value);
           if (evidence.session_id !== intent.session_id) throw new StripeBoundaryError("reconcile");
         }
       } else {
         if (body.action === "expire" || !intent.current_source_matches || intent.state !== "prepared") return reply(409, {state: "reconciliation"});
+        if (deps.collectionsEnabled === false) return reply(409, {state: "collection_paused"});
         value = await deps.provider.createCheckout(intent);
       }
-      const evidence = checkoutEvidence(value, intent);
+      const evidence = normalize(value);
+      if (evidence.state === "session_open" && !intent.current_source_matches) throw new StripeBoundaryError("reconcile");
       const disposition = await deps.apply(intent, evidence, await observationId(intent, evidence));
       if (disposition !== "accepted" || evidence.state === "reconciliation") return reply(409, {state: "reconciliation"});
       return reply(200, {state: evidence.state, client_url: body.action === "expire" ? null : evidence.client_url});
     } catch (error) {
-      if (error instanceof StripeBoundaryError && error.code === "reconcile") return reply(409, {state: "reconciliation"});
+      if (error instanceof StripeBoundaryError && error.code === "reconcile") {
+        const evidence: CheckoutEvidence = {session_id: observedSession ?? "", payment_id: null, state: "reconciliation", amount_cents: intent.amount_cents, currency: "usd", client_url: null};
+        try { await deps.apply(intent, evidence, await observationId(intent, evidence)); }
+        catch { return reply(202, {state: "uncertain", request_id: intent.id}); }
+        return reply(409, {state: "reconciliation"});
+      }
       // Includes a lost DB acknowledgement after Stripe accepted creation. Stable request remains recoverable.
       return reply(202, {state: "uncertain", request_id: intent.id});
     }

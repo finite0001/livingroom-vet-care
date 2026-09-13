@@ -50,11 +50,28 @@ test("changed source, missing expiry identity and actor mismatch cannot create o
 });
 test("mismatched provider identity and quarantined evidence never expose checkout URL", async () => {
   const bad = setup({provider: {createCheckout: async () => ({...session(), amount_total: 1}), retrieveCheckout: async () => session(), expireCheckout: async () => session()}});
-  assert.equal((await bad.handler(req())).status, 409); assert.equal(bad.calls.includes("apply"), false);
+  assert.equal((await bad.handler(req())).status, 409); assert.equal(bad.calls.includes("apply"), true);
   const quarantined = setup({apply: async () => "quarantined"}); const result = await quarantined.handler(req());
   assert.deepEqual(await result.json(), {state: "reconciliation"});
 });
 test("repeated matching observations have stable IDs, excluding transient checkout URL", async () => {
   const {handler, observations} = setup(); await handler(req()); await handler(req());
   const values = observations as {eventId: string}[]; assert.equal(values[0].eventId, values[1].eventId); assert.match(values[0].eventId, /^observe:[a-f0-9]{64}$/);
+});
+test("collection pause prevents creation but preserves known-session recovery", async () => {
+  const paused = setup({collectionsEnabled: false});
+  assert.equal((await (await paused.handler(req())).json()).state, "collection_paused"); assert.equal(paused.calls.includes("create"), false);
+  const existing = setup({collectionsEnabled: false, context: async () => ({...context, state: "open", session_id: "cs_test_fixture"})});
+  assert.equal((await existing.handler(req())).status, 200); assert.equal(existing.calls.includes("retrieve"), true);
+});
+test("stale open checkout and malformed provider metadata produce durable reconciliation without URL", async () => {
+  for (const patch of [
+    {context: async () => ({...context, state: "open" as const, session_id: "cs_test_fixture", current_source_matches: false})},
+    {provider: {createCheckout: async () => ({...session(), metadata: null}), retrieveCheckout: async () => session(), expireCheckout: async () => session()}},
+  ]) {
+    let state = "";
+    const {handler} = setup({...patch, apply: async (_intent, evidence) => {state = evidence.state; return "quarantined";}});
+    const result = await handler(req()); assert.equal(result.status, 409); assert.equal(state, "reconciliation");
+    assert.deepEqual(await result.json(), {state: "reconciliation"});
+  }
 });
