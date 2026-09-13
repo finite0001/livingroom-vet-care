@@ -77,7 +77,7 @@ select throws_ok($$select public.finish_stripe_event((select id from fx where k=
 select is(public.finish_stripe_event((select id from fx where k='retry-receipt'),(select (v->>'lease_token')::uuid from snapshots where k='third-claim'),'{"family":"quarantine","reason":"provider_reconciliation_required"}'),'quarantined','Current lease can preserve reconciliation requirement');
 insert into fx select 'exhaust-receipt',public.receive_stripe_event((select v||'{"event_id":"evt_exhaustinbox"}' from snapshots where k='receipt'));
 reset role;
-update public.stripe_event_work set attempt_count=5,state='processing',lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()-interval '1 second' where receipt_id=(select id from fx where k='exhaust-receipt');
+update public.stripe_event_work set attempt_count=5,cycle_attempt_count=5,state='processing',lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()-interval '1 second' where receipt_id=(select id from fx where k='exhaust-receipt');
 set local role service_role;
 select is(public.claim_stripe_event(),null::jsonb,'Expired fifth lease is never retried automatically');
 reset role;
