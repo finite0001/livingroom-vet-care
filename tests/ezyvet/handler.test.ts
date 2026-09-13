@@ -544,3 +544,328 @@ test("vaccination stale context and legacy run errors are actionable without lea
   const redacted = await privateError.handler(privateError.request());
   assert.equal((await redacted.json()).error, "IMPORT_FAILED");
 });
+
+test("prescription resources cannot fall through to generic claims before scoped intake exists", async () => {
+  const f = fixture();
+  f.env.EZYVET_READ_RESOURCES = "prescription,prescriptionitem";
+  for (const resource of ["prescription", "prescriptionitem"]) {
+    const response = await f.handler(f.request({ run_id: id, resource, animal_link_id: id, ...(resource === "prescriptionitem" ? { prescription_snapshot_id: id, prescription_payload_hash: "a".repeat(64), prescription_observed_head_version: 1 } : {}) }));
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: "PRESCRIPTION_INTAKE_UNAVAILABLE" });
+  }
+  assert.equal(f.state.calls, 0);
+  assert.equal(f.state.claims, 0);
+  assert.equal(f.state.stages, 0);
+});
+
+function prescriptionitemFixture() {
+  const mapping = "e5200000-0000-4000-8000-000000000001";
+  const snapshot = "e5200000-0000-4000-8000-000000000002";
+  const hash = "a".repeat(64);
+  const env: Record<string, string> = {
+    APP_URL: "https://thelivingroom.vet",
+    APP_ENV: "staging",
+    EZYVET_IMPORT_MODE: "staging",
+    EZYVET_SITE_UID: "site",
+    EZYVET_PARTNER_ID: "partner",
+    EZYVET_CLIENT_ID: "client",
+    EZYVET_CLIENT_SECRET: "secret",
+    EZYVET_READ_RESOURCES: "prescriptionitem,contact,history",
+  };
+  const state = {
+    claims: 0,
+    calls: [] as string[],
+    stages: 0,
+    terminal: false,
+    claimError: null as { code: string; message: string } | null,
+    missingScope: false,
+    wrongPrescription: false,
+    failStage: false,
+    failures: [] as string[],
+  };
+  const handler = createHandler({
+    env: (k) => env[k],
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input) => {
+      const url = String(input);
+      state.calls.push(url);
+      return url.endsWith("access_token")
+        ? Response.json({ access_token: "token", expires_in: 43200 })
+        : Response.json({
+          meta: { items_page: 1, items_page_total: 1 },
+          items: [{
+            prescriptionitem: { id: 3, prescription_id: state.wrongPrescription ? 83 : 82 },
+          }],
+        });
+    },
+    gateway: {
+      authenticate: async () => ({ id: "actor", activeAdmin: true }),
+      claim: async () => {
+        throw new Error("Generic claim must never handle prescriptionitems");
+      },
+      claimPrescriptionItem: async (
+        run,
+        actor,
+        site,
+        origin,
+        link,
+        prescription,
+        digest,
+        version,
+      ) => {
+        state.claims++;
+        assert.equal(link, mapping);
+        assert.equal(prescription, snapshot);
+        assert.equal(digest, hash);
+        assert.equal(version, 4);
+        assert.equal(origin, "https://api.trial.ezyvet.com");
+        if (state.claimError) throw state.claimError;
+        return {
+          id: run,
+          requested_by: actor,
+          source_site_uid: site,
+          resource: "prescriptionitem",
+          status: state.terminal ? "review_ready" : "running",
+          next_page: 1,
+          lease_id: "lease",
+          animal_external_id: "77",
+          prescription_external_id: state.missingScope ? undefined : "82",
+        };
+      },
+      stage: async (run, actor, page) => {
+        state.stages++;
+        assert.equal(actor, "actor");
+        assert.equal(page.items[0].payload.prescription_id, 82);
+        if (state.failStage) {
+          throw { code: "40001", message: "SOURCE_PRESCRIPTION_STALE" };
+        }
+        state.terminal = true;
+        return { ...run, status: "review_ready", next_page: 2 };
+      },
+      fail: async (_run, _actor, code) => {
+        state.failures.push(code);
+      },
+    },
+  });
+  const body = {
+    run_id: id,
+    resource: "prescriptionitem",
+    animal_link_id: mapping,
+    prescription_snapshot_id: snapshot,
+    prescription_payload_hash: hash,
+    prescription_observed_head_version: 4,
+  };
+  const request = (value: Record<string, unknown> = body) =>
+    new Request("https://edge.test", {
+      method: "POST",
+      headers: { Authorization: "Bearer staff" },
+      body: JSON.stringify(value),
+    });
+  return { state, env, handler, body, request };
+}
+
+test("prescriptionitem requires complete immutable prescription intent and rejects browser-supplied upstream IDs", async () => {
+  const f = prescriptionitemFixture();
+  for (
+    const field of [
+      "animal_link_id",
+      "prescription_snapshot_id",
+      "prescription_payload_hash",
+      "prescription_observed_head_version",
+    ]
+  ) {
+    const body: Record<string, unknown> = { ...f.body };
+    delete body[field];
+    assert.equal((await f.handler(f.request(body))).status, 400);
+  }
+  for (
+    const patch of [
+      { prescription_id: "82" },
+      { prescription_external_id: "82" },
+      { animal_id: "77" },
+      { prescription_snapshot_id: "bad" },
+      { prescription_payload_hash: "A".repeat(64) },
+      { prescription_observed_head_version: 0 },
+      { prescription_observed_head_version: 1.5 },
+      { prescription_observed_head_version: "4" },
+      { prescription_observed_head_version: 2147483648 },
+    ]
+  ) {
+    assert.equal(
+      (await f.handler(f.request({ ...f.body, ...patch }))).status,
+      400,
+    );
+  }
+  for (const resource of ["contact", "history"]) {
+    assert.equal(
+      (await f.handler(f.request({ ...f.body, resource }))).status,
+      400,
+    );
+  }
+  assert.equal(f.state.claims, 0);
+  assert.equal(f.state.calls.length, 0);
+  f.env.EZYVET_READ_RESOURCES = "contact";
+  assert.equal((await f.handler(f.request())).status, 400);
+  assert.equal(f.state.claims, 0);
+});
+
+test("prescriptionitem uses claimed prescription scope and terminal recovery makes no additional provider request", async () => {
+  const f = prescriptionitemFixture();
+  const result = await f.handler(f.request());
+  assert.equal(result.status, 200);
+  assert.deepEqual(await result.json(), {
+    run_id: id,
+    status: "review_ready",
+    next_page: 2,
+    review_only: true,
+    staged_count: 1,
+  });
+  assert.match(f.state.calls.at(-1)!, /limit=10&prescription_id=82$/);
+  assert.equal(f.state.calls.at(-1)!.includes("animal_id"), false);
+  const calls = f.state.calls.length;
+  assert.equal((await f.handler(f.request())).status, 200);
+  assert.equal(f.state.calls.length, calls);
+  assert.equal(f.state.stages, 1);
+});
+
+test("prescriptionitem missing claimed scope and mixed-prescription payload cannot be staged", async () => {
+  for (const missingScope of [true, false]) {
+    const f = prescriptionitemFixture();
+    f.state.missingScope = missingScope;
+    f.state.wrongPrescription = !missingScope;
+    const response = await f.handler(f.request());
+    assert.equal(response.status, 503);
+    const result = await response.json();
+    assert.equal(
+      result.error,
+      missingScope ? "PRESCRIPTION_MAPPING_REQUIRED" : "SOURCE_PRESCRIPTION_MISMATCH",
+    );
+    assert.equal(f.state.stages, 0);
+    assert.equal(f.state.calls.length, missingScope ? 0 : 2);
+    assert.deepEqual(f.state.failures, [result.error]);
+  }
+});
+
+test("prescriptionitem stale context and legacy run errors are actionable without leaking database bodies", async () => {
+  for (
+    const error of [
+      { code: "22023", message: "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT" },
+      { code: "40001", message: "SOURCE_PRESCRIPTION_STALE" },
+    ]
+  ) {
+    const f = prescriptionitemFixture();
+    f.state.claimError = error;
+    const response = await f.handler(f.request());
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), {
+      error: error.message,
+      retry_after_seconds: 5,
+      retry_safe: false,
+    });
+    assert.equal(f.state.calls.length, 0);
+  }
+  const f = prescriptionitemFixture();
+  f.state.failStage = true;
+  const response = await f.handler(f.request());
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).error, "SOURCE_PRESCRIPTION_STALE");
+  assert.deepEqual(f.state.failures, ["SOURCE_PRESCRIPTION_STALE"]);
+  const privateError = prescriptionitemFixture();
+  privateError.state.claimError = {
+    code: "40001",
+    message: "secret source context details",
+  };
+  const redacted = await privateError.handler(privateError.request());
+  assert.equal((await redacted.json()).error, "IMPORT_FAILED");
+});
+
+
+test("prescription header claims bind mapping and resource; legacy UUIDs cannot silently rebind", async () => {
+  for (const resource of ["prescription"] as const) {
+    const env: Record<string, string> = {
+      APP_URL: "https://thelivingroom.vet",
+      APP_ENV: "staging",
+      EZYVET_IMPORT_MODE: "staging",
+      EZYVET_SITE_UID: "site",
+      EZYVET_PARTNER_ID: "partner",
+      EZYVET_CLIENT_ID: "client",
+      EZYVET_CLIENT_SECRET: "secret",
+      EZYVET_READ_RESOURCES: resource,
+    };
+    let calls = 0, claims = 0, legacy = false, terminal = false;
+    const mapping = "e5200000-0000-4000-8000-000000000001";
+    const handler = createHandler({
+      env: (k) => env[k],
+      now: Date.now,
+      sleep: async () => {},
+      fetch: async (input) => {
+        calls++;
+        return String(input).endsWith("access_token")
+          ? Response.json({ access_token: "token", expires_in: 43200 })
+          : Response.json({
+            meta: { items_page: 1, items_page_total: 1 },
+            items: [{ [resource]: { id: 3, animal_id: 77 } }],
+          });
+      },
+      gateway: {
+        authenticate: async () => ({ id: "actor", activeAdmin: true }),
+        claim: async () => {
+          throw new Error("No generic clinical claim");
+        },
+        claimPrescription: async (run, actor, site, origin, link) => {
+          claims++;
+          assert.equal(link, mapping);
+          assert.equal(origin, "https://api.trial.ezyvet.com");
+          if (legacy) {
+            throw {
+              code: "22023",
+              message: "PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING",
+            };
+          }
+          return {
+            id: run,
+            requested_by: actor,
+            source_site_uid: site,
+            resource,
+            status: terminal ? "review_ready" : "running",
+            next_page: 1,
+            lease_id: "lease",
+            animal_external_id: "77",
+          };
+        },
+        stage: async (run) => {
+          terminal = true;
+          return { ...run, status: "review_ready", next_page: 2 };
+        },
+        fail: async () => {},
+      },
+    });
+    const req = (extra: Record<string, unknown> = {}) =>
+      new Request("https://edge.test", {
+        method: "POST",
+        headers: { Authorization: "Bearer staff" },
+        body: JSON.stringify({ run_id: id, resource, ...extra }),
+      });
+    assert.equal((await handler(req())).status, 400);
+    assert.equal(
+      (await handler(req({ animal_link_id: mapping, animal_id: "999" })))
+        .status,
+      400,
+    );
+    assert.equal(claims, 0);
+    assert.equal((await handler(req({ animal_link_id: mapping }))).status, 200);
+    const before = calls;
+    assert.equal((await handler(req({ animal_link_id: mapping }))).status, 200);
+    assert.equal(calls, before);
+    legacy = true;
+    const rejected = await handler(req({ animal_link_id: mapping }));
+    assert.equal(rejected.status, 409);
+    assert.deepEqual(await rejected.json(), {
+      error: "PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING",
+      retry_after_seconds: 5,
+      retry_safe: false,
+    });
+    assert.equal(calls, before);
+  }
+});

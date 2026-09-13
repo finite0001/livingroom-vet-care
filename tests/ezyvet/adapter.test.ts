@@ -568,3 +568,59 @@ test("issued clinic credentials may omit partner ID while retaining explicit rea
     /MISSING_CONFIGURATION/,
   );
 });
+
+test("prescriptions and items use bounded parent-scoped read contracts and preserve source evidence", async () => {
+  const calls: string[] = [];
+  const adapter = createAdapter({ ...config, readResources: ["prescription", "prescriptionitem"] }, {
+    now: Date.now, sleep: async () => {},
+    fetch: async (input) => {
+      const url = String(input); calls.push(url);
+      if (url.endsWith("access_token")) return token();
+      const item = url.includes("/prescriptionitem?")
+        ? { prescriptionitem: { id: 8, prescription_id: "7", instructions: "Original instructions", qty: "2.50", remaining: "unknown" } }
+        : { prescription: { id: 7, animal_id: "42", prescribing_vet_user_id: "outside-vet", prescription_item_list: [8, "missing", 8] } };
+      return Response.json({ meta: { items_page: 1, items_page_total: 1 }, items: [item] });
+    },
+  });
+  await assert.rejects(adapter.page("prescription", 1), /PATIENT_MAPPING_REQUIRED/);
+  await assert.rejects(adapter.page("prescriptionitem", 1), /PRESCRIPTION_MAPPING_REQUIRED/);
+  await assert.rejects(adapter.page("prescriptionitem", 1, "42", undefined, "7"), /PRESCRIPTION_MAPPING_REQUIRED/);
+  await assert.rejects(adapter.page("prescription", 1, "42", undefined, "7"), /INVALID_PAGE_REQUEST/);
+  assert.equal(calls.length, 0);
+  const header = await adapter.page("prescription", 1, "42");
+  const items = await adapter.page("prescriptionitem", 1, undefined, undefined, "7");
+  assert.deepEqual(header.items[0].payload.prescription_item_list, [8, "missing", 8]);
+  assert.equal(items.items[0].payload.remaining, "unknown");
+  assert.ok(calls.some((url) => url.endsWith("/v1/prescription?page=1&limit=10&animal_id=42")));
+  assert.ok(calls.some((url) => url.endsWith("/v1/prescriptionitem?page=1&limit=10&prescription_id=7")));
+});
+
+test("one wrong-parent prescription row rejects the entire source page", async () => {
+  for (const resource of ["prescription", "prescriptionitem"] as const) {
+    const adapter = createAdapter({ ...config, readResources: [resource] }, {
+      now: Date.now, sleep: async () => {},
+      fetch: async (input) => String(input).endsWith("access_token") ? token() : Response.json({
+        meta: { items_page: 1, items_page_total: 1 },
+        items: [7, 99].map((parent, index) => ({ [resource]: {
+          id: index + 1, [resource === "prescription" ? "animal_id" : "prescription_id"]: parent,
+        } })),
+      }),
+    });
+    await assert.rejects(resource === "prescription"
+      ? adapter.page(resource, 1, "7")
+      : adapter.page(resource, 1, undefined, undefined, "7"),
+    resource === "prescription" ? /SOURCE_PATIENT_MISMATCH/ : /SOURCE_PRESCRIPTION_MISMATCH/);
+  }
+});
+
+test("prescription pages reject invalid identities, nested instructions and oversized pages", () => {
+  const body = (payload: Record<string, unknown>, count = 1) => ({
+    meta: { items_page: 1, items_page_total: 1 },
+    items: Array.from({ length: count }, (_, index) => ({ prescriptionitem: { ...payload, id: index + 1 } })),
+  });
+  for (const payload of [
+    { prescription_id: "01" }, { prescription_id: 7, instructions: { html: "bad" } },
+    { prescription_id: 7, qty: Infinity }, { prescription_id: 7, remaining: [] },
+  ]) assert.throws(() => parsePage(body(payload), "prescriptionitem", 1), /INVALID_UPSTREAM_SHAPE/);
+  assert.throws(() => parsePage(body({ prescription_id: 7 }, 11), "prescriptionitem", 1), /INVALID_UPSTREAM_SHAPE/);
+});

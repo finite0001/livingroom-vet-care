@@ -1,3 +1,5 @@
+import { EzyVetPrescriptionImports } from "./EzyVetPrescriptionImports";
+import { EzyVetPrescriptionItemImports } from "./EzyVetPrescriptionItemImports";
 import { EzyVetVaccinationImports } from "./EzyVetVaccinationImports";
 import { EzyVetClinicalImports } from "./EzyVetClinicalImports";
 import { EzyVetWeightImports } from "./EzyVetWeightImports";
@@ -60,7 +62,9 @@ export function EzyVetImportPage() {
   );
   const [clinicalDirty, setClinicalDirty] = useState(false);
   const [vaccinationDirty, setVaccinationDirty] = useState(false);
-  const importDirty = enabled && (clinicalDirty || vaccinationDirty);
+  const [prescriptionDirty, setPrescriptionDirty] = useState(false);
+  const [prescriptionItemDirty, setPrescriptionItemDirty] = useState(false);
+  const importDirty = enabled && (clinicalDirty || vaccinationDirty || prescriptionDirty || prescriptionItemDirty);
   const blocker = useBlocker(importDirty);
   useEffect(() => {
     if (!importDirty) return;
@@ -359,9 +363,9 @@ export function EzyVetImportPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {clinicalDirty && !vaccinationDirty
+                {clinicalDirty && !vaccinationDirty && !prescriptionDirty && !prescriptionItemDirty
                   ? "Leave clinical import recovery?"
-                  : vaccinationDirty && !clinicalDirty
+                  : vaccinationDirty && !clinicalDirty && !prescriptionDirty && !prescriptionItemDirty
                     ? "Leave vaccination import recovery?"
                     : "Leave import recovery?"}
               </AlertDialogTitle>
@@ -394,6 +398,16 @@ export function EzyVetImportPage() {
           key={`vaccination:${session.user.id}`}
           actor={session.user.id}
           onDirtyChange={setVaccinationDirty}
+        />
+        <EzyVetPrescriptionImports
+          key={`prescription:${session.user.id}`}
+          actor={session.user.id}
+          onDirtyChange={setPrescriptionDirty}
+        />
+        <EzyVetPrescriptionItemImports
+          key={`prescriptionitem:${session.user.id}`}
+          actor={session.user.id}
+          onDirtyChange={setPrescriptionItemDirty}
         />
         <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
         <header>
