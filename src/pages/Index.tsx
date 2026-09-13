@@ -8,7 +8,7 @@ import CTASection from "@/components/sections/CTASection";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 const Index = forwardRef<HTMLDivElement>((_props, ref) => {
-  usePageTitle("Housecall & Clinic Veterinary Care Coming to Boulder");
+  usePageTitle("Housecall & Clinic Veterinary Care Coming to Boulder", "An independent, female-owned veterinary practice in Boulder, CO. Low-stress housecalls and living-room style exam spaces — no traditional waiting room.");
   return (
     <div ref={ref} className="min-h-screen flex flex-col">
       <Header />

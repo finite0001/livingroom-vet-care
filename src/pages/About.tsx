@@ -61,7 +61,7 @@ const paymentInfo = [
 ];
 
 const About = () => {
-  usePageTitle("About Us");
+  usePageTitle("About Us", "Meet Dr. Susan Edler and the team behind The Living Room Vet — an independent, female-owned practice in Boulder built around low-stress handling.");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
