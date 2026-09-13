@@ -50,6 +50,8 @@ Public documentation does not prove the issued account has these scopes, that ev
 
 ## Whole-prescription review
 
+Local groundwork on `codex/ezyvet-prescription-review`: migration5700 provides a private server-side item-reference reconciliation function for the future frozen review payload. It preserves missing, unexpected, duplicate and malformed references and never treats an unfinished scan as matched. Its17 SQL assertions and240 intake regressions pass in an owned disposable schema copy; cleanup is verified. No review RPC, approval, chart record or release capability is created by this helper. Those requirements below remain unfinished.
+
 Use additive immutable review-request, approved-prescription and approved-item evidence, not the refill-request or treatment tables. Review is active-DVM-only; chart discovery is active-staff-only. Private tables and internal helpers remain inaccessible to API roles. All writes derive their actor from authenticated server context.
 
 Freeze the parent original and observed revision, current scoped consultation reference when supplied, selected item originals and observed revisions, optional reviewed catalog matches with product versions, the outside prescriber reference, explicitly interpreted prescription/start dates and status, and a review rationale. Keep source instructions and quantity/remaining values verbatim as plain text; any local interpretation must be a separate attributed field. Do not calculate remaining refills, dose, local authorization or unit conversions from these values.
