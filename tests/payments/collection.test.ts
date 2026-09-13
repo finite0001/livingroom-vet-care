@@ -45,7 +45,7 @@ const args = {
   p_client_id: g.client_id,
   p_source_hash: g.source_hash,
   p_amount_cents: 12500,
-  p_expires_at: g.expires_at,
+  p_expires_at: new Date(g.expires_at).toISOString(),
 };
 test("safe client projection validates frozen context then discards raw context and any unexpected capability", async () => {
   const parsed = await parseCollection(
@@ -223,5 +223,50 @@ test("resolved observation history permits actions while new or legacy unresolve
       ],
     }),
     true,
+  );
+});
+
+test("pending expiry is canonical milliseconds and SQL recovery cannot hide microsecond differences", async () => {
+  const parsed = (await parseCollection(
+    envelope,
+    g.actor_id,
+    g.invoice_id,
+    g.client_id,
+  ))!;
+  const intent = { ...args, p_expires_at: "2026-09-20T03:00:00.123Z" };
+  assert.deepEqual(collectionIntent(intent, g.invoice_id, g.client_id), intent);
+  for (const p_expires_at of [
+    "2026-09-20T03:00:00.123001Z",
+    "2026-09-20T03:00:00.123000Z",
+    "2026-09-20T03:00:00.123+00:00",
+    "2026-09-20T03:00:00Z",
+    "2026-02-30T03:00:00.123Z",
+  ])
+    assert.throws(() =>
+      collectionIntent({ ...intent, p_expires_at }, g.invoice_id, g.client_id),
+    );
+  for (const expires_at of [
+    "2026-09-20T03:00:00.123001+00:00",
+    "2026-09-20T03:00:00.123999Z",
+  ])
+    assert.equal(
+      matchesCollectionIntent({ ...parsed, expires_at }, intent),
+      false,
+    );
+  for (const expires_at of [
+    "2026-09-20T03:00:00.123+00:00",
+    "2026-09-20T03:00:00.123000+00:00",
+    intent.p_expires_at,
+  ])
+    assert.equal(
+      matchesCollectionIntent({ ...parsed, expires_at }, intent),
+      true,
+    );
+  assert.equal(
+    matchesCollectionIntent(
+      { ...parsed, expires_at: intent.p_expires_at },
+      { ...intent, p_expires_at: "2026-09-20T03:00:00.123001Z" },
+    ),
+    false,
   );
 });

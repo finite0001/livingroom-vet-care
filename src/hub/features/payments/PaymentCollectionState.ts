@@ -36,6 +36,23 @@ function date(v: unknown) {
   if (typeof v !== "string" || !Number.isFinite(Date.parse(v))) throw invalid();
   return v;
 }
+function canonicalIntentExpiry(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
+    Number.isFinite(Date.parse(value)) &&
+    new Date(value).toISOString() === value
+  );
+}
+/** PostgreSQL can emit six fractional digits; never round a different instant to milliseconds. */
+function matchesExpiry(saved: string, original: string): boolean {
+  if (!canonicalIntentExpiry(original)) return false;
+  const parts = saved.match(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.(\d{1,6}))?(?:Z|[+-]\d{2}:\d{2})$/,
+  );
+  if (!parts || /[1-9]/.test((parts[1] ?? "").slice(3))) return false;
+  return Date.parse(saved) === Date.parse(original);
+}
 export function collectionIntent(
   value: unknown,
   invoice: string,
@@ -60,7 +77,7 @@ export function collectionIntent(
   if (value.p_invoice_id !== invoice || value.p_client_id !== client)
     throw invalid();
   string(value.p_source_hash, hash);
-  date(value.p_expires_at);
+  if (!canonicalIntentExpiry(value.p_expires_at)) throw invalid();
   if (
     typeof value.p_amount_cents !== "number" ||
     !Number.isInteger(value.p_amount_cents) ||
@@ -80,7 +97,7 @@ export function matchesCollectionIntent(
     grant.client_id === intent.p_client_id &&
     grant.source_hash === intent.p_source_hash &&
     grant.amount_cents === String(intent.p_amount_cents) &&
-    Date.parse(grant.expires_at) === Date.parse(intent.p_expires_at)
+    matchesExpiry(grant.expires_at, intent.p_expires_at)
   );
 }
 /** Keep only metadata the interface needs. Never retain raw RPC responses or canonical context. */
