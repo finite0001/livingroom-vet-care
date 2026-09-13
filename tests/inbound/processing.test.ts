@@ -7,13 +7,16 @@ import {
 } from "../../supabase/functions/_shared/inbound/handlers.ts";
 import { processOneInbound } from "../../supabase/functions/_shared/inbound/process.ts";
 const id = "11111111-1111-4111-8111-111111111111";
-function dbFixture(event?: ProviderEvent) {
+function dbFixture(event?: ProviderEvent, release?: { value: unknown }) {
   const calls: { name: string; args?: Record<string, unknown> }[] = [];
   const db = {
     rpc: async (name: string, args?: Record<string, unknown>) => {
       calls.push({ name, args });
       return {
-        data: name === "claim_communication_event" ? event : { id: "event" },
+        data: name === "claim_communication_event" ? event
+          : name === "release_communication_event_outcome"
+          ? release ? release.value : { id: event?.id, state: args?.p_review ? "review" : "pending" }
+          : { id: "event" },
         error: null,
       };
     },
@@ -121,7 +124,7 @@ test("body fetch failure keeps durable event pending without creating a partial 
   assert.equal(result.retry_pending, true);
   assert.deepEqual(
     f.calls.map((call) => call.name),
-    ["claim_communication_event", "release_communication_event"],
+    ["claim_communication_event", "release_communication_event_outcome"],
   );
   assert.equal(f.calls.at(-1)?.args?.p_review, false);
 });
@@ -226,4 +229,34 @@ test("status events are completed locally without another provider request", asy
     f.calls.map((call) => call.name),
     ["claim_communication_event", "complete_communication_status"],
   );
+});
+
+const retryEvent: ProviderEvent = {
+  id: "event", provider: "resend", event_type: "inbound", resource_id: id,
+  lease_token: "lease", metadata: { from: "family@example.test", to: "care@example.test" },
+};
+test("transient tenth failure reports authoritative review rather than inferred pending", async () => {
+  const f = dbFixture(retryEvent, { value: { id: "event", state: "review" } });
+  const result = await processOneInbound(f.db, { RESEND_API_KEY: "synthetic" }, async () => {
+    throw new Error("provider timeout");
+  });
+  assert.deepEqual(result, { processed: false, retry_pending: false, review_required: true });
+  assert.equal(f.calls.at(-1)?.args?.p_review, false);
+});
+test("unconfirmed or malformed release acknowledgment cannot claim a retry or review", async () => {
+  for (const value of [null, undefined, [], {}, { id: "other", state: "pending" },
+    { id: "event", state: "claimed" }, { id: "event", state: "processed" }]) {
+    const f = dbFixture(retryEvent, { value });
+    await assert.rejects(processOneInbound(f.db, { RESEND_API_KEY: "synthetic" }, async () => {
+      throw new Error("provider timeout");
+    }), /disposition is unconfirmed/);
+    assert.equal(f.calls.filter(c => c.name === "release_communication_event_outcome").length, 1);
+  }
+});
+test("lost release RPC acknowledgment propagates without inventing a durable disposition", async () => {
+  const f = dbFixture(retryEvent);
+  await assert.rejects(processOneInbound({ rpc: async (name, args) => {
+    if (name === "release_communication_event_outcome") return { data: null, error: new Error("lost acknowledgment") };
+    return f.db.rpc(name, args);
+  } }, { RESEND_API_KEY: "synthetic" }, async () => { throw new Error("provider timeout"); }), /lost acknowledgment/);
 });
