@@ -71,7 +71,7 @@ const additionalServices = [
 ];
 
 const Services = () => {
-  usePageTitle("Our Services");
+  usePageTitle("Our Services", "Wellness care, senior care, illness care, diagnostics, surgery, and laser therapy for dogs and cats in Boulder, Colorado.");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
