@@ -12,7 +12,7 @@ const url = "https://hooks.example.test/twilio";
 const secret = "synthetic-signing-test-key";
 function fixture(event?: ProviderEvent) {
   const calls: { name: string; args?: Record<string, unknown> }[] = [];
-  return { calls, db: { rpc: async (name: string, args?: Record<string, unknown>) => { calls.push({ name, args }); return { data: name === "claim_communication_event" ? event : { id: "synthetic" }, error: null }; } } };
+  return { calls, db: { rpc: async (name: string, args?: Record<string, unknown>) => { calls.push({ name, args }); return { data: name === "claim_communication_event" ? event : name === "release_communication_event_outcome" ? { id: event?.id, state: args?.p_review ? "review" : "pending" } : { id: "synthetic" }, error: null }; } } };
 }
 async function signedInbound(message = body) {
   const params = { AccountSid: account, MessageSid: sid, From: "+13035550100", To: "+13035550199", Body: message, MessageStatus: "received" };
@@ -44,7 +44,7 @@ test("verified provider fetch matches raw body hash and completes only redacted 
   assert.ok(!JSON.stringify(f.calls).includes(token));
   const forged = fixture(event);
   await processOneInbound(forged.db, { TWILIO_ACCOUNT_SID: account, TWILIO_AUTH_TOKEN: secret }, async () => new Response(JSON.stringify({ ...payload, body: body.replace(token, "v1." + "d".repeat(43)) })));
-  assert.equal(forged.calls.at(-1)!.name, "release_communication_event");
+  assert.equal(forged.calls.at(-1)!.name, "release_communication_event_outcome");
   assert.equal(forged.calls.at(-1)!.args!.p_review, true);
 });
 test("incoming email canonical capabilities redacted from text, HTML, subject and attachment metadata", async () => {
