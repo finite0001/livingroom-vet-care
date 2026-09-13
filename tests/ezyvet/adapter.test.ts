@@ -442,6 +442,9 @@ test("vaccination page rejects malformed identities, duplicate IDs, nested clini
   for (
     const change of [
       { id: "outside-id" },
+      { id: "031" },
+      { consult_id: "082" },
+      { product_id: "054" },
       { id: "9007199254740992" },
       { id: -1 },
       { consult_id: null },
@@ -518,4 +521,50 @@ test("mixed-consult vaccination page fails as a whole and unrelated resources re
     /SOURCE_CONSULT_MISMATCH/,
   );
   assert.equal(calls, 2);
+});
+
+test("issued clinic credentials may omit partner ID while retaining explicit read-only scopes", async () => {
+  const env: Record<string, string> = {
+    APP_ENV: "staging",
+    EZYVET_IMPORT_MODE: "staging",
+    EZYVET_API_URL: "https://api.ezyvet.com",
+    EZYVET_ALLOW_PRODUCTION_SOURCE: "true",
+    EZYVET_SITE_UID: "synthetic-site",
+    EZYVET_CLIENT_ID: "synthetic-client",
+    EZYVET_CLIENT_SECRET: "synthetic-secret",
+  };
+  const config = configuration((key) => env[key]);
+  assert.equal(config.partnerId, undefined);
+  assert.equal(config.clientId, "synthetic-client");
+  assert.equal(config.clientSecret, "synthetic-secret");
+  const bodies: Record<string, unknown>[] = [];
+  const adapter = createAdapter(config, {
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input, init) => {
+      if (String(input).endsWith("access_token")) {
+        bodies.push(JSON.parse(String(init!.body)));
+        return token();
+      }
+      return Response.json(page());
+    },
+  });
+  await adapter.page("contact", 1);
+  assert.equal("partner_id" in bodies[0], false);
+  assert.equal(bodies[0].scope, "read-contact read-animal");
+  assert.equal(bodies[0].site_uid, "synthetic-site");
+  for (const bad of ["partner\nheader", "x".repeat(4097)]) {
+    env.EZYVET_PARTNER_ID = bad;
+    assert.throws(
+      () => configuration((key) => env[key]),
+      /INVALID_PARTNER_CONFIGURATION/,
+    );
+  }
+  env.EZYVET_PARTNER_ID = "";
+  assert.equal(configuration((key) => env[key]).partnerId, undefined);
+  delete env.EZYVET_CLIENT_SECRET;
+  assert.throws(
+    () => configuration((key) => env[key]),
+    /MISSING_CONFIGURATION/,
+  );
 });

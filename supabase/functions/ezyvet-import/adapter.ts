@@ -54,7 +54,7 @@ export type Resource = (typeof resources)[number];
 export interface EzyVetConfig {
   baseUrl: string;
   siteUid: string;
-  partnerId: string;
+  partnerId?: string;
   clientId: string;
   clientSecret: string;
   readResources: Resource[];
@@ -99,7 +99,6 @@ export function configuration(
   }
   const fields = [
     "EZYVET_SITE_UID",
-    "EZYVET_PARTNER_ID",
     "EZYVET_CLIENT_ID",
     "EZYVET_CLIENT_SECRET",
   ];
@@ -110,6 +109,15 @@ export function configuration(
     )
   ) {
     throw new ImportError("MISSING_CONFIGURATION");
+  }
+  // Some issued clinic credentials authenticate without a partner ID. Keep it
+  // optional rather than blocking a valid read-only connection on local config.
+  const partnerId = env("EZYVET_PARTNER_ID") || undefined;
+  if (
+    partnerId !== undefined &&
+    (partnerId.length > 4096 || /[\r\n]/.test(partnerId))
+  ) {
+    throw new ImportError("INVALID_PARTNER_CONFIGURATION");
   }
   const readResources = (
     env("EZYVET_READ_RESOURCES") || "contact,animal"
@@ -125,9 +133,9 @@ export function configuration(
     readResources: readResources as Resource[],
     baseUrl,
     siteUid: values[0]!,
-    partnerId: values[1]!,
-    clientId: values[2]!,
-    clientSecret: values[3]!,
+    partnerId,
+    clientId: values[1]!,
+    clientSecret: values[2]!,
   };
 }
 function record(value: unknown): value is Record<string, unknown> {
@@ -140,6 +148,12 @@ function integer(value: unknown): number {
   return typeof number === "number" && Number.isSafeInteger(number)
     ? number
     : NaN;
+}
+function validVaccinationId(value: unknown): boolean {
+  if (typeof value === "string" && !/^(0|[1-9][0-9]*)$/.test(value)) {
+    return false;
+  }
+  return Number.isSafeInteger(integer(value)) && integer(value) >= 0;
 }
 const excluded =
   /^(access_token|refresh_token|authorization|password|client_secret|partner_secret|driver_license_number|driver_license_issuer|driver_license_expiry)$/i;
@@ -242,12 +256,10 @@ export function parsePage(
       // Vaccinations belong to a consult, not directly to an animal. Retain
       // optional clinical values verbatim; staging does not interpret them.
       if (
-        !Number.isSafeInteger(integer(id)) || integer(id) < 0 ||
-        !Number.isSafeInteger(integer(payload.consult_id)) ||
-        integer(payload.consult_id) < 0 ||
+        !validVaccinationId(payload.id) ||
+        !validVaccinationId(payload.consult_id) ||
         (payload.product_id !== undefined && payload.product_id !== null &&
-          (!Number.isSafeInteger(integer(payload.product_id)) ||
-            integer(payload.product_id) < 0))
+          !validVaccinationId(payload.product_id))
       ) {
         throw new ImportError("INVALID_UPSTREAM_SHAPE");
       }
@@ -386,7 +398,7 @@ export function createAdapter(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        partner_id: config.partnerId,
+        ...(config.partnerId ? { partner_id: config.partnerId } : {}),
         client_id: config.clientId,
         client_secret: config.clientSecret,
         site_uid: config.siteUid,
@@ -446,8 +458,7 @@ export function createAdapter(
       if (
         resource === "vaccination" &&
         (animalExternalId !== undefined || !consultExternalId ||
-          !Number.isSafeInteger(integer(consultExternalId)) ||
-          integer(consultExternalId) < 0)
+          !validVaccinationId(consultExternalId))
       ) {
         throw new ImportError("CONSULT_MAPPING_REQUIRED");
       }
