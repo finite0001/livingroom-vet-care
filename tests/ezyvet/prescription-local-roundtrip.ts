@@ -1,4 +1,4 @@
-/** PrescriptionItem provenance through actual local Auth/PostgREST and synthetic upstream HTTP. */
+/** Prescription intake and clinical review through actual local Auth/PostgREST. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
 import { createHandler } from "../../supabase/functions/ezyvet-import/handler.ts";
@@ -45,6 +45,7 @@ const sql = (query: string) =>
 const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 
 const ids: string[] = [];
+const additionalActors: string[] = [];
 let actor = "",
   client = "";
 let assertions = 0;
@@ -208,10 +209,13 @@ try {
       );
       return;
     }
-    assert.ok(["/v1/prescription", "/v1/prescriptionitem"].includes(url.pathname));
+    assert.ok(
+      ["/v1/prescription", "/v1/prescriptionitem"].includes(url.pathname),
+    );
     assert.equal(req.method, "GET");
     const resource = url.pathname.slice(4);
-    const scope = resource === "prescriptionitem" ? "prescription_id" : "animal_id";
+    const scope =
+      resource === "prescriptionitem" ? "prescription_id" : "animal_id";
     assert.equal(
       url.searchParams.get(scope),
       resource === "prescriptionitem" ? "1" : "77",
@@ -297,13 +301,7 @@ try {
           p_resource: resource,
           p_source_origin: sourceOrigin,
         }),
-      claimPrescription: async (
-        id,
-        actor,
-        site,
-        sourceOrigin,
-        animalLinkId,
-      ) =>
+      claimPrescription: async (id, actor, site, sourceOrigin, animalLinkId) =>
         rpc("claim_ezyvet_prescription_import", {
           p_id: id,
           p_actor: actor,
@@ -457,13 +455,14 @@ try {
   );
   env.EZYVET_IMPORT_MODE = "disabled";
   check(
-    (await post(run, "prescriptionitem")).status === 503 && upstreamCalls === calls,
+    (await post(run, "prescriptionitem")).status === 503 &&
+      upstreamCalls === calls,
     "Disabled prescriptionitem import makes no upstream request",
   );
   env.EZYVET_IMPORT_MODE = "staging";
   check(
-    (await post(run, "prescriptionitem", { prescription_id: "999" })).status === 400 &&
-      upstreamCalls === calls,
+    (await post(run, "prescriptionitem", { prescription_id: "999" })).status ===
+      400 && upstreamCalls === calls,
     "Caller cannot inject upstream prescription filter",
   );
   mixed = true;
@@ -583,7 +582,8 @@ try {
   );
   calls = upstreamCalls;
   check(
-    (await post(run, "prescriptionitem")).status === 200 && upstreamCalls === calls,
+    (await post(run, "prescriptionitem")).status === 200 &&
+      upstreamCalls === calls,
     "Terminal exact retry avoids upstream request",
   );
   check(
@@ -653,6 +653,409 @@ try {
     ),
     "Server run discovery recovers browser-pointer loss",
   );
+
+  const expectDenied = async (
+    operation: () => Promise<unknown>,
+    message: string,
+    code?: string,
+  ) => {
+    let rejected = false;
+    try {
+      await operation();
+    } catch (error) {
+      rejected =
+        !code ||
+        (typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          error.code === code);
+    }
+    check(rejected, message);
+  };
+  const reviewId = randomUUID();
+  ids.push(reviewId);
+  const reviewPayload = {
+    item_run_id: run,
+    patient_version: Number(
+      sql(`select version from public.pets where id=${quote(pet)};`),
+    ),
+    interpretation: {
+      prescribed_on: null,
+      prescription_date_status: "uninterpreted",
+      status: "unknown",
+      outside_author: null,
+      reason: "Reviewed synthetic outside prescription evidence",
+      completeness: "partial",
+      partial_reason: "The original prescription has no item list",
+      replaces_id: null,
+      expected_predecessor_hash: null,
+      items: candidates.candidates.map((candidate: { id: string }) => ({
+        snapshot_id: candidate.id,
+        start_on: null,
+        start_date_status: "uninterpreted",
+        product_id: null,
+        product_version: null,
+        note: null,
+      })),
+    },
+  };
+  const prepareArgs = {
+    p_id: reviewId,
+    p_pet_id: pet,
+    p_payload: reviewPayload,
+  };
+  await expectDenied(
+    () => rpc("prepare_ezyvet_prescription_review", prepareArgs, true),
+    "Actual HTTP denies clinical preparation to ADMIN without DVM",
+    "42501",
+  );
+  sql(
+    `insert into public.user_roles(user_id,role) values(${quote(actor)},'DVM');`,
+  );
+  await expectDenied(
+    () => rpc("prepare_ezyvet_prescription_review", prepareArgs),
+    "Service API cannot impersonate a reviewing veterinarian",
+  );
+  const reviewAnonymous = {
+    apikey: local.ANON_KEY,
+    "Content-Type": "application/json",
+  };
+  await expectDenied(
+    () =>
+      api(
+        "/rest/v1/rpc/prepare_ezyvet_prescription_review",
+        prepareArgs,
+        reviewAnonymous,
+      ),
+    "Anonymous HTTP cannot prepare clinical history",
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "prepare_ezyvet_prescription_review",
+        {
+          ...prepareArgs,
+          p_id: randomUUID(),
+          p_payload: {
+            ...reviewPayload,
+            interpretation: {
+              ...reviewPayload.interpretation,
+              completeness: "complete",
+              partial_reason: null,
+            },
+          },
+        },
+        true,
+      ),
+    "HTTP review cannot call an unresolved source list complete",
+    "23514",
+  );
+  // Discard the response after an actual committed HTTP preparation; use the
+  // retained operation UUID to recover the server's exact saved interpretation.
+  await rpc("prepare_ezyvet_prescription_review", prepareArgs, true);
+  const reviewCandidates = await rpc(
+    "list_ezyvet_prescription_review_candidates",
+    { p_pet_id: pet },
+    true,
+  );
+  check(
+    reviewCandidates.candidates.some(
+      (candidate: { id: string }) => candidate.id === run,
+    ),
+    "Actual HTTP DVM discovery finds patient-scoped intake",
+  );
+  const reviewSourcePreview = await rpc(
+    "get_ezyvet_prescription_review_candidate",
+    { p_pet_id: pet, p_item_run_id: run },
+    true,
+  );
+  check(
+    reviewSourcePreview.eligible_for_review === true &&
+      reviewSourcePreview.source_context.items.length === 2 &&
+      reviewSourcePreview.source_context.parent.snapshot_id === prescription.id,
+    "Actual HTTP preview preserves exact parent and both observed items",
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "get_ezyvet_prescription_review_candidate",
+        { p_pet_id: randomUUID(), p_item_run_id: run },
+        true,
+      ),
+    "HTTP preview denies a different patient",
+    "42501",
+  );
+  await expectDenied(
+    () =>
+      rpc("get_ezyvet_prescription_review_candidate", {
+        p_pet_id: pet,
+        p_item_run_id: run,
+      }),
+    "Service API cannot inspect a DVM source preview",
+  );
+  const preparedReview = await rpc(
+    "recover_ezyvet_prescription_review",
+    { p_id: reviewId, p_pet_id: pet },
+    true,
+  );
+  check(
+    preparedReview.request.status === "prepared" &&
+      preparedReview.request.payload.item_run_id === run,
+    "Discarded prepare response recovers durable clinical intent through HTTP",
+  );
+  check(
+    preparedReview.request.review_context.selected_items.length === 2 &&
+      preparedReview.request.review_context.selected_items.every(
+        (item: {
+          source: { original: { instructions: string; qty: unknown } };
+        }) =>
+          item.source.original.instructions ===
+            "<script>untrusted source item</script>" &&
+          item.source.original.qty === null,
+      ),
+    "HTTP preparation freezes both raw source items without dose conversion",
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "prepare_ezyvet_prescription_review",
+        {
+          ...prepareArgs,
+          p_payload: {
+            ...reviewPayload,
+            interpretation: {
+              ...reviewPayload.interpretation,
+              reason: "Changed after lost response",
+            },
+          },
+        },
+        true,
+      ),
+    "HTTP retry cannot overwrite saved interpretation",
+    "42501",
+  );
+  const requestList = await rpc(
+    "list_ezyvet_prescription_review_requests",
+    { p_pet_id: pet },
+    true,
+  );
+  check(
+    requestList.requests.some(
+      (entry: { request: { id: string } }) => entry.request.id === reviewId,
+    ),
+    "HTTP discovery finds clinician request after browser pointer loss",
+  );
+  const otherEmail = `prescription-review-${randomUUID()}@example.test`;
+  const otherPassword = `Synthetic-${randomUUID()}-Aa1!`;
+  const otherActor = (
+    await api("/auth/v1/admin/users", {
+      email: otherEmail,
+      password: otherPassword,
+      email_confirm: true,
+    })
+  ).id;
+  ids.push(otherActor);
+  additionalActors.push(otherActor);
+  const otherAuth = await api(
+    "/auth/v1/token?grant_type=password",
+    { email: otherEmail, password: otherPassword },
+    reviewAnonymous,
+  );
+  const otherHeaders = {
+    ...reviewAnonymous,
+    Authorization: `Bearer ${otherAuth.access_token}`,
+  };
+  sql(
+    `insert into public.user_roles(user_id,role) values(${quote(otherActor)},'DVM');`,
+  );
+  const otherCandidates = await api(
+    "/rest/v1/rpc/list_ezyvet_prescription_review_candidates",
+    { p_pet_id: pet },
+    otherHeaders,
+  );
+  check(
+    otherCandidates.candidates.some(
+      (candidate: { id: string }) => candidate.id === run,
+    ),
+    "Non-admin DVM session discovers another operator intake",
+  );
+  const otherPreview = await api(
+    "/rest/v1/rpc/get_ezyvet_prescription_review_candidate",
+    { p_pet_id: pet, p_item_run_id: run },
+    otherHeaders,
+  );
+  check(
+    otherPreview.eligible_for_review && otherPreview.run.pet_id === pet,
+    "Non-admin DVM reads scoped source through actual Auth session",
+  );
+  const approveArgs = {
+    p_id: reviewId,
+    p_pet_id: pet,
+    p_expected_hash: preparedReview.request.request_hash,
+    p_confirmed: true,
+  };
+  await expectDenied(
+    () =>
+      api(
+        "/rest/v1/rpc/approve_ezyvet_prescription_review",
+        approveArgs,
+        otherHeaders,
+      ),
+    "Second real Auth session cannot approve another veterinarian's draft",
+    "42501",
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "approve_ezyvet_prescription_review",
+        { ...approveArgs, p_confirmed: false },
+        true,
+      ),
+    "HTTP approval requires explicit clinician confirmation",
+    "23514",
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "approve_ezyvet_prescription_review",
+        { ...approveArgs, p_expected_hash: "wrong" },
+        true,
+      ),
+    "HTTP approval binds exact prepared review hash",
+    "42501",
+  );
+  await rpc("approve_ezyvet_prescription_review", approveArgs, true);
+  const approvedReview = await rpc(
+    "recover_ezyvet_prescription_review",
+    { p_id: reviewId, p_pet_id: pet },
+    true,
+  );
+  check(
+    approvedReview.request.status === "approved" &&
+      approvedReview.receipt.id === reviewId &&
+      approvedReview.receipt.items.length === 2,
+    "Discarded approval response recovers approved header and both item receipts",
+  );
+  const repeatedApproval = await rpc(
+    "approve_ezyvet_prescription_review",
+    approveArgs,
+    true,
+  );
+  check(
+    repeatedApproval.receipt.version_hash ===
+      approvedReview.receipt.version_hash,
+    "HTTP approval retry returns same immutable version",
+  );
+  const duplicateId = randomUUID();
+  ids.push(duplicateId);
+  const duplicate = await rpc(
+    "prepare_ezyvet_prescription_review",
+    { ...prepareArgs, p_id: duplicateId },
+    true,
+  );
+  const duplicateApproval = await rpc(
+    "approve_ezyvet_prescription_review",
+    {
+      ...approveArgs,
+      p_id: duplicateId,
+      p_expected_hash: duplicate.request.request_hash,
+    },
+    true,
+  );
+  check(
+    duplicateApproval.receipt.id === reviewId,
+    "Equivalent HTTP request does not duplicate historical prescription",
+  );
+  const correctionId = randomUUID();
+  ids.push(correctionId);
+  const correctionPayload = {
+    ...reviewPayload,
+    interpretation: {
+      ...reviewPayload.interpretation,
+      outside_author: "Synthetic outside clinician",
+      reason: "Reviewed outside prescriber correction",
+      replaces_id: approvedReview.receipt.id,
+      expected_predecessor_hash: approvedReview.receipt.version_hash,
+    },
+  };
+  const correction = await rpc(
+    "prepare_ezyvet_prescription_review",
+    { ...prepareArgs, p_id: correctionId, p_payload: correctionPayload },
+    true,
+  );
+  const correctionArgs = {
+    ...approveArgs,
+    p_id: correctionId,
+    p_expected_hash: correction.request.request_hash,
+  };
+  const corrected = await rpc(
+    "approve_ezyvet_prescription_review",
+    correctionArgs,
+    true,
+  );
+  check(
+    corrected.receipt.version === 2 &&
+      corrected.receipt.replaces_id === reviewId &&
+      corrected.receipt.correction_history.length === 2,
+    "HTTP correction appends a linked version and preserves predecessor history",
+  );
+  const chart = await rpc(
+    "list_patient_imported_prescriptions",
+    { p_pet_id: pet, p_limit: 1 },
+    true,
+  );
+  check(
+    chart.has_more &&
+      chart.prescriptions.length === 1 &&
+      chart.prescriptions[0].id === correctionId,
+    "Actual HTTP patient chart discovers latest approved history and cursor",
+  );
+  const nextChart = await rpc(
+    "list_patient_imported_prescriptions",
+    {
+      p_pet_id: pet,
+      p_limit: 1,
+      p_before_at: chart.next_cursor.before_at,
+      p_before_id: chart.next_cursor.before_id,
+    },
+    true,
+  );
+  check(
+    nextChart.prescriptions.length === 1 &&
+      nextChart.prescriptions[0].id === reviewId &&
+      !nextChart.has_more,
+    "Chart cursor returns prior version once without duplication",
+  );
+  const pendingReviewId = randomUUID();
+  ids.push(pendingReviewId);
+  const pendingReview = await rpc(
+    "prepare_ezyvet_prescription_review",
+    { ...prepareArgs, p_id: pendingReviewId, p_payload: correctionPayload },
+    true,
+  );
+  const pendingReviewArgs = {
+    ...approveArgs,
+    p_id: pendingReviewId,
+    p_expected_hash: pendingReview.request.request_hash,
+  };
+  const abandonedId = randomUUID();
+  ids.push(abandonedId);
+  await rpc(
+    "abandon_ezyvet_prescription_review",
+    { p_id: abandonedId, p_pet_id: pet, p_confirmed: true },
+    true,
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "prepare_ezyvet_prescription_review",
+        { ...prepareArgs, p_id: abandonedId },
+        true,
+      ),
+    "HTTP abandonment tombstone prevents delayed preparation",
+    "42501",
+  );
+
   // Advance only this owned synthetic prescription cooldown; preserve production pacing code.
   sql(
     `update public.ezyvet_import_runs set retry_after=clock_timestamp()-interval '1 second' where id=${quote(prescriptionRun)};`,
@@ -660,13 +1063,70 @@ try {
   prescriptionDescription = "Synthetic changed outside prescription";
   const changedPrescriptionRun = randomUUID();
   ids.push(changedPrescriptionRun);
-  const changedPrescriptionResponse = await post(changedPrescriptionRun, "prescription");
+  const changedPrescriptionResponse = await post(
+    changedPrescriptionRun,
+    "prescription",
+  );
   const changedPrescriptionResult = await changedPrescriptionResponse.json();
   check(
     changedPrescriptionResponse.status === 200,
     "Later scoped prescription observation advances its source head: " +
-      String(changedPrescriptionResult.error ?? changedPrescriptionResponse.status),
+      String(
+        changedPrescriptionResult.error ?? changedPrescriptionResponse.status,
+      ),
   );
+
+  await expectDenied(
+    () => rpc("approve_ezyvet_prescription_review", pendingReviewArgs, true),
+    "Actual upstream header revision invalidates pending HTTP review",
+    "40001",
+  );
+  const stalePreview = await rpc(
+    "get_ezyvet_prescription_review_candidate",
+    { p_pet_id: pet, p_item_run_id: run },
+    true,
+  );
+  check(
+    stalePreview.eligible_for_review === false &&
+      stalePreview.unavailable_reason === "SOURCE_CONTEXT_CHANGED" &&
+      stalePreview.source_context.parent.original.description ===
+        reviewSourcePreview.source_context.parent.original.description &&
+      stalePreview.source_context.items.length === 2,
+    "Stale HTTP preview disables preparation while retaining original header and items",
+  );
+  const oldReceipt = await rpc(
+    "approve_ezyvet_prescription_review",
+    correctionArgs,
+    true,
+  );
+  check(
+    oldReceipt.receipt.id === correctionId &&
+      oldReceipt.receipt.current.is_current === false,
+    "Committed HTTP approval recovers after source change with visible stale status",
+  );
+  sql(
+    `delete from public.user_roles where user_id=${quote(actor)} and role='DVM';`,
+  );
+  await expectDenied(
+    () =>
+      rpc(
+        "recover_ezyvet_prescription_review",
+        { p_id: correctionId, p_pet_id: pet },
+        true,
+      ),
+    "Real HTTP session loses private review recovery after DVM role removal",
+    "42501",
+  );
+  const staffChart = await rpc(
+    "list_patient_imported_prescriptions",
+    { p_pet_id: pet },
+    true,
+  );
+  check(
+    staffChart.prescriptions.length === 2,
+    "Active non-DVM staff retains read-only HTTP chart access",
+  );
+
   const staleCandidates = await rpc(
     "list_ezyvet_prescriptionitem_candidates",
     {
@@ -689,7 +1149,8 @@ try {
   );
   calls = upstreamCalls;
   check(
-    (await post(run, "prescriptionitem")).status === 200 && upstreamCalls === calls,
+    (await post(run, "prescriptionitem")).status === 200 &&
+      upstreamCalls === calls,
     "Exact terminal recovery precedes mutable prescription freshness",
   );
   assert.ok(committedPrescriptionItemPage);
@@ -722,6 +1183,9 @@ try {
     "ezyvet_prescriptionitem_runs",
     "ezyvet_prescriptionitem_pages",
     "ezyvet_prescriptionitem_page_observations",
+    "ezyvet_prescription_review_requests",
+    "ezyvet_imported_prescriptions",
+    "ezyvet_imported_prescription_items",
   ]) {
     for (const headers of [anonymous, staffHeaders, serviceHeaders]) {
       const response = await fetch(
@@ -773,7 +1237,10 @@ try {
   } catch {
     denied = true;
   }
-  check(denied, "Generic prescriptionitem claim denied through actual PostgREST");
+  check(
+    denied,
+    "Generic prescriptionitem claim denied through actual PostgREST",
+  );
   const legacy = randomUUID();
   ids.push(legacy);
   sql(
@@ -787,7 +1254,7 @@ try {
   );
   check(
     sideEffects() === beforeEffects,
-    "PrescriptionItem intake changes no treatments, billing, certificates, reminders, outbox or encounters",
+    "Prescription intake, approval and corrections change no native treatments, billing, stock, delivery or encounters",
   );
 } catch (error) {
   failures.push(error);
@@ -809,10 +1276,10 @@ try {
         "Aggregate verification confirms no owned fixture rows remain",
       );
     }
-    if (actor) {
+    for (const ownedActor of [actor, ...additionalActors].filter(Boolean)) {
       check(
         (
-          await fetch(local.API_URL + "/auth/v1/admin/users/" + actor, {
+          await fetch(local.API_URL + "/auth/v1/admin/users/" + ownedActor, {
             method: "DELETE",
             headers: serviceHeaders,
           })
@@ -820,7 +1287,7 @@ try {
         "Synthetic Auth user cleaned",
       );
       const absent = await fetch(
-        local.API_URL + "/auth/v1/admin/users/" + actor,
+        local.API_URL + "/auth/v1/admin/users/" + ownedActor,
         { headers: serviceHeaders },
       );
       check(absent.status === 404, "Deleted synthetic Auth identity is absent");
@@ -844,5 +1311,5 @@ if (failures.length) {
   );
 }
 console.log(
-  `PrescriptionItem import HTTP/Auth/PostgREST: ${assertions} checks passed. Synthetic upstream only; no ezyVet requests.`,
+  `Prescription intake and review HTTP/Auth/PostgREST: ${assertions} checks passed. Synthetic upstream only; no ezyVet requests.`,
 );

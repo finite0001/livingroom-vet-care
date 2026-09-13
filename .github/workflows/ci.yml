@@ -90,6 +90,8 @@ jobs:
         run: python3 supabase/tests/ezyvet_prescriptionitem_runs_concurrency.py --project-config supabase/config.toml
       - name: Verify reviewed vaccination approval and correction races
         run: python3 supabase/tests/ezyvet_vaccination_review_concurrency.py --project-config supabase/config.toml
+      - name: Verify reviewed prescription approval and correction races
+        run: python3 supabase/tests/ezyvet_prescription_review_concurrency.py --project-config supabase/config.toml
       - name: Verify reviewed history, local problem and release concurrency
         run: python3 supabase/tests/ezyvet_history_provenance_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
@@ -161,6 +163,10 @@ jobs:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify consult-scoped vaccination imports through actual HTTP and Auth
         run: node --experimental-strip-types tests/ezyvet/vaccination-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify prescription intake and clinical review through actual HTTP and Auth
+        run: node --experimental-strip-types tests/ezyvet/prescription-local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify source-bound release artifacts in disposable Auth and Storage
