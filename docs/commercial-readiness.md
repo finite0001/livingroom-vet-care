@@ -1,5 +1,9 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — prescription review and releases deployed to staging
+
+[Verified staging rollout](prescription-review-release-staging.md) now includes84 migrations, seven matching version5 export functions and a refreshed protected frontend with schema8 prescription selection. PR121's corrected CI passes all three jobs, including245 browser cases. A fresh populated upgrade/restore verifies both record preservation and exact restored permissions. Staff login/workflow acceptance, Dr. Edler's clinical approval, live source samples and provider delivery remain pending. [Attachment metadata intake](../plans/20260913-ezyvet-clinical-import/phase-03d-attachment-intake.md) is the next planned implementation; it does not yet capture original files.
+
 ## September 13 — private mailbox verified; application mail capacity pending
 
 The owner-created Fastmail trial now has the designated administrator mailbox. GoDaddy saved six root-mail DNS records; Fastmail verifies MX, DKIM and SPF and reports the domain ready to send and receive mail. [Mail commissioning evidence](mail-commissioning-plan.md) also records the staging APP_URL, Auth Site URL and exact password-reset redirect configuration. Actual message delivery, Auth SMTP, staff onboarding and clinical/provider acceptance remain unverified. Earlier mailbox-creation statements below are historical.
