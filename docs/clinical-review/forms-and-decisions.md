@@ -136,3 +136,9 @@ Source: `src/hub/features/record-releases/ReleaseEmailComposer.tsx`; [implementa
 - [ ] Review exact recipient, subject, body, frozen report and each original attachment before the delivery attestation. Confirm the HTML report format is acceptable to recipients and identify any PDF requirement separately.
 - [ ] Verify recovery after an ambiguous preparation/queue response and confirm a second release cannot discard an active composer draft.
 - [ ] Confirm delivery-status wording and the distinction between a provider's acceptance and confirmed delivery. No provider account, domain verification or live send is approved by accepting this form.
+
+## D02 supplemental schema5 source review
+
+- [ ] Complete [the source-provenance disclosure checklist](release-source-provenance.md) against [the separate synthetic example](sources-example.html) and the exact integrated staff workflow.
+- [ ] Verify explicit source/original selection, historical version labels, local-review versus DVM-acknowledgment attribution, and old-release readability versus fresh-delivery eligibility.
+- [ ] Record the exact reviewed revision and any exclusions. Schema5 confirmation remains unavailable until separately accepted; this checklist does not record acceptance.

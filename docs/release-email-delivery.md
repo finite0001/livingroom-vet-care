@@ -1,5 +1,7 @@
 # Reviewed record email delivery
 
+Schema5 source-backed originals now require actual downloaded bytes to match the frozen lab/external capture SHA256 in both the shared builder and SQL capture RPC. Exact already-captured preparation recovers its immutable receipt without downloading current files; this does not override final delivery eligibility. The same checks cover document-link materialization. See [source byte binding](release-source-byte-binding.md).
+
 This increment connects a confirmed EMAIL release to the durable Resend HTTP outbox. Preparation does not send. A staff member reviews the actual generated HTML report, downloaded frozen originals, message, recipient and manifest before explicitly queueing. No SMS record links, public Storage URLs, raw-document-ID attachment API, or PDF conversion is introduced. An HTML report is attached as `medical-records-<release-id>.html` with `text/html`, never disguised as a PDF.
 
 ## Durable staff workflow

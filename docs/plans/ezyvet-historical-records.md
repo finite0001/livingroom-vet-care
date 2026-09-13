@@ -4,6 +4,10 @@ Migration `20260913420000_external_record_provenance.sql` implements the databas
 
 Existing private documents already preserve uploaded PDFs/images. This increment adds immutable association with an approved ezyVet animal mapping, verified local file bytes, original/replacement history, durable review recovery and a separate veterinarian acknowledgment. It does not create SOAP, problems, treatments, due dates, signatures, stock movements, invoices or payments. Native clinical records and their author identity remain unchanged.
 
+## Selected medical releases
+
+Migration4700 and the schema5 staff workflow now let staff explicitly select an approved original/replacement version with its matching document. The frozen report discloses the source mapping, historical status and exact-version acknowledgment separately from administrator approval. Migration4800 checks the actual attachment bytes at email and document-link capture. See the [release contract](release-source-v5-contract.md) and [pending review examples](../clinical-review/release-source-provenance.md). This does not add structured clinical conversion or an ezyVet API adapter.
+
 ## Source and authority
 
 An active administrator selects an existing `ezyvet_record_links` row with `resource='animal'`, scoped to the patient using the existing administrator RLS read policy. No mapping UUID needs manual entry. The server derives local patient/household and source origin, site and external animal ID from that immutable approved mapping. Trial and production sites remain distinct.

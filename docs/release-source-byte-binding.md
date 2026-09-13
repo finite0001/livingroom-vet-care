@@ -25,3 +25,13 @@ The reusable example fixture is `tests/record-releases/source-provenance-fixture
 
 
 Validation: 31 focused/golden/transport tests,14 new rollback SQL assertions and203 existing release-email/document-link/document-SMS/payment-delivery SQL assertions passed. The disposable Auth/Storage/PostgREST workflow passed24 checks. No provider requests or clinical approval were performed.
+
+## Integrated local evidence — 2026-09-13
+
+At `38fdc90995df3a748d9d6765941dc4720bab8bb9`, repository lint/typecheck, all382 unit tests and build passed; all Edge entrypoints passed frozen Deno checking. The41 combined record-release, original-document, document-SMS, lab and external-record browser cases passed. The five read-only inventory-comparator counterexamples passed. Existing AuthContext fast-refresh and build chunk-size warnings remain.
+
+The fully integrated backend at `8dc12d50483b4de52cef302a088fe4a54edb13a9` passed24 disposable Auth/Storage checks with all68 repository migrations and no overlay. The only subsequent application commit adds UI invalidation/refresh, covered by the browser run. Runner SHA256: `2e4ca7ed846530930e0d7cc2c8c21b9638c64839306ba3f6b96d205bb00ce631`; harness SHA256: `e7f733ccaf5c8950ef0ee871ca252545655617e9992b0436e2ebb6f18b632bac`. Cleanup of all owned containers, volumes and private logs passed.
+
+The observed51-version database subset plus direct-grant differences upgraded locally through68 migrations, matched canonical function/trigger permissions, and restored synthetic records and private Storage into a separate destination. Login, original bytes, immutable signed history, ledger/stock values and denied anonymous access passed; outbox remained empty and cron absent. Total135.63seconds, cleanup verified. This fixture restores the full schema but does not populate every provenance family; the separate source workflow supplies that evidence. Runner SHA256: `47ed8c8a64e7c436eafc7d583524f25d2af5e302c1572ebd4375244334037da3`; database archive SHA256: `13d230f21cab3110954004ebcaaf6feb5f245361f6f8d4aeb38ad022312e1ae1`. Protected local artifacts are outside Git. This is not hosted backup coverage or a recovery-time commitment.
+
+Five production-rendered synthetic review artifacts were regenerated at the integrated application revision; schema5 remains visibly unapproved. Required PR CI is separate from this local evidence. No hosted mutation, provider delivery or clinical acceptance was performed.

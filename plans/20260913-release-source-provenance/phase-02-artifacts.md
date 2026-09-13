@@ -1,6 +1,6 @@
 # Phase2 — Rendering and exact-byte delivery
 
-Priority: high. Status: pending. Depends on the phase1 schema5 field contract; implement in parallel after agreement, integrate after its migration.
+Priority: high. Status: implemented and locally verified; see integration evidence in docs/release-source-byte-binding.md. Clinical acceptance remains pending. Depends on the phase1 schema5 field contract; implement in parallel after agreement, integrate after its migration.
 
 ## Frozen artifact contract
 
@@ -34,12 +34,12 @@ Coordinate SQL capture changes with the database owner; reserve separate additiv
 
 ## Acceptance
 
-- [ ] Add a golden schema4 HTML baseline before editing renderer; preserve all existing schema1–3 baselines and exact schema1–4 HTML/hashes.
-- [ ] V5 validates source/original relationships, conflicting/missing digests and source strings; all selected provenance is visible, no unrelated provenance appears.
-- [ ] A same-length PDF mutation preserving `%PDF-` fails in both builders and both SQL captures; exact verified bytes succeed.
-- [ ] Document/version/capture substitution fails and duplicate matching originals remain deduplicated.
-- [ ] Lost capture acknowledgment returns identical frozen HTML/originals and request IDs without a new download.
-- [ ] Source or document-version invalidation after preparation but before final worker start yields no attempt/provider call; bytes substituted before initial capture fail digest verification. After verified immutable capture, later Storage-byte changes must not regenerate or replace the frozen payload. Retain existing SMS proof/payload tamper tests.
-- [ ] Actual local Auth/Storage/PostgREST test, not only mocks, exercises each capture path with synthetic private originals. No real provider send.
+- [x] Add a golden schema4 HTML baseline before editing renderer; preserve all existing schema1–3 baselines and exact schema1–4 HTML/hashes.
+- [x] V5 validates source/original relationships, conflicting/missing digests and source strings; all selected provenance is visible, no unrelated provenance appears.
+- [x] A same-length PDF mutation preserving `%PDF-` fails in both builders and both SQL captures; exact verified bytes succeed.
+- [x] Document/version/capture substitution fails and duplicate matching originals remain deduplicated.
+- [x] Lost capture acknowledgment returns identical frozen HTML/originals and request IDs without a new download.
+- [x] Source or document-version invalidation after preparation but before final worker start yields no attempt/provider call; bytes substituted before initial capture fail digest verification. After verified immutable capture, later Storage-byte changes must not regenerate or replace the frozen payload. Retain existing SMS proof/payload tamper tests.
+- [x] Actual local Auth/Storage/PostgREST test, not only mocks, exercises each capture path with synthetic private originals. No real provider send.
 
 Risk: optional digest handling could accidentally permit bypass. Mitigation: enforce proof from selected source identity in snapshot construction, renderer validation, both builders and both SQL capture paths.
