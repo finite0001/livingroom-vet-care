@@ -1,3 +1,4 @@
+import { PatientImportedVaccinations } from "@/hub/features/imports/PatientImportedVaccinations";
 import { PatientImportedHistory } from "@/hub/features/imports/PatientImportedHistory";
 import { PatientVaccineDuePlans } from "@/hub/features/care-reminders/PatientVaccineDuePlans";
 import { PatientRecordReleases } from "@/hub/features/record-releases/PatientRecordReleases";
@@ -30,6 +31,7 @@ export default function PatientPage() {
   return id ? <PatientWorkspace key={id} petId={id} /> : <p role="alert">Patient not found.</p>;
 }
 function PatientWorkspace({ petId }: { petId: string }) {
+  const [importedVaccinationDirty, setImportedVaccinationDirty] = useState(false);
   const [importedHistoryDirty, setImportedHistoryDirty] = useState(false);
   const [externalDirty, setExternalDirty] = useState(false);
   const [releaseDirty, setReleaseDirty] = useState(false);
@@ -40,7 +42,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
+  const navigationGuard = useUnsavedChanges(importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -72,13 +74,14 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} />
     <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
-    <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedHistoryDirty} />
-    <PatientExternalRecords petId={petId} disabled={importedHistoryDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setExternalDirty} />
+    <PatientImportedVaccinations petId={petId} patientVersion={patient.version} disabled={importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedVaccinationDirty} />
+    <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={importedVaccinationDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedHistoryDirty} />
+    <PatientExternalRecords petId={petId} disabled={importedVaccinationDirty || importedHistoryDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setExternalDirty} />
     <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />
     <PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} />
     <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} />
     <PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} onDirtyChange={setAnesthesiaDirty} />
     <PatientRecordReleases key={`release-${petId}`} petId={petId} onDirtyChange={setReleaseDirty} />
-    <ClinicalWorkspace petId={petId} disabled={inactive || importedHistoryDirty} onDirtyChange={setClinicalDirty} />
+    <ClinicalWorkspace petId={petId} disabled={inactive || importedVaccinationDirty || importedHistoryDirty} onDirtyChange={setClinicalDirty} />
   </div></section>;
 }

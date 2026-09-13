@@ -50,7 +50,7 @@ const runSchema = z.object({
 export type VaccinationRun = z.infer<typeof runSchema>;
 const cursorSchema = z.object({ before_at: date, before_id: uuid });
 export type VaccinationCursor = z.infer<typeof cursorSchema>;
-const candidateSchema = z.object({
+export const candidateSchema = z.object({
   id: uuid,
   payload: z.record(z.unknown()),
   payload_hash: z.string().regex(/^[a-f0-9]{64}$/),
