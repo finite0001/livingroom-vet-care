@@ -17,3 +17,6 @@ verify_jwt = false
 # Staff JWT required at the gateway; handler also verifies the user and every RPC authorizes staff.
 [functions.prepare-release-email]
 verify_jwt = true
+
+[functions.prepare-invoice-email]
+verify_jwt = true

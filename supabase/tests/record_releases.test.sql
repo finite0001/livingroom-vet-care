@@ -22,7 +22,7 @@ insert into storage.objects(bucket_id,name,metadata) select 'patient-documents',
 select public.finalize_patient_document('59000000-0000-4000-8000-000000000001');
 select public.finalize_patient_document('59000000-0000-4000-8000-000000000002');
 select public.finalize_patient_document('59000000-0000-4000-8000-000000000003');
-insert into data values('lab',jsonb_build_object('test_name','CBC','status','resulted','collected_date',current_date,'result_date',current_date,'accession','ACCESSION','notes','PRIVATE LAB WORKFLOW NOTE','result_document_id','59000000-0000-4000-8000-000000000001'));
+insert into data values('lab',jsonb_build_object('test_name','CBC','status','resulted','collected_date',(now() at time zone 'America/Denver')::date,'result_date',(now() at time zone 'America/Denver')::date,'accession','ACCESSION','notes','PRIVATE LAB WORKFLOW NOTE','result_document_id','59000000-0000-4000-8000-000000000001'));
 select public.save_patient_lab_order('59000000-0000-4000-8000-000000000004',(select id from fx where k='pet'),null,(select v from data where k='lab'),'');
 -- Synthetic issued source; certificate issuance authority is covered by its own SQL suite.
 reset role;

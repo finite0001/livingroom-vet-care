@@ -1,4 +1,4 @@
-import { verifyFrozenReleaseEmail } from "./release-email-payload.ts";
+import { verifyFrozenEmailPayload } from "./release-email-payload.ts";
 import {
   authorizeDelivery,
   requireEmailConfiguration,
@@ -57,7 +57,7 @@ export async function dispatchOne(
   let metadata: Record<string, string>;
   let authorization: string;
   let endpoint: string;
-  let frozenReleasePayload: string | null = null;
+  let frozenEmailPayload: string | null = null;
   try {
     authorizeDelivery(env, row.channel, row.recipient);
     if (row.channel === "EMAIL") {
@@ -83,20 +83,26 @@ export async function dispatchOne(
         JSON.stringify(Object.entries(metadata).sort())
     )
       throw new Error("Sender metadata changed");
-    const frozen = (await call(db, "read_release_email_payload", {
+    const frozen = (await call(db, "read_frozen_email_payload", {
       p_outbox_id: row.id,
       p_lease_token: row.lease_token,
-    })) as { payload_text: string; payload_hash: string } | null;
+    })) as {
+      payload_text: string;
+      payload_hash: string;
+      artifact_kind?: string;
+    } | null;
     if (frozen) {
       if (row.channel !== "EMAIL")
-        throw new Error("Release attachments require email");
-      frozenReleasePayload = await verifyFrozenReleaseEmail(frozen, {
+        throw new Error("Frozen attachments require email");
+      frozenEmailPayload = await verifyFrozenEmailPayload(frozen, {
         recipient: row.recipient,
         subject: row.subject,
         body: row.body,
         from: metadata.from,
         replyTo: metadata.reply_to,
       });
+      if (frozen.artifact_kind === "invoice")
+        metadata.invoice_payload_hash = frozen.payload_hash;
     }
   } catch {
     await call(db, "release_communication_claim", {
@@ -133,7 +139,7 @@ export async function dispatchOne(
             },
       body:
         row.channel === "EMAIL"
-          ? (frozenReleasePayload ??
+          ? (frozenEmailPayload ??
             JSON.stringify({
               from: metadata.from,
               reply_to: metadata.reply_to,
