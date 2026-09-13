@@ -55,3 +55,28 @@ test("incoming email canonical capabilities redacted from text, HTML, subject an
   assert.ok(!JSON.stringify(f.calls).includes(token));
   assert.ok(String(f.calls.at(-1)!.args!.p_body).includes("Thank you."));
 });
+
+for (const prefix of ["p1", "s1"]) {
+  test(`${prefix} payment capabilities are redacted after raw SMS verification`, async () => {
+    const capability = prefix + "." + "q".repeat(43);
+    const quoted = `Please review https://thelivingroom.vet/pay/11223344-1234-4234-8234-123456789abc#${capability}`;
+    const signed = await signedInbound(quoted);
+    const metadata = signed.calls[0].args!.p_metadata as Record<string, unknown>;
+    assert.equal(metadata.body_hash, await digestMetadata({body: quoted}));
+    assert.equal(metadata.body, quoted.replace(capability, "[private-payment-access-redacted]"));
+    const f = fixture({id: "event", provider: "twilio", event_type: "inbound", resource_id: sid, lease_token: "lease", metadata});
+    await processOneInbound(f.db, {TWILIO_ACCOUNT_SID: account, TWILIO_AUTH_TOKEN: secret}, async () => new Response(JSON.stringify({sid, account_sid: account, direction: "inbound", from: "+13035550100", to: "+13035550199", body: quoted, date_created: "2026-09-12T12:00:00Z", num_media: "0"})));
+    assert.equal(f.calls.at(-1)!.name, "complete_inbound_communication");
+    assert.equal(f.calls.at(-1)!.args!.p_body, metadata.body);
+    assert.ok(!JSON.stringify([...signed.calls, ...f.calls]).includes(capability));
+  });
+  test(`${prefix} quoted email capabilities are removed from all saved text and metadata`, async () => {
+    const capability = prefix + "." + "q".repeat(43);
+    const id = "11223344-1234-4234-8234-123456789abc";
+    const f = fixture({id: "event", provider: "resend", event_type: "inbound", resource_id: id, lease_token: "lease", metadata: {from: "family@example.test", to: "care@example.test"}});
+    await processOneInbound(f.db, {RESEND_API_KEY: "synthetic"}, async () => new Response(JSON.stringify({id, from: "family@example.test", to: ["care@example.test"], text: capability, html: `<p>${capability}</p>`, subject: capability, created_at: "2026-09-12T12:00:00Z", attachments: [{id: "attachment", filename: `${capability}.pdf`, size: 1, content_type: "application/pdf"}]})));
+    assert.equal(f.calls.at(-1)!.name, "complete_inbound_communication");
+    assert.ok(!JSON.stringify(f.calls).includes(capability));
+    assert.equal(f.calls.at(-1)!.args!.p_body, "[private-payment-access-redacted]");
+  });
+}

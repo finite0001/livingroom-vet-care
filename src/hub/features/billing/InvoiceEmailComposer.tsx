@@ -374,7 +374,7 @@ function InvoiceEmailSession({
       )}
       <p className="text-sm text-muted-foreground">
         Prepare and review an exact HTML invoice attachment before queueing.
-        Queueing does not mean delivered. Payment collection is not connected.
+        Queueing does not mean delivered. This email contains an invoice attachment; payment requests are reviewed separately.
       </p>
       {recovery.isFetching && !hydrated.current && (
         <p role="status">Checking for a saved invoice email…</p>
