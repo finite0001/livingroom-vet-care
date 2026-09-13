@@ -1,5 +1,7 @@
 # Prescription intake — staging rollout
 
+The newer [prescription review/release rollout](prescription-review-release-staging.md) supersedes this intake-only checkpoint. The evidence below remains a historical record of PR118 deployment.
+
 September 13, 2026. Target `kothoqicubowyhwfsrte`. PR118 passed frontend, database and Edge CI at `0041468399ba4753c4f5f5f593bb2437f573eedf` in run34782248989 and merged into the release integration branch. This rollout uses merge2ae935b, whose application files match that tested head.
 
 ## Installed and verified
