@@ -47,6 +47,7 @@ const ServiceDetailLayout = ({
   relatedServices,
   children,
 }: ServiceDetailLayoutProps) => {
+  usePageTitle(`${title} in Boulder, CO`, description.slice(0, 155));
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
