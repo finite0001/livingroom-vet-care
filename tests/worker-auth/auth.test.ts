@@ -143,6 +143,6 @@ test("enabled scheduler uses the authenticated secret for its database connectio
       return { rpc: async () => ({ data: [], error: null }) };
     },
   );
-  assert.equal((await handler(req({ apikey: secret }))).status, 200);
+  assert.equal((await handler(req({ apikey: secret }))).status, 202);
   assert.equal(used, secret);
 });
