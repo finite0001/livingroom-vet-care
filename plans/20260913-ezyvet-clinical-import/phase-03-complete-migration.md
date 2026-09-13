@@ -1,6 +1,6 @@
 # Phase3 — Remaining clinical resources and complete migration
 
-Priority: required for full requested ezyVet migration. Status: vaccination intake implemented; remaining clinical review/resources and account acceptance pending. Phases1/2 cannot substitute for this scope.
+Priority: required for full requested ezyVet migration. Status: vaccination and prescription intake/review/release workflows implemented with local verification; API attachments, full migration reconciliation and account/clinical acceptance remain pending. Phases1/2 cannot substitute for this scope.
 
 Completed intake: [Phase 3a](phase-03a-vaccination-intake.md). Implemented review: [Phase 3b — reviewed outside vaccination history](phase-03b-reviewed-vaccination-history.md).
 
@@ -10,7 +10,7 @@ Resolve every vaccination through its same-site consult and approved patient map
 
 ## Prescription history
 
-The refreshed read contract and implementation sequence are in [Phase 3c — outside prescription history](phase-03c-prescription-history.md). This remains unimplemented; the plan does not establish provider or clinical acceptance.
+The refreshed read contract and implementation sequence are in [Phase 3c — outside prescription history](phase-03c-prescription-history.md). Implementation and local runtime/concurrency/upgrade evidence are recorded there; provider and clinical acceptance remain pending.
 
 Implement the documented prescription and prescription-item read contracts, approved patient/consult joins and explicit product mapping. Keep outside prescriber reference, prescribed date, instructions and quantity/remaining data as historical source values. Add a historical prescription representation rather than misusing refill requests or administration records. An import cannot grant a refill, authorize a new prescription, infer dose units, dispense inventory or create charges. Preserve discontinued/unknown statuses with reviewed interpretation. Any conversion to an active local prescription requires a distinct native prescribing workflow with the correct clinician authority; that is separate from historical import.
 

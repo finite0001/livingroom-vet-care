@@ -415,6 +415,57 @@ try:
     check(scalar(f"select version from catalog_products where id='{low_product}';") == '3', 'Both catalog edits commit after the review releases its ordered locks')
     print('Observed reversed two-product locking for preparation and approval with an actual catalog writer.', flush=True)
 
+    # Mixed families share a patient release lock but retain independent source invalidations.
+    mixed_fixture_source = Path(__file__).with_name('release_imported_prescription.test.sql').read_text().split("insert into data select 'selection',")[0]
+    for scenario_index, (resource, ordering) in enumerate([('vaccination', 'source-first'), ('vaccination', 'release-first'), ('prescriptionitem', 'source-first'), ('prescriptionitem', 'release-first'), ('both', 'release-first')], start=563):
+        prefix = f'db{scenario_index}000'
+        mixed_actor = prefix + '-0000-4000-8000-000000000001'
+        mixed_reviewer = prefix + '-0000-4000-8000-000000000002'
+        mixed_site = f'mixed-release-race-{scenario_index}'
+        source = mixed_fixture_source.replace('db560000', prefix).replace('prescriptionitem-test-site', mixed_site).replace('@example.test', f'@mixed-{scenario_index}-example.test')
+        mixed = json.loads(scalar(source + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
+        mixed_fx, mixed_data = mixed['fx'], mixed['data']
+        mixed_pet, mixed_client = mixed_fx['pet'], mixed_fx['client']
+        mixed_staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': mixed_reviewer, 'role': 'authenticated'})) + ",true);"
+        selection = {'imported_prescription_ids': [mixed_data['approved']['receipt']['id']], 'imported_vaccination_ids': [mixed_data['vaccine-approved']['receipt']['id']]}
+        recipient = f'clinical-import@mixed-{scenario_index}-example.test'
+        mixed_preview = json.loads(scalar('begin;' + mixed_staff + f"select preview_record_release_v8('{mixed_pet}','{mixed_client}','EMAIL','{recipient}',{quote(json.dumps(selection))}::jsonb);commit;"))
+        check(len(mixed_preview['snapshot']['imported_prescriptions']) == 1 and len(mixed_preview['snapshot']['imported_vaccinations']) == 1, 'Race package explicitly contains both reviewed source families')
+        mixed_release_id = str(uuid.uuid4())
+        mixed_confirm = mixed_staff + f"do $mixed$ begin perform confirm_record_release('{mixed_release_id}','{mixed_pet}','{mixed_client}','EMAIL','{recipient}',{quote(json.dumps(selection))}::jsonb,{quote(json.dumps(mixed_preview['snapshot']))}::jsonb,'{mixed_preview['source_hash']}',true);end $mixed$;"
+        def mixed_page(kind):
+            # Advance only this owned synthetic source's cooldown before the next scan.
+            sql(f"update ezyvet_import_runs set retry_after=null,lease_until=null where source_site_uid='{mixed_site}' and resource='{kind}';")
+            run_id = str(uuid.uuid4())
+            common = f"'{run_id}','{mixed_actor}','{mixed_site}','{kind}','https://api.trial.ezyvet.com','{mixed_fx['mapping']}'"
+            if kind == 'vaccination':
+                parent = mixed_data['vconsult']
+                claim = f"select claim_ezyvet_vaccination_import({common},'{parent['id']}','{parent['payload_hash']}',{parent['head_version']});"
+                items = [{'external_id': '902', 'payload': {'id': '902', 'consult_id': '901', 'description': 'Changed original vaccine during mixed release race', 'date_of_administration': 'ambiguous', 'date_of_next_administration': None, 'active': 'unknown'}}]
+            else:
+                parent = mixed_data['prescription']
+                claim = f"select claim_ezyvet_prescriptionitem_import({common},'{parent['id']}','{parent['payload_hash']}',{parent['observed_head_version']});"
+                items = [item | {'payload': item['payload'] | ({'instructions': 'Omitted item changed during mixed release race'} if item['external_id'] == '502' else {})} for item in mixed_data['items']]
+            claimed = json.loads(service_call(claim))
+            return service + f"select stage_ezyvet_import_page('{run_id}','{mixed_actor}','{claimed['lease_id']}',1,true,{quote(json.dumps(items))}::jsonb);"
+        change = mixed_page('vaccination' if resource == 'both' else resource)
+        if resource == 'both':
+            other_change = mixed_page('prescriptionitem')
+            check(contended_three(mixed_confirm, change, other_change), 'Both independent mixed-source writers commit after confirmation')
+        elif ordering == 'source-first':
+            expected = 'Current latest same-patient reviewed ' + ('vaccination' if resource == 'vaccination' else 'prescription') + ' required'
+            contended(change, mixed_confirm, lambda code, output, error: code != 0 and expected in error)
+            check(scalar(f"select count(*) from record_releases where id='{mixed_release_id}';") == '0', 'Source-first mixed release cannot persist stale selected history')
+        else:
+            contended(mixed_confirm, change, lambda code, output, error: code == 0)
+        if ordering == 'release-first':
+            read = json.loads(scalar('begin;' + mixed_staff + f"select read_record_release('{mixed_release_id}');commit;"))
+            check(read['eligible'] is False, 'Selected source change makes mixed package ineligible')
+            check(read['release']['snapshot'] == mixed_preview['snapshot'], 'Mixed source races preserve exact original package')
+            check(sql('begin;' + mixed_confirm + 'commit;', False).returncode == 0, 'Mixed source race preserves exact committed confirmation retry')
+            check(scalar(f"select count(*) from record_release_sources where release_id='{mixed_release_id}';") == '2', 'Mixed package retains both source registry entries')
+        print(f'Observed mixed vaccination/prescription release against {resource} ingestion: {ordering}.', flush=True)
+
     sql(f"delete from user_roles where user_id='{actor}' and role='DVM';")
     denied=sql('begin;'+staff+f"select recover_ezyvet_prescription_review('{a}','{pet}');commit;",False)
     check(denied.returncode!=0 and 'veterinarian' in denied.stderr,'Current role required for approved receipt recovery')

@@ -1,0 +1,24 @@
+{
+  "scope": "Actual local PostgreSQL mixed vaccination/prescription export versus source ingestion",
+  "source_revision": "15a4f1bcde40331f7185c90f0c42d3d72cfa900e",
+  "source_sha256": {
+    "supabase/tests/ezyvet_prescription_review_concurrency.py": "a44ef79e60561ad846de882b68275c9d2fb6a3806010554ae5e4e90039e2796f",
+    "supabase/tests/release_imported_prescription.test.sql": "28cbeb05746d114da713bdbfe02da71eb16b0dceefa8889bdbe2fe95a73e74af"
+  },
+  "concurrency_checks": 230,
+  "sql_assertions": 457,
+  "cleanup_verified": true,
+  "mixed_scenarios": [
+    "Vaccination ingestion commits before mixed confirmation: stale release rejected",
+    "Mixed confirmation commits before vaccination ingestion: saved snapshot unchanged, release ineligible, exact retry recovers",
+    "Omitted prescription item ingestion commits before mixed confirmation: stale release rejected",
+    "Mixed confirmation commits before omitted-item ingestion: saved snapshot unchanged, release ineligible, exact retry recovers",
+    "Mixed confirmation holds shared locks while both independent source writers wait; all commit and package remains immutable/ineligible"
+  ],
+  "hosted_changes": false,
+  "provider_requests": 0,
+  "limitations": [
+    "No actual provider data or hosted Edge endpoint exercised.",
+    "Clinical/provider acceptance and combined latest-revision CI remain separate requirements."
+  ]
+}
