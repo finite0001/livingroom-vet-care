@@ -28,7 +28,7 @@ select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select jso
 select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select jsonb_set(v,'{alert_review,actor_id}',to_jsonb(auth.uid()::text)) from requests where k='live'))$$,'23514',null,'Caller cannot supply review actor metadata');
 select is((select count(*) from billing_invoice_items),0::bigint,'Bypass leaves no billing writes');
 select is((select sum(quantity) from inventory_movements),10::numeric,'Bypass leaves stock unchanged');
-insert into fx select 'problem',id from save_patient_problem(null,(select id from fx where k='pet'),null,'Prior vaccine reaction','Important historical context',current_date,'resolved','high');
+insert into fx select 'problem',id from save_patient_problem(null,(select id from fx where k='pet'),null,'Prior vaccine reaction','Important historical context',(now() at time zone 'America/Denver')::date,'resolved','high');
 select is(read_patient_treatment_alerts((select id from fx where k='pet'))#>>'{snapshot,important_problems,0,status}','resolved','Resolved critical history remains in reviewed content');
 select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'40001',null,'New flag invalidates old empty-alert review');
 update requests set v=v||jsonb_build_object('alert_review',jsonb_build_object('source_hash',read_patient_treatment_alerts((v->>'pet_id')::uuid)->>'source_hash','acknowledged',true)) where k='live';
@@ -38,7 +38,7 @@ select is((select snapshot#>>'{important_problems,0,title}' from treatment_alert
 reset role;
 select is((select count(*) from audit_logs where table_name='treatment_alert_reviews'),1::bigint,'Review association audited');
 set local role authenticated;
-select save_patient_problem((select id from fx where k='problem'),(select id from fx where k='pet'),1,'Prior vaccine reaction','Updated reaction details',current_date,'resolved','high');
+select save_patient_problem((select id from fx where k='problem'),(select id from fx where k='pet'),1,'Prior vaccine reaction','Updated reaction details',(now() at time zone 'America/Denver')::date,'resolved','high');
 select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'40001',null,'Changed alert details reject a new treatment');
 select lives_ok($$select record_patient_treatment('35000000-0000-4000-8000-000000000004',(select v from requests where k='live'))$$,'Committed response-loss retry succeeds despite later alerts');
 select is((select count(*) from treatment_alert_reviews),1::bigint,'Retry does not duplicate review association');

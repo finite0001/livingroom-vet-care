@@ -39,7 +39,7 @@ function fixture(channel: "EMAIL" | "SMS" = "EMAIL") {
       calls.push({ name, args });
       return {
         data:
-          name === "read_release_email_payload"
+          name === "read_frozen_email_payload"
             ? null
             : name === "claim_communication"
               ? row
@@ -121,7 +121,7 @@ test("email provider acceptance is distinct from delivery and has stable idempot
     f.calls.map((c) => c.name),
     [
       "claim_communication",
-      "read_release_email_payload",
+      "read_frozen_email_payload",
       "start_communication_attempt",
       "finish_communication_attempt",
     ],

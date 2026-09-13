@@ -193,7 +193,7 @@ test("dispatch uses identical literal provider payload and idempotency header on
       calls.push(name);
       return {
         data:
-          name === "read_release_email_payload"
+          name === "read_frozen_email_payload"
             ? frozen
             : { ...row, state: finalState },
         error: null,
@@ -223,7 +223,7 @@ test("dispatch uses identical literal provider payload and idempotency header on
     `livingroom-outbox/${releaseId}`,
   );
   assert.ok(
-    calls.indexOf("read_release_email_payload") <
+    calls.indexOf("read_frozen_email_payload") <
       calls.indexOf("start_communication_attempt"),
   );
   finalState = "failed";

@@ -36,7 +36,7 @@ try:
     fixture = Path('supabase/tests/inventory_billing.test.sql').read_text().split('select lives_ok($$select public.record_patient_treatment')[0]
     sql(fixture + '\nreset role;create table race_ids as select * from fx;create table race_requests as select * from requests;grant select on race_ids,race_requests to authenticated;commit;')
     for label, mutation in [
-        ('important problem', "select save_patient_problem(null,(select id from fx where k='pet'),null,'Concurrent reaction','Concurrent clinical update',current_date,'resolved','high');"),
+        ('important problem', "select save_patient_problem(null,(select id from fx where k='pet'),null,'Concurrent reaction','Concurrent clinical update',(now() at time zone 'America/Denver')::date,'resolved','high');"),
         ('legacy allergy', "update pets set allergies='Concurrent legacy allergy' where id=(select id from fx where k='pet');"),
     ]:
         aliases = 'create temp table fx as select * from race_ids; create temp table requests as select * from race_requests; grant all on fx,requests to authenticated;'

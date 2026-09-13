@@ -211,3 +211,5 @@ export async function verifyFrozenReleaseEmail(
     throw new Error("Frozen email metadata differs.");
   return value.payload_text;
 }
+
+export { verifyFrozenReleaseEmail as verifyFrozenEmailPayload };
