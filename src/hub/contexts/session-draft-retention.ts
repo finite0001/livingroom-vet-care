@@ -15,6 +15,7 @@ export function clearOtherInvoiceEmailIntents(
     "lab-result-intent:",
     "external-record-intent:",
     "inbound-assignment-intent:",
+    "communication-processing-intent:",
   ];
   for (const prefix of prefixes) {
     const retained = actorId ? `${prefix}${actorId}:` : null;
