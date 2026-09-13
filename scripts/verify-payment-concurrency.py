@@ -80,9 +80,36 @@ select public.issue_billing_invoice('{invoice}',(select version from public.bill
     if sql(f"select coalesce(sum(amount_cents),0) from public.invoice_refund_requests where invoice_id='{invoice}';").stdout.strip() != '2000':
         raise RuntimeError('Concurrent refunds oversubscribed available cash')
     print('PASS: simultaneous refund reservations cannot exceed credited excess cash.')
+    # Two real workers must skip a work row held by another transaction.
+    if sql("select count(*) from public.stripe_event_work where state in ('queued','processing');").stdout.strip() != '0':
+        raise RuntimeError('Refusing to claim unrelated existing Stripe inbox work')
+    for suffix in ('one', 'two'):
+        envelope = json.dumps({'event_id': 'evt_' + run_id + suffix, 'event_type': 'checkout.session.completed', 'provider_created_at': 1790000000, 'account_id': 'acct_concurrency', 'livemode': False, 'object_id': 'cs_test_next', 'request_id': next_request, 'raw_sha256': 'a' * 64, 'disposition': 'queued', 'reason': ''})
+        sql(f"select public.receive_stripe_event('{envelope}'::jsonb);")
+    worker = subprocess.Popen(['docker','exec','-i',CONTAINER,'psql','-X','-At','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    worker.stdin.write("begin;select public.claim_stripe_event();\n\\echo CLAIM_HELD\nselect pg_sleep(3);commit;\n")
+    worker.stdin.close()
+    claimed = None
+    while True:
+        line = worker.stdout.readline().strip()
+        if line.startswith('{'):
+            claimed = json.loads(line)
+        if line == 'CLAIM_HELD':
+            break
+        if not line and worker.poll() is not None:
+            raise RuntimeError('Inbox worker failed before claim: '+worker.stderr.read())
+    second_claim = json.loads(sql('select public.claim_stripe_event();').stdout.strip())
+    skipped_locked_row = worker.poll() is None
+    worker.wait(timeout=15)
+    if not skipped_locked_row or worker.returncode or not claimed or claimed['receipt']['id'] == second_claim['receipt']['id']:
+        raise RuntimeError('Workers failed to claim distinct receipts')
+    print('PASS: two actual workers claim distinct receipts while the first transaction holds its work row lock.')
 finally:
     # Synthetic IDs only; no table-wide cleanup and no existing environments reset.
     sql(f"""begin;set local session_replication_role=replica;
+delete from public.stripe_event_work_history where receipt_id in (select id from public.stripe_event_receipts where request_id in (select id from public.invoice_checkout_attempts where actor_id='{actor}'));
+delete from public.stripe_event_work where receipt_id in (select id from public.stripe_event_receipts where request_id in (select id from public.invoice_checkout_attempts where actor_id='{actor}'));
+delete from public.stripe_event_receipts where request_id in (select id from public.invoice_checkout_attempts where actor_id='{actor}');
 delete from public.invoice_refund_evidence where request_id in (select id from public.invoice_refund_requests where invoice_id='{invoice}');
 delete from public.invoice_refunds where invoice_id='{invoice}';
 delete from public.invoice_refund_requests where invoice_id='{invoice}';
