@@ -1,8 +1,8 @@
 # Phase3 — Remaining clinical resources and complete migration
 
-Priority: required for full requested ezyVet migration. Status: unimplemented; resource-specific design and account evidence required. Phases1/2 cannot substitute for this scope.
+Priority: required for full requested ezyVet migration. Status: vaccination intake implemented; remaining clinical review/resources and account acceptance pending. Phases1/2 cannot substitute for this scope.
 
-Next bounded implementation: [Phase 3a — consult-scoped vaccination intake](phase-03a-vaccination-intake.md).
+Completed intake: [Phase 3a](phase-03a-vaccination-intake.md). Next: [Phase 3b — reviewed outside vaccination history](phase-03b-reviewed-vaccination-history.md).
 
 ## Vaccinations and due dates
 
@@ -45,4 +45,4 @@ Base: `/Users/davidedler/livingroom-vet-ezyvet-clinical-plan`.
 
 ## Open dependencies
 
-Read-only API availability is the owner-approved implementation premise. Dr. Susan Edler is clarifying the existing entitlement with her representative; no ezyVet write-back is in scope. Live authentication and supported attachment/export contracts; actual site data and source date semantics; catalog/prescriber mappings; clinician approval; supervised cutover window. Continue independently implementable work while these remain pending, but keep commissioning disabled.
+Read-only API availability is the owner-approved implementation premise. Dr. Susan Edler is clarifying the existing entitlement with her representative; no ezyVet write-back is in scope. Basic read-only authentication is verified; supported attachment/export contracts; actual site data and source date semantics; catalog/prescriber mappings; clinician approval; supervised cutover window. Continue independently implementable work while these remain pending, but keep commissioning disabled.
