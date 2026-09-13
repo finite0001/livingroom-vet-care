@@ -1,5 +1,8 @@
-export interface ReminderSchedulerEnvironment {
-  SUPABASE_SERVICE_ROLE_KEY?: string;
+import {
+  authenticateWorker,
+  type WorkerAuthEnvironment,
+} from "./worker-auth.ts";
+export interface ReminderSchedulerEnvironment extends WorkerAuthEnvironment {
   REMINDER_SCHEDULER_ENABLED?: string;
   APP_ENV?: string;
 }
@@ -16,17 +19,13 @@ const json = (value: unknown, status = 200) =>
   });
 export function createReminderSchedulerHandler(
   env: ReminderSchedulerEnvironment,
-  createDatabase: () => ReminderSchedulerDatabase,
+  createDatabase: (key: string) => ReminderSchedulerDatabase,
 ) {
   return async (request: Request): Promise<Response> => {
     if (request.method !== "POST")
       return json({ error: "Method not allowed" }, 405);
-    if (
-      !env.SUPABASE_SERVICE_ROLE_KEY ||
-      request.headers.get("Authorization") !==
-        `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`
-    )
-      return json({ error: "Service authorization required" }, 401);
+    const key = authenticateWorker(request, env);
+    if (!key) return json({ error: "Service authorization required" }, 401);
     // Disabled means no database client, no claims and no outbox work.
     if (env.REMINDER_SCHEDULER_ENABLED !== "true")
       return json({ disabled: true, queued: 0, dispatched: false });
@@ -68,7 +67,7 @@ export function createReminderSchedulerHandler(
       return json({ error: "Invalid JSON request" }, 400);
     }
     try {
-      const { data, error } = await createDatabase().rpc(
+      const { data, error } = await createDatabase(key).rpc(
         "queue_due_reminders",
         { p_limit: limit },
       );

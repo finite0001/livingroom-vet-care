@@ -6,9 +6,11 @@ serve(
   createReminderSchedulerHandler(
     {
       SUPABASE_SERVICE_ROLE_KEY: key,
+      SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
       REMINDER_SCHEDULER_ENABLED: Deno.env.get("REMINDER_SCHEDULER_ENABLED"),
       APP_ENV: Deno.env.get("APP_ENV"),
     },
-    () => createClient(Deno.env.get("SUPABASE_URL")!, key!),
+    (authenticatedKey) =>
+      createClient(Deno.env.get("SUPABASE_URL")!, authenticatedKey),
   ),
 );
