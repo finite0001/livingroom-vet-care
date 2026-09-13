@@ -10,6 +10,8 @@ Resolve every vaccination through its same-site consult and approved patient map
 
 ## Prescription history
 
+The refreshed read contract and implementation sequence are in [Phase 3c — outside prescription history](phase-03c-prescription-history.md). This remains unimplemented; the plan does not establish provider or clinical acceptance.
+
 Implement the documented prescription and prescription-item read contracts, approved patient/consult joins and explicit product mapping. Keep outside prescriber reference, prescribed date, instructions and quantity/remaining data as historical source values. Add a historical prescription representation rather than misusing refill requests or administration records. An import cannot grant a refill, authorize a new prescription, infer dose units, dispense inventory or create charges. Preserve discontinued/unknown statuses with reviewed interpretation. Any conversion to an active local prescription requires a distinct native prescribing workflow with the correct clinician authority; that is separate from historical import.
 
 ## Source attachments
