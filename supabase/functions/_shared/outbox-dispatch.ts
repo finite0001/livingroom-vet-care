@@ -1,3 +1,8 @@
+import {
+  documentLinkConfig,
+  materializeDocumentLink,
+  type CapabilityGrant,
+} from "./document-link-capability.ts";
 import { verifyFrozenEmailPayload } from "./release-email-payload.ts";
 import {
   authorizeDelivery,
@@ -17,6 +22,10 @@ export interface OutboxRow {
   provider_config: Record<string, string> | null;
 }
 export interface OutboxEnvironment extends DeliveryPolicyEnvironment {
+  DOCUMENT_LINK_ORIGIN?: string;
+  DOCUMENT_LINK_ACTIVE_KEY_VERSION?: string;
+  DOCUMENT_LINK_KEYS?: string;
+  DOCUMENT_LINK_PUBLIC_ENABLED?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM?: string;
   RESEND_REPLY_TO?: string;
@@ -58,6 +67,7 @@ export async function dispatchOne(
   let authorization: string;
   let endpoint: string;
   let frozenEmailPayload: string | null = null;
+  let materializedSms: string | null = null;
   try {
     authorizeDelivery(env, row.channel, row.recipient);
     if (row.channel === "EMAIL") {
@@ -83,6 +93,40 @@ export async function dispatchOne(
         JSON.stringify(Object.entries(metadata).sort())
     )
       throw new Error("Sender metadata changed");
+    if (row.channel === "SMS") {
+      const link = (await call(db, "document_link_delivery_context", {
+        p_outbox_id: row.id,
+        p_lease_token: row.lease_token,
+      })) as {
+        grant: CapabilityGrant;
+        token_hash: string;
+        message_hash: string;
+        artifact_hash: string;
+      } | null;
+      if (link) {
+        const config = documentLinkConfig({
+          origin: env.DOCUMENT_LINK_ORIGIN,
+          activeKeyVersion: env.DOCUMENT_LINK_ACTIVE_KEY_VERSION,
+          keys: env.DOCUMENT_LINK_KEYS,
+          publicEnabled: env.DOCUMENT_LINK_PUBLIC_ENABLED,
+        });
+        if (!config.publicEnabled || link.grant.message_template !== row.body) {
+          throw new Error("Document link unavailable");
+        }
+        const materialized = await materializeDocumentLink(link.grant, config);
+        if (
+          materialized.token_hash !== link.token_hash ||
+          materialized.message_hash !== link.message_hash ||
+          materialized.materialized_message.length > 1600
+        ) {
+          throw new Error("Reviewed document message differs");
+        }
+        materializedSms = materialized.materialized_message;
+        metadata.document_link_token_hash = materialized.token_hash;
+        metadata.document_link_message_hash = materialized.message_hash;
+        metadata.document_link_artifact_hash = link.artifact_hash;
+      }
+    }
     const frozen = (await call(db, "read_frozen_email_payload", {
       p_outbox_id: row.id,
       p_lease_token: row.lease_token,
@@ -150,7 +194,7 @@ export async function dispatchOne(
           : new URLSearchParams({
               From: metadata.from,
               To: row.recipient,
-              Body: row.body,
+              Body: materializedSms ?? row.body,
             }).toString(),
     });
     if (response.ok) {

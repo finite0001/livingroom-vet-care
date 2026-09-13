@@ -21,6 +21,10 @@ serve(async (req) => {
     const env: OutboxEnvironment = {};
     for (const name of [
       "APP_ENV",
+      "DOCUMENT_LINK_ORIGIN",
+      "DOCUMENT_LINK_ACTIVE_KEY_VERSION",
+      "DOCUMENT_LINK_KEYS",
+      "DOCUMENT_LINK_PUBLIC_ENABLED",
       "OUTBOUND_DELIVERY_MODE",
       "OUTBOUND_TEST_EMAILS",
       "OUTBOUND_TEST_PHONES",
