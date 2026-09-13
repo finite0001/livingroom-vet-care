@@ -107,6 +107,8 @@ async function fixture(
     requests: [] as ReleaseConfirmArgs[],
     oversized: false,
     allCalls: 0,
+    sourceLoads: 0,
+    sourceSuffix: "",
     ambiguous: false,
     stale: false,
   };
@@ -255,6 +257,7 @@ async function fixture(
       return route.fulfill({ json: null });
     }
     if (path === "/rest/v1/rpc/list_record_release_sources_v5") {
+      state.sourceLoads++;
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
         pet_id: petId,
@@ -278,7 +281,7 @@ async function fixture(
             id: row.id,
             version: 2,
             recorded_at: "2026-09-12T18:00:00Z",
-            label: `Source ${row.id}`,
+            label: `Source ${row.id}${state.sourceSuffix}`,
             required_document_id: key === "lab_order_ids" ? "document" : null,
             required_lab_report_ids: key === "document_ids" ? [] : undefined,
             required_external_record_ids:
@@ -465,6 +468,15 @@ test("select clinical families, confirm identical retry, reopen invalidation and
     });
     if (await button.isEnabled()) await button.click();
   }
+  const loadsBeforeRefresh = state.sourceLoads;
+  state.sourceSuffix = " refreshed";
+  await panel
+    .getByRole("button", { name: "Refresh source list", exact: true })
+    .click();
+  await expect
+    .poll(() => state.sourceLoads)
+    .toBeGreaterThan(loadsBeforeRefresh);
+  await expect(panel.getByText(/refreshed/).first()).toBeVisible();
   await panel
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
@@ -501,6 +513,9 @@ test("select clinical families, confirm identical retry, reopen invalidation and
       exact: true,
     }),
   ).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "Refresh source list", exact: true }),
+  ).toBeDisabled();
   await panel
     .getByRole("button", {
       name: "Retry same package confirmation",

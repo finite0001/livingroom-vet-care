@@ -438,6 +438,25 @@ export function PatientRecordReleases({
         household recipient, then confirm an immutable package. This screen does
         not send email or texts.
       </p>
+      <Button
+        variant="outline"
+        disabled={
+          busy ||
+          !!pending ||
+          !!preview ||
+          emailDirty ||
+          smsDirty ||
+          candidates.isFetching ||
+          history.isFetching
+        }
+        onClick={() =>
+          void run(async () => {
+            await Promise.all([candidates.refetch(), history.refetch()]);
+          })
+        }
+      >
+        Refresh source list
+      </Button>
       {error && (
         <p role="alert" className="text-destructive">
           {error}

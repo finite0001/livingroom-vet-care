@@ -1,3 +1,5 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +76,7 @@ function ExternalRecords({
   admin,
   dvm,
 }: InnerProps) {
+  const releaseCache = useQueryClient();
   const [history, setHistory] = useState<HistoryPage | null>(null),
     [receipts, setReceipts] = useState<ReceiptPage | null>(null),
     [mappings, setMappings] = useState<Mapping[]>([]),
@@ -205,6 +208,8 @@ function ExternalRecords({
     if (v && p?.kind === "verify" && !matchesReceipt(v.receipt, p))
       throw new Error("Frozen receipt differs");
     if (v && alive.current) {
+      if (v.record && p?.kind === "verify")
+        void refreshPatientReleases(releaseCache, petId);
       setSelected(v);
       clearReview();
       if (v.capture && p?.kind === "verify") {
@@ -228,6 +233,7 @@ function ExternalRecords({
       if (!alive.current) return;
       if (a) {
         validateSaved(a, p);
+        void refreshPatientReleases(releaseCache, petId);
         clearPending();
         setDraft(false);
         setNotice("The original veterinarian acknowledgment is saved.");
@@ -247,6 +253,7 @@ function ExternalRecords({
     if (!alive.current) return;
     if (p.kind === "approve" && v?.record) {
       validateSaved(v.record, p);
+      void refreshPatientReleases(releaseCache, petId);
       clearPending();
       setDraft(false);
       setNotice("The original approved record is saved in history.");
@@ -266,6 +273,7 @@ function ExternalRecords({
     if (p.kind === "verify") accept(v, p);
     else {
       validateSaved(v, p);
+      void refreshPatientReleases(releaseCache, petId);
       clearPending();
       clearReview();
       setDraft(false);
