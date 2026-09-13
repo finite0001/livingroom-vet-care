@@ -500,8 +500,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         </div>
       </dl>
       <p className="text-sm text-muted-foreground">
-        Net charges do not include payment reconciliation. No payment or refund
-        is initiated here.
+        Net charges show billed services minus accounting credits. See the payment
+        section for confirmed payments and refunds.
       </p>
       {record.status === "draft" && (
         <>
