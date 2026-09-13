@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, CheckCircle, ArrowRight, LucideIcon } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 interface ServiceDetailLayoutProps {
   title: string;
