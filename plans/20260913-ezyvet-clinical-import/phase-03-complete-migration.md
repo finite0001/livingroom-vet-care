@@ -10,11 +10,13 @@ Resolve every vaccination through its same-site consult and approved patient map
 
 ## Prescription history
 
-The refreshed read contract and implementation sequence are in [Phase 3c — outside prescription history](phase-03c-prescription-history.md). This remains unimplemented; the plan does not establish provider or clinical acceptance.
+The refreshed read contract and implementation sequence are in [Phase 3c — outside prescription history](phase-03c-prescription-history.md). Reviewed outside prescription history and schema-8 record releases are implemented in PRs [119](https://github.com/finite0001/livingroom-vet-care/pull/119) and [121](https://github.com/finite0001/livingroom-vet-care/pull/121). Implementation does not establish hosted deployment, provider acceptance or clinical acceptance.
 
 Implement the documented prescription and prescription-item read contracts, approved patient/consult joins and explicit product mapping. Keep outside prescriber reference, prescribed date, instructions and quantity/remaining data as historical source values. Add a historical prescription representation rather than misusing refill requests or administration records. An import cannot grant a refill, authorize a new prescription, infer dose units, dispense inventory or create charges. Preserve discontinued/unknown statuses with reviewed interpretation. Any conversion to an active local prescription requires a distinct native prescribing workflow with the correct clinician authority; that is separate from historical import.
 
 ## Source attachments
+
+Next bounded implementation: [Phase 3d — animal-scoped attachment metadata intake](phase-03d-attachment-intake.md). Original-byte transport and release integration remain subsequent required work.
 
 Verify the official download endpoint, auth, redirects, maximum size and content/MIME behavior against authorized sample data. Bind each attachment to a reviewed same-patient parent (animal, consult or another explicitly supported type), source host/site/ID and observed version. Never fetch arbitrary source URLs or forward credentials across redirects. Stream within bounds, validate supported content, preserve exact original bytes in private Storage and record immutable SHA256 and source association. Reuse document access controls and reviewed source byte capture where the source contract truly matches; do not relabel an API attachment as a staff-obtained manual export. Partial uploads, lost responses and changed source bytes need durable recovery and cleanup. Verify disclosure/source binding in record releases and both delivery paths.
 
