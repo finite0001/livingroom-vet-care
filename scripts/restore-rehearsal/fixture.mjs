@@ -9,11 +9,15 @@ assert.ok(["create", "verify", "verify-upgrade"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
-assert.equal(url.port, mode !== "verify" ? "58321" : "59321");
-const project = readFileSync(
-  join(dirname(statusPath), "supabase/config.toml"),
-  "utf8",
-).match(/^project_id = "(lrv-restore-[a-f0-9]{10}-(?:source|destination))"/)[1];
+const projectConfig = readFileSync(join(dirname(statusPath), "supabase/config.toml"), "utf8");
+const apiPort = projectConfig.match(/^\[api\]\s*\nport = ([0-9]+)$/m)?.[1];
+assert.ok(apiPort && Number(apiPort) >= 1025 && Number(apiPort) <= 65532);
+assert.equal(url.protocol, "http:");
+assert.equal(url.username + url.password + url.search + url.hash, "");
+assert.equal(url.port, apiPort);
+if (mode !== "verify") assert.equal(apiPort, "58321");
+const project = projectConfig.match(/^project_id = "(lrv-restore-[a-f0-9]{10}-(?:source|destination))"/)?.[1];
+assert.ok(project?.endsWith(mode === "verify" ? "-destination" : "-source"));
 const sql = (query) =>
   execFileSync(
     "docker",

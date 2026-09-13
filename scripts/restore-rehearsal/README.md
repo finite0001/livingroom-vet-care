@@ -1,6 +1,6 @@
 # Synthetic local database and Storage restore rehearsal
 
-Requirements: Docker, the repository-pinned Supabase CLI (2.115.0), Node22+, Python3, and `npm ci --ignore-scripts` in this worktree. No hosted credentials are needed. Ports58320/58321/58322/58324 and59320/59321/59322/59324 must be unused.
+Requirements: Docker, the repository-pinned Supabase CLI (2.115.0), Node22+, Python3, and `npm ci --ignore-scripts` in this worktree. No hosted credentials are needed. Source ports58320/58321/58322/58324 must be unused. The default destination ports are59320/59321/59322/59324; use `--destination-api-port PORT` to select another unused group (PORT-1, PORT, PORT+1, PORT+3), including when resuming a retained backup. Existing services are never stopped to free ports.
 
 Run from this repository:
 
@@ -11,6 +11,8 @@ python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal
 The explicit flag is mandatory. The runner creates randomly named local projects and private temporary artifact directories. It never resets or backs up an existing practice/project. Source and destination use separate database and Storage volumes. All source migrations are replayed; the destination starts with only the platform baseline before restoring the full database archive, including Auth, Storage metadata, application rows, migration ledger, owners and grants. Physical Storage files are copied separately while writers are stopped.
 
 Synthetic fixtures include a confirmed local Auth identity/password, signed SOAP and immutable addendum, a linked private PDF original uploaded through the real Storage API, an issued invoice and accounting credit, and reasoned stock movements. Restored login, RLS, relationships, original IDs, original byte hashes, signed URL retrieval, denied public/anonymous access and immutable writes are checked. Read/denied-write checks must leave the captured clinical/audit/ledger snapshot unchanged. The complete physical file inventory must match before and after restoration.
+
+Prescription fixtures also retain patient/parent-scoped header and item page observations, unfinished scans, two immutable approved review versions, an unapproved prepared request and a schema8 export with selected/omitted item evidence. Their complete rows are compared after restoration. The fixture preserves all prior import rows and permits only explicitly attributed release audit additions to the original clinical/Auth/Storage baseline; every other baseline row must remain unchanged. It restores the prior staff roles and release policy before backup. This verifies saved state, not provider reconnection or fresh clinical approval after restoration.
 
 No Edge runtime, providers, SMTP delivery or scheduled workers are commissioned. Auth uses the local mail catcher; fixture users are confirmed via admin API without requesting email. The restored outbox is empty and pg_cron absent. These are no-sends-by-construction checks, not a claim of a hosted disabled-worker HTTP probe.
 
@@ -23,6 +25,8 @@ The fresh destination realtime schema is dropped before archive restoration beca
 Privileged immutability probes retain the database administrator role while setting the real active synthetic actor claims. They require SQLSTATE23514 and the exact signed-record/addendum/ledger message; an authentication or unrelated SQL failure cannot count as proof.
 
 ## Rehearse the observed hosted migration gaps locally
+
+Current limitation: the legacy gap mode retains a frozen historical migration inventory and rejects the current schema8 checkout. Its inventory must be reviewed and its populated upgrade rerun before claiming current upgrade coverage. A successful normal or resumed restore does not close that gate.
 
 ```sh
 python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-observed-hosted-gaps
