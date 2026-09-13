@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { createHash } from "node:crypto";
 import { AttachmentMetadataError, attachmentMetadataContract, parseAttachmentMetadataPage } from "../../supabase/functions/ezyvet-import/attachment-metadata.ts";
 
 const record = () => ({ id: "41", file_id: "80", record_type: "Animal", record_id: "12", active: "1", created_at: "1690000000", modified_at: "1690000001", mime_type: "application/pdf", name: "Résumé 🐈.pdf", primary_image: "0", notes: "Outside original; no interpretation", file_download_url: "https://synthetic.invalid/file?token=DO_NOT_EXPOSE" });
@@ -21,6 +22,9 @@ test("attachment metadata contract is bounded and preserves documented source sc
   assert.deepEqual(result.parent, { record_type: "Animal", record_id: "12" });
   const { file_download_url: _url, ...expected } = record();
   assert.deepEqual(result.observations[0].metadata, expected);
+  const expectedHash = (value: Record<string, unknown>) => createHash("sha256").update(JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)))).digest("hex");
+  assert.equal(result.observations[0].raw_record_sha256, expectedHash(record()));
+  assert.equal(result.observations[0].stable_metadata_sha256, expectedHash(expected));
   assert.equal(result.observations[0].file_sha256, null);
   for (const hash of [result.page_sha256, result.observations[0].raw_record_sha256, result.observations[0].stable_metadata_sha256]) assert.match(hash, /^[a-f0-9]{64}$/);
   assert.ok(!JSON.stringify(result).includes("DO_NOT_EXPOSE"));
@@ -128,4 +132,27 @@ test("smaller advertised effective size supports intermediate and final partial 
   assert.equal((await parseAttachmentMetadataPage(last, { animalId: 12, page: 2 })).complete, true);
   await rejects({ ...first, meta: { ...first.meta, items_page_size: 3 } });
   await rejects({ ...first, meta: { ...first.meta, items_page_size: 0 } });
+});
+test("serialized byte budget stops before traversing a later invalid field", async () => {
+  // Reuse a small string fixture: expansion is rejected during traversal, before z.
+  const chunk = "x".repeat(32768);
+  const unknown = { a: [Array(9).fill(chunk)], z: undefined };
+  await assert.rejects(parse(page([{ ...record(), unknown }])), error => {
+    assert.ok(error instanceof AttachmentMetadataError);
+    assert.equal(error.code, "ATTACHMENT_METADATA_TOO_LARGE");
+    return true;
+  });
+});
+test("record budget counts JSON punctuation, escaping and UTF-8 exactly once", async () => {
+  const base = { ...record(), unknown: { a: ["🐈", "\n", false, null, 1], pad: "" } };
+  const baselineBytes = Buffer.byteLength(JSON.stringify(base), "utf8");
+  base.unknown.pad = "x".repeat(attachmentMetadataContract.maxRecordBytes - baselineBytes);
+  assert.equal(Buffer.byteLength(JSON.stringify(base), "utf8"), attachmentMetadataContract.maxRecordBytes);
+  assert.equal((await parse(page([base]))).observations.length, 1);
+  base.unknown.pad += "x";
+  await assert.rejects(parse(page([base])), error => {
+    assert.ok(error instanceof AttachmentMetadataError);
+    assert.equal(error.code, "ATTACHMENT_METADATA_TOO_LARGE");
+    return true;
+  });
 });

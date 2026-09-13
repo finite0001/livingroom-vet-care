@@ -65,37 +65,52 @@ function validString(value: string): boolean {
   // Reject lone surrogates: UTF-8 replacement would otherwise collapse distinct inputs.
   return !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value);
 }
-/** Canonical JSON values only; no coercion, toJSON hooks or unknown object types. */
-function canonical(value: unknown, depth = 0, budget = { nodes: 0 }): string {
+interface CanonicalBudget { nodes: number; bytes: number; maxBytes: number }
+function charge(token: string, budget: CanonicalBudget): string {
+  budget.bytes += encoder.encode(token).byteLength;
+  if (budget.bytes > budget.maxBytes) return fail("ATTACHMENT_METADATA_TOO_LARGE");
+  return token;
+}
+/** Each serialized token is charged once before assembling a containing value. */
+function canonical(value: unknown, budget: CanonicalBudget, depth = 0): string {
   if (++budget.nodes > 10000 || depth > 12) return fail();
-  if (value === null || typeof value === "boolean") return JSON.stringify(value);
+  if (value === null || typeof value === "boolean") return charge(JSON.stringify(value), budget);
   if (typeof value === "string") {
     if (value.length > 32768 || !validString(value)) return fail();
-    return JSON.stringify(value);
+    return charge(JSON.stringify(value), budget);
   }
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return fail();
-    return JSON.stringify(value);
+    return charge(JSON.stringify(value), budget);
   }
   if (Array.isArray(value)) {
     if (value.length > 1000 || Object.getOwnPropertySymbols(value).length || Object.getOwnPropertyNames(value).length !== value.length + 1) return fail();
+    charge("[", budget);
     const parts: string[] = [];
     for (let i = 0; i < value.length; i++) {
+      if (i > 0) charge(",", budget);
       const descriptor = Object.getOwnPropertyDescriptor(value, String(i));
       if (!descriptor || !("value" in descriptor)) return fail();
-      parts.push(canonical(descriptor.value, depth + 1, budget));
+      parts.push(canonical(descriptor.value, budget, depth + 1));
     }
+    charge("]", budget);
     return `[${parts.join(",")}]`;
   }
   if (!object(value) || Object.getOwnPropertySymbols(value).length) return fail();
   const keys = Object.keys(value).sort();
   if (keys.length > 100 || Object.getOwnPropertyNames(value).length !== keys.length) return fail();
-  return `{${keys.map((key) => {
+  charge("{", budget);
+  const parts: string[] = [];
+  for (const key of keys) {
+    if (parts.length > 0) charge(",", budget);
     if (key.length > 256 || !validString(key)) return fail();
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (!descriptor || !("value" in descriptor)) return fail();
-    return `${JSON.stringify(key)}:${canonical(descriptor.value, depth + 1, budget)}`;
-  }).join(",")}}`;
+    const prefix = charge(`${JSON.stringify(key)}:`, budget);
+    parts.push(`${prefix}${canonical(descriptor.value, budget, depth + 1)}`);
+  }
+  charge("}", budget);
+  return `{${parts.join(",")}}`;
 }
 async function digest(text: string): Promise<string> {
   const bytes = await crypto.subtle.digest("SHA-256", encoder.encode(text));
@@ -108,9 +123,7 @@ function integer(value: unknown): number {
 }
 function id(value: unknown): string { return String(integer(value)); }
 function boundedCanonical(value: unknown, maxBytes: number): string {
-  const text = canonical(value);
-  if (encoder.encode(text).byteLength > maxBytes) return fail("ATTACHMENT_METADATA_TOO_LARGE");
-  return text;
+  return canonical(value, { nodes: 0, bytes: 0, maxBytes });
 }
 function project(raw: Record<string, unknown>, expectedAnimal: string): AttachmentMetadata {
   if (raw.record_type !== "Animal" || id(raw.record_id) !== expectedAnimal) return fail("ATTACHMENT_PARENT_MISMATCH");
@@ -155,9 +168,9 @@ export async function parseAttachmentMetadataPage(body: unknown, expected: Attac
     const rawText = boundedCanonical(raw, attachmentMetadataContract.maxRecordBytes);
     const metadata = project(raw, animalId);
     observations.push({ external_id: metadata.id, file_id: metadata.file_id, metadata,
-      raw_record_sha256: await digest(rawText), stable_metadata_sha256: await digest(canonical(metadata)), file_sha256: null });
+      raw_record_sha256: await digest(rawText), stable_metadata_sha256: await digest(boundedCanonical(metadata, attachmentMetadataContract.maxRecordBytes)), file_sha256: null });
   }
   const result = { contract_version: attachmentMetadataContract.version, parent: { record_type: "Animal" as const, record_id: animalId },
     page, complete: empty || page === totalPages, pagination, observations };
-  return { ...result, page_sha256: await digest(canonical(result)) };
+  return { ...result, page_sha256: await digest(boundedCanonical(result, attachmentMetadataContract.maxPageBytes)) };
 }
