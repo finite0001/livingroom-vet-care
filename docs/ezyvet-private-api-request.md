@@ -1,5 +1,7 @@
 # ezyVet API questions — owner-managed correspondence
 
+Update: existing credentials have now passed read-only OAuth and a contact read without a partner ID. Any partner-ID/authentication question in this earlier draft is resolved; Dr. Edler’s inquiry about two-way capabilities and the setup fee remains separate.
+
 Status: Dr. Susan Edler will send the questions to her ezyVet representative. Do not send this draft from Codex. No service, agreement or fee accepted.
 
 Subject: Clarification of existing API access and setup options

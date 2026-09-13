@@ -1,5 +1,7 @@
 # Existing Vet Connect Hub connection handoff
 
+Current status: existing GreenTree credentials successfully authenticated and completed a minimal read-only API request without a partner ID. Earlier missing-partner/private-registration assumptions below are historical and superseded by the live evidence section. No new registration is required to resolve this technical authentication issue.
+
 Owner direction, September 13, 2026: use the same ezyVet setup as Vet Connect Hub. The owner reports login credentials and previously confirmed account/API access are available. Do not request credentials in chat.
 
 ## Repository evidence
@@ -48,4 +50,12 @@ Prepared [the private API enablement inquiry](ezyvet-private-api-request.md), in
 
 ## Current direction — read-only premise, owner handles representative
 
-Dr. Susan Edler will send the revised API questions to her representative. Codex must not send the draft. The owner directs implementation to continue assuming read-only ezyVet access; Living Room Vet remains primary and no ezyVet write-back is required. The missing partner configuration and actual provider acceptance remain commissioning dependencies, not blockers for building the rest of the application. The question about two-way access and the $500 setup is exploratory and does not authorize a fee, new integration agreement or write access.
+Dr. Susan Edler will send the revised API questions to her representative. Codex must not send the draft. The owner directs implementation to continue assuming read-only ezyVet access; Living Room Vet remains primary and no ezyVet write-back is required. Clinical-resource sample acceptance remains a commissioning dependency. Basic read-only authentication is verified and does not require a partner ID. The question about two-way access and the $500 setup is exploratory and does not authorize a fee, new integration agreement or write access.
+
+## Verified correction — existing read-only access works
+
+After the owner questioned the new-registration assumption, a direct OAuth-only request using the exported existing clinic credentials and no partner_id returned HTTP 200. A follow-up bounded verification decoded the issued token locally, confirmed exactly `read-contact` and `read-animal` scopes and the exported site UID, then performed `GET /v1/contact?page=1&limit=1`, which returned HTTP 200 and one record. No source response content, token or credential was printed or retained; no records were imported or modified. The session-generated credential download was removed.
+
+This establishes working existing read access, not vaccination/prescription/attachment sample acceptance or permission for write-back. The importer’s mandatory partner-ID validation was a local implementation mistake: `EZYVET_PARTNER_ID` is now optional and omitted from OAuth requests when absent. Present values remain validated, and the site/client credentials, production-source gate and explicit read-resource allowlist are still required.
+
+Staging now has the verified production API origin, explicit production-source opt-in and `contact,animal` read-resource allowlist alongside the previously saved client/site secrets. `EZYVET_IMPORT_MODE` remains disabled/unset until the staff workflow is commissioned; configuring source access does not schedule imports. Dr. Edler can clarify two-way capabilities/terms with her representative separately; that inquiry is not a prerequisite for the demonstrated read-only authentication.

@@ -62,7 +62,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet partner configuration and live authentication, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet clinical-resource samples and migration acceptance, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
@@ -290,8 +290,12 @@ The owner authorized the recommended additional $10/month staging project. `livi
 
 The owner corrected the mail selection to Fastmail for private staff mailboxes and one Resend team for automated practice notices plus authentication/security mail. Postmark is removed; shared-team Auth/client webhook routing needs implementation and acceptance. Preparation is authorized; no mail purchase or second Resend team is authorized. Exact checkout prices remain pending. Clinical record/lab delivery remains required but is outside this initial transport commissioning scope. See the [selected mail plan](mail-commissioning-plan.md).
 
-The owner confirmed production ezyVet API credentials from Vet Connect Hub and authorized copying them into staging. Lovable could list only saved secret names. An owner-session ezyVet export subsequently supplied the client ID, client secret and site UID, now stored in staging. Partner configuration and live authentication remain pending.
+The owner confirmed production ezyVet API credentials from Vet Connect Hub and authorized copying them into staging. Lovable could list only saved secret names. An owner-session ezyVet export subsequently supplied the client ID, client secret and site UID, now stored in staging. Existing credentials subsequently passed OAuth and a bounded contact read without a partner ID; clinical resource acceptance remains pending.
 
 ## Owner direction — continue with read-only ezyVet imports
 
-Dr. Susan Edler owns the inquiry to her ezyVet representative. Build against read-only ezyVet access and keep Living Room Vet as the primary record system. Continue vaccination, prescription, attachment and reconciliation implementation independently of provider correspondence. Actual API authentication/sample acceptance remains pending; no write-back or additional service fee is authorized. Mail remains Fastmail + one Resend team, including authentication mail, with no Postmark.
+Dr. Susan Edler owns the inquiry to her ezyVet representative. Build against read-only ezyVet access and keep Living Room Vet as the primary record system. Continue vaccination, prescription, attachment and reconciliation implementation independently of provider correspondence. Basic API authentication is verified; clinical-resource sample acceptance remains pending; no write-back or additional service fee is authorized. Mail remains Fastmail + one Resend team, including authentication mail, with no Postmark.
+
+## Existing read-only API verified
+
+The source GreenTree credentials returned HTTP 200 for OAuth without a partner ID. Issued scope/site claims matched the requested read-contact/read-animal access and exported site; a bounded one-record contact GET returned HTTP 200. Nothing was imported or modified. The mandatory partner-ID gate was removed from the adapter; Dr. Edler’s separate inquiry about two-way access no longer blocks read-only connection work.

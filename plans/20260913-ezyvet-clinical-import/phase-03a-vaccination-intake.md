@@ -4,7 +4,7 @@ Priority: required next increment of Phase 3. Status: planned; no implementation
 
 ## Context and owner decision
 
-The owner instructed us to proceed on the assumption of read-only ezyVet access. Dr. Susan Edler will ask the ezyVet representative about entitlement, the existing registration and any additional capabilities. This plan needs no two-way API and writes nothing back to ezyVet. Production source activation and authorized sample validation remain pending representative clarification; implementation can proceed with synthetic fixtures.
+The owner instructed us to proceed on the assumption of read-only ezyVet access. Dr. Susan Edler will ask the ezyVet representative about entitlement, the existing registration and any additional capabilities. This plan needs no two-way API and writes nothing back to ezyVet. Existing credentials have now passed production OAuth and a bounded contact read without a partner ID. Vaccination source activation and authorized sample validation remain separate from this basic connection proof; implementation proceeds with synthetic fixtures.
 
 Living Room Vet remains the primary record system. This increment produces inspectable migration evidence only. It does not create local treatments, adopt vaccine due dates, issue certificates, decrement inventory, create charges or send reminders.
 
@@ -41,7 +41,7 @@ The consult must be a current validated scoped observation for that mapping, not
 
 ### 1. Freeze resource and request contracts
 
-Confirm documented `GET /v1/vaccination`, `read-vaccination`, maximum 10 and `consult_id` filter against current primary documentation. Preserve administration/next-date, product, quantity and outside author fields as source values; do not infer epoch units, dose units, clinical date meanings or certificate eligibility. Require valid source identity/reference shapes; unknown or null optional clinical values remain visible rather than receiving fabricated defaults.
+Confirm documented `GET /v1/vaccination`, `read-vaccination`, application page cap 10 and `consult_id` filter against current primary documentation. Preserve administration/next-date, product, quantity and outside author fields as source values; do not infer epoch units, dose units, clinical date meanings or certificate eligibility. Require valid source identity/reference shapes; unknown or null optional clinical values remain visible rather than receiving fabricated defaults.
 
 The browser request supplies run ID, resource, animal-link ID and the selected consult snapshot/hash/observed revision. It does not supply a trusted upstream consult ID. The claim RPC validates the selection and returns the server-derived consult external ID. Reject consult-selection fields on non-vaccination requests and require all of them for vaccination.
 
@@ -138,4 +138,4 @@ The primary risk is an apparently plausible patient association backed only by g
 
 Later Phase 3 work still requires reviewed product mapping, interpreted historical vaccinations/due dates, prescription history, authenticated attachments and whole-migration reconciliation. Those requirements are not completed by this slice. Any native clinical adoption and certificate eligibility requires its own reviewed contract and Dr. Edler's clinical approval.
 
-Unresolved external dependencies: representative confirmation of existing read-only access/partner configuration, securely commissioned production source, authorized vaccination samples including null/date/reference variations, and supported source export/cutover semantics. These do not prevent synthetic implementation, but remain prerequisites to live-source acceptance.
+Unresolved external dependencies: securely commissioned vaccination source access, authorized vaccination samples including null/date/reference variations, and supported source export/cutover semantics. These do not prevent synthetic implementation, but remain prerequisites to live-source acceptance.
