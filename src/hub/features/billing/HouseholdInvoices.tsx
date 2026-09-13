@@ -1,3 +1,4 @@
+import { PaymentCollectionPanel } from "../payments/PaymentCollectionPanel";
 import { InvoicePayments } from "../payments/InvoicePayments";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { useEffect, useRef, useState } from "react";
@@ -243,12 +244,26 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
+  const [collectionDirty, setCollectionDirty] = useState(false);
   useEffect(() => {
     onPending(
-      busy || Boolean(pending) || emailDirty || smsDirty || paymentDirty,
+      busy ||
+        Boolean(pending) ||
+        emailDirty ||
+        smsDirty ||
+        paymentDirty ||
+        collectionDirty,
     );
     return () => onPending(false);
-  }, [busy, pending, emailDirty, smsDirty, paymentDirty, onPending]);
+  }, [
+    busy,
+    pending,
+    emailDirty,
+    smsDirty,
+    paymentDirty,
+    collectionDirty,
+    onPending,
+  ]);
   const invoice = useQuery({
     queryKey: ["invoice", invoiceId, clientId],
     queryFn: async () => {
@@ -417,6 +432,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     emailDirty ||
     smsDirty ||
     paymentDirty ||
+    collectionDirty ||
     readFailed;
   return (
     <section
@@ -500,8 +516,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         </div>
       </dl>
       <p className="text-sm text-muted-foreground">
-        Net charges show billed services minus accounting credits. See the payment
-        section for confirmed payments and refunds.
+        Net charges show billed services minus accounting credits. See the
+        payment section for confirmed payments and refunds.
       </p>
       {record.status === "draft" && (
         <>
@@ -653,7 +669,12 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           clientId={clientId}
           canPrepare={record.status === "issued"}
           disabled={
-            busy || Boolean(pending) || smsDirty || paymentDirty || readFailed
+            busy ||
+            Boolean(pending) ||
+            smsDirty ||
+            paymentDirty ||
+            collectionDirty ||
+            readFailed
           }
           onDirtyChange={setEmailDirty}
         />
@@ -665,7 +686,12 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           clientId={clientId}
           canPrepare={record.status === "issued"}
           disabled={
-            busy || Boolean(pending) || emailDirty || paymentDirty || readFailed
+            busy ||
+            Boolean(pending) ||
+            emailDirty ||
+            paymentDirty ||
+            collectionDirty ||
+            readFailed
           }
           onDirtyChange={setSmsDirty}
         />
@@ -677,9 +703,30 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceTotalCents={record.total_cents}
           canPrepare={record.status === "issued"}
           disabled={
-            busy || Boolean(pending) || emailDirty || smsDirty || readFailed
+            busy ||
+            Boolean(pending) ||
+            emailDirty ||
+            smsDirty ||
+            collectionDirty ||
+            readFailed
           }
           onDirtyChange={setPaymentDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <PaymentCollectionPanel
+          invoiceId={invoiceId}
+          clientId={clientId}
+          canPrepare={record.status === "issued"}
+          disabled={
+            busy ||
+            Boolean(pending) ||
+            emailDirty ||
+            smsDirty ||
+            paymentDirty ||
+            readFailed
+          }
+          onDirtyChange={setCollectionDirty}
         />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}
