@@ -68,6 +68,8 @@ jobs:
         run: python3 supabase/tests/stripe_event_retry_concurrency.py --project-config supabase/config.toml
       - name: Verify concurrent lab report promotion and document guards
         run: python3 supabase/tests/lab_result_provenance_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent external record approval and correction guards
+        run: python3 supabase/tests/external_record_provenance_concurrency.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -111,5 +113,11 @@ jobs:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify signed inbound receipt and actual staff inbox workflow
         run: node --experimental-strip-types tests/inbound/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache external record HTTP dependencies
+        run: deno check --frozen tests/external-records/local-server.ts
+      - name: Verify actual external record HTTP and private file capture
+        run: node --experimental-strip-types tests/external-records/local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
