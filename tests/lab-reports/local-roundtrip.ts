@@ -1,4 +1,4 @@
-/** Actual local HTTP/Auth/SQL roundtrip with synthetic provider responses only. */
+/** Actual local HTTP/Auth/SQL/private Storage roundtrip with a synthetic report file. */
 import {execFileSync,spawn} from "node:child_process";
 import {readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync} from "node:fs";
 import {tmpdir} from "node:os";
