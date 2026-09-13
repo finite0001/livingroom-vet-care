@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,46)]
-    assert len(migration_files)==65 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,47)]
+    assert len(migration_files)==66 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -140,6 +140,11 @@ try:
         command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
         if args.rehearse_observed_hosted_gaps:
             assert ledger(source)==[p.name.split('_')[0] for p in initial_files]
+            # Reproduce the six direct ACL differences observed by read-only hosted
+            # comparison. Only this generated local source is altered; 4600 must
+            # normalize it to the canonical destination's explicit permissions.
+            sql(source, '''grant execute on function public.admin_set_staff_active(uuid,boolean),public.admin_update_staff_role(uuid,public.user_role) to anon,service_role;
+                grant execute on function public.clock_in(),public.clock_out(),public.get_consent_submission(text),public.review_ezyvet_snapshot(uuid,text,uuid,uuid,text) to service_role;''')
             inventory_sql=(root/'scripts/restore-rehearsal/routine-inventory.sql').read_text()
             (run/'initial-routine-inventory.json').write_text(sql(source,inventory_sql))
             for migration in missing_files: shutil.copy2(migration,source['path']/'supabase/migrations'/migration.name)
@@ -155,7 +160,7 @@ try:
             assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
-            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
+            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])

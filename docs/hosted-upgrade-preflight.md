@@ -58,7 +58,7 @@ Six effective execution-grant differences were found:
 | `review_ezyvet_snapshot(uuid,text,uuid,uuid,text)` | authenticated | service_role |
 | `get_consent_submission(text)` | anon, authenticated | service_role |
 
-The source migrations revoke PUBLIC but omit some direct-role revocations; this is consistent with grants inherited from environment-specific defaults when the functions were created. It does not establish who applied those defaults. None of the pending migrations through4500 corrects these grants. The first five functions retain internal active-staff/ADMIN and actor checks; consent lookup intentionally permits an unexpired bearer token anonymously. This comparison does not demonstrate an anonymous privilege escalation. An additive explicit-grant correction with regression evidence is being prepared; no hosted permission was changed.
+The source migrations revoke PUBLIC but omit some direct-role revocations; this is consistent with grants inherited from environment-specific defaults when the functions were created. It does not establish who applied those defaults. None of the pending migrations through4500 corrects these grants. The first five functions retain internal active-staff/ADMIN and actor checks; consent lookup intentionally permits an unexpired bearer token anonymously. This comparison does not demonstrate an anonymous privilege escalation. The additive migration4600 now provides an [explicit-grant correction with regression evidence](explicit-rpc-grants.md); no hosted permission was changed.
 
 The stronger local backfill/restore rehearsal passed in122.15s and verified cleanup, now also comparing function owners and trigger enable modes against canonical installation. Five comparison regression tests cover matching input and counterexamples involving body/authority/grant changes, disabled/replica-only triggers, changed history, missing routines and malformed inventories.
 
@@ -69,3 +69,7 @@ Protected evidence: `/var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-restor
 - Hosted inventory SHA256: `72d7b8bba46d7b34156aa464f77e0b05595db902c6f94c47b662bc5ff0aa27be`
 
 The inventory covers public application functions/triggers, not all RLS policies, table constraints, role memberships or managed schemas. Actual hosted correction, deployment ownership, recovery exports and final explicit dry run remain necessary before upgrade.
+
+## Correction batch rehearsal through4600
+
+Migration4600 and the complete pending15-migration batch passed an actual isolated51→66 rehearsal. The recreated starting catalog matched the observed hosted259-routine/168-trigger inventory, including direct grant drift. The final catalog matched canonical installation after correction, captured rows survived, private Storage/database restore passed and generated resources were removed. [Correction evidence](explicit-rpc-grants.md) records checksums and limits. This changes the reviewed source baseline to66 migrations; it does not change the hosted51 receipts or apply the correction there. Revalidate hosted state before preparing an explicit-target upgrade.

@@ -78,6 +78,8 @@ jobs:
         run: python3 supabase/tests/operations_visibility_concurrency.py --project-config supabase/config.toml
       - name: Verify reviewed outgoing retry receipt and stale-work concurrency
         run: python3 supabase/tests/outbox_retry_concurrency.py --project-config supabase/config.toml
+      - name: Reproduce and correct explicit RPC grant drift
+        run: python3 supabase/tests/explicit_rpc_grants_upgrade.py --project-config supabase/config.toml
       - uses: actions/setup-node@v4
         with:
           node-version: 22
