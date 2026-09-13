@@ -1,6 +1,6 @@
 # Reviewed payment reconciliation resolution
 
-Status: **planned, not implemented**. Defer implementation until the reviewed public payment endpoint increment is integrated. This document does not commission a provider or authorize a live financial action.
+Status: **matching-object database workflow implemented in migration 3500**. The original design below is followed by the implemented scope and evidence checkpoint. Service proof retrieval, administrator UI and inbox retry cycles remain pending. This document does not commission a provider or authorize a live financial action.
 
 ## Scope and authorization
 
