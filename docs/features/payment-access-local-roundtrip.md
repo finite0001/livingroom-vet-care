@@ -4,8 +4,9 @@ Run `node --experimental-strip-types tests/payment-access/local-roundtrip.ts` fr
 
 The harness obtains local credentials without printing them, creates a synthetic Auth user, signs in, and calls real staff/service PostgREST RPCs to create issued invoices, prepare/capture canonical SQL HMAC contexts, recover identical capabilities and attest review. A localhost Deno server exposes the production collection/status runtime for read-only checks. A second adapter uses the same production public handler and real database RPCs with deliberately synthetic provider responses for collection races. Deno runs with `--cached-only --allow-net=127.0.0.1`; provider credentials are empty and external Stripe requests are impossible from the server.
 
-Thirty checks passed against the existing local database, including the migration 3600 payment-token persistence boundary:
+Forty-one checks passed against the existing local database, including the migration 3600 payment-token persistence boundary:
 
+- Production staff preparation and recovery through real Auth/PostgREST, missing-auth denial, captured amount and microsecond-expiry conflict rejection, safe metadata, exact replay and explicit attestation before public access.
 - Exact role-separated HMAC reconstruction from canonical SQL capture and recovery.
 - Unreviewed denial, real runtime inspection/status, no attempt from inspection, both token-role denials, existing cross-grant denial and durable hash mismatch denial.
 - Synthetic provider normalization followed by an actual local payment-ledger insert, then an actual credited partial refund reflected by the production status runtime.

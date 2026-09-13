@@ -1,3 +1,4 @@
+import {paymentAccessStaffRuntime} from "../../supabase/functions/_shared/payment-access-staff-runtime.ts";
 /** Local-only HTTP adapter: real Auth/PostgREST, explicitly synthetic provider responses. */
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2.110.3";
 import {createPaymentAccessHandler} from "../../supabase/functions/_shared/payment-access-http.ts";
@@ -42,8 +43,11 @@ function handler(mode:string,role:"collection"|"status"){
 const handlers=new Map<string,ReturnType<typeof handler>>();
 for(const mode of ["paid","lost","revoked","open"])for(const role of ["collection","status"] as const)handlers.set(`/${mode}/${role}`,handler(mode,role));
 const realCollection=paymentAccessRuntime("collection"),realStatus=paymentAccessRuntime("status");
+const staffPrepare=paymentAccessStaffRuntime("prepare"),staffRecover=paymentAccessStaffRuntime("recover");
 Deno.serve({hostname:"127.0.0.1",port:56471},request=>{
  const path=new URL(request.url).pathname;
+ if(path==="/staff/prepare")return staffPrepare(request);
+ if(path==="/staff/recover")return staffRecover(request);
  if(path==="/health")return new Response("ready");
  if(path==="/real/collection")return realCollection(request);
  if(path==="/real/status")return realStatus(request);
