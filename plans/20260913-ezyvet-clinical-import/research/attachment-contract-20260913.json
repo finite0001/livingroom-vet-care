@@ -1,0 +1,32 @@
+{
+  "sources": [
+    {
+      "url": "https://developers.ezyvet.com/",
+      "sha256": "a679551e4d8a5fa300e7a20f8732ca3e52c3d319a154f6e501a9bf30c2a5608c"
+    },
+    {
+      "url": "https://developers.ezyvet.com/ezyvet-api.postman_collection.json",
+      "sha256": "e8c07d4183dd1bb7c0dd7025397f7a95686ee4264057fda889b50ab5d8cb5abe"
+    }
+  ],
+  "verified_public_contract": {
+    "list_method": "GET",
+    "list_path": "/v1/attachment",
+    "read_scope": "read-attachment",
+    "parent_filters": [
+      "record_type",
+      "record_id"
+    ],
+    "download_method": "GET",
+    "download_path": "/v1/attachment/download/:id",
+    "download_id": "attachment ID",
+    "download_response_description": "octet-stream",
+    "download_auth": "inherited collection authentication"
+  },
+  "practice_requests": 0,
+  "practice_sample_acceptance": false,
+  "limitations": [
+    "Public contract does not establish actual site entitlement or file behavior.",
+    "Redirects, size limits, MIME consistency and metadata/file revision consistency require issued-site acceptance."
+  ]
+}

@@ -16,6 +16,8 @@ Implement the documented prescription and prescription-item read contracts, appr
 
 ## Source attachments
 
+The verified public transport contract, source-binding design and implementation sequence are in [Phase 3d — source API attachments](phase-03d-api-attachments.md). Implementation and issued-site samples remain pending.
+
 Verify the official download endpoint, auth, redirects, maximum size and content/MIME behavior against authorized sample data. Bind each attachment to a reviewed same-patient parent (animal, consult or another explicitly supported type), source host/site/ID and observed version. Never fetch arbitrary source URLs or forward credentials across redirects. Stream within bounds, validate supported content, preserve exact original bytes in private Storage and record immutable SHA256 and source association. Reuse document access controls and reviewed source byte capture where the source contract truly matches; do not relabel an API attachment as a staff-obtained manual export. Partial uploads, lost responses and changed source bytes need durable recovery and cleanup. Verify disclosure/source binding in record releases and both delivery paths.
 
 ## Migration orchestration and reconciliation
