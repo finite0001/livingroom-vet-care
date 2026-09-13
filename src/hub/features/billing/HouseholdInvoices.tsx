@@ -1,3 +1,4 @@
+import { ReconciliationPanel } from "../payments/ReconciliationPanel";
 import { PaymentCollectionPanel } from "../payments/PaymentCollectionPanel";
 import { InvoicePayments } from "../payments/InvoicePayments";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
@@ -245,6 +246,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [smsDirty, setSmsDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
   const [collectionDirty, setCollectionDirty] = useState(false);
+  const [reconciliationDirty, setReconciliationDirty] = useState(false);
   useEffect(() => {
     onPending(
       busy ||
@@ -252,7 +254,8 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         emailDirty ||
         smsDirty ||
         paymentDirty ||
-        collectionDirty,
+        collectionDirty ||
+        reconciliationDirty,
     );
     return () => onPending(false);
   }, [
@@ -262,6 +265,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     smsDirty,
     paymentDirty,
     collectionDirty,
+    reconciliationDirty,
     onPending,
   ]);
   const invoice = useQuery({
@@ -433,6 +437,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     smsDirty ||
     paymentDirty ||
     collectionDirty ||
+    reconciliationDirty ||
     readFailed;
   return (
     <section
@@ -674,6 +679,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             smsDirty ||
             paymentDirty ||
             collectionDirty ||
+            reconciliationDirty ||
             readFailed
           }
           onDirtyChange={setEmailDirty}
@@ -691,6 +697,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             paymentDirty ||
             collectionDirty ||
+            reconciliationDirty ||
             readFailed
           }
           onDirtyChange={setSmsDirty}
@@ -708,6 +715,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             smsDirty ||
             collectionDirty ||
+            reconciliationDirty ||
             readFailed
           }
           onDirtyChange={setPaymentDirty}
@@ -724,9 +732,26 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             smsDirty ||
             paymentDirty ||
+            reconciliationDirty ||
             readFailed
           }
           onDirtyChange={setCollectionDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <ReconciliationPanel
+          invoiceId={invoiceId}
+          clientId={clientId}
+          disabled={
+            busy ||
+            Boolean(pending) ||
+            emailDirty ||
+            smsDirty ||
+            paymentDirty ||
+            collectionDirty ||
+            readFailed
+          }
+          onDirtyChange={setReconciliationDirty}
         />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}
