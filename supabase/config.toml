@@ -27,3 +27,10 @@ verify_jwt = true
 
 [functions.prepare-invoice-email]
 verify_jwt = true
+
+[functions.prepare-document-link]
+verify_jwt = true
+[functions.recover-document-link]
+verify_jwt = true
+[functions.retrieve-document-link]
+verify_jwt = false
