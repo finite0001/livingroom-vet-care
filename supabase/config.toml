@@ -34,3 +34,12 @@ verify_jwt = true
 verify_jwt = true
 [functions.retrieve-document-link]
 verify_jwt = false
+
+[functions.invoice-checkout]
+verify_jwt = true
+[functions.stripe-webhook]
+verify_jwt = false
+[functions.process-stripe-events]
+verify_jwt = false
+[functions.invoice-refund]
+verify_jwt = true
