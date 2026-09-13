@@ -42,3 +42,5 @@ python3 supabase/tests/payment_collection_concurrency.py
 ```
 
 The rollback SQL suite covers authorization, review, recovery, capability separation, versioned parameters, renewal, scoped cash/status, revocation, partial refund, deadline limits and active-originator checks. The concurrency runner uses eight actual simultaneous activation/renewal calls and observes PostgreSQL lock waiters in both credit/activation orderings and payment/activation races. It cleans only its random synthetic fixtures and owned sessions, preserving existing containers and database state. No provider calls, hosted changes, email or SMS occur. Provider acceptance and end-to-end client/delivery verification remain separate requirements.
+
+CI runs the same concurrency suite with `--project-config supabase/config.toml`, deriving its isolated database container from the checked-out project ID. Local invocation without that option retains the existing foundation container and never starts or resets it.

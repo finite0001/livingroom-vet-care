@@ -1,11 +1,20 @@
 """Actual local PostgreSQL contention; synthetic fixtures only, never provider calls."""
+import argparse
+from pathlib import Path
 import concurrent.futures
 import json
 import subprocess
 import time
 import uuid
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
+args = parser.parse_args()
 CONTAINER = 'supabase_db_livingroom-vet-foundation'
+if args.project_config:
+    import tomllib
+    with args.project_config.open('rb') as config_file:
+        CONTAINER = 'supabase_db_' + tomllib.load(config_file)['project_id']
 COMMAND = ['docker', 'exec', '-i', CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1']
 
 def sql(query, fail=True):
