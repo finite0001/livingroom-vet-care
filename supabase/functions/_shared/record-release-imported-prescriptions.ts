@@ -2,7 +2,7 @@ import type { ReleaseSnapshot } from "./record-release-renderer.ts";
 import {
   reconcilePrescriptionItems,
   type PrescriptionItemReconciliation,
-} from "../ezyvet-import/prescription-reconciliation.ts";
+} from "./prescription-reconciliation.ts";
 export interface PrescriptionObservation {
   snapshot_id: string;
   payload_hash: string;
