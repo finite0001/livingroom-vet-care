@@ -23,6 +23,12 @@ select public.add_invoice_service(gen_random_uuid(),(select id from fx where k='
 select public.issue_billing_invoice((select id from fx where k='invoice'),(select version from public.billing_invoices where id=(select id from fx where k='invoice')));
 insert into snapshots select 'before',public.read_invoice_payment_state((select id from fx where k='invoice'),(select id from fx where k='client'));
 
+insert into fx values('grant',gen_random_uuid());
+select public.prepare_payment_collection((select id from fx where k='grant'),(select id from fx where k='invoice'),(select id from fx where k='client'),(select v->>'source_hash' from snapshots where k='before'),10000,now()+interval '6 days');
+set local role service_role;
+insert into snapshots select 'grant_capture',public.capture_payment_collection((select id from fx where k='grant'),'73500000-0000-4000-8000-000000000001','https://thelivingroom.vet','local-v1',repeat('a',64),repeat('b',64));
+set local role authenticated;
+select public.attest_payment_collection((select id from fx where k='grant'),(select v#>>'{capture,context_hash}' from snapshots where k='grant_capture'),true);
 select public.prepare_invoice_checkout((select id from fx where k='attempt'),(select id from fx where k='invoice'),(select id from fx where k='client'),(select v->>'source_hash' from snapshots where k='before'),10000,'acct_test',false,'https://thelivingroom.vet/payment/return','https://thelivingroom.vet/payment/cancel');
 set local role service_role;
 select public.apply_checkout_evidence('evt_reconopen',(select id from fx where k='attempt'),'acct_test',false,'session_open','cs_test_recon',null,10000,'usd',(select v->>'source_hash' from snapshots where k='before'));
@@ -66,12 +72,23 @@ declare t jsonb;c uuid:=gen_random_uuid();proof jsonb;cap jsonb;begin
 end $$;
 select lives_ok($$select pg_temp.resolve_known('session_expired')$$,'Verified expiration resolves recurrence');
 select is(public.checkout_state_internal((select id from fx where k='attempt')),'expired','Authoritative expiration releases reservation');
+set local role service_role;
+select is(public.inspect_payment_collection((select id from fx where k='grant'),repeat('a',64),'https://thelivingroom.vet','local-v1')->>'state','ready','Public inspection ignores resolved observations after verified expiration');
+reset role;
+select is((select count(*) from public.invoice_checkout_attempts where invoice_id=(select id from fx where k='invoice')),1::bigint,'Public inspection creates no new attempt');
+
 select ok(not public.payment_invoice_has_observations((select id from fx where k='invoice')),'Resolved history no longer triggers invoice observation guard');
 select is(public.read_invoice_payment_state((select id from fx where k='invoice'),(select id from fx where k='client'))#>>'{reconciliation_observations,0,resolved}','true','Staff history exposes resolved flag');
 select public.record_payment_reconciliation('checkout',(select id from fx where k='attempt'),'provider_reconciliation_required');
+set local role service_role;
+select throws_ok($$select public.inspect_payment_collection((select id from fx where k='grant'),repeat('a',64),'https://thelivingroom.vet','local-v1')$$,'42501',null,'Public inspection retains new unresolved observation block');
+reset role;
+
+select throws_ok($$select pg_temp.resolve_known('session_open')$$,'23514',null,'Fresh open proof cannot override historical authoritative expiration');
 select lives_ok($$select pg_temp.resolve_known('payment_succeeded','pi_recon')$$,'Matching payment resolves and applies cash atomically');
 select is((select count(*) from public.invoice_payments where invoice_id=(select id from fx where k='invoice')),1::bigint,'One cash payment exists');
 select public.record_payment_reconciliation('checkout',(select id from fx where k='attempt'),'provider_reconciliation_required');
+select throws_ok($$select pg_temp.resolve_known('session_expired')$$,'23514',null,'Fresh expiration cannot resolve a contradiction with settled payment');
 select lives_ok($$select pg_temp.resolve_known('payment_succeeded','pi_recon')$$,'Later matching review cannot duplicate payment');
 select is((select count(*) from public.invoice_payments where invoice_id=(select id from fx where k='invoice')),1::bigint,'Payment remains counted once');
 select public.credit_billing_invoice(gen_random_uuid(),(select id from fx where k='invoice'),3000,'Adjustment');
@@ -92,6 +109,9 @@ select public.record_payment_reconciliation('refund',(select id from fx where k=
 select lives_ok($$select pg_temp.resolve_refund('succeeded')$$,'Matching successful refund applies cash');
 select is(public.refund_state_internal((select id from fx where k='refund')),'succeeded','Refund derives success after observation resolved');
 select is((select count(*) from public.invoice_refunds where invoice_id=(select id from fx where k='invoice')),1::bigint,'Refund posted exactly once');
+select public.record_payment_reconciliation('refund',(select id from fx where k='refund'),'provider_object_unavailable');
+select throws_ok($$select pg_temp.resolve_refund('pending')$$,'23514',null,'Pending proof cannot resolve contradiction with settled refund');
+select lives_ok($$select pg_temp.resolve_refund('succeeded')$$,'Matching settled refund review clears observation without duplicate cash');
 insert into fx values('failed-refund',gen_random_uuid());
 select public.prepare_invoice_refund((select id from fx where k='failed-refund'),(select id from fx where k='invoice'),(select id from fx where k='payment'),1000,'Adjustment');
 select public.apply_refund_evidence('evt_reconfailed',(select id from fx where k='failed-refund'),'acct_test',false,'re_failed','pi_recon',1000,'usd','failed');

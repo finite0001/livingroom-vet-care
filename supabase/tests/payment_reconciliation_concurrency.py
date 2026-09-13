@@ -113,6 +113,39 @@ try:
             contended(complete,complete,lambda code,out,err:code==0)
             check(sql(f"select count(*) from public.invoice_payment_evidence where event_id='reconcile:{case}';").stdout.strip()=='1','Concurrent completion applies evidence once')
 
+    for provider_first in [True, False]:
+        invoice,attempt,case,refund=[str(uuid.uuid4()) for _ in range(4)]
+        ids.extend([invoice,attempt,case,refund])
+        session,payment,provider_refund=['cs_test_'+uuid.uuid4().hex,'pi_'+uuid.uuid4().hex,'re_'+uuid.uuid4().hex]
+        sql(f"""begin;{staff}
+        select public.create_billing_invoice('{invoice}','{client}');
+        select public.add_invoice_service(gen_random_uuid(),'{invoice}',null,'{product}',1);
+        select public.issue_billing_invoice('{invoice}',(select version from public.billing_invoices where id='{invoice}'));
+        select public.prepare_invoice_checkout('{attempt}','{invoice}','{client}',public.read_invoice_payment_state('{invoice}','{client}')->>'source_hash',10000,'{account}',false,'{origin}/payment/return','{origin}/payment/cancel');
+        reset role;
+        select public.apply_checkout_evidence('evt_{uuid.uuid4().hex}','{attempt}','{account}',false,'payment_succeeded','{session}','{payment}',10000,'usd',(select source_hash from public.invoice_checkout_attempts where id='{attempt}'));
+        select public.credit_billing_invoice(gen_random_uuid(),'{invoice}',3000,'Synthetic adjustment');
+        select public.prepare_invoice_refund('{refund}','{invoice}',(select id from public.invoice_payments where invoice_id='{invoice}'),2000,'Synthetic refund');
+        select public.apply_refund_evidence('evt_{uuid.uuid4().hex}','{refund}','{account}',false,'{provider_refund}','{payment}',2000,'usd','pending');
+        select public.record_payment_reconciliation('refund','{refund}','provider_object_unavailable');
+        select public.prepare_payment_reconciliation('{case}','{invoice}','refund','{refund}','{provider_refund}',t->'blocker_refs',t->>'snapshot_hash') from (select public.preview_payment_reconciliation('{invoice}','refund','{refund}','{provider_refund}') t) q;
+        select public.capture_payment_reconciliation('{case}','{actor}',jsonb_build_object('family','refund','request_id','{refund}','object_id','{provider_refund}','account_id','{account}','livemode',false,'amount_cents','2000','currency','usd','provider_observed_at',clock_timestamp()::text,'status','succeeded','provider_payment_id','{payment}'));
+        commit;""")
+        capture=json.loads(sql(f"select public.read_payment_reconciliation('{case}') from (select set_config('request.jwt.claims', '{json.dumps({'sub': actor, 'role': 'authenticated'})}',false)) q;").stdout.strip())
+        complete=staff+f"select public.complete_payment_reconciliation('{case}','{capture['capture']['proof_hash']}','{capture['case']['snapshot_hash']}',true);"
+        settle=f"select public.apply_refund_evidence('evt_{uuid.uuid4().hex}','{refund}','{account}',false,'{provider_refund}','{payment}',2000,'usd','succeeded');"
+        if provider_first:
+            contended(settle,complete,lambda code,out,err:code!=0 and 'Reconciliation facts changed' in err)
+        else:
+            contended(complete,settle,lambda code,out,err:code==0)
+        check(sql(f"select count(*) from public.invoice_refunds where request_id='{refund}';").stdout.strip()=='1','Concurrent verified settlement and resolution post refund once')
+        balance=json.loads(sql(f"select public.payment_balance_internal('{invoice}');").stdout.strip())
+        check(balance['net_cash_cents']=='8000','Exactly one refund reduces net cash')
+        check(balance['pending_refund_cents']=='0','Settled refund never retains duplicate pending capacity')
+        check(balance['refundable_cents']=='1000','Remaining refundable capacity is exact')
+        check(sql(f"select count(*) from public.payment_reconciliation_resolutions where case_id='{case}';").stdout.strip()==('0' if provider_first else '1'),'Only a current reviewed snapshot resolves its blockers')
+        check(sql(f"select public.refund_state_internal('{refund}');").stdout.strip()==('reconciliation' if provider_first else 'succeeded'),'Stale review retains observation even though cash settled')
+
 finally:
     if owned_sessions:
         names = ','.join(quote(name) for name in owned_sessions)
