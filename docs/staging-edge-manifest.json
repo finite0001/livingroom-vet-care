@@ -4,10 +4,11 @@
   "functions": [
     {
       "name": "dispatch-outbox",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "4602e8926e06dcc63bd59dfedd9806aef8ad47331e820f95ee1f233753e6b9cd"
+      "bundle_sha256": "334eb2db07abc54a34eca84d5729e6cbad37bec5450c058efb4e00817a6c7cfa",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "enqueue-message",
@@ -54,10 +55,11 @@
     },
     {
       "name": "prepare-document-link",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": true,
-      "bundle_sha256": "9e792c43ca35756abb4909763e7270919d083303d1be19acb9f7915adae435fc"
+      "bundle_sha256": "b1e511d14b8dc80899b5b81c6b5ec18b0cc7c66cca6e8a242e3ce044df68387c",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "prepare-external-record",
@@ -68,10 +70,11 @@
     },
     {
       "name": "prepare-invoice-email",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": true,
-      "bundle_sha256": "171144a4475a1527659295210c252eaa39d603cbee952014afe9cbef9cb4e765"
+      "bundle_sha256": "6e2130cbe6c3050feed2841d8aa8c6259900d238333b6d4bff3070c579f63d9a",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "prepare-lab-report",
@@ -89,17 +92,19 @@
     },
     {
       "name": "prepare-payment-delivery",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": true,
-      "bundle_sha256": "d6ceca8c29c22fc15f1193b825be8e391999047ae184158a4cbd8f1f780b704d"
+      "bundle_sha256": "41bc8410c8ab83a1abe132cf6a182f9cf480d6cd89427d1391f24a7fa2a468f1",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "prepare-release-email",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": true,
-      "bundle_sha256": "c6a16f99ecb2eb069118ee77cc7a9275f657f4d66bfd3cff6c69d9de0d0f7eb5"
+      "bundle_sha256": "66afbb397d7164eb744862ae40c4614c00ace671d3fea71f0e896792d1276549",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "process-inbound",
@@ -131,10 +136,11 @@
     },
     {
       "name": "recover-document-link",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": true,
-      "bundle_sha256": "49c8c661b39ac499b87152d9589d45506d9541a5735abfca1def58e47688b9e8"
+      "bundle_sha256": "2e4b8b1601518f4bd71338cb71e327b8df42532bdf5da265a27a51c4691a4528",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "recover-payment-collection",
@@ -145,17 +151,19 @@
     },
     {
       "name": "resend-webhook",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "435980c061ec3ab677cc4f9aecf5b6f4444bb738abf4387dc985788adad7a076"
+      "bundle_sha256": "01d8d33160a41a5f5a796c5fa464f9d2bc9e4706313750775fc644a260d03614",
+      "source_revision": "0b7dc592f62efdeec3a18f3fb187ba9058dbf4ca"
     },
     {
       "name": "retrieve-document-link",
-      "version": 2,
+      "version": 3,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "8e92ce582793d4b51333b1f091f22cc3dda3de85e2141bac5ecd15ef80c07646"
+      "bundle_sha256": "278804c08f5ac8f3367e5f1181c395652d5f468fc54ce1e062b824c12d837b30",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
     },
     {
       "name": "send-email",

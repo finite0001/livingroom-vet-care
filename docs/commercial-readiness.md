@@ -1,5 +1,9 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — reviewed vaccination software deployed to staging
+
+PR112 passed combined CI at73abb6a and is merged into the release integration branch. [Staging deployment evidence](reviewed-vaccination-staging.md) records75 migrations, seven matching version3 export functions, selected hosted authorization checks and the refreshed protected frontend. No clinical approval, staff login, provider send or public cutover is claimed. The administrator mailbox still needs creation; Fastmail signup is with the owner for private password entry and terms acceptance.
+
 ## September 13 — shared-team Auth callback separation implemented
 
 [Reserved-sender callback separation](auth-mail-webhook-separation.md) keeps signed Auth delivery statuses out of the client ledger while preserving unknown-client retries. All28 inbound tests and all three PR114 CI jobs pass. Staging webhook version3 matches the tested source; no Resend secrets are installed and the unconfigured endpoint returns503. No mailbox creation, Auth SMTP configuration or sending is claimed. The owner has supplied the first administrator's mailbox; authoritative root DNS still has no MX record, so actual private-mail delivery remains unverified.
