@@ -1,4 +1,17 @@
-# Hosted upgrade preflight after lab provenance
+# Hosted upgrade preflight — current history differs from earlier baseline
+
+## Fresh read-only result at `8117a72`
+
+The explicit-target dry run now exits with `LegacyDbPushMissingRemoteError`. Remote history contains51 migrations: the original47 plus payment3000, Stripe inbox3100, reconciliation observations3300 and payment collection3400. Local document migrations2800,2900 and3200 are absent ahead of the latest remote receipt;3500–4300 are also not recorded remotely.
+
+A separate direct catalog query confirmed51 receipts. `document_link_outbox_links` and `read_document_link_history(text,uuid)` are absent, so at least these gaps are actual missing objects, not merely missing history labels. Exact counts still found zero Auth users, Storage objects, clients and pets; this does not prove every application table is empty.
+
+No deployment or repair was performed. The CLI's suggested `--include-all` flag is not itself evidence that backfilling is safe. The owner has been asked whether another session is deploying; authorship and the reason for the partial payment upgrade are unconfirmed. Coordinate the single deployment owner, compare applied definitions to their reviewed source, snapshot the current state and review interleaved migration dependencies before a new explicit dry run or application. Do not reset the database, mark absent migrations applied, or replay applied payment migrations to force history alignment.
+
+The earlier successful fourteen-migration preflight below is historical and no longer describes the current pending set. Existing frontend configuration and preview safeguards remain unchanged.
+
+## Earlier preflight after lab provenance
+
 
 This is a read-only preflight against dedicated project `mgadheotkdnrsatfivjy`, using repository checkpoint `7c5def9`. It does not record a deployment or authorize public cutover.
 
