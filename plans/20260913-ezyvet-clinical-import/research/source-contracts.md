@@ -14,8 +14,8 @@ Reviewed2026-09-13 against the public [ezyVet API documentation](https://develop
 
 ## Repository findings
 
-- `supabase/functions/ezyvet-import/adapter.ts` has resource-specific contracts only for animal and healthstatus. All other resources currently request50 records. `fetchPage` enforces a source patient only for healthstatus.
-- `handler.ts` accepts `animal_link_id` only for healthstatus; SQL migration2300 binds its run to an immutable approved mapping and independently checks stored page identity. Extend this pattern for consult/history; do not bypass the existing generic claim protections.
+- `supabase/functions/ezyvet-import/adapter.ts` has resource-specific contracts for animal, healthstatus, consult and history. Consult/history use limit10 and enforce patient-scoped ingestion; vaccination remains generic limit50 until the dedicated consult-scoped intake slice.
+- `handler.ts` accepts `animal_link_id` for healthstatus and consult/history. Migration2300 protects weight imports and migration4900 supplies patient-scoped clinical runs. Vaccination requires a distinct consult-bound context; do not send an animal_id filter to an endpoint whose documented parent is consult_id.
 - Generic snapshots and `ezyvet_identity_heads` deduplicate by source host/site/resource/ID and payload hash. Source reversion can reuse a snapshot while advancing its head version. Approval must compare both snapshot hash and observed head version.
 - `src/hub/features/clinical/PatientProblems.tsx` uses native create/edit without durable import preparation. The new import needs stable operation IDs, immutable approvals and independent provenance rather than retrying ordinary null-ID creation.
 - `ClinicalWorkspace.tsx` signs with the current local actor/time. Imported narratives require their own attributed representation.
