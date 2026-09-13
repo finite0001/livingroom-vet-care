@@ -16,14 +16,11 @@ import {
   sourceLabels,
   type SourceKind,
   type ReleaseConfirmArgs,
+  type ReleaseSelection,
+  type ReleaseCandidate,
   type ReleasePreviewArgs,
 } from "./api";
-import type {
-  ReleasePreview,
-  ReleaseSelection,
-  ReleaseBundle,
-  ReleaseArtifact,
-} from "./print";
+import type { ReleasePreview, ReleaseBundle, ReleaseArtifact } from "./print";
 interface PatientRecordReleasesProps {
   petId: string;
   onDirtyChange?: (dirty: boolean) => void;
@@ -52,6 +49,9 @@ export function PatientRecordReleases({
   const [smsDirty, setSmsDirty] = useState(false);
   const [selection, setSelection] = useState<ReleaseSelection>({});
   const [allSelectionNotice, setAllSelectionNotice] = useState("");
+  const [knownSources, setKnownSources] = useState<
+    Partial<Record<SourceKind, Record<string, ReleaseCandidate>>>
+  >({});
   const [channel, setChannel] = useState<"EMAIL" | "SMS">("EMAIL");
   const [sourcePage, setSourcePage] = useState(0);
   const [historyPage, setHistoryPage] = useState(0);
@@ -96,10 +96,10 @@ export function PatientRecordReleases({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates", petId, sourcePage],
+    queryKey: ["release-candidates-v5", petId, sourcePage],
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources",
+        "list_record_release_sources_v5",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -110,14 +110,40 @@ export function PatientRecordReleases({
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
+        typeof data.policy_v5_accepted !== "boolean" ||
+        !data.has_more ||
+        !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
           (kind) =>
             Array.isArray(data[kind]) &&
+            data[kind].length <= 100 &&
             data[kind].every(
               (item) =>
                 item &&
                 typeof item.id === "string" &&
-                typeof item.label === "string",
+                typeof item.label === "string" &&
+                ((kind !== "lab_report_ids" &&
+                  kind !== "external_record_ids") ||
+                  (typeof item.required_document_id === "string" &&
+                    Number.isSafeInteger(item.required_document_version) &&
+                    item.required_document_version! > 0 &&
+                    (kind === "lab_report_ids"
+                      ? ["original", "corrected"]
+                      : ["original", "replacement"]
+                    ).includes(item.kind || "") &&
+                    typeof item.historical === "boolean" &&
+                    typeof item.source_label === "string" &&
+                    Number.isSafeInteger(item.acknowledgment_count) &&
+                    item.acknowledgment_count! >= 0)) &&
+                (kind !== "document_ids" ||
+                  (Array.isArray(item.required_lab_report_ids) &&
+                    item.required_lab_report_ids.every(
+                      (id) => typeof id === "string",
+                    ) &&
+                    Array.isArray(item.required_external_record_ids) &&
+                    item.required_external_record_ids.every(
+                      (id) => typeof id === "string",
+                    ))),
             ),
         )
       ) {
@@ -128,6 +154,59 @@ export function PatientRecordReleases({
       return data;
     },
   });
+  useEffect(() => {
+    if (!candidates.data) return;
+    setKnownSources((previous) => {
+      const next = { ...previous };
+      for (const kind of kinds)
+        next[kind] = {
+          ...previous[kind],
+          ...Object.fromEntries(
+            candidates.data![kind].map((item) => [item.id, item]),
+          ),
+        };
+      return next;
+    });
+  }, [candidates.data]);
+  const dependencyWarnings: string[] = [];
+  for (const kind of ["lab_report_ids", "external_record_ids"] as const) {
+    for (const id of selection[kind] || []) {
+      const source = knownSources[kind]?.[id];
+      if (
+        source?.required_document_id &&
+        !selection.document_ids?.includes(source.required_document_id)
+      )
+        dependencyWarnings.push(
+          `${source.label}: also select its matching original document, version ${source.required_document_version}.`,
+        );
+    }
+  }
+  for (const original of Object.values(knownSources.document_ids || {})) {
+    if (
+      !selection.document_ids?.includes(original.id) &&
+      (original.required_lab_report_ids?.some((id) =>
+        selection.lab_report_ids?.includes(id),
+      ) ||
+        original.required_external_record_ids?.some((id) =>
+          selection.external_record_ids?.includes(id),
+        ))
+    )
+      dependencyWarnings.push(
+        `${original.label}: keep this matching original selected with its approved provenance, or remove both.`,
+      );
+  }
+  for (const id of selection.document_ids || []) {
+    const original = knownSources.document_ids?.[id];
+    for (const [kind, required] of [
+      ["lab_report_ids", original?.required_lab_report_ids],
+      ["external_record_ids", original?.required_external_record_ids],
+    ] as const) {
+      if (required?.some((sourceId) => !selection[kind]?.includes(sourceId)))
+        dependencyWarnings.push(
+          `${original!.label}: also select every associated approved report or imported record version.`,
+        );
+    }
+  }
   const history = useQuery({
     queryKey: ["patient-record-releases", petId, historyPage],
     queryFn: async () => {
@@ -196,13 +275,22 @@ export function PatientRecordReleases({
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources",
+        "select_all_record_release_sources_v5",
         { p_pet_id: petId },
       );
       if (error) throw error;
-      if (!data)
+      if (
+        !data ||
+        !data.selection ||
+        !kinds.every(
+          (kind) =>
+            Array.isArray(data.selection[kind]) &&
+            data.selection[kind]!.length <= 100 &&
+            data.selection[kind]!.every((id) => typeof id === "string"),
+        )
+      )
         throw new Error(
-          "No all-record selection returned; selections were not changed.",
+          "All-record selection is incomplete or exceeds a family limit; selections were not changed.",
         );
       edit();
       setSelection(data.selection);
@@ -212,6 +300,10 @@ export function PatientRecordReleases({
     });
   const loadPreview = () =>
     run(async () => {
+      if (dependencyWarnings.length)
+        throw new Error(
+          "Select each approved source and its matching original together, or remove both from this package.",
+        );
       if (!candidates.data || !recipient)
         throw new Error("Choose a configured primary household contact.");
       const args: ReleasePreviewArgs = {
@@ -222,7 +314,7 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v4",
+        "preview_record_release_v5",
         args,
       );
       if (error) throw error;
@@ -495,14 +587,12 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!(selection.weight_ids?.length
-                ? candidates.data.policy_v4_accepted
-                : candidates.data.policy_accepted) && (
+              {!candidates.data.policy_v5_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 4 for dated weights, including historical
-                  source provenance).
+                  operator (version 5, including verified laboratory and
+                  imported-record provenance).
                 </p>
               )}
               <fieldset
@@ -574,6 +664,30 @@ export function PatientRecordReleases({
                               America/Denver · Version {item.version}
                             </span>
                           </label>
+                          {(kind === "lab_report_ids" ||
+                            kind === "external_record_ids") && (
+                            <div className="space-y-1 text-sm">
+                              <p>
+                                {item.kind} ·{" "}
+                                {item.historical
+                                  ? "Historical version"
+                                  : "Current version"}{" "}
+                                · {item.source_label}
+                              </p>
+                              <p>
+                                Required original: {item.required_document_id} ·
+                                document version{" "}
+                                {item.required_document_version}
+                              </p>
+                              <p>
+                                {item.acknowledgment_count
+                                  ? `${item.acknowledgment_count} exact-version DVM acknowledgment(s)`
+                                  : "No DVM acknowledgment recorded for this exact version"}
+                                . Byte verification and staff approval are
+                                separate from clinical acknowledgment.
+                              </p>
+                            </div>
+                          )}
                           {kind === "lab_order_ids" && (
                             <p className="text-xs text-muted-foreground">
                               {item.required_document_id
@@ -587,6 +701,20 @@ export function PatientRecordReleases({
                               <span>
                                 {item.mime_type} · {item.file_size} bytes
                               </span>
+                              {!!(
+                                item.required_lab_report_ids?.length ||
+                                item.required_external_record_ids?.length
+                              ) && (
+                                <p>
+                                  This original requires its associated approved
+                                  provenance selections:{" "}
+                                  {item.required_lab_report_ids?.length || 0}{" "}
+                                  laboratory report(s),{" "}
+                                  {item.required_external_record_ids?.length ||
+                                    0}{" "}
+                                  imported record(s).
+                                </p>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -617,15 +745,20 @@ export function PatientRecordReleases({
                     busy ||
                     !!preview ||
                     !!pending ||
-                    !kinds.some(
-                      (k) => (candidates.data![k] || []).length === 100,
-                    )
+                    !kinds.some((k) => candidates.data!.has_more[k])
                   }
                   onClick={() => setSourcePage((v) => v + 1)}
                 >
                   Older source records
                 </Button>
               </div>
+              {dependencyWarnings.length > 0 && (
+                <div role="alert" className="space-y-1 text-destructive">
+                  {dependencyWarnings.map((message) => (
+                    <p key={message}>{message}</p>
+                  ))}
+                </div>
+              )}
               <p className="text-sm">
                 Select all shown applies to this source page. A package supports
                 at most 100 records per family; use another package for
@@ -635,7 +768,11 @@ export function PatientRecordReleases({
               {!preview ? (
                 <Button
                   disabled={
-                    busy || !!pending || selectedCount === 0 || !recipient
+                    busy ||
+                    !!pending ||
+                    selectedCount === 0 ||
+                    !recipient ||
+                    dependencyWarnings.length > 0
                   }
                   onClick={() => void loadPreview()}
                 >
@@ -679,9 +816,7 @@ export function PatientRecordReleases({
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !(selection.weight_ids?.length
-                        ? candidates.data.policy_v4_accepted
-                        : candidates.data.policy_accepted) ||
+                      !candidates.data.policy_v5_accepted ||
                       !reviewed
                     }
                     onClick={() => void confirm()}

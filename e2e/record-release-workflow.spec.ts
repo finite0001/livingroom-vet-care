@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { sourceProvenanceArtifact } from "../tests/record-releases/source-provenance-fixture";
 import { provenanceArtifact } from "../tests/record-releases/provenance-fixture";
 const chartArtifact = provenanceArtifact();
 import {
@@ -19,13 +20,23 @@ const groups = {
   encounter_ids: "encounters",
   certificate_ids: "certificates",
   lab_order_ids: "lab_results",
+  lab_report_ids: "lab_reports",
+  external_record_ids: "external_records",
   document_ids: "attachments",
   dental_ids: "dental_charts",
   qol_ids: "qol_records",
   anesthesia_ids: "anesthesia_records",
   lesion_ids: "lesions",
 } as const;
-async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
+async function fixture(
+  page: Page,
+  accepted = true,
+  v4Accepted = accepted,
+  sourceMode = false,
+) {
+  const currentArtifact = sourceMode
+    ? sourceProvenanceArtifact()
+    : chartArtifact;
   const user = {
     id: staffId,
     aud: "authenticated",
@@ -243,7 +254,7 @@ async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
         "abandoned";
       return route.fulfill({ json: null });
     }
-    if (path === "/rest/v1/rpc/list_record_release_sources") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v5") {
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
         pet_id: petId,
@@ -253,22 +264,76 @@ async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
         phone: "+13035550100",
         policy_accepted: accepted,
         policy_v4_accepted: v4Accepted,
+        policy_v5_accepted: v4Accepted,
+        lab_report_ids: [],
+        external_record_ids: [],
+        has_more: Object.fromEntries(
+          Object.keys(sourceLabels).map((key) => [key, false]),
+        ),
       };
+      const offset = route.request().postDataJSON().p_offset;
       for (const [key, array] of Object.entries(groups))
-        candidates[key] = (chartArtifact.preview.snapshot[array] || []).map(
+        candidates[key] = (currentArtifact.preview.snapshot[array] || []).map(
           (row) => ({
             id: row.id,
             version: 2,
             recorded_at: "2026-09-12T18:00:00Z",
             label: `Source ${row.id}`,
             required_document_id: key === "lab_order_ids" ? "document" : null,
+            required_lab_report_ids: key === "document_ids" ? [] : undefined,
+            required_external_record_ids:
+              key === "document_ids" ? [] : undefined,
             mime_type: key === "document_ids" ? "application/pdf" : undefined,
             file_size: key === "document_ids" ? 100 : undefined,
           }),
         );
+      if (sourceMode) {
+        for (const [key, array] of [
+          ["lab_report_ids", "lab_reports"],
+          ["external_record_ids", "external_records"],
+        ] as const)
+          candidates[key] = offset
+            ? []
+            : currentArtifact.preview.snapshot[array]!.map((r) => ({
+                id: r.id,
+                version: r.version,
+                recorded_at: r.received_at,
+                label: `Source ${r.id}`,
+                required_document_id: r.document_id,
+                required_document_version: r.document_version,
+                file_size: r.file_size,
+                mime_type: r.mime_type,
+                kind: r.kind,
+                historical: r.historical,
+                source_label: r.source.provider_label,
+                acknowledgment_count: r.acknowledgments.length,
+              }));
+        candidates.document_ids = offset
+          ? currentArtifact.preview.snapshot.attachments.map((d) => ({
+              id: d.id,
+              version: d.version,
+              recorded_at: "2026-09-12T18:00:00Z",
+              label: `Original ${d.id}`,
+              file_size: d.file_size,
+              mime_type: d.mime_type,
+              required_lab_report_ids: currentArtifact.preview.snapshot
+                .lab_reports!.filter((r) => r.document_id === d.id)
+                .map((r) => r.id),
+              required_external_record_ids: currentArtifact.preview.snapshot
+                .external_records!.filter((r) => r.document_id === d.id)
+                .map((r) => r.id),
+            }))
+          : [];
+        candidates.has_more = Object.fromEntries(
+          Object.keys(sourceLabels).map((key) => [
+            key,
+            key === "document_ids" && !offset,
+          ]),
+        );
+      }
       return route.fulfill({ json: candidates });
     }
-    if (path === "/rest/v1/rpc/select_all_record_release_sources") {
+    if (path === "/rest/v1/rpc/select_all_record_release_sources_v5") {
       state.allCalls++;
       if (state.oversized)
         return route.fulfill({
@@ -281,12 +346,18 @@ async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
         });
       return route.fulfill({
         json: {
-          selection: Object.fromEntries(
-            Object.entries(groups).map(([key, array]) => [
-              key,
-              (chartArtifact.preview.snapshot[array] || []).map((x) => x.id),
-            ]),
-          ),
+          selection: {
+            lab_report_ids: [],
+            external_record_ids: [],
+            ...Object.fromEntries(
+              Object.entries(groups).map(([key, array]) => [
+                key,
+                (currentArtifact.preview.snapshot[array] || []).map(
+                  (x) => x.id,
+                ),
+              ]),
+            ),
+          },
           excluded_unavailable_originals: 0,
           excluded_labs_without_shareable_original: 0,
           scope: "All eligible records across every page; fixed selection.",
@@ -301,7 +372,7 @@ async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release_v4") {
+    if (path === "/rest/v1/rpc/preview_record_release_v5") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -315,7 +386,12 @@ async function fixture(page: Page, accepted = true, v4Accepted = accepted) {
               "Select the lab original report explicitly as a shareable attachment",
           },
         });
-      const preview = structuredClone(chartArtifact.preview);
+      const preview = structuredClone(currentArtifact.preview);
+      Object.assign(preview.snapshot, {
+        schema_version: 5,
+        lab_reports: preview.snapshot.lab_reports || [],
+        external_records: preview.snapshot.external_records || [],
+      });
       for (const [key, array] of Object.entries(groups))
         Object.assign(preview.snapshot, {
           [array]: (preview.snapshot[array] || []).filter((row) =>
@@ -833,7 +909,7 @@ test("new package confirmation cannot replace an active release email draft", as
   );
 });
 
-test("v3 acceptance does not enable confirmation of the expanded weight form", async ({
+test("legacy acceptance does not enable confirmation of the expanded version 5 form", async ({
   page,
 }) => {
   await fixture(page, true, false);
@@ -850,7 +926,9 @@ test("v3 acceptance does not enable confirmation of the expanded weight form", a
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
   await expect(
-    panel.getByText("version 4 for dated weights", { exact: false }),
+    panel.getByText("version 5, including verified laboratory", {
+      exact: false,
+    }),
   ).toBeVisible();
   await expect(
     panel.getByRole("button", {
@@ -958,4 +1036,138 @@ test("SMS release draft protects package selection and recovery preserves revoca
     sms.getByText("This link is revoked.", { exact: true }),
   ).toBeVisible();
   expect(revoked).toBe(true);
+});
+
+test("verified lab and imported versions retain explicit matching originals across pages", async ({
+  page,
+}) => {
+  const state = await fixture(page, true, true, true);
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await expect(panel.getByText(/corrected · Current version/)).toBeVisible();
+  await expect(panel.getByText(/replacement · Current version/)).toBeVisible();
+  await expect(
+    panel
+      .getByText(/No DVM acknowledgment recorded for this exact version/)
+      .first(),
+  ).toBeVisible();
+  await expect(
+    panel.getByText(/1 exact-version DVM acknowledgment/).first(),
+  ).toBeVisible();
+  for (const kind of ["lab_report_ids", "external_record_ids"] as const)
+    await panel
+      .getByRole("button", {
+        name: `Select all shown: ${sourceLabels[kind]}`,
+        exact: true,
+      })
+      .click();
+  await expect(
+    panel.getByRole("button", { name: "Review selected package", exact: true }),
+  ).toBeDisabled();
+  await panel
+    .getByRole("button", { name: "Older source records", exact: true })
+    .click();
+  await panel
+    .getByRole("button", {
+      name: `Select all shown: ${sourceLabels.document_ids}`,
+      exact: true,
+    })
+    .click();
+  await expect(
+    panel.getByRole("button", { name: "Review selected package", exact: true }),
+  ).toBeEnabled();
+  const original = panel
+    .getByRole("checkbox", { name: /Original b5000000/ })
+    .first();
+  await original.uncheck();
+  await expect(panel.getByRole("alert")).toContainText("matching original");
+  await expect(
+    panel.getByRole("button", { name: "Review selected package", exact: true }),
+  ).toBeDisabled();
+  await original.check();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  const frame = panel.frameLocator(
+    'iframe[title="Medical-record release artifact"]',
+  );
+  await expect(
+    frame.getByText("Antech (synthetic)", { exact: false }).first(),
+  ).toBeVisible();
+  await expect(
+    frame.getByText("ezyVet", { exact: false }).first(),
+  ).toBeVisible();
+  await panel
+    .getByLabel(
+      "I reviewed the complete selected records, original attachments and household recipient.",
+    )
+    .check();
+  state.ambiguous = true;
+  await panel
+    .getByRole("button", { name: "Confirm reviewed package", exact: true })
+    .click();
+  await panel
+    .getByRole("button", {
+      name: "Retry same package confirmation",
+      exact: true,
+    })
+    .click();
+  await expect(
+    panel.getByRole("heading", { name: /Opened release / }),
+  ).toBeVisible();
+  expect(state.requests[0]).toEqual(state.requests[1]);
+  expect(state.requests[0].p_selection.lab_report_ids).toHaveLength(2);
+  expect(state.requests[0].p_selection.external_record_ids).toHaveLength(2);
+  expect(state.requests[0].p_selection.document_ids).toHaveLength(4);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(5);
+});
+
+test("all-source selection includes reciprocal provenance and stale source rejection preserves review workflow", async ({
+  page,
+}) => {
+  const state = await fixture(page, true, true, true);
+  const panel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+  });
+  await panel
+    .getByRole("button", { name: "Older source records", exact: true })
+    .click();
+  await panel
+    .getByRole("button", {
+      name: `Select all shown: ${sourceLabels.document_ids}`,
+      exact: true,
+    })
+    .click();
+  await expect(panel.getByRole("alert")).toContainText(
+    "every associated approved report",
+  );
+  await panel
+    .getByRole("button", {
+      name: "Select all eligible records across every page",
+      exact: true,
+    })
+    .click();
+  await panel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Schedule", exact: true })
+    .first()
+    .click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page.getByRole("button", { name: /keep/i }).click();
+  await panel
+    .getByLabel(
+      "I reviewed the complete selected records, original attachments and household recipient.",
+    )
+    .check();
+  state.stale = true;
+  await panel
+    .getByRole("button", { name: "Confirm reviewed package", exact: true })
+    .click();
+  await expect(panel.getByRole("alert")).toContainText(
+    "preview and review again",
+  );
+  expect(state.rows).toHaveLength(0);
 });
