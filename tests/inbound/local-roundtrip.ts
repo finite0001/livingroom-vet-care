@@ -37,7 +37,11 @@ const serviceHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${local.SERVIC
 let staffHeaders:Record<string,string>={};
 async function api(path:string,args:unknown,headers=serviceHeaders){
  const response=await fetch(local.API_URL+path,{method:"POST",headers,body:JSON.stringify(args)});
- if(!response.ok)throw new Error(`Local fixture ${path} failed: HTTP ${response.status}`);
+ if(!response.ok){
+  const failure=await response.json().catch(()=>null);
+  const code=typeof failure?.code==="string"&&/^[A-Z0-9]{5}$/.test(failure.code)?failure.code:"unknown";
+  throw new Error(`Local fixture ${path} failed: HTTP ${response.status}, SQL ${code}`);
+ }
  const text=await response.text();return text?JSON.parse(text):null;
 }
 const rpc=(name:string,args:Record<string,unknown>,staff=false)=>api("/rest/v1/rpc/"+name,args,staff?staffHeaders:serviceHeaders);
@@ -85,13 +89,40 @@ try{
  const failed=await processOneInbound(service,{RESEND_API_KEY:"synthetic-never-sent"},async()=>{throw new Error("Synthetic transport failure");});
  check(failed.retry_pending===true,"Provider read failure retains retryable durable work");
  check(sql(`select count(*) from public.communication_inbound where resource_id=${quote(resource)};`)==="0","Failed provider read created no partial inbox original");
- sql(`update public.communication_provider_events set available_at=now() where resource_id=${quote(resource)};`);
+ // Every real claim consumes budget, even when a worker disappears. Only
+ // synthetic fixture clocks are advanced; no global queue or real time waits.
+ const eventRow=()=>JSON.parse(sql(`select row_to_json(r) from public.communication_provider_events r where resource_id=${quote(resource)};`));
+ for(let attempt=2;attempt<=9;attempt++){
+  sql(`update public.communication_provider_events set available_at=now() where resource_id=${quote(resource)};`);
+  const claim=await rpc("claim_communication_event",{});
+  check(claim.id===eventRow().id&&claim.attempts===attempt&&claim.cycle_attempts===attempt,"Expired worker claim consumes one durable cycle attempt");
+  sql(`update public.communication_provider_events set lease_expires_at=now()-interval '1 second' where resource_id=${quote(resource)};`);
+  await assert.rejects(rpc("release_communication_event_outcome",{p_id:claim.id,p_lease_token:claim.lease_token,p_error:"provider_fetch_or_persistence_retry",p_review:false}),/SQL 40001/);
+  check(eventRow().state==="claimed","Expired token cannot invent a successful release");
+ }
+ const tenth=await processOneInbound(service,{RESEND_API_KEY:"synthetic-never-sent"},async()=>{throw new Error("Synthetic tenth transport failure");});
+ check(tenth.retry_pending===false&&tenth.review_required===true,"Tenth transient failure reports durable review, not pending");
+ check(eventRow().state==="review"&&eventRow().attempts===10&&eventRow().cycle_attempts===10,"Lease losses plus provider failures stop after ten claims");
+ check((await processOneInbound(service,{},async()=>{throw new Error("Must not fetch reviewed work");})).processed===false,"Reviewed event cannot be reclaimed automatically");
+ await assert.rejects(rpc("preview_communication_event_retry",{p_event_id:eventRow().id},true),/HTTP 403/);
+ check(true,"Ordinary staff cannot prepare an inbound processing retry");
+ sql(`insert into public.user_roles(user_id,role) values(${quote(actor)},'ADMIN') on conflict do nothing;`);
+ const preview=await rpc("preview_communication_event_retry",{p_event_id:eventRow().id},true);
+ check(preview.eligible===true&&typeof preview.expected_work_hash==="string","Active administrator previews exact exhausted fetch work");
+ const retryId=randomUUID();ids.push(retryId);
+ const retryArgs={p_id:retryId,p_event_id:eventRow().id,p_expected_work_hash:preview.expected_work_hash,p_reason:"provider_recovered",p_attest:true};
+ const retried=await rpc("requeue_communication_event",retryArgs,true);
+ check(retried.id===retryId&&eventRow().state==="pending"&&eventRow().cycle_no===1&&eventRow().cycle_attempts===0&&eventRow().attempts===10,"Explicit reviewed retry creates a fresh bounded cycle and preserves lifetime count");
+ check((await rpc("requeue_communication_event",retryArgs,true)).id===retryId,"Lost retry acknowledgment recovers the same immutable action");
+ await assert.rejects(rpc("requeue_communication_event",{...retryArgs,p_reason:"processor_repaired"},true),/HTTP 409/);
+ check(eventRow().cycle_no===1,"Changed retry arguments cannot create a second cycle");
  let fetched=0;
  const providerRead:typeof fetch=async(url,options)=>{
   fetched++;check(String(url)===`https://api.resend.com/emails/receiving/${resource}`&&options?.redirect==="error","Processor constructs exact provider resource GET without redirects");
   return Response.json({id:resource,from:sender,to:[receiving],text:"Synthetic reply: please confirm the visit.",html:"<p>Synthetic reply</p>",subject:"Synthetic visit",created_at:created,message_id:`<${resource}@example.test>`,attachments:[{id:"synthetic-attachment",filename:"report.pdf",content_type:"application/pdf",size:20,download_url:"https://never-fetch.example.test/private"}]});
  };
  check((await processOneInbound(service,{RESEND_API_KEY:"synthetic-never-sent"},providerRead)).processed===true,"Actual database processing completes known-household message");
+ check(eventRow().state==="processed"&&eventRow().attempts===11&&eventRow().cycle_attempts===1,"Reviewed retry resumes ordinary verification with lifetime and cycle counts preserved");
  const inbound=JSON.parse(sql(`select row_to_json(r) from public.communication_inbound r where resource_id=${quote(resource)};`));
  ids.push(inbound.id,inbound.conversation_id,inbound.message_id);
  check(inbound.client_id===client&&Boolean(inbound.message_id),"Known sender links to actual household and conversation message");
@@ -112,9 +143,25 @@ try{
  await processOneInbound(service,{RESEND_API_KEY:"synthetic-never-sent"},async()=>Response.json({id:unknown,from:unknownEvent.data.from,to:[receiving],text:"Synthetic unmatched reply",created_at:created}));
  const review=JSON.parse(sql(`select row_to_json(r) from public.communication_inbound r where resource_id=${quote(unknown)};`));ids.push(review.id);
  check(review.client_id===null&&review.message_id===null&&Boolean(review.review_reason),"Unknown sender stays in review without fabricated household");
- await rpc("assign_inbound_communication",{p_actor_id:actor,p_id:review.id,p_expected_version:review.version,p_client_id:client,p_conversation_id:inbound.conversation_id,p_reason:"Synthetic staff verified sender identity"},true);
+ const assignmentFields="id,channel,sender,recipient,subject,body,occurred_at,received_at,client_id,conversation_id,message_id,review_reason,version";
+ const assigned=await api("/rest/v1/rpc/assign_inbound_communication?select="+assignmentFields,{p_actor_id:actor,p_id:review.id,p_expected_version:review.version,p_client_id:client,p_conversation_id:inbound.conversation_id,p_reason:"Synthetic staff verified sender identity"},staffHeaders);
+ check(assigned!==null&&typeof assigned==="object"&&!Array.isArray(assigned),"Actual RPC select returns a composite object rather than a one-element array");
+ check(Object.keys(assigned).sort().join(',')===assignmentFields.split(',').sort().join(','),"Assignment returns only the exact staff-requested fields, excluding HTML and attachment metadata");
+ check(assigned.id===review.id&&assigned.client_id===client&&assigned.conversation_id===inbound.conversation_id&&Boolean(assigned.message_id)&&assigned.version===review.version+1,"Projected assignment retains original identity and new audited version");
  check(sql(`select count(*) from public.communication_inbound_assignments where inbound_id=${quote(review.id)} and assigned_by=${quote(actor)};`)==="1","Explicit staff assignment records durable identity-review evidence");
  check(sql(`select count(*) from public.messages where conversation_id=${quote(inbound.conversation_id)};`)==="2","Reviewed unmatched reply creates exactly one additional message");
+ const exhausted=randomUUID();ids.push(exhausted);
+ check((await post({...event,data:{...event.data,email_id:exhausted}},`synthetic-${exhausted}`)).status===204,"Crash-boundary fixture begins with real signed receipt");
+ for(let attempt=1;attempt<=10;attempt++){
+  const claim=await rpc("claim_communication_event",{});
+  check(claim.resource_id===exhausted&&claim.cycle_attempts===attempt,"Expired-only claims retain a bounded cycle count");
+  sql(`update public.communication_provider_events set lease_expires_at=now()-interval '1 second' where resource_id=${quote(exhausted)};`);
+ }
+ let unexpectedFetch=false;
+ check((await processOneInbound(service,{},async()=>{unexpectedFetch=true;throw new Error("Exhausted work must not fetch");})).processed===false&&!unexpectedFetch,"Tenth expired lease transitions to review without an eleventh claim or provider request");
+ const exhaustedRow=JSON.parse(sql(`select row_to_json(r) from public.communication_provider_events r where resource_id=${quote(exhausted)};`));
+ check(exhaustedRow.state==="review"&&exhaustedRow.attempts===10&&exhaustedRow.last_error==="worker_lease_expired","Crash exhaustion retains explicit durable review reason");
+ check((await rpc("preview_communication_event_retry",{p_event_id:exhaustedRow.id},true)).eligible===false,"Lease-expiry exhaustion cannot use the provider-recovered retry path");
 }catch(error){failures.push(error);}finally{
  if(listening)await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
  try{
@@ -123,6 +170,10 @@ try{
   if(client){
    const children=JSON.parse(sql(`select coalesce(json_agg(id),'[]'::json) from (select id from public.conversations where client_id=${quote(client)} union select m.id from public.messages m join public.conversations c on c.id=m.conversation_id where c.client_id=${quote(client)}) owned;`));
    ids.push(...children);
+  }
+  if(ids.length){
+   const owned=ids.map(value=>quote(value)).join(',');
+   ids.push(...JSON.parse(sql(`select coalesce(json_agg(id),'[]'::json) from public.communication_provider_events where resource_id=any(array[${owned}]);`)));
   }
   if(ids.length){const patterns=ids.filter(Boolean).map(value=>quote(`%${value}%`)).join(',');sql(`begin;set local session_replication_role=replica;do $cleanup$ declare t record;begin for t in select schemaname,tablename from pg_tables where schemaname='public' loop execute format('delete from %I.%I r where to_jsonb(r)::text like any ($1)',t.schemaname,t.tablename) using array[${patterns}];end loop;end $cleanup$;commit;`);
    sql(`do $verify$ declare t record;n bigint;begin for t in select schemaname,tablename from pg_tables where schemaname='public' loop execute format('select count(*) from %I.%I r where to_jsonb(r)::text like any ($1)',t.schemaname,t.tablename) into n using array[${patterns}];if n<>0 then raise exception 'Synthetic fixture cleanup incomplete';end if;end loop;end $verify$;`);

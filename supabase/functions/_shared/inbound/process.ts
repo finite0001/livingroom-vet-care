@@ -169,7 +169,7 @@ export async function processOneInbound(
     const review =
       error instanceof ReviewError ||
       (error instanceof WebhookError && error.status === 413);
-    await call(db, "release_communication_event", {
+    const released: unknown = await call(db, "release_communication_event_outcome", {
       p_id: event.id,
       p_lease_token: event.lease_token,
       p_error: review
@@ -177,10 +177,18 @@ export async function processOneInbound(
         : "provider_fetch_or_persistence_retry",
       p_review: review,
     });
+    // SQL may exhaust the retry budget even for a transient failure. Never
+    // report pending work from our requested disposition or a lost RPC reply.
+    if (
+      !released || typeof released !== "object" || Array.isArray(released) ||
+      !("id" in released) || released.id !== event.id ||
+      !("state" in released) ||
+      (released.state !== "pending" && released.state !== "review")
+    ) throw new Error("Provider event disposition is unconfirmed");
     return {
       processed: false,
-      retry_pending: !review,
-      review_required: review,
+      retry_pending: released.state === "pending",
+      review_required: released.state === "review",
     };
   }
 }
