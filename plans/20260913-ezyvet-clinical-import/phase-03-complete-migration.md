@@ -2,6 +2,8 @@
 
 Priority: required for full requested ezyVet migration. Status: unimplemented; resource-specific design and account evidence required. Phases1/2 cannot substitute for this scope.
 
+Next bounded implementation: [Phase 3a — consult-scoped vaccination intake](phase-03a-vaccination-intake.md).
+
 ## Vaccinations and due dates
 
 Resolve every vaccination through its same-site consult and approved patient mapping; validate product references against a reviewed catalog mapping. Retain original source values plus explicit reviewed administration and due dates. Preserve unknown lot, manufacturer, route, dose and issuer details rather than fabricating certificate eligibility. Reuse historical treatment semantics only after its required fields can be legitimately supplied. An import must never decrement stock, bill the client or assert a vaccine was administered locally. A source next-date is historical evidence; adoption into the active reminder plan requires an explicit clinician decision. Reconciliation must identify missing consults/products, duplicate administrations and conflicting dates. Certificate issuance remains the separately reviewed native workflow.
@@ -43,4 +45,4 @@ Base: `/Users/davidedler/livingroom-vet-ezyvet-clinical-plan`.
 
 ## Open dependencies
 
-API entitlement and supported attachment/export contracts; actual site data and source date semantics; catalog/prescriber mappings; clinician approval; supervised cutover window. Continue independently implementable work while these remain pending, but keep commissioning disabled.
+Read-only API availability is the owner-approved implementation premise. Dr. Susan Edler is clarifying the existing entitlement with her representative; no ezyVet write-back is in scope. Live authentication and supported attachment/export contracts; actual site data and source date semantics; catalog/prescriber mappings; clinician approval; supervised cutover window. Continue independently implementable work while these remain pending, but keep commissioning disabled.
