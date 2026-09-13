@@ -1,4 +1,18 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+
+-- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
+create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
+declare result jsonb;actor uuid;begin
+ begin
+  select created_by into actor from communication_outbox where id=p_id;
+  perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',actor)::text,true);
+  update communication_outbox set state='failed',lease_token=null,lease_expires_at=null where id=p_id;
+  if p_change is not null then execute p_change;end if;
+  result:=preview_outbox_retry(p_id);
+  raise exception 'rollback probe';
+ exception when raise_exception then return result;end;
+end $$;
+
 insert into auth.users(id,email,raw_user_meta_data) values('ae000000-0000-4000-8000-000000000001','reminder-approver@example.test','{"first_name":"Reminder","last_name":"Approver"}'),('ae000000-0000-4000-8000-000000000002','reminder-staff@example.test','{"first_name":"Reminder","last_name":"Staff"}');
 insert into public.user_roles(user_id,role) values('ae000000-0000-4000-8000-000000000001','ADMIN') on conflict do nothing;
 create temp table reminder_fixture(kind text primary key,id uuid);grant all on reminder_fixture to authenticated,service_role;
@@ -27,6 +41,7 @@ select is((public.queue_due_reminders(25)->>'queued')::integer,0,'Repeat schedul
 select is((select created_by from public.communication_outbox where id=(select id from reminder_fixture where kind='outbox')),'ae000000-0000-4000-8000-000000000001'::uuid,'Original source approving actor is preserved without auth injection');
 select is((select state from public.communication_outbox where id=(select id from reminder_fixture where kind='outbox')),'pending','Scheduler never claims accepted or delivered');
 select is((select outbox_id from public.queue_reminder_outbox('care',(select id from reminder_fixture where kind='job'),'ae300000-0000-4000-8000-000000000001')),(select id from reminder_fixture where kind='outbox'),'Lost handoff response returns same outbox identity');
+select is(pg_temp.retry_source_probe((select id from reminder_fixture where kind='outbox'))->>'eligible','true','Current reminder can be reviewed for pre-provider retry');
 select lives_ok($$select public.claim_communication()$$,'Existing dispatcher can claim prepared reminder');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000001',(select id from reminder_fixture where kind='pet'),1,jsonb_build_object('test_name','Synthetic lab','status','cancelled','due_date',(now() at time zone 'America/Denver')::date),'')$$,'Source cancellation after enqueue is allowed');
@@ -34,7 +49,10 @@ set local role service_role;select set_config('request.jwt.claims','{"role":"ser
 select is((select state from public.start_communication_attempt((select id from reminder_fixture where kind='outbox'),(select lease_token from public.communication_outbox where id=(select id from reminder_fixture where kind='outbox')),'{"from":"verified@example.test","reply_to":"reply@example.test"}')),'failed','Final attempt guard blocks canceled lab before provider call');
 select is((select count(*) from public.communication_attempts where outbox_id=(select id from reminder_fixture where kind='outbox')),0::bigint,'Blocked preflight creates no provider attempt');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select lives_ok($$select public.retry_communication(auth.uid(),(select id from reminder_fixture where kind='outbox'))$$,'Staff may request retry but cannot bypass final guard');
+select is(public.preview_outbox_retry((select id from reminder_fixture where kind='outbox'))->>'reason','source_ineligible','Reviewed retry refuses invalidated reminder');
+select throws_ok($$select public.requeue_outbox_retry(gen_random_uuid(),(select id from reminder_fixture where kind='outbox'),public.preview_outbox_retry((select id from reminder_fixture where kind='outbox'))->>'expected_work_hash','source_reverified',true)$$,'42501',null,'Repair attestation cannot revive invalidated source');
+-- Owner-only fixture restores pending to independently retain the existing final-worker regression.
+reset role;update public.communication_outbox set state='pending' where id=(select id from reminder_fixture where kind='outbox');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok($$select public.claim_communication()$$,'Retry may be claimed');
 select is((select state from public.start_communication_attempt((select id from reminder_fixture where kind='outbox'),(select lease_token from public.communication_outbox where id=(select id from reminder_fixture where kind='outbox')),'{"from":"verified@example.test","reply_to":"reply@example.test"}')),'failed','Retry cannot revive invalidated reminder');
@@ -62,7 +80,10 @@ set local role service_role;select set_config('request.jwt.claims','{"role":"ser
 select is((select state from public.start_communication_attempt((select id from reminder_fixture where kind='appointment-outbox'),(select lease_token from public.communication_outbox where id=(select id from reminder_fixture where kind='appointment-outbox')),'{"from":"+13035550199","account_sid":"ACsynthetic"}')),'failed','Final preflight blocks newly suppressed appointment');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from reminder_fixture where kind='client'),'+13035550111',true,'WRITTEN','New synthetic consent after review',(select max(updated_at) from public.sms_consent where client_id=(select id from reminder_fixture where kind='client')))$$,'New consent can be separately reviewed');
-select lives_ok($$select public.retry_communication(auth.uid(),(select id from reminder_fixture where kind='appointment-outbox'))$$,'Staff may request explicit retry after new consent');
+select is(public.preview_outbox_retry((select id from reminder_fixture where kind='appointment-outbox'))->>'reason','source_ineligible','Reviewed retry refuses invalidated reminder');
+select throws_ok($$select public.requeue_outbox_retry(gen_random_uuid(),(select id from reminder_fixture where kind='appointment-outbox'),public.preview_outbox_retry((select id from reminder_fixture where kind='appointment-outbox'))->>'expected_work_hash','source_reverified',true)$$,'42501',null,'Repair attestation cannot revive invalidated source');
+-- Owner-only fixture restores pending to independently retain the existing final-worker regression.
+reset role;update public.communication_outbox set state='pending' where id=(select id from reminder_fixture where kind='appointment-outbox');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok($$select public.claim_communication()$$,'Old appointment retry may claim');
 select is((select state from public.start_communication_attempt((select id from reminder_fixture where kind='appointment-outbox'),(select lease_token from public.communication_outbox where id=(select id from reminder_fixture where kind='appointment-outbox')),'{"from":"+13035550199","account_sid":"ACsynthetic"}')),'failed','Previously suppressed job remains invalidated after consent returns');
