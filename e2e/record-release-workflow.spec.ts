@@ -1,3 +1,4 @@
+import { prescriptionArtifact } from "../tests/record-releases/prescription-fixture";
 import { vaccinationArtifact } from "../tests/record-releases/vaccination-fixture";
 import { clinicalHistoryArtifact } from "../tests/record-releases/clinical-history-fixture";
 import { test, expect, type Page } from "@playwright/test";
@@ -16,6 +17,7 @@ const petId = "22222222-2222-4222-8222-222222222222",
   clientId = "33333333-3333-4333-8333-333333333333";
 const groups = {
   imported_vaccination_ids: "imported_vaccinations",
+  imported_prescription_ids: "imported_prescriptions",
   imported_history_ids: "imported_histories",
   problem_ids: "problems",
   patient_summary_ids: "patient_summaries",
@@ -39,8 +41,11 @@ async function fixture(
   sourceMode = false,
   clinicalMode = false,
   vaccinationMode = false,
+  prescriptionMode = false,
 ) {
-  const currentArtifact = vaccinationMode
+  const currentArtifact = prescriptionMode
+    ? prescriptionArtifact()
+    : vaccinationMode
     ? vaccinationArtifact()
     : clinicalMode
     ? clinicalHistoryArtifact()
@@ -266,7 +271,7 @@ async function fixture(
         "abandoned";
       return route.fulfill({ json: null });
     }
-    if (path === "/rest/v1/rpc/list_record_release_sources_v7") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v8") {
       state.sourceLoads++;
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
@@ -277,7 +282,7 @@ async function fixture(
         phone: "+13035550100",
         policy_accepted: accepted,
         policy_v4_accepted: v4Accepted,
-        policy_v7_accepted: v4Accepted,
+        policy_v8_accepted: v4Accepted,
         lab_report_ids: [],
         external_record_ids: [],
         has_more: Object.fromEntries(
@@ -293,7 +298,7 @@ async function fixture(
             recorded_at: "2026-09-12T18:00:00Z",
             label: `Source ${row.id}${state.sourceSuffix}`,
             source_label:
-              (key === "imported_history_ids" || key === "imported_vaccination_ids")
+              (key === "imported_history_ids" || key === "imported_vaccination_ids" || key === "imported_prescription_ids")
                 ? "ezyVet reviewed outside history"
                 : undefined,
             required_document_id: key === "lab_order_ids" ? "document" : null,
@@ -350,7 +355,7 @@ async function fixture(
       }
       return route.fulfill({ json: candidates });
     }
-    if (path === "/rest/v1/rpc/select_all_record_release_sources_v7") {
+    if (path === "/rest/v1/rpc/select_all_record_release_sources_v8") {
       state.allCalls++;
       if (state.oversized)
         return route.fulfill({
@@ -389,7 +394,7 @@ async function fixture(
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release_v7") {
+    if (path === "/rest/v1/rpc/preview_record_release_v8") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -405,8 +410,9 @@ async function fixture(
         });
       const preview = structuredClone(currentArtifact.preview);
       Object.assign(preview.snapshot, {
-        schema_version: 7,
+        schema_version: 8,
         imported_vaccinations: preview.snapshot.imported_vaccinations || [],
+        imported_prescriptions: preview.snapshot.imported_prescriptions || [],
         imported_histories: preview.snapshot.imported_histories || [],
         problem_source_extractions:
           preview.snapshot.problem_source_extractions || [],
@@ -442,7 +448,7 @@ async function fixture(
             })),
           },
         }));
-      preview.snapshot.selection = { ...body.p_selection, imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [] };
+      preview.snapshot.selection = { ...body.p_selection, imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [], imported_prescription_ids: body.p_selection.imported_prescription_ids || [] };
       return route.fulfill({ json: preview });
     }
     if (path === "/rest/v1/rpc/confirm_record_release") {
@@ -492,7 +498,7 @@ async function fixture(
       name: "Medical-record release packages",
       exact: true,
     }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15_000 });
   return state;
 }
 test("select clinical families, confirm identical retry, reopen invalidation and export current status", async ({
@@ -966,7 +972,7 @@ test("new package confirmation cannot replace an active release email draft", as
   );
 });
 
-test("legacy acceptance does not enable confirmation of the expanded version 7 form", async ({
+test("legacy acceptance does not enable confirmation of the expanded version 8 form", async ({
   page,
 }) => {
   await fixture(page, true, false);
@@ -983,7 +989,7 @@ test("legacy acceptance does not enable confirmation of the expanded version 7 f
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
   await expect(
-    panel.getByText("version 7, including reviewed outside vaccinations, imported clinical narratives", {
+    panel.getByText("version 8, including reviewed outside prescriptions and vaccinations, imported clinical narratives", {
       exact: false,
     }),
   ).toBeVisible();
@@ -1177,7 +1183,7 @@ test("verified lab and imported versions retain explicit matching originals acro
   expect(state.requests[0].p_selection.lab_report_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.external_record_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.document_ids).toHaveLength(4);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(7);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
 });
 
 test("all-source selection includes reciprocal provenance and stale source rejection preserves review workflow", async ({
@@ -1229,7 +1235,7 @@ test("all-source selection includes reciprocal provenance and stale source rejec
   expect(state.rows).toHaveLength(0);
 });
 
-test("schema7 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
+test("schema8 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
   page,
 }) => {
   const state = await fixture(page, true, true, true, true);
@@ -1304,12 +1310,12 @@ test("schema7 explicitly selects outside narratives while retaining compact prob
     .click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(7);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
 
 
-test("schema7 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
+test("schema8 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1327,7 +1333,41 @@ test("schema7 shares explicitly selected outside vaccination and narrative with 
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(7);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
   expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
+});
+
+test("schema8 prescription selection preserves partial evidence and identical confirmation retry", async ({ page }) => {
+  const state = await fixture(page, true, true, true, true, true, true);
+  state.ambiguous = true;
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await expect(panel.getByText("Clinician-reviewed outside prescriptions · 0 selected", { exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: `Select all shown: ${sourceLabels.imported_prescription_ids}`, exact: true }).click();
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  const artifact = panel.frameLocator("iframe");
+  await expect(artifact.getByRole("heading", { name: "Clinician-reviewed outside prescription history", exact: true })).toBeVisible();
+  await expect(artifact.getByText("Partial historical account", { exact: true })).toBeVisible();
+  await expect(artifact.getByText("Parent source list not supplied", { exact: true })).toBeVisible();
+  await expect(artifact.getByText("<script>outside prose</script>", { exact: true })).toBeVisible();
+  await expect(artifact.getByRole("heading", { name: "Clinician-reviewed outside vaccination history", exact: true })).toHaveCount(0);
+  await expect(artifact.locator("script")).toHaveCount(0);
+  await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
+  await panel.getByRole("button", { name: "Confirm reviewed package", exact: true }).click();
+  await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
+  expect(state.requests).toHaveLength(2);
+  expect(state.requests[0]).toEqual(state.requests[1]);
+  expect(state.requests[0].p_selection.imported_prescription_ids).toHaveLength(1);
+  expect(state.requests[0].p_selection.imported_vaccination_ids || []).toHaveLength(0);
+});
+
+test("schema8 prescription preview remains available before clinical form acceptance", async ({ page }) => {
+  const state = await fixture(page, true, false, true, true, true, true);
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: `Select all shown: ${sourceLabels.imported_prescription_ids}`, exact: true }).click();
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  await expect(panel.frameLocator("iframe").getByRole("heading", { name: "Clinician-reviewed outside prescription history", exact: true })).toBeVisible();
+  await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
+  await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
+  expect(state.requests).toHaveLength(0);
 });
