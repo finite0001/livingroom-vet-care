@@ -48,6 +48,7 @@ export interface PaymentState {
   payments: CapturedPayment[];
   refund_requests: RefundRequest[];
   reconciliation_observations: Array<{
+    resolved?: boolean;
     id: string;
     family: string;
     request_id: string;
@@ -152,7 +153,22 @@ export function parsePaymentState(
     )
   )
     throw new Error("Payment history has an unsupported state.");
+  if (
+    state.reconciliation_observations.some(
+      (row) =>
+        !row ||
+        (row.resolved !== undefined && typeof row.resolved !== "boolean"),
+    )
+  )
+    throw new Error("Payment reconciliation history has an unsupported state.");
   return state;
+}
+export function requiresReconciliation(state: PaymentState): boolean {
+  return (
+    state.reconciliation_observations.some((row) => row.resolved !== true) ||
+    state.attempts.some((row) => row.state === "reconciliation") ||
+    state.refund_requests.some((row) => row.state === "reconciliation")
+  );
 }
 export function parseProfile(rows: unknown): ProviderProfile | null {
   if (!Array.isArray(rows) || rows.length > 1)
