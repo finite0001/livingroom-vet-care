@@ -20,12 +20,16 @@ Record decisions per form and exact revision. Blank fields mean no approval. A c
 | C06 | Vaccine group taxonomy, explicit product mapping and patient overrides | Pending | | | |
 | C07 | Lab due/result tracking and standard intervals | Pending | | | |
 | C08 | Vaccine/rabies certificate content and signature attestation | Pending | | | |
+| C09 | Verified lab originals, correction history and per-version DVM acknowledgment | Pending; supplemental review required | | | |
+| C10 | Reviewed ezyVet manual-export originals and replacement history | Pending; supplemental review required | | | |
 | D01 | Invoice charges/credits/status/payment disclosure | Pending | | | |
 | D02 | Record-release selection, recipient, originals and confirmation | Pending; schema-4 provenance example included | | | |
 | D03 | Reminder wording, eligibility, consent and delivery labels | Pending | | | |
 | D04 | Frozen email report/originals and delivery attestation | Pending | | | |
 
 For each accepted row, record: exact code revision; pack version; form/template version where available; decision (accept / accept after specified correction / reject); clinician or operational reviewer identity; date; evidence link; unresolved exclusions. “Accept after correction” remains pending until the correction is verified. Keep clinical acceptance separate from production configuration and operator sharing-policy acceptance.
+
+[The lab and historical-import addendum](lab-import-addendum.md) covers C09/C10 beyond the original v3 baseline. It does not regenerate or extend the scope of the older rendered examples. Review these workflows against their exact integrated revision and a synthetic patient; all decisions remain pending.
 
 ## Review procedure
 
