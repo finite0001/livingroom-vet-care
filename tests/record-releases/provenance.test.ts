@@ -19,6 +19,9 @@ test("v1-v3 renderer output remains byte-for-byte unchanged from parent109b891",
     ),
   );
 });
+test("v4 renderer baseline remains byte-for-byte unchanged before schema5", () => {
+  assert.equal(createHash("sha256").update(renderRecordRelease(artifact())).digest("hex"), "e326f81c88dd94fffb65499544fc86e942053fa7ee68baf6d44c5bacc72df28a");
+});
 test("v4 distinguishes reviewed values, original source and reviewer; escapes notes", () => {
   const html = renderRecordRelease(artifact());
   for (const text of [
