@@ -341,3 +341,9 @@ The patient chart now provides DVM-reviewed interpretation of scoped ezyVet vacc
 Validation:418 unit tests,45 targeted browser cases,57 focused review SQL assertions,143 existing regressions,59 observed concurrency checks,24 release SQL assertions,70 actual local review API checks and42 actual local mixed-release checks passed. The51→74 upgrade/restore preserved reviewed vaccination/source lineage and existing fixtures, with cleanup verified. [Feature/evidence](features/reviewed-outside-vaccinations.md) and [Dr. Edler's unapproved review cases](clinical-review/outside-vaccination-history.md) are recorded.
 
 This increment is not yet deployed to hosted staging. Active due-plan adoption, global source-product mapping, clinical approval and authorized practice acceptance remain required subsequent work. No public cutover or clinical policy activation occurred.
+
+## Prescription intake staging rollout
+
+PR118 passed frontend, database and Edge CI. The staging database now has77 migrations, including5500/5600, and the matching JWT-protected importer is deployed. Six private table boundaries, six administrator rejection probes, deployed-source comparison and anonymous HTTP denial passed; no patients, imports or outgoing messages were created. See [rollout evidence](prescription-intake-staging.md). The prior reviewed-vaccination deployment is recorded in [its staging report](reviewed-vaccination-staging.md), superseding the earlier not-deployed checkpoint above.
+
+Prescription reconciliation/review, patient chart history, release inclusion, populated restore coverage and live clinical acceptance remain unfinished. The protected frontend has not yet been updated for prescription intake. No production cutover or provider activation occurred.

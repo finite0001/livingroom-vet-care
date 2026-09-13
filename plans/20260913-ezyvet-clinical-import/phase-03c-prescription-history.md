@@ -1,6 +1,6 @@
 # Phase 3c — Outside prescription history
 
-Status: scoped intake/recovery and the DVM prescription review/correction workflow with staff chart history are implemented and locally tested; release integration, populated upgrade/restore, combined PR CI and commissioning remain unfinished. Baseline: integrated vaccination review branch `73abb6a`, including migrations through5400 and payment-trigger hardening9000. The full [Phase 3 scope](phase-03-complete-migration.md) remains required, including attachment transport and migration reconciliation.
+Status: scoped intake/recovery and DVM prescription review/correction with staff chart history are implemented and locally tested. Intake database and importer are deployed to staging with live imports disabled. Schema8 release integration and populated restore verification are in progress; combined release CI, frontend rollout and clinical commissioning remain unfinished. Baseline: integrated vaccination review branch `73abb6a`, including migrations through5400 and payment-trigger hardening9000. The full [Phase 3 scope](phase-03-complete-migration.md) remains required, including attachment transport and migration reconciliation.
 
 Implementation started locally: `prescription-reconciliation.ts` compares source item references with observed IDs, preserving missing/unexpected/duplicate/malformed evidence and distinguishing absent versus empty lists. Five focused tests pass. The helper is not yet connected to runtime intake or review; no prescription resource has been enabled, no provider read performed and no completion gate below is closed by this helper alone. Migrations5300/5400 have since been deployed to staging; the older deployment note at the end is historical.
 
@@ -103,10 +103,14 @@ Migrations5300/5400 are pending staging deployment at this planning checkpoint; 
 
 ## Completion evidence
 
-- [ ] Scoped prescription and item intake with exact durable recovery works through actual local HTTP/Auth/database calls.
+- [x] Scoped prescription and item intake with exact durable recovery works through actual local HTTP/Auth/database calls (43 synthetic local checks; not live provider acceptance).
 - [ ] Whole-prescription review, chart reading and corrections work for authorized staff, with wrong actor/patient/site/role and source-change cases denied.
 - [ ] Missing and conflicting item evidence stays visible and migration completeness remains accurately reported.
 - [ ] Historical import creates no local prescribing, refill, inventory, billing or communication side effects.
 - [ ] Explicit medical-record selection and all delivery renderers preserve original evidence, backward compatibility and source invalidation.
 - [ ] Combined checks and populated upgrade/restore evidence pass on the integrated release revision.
 - [ ] Authorized practice samples, scope entitlement, date/product/prescriber mappings and clinical acceptance are verified before commissioning.
+
+## Intake staging rollout after PR118
+
+PR118 passed all three CI jobs at `0041468`. Staging now has77 migrations, including5500/5600, and the matching importer bundle. All six private tables and authenticated administrator boundaries passed selected hosted checks. No provider resource scope or import mode was changed. See [deployment evidence](../../docs/prescription-intake-staging.md). Earlier local-only paragraphs above are historical checkpoints.
