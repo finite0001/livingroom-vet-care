@@ -29,7 +29,7 @@ insert into data select 'review-run',claim_ezyvet_prescriptionitem_import((selec
 select stage_ezyvet_import_page((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='review-run'),1,true,(select v from data where k='items'));
 
 insert into fx values('review',gen_random_uuid()),('abandoned-review',gen_random_uuid());
-insert into data select 'payload',jsonb_build_object('item_run_id',(select id from fx where k='run'),'patient_version',(select version from pets where id=(select id from fx where k='pet')),'interpretation',jsonb_build_object('reason','Synthetic draft only','outside_author','Unresolved source prescriber'));
+insert into data select 'payload',jsonb_build_object('item_run_id',(select id from fx where k='run'),'patient_version',(select version from pets where id=(select id from fx where k='pet')),'interpretation',jsonb_build_object('reason','Synthetic historical review','outside_author',null,'prescribed_on',null,'prescription_date_status','uninterpreted','status','unknown','completeness','partial','partial_reason','Source item list is missing','items','[]'::jsonb,'replaces_id',null,'expected_predecessor_hash',null));
 set local role authenticated;
 select throws_ok($$select prepare_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),(select v from data where k='payload'))$$,'42501','Active veterinarian required','Administrator alone cannot prepare clinical review');
 reset role;
@@ -37,6 +37,7 @@ insert into user_roles(user_id,role) values('db560000-0000-4000-8000-00000000000
 set local role authenticated;
 select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),'{}')$$,'23514',null,'Missing context rejected');
 select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v||'{"patient_version":9999999999}' from data where k='payload'))$$,'40001','Patient version changed','Stale patient version rejected without overflow');
+select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v||'{"interpretation":{}}' from data where k='payload'))$$,'23514','Exact prescription interpretation required','New preparation enforces clinical interpretation shape');
 insert into data select 'prepared',prepare_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),(select v from data where k='payload'));
 select is((select v#>>'{request,status}' from data where k='prepared'),'prepared','Review preparation retained');
 select is((select v#>>'{request,review_context,items,0,original,qty}' from data where k='prepared'),'outside units','Source quantities frozen separately from interpretation');
