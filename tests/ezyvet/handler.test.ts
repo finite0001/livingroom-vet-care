@@ -40,11 +40,11 @@ function fixture() {
       return String(input).endsWith("access_token")
         ? Response.json({ access_token: "hidden-token", expires_in: 43200 })
         : Response.json({
-            meta: { items_page: state.run.next_page, items_page_total: 2 },
-            items: [
-              { contact: { id: state.run.next_page, first_name: "Synthetic" } },
-            ],
-          });
+          meta: { items_page: state.run.next_page, items_page_total: 2 },
+          items: [
+            { contact: { id: state.run.next_page, first_name: "Synthetic" } },
+          ],
+        });
     },
     gateway: {
       authenticate: async () =>
@@ -104,12 +104,14 @@ test("unauthenticated, nonadmin and disabled imports make no provider calls or s
 });
 test("client cannot inject credentials, cursor, actor, API host or arbitrary resource", async () => {
   const f = fixture();
-  for (const extra of [
-    { client_secret: "secret" },
-    { page: 3 },
-    { actor: "another" },
-    { api_url: "https://other.test" },
-  ])
+  for (
+    const extra of [
+      { client_secret: "secret" },
+      { page: 3 },
+      { actor: "another" },
+      { api_url: "https://other.test" },
+    ]
+  ) {
     assert.equal(
       (
         await f.handler(
@@ -118,6 +120,7 @@ test("client cannot inject credentials, cursor, actor, API host or arbitrary res
       ).status,
       400,
     );
+  }
   assert.equal(
     (await f.handler(f.request({ run_id: id, resource: "../../animal" })))
       .status,
@@ -175,9 +178,9 @@ test("healthstatus accepts only reviewed mapping input and uses server-derived a
       return url.endsWith("access_token")
         ? Response.json({ access_token: "token", expires_in: 43200 })
         : Response.json({
-            meta: { items_page: 1, items_page_total: 1 },
-            items: [{ healthstatus: { id: 9, animal_id: 77 } }],
-          });
+          meta: { items_page: 1, items_page_total: 1 },
+          items: [{ healthstatus: { id: 9, animal_id: 77 } }],
+        });
     },
     gateway: {
       authenticate: async () => ({ id: "actor", activeAdmin: true }),
@@ -228,4 +231,94 @@ test("healthstatus accepts only reviewed mapping input and uses server-derived a
     200,
   );
   assert.match(urls.at(-1)!, /animal_id=77$/);
+});
+
+test("clinical claims bind mapping and resource; legacy UUIDs cannot silently rebind", async () => {
+  for (const resource of ["consult", "history"] as const) {
+    const env: Record<string, string> = {
+      APP_URL: "https://thelivingroom.vet",
+      APP_ENV: "staging",
+      EZYVET_IMPORT_MODE: "staging",
+      EZYVET_SITE_UID: "site",
+      EZYVET_PARTNER_ID: "partner",
+      EZYVET_CLIENT_ID: "client",
+      EZYVET_CLIENT_SECRET: "secret",
+      EZYVET_READ_RESOURCES: resource,
+    };
+    let calls = 0, claims = 0, legacy = false, terminal = false;
+    const mapping = "e5200000-0000-4000-8000-000000000001";
+    const handler = createHandler({
+      env: (k) => env[k],
+      now: Date.now,
+      sleep: async () => {},
+      fetch: async (input) => {
+        calls++;
+        return String(input).endsWith("access_token")
+          ? Response.json({ access_token: "token", expires_in: 43200 })
+          : Response.json({
+            meta: { items_page: 1, items_page_total: 1 },
+            items: [{ [resource]: { id: 3, animal_id: 77 } }],
+          });
+      },
+      gateway: {
+        authenticate: async () => ({ id: "actor", activeAdmin: true }),
+        claim: async () => {
+          throw new Error("No generic clinical claim");
+        },
+        claimClinical: async (run, actor, site, selected, origin, link) => {
+          claims++;
+          assert.equal(link, mapping);
+          assert.equal(selected, resource);
+          assert.equal(origin, "https://api.trial.ezyvet.com");
+          if (legacy) {
+            throw {
+              code: "22023",
+              message: "CLINICAL_RUN_REQUIRES_NEW_MAPPING",
+            };
+          }
+          return {
+            id: run,
+            requested_by: actor,
+            source_site_uid: site,
+            resource,
+            status: terminal ? "review_ready" : "running",
+            next_page: 1,
+            lease_id: "lease",
+            animal_external_id: "77",
+          };
+        },
+        stage: async (run) => {
+          terminal = true;
+          return { ...run, status: "review_ready", next_page: 2 };
+        },
+        fail: async () => {},
+      },
+    });
+    const req = (extra: Record<string, unknown> = {}) =>
+      new Request("https://edge.test", {
+        method: "POST",
+        headers: { Authorization: "Bearer staff" },
+        body: JSON.stringify({ run_id: id, resource, ...extra }),
+      });
+    assert.equal((await handler(req())).status, 400);
+    assert.equal(
+      (await handler(req({ animal_link_id: mapping, animal_id: "999" })))
+        .status,
+      400,
+    );
+    assert.equal(claims, 0);
+    assert.equal((await handler(req({ animal_link_id: mapping }))).status, 200);
+    const before = calls;
+    assert.equal((await handler(req({ animal_link_id: mapping }))).status, 200);
+    assert.equal(calls, before);
+    legacy = true;
+    const rejected = await handler(req({ animal_link_id: mapping }));
+    assert.equal(rejected.status, 409);
+    assert.deepEqual(await rejected.json(), {
+      error: "CLINICAL_RUN_REQUIRES_NEW_MAPPING",
+      retry_after_seconds: 5,
+      retry_safe: false,
+    });
+    assert.equal(calls, before);
+  }
 });
