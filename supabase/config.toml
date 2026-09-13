@@ -55,3 +55,6 @@ verify_jwt = false
 verify_jwt = true
 [functions.recover-payment-collection]
 verify_jwt = true
+
+[functions.verify-payment-reconciliation]
+verify_jwt = true
