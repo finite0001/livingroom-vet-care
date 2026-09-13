@@ -1,5 +1,13 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — payment runtime and security continuation
+
+The owner-selected payment backend remains `mgadheotkdnrsatfivjy`. Its runtime Stripe key has been verified against account `acct_1UF1ewGUaxUNX5Ol` with test mode confirmed. Sandbox webhook `we_1UFEiWGUaxUNX5OlbNtD6lHW` is registered with its signing secret saved; delivery and payment gates remain disabled. Earlier reconnection requests in this historical tracker are superseded by that verified runtime setup.
+
+The owner confirmed `thelivingroom.vet` as the intended domain and supplied `livingroom-vet-care.lovable.app` as the published application. HTTP inspection found the former serving a `/lander` redirect and the latter's published entry bundle still targeting the old `ugpyjacqganaqtsiekay` backend without the new payment routes. Publishing the matching application and verifying return/status pages remain dependencies; no public cutover has occurred in this continuation.
+
+[Payment trigger hardening](payment-trigger-hardening.md) records the independently verified search-path correction deployed to the owner-selected payment backend. It preserves all clinical, provider and full-launch acceptance gates below.
+
 Goal: complete all requested practice software and website components, then perform one coordinated rollout. Stacked PRs are implementation increments; merging them is not evidence that a commercial launch is ready. The original scope is preserved below.
 
 ## Current release checkpoint
