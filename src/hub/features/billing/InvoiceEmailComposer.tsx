@@ -405,9 +405,13 @@ function InvoiceEmailSession({
       )}
       <Button
         variant="outline"
-        disabled={busy}
+        disabled={busy || (composing && !pending.current)}
         onClick={() =>
           void run(async () => {
+            if (composing && !pending.current)
+              throw new Error(
+                "Discard the unsent draft before recovering an older email.",
+              );
             if (!hydrated.current) {
               await recovery.refetch();
             } else await recover();

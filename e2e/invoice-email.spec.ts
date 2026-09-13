@@ -298,6 +298,26 @@ test("lost captured prepare and queue responses recover same request after reloa
   await email
     .getByLabel("Invoice email subject")
     .fill("Second explicitly requested copy");
+  await expect(
+    email.getByRole("button", {
+      name: "Recover saved invoice email and receipt",
+    }),
+  ).toBeDisabled();
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(email.getByLabel("Invoice email subject")).toHaveValue(
+    "Second explicitly requested copy",
+  );
+  await page.getByRole("button", { name: "Home", exact: true }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page.getByRole("button", { name: "Stay and reconcile" }).click();
+  await expect(email.getByLabel("Invoice email subject")).toHaveValue(
+    "Second explicitly requested copy",
+  );
+  await email
+    .getByRole("button", { name: "Discard invoice email draft" })
+    .click();
   await email
     .getByRole("button", { name: "Recover saved invoice email and receipt" })
     .click();
