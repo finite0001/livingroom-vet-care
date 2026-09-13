@@ -1,6 +1,6 @@
 import { InquiryNavigationLink } from "@/hub/features/inquiries/WebsiteInquiriesPage";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Archive, CheckCheck, Inbox, Plus, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,7 @@ export default function ConversationsPage() {
           <div>
             <h1 className="text-lg font-bold">Inbox</h1>
             <InquiryNavigationLink />
+            <Link to="/hub/inbox/review" className="block text-sm text-primary underline">Review unmatched incoming messages</Link>
             <p className="text-xs text-muted-foreground" aria-live="polite">
               {count.isError
                 ? "Your unread count is unavailable"
