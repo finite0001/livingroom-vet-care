@@ -16,15 +16,34 @@ import {
 import { createStaffDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
 import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
 const project = process.env.PAYMENT_TEST_PROJECT;
-assert.ok(project, "Run source-disposable.py; an owned disposable project is required");
+assert.ok(
+  project,
+  "Run source-disposable.py; an owned disposable project is required",
+);
 const projectId = readFileSync(`${project}/supabase/config.toml`, "utf8").match(
   /^project_id\s*=\s*"([a-zA-Z0-9_-]+)"/m,
 )?.[1];
-assert.ok(projectId && /^lrv-source-artifacts-[a-f0-9]{12}$/.test(projectId), "Refuse policy fixtures outside an owned disposable source-artifact project");
-const inspected = JSON.parse(execFileSync("docker", ["inspect", `supabase_db_${projectId}`], {encoding:"utf8",stdio:["ignore","pipe","pipe"]}));
+assert.ok(
+  projectId && /^lrv-source-artifacts-[a-f0-9]{12}$/.test(projectId),
+  "Refuse policy fixtures outside an owned disposable source-artifact project",
+);
+const inspected = JSON.parse(
+  execFileSync("docker", ["inspect", `supabase_db_${projectId}`], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }),
+);
 const labels = inspected[0]?.Config?.Labels;
-assert.equal(labels?.["com.supabase.cli.project"], projectId, "Disposable Docker project must match");
-assert.equal(realpathSync(labels?.["com.supabase.cli.workdir"]), realpathSync(project), "Disposable Docker workdir must match");
+assert.equal(
+  labels?.["com.supabase.cli.project"],
+  projectId,
+  "Disposable Docker project must match",
+);
+assert.equal(
+  realpathSync(labels?.["com.supabase.cli.workdir"]),
+  realpathSync(project),
+  "Disposable Docker workdir must match",
+);
 const local = JSON.parse(
   execFileSync(
     "supabase",
@@ -211,7 +230,7 @@ try {
     p_file_name: "synthetic-source.pdf",
     p_mime_type: "application/pdf",
     p_file_size: bytes.length,
-    p_category: "lab_result",
+    p_category: "medical_record",
     p_source: "Synthetic test",
     p_document_date: null,
     p_visibility: "client_shareable",
@@ -297,6 +316,73 @@ try {
     p_review_reason: "Synthetic explicit original review",
     p_attest: true,
   });
+  // One original can legitimately back both a local lab report and an
+  // explicitly approved imported record. Both frozen proofs must survive dedup.
+  const externalSnapshot = randomUUID(),
+    animalLink = randomUUID(),
+    externalReceipt = randomUUID(),
+    externalRecord = randomUUID(),
+    mappingRequest = randomUUID(),
+    site = `synthetic-${randomUUID()}`;
+  ids.push(
+    externalSnapshot,
+    animalLink,
+    externalReceipt,
+    externalRecord,
+    mappingRequest,
+  );
+  sql(
+    `insert into public.ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) values(${
+      quote(externalSnapshot)
+    },'https://api.trial.ezyvet.com',${
+      quote(site)
+    },'animal','77','{"id":77,"contact_id":8}','synthetic-hash',${
+      quote(actor)
+    });
+    insert into public.ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by) values(${
+      quote(animalLink)
+    },${
+      quote(mappingRequest)
+    },'synthetic-link','https://api.trial.ezyvet.com',${
+      quote(site)
+    },'animal','77',${quote(externalSnapshot)},1,${quote(client)},${
+      quote(pet)
+    },1,'link','SYNTHETIC TEST ONLY',${quote(actor)});`,
+  );
+  const externalStaged = await staff("stage_external_record_receipt", {
+    p_id: externalReceipt,
+    p_animal_link_id: animalLink,
+    p_expected_pet_version: 1,
+    p_document_id: document,
+    p_document_version: ready.version,
+    p_export_reference: "Synthetic manually reviewed export",
+    p_received_at: new Date(Date.now() - 1000).toISOString(),
+    p_previous_record_id: null,
+    p_review_reason: "Synthetic explicit mapping and original review",
+  });
+  const externalCaptured = await rpc("capture_external_record_bytes", {
+    p_receipt_id: externalReceipt,
+    p_actor_id: actor,
+    p_expected_receipt_hash: externalStaged.receipt_hash,
+    p_document_version: ready.version,
+    p_content_sha256: await sha256Hex(
+      await download("patient-documents", storagePath, bytes.length),
+    ),
+    p_file_size: bytes.length,
+    p_mime_type: "application/pdf",
+  });
+  const externalApproved = await staff("approve_external_record_import", {
+    p_id: externalRecord,
+    p_receipt_id: externalReceipt,
+    p_expected_receipt_hash: externalStaged.receipt_hash,
+    p_expected_capture_hash: externalCaptured.capture_hash,
+    p_attest: true,
+  });
+  check(
+    externalApproved.id === externalRecord &&
+      externalApproved.animal_link_id === animalLink,
+    "Actual external stage, private-byte capture and separate approval bind the reviewed source mapping",
+  );
   sql(
     `select set_config('request.jwt.claims',${
       quote(JSON.stringify({ sub: actor, role: "authenticated" }))
@@ -307,7 +393,7 @@ try {
   const selection = {
     document_ids: [document],
     lab_report_ids: [report],
-    external_record_ids: [],
+    external_record_ids: [externalRecord],
   };
   async function release(channel: "EMAIL" | "SMS") {
     const args = {
@@ -335,6 +421,28 @@ try {
         captured.content_sha256 &&
       e.release.snapshot.lab_reports[0].capture_hash === captured.capture_hash,
     "Actual schema5 snapshot binds selected original to immutable lab capture",
+  );
+  check(
+    [e, s].every((value) => {
+      const snapshot = value.release.snapshot;
+      const external = snapshot.external_records[0];
+      const attachment = snapshot.attachments[0];
+      return snapshot.attachments.length === 1 &&
+        snapshot.external_records.length === 1 &&
+        external.id === externalRecord &&
+        external.capture_hash === externalCaptured.capture_hash &&
+        external.receipt_hash === externalStaged.receipt_hash &&
+        external.animal_link_id === animalLink &&
+        external.content_sha256 === captured.content_sha256 &&
+        attachment.provenance_captures.length === 2 &&
+        attachment.provenance_captures.some((
+          proof: { family: string; capture_hash: string },
+        ) =>
+          proof.family === "external_record" &&
+          proof.capture_hash === externalCaptured.capture_hash
+        );
+    }),
+    "Both real schema5 release projections retain external and lab proof on one deduplicated private original",
   );
   const requestId = randomUUID();
   ids.push(requestId);
