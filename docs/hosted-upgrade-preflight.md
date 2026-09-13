@@ -42,3 +42,30 @@ Protected evidence remains outsideGit at `/var/folders/j9/dv101nxj5_xd3rjcjkq6_x
 - Database archive SHA256: `7a5323a7340c863c774344f8cbce42707eb7d1c04cb3d02ff1cc9ba2a4adc3d0`
 
 This closes the local migration-order rehearsal gap. It does not compare actual hosted function bodies, establish deployment ownership, authorize hosted application or test real provider delivery. New payment/scheduler/retry tables are included in the schema comparison/restore but are not populated by this clinical restore fixture. Re-run hosted read-only preflight and coordinate the deployment owner before preparing a hosted backfill. [Runner instructions](../scripts/restore-rehearsal/README.md) describe the explicit mode and refusal to treat a resumed backup as a fresh upgrade.
+
+## Direct hosted routine comparison after PR100
+
+A fresh read-only query against `mgadheotkdnrsatfivjy` still found the same 51 receipts and zero Auth users, clients, pets and Storage objects. The local recreation of that exact migration subset was compared with the hosted public application catalog using the committed routine-inventory SQL. All 259 function definition hashes, owners, security-definer settings and configurations matched. All 168 trigger definitions and enable modes matched. No application routine was missing or extra.
+
+Six effective execution-grant differences were found:
+
+| Function | Expected role access | Extra hosted access |
+| --- | --- | --- |
+| `admin_set_staff_active(uuid,boolean)` | authenticated | anon, service_role |
+| `admin_update_staff_role(uuid,user_role)` | authenticated | anon, service_role |
+| `clock_in()` | authenticated | service_role |
+| `clock_out()` | authenticated | service_role |
+| `review_ezyvet_snapshot(uuid,text,uuid,uuid,text)` | authenticated | service_role |
+| `get_consent_submission(text)` | anon, authenticated | service_role |
+
+The source migrations revoke PUBLIC but omit some direct-role revocations; this is consistent with grants inherited from environment-specific defaults when the functions were created. It does not establish who applied those defaults. None of the pending migrations through4500 corrects these grants. The first five functions retain internal active-staff/ADMIN and actor checks; consent lookup intentionally permits an unexpired bearer token anonymously. This comparison does not demonstrate an anonymous privilege escalation. An additive explicit-grant correction with regression evidence is being prepared; no hosted permission was changed.
+
+The stronger local backfill/restore rehearsal passed in122.15s and verified cleanup, now also comparing function owners and trigger enable modes against canonical installation. Five comparison regression tests cover matching input and counterexamples involving body/authority/grant changes, disabled/replica-only triggers, changed history, missing routines and malformed inventories.
+
+Protected evidence: `/var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-restore-synthetic-andmkoob/`.
+
+- Executed runner SHA256: `5f3c63eef06cc840927f49f91a0e50b1238b7671c3834be721beb8ec4448efa4`
+- Initial local inventory SHA256: `c09cf2bf0d740aed1507e0026acb6e1cf5f0d50e8aacf4273c29b7d863680078`
+- Hosted inventory SHA256: `72d7b8bba46d7b34156aa464f77e0b05595db902c6f94c47b662bc5ff0aa27be`
+
+The inventory covers public application functions/triggers, not all RLS policies, table constraints, role memberships or managed schemas. Actual hosted correction, deployment ownership, recovery exports and final explicit dry run remain necessary before upgrade.

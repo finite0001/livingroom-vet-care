@@ -125,10 +125,10 @@ def functions_snapshot(project):
     # Compare all application routines, including effective role grants and trigger bindings.
     return json.loads(sql(project, """select jsonb_build_object(
       'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,
-        'definition',pg_get_functiondef(p.oid),'security_definer',p.prosecdef,'config',p.proconfig,
+        'definition',pg_get_functiondef(p.oid),'owner',pg_get_userbyid(p.proowner),'security_definer',p.prosecdef,'config',p.proconfig,
         'grants',(select jsonb_object_agg(r,has_function_privilege(r,p.oid,'EXECUTE')) from unnest(array['anon','authenticated','service_role']) r)) order by p.oid::regprocedure::text)
         from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f'),
-      'triggers',(select jsonb_agg(pg_get_triggerdef(t.oid) order by pg_get_triggerdef(t.oid)) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and not t.tgisinternal));"""))
+      'triggers',(select jsonb_agg(jsonb_build_object('definition',pg_get_triggerdef(t.oid),'enabled_mode',t.tgenabled) order by pg_get_triggerdef(t.oid) collate "C") from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and not t.tgisinternal));"""))
 
 def services(project):
     return [docker_name(project,kind) for kind in ['kong','auth','rest','storage','inbucket']]
@@ -140,6 +140,8 @@ try:
         command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
         if args.rehearse_observed_hosted_gaps:
             assert ledger(source)==[p.name.split('_')[0] for p in initial_files]
+            inventory_sql=(root/'scripts/restore-rehearsal/routine-inventory.sql').read_text()
+            (run/'initial-routine-inventory.json').write_text(sql(source,inventory_sql))
             for migration in missing_files: shutil.copy2(migration,source['path']/'supabase/migrations'/migration.name)
             verify_identity(source)
             push=['supabase','db','push','--local','--skip-vault','--workdir',str(source['path'])]
@@ -153,7 +155,7 @@ try:
             assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
-            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True},indent=2))
+            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])
