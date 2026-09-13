@@ -1,20 +1,47 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — private mailbox verified; application mail capacity pending
+
+The owner-created Fastmail trial now has the designated administrator mailbox. GoDaddy saved six root-mail DNS records; Fastmail verifies MX, DKIM and SPF and reports the domain ready to send and receive mail. [Mail commissioning evidence](mail-commissioning-plan.md) also records the staging APP_URL, Auth Site URL and exact password-reset redirect configuration. Actual message delivery, Auth SMTP, staff onboarding and clinical/provider acceptance remain unverified. Earlier mailbox-creation statements below are historical.
+
+The accessible Resend team is `finite01` (Pro), with 10 of 10 domain slots occupied, including the verified practice root. The provider blocks adding the planned `auth` and `reply` subdomains. Its Usage page offers 100 additional domains for $20/month; the add-on is off. No additional subscription was purchased and no existing domain was removed. Additional capacity or an explicitly selected alternative is needed before those sender domains can be commissioned.
+
+## September 13 — reviewed vaccination software deployed to staging
+
+PR112 passed combined CI at73abb6a and is merged into the release integration branch. [Staging deployment evidence](reviewed-vaccination-staging.md) records75 migrations, seven matching version3 export functions, selected hosted authorization checks and the refreshed protected frontend. No clinical approval, staff login, provider send or public cutover is claimed. The administrator mailbox still needs creation; Fastmail signup is with the owner for private password entry and terms acceptance.
+
+## September 13 — shared-team Auth callback separation implemented
+
+[Reserved-sender callback separation](auth-mail-webhook-separation.md) keeps signed Auth delivery statuses out of the client ledger while preserving unknown-client retries. All28 inbound tests and all three PR114 CI jobs pass. Staging webhook version3 matches the tested source; no Resend secrets are installed and the unconfigured endpoint returns503. No mailbox creation, Auth SMTP configuration or sending is claimed. The owner has supplied the first administrator's mailbox; authoritative root DNS still has no MX record, so actual private-mail delivery remains unverified.
+
+## September 13 — protected frontend preview available
+
+The current application now has a [protected Vercel preview](protected-frontend-preview.md) against the separately commissioned staging database. Its guarded hosted build passes; HTTP checks and the served bundle verify payment routes, staging backend selection and private-route headers. Staff/rendered/provider acceptance remains open. The public Lovable site and `thelivingroom.vet` were not cut over.
+
+## September 13 — payment runtime and security continuation
+
+The owner-selected payment backend remains `mgadheotkdnrsatfivjy`. Its runtime Stripe key has been verified against account `acct_1UF1ewGUaxUNX5Ol` with test mode confirmed. Sandbox webhook `we_1UFEiWGUaxUNX5OlbNtD6lHW` is registered with its signing secret saved; delivery and payment gates remain disabled. Earlier reconnection requests in this historical tracker are superseded by that verified runtime setup.
+
+The owner confirmed `thelivingroom.vet` as the intended domain and supplied `livingroom-vet-care.lovable.app` as the published application. HTTP inspection found the former serving a `/lander` redirect and the latter's published entry bundle still targeting the old `ugpyjacqganaqtsiekay` backend without the new payment routes. Publishing the matching application and verifying return/status pages remain dependencies; no public cutover has occurred in this continuation.
+
+[Payment trigger hardening](payment-trigger-hardening.md) records the independently verified search-path correction deployed to the owner-selected payment backend. It preserves all clinical, provider and full-launch acceptance gates below.
+
 Goal: complete all requested practice software and website components, then perform one coordinated rollout. Stacked PRs are implementation increments; merging them is not evidence that a commercial launch is ready. The original scope is preserved below.
 
 ## Current release checkpoint
 
+- PR106 (`e80cf62`) has all three GitHub CI jobs green (run34746522048), including the complete browser suite. Patient-scoped consult/history ingestion remains staging for explicit review; authorized ezyVet account/API access is confirmed by the owner; secure configuration and source validation remain pending.
 - PR104 (`c85b5f0`) has all three GitHub CI jobs green (run34745342987), as do its PR103/102 bases. Schema5 release-source implementation passed382 unit tests,41 focused browser cases, frozen Edge checks and24 disposable source-capture checks; the CI frontend job also passed the complete browser suite. See [integrated evidence](release-source-byte-binding.md).
 - Last read-only hosted verification: dedicated project `mgadheotkdnrsatfivjy` has51 migration receipts through3400 with older gaps. Its259 application routines and168 trigger bindings match the observed subset except the six direct grants documented in [hosted preflight](hosted-upgrade-preflight.md). The4600 correction is implemented and locally tested, but remains unapplied there.
-- The observed51-version history plus grant differences was reproduced locally and upgraded through69 migrations. Canonical permissions, captured records, private Storage/database restore and cleanup passed. This does not establish hosted recovery coverage or authorize a hosted backfill.
+- The observed51-version history plus grant differences was reproduced locally and upgraded through71 migrations. Canonical permissions, captured records, private Storage/database restore and cleanup passed. This does not establish hosted recovery coverage or authorize a hosted backfill.
 - No public cutover, provider commissioning, clinical approval or full hosted staff acceptance is claimed. Main remains outside this stacked-PR rollout; revalidate its actual state before merging.
-- Original Lovable and dedicated future-production environments must remain distinct. Separate staging, mail/Auth commissioning, Stripe reauthentication, provider contracts and owner/clinical acceptance remain open as detailed below.
+- Original Lovable and dedicated future-production environments must remain distinct. Staging has all 71 migrations and 28 reviewed Edge functions deployed; frontend and mail/Auth commissioning, Stripe reauthentication, provider contracts and owner/clinical acceptance remain open as detailed below.
 
 The tables below preserve the complete requested scope. Dated narrative checkpoints later in this document are historical evidence, not instructions to deploy those old revisions or claims that their counts describe today's hosted database.
 
 ## Next implementation
 
-The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/plan.md) preserves the remaining API-backed history, diagnoses/reactions, vaccinations, prescriptions, attachments and reconciliation scope. Phase1 is implemented at `2706291`: patient-scoped consult/history ingestion, exact page recovery, observation freshness and administrator review UI. Local evidence includes384 unit tests,13 browser cases,59 focused SQL assertions,41 contention checks,30 actual synthetic HTTP/Auth/PostgREST checks and a69-migration upgrade/restore rehearsal. PR105 planning CI is green; implementation CI is pending. The next phase makes reviewed source history usable in the clinical chart. Provider access and clinical acceptance remain open.
+The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/plan.md) preserves the remaining API-backed history, diagnoses/reactions, vaccinations, prescriptions, attachments and reconciliation scope. Phase1 is implemented in PR106 at `e80cf62`: patient-scoped consult/history ingestion, exact page recovery, observation freshness and administrator review UI. Local evidence includes384 unit tests,13 browser cases,59 focused SQL assertions,41 contention checks,30 actual synthetic HTTP/Auth/PostgREST checks and a69-migration upgrade/restore rehearsal. PR105 planning and PR106 implementation CI are green. Phase2 is implemented and locally verified at `ddf3d80` on `codex/ezyvet-reviewed-history`: administrator-approved source history, explicit DVM create/link decisions, source-discrepancy review and schema6 release disclosure. Its integrated checks passed 399 unit tests, 36 browser tests, 37 actual workflow checks and a 71-migration upgrade/restore; PR107 at `f1c7764` passed all three CI jobs (run34748271853). Database evidence includes 65 focused SQL assertions, 522 regressions and 63 contention checks. See [integrated evidence](release-imported-history-artifacts.md). Vaccination, prescription, attachment and full reconciliation work remains next. The pending [C11 clinical checklist](clinical-review/imported-history-and-problems.md) includes examples with and without full source narratives. Provider access and clinical acceptance remain open.
 
 ## User requirements
 
@@ -61,7 +88,7 @@ No test count, branch label, disabled endpoint, mock vendor adapter or populated
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet authorized import access, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The stated first-administrator address is `admin@thelivingroom.vet`, inferred from the owner's `admin@` response; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet clinical-resource samples and migration acceptance, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The owner has now explicitly supplied a named first-administrator mailbox privately, superseding the earlier inferred `admin@` address; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
 
 ## Current stack strategy
 
@@ -280,3 +307,43 @@ Read-only hosted catalog comparison after PR100 found six broader execution gran
 Migration4600 now explicitly corrects the six observed direct-role RPC grant differences. It passed46 focused SQL assertions,54 existing staff/ezyVet regressions and28 rollback upgrade checks. A full51→66 local rehearsal began with the observed permissions, matched the hosted routine inventory, converged to canonical permissions after all15 pending migrations, preserved captured records and passed database/private-Storage restore plus cleanup. [Correction evidence](explicit-rpc-grants.md) records the limits. The hosted correction remains unapplied; commercial readiness and provider/clinical acceptance remain incomplete.
 
 The next planned release extension is [schema5 selected lab/external-original provenance](../plans/20260913-release-source-provenance/plan.md). Scouts confirmed that schema4 does not include4100/4200 version ledgers and both delivery capture paths lack comparison to those original capture digests. The plan requires explicit selection, historical compatibility, safe acknowledgment locks and independent byte checks before claiming this workflow implemented. No release format, clinical acceptance or delivery behavior changed in the planning increment.
+
+## September 13 — hosted staging initialized
+
+The owner authorized the recommended additional $10/month staging project. `livingroom-vet-staging` (`kothoqicubowyhwfsrte`, US West) now contains the 71-migration PR107 schema. Hosted checks confirm zero clients, pets, Auth users and Storage objects, four private buckets, and no release/reminder policy rows. Public signup and email autoconfirm are disabled. The 28 reviewed Edge functions are deployed; frontend, staff and provider commissioning remain pending. See [staging setup and CLI findings](hosted-staging-proposal.md). Earlier entries describing staging as proposed reflect their historical integration state.
+
+## September 13 — mail topology selected
+
+The owner corrected the mail selection to Fastmail for private staff mailboxes and one Resend team for automated practice notices plus authentication/security mail. Postmark is removed; shared-team Auth/client webhook routing needs implementation and acceptance. Preparation is authorized; no mail purchase or second Resend team is authorized. Exact checkout prices remain pending. Clinical record/lab delivery remains required but is outside this initial transport commissioning scope. See the [selected mail plan](mail-commissioning-plan.md).
+
+The owner confirmed production ezyVet API credentials from Vet Connect Hub and authorized copying them into staging. Lovable could list only saved secret names. An owner-session ezyVet export subsequently supplied the client ID, client secret and site UID, now stored in staging. Existing credentials subsequently passed OAuth and a bounded contact read without a partner ID; clinical resource acceptance remains pending.
+
+## Owner direction — continue with read-only ezyVet imports
+
+Dr. Susan Edler owns the inquiry to her ezyVet representative. Build against read-only ezyVet access and keep Living Room Vet as the primary record system. Continue vaccination, prescription, attachment and reconciliation implementation independently of provider correspondence. Basic API authentication is verified; clinical-resource sample acceptance remains pending; no write-back or additional service fee is authorized. Mail remains Fastmail + one Resend team, including authentication mail, with no Postmark.
+
+## Existing read-only API verified
+
+The source GreenTree credentials returned HTTP 200 for OAuth without a partner ID. Issued scope/site claims matched the requested read-contact/read-animal access and exported site; a bounded one-record contact GET returned HTTP 200. Nothing was imported or modified. The mandatory partner-ID gate was removed from the adapter; Dr. Edler’s separate inquiry about two-way access no longer blocks read-only connection work.
+
+## Consult-scoped vaccination intake — implementation stack
+
+Migration 5200 and the administrator intake workflow freeze the approved patient mapping and current scoped consultation, preserve raw vaccination evidence, and support exact-run recovery and server discovery. Generic vaccination ingestion is blocked. Shared navigation protection retains pending clinical and vaccination work together.
+
+Verification passes: 407 unit tests, 24 importer tests, 21 targeted browser tests, 81 focused SQL assertions, 215 existing import regressions, 53 concurrency/runner checks and 43 actual disposable Auth/HTTP checks. Lint, type checking and the production build pass with existing warnings. Receipt backup/restore verification is tracked in [runtime evidence](vaccination-runtime-evidence.md).
+
+This completes source intake implementation only. Product mapping, date interpretation, clinical adoption and Dr. Edler's review remain later work. The new migration and optional-partner importer are now deployed to hosted staging; permission and anonymous-denial checks passed. The direct read-only connection proof remains separate from hosted staff and vaccination sample acceptance. See [staging commissioning](vaccination-staging-commissioning.md).
+
+## Reviewed outside vaccination history — implementation stack
+
+The patient chart now provides DVM-reviewed interpretation of scoped ezyVet vaccinations, immutable correction history, durable request recovery and active-staff read access. Schema7 packages explicitly include outside vaccination history with existing narratives and original-file verification. Approval creates no native treatment, due plan, stock movement, charge, certificate or reminder.
+
+Validation:418 unit tests,45 targeted browser cases,57 focused review SQL assertions,143 existing regressions,59 observed concurrency checks,24 release SQL assertions,70 actual local review API checks and42 actual local mixed-release checks passed. The51→74 upgrade/restore preserved reviewed vaccination/source lineage and existing fixtures, with cleanup verified. [Feature/evidence](features/reviewed-outside-vaccinations.md) and [Dr. Edler's unapproved review cases](clinical-review/outside-vaccination-history.md) are recorded.
+
+This increment is not yet deployed to hosted staging. Active due-plan adoption, global source-product mapping, clinical approval and authorized practice acceptance remain required subsequent work. No public cutover or clinical policy activation occurred.
+
+## Prescription intake staging rollout
+
+PR118 passed frontend, database and Edge CI. The staging database now has77 migrations, including5500/5600, and the matching JWT-protected importer is deployed. Six private table boundaries, six administrator rejection probes, deployed-source comparison and anonymous HTTP denial passed; no patients, imports or outgoing messages were created. See [rollout evidence](prescription-intake-staging.md). The prior reviewed-vaccination deployment is recorded in [its staging report](reviewed-vaccination-staging.md), superseding the earlier not-deployed checkpoint above.
+
+Prescription reconciliation/review, patient chart history, release inclusion, populated restore coverage and live clinical acceptance remain unfinished. The protected frontend has not yet been updated for prescription intake. No production cutover or provider activation occurred.

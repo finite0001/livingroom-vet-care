@@ -1,12 +1,16 @@
 # Phase3 — Remaining clinical resources and complete migration
 
-Priority: required for full requested ezyVet migration. Status: unimplemented; resource-specific design and account evidence required. Phases1/2 cannot substitute for this scope.
+Priority: required for full requested ezyVet migration. Status: vaccination intake implemented; remaining clinical review/resources and account acceptance pending. Phases1/2 cannot substitute for this scope.
+
+Completed intake: [Phase 3a](phase-03a-vaccination-intake.md). Implemented review: [Phase 3b — reviewed outside vaccination history](phase-03b-reviewed-vaccination-history.md).
 
 ## Vaccinations and due dates
 
 Resolve every vaccination through its same-site consult and approved patient mapping; validate product references against a reviewed catalog mapping. Retain original source values plus explicit reviewed administration and due dates. Preserve unknown lot, manufacturer, route, dose and issuer details rather than fabricating certificate eligibility. Reuse historical treatment semantics only after its required fields can be legitimately supplied. An import must never decrement stock, bill the client or assert a vaccine was administered locally. A source next-date is historical evidence; adoption into the active reminder plan requires an explicit clinician decision. Reconciliation must identify missing consults/products, duplicate administrations and conflicting dates. Certificate issuance remains the separately reviewed native workflow.
 
 ## Prescription history
+
+The refreshed read contract and implementation sequence are in [Phase 3c — outside prescription history](phase-03c-prescription-history.md). This remains unimplemented; the plan does not establish provider or clinical acceptance.
 
 Implement the documented prescription and prescription-item read contracts, approved patient/consult joins and explicit product mapping. Keep outside prescriber reference, prescribed date, instructions and quantity/remaining data as historical source values. Add a historical prescription representation rather than misusing refill requests or administration records. An import cannot grant a refill, authorize a new prescription, infer dose units, dispense inventory or create charges. Preserve discontinued/unknown statuses with reviewed interpretation. Any conversion to an active local prescription requires a distinct native prescribing workflow with the correct clinician authority; that is separate from historical import.
 
@@ -43,4 +47,4 @@ Base: `/Users/davidedler/livingroom-vet-ezyvet-clinical-plan`.
 
 ## Open dependencies
 
-API entitlement and supported attachment/export contracts; actual site data and source date semantics; catalog/prescriber mappings; clinician approval; supervised cutover window. Continue independently implementable work while these remain pending, but keep commissioning disabled.
+Read-only API availability is the owner-approved implementation premise. Dr. Susan Edler is clarifying the existing entitlement with her representative; no ezyVet write-back is in scope. Basic read-only authentication is verified; supported attachment/export contracts; actual site data and source date semantics; catalog/prescriber mappings; clinician approval; supervised cutover window. Continue independently implementable work while these remain pending, but keep commissioning disabled.

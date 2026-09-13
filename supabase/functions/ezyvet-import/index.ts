@@ -57,6 +57,68 @@ const handler = createHandler({
       if (error) throw error;
       return data as ImportRun;
     },
+    async claimVaccination(
+      id,
+      actor,
+      site,
+      sourceOrigin,
+      animalLinkId,
+      consultSnapshotId,
+      consultPayloadHash,
+      consultObservedHeadVersion,
+    ) {
+      const { data, error } = await admin.rpc(
+        "claim_ezyvet_vaccination_import",
+        {
+          p_id: id,
+          p_actor: actor,
+          p_site_uid: site,
+          p_resource: "vaccination",
+          p_source_origin: sourceOrigin,
+          p_animal_link_id: animalLinkId,
+          p_consult_snapshot_id: consultSnapshotId,
+          p_consult_payload_hash: consultPayloadHash,
+          p_consult_observed_head_version: consultObservedHeadVersion,
+        },
+      );
+      if (error) throw error;
+      return data as ImportRun;
+    },
+    async claimPrescriptionItem(
+      id,
+      actor,
+      site,
+      sourceOrigin,
+      animalLinkId,
+      prescriptionSnapshotId,
+      prescriptionPayloadHash,
+      prescriptionObservedHeadVersion,
+    ) {
+      const { data, error } = await admin.rpc(
+        "claim_ezyvet_prescriptionitem_import",
+        {
+          p_id: id,
+          p_actor: actor,
+          p_site_uid: site,
+          p_resource: "prescriptionitem",
+          p_source_origin: sourceOrigin,
+          p_animal_link_id: animalLinkId,
+          p_prescription_snapshot_id: prescriptionSnapshotId,
+          p_prescription_payload_hash: prescriptionPayloadHash,
+          p_prescription_observed_head_version: prescriptionObservedHeadVersion,
+        },
+      );
+      if (error) throw error;
+      return data as ImportRun;
+    },
+    async claimPrescription(id, actor, site, sourceOrigin, animalLinkId) {
+      const { data, error } = await admin.rpc("claim_ezyvet_prescription_import", {
+        p_id: id, p_actor: actor, p_site_uid: site, p_resource: "prescription",
+        p_source_origin: sourceOrigin, p_animal_link_id: animalLinkId,
+      });
+      if (error) throw error;
+      return data as ImportRun;
+    },
     async stage(run, actor, page) {
       const { data, error } = await admin.rpc("stage_ezyvet_import_page", {
         p_id: run.id,

@@ -96,10 +96,10 @@ export function PatientRecordReleases({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates-v5", petId, sourcePage],
+    queryKey: ["release-candidates-v7", petId, sourcePage],
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources_v5",
+        "list_record_release_sources_v7",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -110,7 +110,7 @@ export function PatientRecordReleases({
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
-        typeof data.policy_v5_accepted !== "boolean" ||
+        typeof data.policy_v7_accepted !== "boolean" ||
         !data.has_more ||
         !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
@@ -135,6 +135,10 @@ export function PatientRecordReleases({
                     typeof item.source_label === "string" &&
                     Number.isSafeInteger(item.acknowledgment_count) &&
                     item.acknowledgment_count! >= 0)) &&
+                ((kind !== "imported_history_ids" && kind !== "imported_vaccination_ids") ||
+                  (Number.isSafeInteger(item.version) &&
+                    item.version > 0 &&
+                    typeof item.source_label === "string")) &&
                 (kind !== "document_ids" ||
                   (Array.isArray(item.required_lab_report_ids) &&
                     item.required_lab_report_ids.every(
@@ -246,9 +250,10 @@ export function PatientRecordReleases({
   };
   const setChosen = (kind: SourceKind, id: string, checked: boolean) => {
     const existing = selection[kind] || [];
-    if (checked && existing.length >= 100) {
+    const limit = kind === "imported_vaccination_ids" ? 20 : 100;
+    if (checked && existing.length >= limit) {
       setError(
-        "Use a separate package for more than 100 records in one source family.",
+        `Use a separate package for more than ${limit} records in this source family.`,
       );
       return;
     }
@@ -265,6 +270,7 @@ export function PatientRecordReleases({
       const ids = mergeReleaseSelection(
         selection[kind] || [],
         (candidates.data?.[kind] || []).map((item) => item.id),
+        kind === "imported_vaccination_ids" ? 20 : 100,
       );
       edit();
       setSelection((current) => ({ ...current, [kind]: ids }));
@@ -275,7 +281,7 @@ export function PatientRecordReleases({
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources_v5",
+        "select_all_record_release_sources_v7",
         { p_pet_id: petId },
       );
       if (error) throw error;
@@ -285,7 +291,7 @@ export function PatientRecordReleases({
         !kinds.every(
           (kind) =>
             Array.isArray(data.selection[kind]) &&
-            data.selection[kind]!.length <= 100 &&
+            data.selection[kind]!.length <= (kind === "imported_vaccination_ids" ? 20 : 100) &&
             data.selection[kind]!.every((id) => typeof id === "string"),
         )
       )
@@ -314,10 +320,14 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v5",
+        "preview_record_release_v7",
         args,
       );
       if (error) throw error;
+      if (!data || data.snapshot.schema_version !== 7)
+        throw new Error(
+          "Current source-aware release preview is unavailable. Preserve selections and retry.",
+        );
       previewArgsRef.current = args;
       setPreview(data);
       setReviewed(false);
@@ -606,11 +616,12 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_v5_accepted && (
+              {!candidates.data.policy_v7_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 5, including verified laboratory and
+                  operator (version 7, including reviewed outside vaccinations, imported clinical narratives,
+                  locally reviewed source findings, verified laboratory and
                   imported-record provenance).
                 </p>
               )}
@@ -706,6 +717,17 @@ export function PatientRecordReleases({
                                 separate from clinical acknowledgment.
                               </p>
                             </div>
+                          )}
+                          {kind === "imported_vaccination_ids" && (
+                            <p className="text-sm">{item.source_label}. Reviewed outside history; no local administration or active due plan is inferred. Select at most 20 vaccination versions per package.</p>
+                          )}
+                          {kind === "imported_history_ids" && (
+                            <p className="text-sm">
+                              {item.source_label}. Full source narrative is
+                              included only when explicitly selected. Selected
+                              native problems carry their reviewed source
+                              references automatically.
+                            </p>
                           )}
                           {kind === "lab_order_ids" && (
                             <p className="text-xs text-muted-foreground">
@@ -835,7 +857,7 @@ export function PatientRecordReleases({
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !candidates.data.policy_v5_accepted ||
+                      !candidates.data.policy_v7_accepted ||
                       !reviewed
                     }
                     onClick={() => void confirm()}

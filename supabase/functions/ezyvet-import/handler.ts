@@ -20,6 +20,8 @@ export interface ImportRun {
   status: string;
   lease_id: string | null;
   animal_external_id?: string;
+  consult_external_id?: string;
+  prescription_external_id?: string;
 }
 export interface ImportGateway {
   authenticate: (
@@ -46,6 +48,29 @@ export interface ImportGateway {
     resource: ClinicalResource,
     sourceOrigin: string,
     animalLinkId: string,
+  ) => Promise<ImportRun>;
+  claimVaccination?: (
+    id: string,
+    actor: string,
+    site: string,
+    sourceOrigin: string,
+    animalLinkId: string,
+    consultSnapshotId: string,
+    consultPayloadHash: string,
+    consultObservedHeadVersion: number,
+  ) => Promise<ImportRun>;
+  claimPrescriptionItem?: (
+    id: string,
+    actor: string,
+    site: string,
+    sourceOrigin: string,
+    animalLinkId: string,
+    prescriptionSnapshotId: string,
+    prescriptionPayloadHash: string,
+    prescriptionObservedHeadVersion: number,
+  ) => Promise<ImportRun>;
+  claimPrescription?: (
+    id: string, actor: string, site: string, sourceOrigin: string, animalLinkId: string,
   ) => Promise<ImportRun>;
   stage: (
     run: ImportRun,
@@ -141,7 +166,18 @@ export function createHandler(dependencies: HandlerDependencies) {
         Array.isArray(body) ||
         typeof body !== "object" ||
         Object.keys(body).some(
-          (key) => !["run_id", "resource", "animal_link_id"].includes(key),
+          (key) =>
+            ![
+              "run_id",
+              "resource",
+              "animal_link_id",
+              "consult_snapshot_id",
+              "consult_payload_hash",
+              "consult_observed_head_version",
+              "prescription_snapshot_id",
+              "prescription_payload_hash",
+              "prescription_observed_head_version",
+            ].includes(key),
         ) ||
         typeof body.run_id !== "string" ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -156,7 +192,8 @@ export function createHandler(dependencies: HandlerDependencies) {
         return respond({ error: "RESOURCE_NOT_CONFIGURED" }, 400);
       }
       if (
-        patientScoped(body.resource as Resource) &&
+        (patientScoped(body.resource as Resource) ||
+          body.resource === "vaccination" || body.resource === "prescriptionitem") &&
         (typeof body.animal_link_id !== "string" ||
           !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
             .test(body.animal_link_id))
@@ -165,11 +202,80 @@ export function createHandler(dependencies: HandlerDependencies) {
       }
       if (
         !patientScoped(body.resource as Resource) &&
+        body.resource !== "vaccination" && body.resource !== "prescriptionitem" &&
         body.animal_link_id !== undefined
       ) {
         return respond({ error: "INVALID_REQUEST" }, 400);
       }
-      run = body.resource === "healthstatus"
+      if (body.resource === "vaccination") {
+        if (
+          typeof body.consult_snapshot_id !== "string" ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+            .test(body.consult_snapshot_id) ||
+          typeof body.consult_payload_hash !== "string" ||
+          !/^[0-9a-f]{64}$/.test(body.consult_payload_hash) ||
+          typeof body.consult_observed_head_version !== "number" ||
+          !Number.isSafeInteger(body.consult_observed_head_version) ||
+          body.consult_observed_head_version < 1 ||
+          body.consult_observed_head_version > 2147483647
+        ) {
+          return respond({ error: "CONSULT_MAPPING_REQUIRED" }, 400);
+        }
+      } else if (
+        [
+          "consult_snapshot_id",
+          "consult_payload_hash",
+          "consult_observed_head_version",
+        ].some((key) => key in body)
+      ) {
+        return respond({ error: "INVALID_REQUEST" }, 400);
+      }
+      if (body.resource === "prescriptionitem") {
+        if (
+          typeof body.prescription_snapshot_id !== "string" ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+            .test(body.prescription_snapshot_id) ||
+          typeof body.prescription_payload_hash !== "string" ||
+          !/^[0-9a-f]{64}$/.test(body.prescription_payload_hash) ||
+          typeof body.prescription_observed_head_version !== "number" ||
+          !Number.isSafeInteger(body.prescription_observed_head_version) ||
+          body.prescription_observed_head_version < 1 ||
+          body.prescription_observed_head_version > 2147483647
+        ) {
+          return respond({ error: "PRESCRIPTION_MAPPING_REQUIRED" }, 400);
+        }
+      } else if (
+        [
+          "prescription_snapshot_id",
+          "prescription_payload_hash",
+          "prescription_observed_head_version",
+        ].some((key) => key in body)
+      ) {
+        return respond({ error: "INVALID_REQUEST" }, 400);
+      }
+      if ((body.resource === "prescription" && !dependencies.gateway.claimPrescription) ||
+        (body.resource === "prescriptionitem" && !dependencies.gateway.claimPrescriptionItem)) {
+        return respond({ error: "PRESCRIPTION_INTAKE_UNAVAILABLE" }, 503);
+      }
+      run = body.resource === "prescription"
+        ? await dependencies.gateway.claimPrescription!(body.run_id, actor, config.siteUid,
+          config.baseUrl, body.animal_link_id as string)
+        : body.resource === "prescriptionitem"
+        ? await dependencies.gateway.claimPrescriptionItem!(body.run_id, actor, config.siteUid,
+          config.baseUrl, body.animal_link_id as string, body.prescription_snapshot_id as string,
+          body.prescription_payload_hash as string, body.prescription_observed_head_version as number)
+        : body.resource === "vaccination"
+        ? await dependencies.gateway.claimVaccination!(
+          body.run_id,
+          actor,
+          config.siteUid,
+          config.baseUrl,
+          body.animal_link_id as string,
+          body.consult_snapshot_id as string,
+          body.consult_payload_hash as string,
+          body.consult_observed_head_version as number,
+        )
+        : body.resource === "healthstatus"
         ? await dependencies.gateway.claimWeight!(
           body.run_id,
           actor,
@@ -208,7 +314,9 @@ export function createHandler(dependencies: HandlerDependencies) {
       const page = await adapter.page(
         run.resource,
         run.next_page,
-        run.animal_external_id,
+        run.resource === "vaccination" || run.resource === "prescriptionitem" ? undefined : run.animal_external_id,
+        run.consult_external_id,
+        run.prescription_external_id,
       );
       const result = await dependencies.gateway.stage(run, actor, page);
       return respond(
@@ -216,18 +324,31 @@ export function createHandler(dependencies: HandlerDependencies) {
         200,
       );
     } catch (error) {
-      const code = error && typeof error === "object" && "code" in error &&
-          error.code === "22023" && "message" in error &&
-          error.message === "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
-        ? "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
-        : error instanceof ImportError
-        ? error.code
-        : error &&
-            typeof error === "object" &&
-            "code" in error &&
-            error.code === "55P03"
-        ? "IMPORT_BUSY"
-        : "IMPORT_FAILED";
+      const vaccinationCode = error && typeof error === "object" &&
+          "code" in error && "message" in error &&
+          ((error.code === "22023" &&
+            error.message === "VACCINATION_RUN_REQUIRES_NEW_CONTEXT") ||
+            (error.code === "40001" &&
+              error.message === "SOURCE_CONSULT_STALE"))
+        ? String(error.message)
+        : null;
+      const prescriptionCode = error && typeof error === "object" && "code" in error && "message" in error &&
+        ((error.code === "22023" && ["PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING", "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT"].includes(String(error.message))) ||
+          (error.code === "40001" && error.message === "SOURCE_PRESCRIPTION_STALE"))
+        ? String(error.message) : null;
+      const code = prescriptionCode ?? vaccinationCode ??
+        (error && typeof error === "object" && "code" in error &&
+            error.code === "22023" && "message" in error &&
+            error.message === "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
+          ? "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
+          : error instanceof ImportError
+          ? error.code
+          : error &&
+              typeof error === "object" &&
+              "code" in error &&
+              error.code === "55P03"
+          ? "IMPORT_BUSY"
+          : "IMPORT_FAILED");
       const seconds = error instanceof ImportError
         ? Math.max(2, error.retryAfter)
         : 5;
@@ -238,15 +359,21 @@ export function createHandler(dependencies: HandlerDependencies) {
           /* The durable lease expires; do not leak database or upstream error bodies. */
         }
       }
+      const requiresNewContext = [
+        "CLINICAL_RUN_REQUIRES_NEW_MAPPING",
+        "VACCINATION_RUN_REQUIRES_NEW_CONTEXT",
+        "SOURCE_CONSULT_STALE",
+        "PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING",
+        "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT",
+        "SOURCE_PRESCRIPTION_STALE",
+      ].includes(code);
       return respond(
         {
           error: code,
           retry_after_seconds: seconds,
-          retry_safe: code !== "CLINICAL_RUN_REQUIRES_NEW_MAPPING",
+          retry_safe: !requiresNewContext,
         },
-        code === "IMPORT_BUSY" || code === "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
-          ? 409
-          : 503,
+        code === "IMPORT_BUSY" || requiresNewContext ? 409 : 503,
       );
     }
   };

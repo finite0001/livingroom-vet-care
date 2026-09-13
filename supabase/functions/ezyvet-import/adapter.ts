@@ -12,16 +12,21 @@ export const resources = [
   "history",
   "vaccination",
   "healthstatus",
+  "prescription",
+  "prescriptionitem",
 ] as const;
 export const resourceContracts = {
   animal: { path: "/v2/animal", limit: 50 },
   healthstatus: { path: "/v1/healthstatus", limit: 10 },
   consult: { path: "/v1/consult", limit: 10 },
   history: { path: "/v1/history", limit: 10 },
+  vaccination: { path: "/v1/vaccination", limit: 10 },
+  prescription: { path: "/v1/prescription", limit: 10 },
+  prescriptionitem: { path: "/v1/prescriptionitem", limit: 10 },
 } as const;
 export type ClinicalResource = "consult" | "history";
 export const patientScoped = (resource: Resource) =>
-  ["healthstatus", "consult", "history"].includes(resource);
+  ["healthstatus", "consult", "history", "prescription"].includes(resource);
 export interface ClinicalSourcePayload extends Record<string, unknown> {
   id: string | number;
   animal_id: string | number;
@@ -38,11 +43,22 @@ export interface HistorySourcePayload extends ClinicalSourcePayload {
   timestamp?: string | number | null;
   vet_id?: string | number | null;
 }
+export interface VaccinationSourcePayload extends Record<string, unknown> {
+  id: string | number;
+  consult_id: string | number;
+  product_id?: string | number | null;
+  qty?: string | number | null;
+  date_of_administration?: string | number | null;
+  date_of_next_administration?: string | number | null;
+  vet_id?: string | number | null;
+  description?: string | null;
+  notes?: string | null;
+}
 export type Resource = (typeof resources)[number];
 export interface EzyVetConfig {
   baseUrl: string;
   siteUid: string;
-  partnerId: string;
+  partnerId?: string;
   clientId: string;
   clientSecret: string;
   readResources: Resource[];
@@ -87,7 +103,6 @@ export function configuration(
   }
   const fields = [
     "EZYVET_SITE_UID",
-    "EZYVET_PARTNER_ID",
     "EZYVET_CLIENT_ID",
     "EZYVET_CLIENT_SECRET",
   ];
@@ -98,6 +113,15 @@ export function configuration(
     )
   ) {
     throw new ImportError("MISSING_CONFIGURATION");
+  }
+  // Some issued clinic credentials authenticate without a partner ID. Keep it
+  // optional rather than blocking a valid read-only connection on local config.
+  const partnerId = env("EZYVET_PARTNER_ID") || undefined;
+  if (
+    partnerId !== undefined &&
+    (partnerId.length > 4096 || /[\r\n]/.test(partnerId))
+  ) {
+    throw new ImportError("INVALID_PARTNER_CONFIGURATION");
   }
   const readResources = (
     env("EZYVET_READ_RESOURCES") || "contact,animal"
@@ -113,9 +137,9 @@ export function configuration(
     readResources: readResources as Resource[],
     baseUrl,
     siteUid: values[0]!,
-    partnerId: values[1]!,
-    clientId: values[2]!,
-    clientSecret: values[3]!,
+    partnerId,
+    clientId: values[1]!,
+    clientSecret: values[2]!,
   };
 }
 function record(value: unknown): value is Record<string, unknown> {
@@ -128,6 +152,12 @@ function integer(value: unknown): number {
   return typeof number === "number" && Number.isSafeInteger(number)
     ? number
     : NaN;
+}
+function validVaccinationId(value: unknown): boolean {
+  if (typeof value === "string" && !/^(0|[1-9][0-9]*)$/.test(value)) {
+    return false;
+  }
+  return Number.isSafeInteger(integer(value)) && integer(value) >= 0;
 }
 const excluded =
   /^(access_token|refresh_token|authorization|password|client_secret|partner_secret|driver_license_number|driver_license_issuer|driver_license_expiry)$/i;
@@ -155,7 +185,11 @@ export function parsePage(
     !Array.isArray(body.items) ||
     !record(body.meta) ||
     body.items.length >
-      (resource === "consult" || resource === "history" ? 10 : 50)
+      (resource === "consult" || resource === "history" ||
+          resource === "vaccination" || resource === "prescription" ||
+          resource === "prescriptionitem"
+        ? 10
+        : 50)
   ) {
     throw new ImportError("INVALID_UPSTREAM_SHAPE");
   }
@@ -220,6 +254,76 @@ export function parsePage(
         payload[prose] !== undefined && payload[prose] !== null &&
         typeof payload[prose] !== "string"
       ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+    }
+    if (resource === "vaccination") {
+      // Vaccinations belong to a consult, not directly to an animal. Retain
+      // optional clinical values verbatim; staging does not interpret them.
+      if (
+        !validVaccinationId(payload.id) ||
+        !validVaccinationId(payload.consult_id) ||
+        (payload.product_id !== undefined && payload.product_id !== null &&
+          !validVaccinationId(payload.product_id))
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      for (
+        const field of [
+          "qty",
+          "date_of_administration",
+          "date_of_next_administration",
+          "vet_id",
+          "created_at",
+          "modified_at",
+        ]
+      ) {
+        const value = payload[field];
+        if (
+          value !== undefined && value !== null &&
+          typeof value !== "string" &&
+          (typeof value !== "number" || !Number.isFinite(value))
+        ) {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
+      }
+      for (const field of ["description", "notes"]) {
+        if (
+          payload[field] !== undefined && payload[field] !== null &&
+          typeof payload[field] !== "string"
+        ) {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
+      }
+      if (
+        payload.active !== undefined && payload.active !== null &&
+        !["string", "number", "boolean"].includes(typeof payload.active)
+      ) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+    }
+    if (resource === "prescription" || resource === "prescriptionitem") {
+      const parent = resource === "prescription" ? "animal_id" : "prescription_id";
+      if (!validVaccinationId(payload.id) || !validVaccinationId(payload[parent])) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      // Preserve unresolved optional references and source item-list evidence.
+      // Association and eligibility for approval are checked by scoped intake.
+      for (const field of resource === "prescription"
+        ? ["consult_id", "prescribing_vet_user_id", "date_of_prescription", "created_at", "modified_at"]
+        : ["product_id", "qty", "remaining", "date_start", "serial_number", "created_at", "modified_at"]) {
+        const value = payload[field];
+        if (value !== undefined && value !== null && typeof value !== "string" &&
+          (typeof value !== "number" || !Number.isFinite(value))) {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
+      }
+      if (resource === "prescriptionitem" && payload.instructions !== undefined &&
+        payload.instructions !== null && typeof payload.instructions !== "string") {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      if (payload.active !== undefined && payload.active !== null &&
+        !["string", "number", "boolean"].includes(typeof payload.active)) {
         throw new ImportError("INVALID_UPSTREAM_SHAPE");
       }
     }
@@ -324,7 +428,7 @@ export function createAdapter(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        partner_id: config.partnerId,
+        ...(config.partnerId ? { partner_id: config.partnerId } : {}),
         client_id: config.clientId,
         client_secret: config.clientSecret,
         site_uid: config.siteUid,
@@ -365,6 +469,8 @@ export function createAdapter(
       resource: Resource,
       page: number,
       animalExternalId?: string,
+      consultExternalId?: string,
+      prescriptionExternalId?: string,
     ): Promise<PageResult> {
       if (
         !config.readResources.includes(resource) ||
@@ -380,8 +486,28 @@ export function createAdapter(
       ) {
         throw new ImportError("PATIENT_MAPPING_REQUIRED");
       }
+      if (
+        resource === "vaccination" &&
+        (animalExternalId !== undefined || !consultExternalId ||
+          !validVaccinationId(consultExternalId))
+      ) {
+        throw new ImportError("CONSULT_MAPPING_REQUIRED");
+      }
+      if (resource !== "vaccination" && consultExternalId !== undefined) {
+        throw new ImportError("INVALID_PAGE_REQUEST");
+      }
+      if (resource === "prescriptionitem" &&
+        (animalExternalId !== undefined || !prescriptionExternalId ||
+          !validVaccinationId(prescriptionExternalId))) {
+        throw new ImportError("PRESCRIPTION_MAPPING_REQUIRED");
+      }
+      if (resource !== "prescriptionitem" && prescriptionExternalId !== undefined) {
+        throw new ImportError("INVALID_PAGE_REQUEST");
+      }
       const contract = resource === "animal" || resource === "healthstatus" ||
-          resource === "consult" || resource === "history"
+          resource === "consult" || resource === "history" ||
+          resource === "vaccination" || resource === "prescription" ||
+          resource === "prescriptionitem"
         ? resourceContracts[resource]
         : { path: `/v1/${resource}`, limit: 50 };
       const query = new URLSearchParams({
@@ -390,6 +516,12 @@ export function createAdapter(
       });
       if (patientScoped(resource)) {
         query.set("animal_id", animalExternalId!);
+      }
+      if (resource === "vaccination") {
+        query.set("consult_id", consultExternalId!);
+      }
+      if (resource === "prescriptionitem") {
+        query.set("prescription_id", prescriptionExternalId!);
       }
       for (let attempt = 0; attempt < 2; attempt++) {
         const bearer = await accessToken();
@@ -421,6 +553,18 @@ export function createAdapter(
           )
         ) {
           throw new ImportError("SOURCE_PATIENT_MISMATCH");
+        }
+        if (
+          resource === "vaccination" && result.items.some(
+            (item) => String(item.payload.consult_id) !== consultExternalId,
+          )
+        ) {
+          throw new ImportError("SOURCE_CONSULT_MISMATCH");
+        }
+        if (resource === "prescriptionitem" && result.items.some(
+          (item) => String(item.payload.prescription_id) !== prescriptionExternalId,
+        )) {
+          throw new ImportError("SOURCE_PRESCRIPTION_MISMATCH");
         }
         return result;
       }

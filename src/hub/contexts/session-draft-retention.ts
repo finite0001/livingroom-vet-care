@@ -18,6 +18,11 @@ export function clearOtherInvoiceEmailIntents(
     "communication-processing-intent:",
     "outbox-retry-intent:",
     "lrv-ezyvet-clinical-run:",
+    "lrv-ezyvet-vaccination-run:",
+    "lrv-ezyvet-prescription-run:",
+    "lrv-ezyvet-prescriptionitem-run:",
+    "ezyvet-history-intent:",
+    "ezyvet-vaccination-review:",
   ];
   for (const prefix of prefixes) {
     const retained = actorId ? `${prefix}${actorId}:` : null;

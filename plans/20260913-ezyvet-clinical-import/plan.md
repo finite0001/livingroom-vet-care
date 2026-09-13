@@ -1,6 +1,6 @@
 # ezyVet clinical migration into Living Room Vet
 
-Status: phase1 implemented and locally verified; later phases and commissioning remain unfinished. Base: PR104, `c85b5f0`, migrations through4800. Living Room Vet remains primary; ezyVet is a read-only import source. This plan preserves the full clinical migration scope and sequences implementation without treating manual originals or raw staging as a completed migration.
+Status: phase1 implemented with local verification and green PR106 CI; phase2 is implemented with local verification and pending PR CI, and phase3/commissioning remain unfinished. Planning baseline: PR104, `c85b5f0`, migrations through4800. Phase2 implementation base: PR106, `e80cf62`, migrations through4900. Living Room Vet remains primary; ezyVet is a read-only import source. This plan preserves the full clinical migration scope and sequences implementation without treating manual originals or raw staging as a completed migration.
 
 ## Required outcome
 
@@ -10,13 +10,13 @@ An authorized operator imports the selected patient's clinical history, reviews 
 
 - [Current official contract audit](research/source-contracts.md).
 - [Existing staged adapter](../../docs/ezyvet-staged-import.md), [reviewed identity promotion](../../docs/ezyvet-reviewed-promotion.md), [weight import](../../docs/ezyvet-reviewed-weights.md), [manual originals](../../docs/plans/ezyvet-historical-records.md).
-- Current adapter stages consult/history/vaccination generically; these snapshots do not establish clinical semantics or patient ownership. History also incorrectly inherits the generic50-record request limit; documented maximum is10.
+- At the planning baseline, the adapter staged consult/history/vaccination generically, and history incorrectly inherited the generic50-record request limit. PR106 now enforces patient-scoped consult/history runs and the documented history limit10. Staging still does not establish clinical semantics or complete migration; vaccination remains subsequent work.
 - Native SOAP signing attributes the local signer and current time. External history cannot be passed through that operation as if originally signed here.
 
 ## Phases and implementation order
 
-1. [Patient-scoped clinical API ingestion](phase-01-patient-scoped-ingestion.md) — implemented with local evidence; implementation PR CI pending. Correct history bounds; tie consult/history runs and every stored page to an approved patient mapping, preserve leases/recovery, and expose the bounded workflow in the administrator page.
-2. [Reviewed history and actionable diagnoses/reactions](phase-02-reviewed-chart-history.md) — follows phase1. Immutable imported-history representation plus explicit locally authored create/link decisions for native problems, source discrepancy handling, clinical alerts and frozen-release provenance.
+1. [Patient-scoped clinical API ingestion](phase-01-patient-scoped-ingestion.md) — implemented with local evidence and green PR106 CI. Correct history bounds; tie consult/history runs and every stored page to an approved patient mapping, preserve leases/recovery, and expose the bounded workflow in the administrator page.
+2. [Reviewed history and actionable diagnoses/reactions](phase-02-reviewed-chart-history.md) — implemented and locally verified; PR CI pending. Immutable imported-history representation plus explicit locally authored create/link decisions for native problems, source discrepancy handling, clinical alerts and frozen-release provenance.
 3. [Vaccinations, prescriptions, attachments and migration reconciliation](phase-03-complete-migration.md) — required subsequent work. Do not omit these resources from completion because phase1/2 passes.
 
 Use separate owned worktrees for database, adapter/runtime and UI once a phase contract is frozen. Root integrates, runs combined checks and stacks draft PRs. Do not merge main, commission provider reads, change hosted schemas or create clinician approval during local implementation.

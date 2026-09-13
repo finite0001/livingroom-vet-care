@@ -14,7 +14,11 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       ),
-      { RESEND_INBOUND_ADDRESSES: Deno.env.get("RESEND_INBOUND_ADDRESSES") },
+      {
+        RESEND_INBOUND_ADDRESSES: Deno.env.get("RESEND_INBOUND_ADDRESSES"),
+        RESEND_FROM: Deno.env.get("RESEND_FROM"),
+        RESEND_AUTH_FROM_ADDRESS: Deno.env.get("RESEND_AUTH_FROM_ADDRESS"),
+      },
       (raw, headers) => verifier.verify(raw, headers),
     );
     return new Response(null, { status: 204 });

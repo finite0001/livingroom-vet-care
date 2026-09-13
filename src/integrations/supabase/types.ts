@@ -5564,6 +5564,122 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      prepare_ezyvet_history_approval: {
+        Args: { p_id: string; p_payload: Json; p_pet_id: string }
+        Returns: Json
+      }
+      approve_ezyvet_history: {
+        Args: {
+          p_confirmed: boolean
+          p_expected_hash: string
+          p_id: string
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      prepare_ezyvet_problem_extraction: {
+        Args: { p_id: string; p_payload: Json; p_pet_id: string }
+        Returns: Json
+      }
+      approve_ezyvet_problem_extraction: {
+        Args: {
+          p_confirmed: boolean
+          p_expected_hash: string
+          p_id: string
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      prepare_ezyvet_history_discrepancy: {
+        Args: { p_id: string; p_payload: Json; p_pet_id: string }
+        Returns: Json
+      }
+      approve_ezyvet_history_discrepancy: {
+        Args: {
+          p_confirmed: boolean
+          p_expected_hash: string
+          p_id: string
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      recover_ezyvet_history_request: {
+        Args: { p_id: string; p_kind: string; p_pet_id: string }
+        Returns: Json
+      }
+      abandon_ezyvet_history_request: {
+        Args: {
+          p_confirmed: boolean
+          p_id: string
+          p_kind: string
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      list_ezyvet_history_requests: {
+        Args: {
+          p_before_at?: string
+          p_before_id?: string
+          p_kind: string
+          p_limit?: number
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      list_patient_imported_histories: {
+        Args: {
+          p_before_at?: string
+          p_before_id?: string
+          p_limit?: number
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      search_patient_problems: {
+        Args: { p_limit?: number; p_pet_id: string; p_search: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          importance: string
+          notes: string
+          onset_date: string | null
+          pet_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "patient_problems"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      read_patient_problem_import_provenance: {
+        Args: { p_pet_id: string; p_problem_ids: string[] }
+        Returns: Json
+      }
+      preview_record_release_v6: {
+        Args: {
+          p_channel: string
+          p_client_id: string
+          p_pet_id: string
+          p_recipient: string
+          p_selection: Json
+        }
+        Returns: Json
+      }
+      list_record_release_sources_v6: {
+        Args: { p_offset?: number; p_pet_id: string }
+        Returns: Json
+      }
+      select_all_record_release_sources_v6: {
+        Args: { p_pet_id: string }
+        Returns: Json
+      }
       search_ezyvet_mapped_patients: {
         Args: { p_limit?: number; p_search: string }
         Returns: {

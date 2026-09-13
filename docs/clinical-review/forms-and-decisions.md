@@ -1,4 +1,4 @@
-# Form fields and decisions — DRAFT v3
+# Form fields and decisions — DRAFT v4
 
 All rows await review. Patient panels live at `/hub/patient/:petId`; administration of reviewed care wording/groups is at `/hub/tools/care-reminders`. Paths below are relative to the repository root. This is an inventory of implemented choices, not a proposed clinical protocol. Each checklist is intended to produce a concrete decision in the acceptance register.
 
@@ -142,3 +142,9 @@ Source: `src/hub/features/record-releases/ReleaseEmailComposer.tsx`; [implementa
 - [ ] Complete [the source-provenance disclosure checklist](release-source-provenance.md) against [the separate synthetic example](sources-example.html) and the exact integrated staff workflow.
 - [ ] Verify explicit source/original selection, historical version labels, local-review versus DVM-acknowledgment attribution, and old-release readability versus fresh-delivery eligibility.
 - [ ] Record the exact reviewed revision and any exclusions. Schema5 confirmation remains unavailable until separately accepted; this checklist does not record acceptance.
+
+## C11 — Imported API history and locally reviewed problems
+
+- [ ] Complete [the C11 checklist](imported-history-and-problems.md) using synthetic source histories and the exact integrated implementation.
+- [ ] Review source attribution, unresolved consultation context, explicit local status/importance, duplicate decisions, create/link behavior, source discrepancies and recovery.
+- [ ] Re-review C01/D02/D04 where imported findings enter clinical alerts or recipient disclosures. No clinical acceptance or schema6 activation is recorded by this pack.

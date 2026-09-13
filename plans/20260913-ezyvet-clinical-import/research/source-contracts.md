@@ -1,6 +1,6 @@
 # Source contracts and local architectural findings
 
-Reviewed2026-09-13 against the public [ezyVet API documentation](https://developers.ezyvet.com/), downloaded directly because the web reader exceeded its response-size limit. No account or clinical data was accessed. Public pages must be rechecked when implementing each resource and compared with authorized practice samples before commissioning.
+Reviewed 2026-09-13 against the public [ezyVet API documentation](https://developers.ezyvet.com/), downloaded directly because the web reader exceeded its response-size limit. No account or clinical data was accessed. Public pages must be rechecked when implementing each resource and compared with authorized practice samples before commissioning.
 
 ## Documented source facts
 
@@ -14,8 +14,8 @@ Reviewed2026-09-13 against the public [ezyVet API documentation](https://develop
 
 ## Repository findings
 
-- `supabase/functions/ezyvet-import/adapter.ts` has resource-specific contracts only for animal and healthstatus. All other resources currently request50 records. `fetchPage` enforces a source patient only for healthstatus.
-- `handler.ts` accepts `animal_link_id` only for healthstatus; SQL migration2300 binds its run to an immutable approved mapping and independently checks stored page identity. Extend this pattern for consult/history; do not bypass the existing generic claim protections.
+- `supabase/functions/ezyvet-import/adapter.ts` has resource-specific contracts for animal, healthstatus, consult and history. Consult/history use limit10 and enforce patient-scoped ingestion; vaccination now uses its dedicated consult-scoped contract and application cap of 10.
+- `handler.ts` accepts `animal_link_id` for healthstatus and consult/history. Migration2300 protects weight imports and migration4900 supplies patient-scoped clinical runs. Migration5200 adds the distinct vaccination consult-bound context; do not send an animal_id filter to an endpoint whose documented parent is consult_id.
 - Generic snapshots and `ezyvet_identity_heads` deduplicate by source host/site/resource/ID and payload hash. Source reversion can reuse a snapshot while advancing its head version. Approval must compare both snapshot hash and observed head version.
 - `src/hub/features/clinical/PatientProblems.tsx` uses native create/edit without durable import preparation. The new import needs stable operation IDs, immutable approvals and independent provenance rather than retrying ordinary null-ID creation.
 - `ClinicalWorkspace.tsx` signs with the current local actor/time. Imported narratives require their own attributed representation.
@@ -26,3 +26,9 @@ Reviewed2026-09-13 against the public [ezyVet API documentation](https://develop
 ## Alternatives
 
 A manual-original-to-problem transcription shortcut is implementable, but alone leaves the requested API migration gap. Automatic classification of history text would introduce unverified clinical interpretations. Use patient-scoped API history with immutable outside attribution, followed by explicit local review. Retain the manual-original workflow as a separate supported source, without claiming it completes API migration.
+
+## Vaccination contract refresh — September 13, 2026
+
+The official documentation specifies GET `/v1/vaccination`, scope `read-vaccination`, and `consult_id` filtering. Its documented default page size is 10; the importer deliberately caps each request and accepted page at 10. This application cap is not a claim that the provider documents a maximum of 10.
+
+Preserved source fields include `id`, `consult_id`, `product_id`, `active`, `created_at`, `modified_at`, `vet_id`, `qty`, `description`, `notes`, `date_of_administration` and `date_of_next_administration`. The documented examples contain string IDs; validation accepts canonical numeric strings and safe integers. Quantity represents product units without an inferred dose unit. Date interpretation, product mapping and local clinical adoption remain later review work. No practice vaccination sample was used in this contract verification.

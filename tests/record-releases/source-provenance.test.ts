@@ -1,4 +1,5 @@
 import test from "node:test";
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import {
   sourceOriginalBytes,
@@ -189,4 +190,13 @@ test("ordinary-only schema5 retains metadata contract without invented captured 
     delete d.provenance_captures;
   }
   assert.equal(JSON.parse((await email(b)).payload_text).attachments.length, 5);
+});
+
+// Frozen before adding schema6 imported history. Legacy documents must not change.
+test("schema5 source provenance golden remains unchanged", () => {
+  assert.equal(
+    createHash("sha256").update(renderRecordRelease(sourceProvenanceArtifact()))
+      .digest("hex"),
+    "01155bd6efa7ceb8e4f559d1f4f89a7b621f0020144f12baeeae268981061870",
+  );
 });

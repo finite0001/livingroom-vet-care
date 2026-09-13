@@ -1,0 +1,212 @@
+{
+  "project_ref": "kothoqicubowyhwfsrte",
+  "source_revision": "f1c7764",
+  "functions": [
+    {
+      "name": "dispatch-outbox",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "334eb2db07abc54a34eca84d5729e6cbad37bec5450c058efb4e00817a6c7cfa",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "enqueue-message",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "57a5472cf3fd101181c1fef00a9631851bdb85097dbd5c3a270af4c5e5489ca3"
+    },
+    {
+      "name": "ezyvet-import",
+      "version": 5,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "b5cec0923218daf80fd5c67d014cf6e6a188a72689c67ca2ec1c7a7a8e5f7536",
+      "source_revision": "0041468399ba4753c4f5f5f593bb2437f573eedf"
+    },
+    {
+      "name": "invoice-checkout",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "96c4f50002b983c9e4f8bf05349f29cc21b08a62c8552286c17c6a1117dc934e"
+    },
+    {
+      "name": "invoice-refund",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "efb085ff45e44fbbcd69c893f2aa49ffdc822500f644d136ab8569828fc2e776"
+    },
+    {
+      "name": "payment-collection",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "9225e919870955991cc3ce7a9fb77ff602eadb99bbdab1f82079b335d4fdd7c5"
+    },
+    {
+      "name": "payment-status",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "356250d57824a66f4e3d5eca739217106375d17623596ee642a5c54b2a6fe199"
+    },
+    {
+      "name": "prepare-document-link",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "b1e511d14b8dc80899b5b81c6b5ec18b0cc7c66cca6e8a242e3ce044df68387c",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "prepare-external-record",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "7b235a5e998e74e5be7ed62435d450bc085d73900aef4db3df6bfe4d4fb4e060"
+    },
+    {
+      "name": "prepare-invoice-email",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "6e2130cbe6c3050feed2841d8aa8c6259900d238333b6d4bff3070c579f63d9a",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "prepare-lab-report",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "57d11faa242d67d7fc0c8cc1baaae8191be11f23b883c56ff8b795bf37378143"
+    },
+    {
+      "name": "prepare-payment-collection",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "87c2d35de753dc36d3c08a3877e46a3d570c09859405d3620fcfff17ea755ace"
+    },
+    {
+      "name": "prepare-payment-delivery",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "41bc8410c8ab83a1abe132cf6a182f9cf480d6cd89427d1391f24a7fa2a468f1",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "prepare-release-email",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "66afbb397d7164eb744862ae40c4614c00ace671d3fea71f0e896792d1276549",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "process-inbound",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "cf8c402c0e3d9b71f1d56519e67654948ee3440a740b029ae4bc06bd2a03a819"
+    },
+    {
+      "name": "process-stripe-events",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "bfedc3a91c702fcbb3788d3a45bc8deb9d15e16e81f3cf847f028d495583baa6"
+    },
+    {
+      "name": "public-contact",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "ad77a0fb58569e529abdbf455288123076b15befdb7c0276e8f4345446a417e5"
+    },
+    {
+      "name": "queue-reminders",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "903d4275a853acb494e443b8f1158049a1140984db56b2bde3e3e4f4984fd17f"
+    },
+    {
+      "name": "recover-document-link",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "2e4b8b1601518f4bd71338cb71e327b8df42532bdf5da265a27a51c4691a4528",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "recover-payment-collection",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "9f0725d0d8bbd4c0c41c36bf5c4dd730d34eb4cc8bc577b1ccf0652eecef40ed"
+    },
+    {
+      "name": "resend-webhook",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "01d8d33160a41a5f5a796c5fa464f9d2bc9e4706313750775fc644a260d03614",
+      "source_revision": "0b7dc592f62efdeec3a18f3fb187ba9058dbf4ca"
+    },
+    {
+      "name": "retrieve-document-link",
+      "version": 3,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "278804c08f5ac8f3367e5f1181c395652d5f468fc54ce1e062b824c12d837b30",
+      "source_revision": "73abb6a4fbb66aad53c23f65ed172f50ffc35478"
+    },
+    {
+      "name": "send-email",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "23373fd03220b2ea1e2f35784c9637d8d14514b0cbd6a16b41262cc304f335ba"
+    },
+    {
+      "name": "send-provider-email",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "14e026f65a5a693ab05290b4f31ea8159cd8a59bcee4b64e1778ee503d5095fb"
+    },
+    {
+      "name": "send-sms",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "759cc1f9ee8c872a2b453295dbbf0f117c4041b5b210e82230543b111e21478a"
+    },
+    {
+      "name": "stripe-webhook",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "d97efbed2ae871e62b62bc24b80234a960591c67586377b4652b6318feb30b0b"
+    },
+    {
+      "name": "twilio-webhook",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "68940523cb697c4275c8574a6874211ed5beae042ba12162c679ff570bd876b4"
+    },
+    {
+      "name": "verify-payment-reconciliation",
+      "version": 2,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "f216bf2003949056f212670586464d2d94a95eca50c15df50b415319e308a068"
+    }
+  ],
+  "verified_at": "2026-09-13"
+}

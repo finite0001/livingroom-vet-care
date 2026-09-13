@@ -2,6 +2,8 @@
 
 Antech is the selected lab provider. A production adapter is not implemented or commissioned by this document. The existing [native lab-work workflow](lab-work.md) supports staff-entered orders, due dates, accession references, result dates, same-patient private documents and preserved corrections. Staff can use that workflow while integration requirements are resolved; it does not place an Antech order or retrieve an Antech result automatically.
 
+The practice owner confirmed that Antech has not yet assigned an account representative or onboarding contact. Obtaining that contact and the supported custom-practice-software integration contract remains pending. No outreach has been sent.
+
 ## Official public evidence reviewed 2026-09-12
 
 Antech's [development PIMS stub](https://pimsint-dev.antechdiagnostics.com/) displays clinic/user authentication and token fields, order placement/status, result status/retrieval, clinic and laboratory accession identifiers, PDF/DOC/XML/RTF result options, species/breed/unit/test-code lookups and explicit order/result acknowledgments. It is a development demonstration surface, **not a confirmed production API contract**. No authentication form was submitted or provider API called during this review.

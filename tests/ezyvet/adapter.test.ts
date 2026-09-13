@@ -379,3 +379,248 @@ test("consult and history require mapped animals, bounded pages and intact opaqu
     );
   }
 });
+
+test("vaccination fetch is read-only, consult-scoped and retains unresolved source values", async () => {
+  const calls: { url: string; init: RequestInit }[] = [];
+  const payload = {
+    id: "31",
+    consult_id: "82",
+    product_id: "54",
+    qty: "unknown",
+    date_of_administration: "0",
+    date_of_next_administration: null,
+    vet_id: "outside",
+    active: "false",
+    description: "<script>source</script>",
+    notes: "Uninterpreted vaccine history",
+    nested: { client_secret: "discard-me" },
+  };
+  const adapter = createAdapter({ ...config, readResources: ["vaccination"] }, {
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input, init) => {
+      const url = String(input);
+      calls.push({ url, init: init! });
+      return url.endsWith("access_token") ? token() : Response.json({
+        meta: { items_page: 1, items_page_total: 1 },
+        items: [{ vaccination: payload }],
+      });
+    },
+  });
+  for (const scope of [undefined, "", "oops", "9007199254740992", "-1"]) {
+    await assert.rejects(
+      adapter.page("vaccination", 1, undefined, scope),
+      /CONSULT_MAPPING_REQUIRED/,
+    );
+  }
+  await assert.rejects(
+    adapter.page("vaccination", 1, "77", "82"),
+    /CONSULT_MAPPING_REQUIRED/,
+  );
+  assert.equal(calls.length, 0);
+  const result = await adapter.page("vaccination", 1, undefined, "82");
+  assert.equal(
+    calls[1].url,
+    "https://api.trial.ezyvet.com/v1/vaccination?page=1&limit=10&consult_id=82",
+  );
+  assert.equal(calls[1].init.method, "GET");
+  assert.equal(calls[1].init.redirect, "error");
+  assert.equal(
+    JSON.parse(calls[0].init.body as string).scope,
+    "read-vaccination",
+  );
+  assert.deepEqual(result.items[0].payload, { ...payload, nested: {} });
+  assert.equal(JSON.stringify(result).includes("discard-me"), false);
+});
+
+test("vaccination page rejects malformed identities, duplicate IDs, nested clinical values and over-limit pages", () => {
+  const source = (payload: Record<string, unknown>) => ({
+    meta: { items_page: 1, items_page_total: 1 },
+    items: [{ vaccination: payload }],
+  });
+  const valid = { id: "31", consult_id: 82, product_id: null };
+  for (
+    const change of [
+      { id: "outside-id" },
+      { id: "031" },
+      { consult_id: "082" },
+      { product_id: "054" },
+      { id: "9007199254740992" },
+      { id: -1 },
+      { consult_id: null },
+      { consult_id: [] },
+      { consult_id: "9007199254740992" },
+      { product_id: {} },
+      { product_id: "n/a" },
+      { qty: {} },
+      { vet_id: [] },
+      { date_of_administration: {} },
+      { date_of_next_administration: [] },
+      { description: [] },
+      { notes: {} },
+      { active: {} },
+    ]
+  ) {
+    assert.throws(
+      () => parsePage(source({ ...valid, ...change }), "vaccination", 1),
+      /INVALID_UPSTREAM_SHAPE|DUPLICATE_OR_INVALID_EXTERNAL_ID/,
+    );
+  }
+  const repeated = {
+    ...source(valid),
+    items: [{ vaccination: valid }, { vaccination: valid }],
+  };
+  assert.throws(
+    () => parsePage(repeated, "vaccination", 1),
+    /DUPLICATE_OR_INVALID_EXTERNAL_ID/,
+  );
+  const tooMany = {
+    ...source(valid),
+    items: Array.from(
+      { length: 11 },
+      (_, id) => ({ vaccination: { ...valid, id } }),
+    ),
+  };
+  assert.throws(
+    () => parsePage(tooMany, "vaccination", 1),
+    /INVALID_UPSTREAM_SHAPE/,
+  );
+  assert.equal(
+    parsePage(source({ ...valid, qty: null, notes: null }), "vaccination", 1)
+      .items.length,
+    1,
+  );
+});
+
+test("mixed-consult vaccination page fails as a whole and unrelated resources reject consult scope", async () => {
+  let calls = 0;
+  const adapter = createAdapter({
+    ...config,
+    readResources: ["vaccination", "contact"],
+  }, {
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input) => {
+      calls++;
+      return String(input).endsWith("access_token") ? token() : Response.json({
+        meta: { items_page: 1, items_page_total: 1 },
+        items: [
+          { vaccination: { id: 1, consult_id: 82 } },
+          { vaccination: { id: 2, consult_id: 83 } },
+        ],
+      });
+    },
+  });
+  await assert.rejects(
+    adapter.page("contact", 1, undefined, "82"),
+    /INVALID_PAGE_REQUEST/,
+  );
+  assert.equal(calls, 0);
+  await assert.rejects(
+    adapter.page("vaccination", 1, undefined, "82"),
+    /SOURCE_CONSULT_MISMATCH/,
+  );
+  assert.equal(calls, 2);
+});
+
+test("issued clinic credentials may omit partner ID while retaining explicit read-only scopes", async () => {
+  const env: Record<string, string> = {
+    APP_ENV: "staging",
+    EZYVET_IMPORT_MODE: "staging",
+    EZYVET_API_URL: "https://api.ezyvet.com",
+    EZYVET_ALLOW_PRODUCTION_SOURCE: "true",
+    EZYVET_SITE_UID: "synthetic-site",
+    EZYVET_CLIENT_ID: "synthetic-client",
+    EZYVET_CLIENT_SECRET: "synthetic-secret",
+  };
+  const config = configuration((key) => env[key]);
+  assert.equal(config.partnerId, undefined);
+  assert.equal(config.clientId, "synthetic-client");
+  assert.equal(config.clientSecret, "synthetic-secret");
+  const bodies: Record<string, unknown>[] = [];
+  const adapter = createAdapter(config, {
+    now: Date.now,
+    sleep: async () => {},
+    fetch: async (input, init) => {
+      if (String(input).endsWith("access_token")) {
+        bodies.push(JSON.parse(String(init!.body)));
+        return token();
+      }
+      return Response.json(page());
+    },
+  });
+  await adapter.page("contact", 1);
+  assert.equal("partner_id" in bodies[0], false);
+  assert.equal(bodies[0].scope, "read-contact read-animal");
+  assert.equal(bodies[0].site_uid, "synthetic-site");
+  for (const bad of ["partner\nheader", "x".repeat(4097)]) {
+    env.EZYVET_PARTNER_ID = bad;
+    assert.throws(
+      () => configuration((key) => env[key]),
+      /INVALID_PARTNER_CONFIGURATION/,
+    );
+  }
+  env.EZYVET_PARTNER_ID = "";
+  assert.equal(configuration((key) => env[key]).partnerId, undefined);
+  delete env.EZYVET_CLIENT_SECRET;
+  assert.throws(
+    () => configuration((key) => env[key]),
+    /MISSING_CONFIGURATION/,
+  );
+});
+
+test("prescriptions and items use bounded parent-scoped read contracts and preserve source evidence", async () => {
+  const calls: string[] = [];
+  const adapter = createAdapter({ ...config, readResources: ["prescription", "prescriptionitem"] }, {
+    now: Date.now, sleep: async () => {},
+    fetch: async (input) => {
+      const url = String(input); calls.push(url);
+      if (url.endsWith("access_token")) return token();
+      const item = url.includes("/prescriptionitem?")
+        ? { prescriptionitem: { id: 8, prescription_id: "7", instructions: "Original instructions", qty: "2.50", remaining: "unknown" } }
+        : { prescription: { id: 7, animal_id: "42", prescribing_vet_user_id: "outside-vet", prescription_item_list: [8, "missing", 8] } };
+      return Response.json({ meta: { items_page: 1, items_page_total: 1 }, items: [item] });
+    },
+  });
+  await assert.rejects(adapter.page("prescription", 1), /PATIENT_MAPPING_REQUIRED/);
+  await assert.rejects(adapter.page("prescriptionitem", 1), /PRESCRIPTION_MAPPING_REQUIRED/);
+  await assert.rejects(adapter.page("prescriptionitem", 1, "42", undefined, "7"), /PRESCRIPTION_MAPPING_REQUIRED/);
+  await assert.rejects(adapter.page("prescription", 1, "42", undefined, "7"), /INVALID_PAGE_REQUEST/);
+  assert.equal(calls.length, 0);
+  const header = await adapter.page("prescription", 1, "42");
+  const items = await adapter.page("prescriptionitem", 1, undefined, undefined, "7");
+  assert.deepEqual(header.items[0].payload.prescription_item_list, [8, "missing", 8]);
+  assert.equal(items.items[0].payload.remaining, "unknown");
+  assert.ok(calls.some((url) => url.endsWith("/v1/prescription?page=1&limit=10&animal_id=42")));
+  assert.ok(calls.some((url) => url.endsWith("/v1/prescriptionitem?page=1&limit=10&prescription_id=7")));
+});
+
+test("one wrong-parent prescription row rejects the entire source page", async () => {
+  for (const resource of ["prescription", "prescriptionitem"] as const) {
+    const adapter = createAdapter({ ...config, readResources: [resource] }, {
+      now: Date.now, sleep: async () => {},
+      fetch: async (input) => String(input).endsWith("access_token") ? token() : Response.json({
+        meta: { items_page: 1, items_page_total: 1 },
+        items: [7, 99].map((parent, index) => ({ [resource]: {
+          id: index + 1, [resource === "prescription" ? "animal_id" : "prescription_id"]: parent,
+        } })),
+      }),
+    });
+    await assert.rejects(resource === "prescription"
+      ? adapter.page(resource, 1, "7")
+      : adapter.page(resource, 1, undefined, undefined, "7"),
+    resource === "prescription" ? /SOURCE_PATIENT_MISMATCH/ : /SOURCE_PRESCRIPTION_MISMATCH/);
+  }
+});
+
+test("prescription pages reject invalid identities, nested instructions and oversized pages", () => {
+  const body = (payload: Record<string, unknown>, count = 1) => ({
+    meta: { items_page: 1, items_page_total: 1 },
+    items: Array.from({ length: count }, (_, index) => ({ prescriptionitem: { ...payload, id: index + 1 } })),
+  });
+  for (const payload of [
+    { prescription_id: "01" }, { prescription_id: 7, instructions: { html: "bad" } },
+    { prescription_id: 7, qty: Infinity }, { prescription_id: 7, remaining: [] },
+  ]) assert.throws(() => parsePage(body(payload), "prescriptionitem", 1), /INVALID_UPSTREAM_SHAPE/);
+  assert.throws(() => parsePage(body({ prescription_id: 7 }, 11), "prescriptionitem", 1), /INVALID_UPSTREAM_SHAPE/);
+});
