@@ -43,3 +43,9 @@ verify_jwt = false
 verify_jwt = false
 [functions.invoice-refund]
 verify_jwt = true
+
+# Capability-only public endpoints; handlers validate role-scoped HMAC and durable hashes.
+[functions.payment-collection]
+verify_jwt = false
+[functions.payment-status]
+verify_jwt = false
