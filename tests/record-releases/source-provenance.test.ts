@@ -73,9 +73,13 @@ test("v5 selected source sections describe lineage, acknowledgments and local at
   const a = sourceProvenanceArtifact();
   a.preview.snapshot.lab_reports![0].source.source_report_reference =
     "<script>altered</script>";
+  a.preview.snapshot.attachments[0].file_name = "Report <original>.pdf";
+  a.preview.snapshot.attachments[1].file_name = "Report <original>.pdf";
   const html = renderRecordRelease(a);
   for (
     const text of [
+      "Original attachment 1: Report &lt;original&gt;.pdf",
+      "Original attachment 2: Report &lt;original&gt;.pdf",
       "Selected laboratory report provenance",
       "Selected external medical originals",
       "Historical version",

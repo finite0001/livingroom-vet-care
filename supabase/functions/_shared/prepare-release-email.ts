@@ -42,6 +42,7 @@ const headers = {
   "Access-Control-Allow-Headers":
     "authorization,apikey,content-type,x-client-info",
   "Content-Type": "application/json",
+  "Cache-Control": "no-store",
 };
 const json = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), { status, headers });
@@ -50,17 +51,20 @@ export function createPrepareReleaseEmailHandler(
 ) {
   return async (req: Request): Promise<Response> => {
     if (req.method === "OPTIONS") return new Response(null, { headers });
-    if (req.method !== "POST")
+    if (req.method !== "POST") {
       return json({ error: "Method not allowed" }, 405);
+    }
     const authorization = req.headers.get("Authorization");
-    if (!authorization?.startsWith("Bearer "))
+    if (!authorization?.startsWith("Bearer ")) {
       return json({ error: "Staff authorization required" }, 401);
+    }
     try {
       const auth = await deps.authenticate(authorization.slice(7));
       if (!auth) return json({ error: "Staff authorization required" }, 401);
       const text = await req.text();
-      if (new TextEncoder().encode(text).length > 450000)
+      if (new TextEncoder().encode(text).length > 450000) {
         return json({ error: "Email intent too large" }, 413);
+      }
       const args = JSON.parse(text);
       const keys = [
         "p_request_id",
@@ -76,8 +80,9 @@ export function createPrepareReleaseEmailHandler(
         Array.isArray(args) ||
         Object.keys(args).some((k) => !keys.includes(k)) ||
         keys.some((k) => typeof args[k] !== "string")
-      )
+      ) {
         return json({ error: "Exact release email intent required" }, 400);
+      }
       const prepared = (await rpc(
         auth.db,
         "prepare_release_email",
@@ -85,6 +90,12 @@ export function createPrepareReleaseEmailHandler(
       )) as PreparedReleaseEmail;
       // A recorded queue receipt settles an ambiguous retry; never capture or queue again here.
       if (prepared.receipt) return json(prepared);
+      // Exact prepare RPC already bound actor and request arguments. A captured
+      // payload is historical evidence, not fresh delivery authorization.
+      if (
+        typeof prepared.payload_hash === "string" &&
+        /^[a-f0-9]{64}$/.test(prepared.payload_hash)
+      ) return json(prepared);
       const context = (await rpc(
         deps.service,
         "release_email_capture_context",
@@ -118,24 +129,23 @@ export function createPrepareReleaseEmailHandler(
       // Never return provider payloads, private paths, base64 or SQL diagnostic context.
       return json(
         {
-          error:
-            code === "42501"
-              ? "Release or household authorization is unavailable."
-              : code === "23505"
-                ? "Recover the existing release email; its intent or bytes are already fixed."
-                : code === "23514"
-                  ? "Release email validation failed. Check the reviewed records and attachment limits."
-                  : "Preparation was not confirmed. Recover the saved request before retrying.",
+          error: code === "42501"
+            ? "Release or household authorization is unavailable."
+            : code === "23505"
+            ? "Recover the existing release email; its intent or bytes are already fixed."
+            : code === "23514"
+            ? "Release email validation failed. Check the reviewed records and attachment limits."
+            : "Preparation was not confirmed. Recover the saved request before retrying.",
           code: code || "preparation_unconfirmed",
           retry_requires_recovery: true,
         },
         code === "42501"
           ? 403
           : code === "23505"
-            ? 409
-            : code === "23514"
-              ? 400
-              : 500,
+          ? 409
+          : code === "23514"
+          ? 400
+          : 500,
       );
     }
   };

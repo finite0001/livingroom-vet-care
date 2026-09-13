@@ -40,6 +40,7 @@ export function sourceProvenanceArtifact() {
     order_id: id(500),
     source_account_id: id(501),
     source_review_id: id(502),
+    latest_source_review_id: id(502),
     source: {
       provider_label: "Antech (synthetic)",
       account_reference: "Synthetic practice account",

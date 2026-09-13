@@ -38,6 +38,7 @@ export interface ReleaseLabReport extends ReleaseSourceVersion {
   order_id: string;
   source_account_id: string;
   source_review_id: string;
+  latest_source_review_id: string;
   source: {
     provider_label: string;
     account_reference: string;
@@ -129,6 +130,7 @@ export function validateReleaseSourceProvenance(s: ReleaseSnapshot): void {
         if (
           !["original", "corrected"].includes(l.kind) || !uuid(l.order_id) ||
           !uuid(l.source_account_id) || !uuid(l.source_review_id) ||
+          !uuid(l.latest_source_review_id) ||
           !l.source || l.source.entry_method !== "staff_entered_v1" ||
           ![
             l.source.provider_label,
@@ -210,6 +212,16 @@ export function renderReleaseSourceProvenance(s: ReleaseSnapshot): string {
       esc(r.received_at)
     } · Locally reviewed ${esc(r.reviewed_at)} · Local reviewer ${
       esc(r.reviewed_by)
+    }</p><p>Original attachment ${
+      s.attachments.findIndex((d) =>
+        d.id === r.document_id && d.version === r.document_version
+      ) + 1
+    }: ${
+      esc(
+        s.attachments.find((d) =>
+          d.id === r.document_id && d.version === r.document_version
+        )!.file_name,
+      )
     }</p><p>Original document ${
       esc(r.document_id)
     } · Version ${r.document_version} · SHA-256 ${esc(r.content_sha256)}</p>${
@@ -233,7 +245,11 @@ export function renderReleaseSourceProvenance(s: ReleaseSnapshot): string {
             esc(r.source.source_patient_reference)
           } · Order reference ${
             esc(r.source.source_order_reference)
-          }</p><p>Staff-entered laboratory source</p>${common(r)}</section>`
+          }</p><p>Staff-entered laboratory source</p><p>Original source identity review ${
+            esc(r.source_review_id)
+          } · Latest source identity review ${
+            esc(r.latest_source_review_id)
+          }</p>${common(r)}</section>`
         ).join("")
       }</article>`
       : ""
