@@ -73,7 +73,7 @@ async function api(
   });
   if (!response.ok) {
     const problem = await response.json().catch(() => ({}));
-    throw { code: problem.code, message: problem.message };
+    throw Object.assign(new Error(`Local original request rejected: ${path}`), { code: problem.code });
   }
   const text = await response.text();
   return text ? JSON.parse(text) : null;

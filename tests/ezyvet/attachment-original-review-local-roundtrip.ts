@@ -17,7 +17,7 @@ export async function verifyOriginalChartReview(f: Fixture): Promise<number> {
   const api = async (path: string, body: unknown, headers = f.staffHeaders) => {
     const response = await fetch(f.apiUrl + path, { method: "POST", headers, body: JSON.stringify(body) });
     const result = await response.json();
-    if (!response.ok) throw Object.assign(new Error("Local review request rejected"), { code: result.code || String(response.status) });
+    if (!response.ok) throw Object.assign(new Error(`Local review request rejected: ${path}`), { code: result.code || String(response.status) });
     return result;
   };
   const rpc = (name: string, args: object, headers = f.staffHeaders) => api(`/rest/v1/rpc/${name}`, args, headers);
