@@ -1,0 +1,37 @@
+{
+  "date": "2026-09-14",
+  "base_revision": "177038de66594b0641d8af134bf2d541dbee5763",
+  "validation": {
+    "npm_run_check": "passed",
+    "unit_tests": 547,
+    "typecheck": "passed",
+    "production_build": "passed",
+    "frozen_edge_typecheck": "passed",
+    "invoice_edge_isolation": "passed",
+    "restore_comparator_tests": 10,
+    "full_browser_run": {
+      "total": 274,
+      "passed": 272,
+      "failed": 2
+    },
+    "corrected_external_record_browser_run": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    }
+  },
+  "correction": "External-record fixture now intercepts list_record_release_sources_v9 and supplies policy_v9_accepted; refresh and acknowledgment assertions unchanged.",
+  "source_sha256": {
+    "e2e/external-records.spec.ts": "6829281eedfb886b0b759d526d0e3f91f76d504cd4ee9ebbb6ee8d930a7abec9",
+    "package-lock.json": "2a46b5e44a9ae0c586a42aaa371b1e3f03c7f2a1717c8a9c14c64c9e976e37c8",
+    "deno.lock": "c572011271fc7a5690ff1e12066753070326e2d5606527fe0856db94f7a4485e",
+    "playwright.config.ts": "1c8e62267d8cb75ba920c842e43130ad67ca54492fcf0209db24f67f9a7a26a2"
+  },
+  "limitations": [
+    "Full browser run preceded the fixture correction; only the affected six-test file was rerun afterward.",
+    "Browser requests use synthetic fixtures; no authenticated hosted staff acceptance.",
+    "Existing AuthContext Fast Refresh and production bundle-size warnings remain.",
+    "Staging inventory confirms84 migrations; candidate15-migration/10-function manifest is not deployment or hosted code/permission parity.",
+    "No hosted writes, messages, or public cutover."
+  ]
+}

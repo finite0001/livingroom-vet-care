@@ -1,0 +1,557 @@
+{
+  "observed_on": "2026-09-14",
+  "project": "kothoqicubowyhwfsrte",
+  "read_only": true,
+  "migrations": [
+    {
+      "version": "20260308184039",
+      "name": "cbd27973-fb79-4b1b-9fe4-3036b0fc4640"
+    },
+    {
+      "version": "20260308194312",
+      "name": "688620cd-8ef1-4782-bb44-a5b6b5355eac"
+    },
+    {
+      "version": "20260308215204",
+      "name": "ca5349ea-d2b2-4f7b-bd73-c46c19dfadb6"
+    },
+    {
+      "version": "20260308231655",
+      "name": "aa98042d-5e6d-4530-8cc2-b66f9581b35d"
+    },
+    {
+      "version": "20260309034659",
+      "name": "7490047a-6052-4ad6-9f68-9a16b0851759"
+    },
+    {
+      "version": "20260309045202",
+      "name": "7de7ae36-24fd-46b2-9fe5-ddd9e38ff237"
+    },
+    {
+      "version": "20260309045831",
+      "name": "031a7a42-a506-4c29-bce7-e20869ded224"
+    },
+    {
+      "version": "20260613183224",
+      "name": "9575f409-8565-4e33-ab7a-1a004e11a670"
+    },
+    {
+      "version": "20260613184005",
+      "name": "cbe9bfe4-734b-4f1e-ac8e-854a19ad7864"
+    },
+    {
+      "version": "20260613195035",
+      "name": "768d08b4-e93d-4eb6-8f21-ca48b39d895f"
+    },
+    {
+      "version": "20260613223600",
+      "name": "0b5db918-2014-43cf-aaf0-08cdccbc4d96"
+    },
+    {
+      "version": "20260613225133",
+      "name": "e28d9447-249a-4821-9614-c088efb2f9b8"
+    },
+    {
+      "version": "20260614151553",
+      "name": "376b87c5-04a7-4f77-8386-321af04d2cfe"
+    },
+    {
+      "version": "20260614171114",
+      "name": "5b96273b-12b6-48bc-8ff1-d89edc292f62"
+    },
+    {
+      "version": "20260912193000",
+      "name": "explicit_application_grants"
+    },
+    {
+      "version": "20260912210000",
+      "name": "clinical_core"
+    },
+    {
+      "version": "20260912220000",
+      "name": "patient_documents"
+    },
+    {
+      "version": "20260912230000",
+      "name": "scheduling"
+    },
+    {
+      "version": "20260913000000",
+      "name": "inventory_billing"
+    },
+    {
+      "version": "20260913010000",
+      "name": "ezyvet_import"
+    },
+    {
+      "version": "20260913020000",
+      "name": "communications_outbox"
+    },
+    {
+      "version": "20260913030000",
+      "name": "inventory_read_models"
+    },
+    {
+      "version": "20260913040000",
+      "name": "ezyvet_review_import"
+    },
+    {
+      "version": "20260913050000",
+      "name": "inbound_delivery"
+    },
+    {
+      "version": "20260913060000",
+      "name": "care_charts"
+    },
+    {
+      "version": "20260913070000",
+      "name": "dental_chart"
+    },
+    {
+      "version": "20260913080000",
+      "name": "vaccine_certificates"
+    },
+    {
+      "version": "20260913095000",
+      "name": "inbox_workspace"
+    },
+    {
+      "version": "20260913095500",
+      "name": "sms_consent_workspace"
+    },
+    {
+      "version": "20260913100000",
+      "name": "lab_work"
+    },
+    {
+      "version": "20260913110000",
+      "name": "anesthesia_records"
+    },
+    {
+      "version": "20260913120000",
+      "name": "message_recovery"
+    },
+    {
+      "version": "20260913130000",
+      "name": "record_releases"
+    },
+    {
+      "version": "20260913140000",
+      "name": "care_reminders"
+    },
+    {
+      "version": "20260913150000",
+      "name": "invoice_documents"
+    },
+    {
+      "version": "20260913160000",
+      "name": "record_release_charts"
+    },
+    {
+      "version": "20260913170000",
+      "name": "website_inquiries"
+    },
+    {
+      "version": "20260913180000",
+      "name": "reminder_outbox"
+    },
+    {
+      "version": "20260913190000",
+      "name": "certificate_due_plans"
+    },
+    {
+      "version": "20260913200000",
+      "name": "record_release_history"
+    },
+    {
+      "version": "20260913210000",
+      "name": "public_intake"
+    },
+    {
+      "version": "20260913220000",
+      "name": "release_email_delivery"
+    },
+    {
+      "version": "20260913230000",
+      "name": "reviewed_weight_import"
+    },
+    {
+      "version": "20260913240000",
+      "name": "disable_reminder_policy"
+    },
+    {
+      "version": "20260913250000",
+      "name": "release_weight_provenance"
+    },
+    {
+      "version": "20260913260000",
+      "name": "treatment_alert_review"
+    },
+    {
+      "version": "20260913270000",
+      "name": "invoice_email"
+    },
+    {
+      "version": "20260913280000",
+      "name": "document_links"
+    },
+    {
+      "version": "20260913290000",
+      "name": "document_link_sms"
+    },
+    {
+      "version": "20260913300000",
+      "name": "payment_ledger"
+    },
+    {
+      "version": "20260913310000",
+      "name": "stripe_event_inbox"
+    },
+    {
+      "version": "20260913320000",
+      "name": "document_link_history"
+    },
+    {
+      "version": "20260913330000",
+      "name": "payment_reconciliation_observations"
+    },
+    {
+      "version": "20260913340000",
+      "name": "payment_collection_access"
+    },
+    {
+      "version": "20260913350000",
+      "name": "payment_reconciliation_resolution"
+    },
+    {
+      "version": "20260913360000",
+      "name": "payment_capability_persistence"
+    },
+    {
+      "version": "20260913370000",
+      "name": "payment_link_delivery"
+    },
+    {
+      "version": "20260913380000",
+      "name": "payment_reconciliation_discovery"
+    },
+    {
+      "version": "20260913390000",
+      "name": "payment_delivery_history"
+    },
+    {
+      "version": "20260913400000",
+      "name": "stripe_event_retry_cycles"
+    },
+    {
+      "version": "20260913410000",
+      "name": "lab_result_provenance"
+    },
+    {
+      "version": "20260913420000",
+      "name": "external_record_provenance"
+    },
+    {
+      "version": "20260913430000",
+      "name": "inbound_processing_recovery"
+    },
+    {
+      "version": "20260913440000",
+      "name": "operations_visibility"
+    },
+    {
+      "version": "20260913450000",
+      "name": "outbox_retry_recovery"
+    },
+    {
+      "version": "20260913460000",
+      "name": "explicit_staff_rpc_grants"
+    },
+    {
+      "version": "20260913470000",
+      "name": "release_source_provenance"
+    },
+    {
+      "version": "20260913480000",
+      "name": "release_source_byte_binding"
+    },
+    {
+      "version": "20260913490000",
+      "name": "ezyvet_clinical_runs"
+    },
+    {
+      "version": "20260913500000",
+      "name": "reviewed_imported_history"
+    },
+    {
+      "version": "20260913510000",
+      "name": "release_imported_history"
+    },
+    {
+      "version": "20260913520000",
+      "name": "consult_scoped_vaccination_import"
+    },
+    {
+      "version": "20260913530000",
+      "name": "reviewed_imported_vaccinations"
+    },
+    {
+      "version": "20260913540000",
+      "name": "record_release_vaccination_history"
+    },
+    {
+      "version": "20260913550000",
+      "name": "patient_scoped_prescription_import"
+    },
+    {
+      "version": "20260913560000",
+      "name": "parent_scoped_prescription_items"
+    },
+    {
+      "version": "20260913570000",
+      "name": "prescription_reference_reconciliation"
+    },
+    {
+      "version": "20260913580000",
+      "name": "prescription_source_review_context"
+    },
+    {
+      "version": "20260913590000",
+      "name": "prescription_review_preparation"
+    },
+    {
+      "version": "20260913600000",
+      "name": "prescription_interpretation_context"
+    },
+    {
+      "version": "20260913610000",
+      "name": "reviewed_imported_prescriptions"
+    },
+    {
+      "version": "20260913620000",
+      "name": "prescription_review_discovery"
+    },
+    {
+      "version": "20260913630000",
+      "name": "record_release_prescription_history"
+    },
+    {
+      "version": "20260913900000",
+      "name": "payment_immutable_search_path"
+    }
+  ],
+  "functions": [
+    {
+      "slug": "dispatch-outbox",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": false,
+      "ezbr_sha256": "e97923a784de5835b730df537f36da0d4139b1a8aeb877360a3734d8b7e68ebd"
+    },
+    {
+      "slug": "enqueue-message",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "57a5472cf3fd101181c1fef00a9631851bdb85097dbd5c3a270af4c5e5489ca3"
+    },
+    {
+      "slug": "ezyvet-import",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "ezbr_sha256": "b5cec0923218daf80fd5c67d014cf6e6a188a72689c67ca2ec1c7a7a8e5f7536"
+    },
+    {
+      "slug": "invoice-checkout",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "96c4f50002b983c9e4f8bf05349f29cc21b08a62c8552286c17c6a1117dc934e"
+    },
+    {
+      "slug": "invoice-refund",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "efb085ff45e44fbbcd69c893f2aa49ffdc822500f644d136ab8569828fc2e776"
+    },
+    {
+      "slug": "payment-collection",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "9225e919870955991cc3ce7a9fb77ff602eadb99bbdab1f82079b335d4fdd7c5"
+    },
+    {
+      "slug": "payment-status",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "356250d57824a66f4e3d5eca739217106375d17623596ee642a5c54b2a6fe199"
+    },
+    {
+      "slug": "prepare-document-link",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "ezbr_sha256": "2f2fb20ad7238aec23aeec96bd67de40fe0d1619d5109c16a12694fda178f4de"
+    },
+    {
+      "slug": "prepare-external-record",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "7b235a5e998e74e5be7ed62435d450bc085d73900aef4db3df6bfe4d4fb4e060"
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "ezbr_sha256": "25abfdf3860d0acdb7f70ad2e37f563a9e60b6e4c7ed3702f98d4d48df4ba3f3"
+    },
+    {
+      "slug": "prepare-lab-report",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "57d11faa242d67d7fc0c8cc1baaae8191be11f23b883c56ff8b795bf37378143"
+    },
+    {
+      "slug": "prepare-payment-collection",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "87c2d35de753dc36d3c08a3877e46a3d570c09859405d3620fcfff17ea755ace"
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "ezbr_sha256": "6e27bb27f148c69bb41e711facaf655a331d0fdc97b88595698586eb74ab54f3"
+    },
+    {
+      "slug": "prepare-release-email",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "ezbr_sha256": "38fb4d9d17faa76bf79475bf9ceb415597b9ce9d735d16e1c8dd7625edfe47c2"
+    },
+    {
+      "slug": "process-inbound",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "cf8c402c0e3d9b71f1d56519e67654948ee3440a740b029ae4bc06bd2a03a819"
+    },
+    {
+      "slug": "process-stripe-events",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "bfedc3a91c702fcbb3788d3a45bc8deb9d15e16e81f3cf847f028d495583baa6"
+    },
+    {
+      "slug": "public-contact",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "ad77a0fb58569e529abdbf455288123076b15befdb7c0276e8f4345446a417e5"
+    },
+    {
+      "slug": "queue-reminders",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "903d4275a853acb494e443b8f1158049a1140984db56b2bde3e3e4f4984fd17f"
+    },
+    {
+      "slug": "recover-document-link",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "ezbr_sha256": "4bccdde6e9fc5cbea62f90a281a437afd127ac7b569f12b3f7872244cea3ca6e"
+    },
+    {
+      "slug": "recover-payment-collection",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "9f0725d0d8bbd4c0c41c36bf5c4dd730d34eb4cc8bc577b1ccf0652eecef40ed"
+    },
+    {
+      "slug": "resend-webhook",
+      "status": "ACTIVE",
+      "version": 4,
+      "verify_jwt": false,
+      "ezbr_sha256": "01d8d33160a41a5f5a796c5fa464f9d2bc9e4706313750775fc644a260d03614"
+    },
+    {
+      "slug": "retrieve-document-link",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": false,
+      "ezbr_sha256": "b67bb9bd6b2126153b90ac81618dfff21ccfe258f04facc4b149e0283ad4e98a"
+    },
+    {
+      "slug": "send-email",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "23373fd03220b2ea1e2f35784c9637d8d14514b0cbd6a16b41262cc304f335ba"
+    },
+    {
+      "slug": "send-provider-email",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "14e026f65a5a693ab05290b4f31ea8159cd8a59bcee4b64e1778ee503d5095fb"
+    },
+    {
+      "slug": "send-sms",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "759cc1f9ee8c872a2b453295dbbf0f117c4041b5b210e82230543b111e21478a"
+    },
+    {
+      "slug": "stripe-webhook",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "d97efbed2ae871e62b62bc24b80234a960591c67586377b4652b6318feb30b0b"
+    },
+    {
+      "slug": "twilio-webhook",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "ezbr_sha256": "68940523cb697c4275c8574a6874211ed5beae042ba12162c679ff570bd876b4"
+    },
+    {
+      "slug": "verify-payment-reconciliation",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true,
+      "ezbr_sha256": "f216bf2003949056f212670586464d2d94a95eca50c15df50b415319e308a068"
+    }
+  ],
+  "counts": [
+    {
+      "auth_users": 0,
+      "clients": 0,
+      "pets": 0,
+      "storage_objects": 0,
+      "outbox_rows": 0,
+      "enabled_release_policies": 0,
+      "schema9_present": false,
+      "original_capture_present": false
+    }
+  ],
+  "limitations": [
+    "Inventory and aggregate counts only; this refresh does not compare hosted routine bodies, ACLs, or deployed source files.",
+    "No hosted mutation or outgoing message."
+  ]
+}
