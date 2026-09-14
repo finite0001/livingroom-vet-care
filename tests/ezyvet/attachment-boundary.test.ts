@@ -49,7 +49,7 @@ test("generic attachment reads are refused before OAuth or provider requests", a
   assert.equal(requests, 0);
 });
 
-test("attachment commissioning remains unavailable until scoped durable intake exists", () => {
+test("attachment commissioning requires explicit opt-in and defaults remain unchanged", () => {
   const env: Record<string, string> = {
     APP_ENV: "staging",
     EZYVET_IMPORT_MODE: "staging",
@@ -59,5 +59,5 @@ test("attachment commissioning remains unavailable until scoped durable intake e
   };
   assert.deepEqual(configuration((key) => env[key]).readResources, ["contact", "animal"]);
   env.EZYVET_READ_RESOURCES = "contact,animal,attachment";
-  assert.throws(() => configuration((key) => env[key]), { message: "INVALID_READ_SCOPES" });
+  assert.deepEqual(configuration((key) => env[key]).readResources, ["contact", "animal", "attachment"]);
 });

@@ -1,3 +1,5 @@
+import { AttachmentMetadataError, attachmentMetadataContract, parseAttachmentMetadataPage, type AttachmentMetadataPage } from "./attachment-metadata.ts";
+
 export const resources = [
   "contact",
   "contactdetail",
@@ -14,6 +16,7 @@ export const resources = [
   "healthstatus",
   "prescription",
   "prescriptionitem",
+  "attachment",
 ] as const;
 export const resourceContracts = {
   animal: { path: "/v2/animal", limit: 50 },
@@ -393,7 +396,7 @@ export function createAdapter(
     }
     throw new ImportError("UPSTREAM_UNAVAILABLE");
   }
-  async function json(response: Response): Promise<unknown> {
+  async function json(response: Response, maxBytes = 2 * 1024 * 1024): Promise<unknown> {
     // Enforce the bound while streaming, including chunked responses without Content-Length.
     if (!response.body) throw new ImportError("INVALID_UPSTREAM_JSON");
     const reader = response.body.getReader();
@@ -404,7 +407,7 @@ export function createAdapter(
         const chunk = await reader.read();
         if (chunk.done) break;
         bytes += chunk.value.length;
-        if (bytes > 2 * 1024 * 1024) {
+        if (bytes > maxBytes) {
           await reader.cancel();
           throw new ImportError("UPSTREAM_RESPONSE_TOO_LARGE");
         }
@@ -470,6 +473,41 @@ export function createAdapter(
     return token.value;
   }
   return {
+    async attachmentPage(animalExternalId: string, page: number): Promise<AttachmentMetadataPage> {
+      if (!["https://api.trial.ezyvet.com", "https://api.ezyvet.com"].includes(config.baseUrl) ||
+        !config.readResources.includes("attachment") || typeof animalExternalId !== "string" ||
+        !validVaccinationId(animalExternalId) || !Number.isSafeInteger(page) || page < 1 || page > 1000) {
+        throw new ImportError("INVALID_ATTACHMENT_REQUEST");
+      }
+      const query = new URLSearchParams({ page: String(page), limit: String(attachmentMetadataContract.pageLimit),
+        record_type: "Animal", record_id: animalExternalId });
+      const url = `${config.baseUrl}${attachmentMetadataContract.path}?${query}`;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const bearer = await accessToken();
+        const response = await request(url, { method: "GET", headers: { Authorization: `Bearer ${bearer}` } });
+        if (response.redirected || (response.url && response.url !== url)) {
+          void response.body?.cancel().catch(() => {});
+          throw new ImportError("INVALID_UPSTREAM_RESPONSE");
+        }
+        if (response.status === 401 && attempt === 0) {
+          void response.body?.cancel().catch(() => {});
+          token = null;
+          continue;
+        }
+        if (response.status !== 200) {
+          void response.body?.cancel().catch(() => {});
+          throw new ImportError(response.status === 403 ? "UPSTREAM_SCOPE_DENIED" :
+            response.status === 401 ? "UPSTREAM_AUTH_FAILED" : "UPSTREAM_REQUEST_FAILED");
+        }
+        try {
+          return await parseAttachmentMetadataPage(await json(response, attachmentMetadataContract.maxPageBytes), { animalId: animalExternalId, page });
+        } catch (error) {
+          if (error instanceof AttachmentMetadataError) throw new ImportError(error.code);
+          throw error instanceof ImportError ? error : new ImportError("UPSTREAM_UNAVAILABLE");
+        }
+      }
+      throw new ImportError("UPSTREAM_AUTH_FAILED");
+    },
     async page(
       resource: Resource,
       page: number,
