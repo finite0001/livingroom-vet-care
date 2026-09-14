@@ -15,7 +15,7 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
 approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
-release_scenarios = ['release-link-retrieve-source-first', 'release-link-retrieve-before-source', 'release-link-worker-source-first', 'release-link-worker-before-source', 'release-email-worker-source-first', 'release-email-worker-before-source', 'release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
+release_scenarios = ['release-link-retrieve-expiry', 'release-link-retrieve-budget-expiry', 'release-link-retrieve-budget-role-loss', 'release-link-retrieve-role-loss', 'release-link-retrieve-source-first', 'release-link-retrieve-before-source', 'release-link-worker-source-first', 'release-link-worker-before-source', 'release-email-worker-source-first', 'release-email-worker-before-source', 'release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
 parser.add_argument('--scenario', choices=approval_scenarios + release_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 parser.add_argument('--skip-release-access-fix', action='store_true', help='Reproduce pre8000 access waits in an owned clone when the source lacks8000; never revert an existing fix')
@@ -128,6 +128,7 @@ try:
 
     if not args.skip_release_access_fix:
         pending.append(('20260913800000', "case when obj_description('public.read_record_release(uuid)'::regprocedure,'pg_proc')='Rechecks active staff after release/source waits.' and obj_description('public.confirm_record_release(uuid,uuid,uuid,text,text,jsonb,jsonb,text,boolean)'::regprocedure,'pg_proc')='Rechecks active staff after operation waits and before returning.' then true else null end"))
+    pending.append(('20260913810000', "case when obj_description('public.retrieve_document_link(uuid,text,integer)'::regprocedure,'pg_proc')='Rechecks approving staff and expiry after access-budget waits.' then true else null end"))
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':
             paths = list(migration_dir.glob(version + '_*'))
@@ -218,7 +219,16 @@ try:
                     check(claimed['id'] == queued['id'], 'Worker claims exact reviewed synthetic link')
                     config = quote(json.dumps({'from': '+13035550199', 'account_sid': 'AC' + 'a'*32, 'document_link_token_hash': 'a'*64, 'document_link_message_hash': 'b'*64, 'document_link_artifact_hash': artifact_hash}))
                     operation = service + f"select start_communication_attempt('{queued['id']}','{claimed['lease_token']}',{config}::jsonb);"
-                if scenario.endswith('source-first'):
+                if scenario.endswith(('role-loss', '-expiry')):
+                    holder = f"select 1 from document_link_access_budget where grant_id='{link_id}' for update;" if 'budget-' in scenario else source_lock
+                    if scenario.endswith('-expiry'):
+                        sql(f"begin;alter table document_link_grants disable trigger document_link_immutable;update document_link_grants set expires_at=clock_timestamp()+interval '3 seconds' where id='{link_id}';alter table document_link_grants enable trigger document_link_immutable;commit;")
+                        after_wait = lambda: time.sleep(3.1)
+                    else:
+                        after_wait = lambda: sql(f"delete from user_roles where user_id='{actor}';")
+                    contend(holder, operation, 'Document link unavailable', after_wait)
+                    check(scalar(f"select used from document_link_access_budget where grant_id='{link_id}';") == '0', 'Revocation or expiry during an observed wait prevents public original access')
+                elif scenario.endswith('source-first'):
                     contend(change, operation, None if queued else 'SMS release unavailable')
                     if queued:
                         check(scalar(f"select state||':'||attempt_count::text from communication_outbox where id='{queued['id']}';") == 'failed:0', 'Earlier source revision prevents SMS worker attempt')
@@ -229,7 +239,7 @@ try:
                     else:
                         check(scalar(f"select used from document_link_access_budget where grant_id='{link_id}';") == '1', 'Earlier public retrieval consumes exactly one access budget entry')
                 denied = sql('begin;' + service + f"select retrieve_document_link('{link_id}',repeat('a',64),1);commit;", fail=False)
-                check(denied.returncode != 0 and 'SMS release unavailable' in denied.stderr, 'Later public retrieval is denied after source invalidation: ' + denied.stderr)
+                check(denied.returncode != 0 and ('Document link unavailable' if scenario.endswith(('role-loss', '-expiry')) else 'SMS release unavailable') in denied.stderr, 'Later public retrieval is denied after source invalidation: ' + denied.stderr)
                 check(scalar(f"select artifact_hash='{artifact_hash}' from document_link_payloads where grant_id='{link_id}';") == 't', 'Link races retain the exact frozen artifact hash')
             elif scenario.startswith('release-email-'):
                 sql('begin;' + confirm + 'commit;')
