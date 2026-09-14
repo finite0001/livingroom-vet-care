@@ -318,7 +318,9 @@ try {
   const resetCooldown = () => sql(`update ezyvet_import_runs set retry_after=null,lease_until=null where source_site_uid=${quote(site)} and resource='attachment';`);
   const discoveredParent = await rpc("get_ezyvet_attachment_animal_parent", { p_animal_link_id: mapping }, true);
   check(discoveredParent.pet_id === pet && discoveredParent.parent_snapshot_id === snapshot && discoveredParent.parent_observed_head_version === 1, "Actual parent discovery binds current approved patient mapping");
-  let lastAttachmentRun = "";
+  let lastAttachmentRun = "", lastAttachmentApproval = "";
+  check(sql("select not has_table_privilege('authenticated','public.ezyvet_attachment_record_versions','SELECT,INSERT,UPDATE,DELETE') and not has_table_privilege('service_role','public.ezyvet_attachment_record_versions','SELECT,INSERT,UPDATE,DELETE');") === "t", "API approval history denies direct client and service-role table access");
+  check(sql("select not has_function_privilege('anon','public.approve_ezyvet_attachment_record(uuid,uuid,uuid,text,uuid,text,text,boolean)','EXECUTE') and not has_function_privilege('service_role','public.approve_ezyvet_attachment_record(uuid,uuid,uuid,text,uuid,text,text,boolean)','EXECUTE');") === "t", "Approval RPC requires authenticated actor context rather than anonymous/service execution");
   for (const parentType of ["Animal", "Consult"]) {
     resetCooldown();
     const runId = randomUUID(); ids.push(runId); lastAttachmentRun = runId;
@@ -399,6 +401,25 @@ try {
       check(final.request.status === "captured" && final.capture.capture_hash === receipt.capture_hash && !JSON.stringify(final).includes(lease.lease_id), "Owner recovery exposes completion without service lease");
       const sdkOriginal = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + intent.object_path, { headers: { apikey: local.ANON_KEY, Authorization: staffHeaders.Authorization } });
       check(sdkOriginal.ok && (await verifyAttachmentOriginal(await sdkOriginal.blob(), intent)).size === intent.file_size, "Exact frontend SDK route returns verifiable captured bytes under staff JWT");
+      const approvalId = randomUUID(), correctionId = randomUUID(), conflictingApproval = randomUUID(); ids.push(approvalId, correctionId, conflictingApproval);
+      const approvalArgs = { p_id: approvalId, p_request_id: downloadId, p_pet_id: pet, p_capture_hash: receipt.capture_hash, p_previous_record_id: null, p_title: "Synthetic reviewed API attachment", p_review_reason: "Synthetic staff inspected the captured original", p_attest: true };
+      await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_attest: false }, true), (error: { code: string }) => error.code === "23514"); assertions++;
+      await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_capture_hash: "0".repeat(64) }, true), (error: { code: string }) => error.code === "42501"); assertions++;
+      const approved = await rpc("approve_ezyvet_attachment_record", approvalArgs, true); lastAttachmentApproval = approvalId;
+      check(approved.version === 1 && approved.previous_record_id === null && approved.entry_method === "staff_reviewed_api_attachment_v1" && approved.capture_hash === receipt.capture_hash, "Staff approval creates explicit immutable API provenance bound to captured bytes");
+      check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Lost approval acknowledgment recovers exact saved version");
+      check(JSON.stringify(await rpc("recover_ezyvet_attachment_record", { p_id: approvalId, p_pet_id: pet }, true)) === JSON.stringify(approved), "Owner recovers approval without browser state");
+      await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_title: "Different title" }, true), (error: { code: string }) => error.code === "23505"); assertions++;
+      await assert.rejects(rpc("recover_ezyvet_attachment_record", { p_id: approvalId, p_pet_id: randomUUID() }, true), (error: { code: string }) => error.code === "42501"); assertions++;
+      await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval }, true), (error: { code: string }) => error.code === "40001"); assertions++;
+      const corrected = await rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: correctionId, p_previous_record_id: approvalId, p_title: "Corrected synthetic attachment title", p_review_reason: "Explicit synthetic correction" }, true);
+      check(sql(`do $immutable$ begin begin update ezyvet_attachment_record_versions set title='rewritten' where id=${quote(approvalId)};raise exception 'Immutable guard failed';exception when check_violation then null;end;end $immutable$;select title='Synthetic reviewed API attachment' from ezyvet_attachment_record_versions where id=${quote(approvalId)};`) === "t", "Append-only trigger rejects rewriting approved clinical source history");
+      check(corrected.version === 2 && corrected.previous_record_id === approvalId && corrected.record_hash !== approved.record_hash, "Correction appends an exact predecessor without rewriting source bytes");
+      check(JSON.stringify(await rpc("recover_ezyvet_attachment_record", { p_id: approvalId, p_pet_id: pet }, true)) === JSON.stringify(approved), "Original approval remains unchanged after correction");
+      sql(`update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(selected.id)};`);
+      check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
+      await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
+      sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
       // Exercise the production runtime adapter and handler through actual loopback HTTP.
@@ -518,6 +539,7 @@ try {
     check(actualHistory.requests.every((item: { request: { source_context: Record<string, unknown> | null } }) => !item.request.source_context || !("attachment_metadata" in item.request.source_context)), "Actual discovery omits raw provider metadata");
   }
   sql(`delete from user_roles where user_id=${quote(actor)} and role='ADMIN';`);
+  if (includeCapture) { await assert.rejects(rpc("recover_ezyvet_attachment_record", { p_id: lastAttachmentApproval, p_pet_id: pet }, true), (error: { code: string }) => error.code === "42501"); assertions++; }
   check((await post({ run_id: randomUUID(), resource: "attachment" })).status === 403, "Role loss prevents HTTP import");
   await assert.rejects(rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true), (error: { code: string }) => error.code === "42501"); assertions++;
   await assert.rejects(rpc("list_ezyvet_attachment_observations", { p_run_id: lastAttachmentRun, p_pet_id: pet }, true), (error: { code: string }) => error.code === "42501"); assertions++;

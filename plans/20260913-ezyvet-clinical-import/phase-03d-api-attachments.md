@@ -278,3 +278,12 @@ Captured file cards now offer explicit original verification and a private local
 A failed check withholds the download and removes a previous link. Object URLs are revoked on replacement, component cleanup, pagehide and sign-out/account change; late results cannot repopulate a cleared view. Inspection participates in the existing busy/navigation guards. No browser URL, raw bytes or inspection approval is persisted. This verifies captured API source bytes and allows staff inspection; it does not attest review, create a native clinical document, or authorize release.
 
 Evidence: `docs/evidence/attachment-original-inspection-local-20260913.json`. Clinical review/corrections/release, current populated upgrade/restore and all provider/operator/clinical/commercial acceptance gates remain open. No hosted deployment or real provider attachment read was performed.
+
+
+### Immutable API attachment approval groundwork
+
+Migration7300 adds a separate `staff_reviewed_api_attachment_v1` record family. Authenticated active administrators may approve only their exact captured request, supplying the capture hash, explicit review attestation, title/reason and expected predecessor. The function revalidates current parent/source observation under the existing request/run/source locks, serializes each attachment version chain, verifies the reserved Storage object remains present and rechecks authorization after waits. Same-operation recovery compares all caller-controlled decision fields before returning the saved record and precedes mutable source checks.
+
+Corrections append a new version and predecessor pointer. A conflicting initial approval or stale predecessor is rejected; prior versions and capture bytes are never rewritten. Direct table access is revoked for API roles, immutable triggers protect saved versions, and server-role execution cannot impersonate an authenticated reviewer. This is API provenance, not a manual-export receipt or native clinical interpretation.
+
+Local evidence is recorded in `docs/evidence/attachment-approval-foundation-local-20260913.json`. Staff review UI, chart/history discovery, DVM acknowledgement decisions, approval-specific both-order lock races, release integration, current populated94-migration upgrade/restore and real clinical/operator/provider acceptance remain open. Existing capture/cleanup contention checks do not establish approval concurrency coverage. No hosted approval record or migration was created.
