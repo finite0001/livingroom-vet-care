@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 parser.add_argument('--include-capture', action='store_true')
+parser.add_argument('--include-contention', action='store_true', help='Also clone this fully migrated local schema for attachment lock tests')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
@@ -31,6 +32,7 @@ started = False
 success = False
 checks = 0
 migration_hashes = {}
+contention = None
 
 def command(argv, **kwargs):
     result = subprocess.run(argv, capture_output=True, text=True, **kwargs)
@@ -98,6 +100,15 @@ enabled = false
     assert matched, 'Refuse unexpected harness output'
     checks = int(matched[1])
     print(matched[0], flush=True)
+    if args.include_contention:
+        contention_path = root / 'supabase/tests/ezyvet_attachment_capture_concurrency.py'
+        contention_hash = hashlib.sha256(contention_path.read_bytes()).hexdigest()
+        contention_output = command(['python3', str(contention_path), '--project-config', str(project / 'supabase/config.toml')], cwd=root)
+        assert hashlib.sha256(contention_path.read_bytes()).hexdigest() == contention_hash, 'Contention runner changed during execution'
+        contention_match = re.search(r'^Attachment capture concurrency: ([0-9]+) checks passed\.$', contention_output, re.MULTILINE)
+        assert contention_match and 'Owned attachment scratch database removed.' in contention_output, 'Contention or owned clone cleanup did not complete'
+        contention = {'checks_passed': int(contention_match[1]), 'runner_sha256': contention_hash, 'fully_migrated_schema_clone': True}
+        print(contention_match[0], flush=True)
     success = True
 finally:
     try:
@@ -114,7 +125,7 @@ if success:
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hash,
-               'migration_sha256': migration_hashes, 'provider_requests': 0}
+               'migration_sha256': migration_hashes, 'contention': contention, 'provider_requests': 0}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)

@@ -72,7 +72,10 @@ def contend(holder_query, waiter_query, expected_error, during_wait=None):
     waiter.wait(timeout=20)
     check(holder.returncode == 0, holder.stderr.read())
     error = waiter.stderr.read()
-    check(waiter.returncode != 0 and expected_error in error, 'Expected '+expected_error+', got '+error+' / '+waiter.stdout.read())
+    if expected_error is None:
+        check(waiter.returncode == 0, error)
+    else:
+        check(waiter.returncode != 0 and expected_error in error, 'Expected '+expected_error+', got '+error+' / '+waiter.stdout.read())
 
 created = False
 try:
@@ -105,15 +108,20 @@ try:
         ('20260913660000', "to_regclass('public.ezyvet_attachment_download_requests')"),
         ('20260913670000', "to_regclass('public.ezyvet_attachment_download_attempts')"),
         ('20260913680000', "to_regclass('public.ezyvet_attachment_captures')"),
+        ('20260913690000', "to_regclass('public.ezyvet_attachment_cleanup_attempts')"),
     ]
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':
             paths = list(migration_dir.glob(version + '_*'))
             assert len(paths) == 1, version
             sql(paths[0].read_text())
+    # A fully migrated source clone has the tables but no bucket data. Pending
+    # migration replay may already have inserted it; either starting state works.
+    sql("insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('ezyvet-attachments','ezyvet-attachments',false,20971520,array['application/pdf','image/jpeg','image/png']) on conflict(id) do nothing;")
+    check(scalar("select not public and file_size_limit=20971520 and allowed_mime_types=array['application/pdf','image/jpeg','image/png'] from storage.buckets where id='ezyvet-attachments';") == 't', 'Private fixture bucket matches capture contract')
     fixture = Path(__file__).with_name('ezyvet_attachment_capture.test.sql').read_text().split('-- FIXTURE_BEGIN:')[1].split('select throws_ok(')[0]
     fixture = '\n'.join(fixture.splitlines()[1:])
-    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss'], 1):
+    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry'], 1):
         prefix = f'db569{index:03d}'
         actor = prefix + '-0000-4000-8000-000000000001'
         current = fixture.replace('db560000', prefix).replace('prescriptionitem-test-site', scenario).replace('@example.test', '@' + scenario + '.example.test')
@@ -121,7 +129,7 @@ try:
         setup = current + "update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');insert into data select 'lease',pg_temp.claim();"
         if scenario != 'reserve-source-expiry':
             setup += "insert into data select 'intent',pg_temp.reserve();"
-        if scenario.startswith('complete-'):
+        if scenario.startswith(('complete-', 'cleanup-')):
             setup += "insert into storage.objects(bucket_id,name,owner,metadata) select 'ezyvet-attachments',v->>'object_path','"+actor+"',jsonb_build_object('size',37,'mimetype','application/pdf') from data where k='intent';"
         saved = json.loads(scalar("begin;set local search_path=public,extensions;" + setup + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
         fx, data = saved['fx'], saved['data']
@@ -130,7 +138,26 @@ try:
         metadata = quote(json.dumps(data['saved']['request']['source_context']['attachment_metadata'])) + '::jsonb'
         identity = ','.join(map(quote, [request, actor, lease, request_hash]))
         source_lock = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='attachment' for update;"
-        if scenario.endswith('expiry'):
+        if scenario.startswith('cleanup-'):
+            sql(f"alter table ezyvet_attachment_download_attempts disable trigger immutable_attachment_worker;update ezyvet_attachment_download_attempts set created_at=clock_timestamp()-interval '10 minutes',lease_until=clock_timestamp()-interval '5 minutes' where lease_id='{lease}';alter table ezyvet_attachment_download_attempts enable trigger immutable_attachment_worker;")
+            staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
+            sql('begin;' + staff + f"select abandon_ezyvet_attachment_download('{request}','{fx['pet']}',true);commit;")
+            sql(f"alter table ezyvet_attachment_download_requests disable trigger immutable_attachment_download;update ezyvet_attachment_download_requests set resolved_at=clock_timestamp()-interval '5 minutes' where id='{request}';alter table ezyvet_attachment_download_requests enable trigger immutable_attachment_download;")
+            cleanup = str(uuid.uuid4())
+            sql(f"select claim_ezyvet_attachment_cleanup('{cleanup}','{request}','{actor}','{fx['pet']}','{request_hash}');")
+            path = quote(data['intent']['object_path'])
+            holder = f"select pg_advisory_xact_lock(hashtextextended('{request}',6600));"
+            # Metadata-only disposable transaction; mirror Storage's own delete flag.
+            operation = f"set local storage.allow_delete_query='true';delete from storage.objects where bucket_id='ezyvet-attachments' and name={path};"
+            if scenario == 'cleanup-expiry':
+                sql(f"alter table ezyvet_attachment_cleanup_attempts disable trigger immutable_attachment_cleanup;update ezyvet_attachment_cleanup_attempts set created_at=clock_timestamp()-interval '1 minute',lease_until=clock_timestamp()+interval '3 seconds' where id='{cleanup}';alter table ezyvet_attachment_cleanup_attempts enable trigger immutable_attachment_cleanup;")
+                during = lambda: wait_for(f"select lease_until<=clock_timestamp() from ezyvet_attachment_cleanup_attempts where id='{cleanup}';", 'Cleanup lease did not expire')
+            else:
+                during = lambda: sql(f"delete from user_roles where user_id='{actor}' and role='ADMIN';")
+            contend(holder, staff + operation, None, during)
+            check(scalar(f"select count(*) from storage.objects where bucket_id='ezyvet-attachments' and name={path};") == '1', 'Ineligible cleanup leaves reserved object intact')
+            check(scalar(f"select count(*) from ezyvet_attachment_cleanup_receipts where cleanup_id='{cleanup}';") == '0', 'Ineligible cleanup has no success receipt')
+        elif scenario.endswith('expiry'):
             # Owner-only disposable fixture clock, with a real elapsed deadline after an observed wait.
             sql(f"alter table ezyvet_attachment_download_attempts disable trigger immutable_attachment_worker;update ezyvet_attachment_download_attempts set created_at=clock_timestamp()-interval '1 minute',lease_until=clock_timestamp()+interval '3 seconds' where lease_id='{lease}';alter table ezyvet_attachment_download_attempts enable trigger immutable_attachment_worker;")
             if scenario == 'reserve-source-expiry':
