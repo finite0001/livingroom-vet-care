@@ -14,6 +14,6 @@ Contract: `docs/plans/api-original-release-contract.md`.
 
 No production migration, clinical approval, external message, purchase, or provider write-back is part of this increment. Living Room Vet remains primary; ezyVet remains a read-only import source.
 
-Status: implementation in progress across isolated database, runtime and UI worktrees; root owns integration, evidence and documentation.
+Status: implementation integrated, with independent runtime and database review. Verification is tracked in [PR #130](https://github.com/finite0001/livingroom-vet-care/pull/130). The CI workflow includes frontend/browser, Edge, database/HTTP/concurrency, and isolated populated-restore jobs. Its restore job retains only a sanitized receipt. Hosted commissioning and clinical acceptance are not complete.
 
 Next candidate after this increment: an operator-owned migration coverage ledger connecting existing patient/resource runs, reviews and capture receipts. It must distinguish observed, staged, admitted, rejected, unresolved and failed work; a completed page is not proof of a complete source export. Hosted staff rehearsal and clinical acceptance remain separate launch gates. Keep the approved Fastmail + one Resend setup and read-only ezyVet direction.
