@@ -94,4 +94,28 @@ select ok(not has_function_privilege('service_role','ezyvet_attachment_capture_p
 select ok(not exists(select 1 from patient_documents),'API capture creates no patient document');
 select ok(not exists(select 1 from external_record_receipts),'API capture creates no manual-export receipt');
 select is((select count(*)::integer from ezyvet_attachment_page_observations),2,'Metadata observation count unchanged by capture');
+set local role authenticated;
+select is(jsonb_array_length(list_ezyvet_attachment_capture_mappings()->'mappings'),1,'Historical mappings are grouped for their owner');
+select is(list_ezyvet_attachment_capture_mappings()#>>'{mappings,0,household_name}','Attachment Owner','Historical mapping keeps original household');
+select throws_ok($$select list_ezyvet_attachment_capture_mappings(now(),null,20)$$,'23514',null,'Mapping cursor must be complete');
+insert into fx select 'moved-client',id from save_client(auth.uid(),null,null,'Different','Household','+13035550197','other-household@example.test','EMAIL',null,null);
+reset role;
+-- Owner-only synthetic future household-transfer fixture.
+alter table pets disable trigger pets_version;
+update pets set client_id=(select id from fx where k='moved-client') where id=(select id from fx where k='pet');
+set local role authenticated;
+select is(list_ezyvet_attachment_capture_mappings()#>>'{mappings,0,household_name}','Attachment Owner','Moved patient remains discoverable under original capture household');
+select is(abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture3'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','abandoned','Uncreated scoped preparation becomes abandoned');
+reset role;
+update pets set client_id=(select id from fx where k='client') where id=(select id from fx where k='pet');
+alter table pets enable trigger pets_version;
+set local role authenticated;
+select is(prepare_ezyvet_attachment_capture((select id from fx where k='capture3'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','abandoned','Delayed prepare recovers abandoned tombstone');
+select is(abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','ready','Abandon preparation cannot alter an existing ready request');
+select throws_ok($$select abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture3'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,2,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Preparation tombstone cannot change observation ordinal');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select is(jsonb_array_length(list_ezyvet_attachment_capture_mappings()->'mappings'),0,'Another administrator cannot discover historical mappings');
+select throws_ok($$select abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture3'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Another administrator cannot recover preparation tombstone');
+reset role;
+select ok(not has_function_privilege('authenticated','ezyvet_attachment_capture_prepare_core(uuid,uuid,uuid,integer,integer,uuid,integer,text,boolean)','execute'),'Preparation core remains private');
 select * from finish();rollback;

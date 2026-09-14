@@ -86,7 +86,7 @@ declare r public.ezyvet_attachment_capture_requests;context jsonb;h public.ezyve
  select * into h from public.ezyvet_identity_heads where source_origin=context->>'source_origin' and source_site_uid=context->>'source_site_uid' and resource='attachment' and external_id=r.external_id for share;
  if h.snapshot_id is distinct from r.snapshot_id or h.version is distinct from r.observed_head_version then raise exception 'SOURCE_ATTACHMENT_STALE' using errcode='40001';end if;
 end $$;
-create function public.prepare_ezyvet_attachment_capture(p_id uuid,p_animal_link_id uuid,p_run_id uuid,p_page integer,p_ordinal integer,p_snapshot_id uuid,p_observed_head_version integer,p_stable_metadata_sha256 text) returns jsonb language plpgsql security definer set search_path=public,extensions as $$
+create function public.ezyvet_attachment_capture_prepare_core(p_id uuid,p_animal_link_id uuid,p_run_id uuid,p_page integer,p_ordinal integer,p_snapshot_id uuid,p_observed_head_version integer,p_stable_metadata_sha256 text,p_abandon boolean) returns jsonb language plpgsql security definer set search_path=public,extensions as $$
 declare actor uuid:=auth.uid();r public.ezyvet_attachment_capture_requests;c public.ezyvet_attachment_runs;o public.ezyvet_attachment_page_observations;s public.ezyvet_import_snapshots;payload jsonb;fingerprint text;
 begin
  if public.ezyvet_is_active_admin(actor) is not true then raise exception 'Active administrator required' using errcode='42501';end if;
@@ -105,11 +105,13 @@ begin
  select * into strict s from public.ezyvet_import_snapshots where id=o.snapshot_id;
  if s.resource<>'attachment' or s.payload->>'representation' is distinct from 'sanitized_attachment_metadata_v1' then raise exception 'Sanitized attachment evidence required' using errcode='23514';end if;
  fingerprint:=encode(digest(jsonb_build_array(p_id,actor,payload,c.parent_context,s.payload,o.raw_record_sha256)::text,'sha256'),'hex');
- insert into public.ezyvet_attachment_capture_requests(id,requested_by,animal_link_id,pet_id,client_id,run_id,page,ordinal,snapshot_id,observed_head_version,external_id,file_id,stable_metadata_sha256,raw_record_sha256,metadata,parent_context,request_payload,request_hash)
- values(p_id,actor,c.animal_link_id,c.pet_id,(c.parent_context->>'client_id')::uuid,p_run_id,p_page,p_ordinal,o.snapshot_id,o.head_version,o.external_id,o.file_id,o.stable_metadata_sha256,o.raw_record_sha256,s.payload-'representation',c.parent_context,payload,fingerprint);
- perform public.ezyvet_attachment_capture_lock_source(p_id,false);
+ insert into public.ezyvet_attachment_capture_requests(id,requested_by,animal_link_id,pet_id,client_id,run_id,page,ordinal,snapshot_id,observed_head_version,external_id,file_id,stable_metadata_sha256,raw_record_sha256,metadata,parent_context,request_payload,request_hash,status)
+ values(p_id,actor,c.animal_link_id,c.pet_id,(c.parent_context->>'client_id')::uuid,p_run_id,p_page,p_ordinal,o.snapshot_id,o.head_version,o.external_id,o.file_id,o.stable_metadata_sha256,o.raw_record_sha256,s.payload-'representation',c.parent_context,payload,fingerprint,case when p_abandon then 'abandoned' else 'prepared' end);
+ if not p_abandon then perform public.ezyvet_attachment_capture_lock_source(p_id,false);end if;
  return public.ezyvet_attachment_capture_projection(p_id);
 end $$;
+create function public.prepare_ezyvet_attachment_capture(p_id uuid,p_animal_link_id uuid,p_run_id uuid,p_page integer,p_ordinal integer,p_snapshot_id uuid,p_observed_head_version integer,p_stable_metadata_sha256 text) returns jsonb language sql security definer set search_path=public as $$ select public.ezyvet_attachment_capture_prepare_core(p_id,p_animal_link_id,p_run_id,p_page,p_ordinal,p_snapshot_id,p_observed_head_version,p_stable_metadata_sha256,false); $$;
+create function public.abandon_ezyvet_attachment_capture_preparation(p_id uuid,p_animal_link_id uuid,p_run_id uuid,p_page integer,p_ordinal integer,p_snapshot_id uuid,p_observed_head_version integer,p_stable_metadata_sha256 text) returns jsonb language sql security definer set search_path=public as $$ select public.ezyvet_attachment_capture_prepare_core(p_id,p_animal_link_id,p_run_id,p_page,p_ordinal,p_snapshot_id,p_observed_head_version,p_stable_metadata_sha256,true); $$;
 create function public.recover_ezyvet_attachment_capture(p_id uuid,p_animal_link_id uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$
 declare r public.ezyvet_attachment_capture_requests;begin
  if public.ezyvet_is_active_admin(auth.uid()) is not true then raise exception 'Active administrator required' using errcode='42501';end if;
@@ -125,6 +127,22 @@ declare items jsonb;more boolean;lastrow jsonb;begin
  select coalesce(jsonb_agg(public.ezyvet_attachment_capture_projection(id) order by created_at desc,id desc),'[]') into items from(select id,created_at from public.ezyvet_attachment_capture_requests where requested_by=auth.uid() and animal_link_id=p_animal_link_id and(p_before_at is null or(created_at,id)<(p_before_at,p_before_id)) order by created_at desc,id desc limit p_limit+1) x;
  more:=jsonb_array_length(items)>p_limit;if more then items:=items-p_limit;end if;lastrow:=items->(jsonb_array_length(items)-1);
  return jsonb_build_object('captures',items,'has_more',more,'next_cursor',case when more then jsonb_build_object('before_at',lastrow->'created_at','before_id',lastrow->'id') else null end);
+end $$;
+create function public.list_ezyvet_attachment_capture_mappings(p_before_at timestamptz default null,p_before_id uuid default null,p_limit integer default 20) returns jsonb language plpgsql stable security definer set search_path=public as $$
+declare items jsonb;more boolean;lastrow jsonb;begin
+ if public.ezyvet_is_active_admin(auth.uid()) is not true then raise exception 'Active administrator required' using errcode='42501';end if;
+ if p_limit is null or p_limit not between 1 and 50 or(p_before_at is null)<>(p_before_id is null) or(p_before_at is not null and not isfinite(p_before_at)) then raise exception 'Bounded capture mapping cursor required' using errcode='23514';end if;
+ select coalesce(jsonb_agg(to_jsonb(x) order by last_capture_at desc,link_id desc),'[]') into items from (
+  select r.animal_link_id link_id,r.pet_id,p.name patient_name,c.full_name household_name,
+   r.parent_context->>'source_origin' source_origin,r.parent_context->>'source_site_uid' source_site_uid,
+   l.external_id,p.version patient_version,r.created_at last_capture_at
+  from (select distinct on(animal_link_id) * from public.ezyvet_attachment_capture_requests where requested_by=auth.uid() order by animal_link_id,created_at desc,id desc) r
+  join public.pets p on p.id=r.pet_id join public.clients c on c.id=r.client_id join public.ezyvet_record_links l on l.id=r.animal_link_id
+  where p_before_at is null or(r.created_at,r.animal_link_id)<(p_before_at,p_before_id)
+  order by r.created_at desc,r.animal_link_id desc limit p_limit+1
+ ) x;
+ more:=jsonb_array_length(items)>p_limit;if more then items:=items-p_limit;end if;lastrow:=items->(jsonb_array_length(items)-1);
+ return jsonb_build_object('mappings',items,'has_more',more,'next_cursor',case when more then jsonb_build_object('before_at',lastrow->'last_capture_at','before_id',lastrow->'link_id') else null end);
 end $$;
 create function public.get_ezyvet_attachment_capture_context(p_id uuid,p_actor uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$begin
  if public.ezyvet_is_active_admin(p_actor) is not true or not exists(select 1 from public.ezyvet_attachment_capture_requests where id=p_id and requested_by=p_actor) then raise exception 'Owned capture unavailable' using errcode='42501';end if;
@@ -269,9 +287,9 @@ begin
  return to_jsonb(r)||jsonb_build_object('scope','animal_attachment_metadata','parent_context',context,'animal_link_id',p_animal_link_id,'animal_external_id',context->'animal_external_id','pet_id',context->'pet_id','client_id',context->'client_id');
 end $$;
 do $$declare f record;begin
- for f in select oid::regprocedure signature,proname from pg_proc where pronamespace='public'::regnamespace and proname in('guard_ezyvet_attachment_capture_request','ezyvet_attachment_capture_current','ezyvet_attachment_capture_projection','ezyvet_attachment_capture_private','ezyvet_attachment_original_source_gate','ezyvet_attachment_capture_lock_source','prepare_ezyvet_attachment_capture','recover_ezyvet_attachment_capture','list_ezyvet_attachment_captures','get_ezyvet_attachment_capture_context','ezyvet_attachment_capture_require_lease','claim_ezyvet_attachment_capture','reserve_ezyvet_attachment_original','complete_ezyvet_attachment_capture','fail_ezyvet_attachment_capture','begin_discard_ezyvet_attachment_capture','complete_discard_ezyvet_attachment_capture','ezyvet_attachment_original_storage_insert','claim_ezyvet_attachment_import') loop
+ for f in select oid::regprocedure signature,proname from pg_proc where pronamespace='public'::regnamespace and proname in('ezyvet_attachment_capture_prepare_core','abandon_ezyvet_attachment_capture_preparation','list_ezyvet_attachment_capture_mappings','guard_ezyvet_attachment_capture_request','ezyvet_attachment_capture_current','ezyvet_attachment_capture_projection','ezyvet_attachment_capture_private','ezyvet_attachment_original_source_gate','ezyvet_attachment_capture_lock_source','prepare_ezyvet_attachment_capture','recover_ezyvet_attachment_capture','list_ezyvet_attachment_captures','get_ezyvet_attachment_capture_context','ezyvet_attachment_capture_require_lease','claim_ezyvet_attachment_capture','reserve_ezyvet_attachment_original','complete_ezyvet_attachment_capture','fail_ezyvet_attachment_capture','begin_discard_ezyvet_attachment_capture','complete_discard_ezyvet_attachment_capture','ezyvet_attachment_original_storage_insert','claim_ezyvet_attachment_import') loop
  execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
- if f.proname in('prepare_ezyvet_attachment_capture','recover_ezyvet_attachment_capture','list_ezyvet_attachment_captures','ezyvet_attachment_original_storage_insert') then execute format('grant execute on function %s to authenticated',f.signature);
+ if f.proname in('abandon_ezyvet_attachment_capture_preparation','list_ezyvet_attachment_capture_mappings','prepare_ezyvet_attachment_capture','recover_ezyvet_attachment_capture','list_ezyvet_attachment_captures','ezyvet_attachment_original_storage_insert') then execute format('grant execute on function %s to authenticated',f.signature);
  elsif f.proname in('get_ezyvet_attachment_capture_context','claim_ezyvet_attachment_capture','reserve_ezyvet_attachment_original','complete_ezyvet_attachment_capture','fail_ezyvet_attachment_capture','begin_discard_ezyvet_attachment_capture','complete_discard_ezyvet_attachment_capture','claim_ezyvet_attachment_import') then execute format('grant execute on function %s to service_role',f.signature);end if;
  end loop;
 end $$;
