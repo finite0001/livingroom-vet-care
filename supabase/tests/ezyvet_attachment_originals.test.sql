@@ -87,10 +87,25 @@ select is(jsonb_array_length(read_ezyvet_attachment_chart((select id from fx whe
 select throws_ok($$select read_ezyvet_attachment_chart((select id from fx where k='pet'),now(),null,20)$$,'23514',null,'Chart requires paired cursor');
 select throws_ok($$select * from ezyvet_attachment_record_versions$$,'42501',null,'Approval table is not directly readable');
 reset role;
+create function pg_temp.release_original(k text default 'corrected',patient uuid default null) returns jsonb language sql as $$
+ select ezyvet_validate_release_attachments(coalesce($2,(select id from fx where fx.k='pet')),jsonb_build_array(jsonb_build_object('id',(select v->>'id' from data where data.k=$1),'record_hash',(select v->>'record_hash' from data where data.k=$1))));
+$$;
+insert into data select 'release-original',pg_temp.release_original();
+select is((select v#>>'{0,capture,object_path}' from data where k='release-original'),(select v#>>'{intent,object_path}' from data where k='reserved'),'Release validation binds exact canonical original path');
+select is((select v#>>'{0,record,source_context,file_id}' from data where k='release-original'),(select v#>>'{request,file_id}' from data where k='ready'),'Release retains separate canonical file identity');
+select ok(not (select(v#>'{0,record,source_context}') ? 'metadata' from data where k='release-original'),'Release provenance omits raw metadata');
+select throws_ok($$select pg_temp.release_original('approved')$$,'40001',null,'Superseded approval cannot enter a new release');
+select throws_ok($$select pg_temp.release_original('corrected',(select id from fx where k='client'))$$,'40001',null,'Release rejects another patient');
+select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),'[]')$$,'23514',null,'Empty API original selection rejected');
+select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),jsonb_build_array(jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',repeat('f',64))))$$,'40001',null,'Release refuses altered approval digest');
+select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),jsonb_build_array(jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',(select v->>'record_hash' from data where k='corrected')),jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',(select v->>'record_hash' from data where k='corrected'))))$$,'23514',null,'Release rejects duplicate approval identities');
+select ok(not has_function_privilege('authenticated','ezyvet_validate_release_attachments(uuid,jsonb)','execute'),'Private release validation unavailable directly to staff');
+select ok(not has_function_privilege('service_role','ezyvet_validate_release_attachments(uuid,jsonb)','execute'),'Worker cannot invoke release validation directly');
 select throws_ok($$update ezyvet_attachment_record_versions set title='changed'$$,'23514',null,'Privileged approval rewrites are rejected');
 select ok(not has_function_privilege('anon','approve_ezyvet_attachment_record(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Anonymous approval denied');
 select ok(not has_function_privilege('service_role','approve_ezyvet_attachment_record(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Worker cannot approve');
 update ezyvet_identity_heads set version=version+1 where resource='animal' and external_id='77';
+select throws_ok($$select pg_temp.release_original()$$,'40001',null,'Source change prevents a new release of retained original');
 set local role authenticated;
 select is(read_ezyvet_attachment_chart((select id from fx where k='pet'))#>>'{records,0,source_current}','false','Latest review remains visible but stale after source changes');
 select is(recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))->>'status','ready','Ready historical capture recovers after parent changes');

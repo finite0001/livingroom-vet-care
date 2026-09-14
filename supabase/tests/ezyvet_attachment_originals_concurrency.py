@@ -265,6 +265,28 @@ try:
     contended(staff+approval(winner,predecessor),staff+approval(loser,predecessor),lambda code,out,err:code!=0 and 'Review latest attachment version' in err)
     check(scalar(f"select count(*) from ezyvet_attachment_record_versions where previous_record_id='{predecessor}';")=='1','Competing corrections append exactly one successor')
 
+
+    # Private release validation composes under staff identity, without browser EXECUTE.
+    private_staff=staff.replace('set local role authenticated;','')
+    def validate_review(review):
+        return private_staff+f"select ezyvet_validate_release_attachments('{fx['pet']}',jsonb_build_array(jsonb_build_object('id','{review}','record_hash',(select record_hash from ezyvet_attachment_record_versions where id='{review}'))));"
+    roles=json.loads(scalar(f"select coalesce(jsonb_agg(role::text),'[]') from user_roles where user_id='{actor}';"))
+    def revoke_staff():sql(f"delete from user_roles where user_id='{actor}';")
+    for boundary in ['source','chain','object']:
+        try:
+            contended(boundary_locks[boundary],validate_review(winner),lambda code,out,err:code!=0 and 'Active staff access required' in err,during_wait=revoke_staff)
+        finally:
+            for role in roles:sql(f"insert into user_roles(user_id,role) values('{actor}',{quote(role)}) on conflict do nothing;")
+    revised=str(uuid.uuid4())
+    contended(staff+approval(revised,winner),validate_review(winner),lambda code,out,err:code!=0 and 'Current latest same-patient API approval required' in err)
+    next_review=str(uuid.uuid4())
+    contended(validate_review(revised),staff+approval(next_review,revised),lambda code,out,err:code==0)
+    check(scalar(f"select previous_record_id from ezyvet_attachment_record_versions where id='{next_review}';")==revised,'Validation-first holds approval chain until transaction ends')
+    contended(change,validate_review(next_review),lambda code,out,err:code!=0 and 'Current latest same-patient API approval required' in err)
+    sql("update ezyvet_identity_heads set version=version-1 where resource='attachment' and external_id='701';")
+    contended(validate_review(next_review),change,lambda code,out,err:code==0)
+    check(scalar("select version from ezyvet_identity_heads where resource='attachment' and external_id='701';")=='2','Validation-first preserves source lock until transaction ends')
+
 finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
