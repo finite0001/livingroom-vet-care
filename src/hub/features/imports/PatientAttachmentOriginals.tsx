@@ -214,6 +214,8 @@ function Originals({
     admitted: boolean,
   ) {
     void work(async () => {
+      setVerified("");
+      setAttest(false);
       const epoch = generation.current;
       const blob = await downloadOriginal(value, actor, admitted);
       if (!alive.current || epoch !== generation.current) return;

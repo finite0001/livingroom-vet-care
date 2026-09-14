@@ -772,3 +772,67 @@ test("own admission cancel remains available while sibling care draft is dirty",
     page.getByLabel("Observer / source", { exact: true }),
   ).toHaveValue("Synthetic observer draft");
 });
+test("failed repeat provenance download clears earlier verification and attestation", async ({
+  page,
+}) => {
+  const { state } = await fixture(page);
+  await admission(page);
+  await expect(
+    panel(page).getByRole("button", {
+      name: "Admit original to patient chart",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  state.tamper = true;
+  await panel(page)
+    .getByRole("button", {
+      name: "Download captured original for provenance review",
+    })
+    .click();
+  await expect(panel(page).getByRole("alert")).toBeVisible();
+  await expect(panel(page).getByRole("checkbox")).not.toBeChecked();
+  await expect(panel(page).getByRole("checkbox")).toBeDisabled();
+  await expect(
+    panel(page).getByRole("button", {
+      name: "Admit original to patient chart",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  expect(state.actions).toHaveLength(0);
+});
+test("failed repeat clinical download clears earlier verification and acknowledgment gate", async ({
+  page,
+}) => {
+  const { state, r } = await fixture(page, ["DVM"]);
+  state.records = [
+    {
+      record: r,
+      latest_record_id: r.id,
+      is_latest: true,
+      withdrawal: null,
+      acknowledgments: [],
+    },
+  ];
+  await open(page);
+  await panel(page)
+    .getByRole("button", { name: "Download chart original version 1" })
+    .click();
+  await expect(
+    panel(page).getByText(/Original downloaded after checksum/),
+  ).toBeVisible();
+  await panel(page).getByRole("checkbox").check();
+  await expect(
+    panel(page).getByRole("button", { name: "Acknowledge original version 1" }),
+  ).toBeEnabled();
+  state.tamper = true;
+  await panel(page)
+    .getByRole("button", { name: "Download chart original version 1" })
+    .click();
+  await expect(panel(page).getByRole("alert")).toBeVisible();
+  await expect(panel(page).getByRole("checkbox")).not.toBeChecked();
+  await expect(panel(page).getByRole("checkbox")).toBeDisabled();
+  await expect(
+    panel(page).getByRole("button", { name: "Acknowledge original version 1" }),
+  ).toBeDisabled();
+  expect(state.actions).toHaveLength(0);
+});
