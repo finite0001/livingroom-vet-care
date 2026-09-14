@@ -11,6 +11,8 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
+parser.add_argument('--scenario', choices=['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
+parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 args = parser.parse_args()
 project = 'livingroom-vet-foundation'
 if args.project_config:
@@ -110,7 +112,10 @@ try:
         ('20260913680000', "to_regclass('public.ezyvet_attachment_captures')"),
         ('20260913690000', "to_regclass('public.ezyvet_attachment_cleanup_attempts')"),
         ('20260913700000', "to_regprocedure('public.get_ezyvet_attachment_animal_parent(uuid)')"),
+        ('20260913710000', "to_regprocedure('public.prepare_ezyvet_attachment_scan(uuid,uuid,text,uuid,text,integer)')"),
     ]
+    if not args.skip_authorization_fix:
+        pending.append(('20260913720000', "case when obj_description('public.prepare_ezyvet_attachment_download(uuid,uuid,uuid,integer,uuid,text,integer)'::regprocedure,'pg_proc')='Rechecks active administrator after request and source waits.' then true else null end"))
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':
             paths = list(migration_dir.glob(version + '_*'))
@@ -122,7 +127,9 @@ try:
     check(scalar("select not public and file_size_limit=20971520 and allowed_mime_types=array['application/pdf','image/jpeg','image/png'] from storage.buckets where id='ezyvet-attachments';") == 't', 'Private fixture bucket matches capture contract')
     fixture = Path(__file__).with_name('ezyvet_attachment_capture.test.sql').read_text().split('-- FIXTURE_BEGIN:')[1].split('select throws_ok(')[0]
     fixture = '\n'.join(fixture.splitlines()[1:])
-    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry'], 1):
+    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry', 'prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'], 1):
+        if args.scenario and scenario != args.scenario:
+            continue
         prefix = f'db569{index:03d}'
         actor = prefix + '-0000-4000-8000-000000000001'
         current = fixture.replace('db560000', prefix).replace('prescriptionitem-test-site', scenario).replace('@example.test', '@' + scenario + '.example.test')
@@ -139,7 +146,34 @@ try:
         metadata = quote(json.dumps(data['saved']['request']['source_context']['attachment_metadata'])) + '::jsonb'
         identity = ','.join(map(quote, [request, actor, lease, request_hash]))
         source_lock = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='attachment' for update;"
-        if scenario.startswith('cleanup-'):
+        if scenario.startswith(('prepare-', 'abandon-', 'scan-')):
+            staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
+            selected = data['saved']['request']['request_payload']
+            target = request if scenario in ('prepare-request-role-loss', 'abandon-request-role-loss') else str(uuid.uuid4())
+            holder = f"select pg_advisory_xact_lock(hashtextextended('{target}',6600));"
+            if scenario.startswith('prepare-'):
+                operation = f"select prepare_ezyvet_attachment_download('{target}','{fx['pet']}','{selected['run_id']}',{selected['page']},'{selected['snapshot_id']}','{selected['payload_hash']}',{selected['observed_head_version']});"
+                if scenario == 'prepare-source-role-loss': holder = source_lock
+            elif scenario.startswith('abandon-'):
+                if scenario == 'abandon-request-role-loss':
+                    holder = f"select 1 from ezyvet_attachment_download_requests where id='{target}' for update;"
+                # Resolve the active worker so the role check is the decisive guard.
+                sql(f"select fail_ezyvet_attachment_download('{request}','{actor}','{lease}','{request_hash}','STORAGE_UNAVAILABLE',5);")
+                operation = f"select abandon_ezyvet_attachment_download('{target}','{fx['pet']}',true);"
+            else:
+                parent = data['saved']['request']['source_context']['parent']
+                holder = f"select pg_advisory_xact_lock(hashtextextended('attachment-run:{target}',0));"
+                if scenario == 'scan-source-role-loss':
+                    holder = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='animal' for update;"
+                operation = f"select prepare_ezyvet_attachment_scan('{target}','{fx['mapping']}','Animal','{parent['parent_snapshot_id']}','{parent['parent_payload_hash']}',{parent['parent_observed_head_version']});"
+            contend(holder, staff + operation, 'Active administrator required', lambda: sql(f"delete from user_roles where user_id='{actor}' and role='ADMIN';"))
+            if target == request:
+                check(scalar(f"select status from ezyvet_attachment_download_requests where id='{target}';") == 'pending', 'Role loss preserves existing pending request')
+            elif scenario.startswith('scan-'):
+                check(scalar(f"select count(*) from ezyvet_import_runs where id='{target}';") == '0', 'Role loss leaves no prepared scan')
+            else:
+                check(scalar(f"select count(*) from ezyvet_attachment_download_requests where id='{target}';") == '0', 'Role loss leaves no new request or tombstone')
+        elif scenario.startswith('cleanup-'):
             sql(f"alter table ezyvet_attachment_download_attempts disable trigger immutable_attachment_worker;update ezyvet_attachment_download_attempts set created_at=clock_timestamp()-interval '10 minutes',lease_until=clock_timestamp()-interval '5 minutes' where lease_id='{lease}';alter table ezyvet_attachment_download_attempts enable trigger immutable_attachment_worker;")
             staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
             sql('begin;' + staff + f"select abandon_ezyvet_attachment_download('{request}','{fx['pet']}',true);commit;")

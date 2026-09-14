@@ -204,3 +204,12 @@ Successful preparation opens the saved scan's existing explicit page controls; p
 Validation: 581 unit tests and30 browser cases passed (20 attachment history/action/creation and10 neighboring prescription cases), including both parent types, stale consultation display, lost preparation acknowledgment with reload, stale-context reset, unreadable local recovery and storage failure. Lint, TypeScript and build passed with existing warnings. Browser calls are mocked; prior92-migration actual local runtime evidence is separate. Evidence: `docs/evidence/attachment-scan-creation-ui-local-20260913.json`.
 
 Still required: download preparation/capture/abandon/cleanup UI, original inspection, clinical review/corrections/release, dedicated preparation contention, current populated upgrade/restore, actual source/provider/operator acceptance and the full commercial-readiness gates. No hosted migration, function deployment or activation occurred.
+
+
+### Request authorization after lock waits
+
+Migration7200 fixes an observed access-revocation race in download preparation and abandonment. The pre-fix preparation function returned its owned request projection even after the administrator role was removed while it waited on the request advisory lock. The updated functions recheck administrator authority after request/source waits and before returning after mutations, preserving existing request identity, captured-evidence and tombstone rules.
+
+The final93-migration local rehearsal passes161 HTTP/Auth/Storage and55 contention checks. Six additional cases observe the exact blocker before revocation: download preparation request/source locks, abandonment request-row/tombstone locks, and scan preparation request/source locks. Rejected operations preserve pending requests and create no new request, tombstone or scan. Four focused SQL suites pass150 assertions. All owned disposable resources were removed. Evidence: `docs/evidence/attachment-request-role-waits-local-20260913.json`.
+
+This is not proof of every possible role/source/lease ordering. File action UI, original inspection, clinical review/release, current populated upgrade/restore and hosted/provider/operator acceptance remain unfinished. No hosted migration or activation occurred.
