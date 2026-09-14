@@ -229,9 +229,8 @@ test("mobile route preserves staff, Denver day, appointment order and saved addr
     "999 Current Household Address",
   ])
     await expect(region).not.toContainText(excluded);
-  await page.screenshot({
+  await region.screenshot({
     path: test.info().outputPath("housecall-route-mobile.png"),
-    fullPage: true,
   });
   await page
     .getByLabel(`Route staff for ${day}`, { exact: true })
