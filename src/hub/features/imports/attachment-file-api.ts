@@ -1,3 +1,4 @@
+import { parseAttachmentReviewHistory, type AttachmentReviewCursor } from "./attachment-review-state";
 import { verifyAttachmentOriginal, attachmentOriginalFilename } from "./attachment-original";
 import { parseAttachmentCleanupRecovery, type AttachmentCleanupOperation } from "./attachment-cleanup-state";
 import { parseAttachmentCleanupHistory, type AttachmentCleanupCursor } from "./attachment-cleanup-state";
@@ -71,4 +72,8 @@ export async function loadAttachmentOriginal(intent: AttachmentFileIntent) {
   const after = await recoverAttachmentFile(intent);
   if (!after?.original || after.original.captureHash !== before.original.captureHash || after.original.intent_hash !== before.original.intent_hash) throw new AttachmentFileActionError("The captured file could not be reverified. No original is available for inspection.");
   return { blob, captureHash: after.original.captureHash, filename: attachmentOriginalFilename(intent.externalId, after.original.mime_type) };
+}
+
+export async function listAttachmentReviewHistory(intent: AttachmentFileIntent, cursor: AttachmentReviewCursor | null) {
+  return parseAttachmentReviewHistory(await rpc("list_ezyvet_attachment_record_versions", { p_request_id: intent.id, p_pet_id: intent.pet, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), intent);
 }

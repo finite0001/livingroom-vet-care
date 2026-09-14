@@ -1,3 +1,4 @@
+import { AttachmentReviewHistory } from "./AttachmentReviewHistory";
 import { AttachmentOriginal } from "./AttachmentOriginal";
 import { AttachmentCleanupActions } from "./AttachmentCleanupActions";
 import { AttachmentCleanupHistory } from "./AttachmentCleanupHistory";
@@ -95,7 +96,8 @@ export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurr
       {saved?.status === "abandoned" && <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || disabled || !parentCurrent || !file.is_current} onClick={startAnother}>Start another file request</Button>}
       <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || disabled || uncertain || !saved || !attachmentFileCanCapture(saved)} onClick={() => void act("capture")}>Capture file privately</Button>
     </div>
-    {intent && saved?.captured && !uncertain && <AttachmentOriginal key={intent.id} intent={intent} disabled={busy || disabled} onBusy={setInspectionBusy} />}
+    {intent && saved?.captured && !uncertain && <AttachmentReviewHistory key={`review:${intent.id}`} intent={intent} disabled={busy || disabled || inspectionBusy} />}
+    {intent && saved?.captured && !uncertain && <AttachmentOriginal key={`original:${intent.id}`} intent={intent} disabled={busy || disabled} onBusy={setInspectionBusy} />}
     {intent && saved?.status === "abandoned" && !uncertain && (saved.cleanupIntentHash ? <AttachmentCleanupActions key={intent.id} intent={intent} intentHash={saved.cleanupIntentHash} disabled={busy || disabled} onState={onCleanupState} /> : <AttachmentCleanupHistory key={intent.id} intent={intent} disabled={busy || disabled} />)}
   </div>;
 }
