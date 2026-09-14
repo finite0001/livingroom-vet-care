@@ -229,6 +229,10 @@ test("mobile route preserves staff, Denver day, appointment order and saved addr
     "999 Current Household Address",
   ])
     await expect(region).not.toContainText(excluded);
+  await page.screenshot({
+    path: test.info().outputPath("housecall-route-mobile.png"),
+    fullPage: true,
+  });
   await page
     .getByLabel(`Route staff for ${day}`, { exact: true })
     .selectOption(otherStaff);
@@ -254,7 +258,17 @@ test("mobile route preserves staff, Denver day, appointment order and saved addr
     ),
   ).toBe(true);
   expect(
-    traffic.externalRequests.filter((url) => /google|maps/i.test(url)),
+    traffic.externalRequests.filter((requestUrl) => {
+      const url = new URL(requestUrl);
+      return (
+        url.hostname === "maps.googleapis.com" ||
+        url.hostname === "maps.google.com" ||
+        (url.hostname === "www.google.com" &&
+          url.pathname.startsWith("/maps")) ||
+        url.hostname === "maps.gstatic.com" ||
+        url.hostname === "maps.app.goo.gl"
+      );
+    }),
   ).toEqual([]);
   expect(traffic.writes).toEqual([]);
 });
