@@ -1617,3 +1617,28 @@ test("late API original bytes after release-preview signout cannot download", as
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
   expect(downloads).toBe(0);
 });
+
+test("late API original bytes after release-preview pagehide cannot download", async ({ page }) => {
+  const { panel } = await openApiOriginalPreview(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-attachment", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  let downloads = 0;
+  page.on("download", () => { downloads++; });
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await entered;
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  const response = page.waitForResponse(r => r.url().endsWith("/retrieve-reviewed-ezyvet-attachment"));
+  release();
+  await (await response).finished();
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+  expect(downloads).toBe(0);
+  await expect(panel.getByText("Original downloaded after checksum verification. Open and review the file before confirming the package.", { exact: true })).toHaveCount(0);
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+});
