@@ -1,3 +1,4 @@
+import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
 import { renderRecordRelease } from "../../supabase/functions/_shared/record-release-renderer.ts";
 import { parseAttachmentChart, parseAttachmentChartOriginal } from "../../src/hub/features/imports/attachment-chart-state.ts";
 import { parseAttachmentDecisionOutcome } from "../../src/hub/features/imports/attachment-decision-state.ts";
@@ -507,8 +508,50 @@ try {
       const savedPackage = await api('/rest/v1/rpc/confirm_record_release', confirmPackage, chartHeaders);
       const readyPackage = await api('/rest/v1/rpc/read_record_release', { p_id: packageId }, chartHeaders);
       check(readyPackage.eligible && savedPackage.source_hash === packagePreview.source_hash && sql(`select source_kind from record_release_sources where release_id=${quote(packageId)};`) === 'api_attachment', "Schema9 confirmation requires policy9 and registers exact API source for eligible recovery");
+      const conversation = sql(`select id from conversations where client_id=${quote(client)} and status='ACTIVE' limit 1;`) || randomUUID(), emailRequest = randomUUID(); ids.push(conversation, emailRequest);
+      sql(`insert into conversations(id,client_id) values(${quote(conversation)},${quote(client)}) on conflict(id) do nothing;`);
+      let emailReads = 0, loseEmailCaptureReply = true;
+      const emailDb = (headers: Record<string, string>, service = false) => ({ rpc: async (name: string, args: Record<string, unknown>) => {
+        try {
+          const data = await api('/rest/v1/rpc/' + name, args, headers);
+          if (service && name === 'capture_release_email_payload' && loseEmailCaptureReply) {
+            loseEmailCaptureReply = false;
+            return { data: null, error: { code: 'synthetic_lost_reply' } };
+          }
+          return { data, error: null };
+        } catch (error) { return { data: null, error }; }
+      } });
+      const emailHandler = createPrepareReleaseEmailHandler({
+        authenticate: async token => {
+          const response = await fetch(local.API_URL + '/auth/v1/user', { headers: { apikey: local.ANON_KEY, Authorization: `Bearer ${token}` } });
+          if (!response.ok) return null;
+          const user = await response.json();
+          return { actorId: user.id, db: emailDb({ ...chartHeaders, Authorization: `Bearer ${token}` }) };
+        },
+        service: emailDb(serviceHeaders, true),
+        sender: { from: 'care@example.test', replyTo: 'care@example.test' },
+        download: async (bucket, path, expectedSize) => {
+          emailReads++;
+          check(bucket === 'ezyvet-attachments' && path === chartCapture.object_path, "Email handler downloads the exact selected API original from its private bucket");
+          const response = await fetch(local.API_URL + '/storage/v1/object/' + bucket + '/' + path, { headers: serviceHeaders });
+          assert.ok(response.ok);
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          assert.equal(bytes.length, expectedSize);
+          return bytes;
+        },
+      });
+      const emailArgs = { p_request_id: emailRequest, p_release_id: packageId, p_conversation_id: conversation, p_subject: 'Synthetic reviewed API original', p_body: 'Synthetic release acceptance only', p_release_hash: savedPackage.source_hash };
+      const prepareEmail = (args = emailArgs, headers = chartHeaders) => emailHandler(new Request('http://localhost/prepare-release-email', { method: 'POST', headers, body: JSON.stringify(args) }));
+      check((await prepareEmail(emailArgs, { 'Content-Type': 'application/json' })).status === 401 && emailReads === 0, "Anonymous email preparation cannot read private API bytes");
+      check((await prepareEmail()).status === 500, "Lost successful email capture acknowledgment requires exact recovery");
+      const capturedEmail = await api('/rest/v1/rpc/recover_release_email', { p_release_id: packageId, p_request_id: emailRequest }, chartHeaders);
+      check(/^[a-f0-9]{64}$/.test(capturedEmail.payload_hash) && capturedEmail.manifest.some((file: { sha256: string }) => file.sha256 === receipt.content_sha256), "Full email handler records a SQL-verified manifest for actual API bytes despite lost acknowledgment");
+      const emailRetry = await prepareEmail();
+      check(emailRetry.status === 200 && (await emailRetry.json()).payload_hash === capturedEmail.payload_hash && emailReads === 1, "Exact handler retry recovers captured API email without another Storage download");
+      check((await prepareEmail({ ...emailArgs, p_subject: 'Changed intent' })).status === 409, "Captured API email rejects changed request identity");
       sql(`begin; select set_config('request.jwt.claims',${quote(JSON.stringify({ sub: chartActor, role: 'authenticated' }))},true); do $test$ begin if not (public.release_read_internal(${quote(packageId)})->>'eligible')::boolean then raise exception 'Expected eligible baseline'; end if; end $test$; update storage.objects set metadata='{}' where id=${quote(chartCapture.storage_object_id)}; do $test$ begin if (public.release_read_internal(${quote(packageId)})->>'eligible')::boolean then raise exception 'Missing original remained eligible'; end if; end $test$; rollback;`); assertions++;
       sql(`delete from user_roles where user_id=${quote(chartActor)};`);
+      check((await prepareEmail()).status === 403 && emailReads === 1, "Revoked staff cannot recover the captured API email through the handler");
       await assert.rejects(api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet }, chartHeaders), (error: { code: string }) => error.code === "42501"); assertions++;
       check(!(await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + chartCapture.object_path, { headers: chartHeaders })).ok, "Revoked staff cannot download reviewed original");
       sql(`insert into user_roles(user_id,role) values(${quote(chartActor)},'DVM');`);
@@ -517,6 +560,10 @@ try {
       check(staleChart.records[0].is_latest && !staleChart.records[0].source_current, "Chart distinguishes latest approval from changed source evidence");
       rejectRelease(releaseRefs, '40001');
       check(!(await api('/rest/v1/rpc/list_record_release_sources_v9', { p_pet_id: pet, p_offset: 0 }, chartHeaders)).api_attachment_ids.some((item: { id: string }) => item.id === correctionId), "Changed API evidence is removed from current eligible source candidates");
+      const historicalEmail = await prepareEmail();
+      check(historicalEmail.status === 200 && (await historicalEmail.json()).payload_hash === capturedEmail.payload_hash && emailReads === 1, "API source invalidation preserves exact captured email recovery without rereading bytes");
+      const freshEmailRequest = randomUUID(); ids.push(freshEmailRequest);
+      check((await prepareEmail({ ...emailArgs, p_request_id: freshEmailRequest })).status === 403 && emailReads === 1, "Invalidated API release cannot prepare a new email or fetch originals");
       const invalidatedPackage = await api('/rest/v1/rpc/read_record_release', { p_id: packageId }, chartHeaders);
       check(!invalidatedPackage.eligible && invalidatedPackage.events.some((event: { kind: string }) => event.kind === 'source_changed') && JSON.stringify(invalidatedPackage.release.snapshot) === JSON.stringify(packagePreview.snapshot), "Source revision adds an invalidation event without rewriting the reviewed API package");
       check((await api('/rest/v1/rpc/confirm_record_release', confirmPackage, chartHeaders)).id === packageId, "Exact schema9 confirmation retry recovers original after source change");
