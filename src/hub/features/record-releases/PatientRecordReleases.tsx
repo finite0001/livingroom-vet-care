@@ -833,8 +833,10 @@ export function PatientRecordReleases({
               )}
               <p className="text-sm">
                 Select all shown applies to this source page. A package supports
-                at most 100 records per family; use another package for
-                additional history. Body maps include every observation and
+                at most 20 API originals, 20 outside vaccinations and 20 outside
+                prescriptions, and 100 records per other family. Delivery also
+                limits the combined original files to 24; use another package
+                for additional history. Body maps include every observation and
                 correction, not a signed diagnosis.
               </p>
               {!preview ? (
@@ -853,6 +855,19 @@ export function PatientRecordReleases({
               ) : (
                 <>
                   <RecordReleaseArtifact artifact={{ preview }} />
+                  {!!preview.snapshot.api_originals?.length && (
+                    <p className="rounded-md bg-muted p-3 text-sm">
+                      This preview shows API-original provenance, not the file
+                      contents. A DVM must review the exact files in this
+                      patient’s Imported API originals panel before starting
+                      package selection. If that review is incomplete, use Clear
+                      package selection, have a DVM download and review the chart
+                      originals, then select and review the package again before
+                      attesting below. Chart-original actions are unavailable
+                      while package selection is unfinished. Email and
+                      secure-link delivery include the original files separately.
+                    </p>
+                  )}
                   {preview.snapshot.attachments.map((a) => (
                     <Button
                       key={a.id}

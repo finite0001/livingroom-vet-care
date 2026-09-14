@@ -276,8 +276,10 @@ function Originals({
       <h2 className="text-xl font-semibold">Imported API originals</h2>
       <p>
         Verified historical files admitted to this patient’s chart. Provenance
-        admission and veterinary acknowledgment are separate. These records are
-        not included in record releases.
+        admission and veterinary acknowledgment are separate. Latest,
+        nonwithdrawn originals with DVM acknowledgment can be selected for
+        reviewed record packages. Confirmation requires practice acceptance of
+        the release policy.
       </p>
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
