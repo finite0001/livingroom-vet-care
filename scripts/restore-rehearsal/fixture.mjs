@@ -1,3 +1,4 @@
+import { seedReleasePackages, verifyReleasePackages } from './release-packages.mjs';
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -5,7 +6,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 const [mode, statusPath, run] = process.argv.slice(2);
-assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals"].includes(mode));
+assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals", "capture-release-packages"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
@@ -81,7 +82,7 @@ if (mode === "create") {
   );
   const result =
     sql(`begin;create temp table fx(k text primary key,id uuid);grant all on fx to authenticated;${actor(state.user)}
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Synthetic Restore','Only',null,'restore@example.test','EMAIL','Synthetic mailing address',null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Synthetic Restore','Only','+13035550481','restore@example.test','EMAIL','Synthetic mailing address',null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Synthetic Restore Patient','Dog',null,null,'unknown',null,'unknown','unknown','0000123456789',null,null);
 insert into fx select 'encounter',id from save_clinical_encounter(null,(select id from fx where k='pet'),null,now(),'clinic','Synthetic home base','Synthetic history','Synthetic examination','Synthetic assessment','Synthetic plan');
 select sign_clinical_encounter((select id from fx where k='encounter'),1);
@@ -190,6 +191,20 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   state.snapshot = captured;
   writeFileSync(statePath, JSON.stringify(state), {mode:0o600});
   console.log('Ready and reserved API originals uploaded through staff Storage API, verified privately, and captured for restore.');
+} else if (mode === "capture-release-packages") {
+  state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(project, `${state.projectRun}-source`);
+  checked(await api.auth.signInWithPassword({email:state.email,password:state.password}));
+  const previous = snapshot();
+  await seedReleasePackages({state,api,admin,sql});
+  const captured = snapshot();
+  const oldAudits = new Set(previous.audit_logs.map(row => row.id));
+  const addedAudits = captured.audit_logs.filter(row => !oldAudits.has(row.id));
+  assert.ok(addedAudits.length > 0);
+  assert.ok(addedAudits.every(row => ['record_release_policy','record_releases','record_release_sources','record_release_events','release_email_requests','release_email_payloads','sms_consent','conversations','document_link_grants','document_link_payloads','document_link_events'].includes(row.table_name)), 'Only expected release audit families added');
+  assert.deepEqual({...captured,audit_logs:captured.audit_logs.filter(row => oldAudits.has(row.id))},previous,'Release packages preserve prior native/Auth/Storage/audit rows');
+  state.snapshot = captured;
+  writeFileSync(statePath,JSON.stringify(state),{mode:0o600});
 } else if (mode === "capture-review-audit") {
   state = JSON.parse(readFileSync(statePath, "utf8"));
   assert.equal(project, `${state.projectRun}-source`);
@@ -464,10 +479,17 @@ rollback;`);
     state.snapshot,
     "Read and denied-write verification leaves restored clinical/audit/ledger records unchanged",
   );
+  if (state.releasePackages) {
+    await verifyReleasePackages({state,api,admin,sql});
+    assert.deepEqual(snapshot(),state.snapshot,'Artifact verification and rolled-back source/policy probes preserve original records');
+  }
   writeFileSync(
     join(run, "verification.json"),
     JSON.stringify(
       {
+        saved_schema9_email_and_link_restored: Boolean(state.releasePackages),
+        restored_saved_artifact_recovery_and_current_access: Boolean(state.releasePackages),
+        restored_policy_and_source_invalidation_denied: Boolean(state.releasePackages),
         fresh_local_login: true,
         identical_rows_and_ids: true,
         signed_soap_and_addendum: true,

@@ -185,7 +185,8 @@ def vaccination_snapshot(project):
               'ezyvet_attachment_capture_requests','ezyvet_attachment_capture_attempts','ezyvet_attachment_capture_failures',
               'ezyvet_attachment_original_intents','ezyvet_attachment_original_captures',
               'ezyvet_attachment_record_versions','ezyvet_attachment_approval_cancellations',
-              'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy']
+              'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy',
+              'release_email_requests','release_email_payloads','document_link_grants','document_link_payloads','document_link_events','document_link_access_budget','sms_consent','conversations']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
 
@@ -209,7 +210,7 @@ def seed_vaccination_receipt(project):
       select exists(select 1 from public.user_roles where user_id=a and role='ADMIN') into already_admin;
       if not already_admin then insert into public.user_roles(user_id,role) values(a,'ADMIN'); end if;
       insert into public.ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by)
-        values(animal,'https://api.trial.ezyvet.com','{site}','animal','77','{{"id":77,"contact_id":8}}','synthetic-restore-animal',a);
+        values(animal,'https://api.trial.ezyvet.com','{site}','animal','77','{{"id":77,"contact_id":8}}',encode(sha256(convert_to('{{"id":77,"contact_id":8}}'::jsonb::text,'UTF8')),'hex'),a);
       insert into public.ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
         values(mapping,mapping,'synthetic-restore-link','https://api.trial.ezyvet.com','{site}','animal','77',animal,1,client,p,1,'link','SYNTHETIC RESTORE ONLY',a);
       claimed := public.claim_ezyvet_clinical_import(consult_run,a,'{site}','consult','https://api.trial.ezyvet.com',mapping);
@@ -330,6 +331,7 @@ try:
             # Preserve all prior rows and explicitly capture the four new release audit entries.
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-review-audit',str(source['path']/'status.json'),str(run)])
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-originals',str(source['path']/'status.json'),str(run)])
+            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-release-packages',str(source['path']/'status.json'),str(run)])
             (run/'vaccination-receipt-fixture.json').write_text(json.dumps(vaccination_snapshot(source),sort_keys=True))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
@@ -399,6 +401,8 @@ try:
         except Exception:
             if attempt==59: raise RuntimeError('Restored Auth/PostgREST/Storage did not become healthy')
             time.sleep(1)
+    if (run/'vaccination-receipt-fixture.json').exists():
+        assert vaccination_snapshot(destination)==json.loads((run/'vaccination-receipt-fixture.json').read_text()), 'Restored source, decision and delivery rows must match before verification reads'
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
     if verify_canonical:
         assert functions_snapshot(destination)==canonical_inventory, 'Restored backfilled routines/grants/triggers differ from canonical order'
@@ -409,7 +413,16 @@ try:
     vaccination_evidence = None
     if (run/'vaccination-receipt-fixture.json').exists():
         expected_vaccinations = json.loads((run/'vaccination-receipt-fixture.json').read_text())
-        assert vaccination_snapshot(destination) == expected_vaccinations, 'Restored scoped vaccination receipts or pinned source evidence differ'
+        expected_after_reads=json.loads(json.dumps(expected_vaccinations))
+        fixture_state=json.loads((run/'synthetic-fixture.json').read_text())
+        verified_link_reads=0
+        if fixture_state.get('releasePackages'):
+            grant_id=fixture_state['releasePackages']['SMS']['prepare']['p_request_id']
+            budgets=[row for row in expected_after_reads['document_link_access_budget'] if row['grant_id']==grant_id]
+            assert len(budgets)==1
+            verified_link_reads=2
+            budgets[0]['used']+=verified_link_reads
+        assert vaccination_snapshot(destination) == expected_after_reads, 'Restored rows differ beyond exactly verified link access accounting'
         vaccination_evidence = {'receipt_rows': len(expected_vaccinations['ezyvet_vaccination_pages']),
                                'scoped_context_rows': len(expected_vaccinations['ezyvet_vaccination_runs']),
                                'observation_rows': len(expected_vaccinations['ezyvet_vaccination_page_observations']),
@@ -427,7 +440,12 @@ try:
                                'api_original_approval_versions':len(expected_vaccinations['ezyvet_attachment_record_versions']),
                                'api_original_cancellations':len(expected_vaccinations['ezyvet_attachment_approval_cancellations']),
                                'frozen_release_rows': len(expected_vaccinations['record_releases']),
+                               'saved_release_email_payloads':len(expected_vaccinations['release_email_payloads']),
+                               'saved_document_link_payloads':len(expected_vaccinations['document_link_payloads']),
                                'source_and_receipt_rows_match': True,
+                               'exact_before_verification_match':True,
+                               'verified_link_read_counter_increment':verified_link_reads,
+                               'after_verification_only_expected_counter_change':True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
     # Compare the restored physical files as well as authorized downloaded original bytes.
     command(['docker','cp',docker_name(destination,'storage')+':/mnt/.',str(run/'restored-storage')])
@@ -455,6 +473,7 @@ finally:
         raise RuntimeError('Rehearsal cleanup failed; no success recorded: '+'; '.join(cleanup_errors))
 # This is reached only if restore/verification and every checked cleanup succeeded.
 results['cleanup_verified']=True
+results['release_package_sources_sha256']={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [root/'scripts/restore-rehearsal/release-packages.mjs',*sorted((root/'supabase/functions/_shared').glob('*.ts'))]}
 if verify_canonical: results['backfill']=json.loads((run/'backfill-evidence.json').read_text())
 results['total_seconds']=round(time.monotonic()-started,2)
 (run/'result.json').write_text(json.dumps(results,indent=2)+'\n')
