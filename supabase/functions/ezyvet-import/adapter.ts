@@ -474,13 +474,38 @@ export function createAdapter(
     };
     return token.value;
   }
-  return {
-    async downloadAttachment(attachmentId: string, parent: AttachmentParent, metadataMime: string | null): Promise<AttachmentBytes> {
+  function validateAttachmentRequest(attachmentId: string, parent: AttachmentParent) {
       if (!["https://api.trial.ezyvet.com", "https://api.ezyvet.com"].includes(config.baseUrl) ||
         !config.readResources.includes("attachment") || typeof attachmentId !== "string" || !validVaccinationId(attachmentId) ||
         !parent || !["Animal", "Consult"].includes(parent.parent_type) || typeof parent.parent_external_id !== "string" || !validVaccinationId(parent.parent_external_id)) {
         throw new ImportError("INVALID_ATTACHMENT_REQUEST");
       }
+  }
+  return {
+    async attachmentMetadata(attachmentId: string, parent: AttachmentParent): Promise<StagedEntity> {
+      validateAttachmentRequest(attachmentId, parent);
+      const query = new URLSearchParams({ page: "1", limit: "10", id: attachmentId, record_type: parent.parent_type, record_id: parent.parent_external_id });
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const bearer = await accessToken();
+        const response = await request(`${config.baseUrl}/v1/attachment?${query}`, { method: "GET", headers: { Authorization: `Bearer ${bearer}` } });
+        if (response.status === 401 && attempt === 0) {
+          await response.body?.cancel(); token = null; continue;
+        }
+        if (response.status !== 200) {
+          await response.body?.cancel();
+          throw new ImportError(response.status === 404 ? "SOURCE_ATTACHMENT_METADATA_CHANGED" : response.status === 403 ? "UPSTREAM_SCOPE_DENIED" : response.status === 401 ? "UPSTREAM_AUTH_FAILED" : "UPSTREAM_UNAVAILABLE");
+        }
+        const result = parsePage(await json(response), "attachment", 1);
+        if (!result.complete || result.items.length !== 1 || result.items[0].external_id !== attachmentId ||
+          result.items[0].payload.record_type !== parent.parent_type || String(result.items[0].payload.record_id) !== parent.parent_external_id) {
+          throw new ImportError("SOURCE_ATTACHMENT_METADATA_CHANGED");
+        }
+        return result.items[0];
+      }
+      throw new ImportError("UPSTREAM_AUTH_FAILED");
+    },
+    async downloadAttachment(attachmentId: string, parent: AttachmentParent, metadataMime: string | null): Promise<AttachmentBytes> {
+      validateAttachmentRequest(attachmentId, parent);
       attachmentMime(metadataMime); // Unsupported declarations must not trigger authentication or a file request.
       const url = `${config.baseUrl}/v1/attachment/download/${attachmentId}`;
       for (let attempt = 0; attempt < 2; attempt++) {

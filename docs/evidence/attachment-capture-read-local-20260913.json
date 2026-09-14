@@ -1,0 +1,36 @@
+{
+  "synthetic_only": true,
+  "git_parent_revision": "e3c0ef0afac1e1cde1faba0c848603cb38205a9e",
+  "new_focused_tests": 14,
+  "application_tests": 510,
+  "native_http_consistency_scenarios": [
+    "matching metadata before/after transfer",
+    "changed file ID after transfer rejects capture result"
+  ],
+  "commands": [
+    "npm run check",
+    "deno check --frozen supabase/functions/ezyvet-import/index.ts supabase/functions/ezyvet-import/attachment-capture-read.ts"
+  ],
+  "results": {
+    "lint": "pass (existing Fast Refresh warning)",
+    "typescript": "pass",
+    "tests": "510 passed",
+    "build": "pass (existing chunk warning)",
+    "deno": "pass"
+  },
+  "source_sha256": {
+    "supabase/functions/ezyvet-import/adapter.ts": "9c7dfd11173a032215c2de8d011fbbf94eb271b1a066ab120084a3b136a99e33",
+    "supabase/functions/ezyvet-import/attachment-capture-read.ts": "5a03e45ff444b3e2eb817d89d8b02fe219e916626f86f8b859fb1aa66873aec2",
+    "supabase/functions/ezyvet-import/attachment-bytes.ts": "2363b7faded6c4427c72eca52f26463e7f5873f04d742aba6a7d140ad8d6d89d",
+    "supabase/functions/ezyvet-import/import-error.ts": "a83f709a2314f1f6d1335337b020df805d89e450b9de90956956f84191222898",
+    "tests/ezyvet/attachment-capture-read.test.ts": "c109b14fdff0650248629fdaa1ef2de31874fcaeb1bce81659976c9206631cfd",
+    "tests/ezyvet/attachment-download-http.test.ts": "d5f47abe684fce96130ac1f54322468317601aed16bad074f4fc3e34f4f72f1e"
+  },
+  "provider_requests": 0,
+  "limitations": [
+    "No persisted capture, Storage upload/recovery, worker endpoint or hosted deployment.",
+    "Same metadata before and after transfer is not an atomic provider snapshot guarantee.",
+    "Database lease and source currentness must still be revalidated at final capture.",
+    "No clinical approval/release, browser, restore or issued-site acceptance; staff download availability remains false."
+  ]
+}
