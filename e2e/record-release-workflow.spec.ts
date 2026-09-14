@@ -4,6 +4,7 @@ import { vaccinationArtifact } from "../tests/record-releases/vaccination-fixtur
 import { clinicalHistoryArtifact } from "../tests/record-releases/clinical-history-fixture";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { sourceProvenanceArtifact } from "../tests/record-releases/source-provenance-fixture";
 import { provenanceArtifact } from "../tests/record-releases/provenance-fixture";
 const chartArtifact = provenanceArtifact();
@@ -43,6 +44,7 @@ async function fixture(
   clinicalMode = false,
   vaccinationMode = false,
   prescriptionMode = false,
+  roles = ["STAFF"],
 ) {
   const currentArtifact = prescriptionMode ? prescriptionArtifact() : vaccinationMode
     ? vaccinationArtifact()
@@ -81,7 +83,17 @@ async function fixture(
     (value) => localStorage.setItem("sb-127-auth-token", JSON.stringify(value)),
     session,
   );
+  const apiBytes = Buffer.from("%PDF-1.4\nSynthetic review original\n%%EOF");
+  const apiOriginal = {
+    ...apiRecord(),
+    content_sha256: createHash("sha256").update(apiBytes).digest("hex"),
+    file_size: apiBytes.length,
+  };
   const state = {
+    apiOriginal,
+    apiBytes,
+    tamperApiDownload: false,
+    apiDownloadRequests: [] as Array<{ record_id: string; pet_id: string }>,
     malformedSources: false,
     apiCandidateCount: 0,
     malformedApi: false,
@@ -140,6 +152,15 @@ async function fixture(
     const path = new URL(route.request().url()).pathname;
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
+    if (path === "/auth/v1/logout") return route.fulfill({ json: {} });
+    if (path === "/functions/v1/retrieve-reviewed-ezyvet-attachment") {
+      expect(route.request().method()).toBe("POST");
+      state.apiDownloadRequests.push(route.request().postDataJSON());
+      return route.fulfill({
+        contentType: "application/pdf",
+        body: state.tamperApiDownload ? Buffer.alloc(apiBytes.length, 65) : apiBytes,
+      });
+    }
     if (path === "/rest/v1/profiles")
       return route.fulfill({
         json: [
@@ -148,13 +169,13 @@ async function fixture(
             full_name: "Test staff",
             first_name: "Test",
             last_name: "Staff",
-            role: "STAFF",
+            role: roles[0],
             is_active: true,
           },
         ],
       });
     if (path === "/rest/v1/user_roles")
-      return route.fulfill({ json: [{ role: "STAFF" }] });
+      return route.fulfill({ json: roles.map((role) => ({ role })) });
     if (path === "/rest/v1/pets")
       return route.fulfill({
         json: [
@@ -377,11 +398,11 @@ async function fixture(
         }));
       }
       candidates.api_original_ids = Array.from({ length: state.apiCandidateCount }, (_, index) => ({
-        id: index === 0 ? apiRecord().id : `c9000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
-        version: 1, version_hash: apiRecord().record_hash,
-        recorded_at: apiRecord().approved_at, label: `API original ${index + 1}`,
-        source_label: "ezyVet API original", capture_hash: apiRecord().capture_hash,
-        content_sha256: apiRecord().content_sha256, mime_type: "application/pdf", file_size: 30,
+        id: index === 0 ? apiOriginal.id : `c9000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+        version: 1, version_hash: apiOriginal.record_hash,
+        recorded_at: apiOriginal.approved_at, label: `API original ${index + 1}`,
+        source_label: "ezyVet API original", capture_hash: apiOriginal.capture_hash,
+        content_sha256: apiOriginal.content_sha256, mime_type: apiOriginal.mime_type, file_size: apiOriginal.file_size,
         acknowledgment_count: state.malformedApi ? 0 : 1, historical_source: true,
       }));
       return route.fulfill({ json: candidates });
@@ -400,7 +421,7 @@ async function fixture(
       return route.fulfill({
         json: {
           selection: {
-            api_original_ids: Array.from({ length: state.apiCandidateCount }, (_, index) => index === 0 ? apiRecord().id : `c9000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+            api_original_ids: Array.from({ length: state.apiCandidateCount }, (_, index) => index === 0 ? apiOriginal.id : `c9000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
             lab_report_ids: [],
             external_record_ids: [],
             ...Object.fromEntries(
@@ -448,10 +469,10 @@ async function fixture(
       Object.assign(preview.snapshot, {
         schema_version: 9,
         api_originals: body.p_selection.api_original_ids?.length ? [{
-          record: apiRecord(), acknowledgment: {
+          record: apiOriginal, acknowledgment: {
             id: "99999999-9999-4999-8999-999999999999", action_id: "88888888-8888-4888-8888-888888888888",
-            record_id: apiRecord().id, pet_id: petId, actor_id: staffId,
-            record_hash: apiRecord().record_hash, capture_hash: apiRecord().capture_hash,
+            record_id: apiOriginal.id, pet_id: petId, actor_id: staffId,
+            record_hash: apiOriginal.record_hash, capture_hash: apiOriginal.capture_hash,
             created_at: "2026-09-14T13:00:00Z",
           },
         }] : [],
@@ -1488,7 +1509,7 @@ test("schema9 supports API-original-only review and exact lost-confirmation reco
   await panel.getByRole("button", { name: "Refresh source list", exact: true }).click();
   await panel.getByRole("button", { name: "Select all shown: DVM-acknowledged API originals", exact: true }).click();
   await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
-  await expect(panel.frameLocator("iframe").getByText(apiRecord().content_sha256, { exact: false })).toBeVisible();
+  await expect(panel.frameLocator("iframe").getByText(state.apiOriginal.content_sha256, { exact: false })).toBeVisible();
   await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
   await panel.getByRole("button", { name: "Confirm reviewed package", exact: true }).click();
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
@@ -1498,4 +1519,101 @@ test("schema9 supports API-original-only review and exact lost-confirmation reco
   expect(state.requests[0].p_selection.api_original_ids).toEqual([apiRecord().id]);
   expect(state.requests[0].p_reviewed_snapshot.attachments).toEqual([]);
   expect(storageRequests).toEqual([]);
+});
+
+
+async function openApiOriginalPreview(page: Page, roles = ["DVM"]) {
+  const state = await fixture(page, true, true, false, false, false, false, roles);
+  state.apiCandidateCount = 1;
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: "Refresh source list", exact: true }).click();
+  await panel.getByRole("button", { name: "Select all shown: DVM-acknowledged API originals", exact: true }).click();
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  await expect(panel.frameLocator("iframe").getByText(state.apiOriginal.content_sha256, { exact: false })).toBeVisible();
+  return { state, panel };
+}
+const selectedOriginalButton = "Download selected API original: Synthetic original.pdf · version 1";
+const reviewedPackageLabel = "I reviewed the complete selected records, original attachments and household recipient.";
+
+test("DVM downloads the selected API original from release preview without attesting", async ({ page }) => {
+  const forbiddenRequests: string[] = [];
+  page.on("request", request => {
+    if (/\/storage\/v1\/|\/capture-ezyvet-attachment|\/acknowledge_ezyvet_attachment_original/.test(request.url())) forbiddenRequests.push(request.url());
+  });
+  const { state, panel } = await openApiOriginalPreview(page);
+  const downloads = panel.getByRole("region", { name: "Selected API original downloads" });
+  await expect(downloads.getByRole("button", { name: selectedOriginalButton, exact: true })).toBeVisible();
+  expect(state.apiDownloadRequests).toEqual([]);
+  await panel.getByLabel(reviewedPackageLabel).check();
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-attachment", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  const downloaded = page.waitForEvent("download");
+  await downloads.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await entered;
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  for (const name of ["Confirm reviewed package", "Edit selection and review again", "Clear package selection"]) {
+    await expect(panel.getByRole("button", { name, exact: true })).toBeDisabled();
+  }
+  release();
+  const download = await downloaded;
+  expect(await readFile((await download.path())!)).toEqual(state.apiBytes);
+  expect(state.apiDownloadRequests).toEqual([{ record_id: state.apiOriginal.id, pet_id: petId }]);
+  await expect(panel.getByText("Original downloaded after checksum verification. Open and review the file before confirming the package.", { exact: true })).toBeVisible();
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
+  expect(state.requests).toEqual([]);
+  expect(forbiddenRequests).toEqual([]);
+});
+
+for (const role of ["STAFF", "ADMIN"]) {
+  test(`${role} release preview has no API original download control`, async ({ page }) => {
+    const { state, panel } = await openApiOriginalPreview(page, [role]);
+    await expect(panel.getByRole("button", { name: selectedOriginalButton, exact: true })).toHaveCount(0);
+    expect(state.apiDownloadRequests).toEqual([]);
+  });
+}
+
+test("corrupt API original bytes fail release-preview download without attesting", async ({ page }) => {
+  const { state, panel } = await openApiOriginalPreview(page);
+  state.tamperApiDownload = true;
+  let downloads = 0;
+  page.on("download", () => { downloads++; });
+  await panel.getByLabel(reviewedPackageLabel).check();
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await expect(panel.getByText("Original download failed. The selected file could not be verified. Try again before confirming the package.", { exact: true })).toBeVisible();
+  expect(downloads).toBe(0);
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
+  expect(state.requests).toEqual([]);
+});
+
+test("late API original bytes after release-preview signout cannot download", async ({ page }) => {
+  const { panel } = await openApiOriginalPreview(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-attachment", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  let downloads = 0;
+  page.on("download", () => { downloads++; });
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await entered;
+  await page.getByRole("button", { name: "Sign Out", exact: true }).click();
+  await expect(panel).toHaveCount(0);
+  const response = page.waitForResponse(r => r.url().endsWith("/retrieve-reviewed-ezyvet-attachment"));
+  release();
+  await (await response).finished();
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+  expect(downloads).toBe(0);
 });
