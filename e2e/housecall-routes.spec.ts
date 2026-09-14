@@ -323,11 +323,11 @@ test("an appointment response without a count cannot generate a route", async ({
 test("refresh pauses directions and preserves the expanded route and staff selection", async ({
   page,
 }) => {
-  let pendingRefresh: Promise<void> | undefined;
+  const refresh = { pending: undefined as Promise<void> | undefined };
   let releaseRefresh = () => {};
   await openSchedule(page, {
     beforeAppointmentResponse: async () => {
-      await pendingRefresh;
+      await refresh.pending;
     },
   });
   const region = await openRoute(page);
@@ -335,7 +335,7 @@ test("refresh pauses directions and preserves the expanded route and staff selec
     exact: true,
   });
   await expect(region.getByRole("link")).toHaveCount(4);
-  pendingRefresh = new Promise<void>((resolve) => {
+  refresh.pending = new Promise<void>((resolve) => {
     releaseRefresh = resolve;
   });
   try {
