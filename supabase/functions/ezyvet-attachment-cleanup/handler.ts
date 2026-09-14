@@ -63,7 +63,7 @@ export function createCleanupHandler(deps: CleanupDependencies) {
       if (value === null) return respond({ error: "REQUEST_NOT_FOUND" }, 404);
       const saved = object(value), r = object(saved.request);
       if (r.id !== identity.id || r.actor_id !== identity.actor || r.pet_id !== identity.pet || r.request_hash !== identity.requestHash) invalid();
-      if (r.status !== "abandoned" || saved.capture !== null) throw new ImportError("CLEANUP_NOT_ELIGIBLE");
+      if (r.status !== "abandoned" || saved.capture !== null || saved.capture_intent === null) throw new ImportError("CLEANUP_NOT_ELIGIBLE");
       // Cleanup uses retained evidence, never current provider credentials or source reads.
       intent = parseIntent(saved.capture_intent, identity, object(r.source_context) as Source);
       const previous = await recover(identity, intent); if (previous) return success(previous);

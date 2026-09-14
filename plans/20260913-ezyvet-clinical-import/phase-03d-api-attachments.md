@@ -235,3 +235,10 @@ Reopening first recovers and validates the full file request, then the exact own
 Validation:590 unit tests,40 browser cases and a fresh93-migration runtime with164 HTTP/Auth/Storage and55 contention checks passed. The runtime passes actual captured/abandoned PostgREST history through the same frontend parser and confirms raw metadata omission. Browser cases prove local-reference loss, wrong-patient rejection, pagination and repair of a mismatched local hash. All owned disposable resources were removed. Evidence: `docs/evidence/attachment-file-history-ui-local-20260913.json`.
 
 Abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore and actual hosted/provider/operator acceptance remain unfinished. Full commercial-readiness gates remain open; no hosted deployment or activation occurred.
+
+
+### Unreserved cleanup eligibility correction
+
+The cleanup worker now returns409 `CLEANUP_NOT_ELIGIBLE` with `retry_safe=false` for an owned abandoned request whose capture intent is explicitly null. Previously the shared intent parser turned that ordinary ineligible state into a retryable503. No Storage/provider operation, cleanup attempt or absence receipt occurs. A missing reservation field still fails as malformed; no successful cleanup is claimed.
+
+The regression failed before the fix and now passes. Validation:592 unit tests (24 cleanup-handler cases), frozen cleanup Edge checking, and a fresh93-migration runtime with170 HTTP/Auth/Storage plus55 contention checks passed. Both Animal and Consult unreserved abandonment cases are exercised. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-unreserved-cleanup-local-20260913.json`. No hosted deployment occurred; cleanup/abandon UI and all later clinical/release/readiness gates remain open.

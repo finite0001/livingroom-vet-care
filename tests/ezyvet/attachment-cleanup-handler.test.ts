@@ -6,7 +6,7 @@ const actor = uid(1), pet = uid(2), id = uid(3), cleanup = uid(4), lease = uid(5
 const body = { cleanup_id: cleanup, request_id: id, pet_id: pet, request_hash: requestHash };
 function fixture() {
   const calls: string[] = [];
-  const state = { active: true, signedIn: true, enabled: true, present: true, status: "abandoned", loseDelete: false, denyDelete: false, loseComplete: false, loseClaim: false, wrongPath: false, wrongLease: false, expired: false, wrongActor: false, wrongReceipt: false, claimCode: "", absentRequest: false, claimed: false, completed: false };
+  const state = { noIntent: false, missingIntent: false, active: true, signedIn: true, enabled: true, present: true, status: "abandoned", loseDelete: false, denyDelete: false, loseComplete: false, loseClaim: false, wrongPath: false, wrongLease: false, expired: false, wrongActor: false, wrongReceipt: false, claimCode: "", absentRequest: false, claimed: false, completed: false };
   const metadata = { id: 701, record_type: "Animal", record_id: 77 };
   const intent = { request_id: id, actor_id: actor, pet_id: pet, request_hash: requestHash, intent_hash: intentHash, bucket: "ezyvet-attachments", object_path: `${actor}/${pet}/${id}/${uid(6)}/original`, content_sha256: "c".repeat(64), file_size: 37, mime_type: "application/pdf", before_metadata: metadata, after_metadata: metadata };
   const attempt = () => ({ id: cleanup, request_id: id, actor_id: actor, pet_id: pet, request_hash: requestHash, intent_hash: intentHash, lease_id: state.wrongLease ? "wrong" : lease, created_at: new Date(Date.now() - 100_000).toISOString(), lease_until: new Date(Date.now() + (state.expired ? -1000 : 90_000)).toISOString() });
@@ -16,7 +16,7 @@ function fixture() {
     rpc: async (name, args, bearer) => {
       calls.push(name);
       if (name === "recover_ezyvet_attachment_download") {
-        assert.equal(bearer, "staff-jwt"); return state.absentRequest ? null : { request: { id, actor_id: state.wrongActor ? uid(99) : actor, pet_id: pet, request_hash: requestHash, status: state.status, source_context: { attachment_metadata: metadata } }, capture: state.status === "captured" ? {} : null, capture_intent: intent };
+        assert.equal(bearer, "staff-jwt"); return state.absentRequest ? null : { request: { id, actor_id: state.wrongActor ? uid(99) : actor, pet_id: pet, request_hash: requestHash, status: state.status, source_context: { attachment_metadata: metadata } }, capture: state.status === "captured" ? {} : null, capture_intent: state.missingIntent ? undefined : state.noIntent ? null : intent };
       }
       if (name === "recover_ezyvet_attachment_cleanup") { assert.equal(bearer, "staff-jwt"); return state.claimed ? { attempt: attempt(), receipt: state.completed ? receipt() : null } : null; }
       assert.equal(bearer, undefined); assert.equal(args.p_actor, actor);
@@ -91,4 +91,19 @@ test("production environment cannot enable the sandbox cleanup worker", async ()
 test("non-boolean role result cannot authorize cleanup", async () => {
   const f = fixture(); f.gateway.authenticate = async () => ({ id: actor, activeAdmin: "true" as unknown as boolean });
   assert.equal((await f.post()).status, 403); assert.ok(!f.calls.includes("delete"));
+});
+
+test("abandoned request with no reserved file is not eligible for cleanup", async () => {
+  const f = fixture(); f.state.noIntent = true;
+  const response = await f.post();
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: "CLEANUP_NOT_ELIGIBLE", retry_safe: false });
+  assert.deepEqual(f.calls, ["auth", "recover_ezyvet_attachment_download"]);
+  assert.equal(f.state.claimed, false); assert.equal(f.state.completed, false);
+});
+test("missing reservation field remains an invalid response rather than verified absence", async () => {
+  const f = fixture(); f.state.missingIntent = true;
+  assert.equal((await f.post()).status, 503);
+  assert.deepEqual(f.calls, ["auth", "recover_ezyvet_attachment_download"]);
+  assert.equal(f.state.completed, false);
 });
