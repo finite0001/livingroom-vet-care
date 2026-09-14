@@ -180,6 +180,11 @@ export function parsePage(
   resource: Resource,
   page: number,
 ): PageResult {
+  // Attachment URLs can be temporary capabilities. This generic snapshot
+  // projection must never carry them into the raw import/audit ledger.
+  if ((resource as string) === "attachment") {
+    throw new ImportError("ATTACHMENT_REQUIRES_METADATA_INTAKE");
+  }
   if (
     !record(body) ||
     !Array.isArray(body.items) ||
@@ -472,6 +477,9 @@ export function createAdapter(
       consultExternalId?: string,
       prescriptionExternalId?: string,
     ): Promise<PageResult> {
+      if ((resource as string) === "attachment") {
+        throw new ImportError("ATTACHMENT_REQUIRES_METADATA_INTAKE");
+      }
       if (
         !config.readResources.includes(resource) ||
         !Number.isInteger(page) ||

@@ -45,7 +45,7 @@ jobs:
           deno-version: 2.9.6
           cache: true
       - name: Check all Edge Function entry points with the committed dependency lock
-        run: deno check --frozen supabase/functions/*/index.ts
+        run: deno check --frozen supabase/functions/*/index.ts supabase/functions/ezyvet-import/attachment-metadata.ts
       - name: Verify invoice handler without root Node dependencies
         run: python3 scripts/verify-invoice-edge-isolation.py
 
