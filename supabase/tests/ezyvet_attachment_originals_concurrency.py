@@ -109,13 +109,25 @@ try:
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
         sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    targeted=['ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    targeted=['public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
         result=sql(Path(__file__).with_name(filename).read_text());plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
         check('not ok' not in result.stdout and bool(plans),filename+'\n'+result.stdout)
         regressions+=int(plans[-1])
+        if filename=='public_access_defaults.test.sql':
+            hardening=Path(__file__).resolve().parents[1].joinpath('migrations/20260914120000_explicit_public_creation_privileges.sql').read_text()
+            for style in ['local','hosted']:
+                table_grants='all' if style=='hosted' else 'truncate,references,trigger,maintain'
+                sequence_grants='all' if style=='hosted' else 'update'
+                function_grants="alter default privileges for role postgres in schema public grant execute on functions to anon,authenticated,service_role;" if style=='hosted' else ''
+                drift=f"alter default privileges for role postgres in schema public grant {table_grants} on tables to anon,authenticated,service_role;alter default privileges for role postgres in schema public grant {sequence_grants} on sequences to anon,authenticated,service_role;{function_grants}grant {sequence_grants} on all sequences in schema public to anon,authenticated,service_role;"
+                upgraded=sql(test_file.read_text().replace('-- REPRODUCE_ACCESS_DRIFT',drift+hardening))
+                upgrade_plans=re.findall(r'1\.\.([0-9]+)',upgraded.stdout)
+                check('not ok' not in upgraded.stdout and bool(upgrade_plans),style+' access upgrade\n'+upgraded.stdout)
+                regressions+=int(upgrade_plans[-1])
+
     print(f'Attachment and prior SQL: {regressions} assertions passed.',flush=True)
     # Broad verification is opt-in; CI already has independent canonical lanes.
     if args.full_regression:
