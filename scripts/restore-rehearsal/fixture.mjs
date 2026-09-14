@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 const [mode, statusPath, run] = process.argv.slice(2);
-assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit"].includes(mode));
+assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
@@ -132,6 +132,47 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   console.log(
     "Synthetic signed record, private original, issued invoice/credit and stock ledger created.",
   );
+} else if (mode === "capture-api-originals") {
+  state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(project, `${state.projectRun}-source`);
+  const previous = snapshot();
+  const hadAdmin = sql(`select exists(select 1 from user_roles where user_id='${state.user}' and role='ADMIN')`) === "t";
+  if (!hadAdmin) sql(`insert into user_roles(user_id,role) values('${state.user}','ADMIN')`);
+  const rows = JSON.parse(sql(`select jsonb_agg(jsonb_build_object('run_id',o.run_id,'page',o.page,'ordinal',o.ordinal,'snapshot_id',o.snapshot_id,'head_version',o.head_version,'stable_hash',o.stable_metadata_sha256,'mapping',r.animal_link_id)) from ezyvet_attachment_page_observations o join ezyvet_attachment_runs r on r.run_id=o.run_id where r.actor_id='${state.user}'`));
+  assert.equal(rows.length, 2);
+  // Generated pending metadata run stays unfinished, but no provider lease is needed in this local byte fixture.
+  sql(`update ezyvet_import_runs set lease_until=null,lease_id=null,retry_after=null where resource='attachment' and requested_by='${state.user}'`);
+  checked(await api.auth.signInWithPassword({ email: state.email, password: state.password }));
+  state.apiOriginals = [];
+  try {
+    for (const [index, row] of rows.entries()) {
+      const id = randomUUID();
+      const prepared = checked(await api.rpc('prepare_ezyvet_attachment_capture', {p_id:id,p_animal_link_id:row.mapping,p_run_id:row.run_id,p_page:row.page,p_ordinal:row.ordinal,p_snapshot_id:row.snapshot_id,p_observed_head_version:row.head_version,p_stable_metadata_sha256:row.stable_hash}));
+      assert.equal(prepared.status, 'prepared');
+      const claim = checked(await admin.rpc('claim_ezyvet_attachment_capture', {p_id:id,p_actor:state.user}));
+      const bytes = Buffer.from(`%PDF-1.7\nSynthetic API original restore fixture ${index}; no provider call.\n%%EOF`);
+      const digest = hash(bytes);
+      const reserved = checked(await admin.rpc('reserve_ezyvet_attachment_original', {p_id:id,p_actor:state.user,p_lease_id:claim.lease_id,p_content_sha256:digest,p_mime_type:'application/pdf',p_file_size:bytes.length,p_before_raw_sha256:'a'.repeat(64),p_after_raw_sha256:'c'.repeat(64)}));
+      checked(await api.storage.from(reserved.intent.bucket_id).upload(reserved.intent.object_path, bytes, {contentType:'application/pdf',upsert:false}));
+      const stored = Buffer.from(await checked(await admin.storage.from(reserved.intent.bucket_id).download(reserved.intent.object_path)).arrayBuffer());
+      assert.equal(hash(stored), digest);
+      assert.ok((await api.storage.from(reserved.intent.bucket_id).download(reserved.intent.object_path)).error, 'Owning administrator cannot read private API original directly');
+      let result = reserved;
+      if (index === 0) result = checked(await admin.rpc('complete_ezyvet_attachment_capture', {p_id:id,p_actor:state.user,p_lease_id:claim.lease_id,p_intent_id:reserved.intent.id,p_content_sha256:digest,p_mime_type:'application/pdf',p_file_size:bytes.length}));
+      state.apiOriginals.push({id,mapping:row.mapping,requestHash:result.request.request_hash,status:result.request.status,intent:reserved.intent,contentSha256:digest,bytes:bytes.length,capture:result.request.capture});
+    }
+  } finally {
+    if (!hadAdmin) sql(`delete from user_roles where user_id='${state.user}' and role='ADMIN'`);
+  }
+  const captured = snapshot();
+  const originalObjects = new Set(previous.storage_objects.map(row => row.id));
+  const added = captured.storage_objects.filter(row => !originalObjects.has(row.id));
+  assert.equal(added.length, 2);
+  for (const row of added) assert.ok(state.apiOriginals.some(original => row.bucket_id === original.intent.bucket_id && row.name === original.intent.object_path));
+  assert.deepEqual({...captured,storage_objects:captured.storage_objects.filter(row => originalObjects.has(row.id))},previous,'API original fixture preserves all prior rows and original object');
+  state.snapshot = captured;
+  writeFileSync(statePath, JSON.stringify(state), {mode:0o600});
+  console.log('Ready and reserved API originals uploaded through staff Storage API, verified privately, and captured for restore.');
 } else if (mode === "capture-review-audit") {
   state = JSON.parse(readFileSync(statePath, "utf8"));
   assert.equal(project, `${state.projectRun}-source`);
@@ -191,6 +232,27 @@ select jsonb_object_agg(k,id) from fx;commit;`);
     }),
   );
   assert.equal(login.user.id, state.user);
+  if (state.apiOriginals) {
+    const hadAdmin = sql(`select exists(select 1 from user_roles where user_id='${state.user}' and role='ADMIN')`) === "t";
+    if (!hadAdmin) sql(`insert into user_roles(user_id,role) values('${state.user}','ADMIN')`);
+    try {
+      for (const original of state.apiOriginals) {
+        const recovered = checked(await api.rpc('recover_ezyvet_attachment_capture', {p_id:original.id,p_animal_link_id:original.mapping}));
+        assert.equal(recovered.status, original.status);
+        assert.equal(recovered.request_hash, original.requestHash);
+        assert.deepEqual(recovered.capture, original.capture);
+        const context = checked(await admin.rpc('get_ezyvet_attachment_capture_context', {p_id:original.id,p_actor:state.user}));
+        assert.deepEqual(context.intent, original.intent);
+        const bytes = Buffer.from(await checked(await admin.storage.from(context.intent.bucket_id).download(context.intent.object_path)).arrayBuffer());
+        assert.equal(hash(bytes), original.contentSha256);
+        assert.equal(bytes.length, original.bytes);
+        assert.ok((await api.storage.from(context.intent.bucket_id).download(context.intent.object_path)).error);
+        assert.ok((await anonymous.storage.from(context.intent.bucket_id).download(context.intent.object_path)).error);
+      }
+    } finally {
+      if (!hadAdmin) sql(`delete from user_roles where user_id='${state.user}' and role='ADMIN'`);
+    }
+  }
   const record = checked(
     await api
       .from("clinical_encounters")
@@ -369,6 +431,8 @@ rollback;`);
         ready_original_and_signed_history_immutable: true,
         outbox_empty: true,
         cron_absent: true,
+        api_originals_restored: state.apiOriginals?.length ?? 0,
+        ready_and_reserved_api_original_bytes_verified: Boolean(state.apiOriginals?.length),
       },
       null,
       2,
