@@ -84,3 +84,14 @@ export function parseAttachmentCleanups(value: unknown, owner: AttachmentOwner) 
   }
   return page;
 }
+
+export function parseRecoveredAttachmentRun(value: unknown, actor: string, mapping: AttachmentMapping, expected: AttachmentRun) {
+  const pinned = run.parse(expected);
+  const page = parseAttachmentRuns({ runs: [value], has_more: false, next_cursor: null }, actor, mapping);
+  const recovered = page.runs[0];
+  requireMatch(recovered.id === pinned.id && Object.keys(pinned.parent_context).every(key => recovered.parent_context[key as keyof AttachmentParent] === pinned.parent_context[key as keyof AttachmentParent]));
+  return recovered;
+}
+export function attachmentScanCanContinue(value: AttachmentRun, now = Date.now()) {
+  return value.status === "running" && !value.lease_active && (!value.retry_after || Date.parse(value.retry_after) <= now);
+}

@@ -1,33 +1,40 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { searchMappings } from "./clinical-api";
-import { listAttachmentRuns, listAttachmentObservations } from "./attachment-discovery-api";
+import { listAttachmentRuns, listAttachmentObservations, recoverAttachmentRun, stageAttachmentPage } from "./attachment-discovery-api";
 import type { AttachmentMapping, AttachmentHistoryCursor, AttachmentObservationCursor, AttachmentRun } from "./attachment-discovery-state";
-interface Props { actor: string; }
+import { attachmentScanCanContinue } from "./attachment-discovery-state";
+interface Props { actor: string; onDirtyChange: (dirty: boolean) => void; }
 interface SelectedMapping extends AttachmentMapping { patient_name: string; household_name: string; }
-export function AttachmentScanHistory({ actor }: Props) {
+export function AttachmentScanHistory({ actor, onDirtyChange }: Props) {
+  const [locked, setLocked] = useState(false);
+  useEffect(() => { onDirtyChange(locked); }, [locked, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const [search, setSearch] = useState("");
   const [mapping, setMapping] = useState<SelectedMapping | null>(null);
   const patients = useQuery({ queryKey: ["attachment-patients", actor, search], enabled: search.trim().length >= 2, queryFn: () => searchMappings(search), retry: false });
   return <section aria-label="Attachment scan history" className="space-y-4 rounded-md border p-4">
     <div><h2 className="text-xl font-semibold">Source attachment history</h2><p className="text-sm text-muted-foreground">Find files observed in your saved ezyVet scans. Source files require review before they become part of the medical record.</p></div>
-    <label className="block">Find attachment history patient<Input value={search} onChange={event => setSearch(event.target.value)} maxLength={200} /></label>
+    <label className="block">Find attachment history patient<Input disabled={locked} value={search} onChange={event => setSearch(event.target.value)} maxLength={200} /></label>
     {patients.isFetching && <p role="status">Finding mapped patients…</p>}
     {patients.isError && <p role="alert">Patient search is unavailable. Try again without changing the saved scan.</p>}
     {patients.data?.length === 0 && <p>No mapped patients match this search.</p>}
     {/* searchMappings validates these required fields; the project's non-strict null typing makes its inferred fields optional. */}
-    <div className="flex flex-wrap gap-2">{patients.data?.map(item => <Button key={item.link_id} variant="secondary" aria-pressed={mapping?.link_id === item.link_id} onClick={() => setMapping(item as SelectedMapping)}>{item.patient_name} · {item.household_name}</Button>)}</div>
-    {mapping && <PatientScans key={`${actor}:${mapping.link_id}`} actor={actor} mapping={mapping} />}
+    <div className="flex flex-wrap gap-2">{patients.data?.map(item => <Button key={item.link_id} disabled={locked} variant="secondary" aria-pressed={mapping?.link_id === item.link_id} onClick={() => setMapping(item as SelectedMapping)}>{item.patient_name} · {item.household_name}</Button>)}</div>
+    {mapping && <PatientScans key={`${actor}:${mapping.link_id}`} actor={actor} mapping={mapping} onLocked={setLocked} />}
   </section>;
 }
-interface PatientProps { actor: string; mapping: SelectedMapping; }
-function PatientScans({ actor, mapping }: PatientProps) {
+interface PatientProps { actor: string; mapping: SelectedMapping; onLocked: (locked: boolean) => void; }
+function PatientScans({ actor, mapping, onLocked }: PatientProps) {
+  const [locked, setLocked] = useState(false);
+  useEffect(() => { onLocked(locked); }, [locked, onLocked]);
   const [cursor, setCursor] = useState<AttachmentHistoryCursor | null>(null);
   const [selected, setSelected] = useState<AttachmentRun | null>(null);
   const scans = useQuery({ queryKey: ["attachment-scans", actor, mapping.link_id, cursor], queryFn: () => listAttachmentRuns(actor, mapping, cursor), retry: false });
+  useEffect(() => { if (scans.data) setSelected(previous => previous ? scans.data.runs.find(item => item.id === previous.id) ?? previous : null); }, [scans.data]);
   const labels = { running: "Scan in progress", review_ready: "Scan complete", page_limit_reached: "Scan limit reached" };
   return <div className="space-y-3">
     <p className="font-medium">Selected patient: {mapping.patient_name} · {mapping.household_name}</p>
@@ -37,22 +44,23 @@ function PatientScans({ actor, mapping }: PatientProps) {
     {!scans.isError && scans.data?.runs.map(item => <div key={item.id} className="flex flex-wrap items-center gap-2 rounded border p-3">
       <Badge variant="secondary">{item.parent_context.parent_type === "Animal" ? "Patient files" : `Consultation ${item.parent_context.parent_external_id}`}</Badge>
       <span>{labels[item.status]} · {new Date(item.created_at).toLocaleString()}</span>
-      <Button variant="secondary" onClick={() => setSelected(item)} aria-pressed={selected?.id === item.id}>View files from scan {item.id.slice(0, 8)}</Button>
+      <Button variant="secondary" disabled={locked} onClick={() => setSelected(item)} aria-pressed={selected?.id === item.id}>View files from scan {item.id.slice(0, 8)}</Button>
     </div>)}
     <div className="flex flex-wrap gap-2">
       <Button variant="secondary" disabled={scans.isFetching} onClick={() => void scans.refetch()}>Refresh attachment scans</Button>
       <Button variant="secondary" disabled={!cursor || scans.isFetching} onClick={() => setCursor(null)}>Newest attachment scans</Button>
       <Button variant="secondary" disabled={scans.isFetching || scans.isError || !scans.data?.next_cursor} onClick={() => setCursor(scans.data?.next_cursor ?? null)}>Older attachment scans</Button>
     </div>
-    {selected && <ScanFiles key={selected.id} actor={actor} mapping={mapping} scan={selected} />}
+    {selected && <ScanFiles key={selected.id} actor={actor} mapping={mapping} scan={selected} onLocked={setLocked} />}
   </div>;
 }
 interface FilesProps extends PatientProps { scan: AttachmentRun; }
-function ScanFiles({ actor, mapping, scan }: FilesProps) {
+function ScanFiles({ actor, mapping, scan, onLocked }: FilesProps) {
   const [cursor, setCursor] = useState<AttachmentObservationCursor | null>(null);
   const files = useQuery({ queryKey: ["attachment-observations", actor, mapping.link_id, scan.id, cursor], queryFn: () => listAttachmentObservations(scan.id, mapping, scan.parent_context, cursor), retry: false });
   return <section aria-label="Files observed in selected scan" className="space-y-3">
     <h3 className="font-semibold">Files observed in this scan</h3>
+    <AttachmentScanActions actor={actor} mapping={mapping} scan={scan} onLocked={onLocked} />
     <p className="text-sm text-muted-foreground">{scan.status === "running" ? "This scan is still in progress. The list includes only pages already saved." : scan.status === "page_limit_reached" ? "The scan reached its limit. More source files may remain." : "This scan completed for the selected patient or consultation. It does not establish complete migration of the patient's records."}</p>
     {files.isFetching && <p role="status">Loading observed files…</p>}
     {files.isError && <p role="alert">File evidence is unavailable or changed unexpectedly. Recheck the saved scan.</p>}
@@ -73,4 +81,54 @@ function ScanFiles({ actor, mapping, scan }: FilesProps) {
       <Button variant="secondary" disabled={files.isFetching || files.isError || !files.data?.next_cursor} onClick={() => setCursor(files.data?.next_cursor ?? null)}>Next file page</Button>
     </div>
   </section>;
+}
+
+function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
+  const queryClient = useQueryClient();
+  const [current, setCurrent] = useState(scan);
+  const [busy, setBusy] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const [notice, setNotice] = useState("");
+  const lock = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; onLocked(false); }; }, [onLocked]);
+  useEffect(() => { onLocked(busy || uncertain); }, [busy, uncertain, onLocked]);
+  async function act(readPage: boolean) {
+    if (lock.current) return;
+    lock.current = true; setBusy(true); setNotice("");
+    try {
+      let recovered = await recoverAttachmentRun(actor, mapping, scan);
+      if (!alive.current) return;
+      setCurrent(recovered); setUncertain(false);
+      let pageError = false;
+      if (readPage && attachmentScanCanContinue(recovered)) {
+        setUncertain(true);
+        try { await stageAttachmentPage(actor, mapping, recovered); } catch { pageError = true; }
+        // Both success and a lost response require the authoritative saved state.
+        recovered = await recoverAttachmentRun(actor, mapping, scan);
+        if (!alive.current) return;
+        setCurrent(recovered); setUncertain(false);
+      }
+      setNotice(pageError ? "The page response was unconfirmed. Saved scan state was recovered; review it before another request." : recovered.status === "running" ? "Saved scan recovered. Recheck after any active scan or provider cooldown ends." : "Saved scan is complete or has reached its limit. No additional pages will be requested.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["attachment-scans", actor, mapping.link_id] }),
+        queryClient.invalidateQueries({ queryKey: ["attachment-observations", actor, mapping.link_id, scan.id] }),
+      ]);
+    } catch {
+      if (alive.current) { setUncertain(true); setNotice("Scan state is unconfirmed. Recheck this original saved scan before changing patients or requesting another page."); }
+    } finally {
+      lock.current = false;
+      if (alive.current) setBusy(false);
+    }
+  }
+  return <div className="space-y-2 rounded border p-3">
+    <p className="text-sm">Saved scan: {current.status === "running" ? `next page ${current.next_page}` : current.status === "review_ready" ? "complete" : "page limit reached"}. Reading a page saves source metadata for review.</p>
+    {current.lease_active && <p role="status">Another request is active for this scan. Recheck its saved state.</p>}
+    {current.retry_after && <p className="text-sm">Provider retry time: {new Date(current.retry_after).toLocaleString()}.</p>}
+    {notice && <p role={uncertain ? "alert" : "status"}>{notice}</p>}
+    <div className="flex flex-wrap gap-2">
+      <Button variant="secondary" disabled={busy} onClick={() => void act(false)}>Recheck saved attachment scan</Button>
+      <Button variant="secondary" disabled={busy || uncertain || !attachmentScanCanContinue(current)} onClick={() => void act(true)}>Read next attachment page</Button>
+    </div>
+  </div>;
 }

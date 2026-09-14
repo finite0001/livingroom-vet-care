@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { parseAttachmentParent, parseAttachmentObservations, parseAttachmentCleanups, parseAttachmentRuns } from "./attachment-discovery-state";
-import type { AttachmentMapping, AttachmentOwner, AttachmentParent, AttachmentObservationCursor, AttachmentHistoryCursor } from "./attachment-discovery-state";
+import { parseAttachmentParent, parseAttachmentObservations, parseAttachmentCleanups, parseAttachmentRuns, parseRecoveredAttachmentRun } from "./attachment-discovery-state";
+import type { AttachmentMapping, AttachmentOwner, AttachmentParent, AttachmentObservationCursor, AttachmentHistoryCursor, AttachmentRun } from "./attachment-discovery-state";
 interface Database {
   public: {
     Tables: Record<never, never>; Views: Record<never, never>; Enums: Record<never, never>; CompositeTypes: Record<never, never>;
@@ -27,4 +27,19 @@ export async function listAttachmentObservations(runId: string, mapping: Attachm
 }
 export async function listAttachmentCleanups(owner: AttachmentOwner, cursor: AttachmentHistoryCursor | null) {
   return parseAttachmentCleanups(await rpc("list_ezyvet_attachment_cleanups", { p_id: owner.id, p_pet_id: owner.pet, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), owner);
+}
+
+export async function recoverAttachmentRun(actor: string, mapping: AttachmentMapping, expected: AttachmentRun) {
+  return parseRecoveredAttachmentRun(await rpc("recover_ezyvet_attachment_run", { p_id: expected.id, p_animal_link_id: mapping.link_id }), actor, mapping, expected);
+}
+export async function stageAttachmentPage(actor: string, mapping: AttachmentMapping, expected: AttachmentRun) {
+  const run = parseRecoveredAttachmentRun(expected, actor, mapping, expected);
+  const parent = run.parent_context;
+  const { data, error } = await supabase.functions.invoke("ezyvet-import", { body: {
+    run_id: run.id, resource: "attachment", animal_link_id: mapping.link_id,
+    parent_type: parent.parent_type, parent_snapshot_id: parent.parent_snapshot_id,
+    parent_payload_hash: parent.parent_payload_hash, parent_observed_head_version: parent.parent_observed_head_version,
+  } });
+  if (error || !data || data.run_id !== run.id || data.review_only !== true)
+    throw new Error("Page response unconfirmed. Recheck this saved scan before continuing.");
 }

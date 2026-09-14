@@ -168,3 +168,12 @@ The existing private patient-document bucket, upload/read policies and original-
 - [ ] Issued-site samples, entitlement, parent/date/file behavior, migration reconciliation and clinical acceptance verified.
 
 No production-source reads, provider write-back, outgoing messages or deployment are authorized by this plan itself. Existing session authorizations and actual commissioning decisions remain authoritative.
+
+
+### Saved-scan continuation checkpoint
+
+The existing attachment-history section now supports explicit recovery and one-page continuation for saved Animal and Consult runs. Each action uses the saved run UUID and immutable parent pins, recovers before sending, and recovers after either a success or an uncertain response. Terminal state, active leases and future retry timestamps prevent a page request. Unresolved recovery locks patient/scan switching and uses the existing import navigation guard; rechecking performs no source request. Server discovery retains the original run after browser navigation.
+
+Local validation: 575 application unit tests and 22 browser cases passed (12 attachment history/action cases and 10 neighboring prescription cases). The browser tests include lost acknowledgments, failed pre/post-request recovery, current leases and canceling navigation. No backend migration or worker code changed; the prior 91-migration runtime evidence remains historical and does not itself prove these new browser controls against a hosted Edge gateway. See `docs/evidence/attachment-scan-actions-local-20260913.json`.
+
+Still required: new Animal/Consult scan selection and creation, prepare/capture/abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore, actual provider and hosted operator acceptance. Full commercial-readiness gates remain open.
