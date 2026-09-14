@@ -39,7 +39,7 @@ checks = 0
 checks_by_fixture = {}
 harness_hashes = {}
 migration_hashes = {}
-source_paths = [Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-attachment').glob('*.ts')), root / 'tests/ezyvet/attachment-original-review-local-roundtrip.ts']
+source_paths = [Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/_shared').glob('*.ts')), root / 'tests/ezyvet/attachment-original-review-local-roundtrip.ts', root / 'tests/ezyvet/attachment-original-release-local-roundtrip.ts']
 source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
 
 def command(argv, **kwargs):
@@ -76,7 +76,8 @@ try:
     assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
     assert '20260913700000' in versions, 'Canonical original capture migration required'
     assert '20260913710000' in versions, 'Canonical chart-original review migration required'
-    assert len(versions) == 88 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    assert '20260913720000' in versions, 'Canonical reviewed API-original release migration required'
+    assert len(versions) == 89 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 62421

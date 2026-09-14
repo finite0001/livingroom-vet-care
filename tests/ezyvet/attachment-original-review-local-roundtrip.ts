@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import type { RequestListener } from "node:http";
 import { createHandler } from "../../supabase/functions/retrieve-reviewed-ezyvet-attachment/handler.ts";
+import { prepareOriginalReleaseChecks } from "./attachment-original-release-local-roundtrip.ts";
 interface Fixture {
   apiUrl: string; anonKey: string; serviceHeaders: Record<string, string>;
   staffHeaders: Record<string, string>; actor: string; pet: string; captureId: string; captureHash: string;
@@ -98,9 +99,11 @@ export async function verifyOriginalChartReview(f: Fixture): Promise<number> {
   check((await write(corrupt)).ok, "Owned local fixture simulates same-size byte corruption");
   check(!(await download()).ok, "Same-size corrupted original cannot be returned as verified");
   check((await write(f.originalBytes)).ok && (await download()).ok, "Restoring exact fixture bytes restores verified retrieval");
+  const completeReleaseChecks = await prepareOriginalReleaseChecks({ ...f, recordId: record.id });
   const withdrawal = { p_id: randomUUID(), p_pet_id: f.pet, p_record_id: record.id, p_expected_record_hash: record.record_hash, p_reason: "Synthetic mistaken admission correction" };
   const withdrawn = await rpc("withdraw_ezyvet_attachment_original", withdrawal);
   check(withdrawn.withdrawal.record_id === record.id, "Withdrawal appends a correction against the exact chart record");
+  checks += await completeReleaseChecks();
   check((await download()).ok, "Withdrawn originals remain available to DVMs as historical evidence");
   check(JSON.stringify(await rpc("acknowledge_ezyvet_attachment_original", acknowledgment, dvmHeaders)) === JSON.stringify(ack), "Committed acknowledgment recovers after withdrawal");
   await assert.rejects(rpc("acknowledge_ezyvet_attachment_original", { ...acknowledgment, p_id: randomUUID() }, dvmHeaders)); checks++;

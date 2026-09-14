@@ -58,6 +58,8 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify guarded disposable cleanup with restricted database roles
+        run: python3 supabase/tests/owned_database_cleanup_regression.py --project-config supabase/config.toml
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks
