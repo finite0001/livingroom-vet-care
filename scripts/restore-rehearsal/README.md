@@ -82,3 +82,15 @@ After restore, exact prepare/confirmation retries recover the same records and p
 The source/decision/delivery snapshot must match exactly before any verification reads. After verification, the only permitted difference is a +2 access-counter increment on the single known restored link. All other counters and every other captured row still compare exactly; denied accesses cannot add increments.
 
 The [saved release-package receipt](../../docs/evidence/canonical-api-release-packages-restore-20260914.json) records the passing84→98 rehearsal with both packages, post-restore authorization/invalidation checks, exact access accounting, production-renderer fingerprints and verified cleanup.
+
+## Compare public table, sequence, policy and default access
+
+Upgrade modes also write `initial-access-inventory.json` before applying missing migrations. Run the read-only `access-inventory.sql` against the authorized hosted database and save its inventory value privately, then compare:
+
+```sh
+python3 scripts/restore-rehearsal/compare-access-inventories.py /private/local-inventory.json /private/hosted-inventory.json
+```
+
+The comparison rejects missing/duplicate/malformed inventories and reports differing object names and fields without printing policy expressions. It covers public relation owners, effective table privileges including PostgreSQL17 MAINTAIN, sequence privileges, RLS flags, policy definitions/roles and explicit global/public default ACLs. Internal role OIDs are replaced with names for stable default-ACL ordering. A matching version ledger is mandatory. It does not cover column grants, schema grants, role membership, managed schemas or application data.
+
+The September14 staging audit found permission differences despite matching routines and RLS policies. See the [access correction requirements](../../plans/20260914-attachment-canonical-integration/access-hardening.md). No automatic hosted changes are made by either inventory or comparator.

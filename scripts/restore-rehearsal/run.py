@@ -311,6 +311,8 @@ try:
                 grant execute on function public.clock_in(),public.clock_out(),public.get_consent_submission(text),public.review_ezyvet_snapshot(uuid,text,uuid,uuid,text) to service_role;''')
             inventory_sql=(root/'scripts/restore-rehearsal/routine-inventory.sql').read_text()
             (run/'initial-routine-inventory.json').write_text(sql(source,inventory_sql))
+            access_sql=(root/'scripts/restore-rehearsal/access-inventory.sql').read_text()
+            (run/'initial-access-inventory.json').write_text(sql(source,access_sql))
             for migration in missing_files: shutil.copy2(migration,source['path']/'supabase/migrations'/migration.name)
             verify_identity(source)
             push=['supabase','db','push','--local','--skip-vault','--workdir',str(source['path'])]
@@ -325,7 +327,7 @@ try:
             assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
-            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':args.rehearse_observed_hosted_gaps,'baseline_kind':'staging_20260914' if args.rehearse_staging_baseline else 'legacy_51','baseline_ledger_sha256':hashlib.sha256(baseline_path.read_bytes()).hexdigest() if args.rehearse_staging_baseline else None,'hosted_body_parity_verified':False,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
+            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':args.rehearse_observed_hosted_gaps,'baseline_kind':'staging_20260914' if args.rehearse_staging_baseline else 'legacy_51','baseline_ledger_sha256':hashlib.sha256(baseline_path.read_bytes()).hexdigest() if args.rehearse_staging_baseline else None,'hosted_body_parity_verified':False,'initial_access_inventory_sha256':hashlib.sha256((run/'initial-access-inventory.json').read_bytes()).hexdigest(),'access_inventory_sql_sha256':hashlib.sha256(access_sql.encode()).hexdigest(),'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         if any(p.name.startswith('20260913520000_') for p in migration_files):
             seed_vaccination_receipt(source)
             # Preserve all prior rows and explicitly capture the four new release audit entries.
