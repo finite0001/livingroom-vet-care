@@ -109,6 +109,7 @@ try:
         ('20260913670000', "to_regclass('public.ezyvet_attachment_download_attempts')"),
         ('20260913680000', "to_regclass('public.ezyvet_attachment_captures')"),
         ('20260913690000', "to_regclass('public.ezyvet_attachment_cleanup_attempts')"),
+        ('20260913700000', "to_regprocedure('public.get_ezyvet_attachment_animal_parent(uuid)')"),
     ]
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':

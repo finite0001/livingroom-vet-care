@@ -313,9 +313,12 @@ try {
   });
   const postCleanup = (payload: Record<string, unknown>, authorized = true) => fetch(cleanupEdge, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...(authorized ? { Authorization: staffHeaders.Authorization } : {}) }, body: JSON.stringify(payload) });
   const resetCooldown = () => sql(`update ezyvet_import_runs set retry_after=null,lease_until=null where source_site_uid=${quote(site)} and resource='attachment';`);
+  const discoveredParent = await rpc("get_ezyvet_attachment_animal_parent", { p_animal_link_id: mapping }, true);
+  check(discoveredParent.pet_id === pet && discoveredParent.parent_snapshot_id === snapshot && discoveredParent.parent_observed_head_version === 1, "Actual parent discovery binds current approved patient mapping");
+  let lastAttachmentRun = "";
   for (const parentType of ["Animal", "Consult"]) {
     resetCooldown();
-    const runId = randomUUID(); ids.push(runId);
+    const runId = randomUUID(); ids.push(runId); lastAttachmentRun = runId;
     const body = { run_id: runId, resource: "attachment", animal_link_id: mapping, parent_type: parentType, parent_snapshot_id: parentType === "Animal" ? snapshot : consult.id, parent_payload_hash: parentType === "Animal" ? "a".repeat(64) : consult.hash, parent_observed_head_version: 1 };
     const beforeCalls = upstreamCalls;
     check((await post(body, false)).status === 401, "Anonymous metadata HTTP request denied");
@@ -330,6 +333,12 @@ try {
     check((await post(body)).status === 503, "Terminal page committed but acknowledgment intentionally discarded");
     const terminal = await rpc("recover_ezyvet_attachment_run", { p_id: runId, p_animal_link_id: mapping }, true);
     check(terminal.status === "review_ready" && terminal.next_page === 3, "Both real pages are committed");
+    const observed = await rpc("list_ezyvet_attachment_observations", { p_run_id: runId, p_pet_id: pet, p_limit: 1 }, true);
+    check(observed.run_id === runId && observed.pet_id === pet && observed.parent_context.parent_type === parentType, "Actual observation discovery preserves run/patient/parent identity");
+    check(observed.parent_is_current && observed.observations[0].is_current && observed.has_more, "Discovery distinguishes current source and available next page");
+    check(!("file_download_url" in observed.observations[0].metadata), "Operator discovery does not expose upstream download URLs");
+    const observedNext = await rpc("list_ezyvet_attachment_observations", { p_run_id: runId, p_pet_id: pet, p_limit: 1, p_after_page: observed.next_cursor.after_page, p_after_snapshot_id: observed.next_cursor.after_snapshot_id }, true);
+    check(observedNext.observations[0].page === 2 && !observedNext.has_more && observedNext.next_cursor === null, "Observation cursor reaches the second committed page exactly");
     const callsAtTerminal = upstreamCalls;
     check((await post(body)).status === 200, "Terminal HTTP retry recovers exact owned context");
     check(upstreamCalls === callsAtTerminal, "Terminal retry performs no additional upstream request");
@@ -445,6 +454,10 @@ try {
       check((await postCleanup(cleanupBody)).status === 200 && cleanupStorageCalls === retryCalls, "Completed cleanup retry returns receipt without another file operation");
       const laterCleanup = randomUUID(); ids.push(laterCleanup);
       check((await postCleanup({ ...cleanupBody, cleanup_id: laterCleanup })).status === 200, "Later explicit sweep verifies already absent reserved path");
+      const cleanupHistory = await rpc("list_ezyvet_attachment_cleanups", { p_id: cleanupRequest, p_pet_id: pet, p_limit: 1 }, true);
+      check(cleanupHistory.cleanups[0].attempt.id === laterCleanup && cleanupHistory.cleanups[0].receipt.cleanup_id === laterCleanup && !cleanupHistory.cleanups[0].lease_active && !("lease_id" in cleanupHistory.cleanups[0].attempt), "Actual cleanup discovery exposes newest receipt without worker lease");
+      const cleanupOlder = await rpc("list_ezyvet_attachment_cleanups", { p_id: cleanupRequest, p_pet_id: pet, p_limit: 1, p_before_at: cleanupHistory.next_cursor.before_at, p_before_id: cleanupHistory.next_cursor.before_id }, true);
+      check(cleanupOlder.cleanups[0].receipt.cleanup_id === cleanupId && !cleanupOlder.has_more, "Actual cleanup cursor recovers prior exact operation without browser storage");
       check(upstreamCalls === sourceCallsBeforeCleanup, "Cleanup needs no provider credentials or source traffic");
 
     }
@@ -453,6 +466,8 @@ try {
     check(sql(`select count(*) from ezyvet_attachment_pages where run_id=${quote(freshId)};`) === "0", "Rejected page leaves no receipt");
     const resource = parentType === "Animal" ? "animal" : "consult";
     sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource=${quote(resource)};`);
+    const historicalObservations = await rpc("list_ezyvet_attachment_observations", { p_run_id: runId, p_pet_id: pet }, true);
+    check(!historicalObservations.parent_is_current && historicalObservations.observations.length === 2, "Original observed files stay discoverable after parent source changes");
     resetCooldown(); const staleCalls = upstreamCalls;
     const stale = await post({ ...body, run_id: freshId });
     check(stale.status === 409 && (await stale.json()).retry_safe === false, "Changed parent is actionable conflict through actual RPC");
@@ -465,6 +480,7 @@ try {
   sql(`delete from user_roles where user_id=${quote(actor)} and role='ADMIN';`);
   check((await post({ run_id: randomUUID(), resource: "attachment" })).status === 403, "Role loss prevents HTTP import");
   await assert.rejects(rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true), (error: { code: string }) => error.code === "42501"); assertions++;
+  await assert.rejects(rpc("list_ezyvet_attachment_observations", { p_run_id: lastAttachmentRun, p_pet_id: pet }, true), (error: { code: string }) => error.code === "42501"); assertions++;
   check(effects() === beforeEffects, "Metadata intake creates no documents, native treatments, billing, stock or messages");
 } catch (error) {
   failures.push(error);

@@ -1,0 +1,117 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: owner-only synthetic source observations and reviewed mapping.
+insert into auth.users(id,email,raw_user_meta_data) values('db560000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db560000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+insert into user_roles(user_id,role) values('db560000-0000-4000-8000-000000000001','ADMIN'),('db560000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Clinical','Import','+13035550199','clinical-import@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Scoped dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','mapping2','snapshot','snapshot2','legacy','terminal','run','history','other-run']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) select id,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='snapshot' then '77' else '88' end,jsonb_build_object('id',case when k='snapshot' then 77 else 88 end),k,'db560000-0000-4000-8000-000000000001' from fx where k in ('snapshot','snapshot2');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select id,gen_random_uuid(),k,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='mapping' then '77' else '88' end,(select id from fx where k=case when m.k='mapping' then 'snapshot' else 'snapshot2' end),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic approved mapping','db560000-0000-4000-8000-000000000001' from fx m where k in ('mapping','mapping2');
+insert into ezyvet_identity_heads(source_origin,source_site_uid,resource,external_id,snapshot_id,version)
+select source_origin,source_site_uid,resource,external_id,id,1 from ezyvet_import_snapshots where id=(select id from fx where k='snapshot');
+insert into fx select k,gen_random_uuid() from unnest(array['request','request2','tombstone','consult-source','consult-run','consult-request']) k;
+insert into data select 'run',claim_ezyvet_attachment_import((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','https://api.trial.ezyvet.com',(select id from fx where k='mapping'),'Animal',(select id from fx where k='snapshot'),'snapshot',1);
+select stage_ezyvet_import_page((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,false,'[{"external_id":"701","payload":{"id":701,"record_type":"Animal","record_id":77,"mime_type":"application/pdf","file_download_url":"https://untrusted.example.test/file","name":"Source file"}}]');
+insert into data select 'observation',jsonb_build_object('snapshot_id',s.id,'hash',s.payload_hash,'version',h.version) from ezyvet_import_snapshots s join ezyvet_identity_heads h on h.snapshot_id=s.id where s.resource='attachment' and s.external_id='701';
+insert into data values('side-effects',jsonb_build_object('documents',(select count(*) from patient_documents),'treatments',(select count(*) from patient_treatments),'invoices',(select count(*) from billing_invoices),'stock',(select count(*) from inventory_movements),'outbox',(select count(*) from communication_outbox)));
+create function pg_temp.prepare(k text default 'request') returns jsonb language sql as $$
+ select prepare_ezyvet_attachment_download((select id from fx where fx.k=$1),(select id from fx where fx.k='pet'),(select id from fx where fx.k='run'),1,(v->>'snapshot_id')::uuid,v->>'hash',(v->>'version')::integer) from data where data.k='observation';
+$$;
+set local role authenticated;
+insert into data select 'saved',pg_temp.prepare();
+insert into data select 'saved2',pg_temp.prepare('request2');
+reset role;
+create function pg_temp.claim(k text default 'request') returns jsonb language sql as $$
+ select claim_ezyvet_attachment_download((select id from fx where fx.k=$1),'db560000-0000-4000-8000-000000000001',(select id from fx where fx.k='pet'),(select v#>>'{request,request_hash}' from data where data.k='saved'));
+$$;
+create function pg_temp.fail(code text,seconds integer,lease_key text default 'lease') returns jsonb language sql as $$
+ select fail_ezyvet_attachment_download((select id from fx where fx.k='request'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where data.k=$3),(select v#>>'{request,request_hash}' from data where data.k='saved'),$1,$2);
+$$;
+create function pg_temp.reserve(lease_key text default 'lease',sha text default repeat('a',64),mime text default 'application/pdf') returns jsonb language sql as $$
+ select prepare_ezyvet_attachment_capture((select id from fx where k='request'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k=$1),(select v#>>'{request,request_hash}' from data where k='saved'),$2,37,$3,(select v#>'{request,source_context,attachment_metadata}' from data where k='saved'),(select v#>'{request,source_context,attachment_metadata}' from data where k='saved'));
+$$;
+create function pg_temp.complete(lease_key text default 'lease',sha text default repeat('a',64)) returns jsonb language sql as $$
+ select complete_ezyvet_attachment_capture((select id from fx where k='request'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k=$1),(select v#>>'{request,request_hash}' from data where k='saved'),(select v->>'intent_hash' from data where k='intent'),$2,37,'application/pdf',(select v#>'{request,source_context,attachment_metadata}' from data where k='saved'));
+$$;
+
+set local role authenticated;
+select is(get_ezyvet_attachment_animal_parent((select id from fx where k='mapping'))->>'parent_snapshot_id',(select id::text from fx where k='snapshot'),'Animal parent discovery returns current exact snapshot');
+select is((get_ezyvet_attachment_animal_parent((select id from fx where k='mapping'))->>'parent_observed_head_version')::integer,1,'Parent discovery returns observed head version');
+select is(jsonb_array_length(list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'))->'observations'),1,'Owned committed observations are discoverable before full scan completion');
+select ok(not list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'))::text like '%untrusted.example.test%','List never exposes provider download URLs');
+select is(jsonb_array_length(list_ezyvet_attachment_cleanups((select id from fx where k='request'),(select id from fx where k='pet'))->'cleanups'),0,'Owned request initially has empty cleanup history');
+select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),gen_random_uuid())$$,'42501','Attachment observation identity mismatch','Wrong patient cannot read observations');
+select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'),1,null)$$,'23514','Invalid attachment observation cursor','Observation cursor must be complete');
+select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'),null,null,11)$$,'23514','Invalid attachment observation cursor','Observation page size stays bounded');
+select throws_ok($$select list_ezyvet_attachment_cleanups((select id from fx where k='request'),(select id from fx where k='pet'),null,null,51)$$,'23514','Invalid attachment cleanup cursor','Cleanup page size stays bounded');
+reset role;
+update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');
+insert into data select 'page2lease',claim_ezyvet_attachment_import((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','https://api.trial.ezyvet.com',(select id from fx where k='mapping'),'Animal',(select id from fx where k='snapshot'),'snapshot',1);
+select stage_ezyvet_import_page((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='page2lease'),2,true,jsonb_build_array(jsonb_build_object('external_id','702','payload',jsonb_build_object('id',702,'record_type','Animal','record_id',77,'name',repeat('n',500),'notes',repeat('x',5000),'mime_type','text/plain','file_download_url','https://untrusted.example.test/second'))));
+set local role authenticated;
+insert into data select 'first-page',list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'),null,null,1);
+select ok((select (v->>'has_more')::boolean from data where k='first-page'),'Observation discovery exposes another page');
+select is((select v#>>'{observations,0,external_id}' from data where k='first-page'),'701','Discovery preserves original committed page order');
+insert into data select 'second-page',list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'),(select (v#>>'{next_cursor,after_page}')::integer from data where k='first-page'),(select (v#>>'{next_cursor,after_snapshot_id}')::uuid from data where k='first-page'),1);
+select is((select v#>>'{observations,0,external_id}' from data where k='second-page'),'702','Composite cursor advances without repeating the first observation');
+select ok(not (select (v->>'has_more')::boolean from data where k='second-page'),'Final observation page is marked complete');
+select is((select v#>>'{observations,0,metadata,mime_type}' from data where k='second-page'),'text/plain','Unsupported file type remains visible for migration accounting');
+select is(length((select v#>>'{observations,0,metadata,notes}' from data where k='second-page')),4000,'Notes preview is bounded');
+select ok((select (v#>>'{observations,0,metadata,notes_truncated}')::boolean from data where k='second-page'),'Truncated notes are explicitly marked');
+select is(length((select v#>>'{observations,0,metadata,name}' from data where k='second-page')),400,'Filename preview is bounded');
+select ok((select (v#>>'{observations,0,metadata,name_truncated}')::boolean from data where k='second-page'),'Truncated filename is explicitly marked');
+select ok((select (v->>'parent_is_current')::boolean from data where k='first-page'),'Current parent is reported separately from file currentness');
+reset role;
+-- Cleanup discovery fixtures use no physical file; SQL completion is metadata-only.
+update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');
+insert into data select 'lease',pg_temp.claim();
+insert into data select 'intent',pg_temp.reserve();
+alter table ezyvet_attachment_download_attempts disable trigger immutable_attachment_worker;
+update ezyvet_attachment_download_attempts set created_at=clock_timestamp()-interval '10 minutes',lease_until=clock_timestamp()-interval '5 minutes';
+alter table ezyvet_attachment_download_attempts enable trigger immutable_attachment_worker;
+set local role authenticated;
+select abandon_ezyvet_attachment_download((select id from fx where k='request'),(select id from fx where k='pet'),true);
+reset role;
+alter table ezyvet_attachment_download_requests disable trigger immutable_attachment_download;
+update ezyvet_attachment_download_requests set resolved_at=clock_timestamp()-interval '5 minutes' where status='abandoned';
+alter table ezyvet_attachment_download_requests enable trigger immutable_attachment_download;
+insert into fx select k,gen_random_uuid() from unnest(array['cleanup','cleanup2']) k;
+insert into data select 'cleanup',claim_ezyvet_attachment_cleanup((select id from fx where k='cleanup'),(select id from fx where k='request'),'db560000-0000-4000-8000-000000000001',(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='saved'));
+select complete_ezyvet_attachment_cleanup((select id from fx where k='cleanup'),(select id from fx where k='request'),'db560000-0000-4000-8000-000000000001',(select (v#>>'{attempt,lease_id}')::uuid from data where k='cleanup'),(select v#>>'{request,request_hash}' from data where k='saved'),(select v->>'intent_hash' from data where k='intent'),true);
+insert into data select 'cleanup2',claim_ezyvet_attachment_cleanup((select id from fx where k='cleanup2'),(select id from fx where k='request'),'db560000-0000-4000-8000-000000000001',(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='saved'));
+set local role authenticated;
+insert into data select 'cleanup-list',list_ezyvet_attachment_cleanups((select id from fx where k='request'),(select id from fx where k='pet'),null,null,1);
+select is((select v#>>'{cleanups,0,attempt,id}' from data where k='cleanup-list'),(select id::text from fx where k='cleanup2'),'Newest active cleanup is discoverable without browser storage');
+select ok((select (v#>>'{cleanups,0,lease_active}')::boolean from data where k='cleanup-list'),'Cleanup discovery distinguishes active lease');
+select ok((select (v->>'has_more')::boolean from data where k='cleanup-list'),'Cleanup history offers a cursor');
+select ok(not (select v::text from data where k='cleanup-list') like '%'||(select v#>>'{attempt,lease_id}' from data where k='cleanup2')||'%','Cleanup discovery hides service lease identifiers');
+insert into data select 'cleanup-last',list_ezyvet_attachment_cleanups((select id from fx where k='request'),(select id from fx where k='pet'),(select (v#>>'{next_cursor,before_at}')::timestamptz from data where k='cleanup-list'),(select (v#>>'{next_cursor,before_id}')::uuid from data where k='cleanup-list'),1);
+select is((select v#>>'{cleanups,0,receipt,cleanup_id}' from data where k='cleanup-last'),(select id::text from fx where k='cleanup'),'Older immutable receipt remains discoverable');
+select ok(not (select (v#>>'{cleanups,0,lease_active}')::boolean from data where k='cleanup-last'),'Completed cleanup does not look active');
+select ok(not (select (v->>'has_more')::boolean from data where k='cleanup-last'),'Final cleanup page is complete');
+select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'))$$,'42501','Attachment observation identity mismatch','Another administrator cannot browse owner observations');
+select throws_ok($$select list_ezyvet_attachment_cleanups((select id from fx where k='request'),(select id from fx where k='pet'))$$,'42501','Cleanup identity mismatch','Another administrator cannot browse owner cleanup history');
+select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+reset role;
+update ezyvet_identity_heads set version=version+1 where resource='attachment' and external_id='701';
+update ezyvet_identity_heads set version=version+1 where resource='animal' and external_id='77';
+set local role authenticated;
+insert into data select 'stale',list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'));
+select ok(not (select (v#>>'{observations,0,is_current}')::boolean from data where k='stale'),'Repeated snapshot at a newer head version remains stale');
+select is((select v#>>'{observations,0,observed_head_version}' from data where k='stale'),'1','Discovery preserves the original observed head version');
+select ok(not (select (v->>'parent_is_current')::boolean from data where k='stale'),'Historical run remains visible after parent changes');
+select is((get_ezyvet_attachment_animal_parent((select id from fx where k='mapping'))->>'parent_observed_head_version')::integer,2,'New animal scan discovery gets current parent pins');
+reset role;
+select is(jsonb_build_object('documents',(select count(*) from patient_documents),'treatments',(select count(*) from patient_treatments),'invoices',(select count(*) from billing_invoices),'stock',(select count(*) from inventory_movements),'outbox',(select count(*) from communication_outbox)),(select v from data where k='side-effects'),'Discovery creates no clinical, financial, stock, delivery or manual document effects');
+delete from user_roles where user_id='db560000-0000-4000-8000-000000000001' and role='ADMIN';
+set local role authenticated;
+select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='pet'))$$,'42501','Active administrator required','Role loss revokes observation discovery');
+select throws_ok($$select list_ezyvet_attachment_cleanups((select id from fx where k='request'),(select id from fx where k='pet'))$$,'42501','Active administrator required','Role loss revokes cleanup discovery');
+select throws_ok($$select get_ezyvet_attachment_animal_parent((select id from fx where k='mapping'))$$,'42501','Active administrator required','Role loss revokes current parent discovery');
+reset role;
+select * from finish();rollback;

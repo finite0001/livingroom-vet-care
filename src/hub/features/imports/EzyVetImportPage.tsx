@@ -1,4 +1,5 @@
 import { EzyVetPrescriptionImports } from "./EzyVetPrescriptionImports";
+import { AttachmentScanHistory } from "./AttachmentScanHistory";
 import { EzyVetPrescriptionItemImports } from "./EzyVetPrescriptionItemImports";
 import { EzyVetVaccinationImports } from "./EzyVetVaccinationImports";
 import { EzyVetClinicalImports } from "./EzyVetClinicalImports";
@@ -410,6 +411,7 @@ export function EzyVetImportPage() {
           onDirtyChange={setPrescriptionItemDirty}
         />
         <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
+        <AttachmentScanHistory key={`attachments:${session.user.id}`} actor={session.user.id} />
         <header>
           <h1 className="text-2xl font-semibold">ezyVet import review</h1>
           <p className="mt-2 text-sm text-muted-foreground">

@@ -5,6 +5,18 @@ Status: migration6500 implements parent-scoped metadata claims/staging and owned
 
 
 
+## Operator discovery checkpoint — 2026-09-13
+
+Migration7000 adds current Animal parent discovery, bounded owned scan-observation pages and bounded owned cleanup history. Observation cursors retain the committed page, snapshot, hash and observed head version, including A-to-B-to-A changes. Parent currentness is separate from file currentness. Filename/notes previews are bounded with explicit truncation flags; unsupported MIME declarations stay visible and provider download URLs are omitted. Cleanup history exposes exact owned operation IDs and point-in-time receipts without service lease IDs, so browser storage is not the only recovery path.
+
+The existing ezyVet import page now includes a read-only Source attachment history section. Operators select an approved patient mapping, browse their saved scans and page through observed files. Historical revisions remain visible with source-change notices. The section shows loading, empty and recoverable error states, escapes source text, clears the selected scan when changing patients and does not create a chart record, start a scan or invoke a file worker. Existing import controls and navigation guards remain in place. Validated browser adapters also provide current-parent and cleanup-history discovery for the remaining action controls.
+
+The focused SQL suite passes36 assertions; the broader regression passes236 harness checks with694 SQL assertions. Browser response validation adds18 cases. Seventeen browser cases pass (seven new attachment cases plus ten neighboring prescription-item import cases), including wrong-patient response rejection, stale evidence, exact cursors, unsupported MIME, escaped text, patient switching, role gating and375px layout. The current91-migration local rehearsal passes153 actual HTTP/Auth/PostgREST/Storage checks and31 contention checks against the fully migrated schema. It verifies the new discovery RPCs alongside capture, cleanup, original receipt recovery and source-change behavior, then removes all owned resources.
+
+An Impeccable code-level audit found no mechanical detector issues. Measured inherited outline text contrast prompted use of the existing sage secondary button variant only in the new section; no global button styling was changed. [Design review](../../docs/evidence/attachment-history-design-review-20260913.md) records the measured scope and limits. Detailed source hashes and validation are in [discovery evidence](../../docs/evidence/attachment-operator-discovery-local-20260913.json).
+
+This completes read-only scan/observation discovery, not the full operator workflow. Scan start/resume, download preparation, capture/abandon/cleanup recovery controls and cleanup history presentation still need UI integration. Original file inspection, clinical approval/corrections, release integration, broader contention, current populated upgrade/restore and issued-site/clinical acceptance remain required. Earlier90-migration evidence is historical; no91-migration hosted deployment is claimed.
+
 ## Authenticated cleanup worker checkpoint — 2026-09-13
 
 `ezyvet-attachment-cleanup` implements the authorized Storage API worker with JWT verification and a separate default-off `EZYVET_ATTACHMENT_CLEANUP_ENABLED` gate. It requires `APP_ENV=staging` but no ezyVet credentials or provider access. The caller supplies cleanup ID, request ID, patient ID and request hash only. The worker derives the actor from Auth and checks the retained abandoned request, reservation and cleanup attempt before touching Storage. Bucket/path always come from matching immutable server evidence; pending requests and completed captures are rejected.
