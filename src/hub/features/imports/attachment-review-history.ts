@@ -13,7 +13,7 @@ function precedes(at: string, id: string, beforeAt: string, beforeId: string) {
   const delta = timestamp(at) - timestamp(beforeAt);
   return delta < 0n || (delta === 0n && id < beforeId);
 }
-const recordSchema = z.object({
+export const recordSchema = z.object({
   id: uuid, actor_id: uuid, request_id: uuid, pet_id: uuid, animal_link_id: uuid,
   source_origin: z.string().url(), source_site_uid: z.string(), attachment_external_id: z.string(),
   request_hash: hash, capture_hash: hash, title: z.string().min(1).max(200),

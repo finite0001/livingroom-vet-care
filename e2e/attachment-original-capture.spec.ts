@@ -246,6 +246,10 @@ async function fixture(page: Page, mime = "application/pdf") {
     loseAbandon: false,
     reviews: [] as Row[],
     failReviews: false,
+    decisions: [] as Row[],
+    rejectDecision: false,
+    loseDecision: false,
+    failDecisionRecovery: false,
   };
   function capture(id: unknown) {
     return {
@@ -313,6 +317,39 @@ async function fixture(page: Page, mime = "application/pdf") {
         route.request().method() === "POST"
           ? route.request().postDataJSON()
           : {};
+    if (path.endsWith("recover_ezyvet_attachment_approval")) {
+      state.calls.push({ path, ...body });
+      if (state.failDecisionRecovery) return route.abort();
+      return route.fulfill({ json: state.decisions.find(d => (d.record as Row | null)?.id === body.p_id || (d.cancellation as Row | null)?.id === body.p_id) ?? null });
+    }
+    if (path.endsWith("approve_ezyvet_attachment_record")) {
+      state.calls.push({ path, ...body });
+      if (state.rejectDecision) return route.fulfill({ status: 400, json: { message: "Source changed" } });
+      const c = state.captures.find(c => c.id === body.p_request_id)!;
+      const record = { id: body.p_id, actor_id: actor, request_id: c.id, pet_id: pet, capture_hash: body.p_capture_hash,
+        previous_record_id: body.p_previous_record_id, title: body.p_title, review_reason: body.p_review_reason,
+        animal_link_id: link, request_hash: c.request_hash, source_origin: (c.parent_context as Row).source_origin,
+        source_site_uid: (c.parent_context as Row).source_site_uid, attachment_external_id: c.external_id,
+        version: state.reviews.length + 1, entry_method: "staff_reviewed_api_attachment_v2", record_hash: "f".repeat(64), created_at: at,
+        source_context: { capture_contract: "canonical_api_original_v1", parent: c.parent_context, run_id: c.run_id,
+          page: c.page, ordinal: c.ordinal, attachment_snapshot_id: c.snapshot_id, attachment_observed_head_version: c.observed_head_version,
+          attachment_external_id: c.external_id, file_id: c.file_id, stable_metadata_sha256: c.stable_metadata_sha256,
+          raw_record_sha256: c.raw_record_sha256, metadata: c.metadata },
+      };
+      state.decisions.push({ status: "approved", record, cancellation: null });
+      const projection: Row = { ...record }; delete projection.source_context;
+      state.reviews.unshift(projection);
+      if (state.loseDecision) { state.failDecisionRecovery = true; return route.abort(); }
+      return route.fulfill({ json: record });
+    }
+    if (path.endsWith("cancel_ezyvet_attachment_approval")) {
+      state.calls.push({ path, ...body });
+      const existing = state.decisions.find(d => (d.record as Row | null)?.id === body.p_id || (d.cancellation as Row | null)?.id === body.p_id);
+      const result = existing ?? { status: "canceled", record: null, cancellation: { id: body.p_id, actor_id: actor,
+        request_id: body.p_request_id, pet_id: body.p_pet_id, capture_hash: body.p_capture_hash, created_at: at } };
+      if (!existing) state.decisions.push(result);
+      return route.fulfill({ json: result });
+    }
     if (path.endsWith("list_ezyvet_attachment_record_versions")) {
       state.calls.push({ path, ...body });
       if (state.failReviews) return route.fulfill({ status: 500, json: { message: "unavailable" } });
@@ -849,4 +886,78 @@ test("review history preserves latest marker, paginates and recovers a failed re
   state.failReviews = false;
   await history.getByRole("button", { name: "Refresh review history" }).click();
   await expect(history.getByText(/Latest review/)).toBeVisible();
+});
+
+async function reviewedDecision(page: Page) {
+  const data = await fixture(page);
+  const panel = await openCapture(page);
+  await panel.getByRole("button", { name: "Capture selected original", exact: true }).click();
+  const form = panel.getByRole("region", { name: "Staff attachment decision", exact: true });
+  await form.getByLabel("Reviewed attachment title").fill("Reviewed patient original");
+  await form.getByLabel("Review or correction reason").fill("Patient and source association inspected");
+  await expect(form.getByRole("checkbox")).toBeDisabled();
+  const download = page.waitForEvent("download");
+  await panel.getByRole("button", { name: "Download verified original", exact: true }).click();
+  await download;
+  await form.getByRole("checkbox").check();
+  return { ...data, panel, form };
+}
+test("lost approval response retains one decision and recovers without resubmitting", async ({ page }) => {
+  const { state, panel, form } = await reviewedDecision(page);
+  state.loseDecision = true;
+  await form.getByRole("button", { name: "Save staff decision", exact: true }).click();
+  await expect(form.getByRole("alert")).toContainText("unconfirmed");
+  await expect(panel.getByRole("button", { name: "Choose another original" })).toBeDisabled();
+  await expect(form.getByLabel("Reviewed attachment title")).toBeDisabled();
+  const submitted = state.calls.filter(c => String(c.path).endsWith("approve_ezyvet_attachment_record"));
+  expect(submitted).toHaveLength(1);
+  const stored = await page.evaluate(() => Object.keys(sessionStorage).filter(k => k.startsWith("lrv-attachment-decision:")).map(k => JSON.parse(sessionStorage.getItem(k)!)));
+  expect(stored[0].id).toBe(submitted[0].p_id);
+  // A page reload must recover the retained capture and exact decision, never resubmit it.
+  const recoveredMetadata = await select(page);
+  await recoveredMetadata.getByRole("button", { name: "Recheck saved attachment run", exact: true }).click();
+  await panel.getByRole("button", { name: "Recheck original capture", exact: true }).click();
+  await expect(form.getByText("A submitted decision is retained. Recover its outcome before continuing.")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Choose another original" })).toBeDisabled();
+  state.failDecisionRecovery = false;
+  await form.getByRole("button", { name: "Recover decision outcome", exact: true }).click();
+  await expect(form.getByRole("status")).toContainText("Approval version 1 is saved");
+  expect(state.calls.filter(c => String(c.path).endsWith("approve_ezyvet_attachment_record"))).toHaveLength(1);
+  await expect(panel.getByRole("button", { name: "Choose another original" })).toBeEnabled();
+});
+test("unconfirmed decision requires explicit server cancellation before another draft", async ({ page }) => {
+  const { state, panel, form } = await reviewedDecision(page);
+  state.rejectDecision = true;
+  await form.getByRole("button", { name: "Save staff decision", exact: true }).click();
+  await expect(form.getByRole("alert")).toContainText("No saved outcome");
+  await expect(panel.getByRole("button", { name: "Choose another original" })).toBeDisabled();
+  await form.getByRole("button", { name: "Cancel submitted decision", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm decision cancellation", exact: true }).click();
+  await expect(form.getByRole("status")).toContainText("is canceled");
+  await form.getByRole("button", { name: "Start another decision", exact: true }).click();
+  await expect(form.getByLabel("Reviewed attachment title")).toHaveValue("");
+  expect(state.calls.filter(c => String(c.path).endsWith("cancel_ezyvet_attachment_approval"))).toHaveLength(1);
+  await expect(panel.getByRole("button", { name: "Choose another original" })).toBeEnabled();
+});
+
+test("signout during approval history recheck prevents persistence and submission", async ({ page }) => {
+  const { state, form } = await reviewedDecision(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  let completed!: () => void;
+  const finished = new Promise<void>(resolve => { completed = resolve; });
+  await page.route("**/rest/v1/rpc/list_ezyvet_attachment_record_versions", async route => {
+    started(); await gate;
+    try { await route.fallback(); } finally { completed(); }
+  });
+  await form.getByRole("button", { name: "Save staff decision", exact: true }).click();
+  await entered;
+  await page.getByRole("button", { name: "Sign Out", exact: true }).click();
+  await expect(page).toHaveURL(/login/);
+  release(); await finished;
+  await expect(form).toHaveCount(0);
+  expect(state.calls.filter(c => String(c.path).endsWith("approve_ezyvet_attachment_record"))).toHaveLength(0);
+  expect(await page.evaluate(() => Object.keys(sessionStorage).filter(k => k.startsWith("lrv-attachment-decision:")))).toHaveLength(0);
 });

@@ -346,7 +346,7 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
         </Button>
         <Button
           variant="outline"
-          disabled={captureDirty || busy || !id}
+          disabled={busy || !id}
           onClick={() => void work(() => recover())}
         >
           Recheck saved attachment run

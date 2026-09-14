@@ -1,5 +1,6 @@
+import { AttachmentDecisionForm } from "./AttachmentDecisionForm";
 import { AttachmentReviewHistory } from "./AttachmentReviewHistory";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,13 @@ export function AttachmentOriginalCapture({
   disabled,
   onDirtyChange,
 }: Props) {
+  const [decisionLocked, setDecisionLocked] = useState(false);
+  const [decisionBusy, setDecisionBusy] = useState(false);
+  const [verifiedHash, setVerifiedHash] = useState<string | null>(null);
+  const onDecisionState = useCallback((locked: boolean, working: boolean) => {
+    setDecisionLocked(locked);
+    setDecisionBusy(working);
+  }, []);
   const [selected, setSelected] = useState("");
   const [intent, setIntent] = useState<CaptureIntent | null>(null),
     intentRef = useRef<CaptureIntent | null>(null);
@@ -68,8 +76,8 @@ export function AttachmentOriginalCapture({
     retry: false,
   });
   useEffect(() => {
-    onDirtyChange(busy || uncertain);
-  }, [busy, uncertain, onDirtyChange]);
+    onDirtyChange(busy || uncertain || decisionLocked);
+  }, [busy, uncertain, decisionLocked, onDirtyChange]);
   useEffect(() => {
     alive.current = true;
     const clear = () => {
@@ -233,11 +241,12 @@ export function AttachmentOriginalCapture({
     link.download = `ezyvet-attachment-${saved.external_id}.${saved.capture.mime_type === "application/pdf" ? "pdf" : saved.capture.mime_type === "image/png" ? "png" : "jpg"}`;
     link.rel = "noopener noreferrer";
     link.click();
+    setVerifiedHash(saved.capture.capture_hash);
     setNotice(
       "Original downloaded after byte checksum verification. No clinical approval occurred.",
     );
   }
-  const frozen = busy || disabled;
+  const frozen = busy || disabled || decisionLocked;
   return (
     <section
       aria-label="Original attachment capture"
@@ -378,11 +387,12 @@ export function AttachmentOriginalCapture({
               </p>
               <Button
                 variant="outline"
-                disabled={frozen}
+                disabled={busy || disabled || decisionBusy || uncertain}
                 onClick={() => void work(download)}
               >
                 Download verified original
               </Button>
+              <AttachmentDecisionForm key={`decision:${actor}:${capture.id}`} actor={actor} capture={capture} verifiedHash={verifiedHash} disabled={busy || disabled || uncertain} onState={onDecisionState} />
               <AttachmentReviewHistory key={`${actor}:${capture.id}`} actor={actor} capture={capture} disabled={frozen || uncertain} />
             </>
           )}
