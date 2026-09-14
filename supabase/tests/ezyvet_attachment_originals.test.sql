@@ -124,8 +124,35 @@ select throws_ok($$select pg_temp.api_preview(jsonb_build_object('api_attachment
 select throws_ok($$select pg_temp.api_preview(jsonb_build_object('api_attachment_ids',jsonb_build_array((select id from fx where k='correction')),'imported_prescription_ids',jsonb_build_array(gen_random_uuid())))$$,'23514',null,'Mixed preview still validates canonical prescription selection');
 select throws_ok($$select release_api_attachment_document(jsonb_set((select v->0 from data where k='release-original'),'{capture,file_size}','20971521'))$$,'23514',null,'Original mapper rejects oversized file');
 select throws_ok($$select release_api_attachment_document(jsonb_set((select v->0 from data where k='release-original'),'{capture,bucket_id}','"patient-documents"'))$$,'23514',null,'API source cannot masquerade as a native document');
-select ok(not has_function_privilege('authenticated','release_preview_v9_internal(uuid,uuid,text,text,jsonb)','execute'),'Unfinished schema9 composition remains private');
+select ok(not has_function_privilege('authenticated','release_preview_v9_internal(uuid,uuid,text,text,jsonb)','execute'),'Schema9 composition remains private behind authorized wrappers');
 select ok(not has_function_privilege('service_role','release_api_attachment_document(jsonb)','execute'),'Original mapper is not a direct worker entrypoint');
+-- Public confirmation and recovery on canonical schema9; acceptance is rollback-only.
+insert into fx values('api-release',gen_random_uuid());
+create function pg_temp.confirm_api_release() returns jsonb language sql as $$
+ select to_jsonb(confirm_record_release((select id from fx where k='api-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select v#>'{snapshot,selection}' from data where k='api-preview'),(select v->'snapshot' from data where k='api-preview'),(select v->>'source_hash' from data where k='api-preview'),true));
+$$;
+set local role authenticated;
+select is(preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',jsonb_build_object('api_attachment_ids',jsonb_build_array((select id from fx where k='correction')))),(select v from data where k='api-preview'),'Public preview matches exact private canonical snapshot');
+select throws_ok($$select pg_temp.confirm_api_release()$$,'42501',null,'Schema9 confirmation requires clinical acceptance');
+reset role;
+insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic rollback reviewer',now(),'TEST ONLY',8);
+set local role authenticated;
+select throws_ok($$select pg_temp.confirm_api_release()$$,'42501',null,'Schema8 acceptance cannot enable schema9');
+reset role;update record_release_policy set accepted_schema_version=9;
+set local role authenticated;
+insert into data select 'confirmed-api',pg_temp.confirm_api_release();
+select is((select v->'snapshot' from data where k='confirmed-api'),(select v->'snapshot' from data where k='api-preview'),'Confirmation preserves exact reviewed snapshot');
+select is(pg_temp.confirm_api_release(),(select v from data where k='confirmed-api'),'Exact confirmation retry returns saved receipt');
+select is(read_record_release((select id from fx where k='api-release'))->>'eligible','true','Staff recovery revalidates current canonical source');
+reset role;
+select is((select count(*)::integer from record_release_sources where release_id=(select id from fx where k='api-release') and source_kind='api_attachment' and source_id=(select id from fx where k='correction')),1,'Confirmation registers exact API approval for invalidation');
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select is(release_read_internal((select id from fx where k='api-release'))->>'eligible','true','Trusted worker composition does not require a staff JWT');
+set local role service_role;
+select throws_ok($$select release_read_internal((select id from fx where k='api-release'))$$,'42501',null,'Service API cannot call private recovery directly');
+select throws_ok($$select preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test','{}')$$,'42501',null,'Service API cannot bypass staff preview authorization');
+reset role;
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 -- Synthetic byte-contract fixture derived from the canonical preview shape.
 insert into data select 'byte-source',jsonb_set(jsonb_set(v#>'{snapshot,api_attachments,0}','{capture,content_sha256}',to_jsonb(encode(sha256(convert_to('%PDF-example','UTF8')),'hex'))),'{capture,file_size}',to_jsonb(octet_length(convert_to('%PDF-example','UTF8')))) from data where k='api-preview';
 insert into data select 'byte-document',release_api_attachment_document(v) from data where k='byte-source';
@@ -151,6 +178,10 @@ select throws_ok($$update ezyvet_attachment_record_versions set title='changed'$
 select ok(not has_function_privilege('anon','approve_ezyvet_attachment_record(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Anonymous approval denied');
 select ok(not has_function_privilege('service_role','approve_ezyvet_attachment_record(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Worker cannot approve');
 update ezyvet_identity_heads set version=version+1 where resource='animal' and external_id='77';
+select ok(exists(select 1 from record_release_events where release_id=(select id from fx where k='api-release') and kind='source_changed'),'Canonical Animal head change appends release invalidation');
+select is(read_record_release((select id from fx where k='api-release'))->>'eligible','false','Changed source makes saved release ineligible');
+select is(pg_temp.confirm_api_release(),(select v from data where k='confirmed-api'),'Exact saved receipt remains recoverable after source invalidation');
+
 select throws_ok($$select pg_temp.release_original()$$,'40001',null,'Source change prevents a new release of retained original');
 set local role authenticated;
 select is(read_ezyvet_attachment_chart((select id from fx where k='pet'))#>>'{records,0,source_current}','false','Latest review remains visible but stale after source changes');

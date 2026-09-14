@@ -287,6 +287,58 @@ try:
     contended(validate_review(next_review),change,lambda code,out,err:code==0)
     check(scalar("select version from ezyvet_identity_heads where resource='attachment' and external_id='701';")=='2','Validation-first preserves source lock until transaction ends')
 
+
+    # Public confirmation/read must reauthorize after observed waits, including replay.
+    sql("update ezyvet_identity_heads set version=1 where resource='attachment' and external_id='701';")
+    sql("insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic race reviewer',now(),'TEST ONLY',9);")
+    def release_for(review):
+        selection={'api_attachment_ids':[review]}
+        preview=json.loads(scalar('begin;'+staff+f"select preview_record_release_v9('{fx['pet']}','{fx['client']}','EMAIL','attachment@example.test',{quote(json.dumps(selection))}::jsonb);commit;"))
+        release_id=str(uuid.uuid4())
+        confirmation=f"select confirm_record_release('{release_id}','{fx['pet']}','{fx['client']}','EMAIL','attachment@example.test',{quote(json.dumps(selection))}::jsonb,{quote(json.dumps(preview['snapshot']))}::jsonb,'{preview['source_hash']}',true);"
+        return release_id,confirmation,preview
+    def restore_staff():
+        for role in roles:sql(f"insert into user_roles(user_id,role) values('{actor}',{quote(role)}) on conflict do nothing;")
+    for boundary in ['operation','source','object']:
+        release_id,confirmation,preview=release_for(next_review)
+        hold=f"select pg_advisory_xact_lock(hashtextextended('{release_id}',13));" if boundary=='operation' else boundary_locks[boundary]
+        try:
+            contended(hold,staff+confirmation,lambda code,out,err:code!=0 and 'Active staff access required' in err,during_wait=revoke_staff)
+            check(scalar(f"select count(*) from record_releases where id='{release_id}';")=='0','Revoked staff cannot confirm after '+boundary+' wait')
+        finally:restore_staff()
+    release_id,confirmation,preview=release_for(next_review)
+    sql('begin;'+staff+confirmation+'commit;')
+    try:
+        contended(f"select pg_advisory_xact_lock(hashtextextended('{release_id}',13));",staff+confirmation,lambda code,out,err:code!=0 and 'Active staff access required' in err,during_wait=revoke_staff)
+    finally:restore_staff()
+    try:
+        contended(f"select 1 from record_releases where id='{release_id}' for update;",staff+f"select read_record_release('{release_id}');",lambda code,out,err:code!=0 and 'Active staff access required' in err,during_wait=revoke_staff)
+    finally:restore_staff()
+    # A real private email context represents the service worker's stored actor boundary.
+    conversation_id,request_id=str(uuid.uuid4()),str(uuid.uuid4())
+    sql(f"insert into conversations(id,client_id) values('{conversation_id}','{fx['client']}');insert into release_email_requests(id,release_id,actor_id,conversation_id,client_id,recipient,subject,body,release_hash) values('{request_id}','{release_id}','{actor}','{conversation_id}','{fx['client']}','attachment@example.test','Synthetic review','Synthetic original', '{preview['source_hash']}');")
+    worker="select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
+    check(json.loads(scalar('begin;'+worker+f"select release_email_context('{request_id}');commit;"))['eligible'] is True,'Actor-authorized worker recovers schema9 with no staff JWT')
+    try:
+        contended(boundary_locks['object'],worker+f"select release_email_context('{request_id}');",lambda code,out,err:code!=0 and 'Release email actor is unavailable' in err,during_wait=revoke_staff)
+    finally:restore_staff()
+    # Both source-change orderings exercise confirmation, registration and invalidation.
+    pending_id,pending_confirmation,_=release_for(next_review)
+    contended(change,staff+pending_confirmation,lambda code,out,err:code!=0 and 'Current latest' in err)
+    check(scalar(f"select count(*) from record_releases where id='{pending_id}';")=='0','Source-first change rejects pending confirmation')
+    sql("update ezyvet_identity_heads set version=1 where resource='attachment' and external_id='701';")
+    pending_id,pending_confirmation,_=release_for(next_review)
+    contended(staff+pending_confirmation,change,lambda code,out,err:code==0)
+    check(scalar(f"select count(*)>0 from record_release_events where release_id='{pending_id}' and kind='source_changed';")=='t','Confirmation-first source revision invalidates registered API approval')
+    sql("update ezyvet_identity_heads set version=1 where resource='attachment' and external_id='701';")
+    pending_id,pending_confirmation,_=release_for(next_review)
+    corrected_review=str(uuid.uuid4())
+    contended(staff+approval(corrected_review,next_review),staff+pending_confirmation,lambda code,out,err:code!=0 and 'Current latest' in err)
+    pending_id,pending_confirmation,_=release_for(corrected_review)
+    final_review=str(uuid.uuid4())
+    contended(staff+pending_confirmation,staff+approval(final_review,corrected_review),lambda code,out,err:code==0)
+    check(scalar(f"select count(*)>0 from record_release_events where release_id='{pending_id}' and kind='source_changed';")=='t','Confirmation-first correction invalidates saved package')
+
 finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
