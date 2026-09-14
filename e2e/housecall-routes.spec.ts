@@ -66,6 +66,8 @@ const appointments = [
 interface FixtureOptions {
   rows?: ReturnType<typeof appointment>[];
   incomplete?: boolean;
+  missingCount?: boolean;
+  beforeAppointmentResponse?: () => Promise<void>;
 }
 
 async function openSchedule(page: Page, options: FixtureOptions = {}) {
@@ -123,6 +125,7 @@ async function openSchedule(page: Page, options: FixtureOptions = {}) {
       return route.fulfill({ json: [{ user_id: staff, role: "STAFF" }] });
     if (path === "/rest/v1/appointments") {
       expect(request.headers().prefer).toContain("count=exact");
+      await options.beforeAppointmentResponse?.();
       const filters = url.searchParams.getAll("scheduled_at");
       const from = filters.find((value) => value.startsWith("gte."))?.slice(4);
       const until = filters.find((value) => value.startsWith("lt."))?.slice(3);
@@ -137,9 +140,14 @@ async function openSchedule(page: Page, options: FixtureOptions = {}) {
       return route.fulfill({
         json: rows,
         headers: {
-          "content-range": rows.length
-            ? `0-${rows.length - 1}/${total}`
-            : `*/${total}`,
+          "access-control-expose-headers": "content-range",
+          ...(options.missingCount
+            ? {}
+            : {
+                "content-range": rows.length
+                  ? `0-${rows.length - 1}/${total}`
+                  : `*/${total}`,
+              }),
         },
       });
     }
@@ -280,4 +288,62 @@ test("an incomplete appointment response cannot generate a route", async ({
   await expect(
     page.getByRole("region", { name: `Housecall route ${day}`, exact: true }),
   ).toHaveCount(0);
+});
+
+test("an appointment response without a count cannot generate a route", async ({
+  page,
+}) => {
+  await openSchedule(page, { missingCount: true });
+  await expect(
+    page.getByText(
+      "The schedule may be incomplete. Route planning is unavailable until the full period loads.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Plan housecall route", { exact: true }),
+  ).toHaveCount(0);
+});
+
+test("refresh pauses directions and preserves the expanded route and staff selection", async ({
+  page,
+}) => {
+  let pendingRefresh: Promise<void> | undefined;
+  let releaseRefresh = () => {};
+  await openSchedule(page, {
+    beforeAppointmentResponse: async () => {
+      await pendingRefresh;
+    },
+  });
+  const region = await openRoute(page);
+  const staffSelect = page.getByLabel(`Route staff for ${day}`, {
+    exact: true,
+  });
+  await expect(region.getByRole("link")).toHaveCount(4);
+  pendingRefresh = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  try {
+    await page
+      .getByRole("button", { name: "Refresh schedule", exact: true })
+      .click();
+    await expect(region).toBeVisible();
+    await expect(region).toContainText(
+      "Refreshing schedule… Directions are temporarily unavailable.",
+    );
+    await expect(region.getByRole("link")).toHaveCount(0);
+    await expect(staffSelect).toHaveValue(staff);
+    await expect(staffSelect).toBeDisabled();
+  } finally {
+    releaseRefresh();
+  }
+  await expect(region.getByRole("link")).toHaveCount(4);
+  await expect(region).toBeVisible();
+  await expect(staffSelect).toHaveValue(staff);
+  await expect(staffSelect).toBeEnabled();
+  await expect(region).not.toContainText("Refreshing schedule…");
+  await expectLeg(
+    region.getByRole("link", { name: "Directions to stop 1", exact: true }),
+    base,
+    firstAddress,
+  );
 });
