@@ -12,7 +12,7 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
 approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
-release_scenarios = ['release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
+release_scenarios = ['release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
 parser.add_argument('--scenario', choices=approval_scenarios + release_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 parser.add_argument('--skip-release-access-fix', action='store_true', help='Reproduce pre8000 access waits in an owned clone when the source lacks8000; never revert an existing fix')
@@ -183,7 +183,25 @@ try:
                 error = 'Release sources or recipient changed'
             elif 'correction' in scenario:
                 change = staff + release_approve(correction, approval)
-            if scenario.endswith('role-loss'):
+            if scenario.startswith('release-email-'):
+                sql('begin;' + confirm + 'commit;')
+                conversation, email_request = str(uuid.uuid4()), str(uuid.uuid4())
+                existing = scalar(f"select coalesce(min(id::text),'none') from conversations where client_id='{fx['client']}' and status='ACTIVE';")
+                existing = None if existing == 'none' else existing
+                conversation = existing or conversation
+                if not existing:
+                    sql(f"insert into conversations(id,client_id) values('{conversation}','{fx['client']}');")
+                prepare = staff + f"select prepare_release_email('{email_request}','{release_id}','{conversation}','Synthetic race','Synthetic reviewed API original','{preview['source_hash']}');"
+                if scenario.endswith('source-first'):
+                    contend(change, prepare, 'Release is not eligible for this household recipient')
+                    check(scalar(f"select count(*) from release_email_requests where id='{email_request}';") == '0', 'Earlier source revision prevents email preparation')
+                else:
+                    contend(prepare, change, None)
+                    check(scalar(f"select count(*) from release_email_requests where id='{email_request}';") == '1', 'Earlier preparation preserves its exact durable request')
+                    rejected = sql(f"set role service_role;select set_config('request.jwt.claims','{{\"role\":\"service_role\"}}',false);select release_email_capture_context('{email_request}','{actor}');", fail=False)
+                    check(rejected.returncode != 0 and ('not eligible' in rejected.stderr or 'no longer eligible' in rejected.stderr), 'Later source revision prevents capture of the prepared email: ' + rejected.stderr)
+                check(scalar(f"select source_hash='{preview['source_hash']}' from record_releases where id='{release_id}';") == 't', 'Email ordering never rewrites the reviewed release')
+            elif scenario.endswith('role-loss'):
                 expected_rows = 0
                 waiter = confirm
                 holder = f"select pg_advisory_xact_lock(hashtextextended('{release_id}',13));"
