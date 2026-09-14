@@ -1,0 +1,42 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "7c2f5523b53c8ac5de225f3bf351e67af0d8cb7a",
+  "file_sha256": {
+    "src/hub/features/imports/PatientApiAttachments.tsx": "08c4c7c09bc325b78c840b0d28af4188a49b1095ceb4e53e2795d381a173a0fb",
+    "src/hub/features/imports/attachment-chart-api.ts": "706ffee62fa8cf1b51781bc3f37dfcd0a5691d73484b00fff2e2723b4e620db5",
+    "supabase/functions/retrieve-reviewed-ezyvet-original/handler.ts": "e3d67257c1dea85bf0392c852f2bebb7b38d53333169b66e342b553081e49ebe",
+    "supabase/functions/retrieve-reviewed-ezyvet-original/index.ts": "410dfedb71b8918b08cadf31267f9bd91eec0857439ed8de8c8c9fb646e3cef8",
+    "supabase/migrations/20260914050000_canonical_reviewed_original_context.sql": "4c79b8ed01e2118cd0f506ff683ed77e609857793c8202611da3f4e59639d60f",
+    "supabase/config.toml": "40dea5b839667c5755985dd86467a30c963b4a88c3f402181b67c6f3e3144a1c",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "b883058763dbe69bd5fda4be9b0a444396c77b42ade3084b34aa81fa518528a1",
+    "tests/ezyvet/reviewed-original-handler.test.ts": "0603985926ff6562db9c2aa4e34cd771746590c54ffa88ffa25c824a7b9b135e",
+    "e2e/patients.spec.ts": "771a84497e6003867cc611bb32dac649941514d1ce7be86bcc20812cfe9928b6"
+  },
+  "sql_assertions": 471,
+  "new_sql_assertions": 8,
+  "concurrency_checks": 117,
+  "unit_tests": 528,
+  "new_handler_tests": 3,
+  "browser_tests": 1,
+  "browser_scope": "Expanded patient workflow: mobile JPEG binary download, same-size tampering denial, then desktop signout before delayed download completes.",
+  "check_passed": true,
+  "edge_function_typecheck_passed": true,
+  "owned_database_cleanup_verified": true,
+  "log_sha256": {
+    "/tmp/lrv-reviewed-original-sql.log": "5c64784692b597f15638fc72c5301000eac555c7eeb1f039234e634e917957f3",
+    "/tmp/lrv-reviewed-original-check.log": "27248d58f5099bb9500e10ed663a94acd760fb45c5875e7a0b2b0bceaa2fb535",
+    "/tmp/lrv-reviewed-original-deno.log": "d3a92bf56e0a7b27171f6acff6832259d063675621f11722d61a95b1d2b34276",
+    "/tmp/lrv-reviewed-original-handler-tests.log": "5adb59129012c7bd0564aa0283e1ff9a3aed57594113fb78b5e1bbdd7251e254",
+    "/tmp/lrv-reviewed-original-browser.log": "d6c4b87bded4763777f3383513c810b8df7b8a44f2c0c013f8344536cdf931a7"
+  },
+  "warnings": [
+    "Existing AuthContext fast-refresh lint warning",
+    "Existing large production chunk warning"
+  ],
+  "limitations": [
+    "SQL uses synthetic Storage metadata; handler gateway and browser transport are mocked. Actual local Auth/HTTP/Storage roundtrip remains required.",
+    "No new Storage SELECT policy; private reviewed context callable only by service_role.",
+    "Historical reviewed access is not source currentness or clinical release authorization.",
+    "No hosted changes or provider messages. Schema9, mixed releases and populated restore remain required."
+  ]
+}

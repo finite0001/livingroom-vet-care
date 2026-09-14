@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { test, expect } from "@playwright/test";
 
 const backend = "http://127.0.0.1:54321";
@@ -77,10 +78,18 @@ test("mobile household adds two patients, retains identity fields and dated weig
       ? route.continue()
       : route.abort(),
   );
-  let failChart = false;
+  let failChart = false, tamperOriginal = false;
+  const originalBytes = Buffer.from([255,216,255,1,2,3,4]);
+  const originalSha = createHash("sha256").update(originalBytes).digest("hex");
   await page.route(`${backend}/**`, async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
+    if(path === "/functions/v1/retrieve-reviewed-ezyvet-original") {
+      const body=route.request().postDataJSON();
+      expect(body.capture_hash).toBe("b".repeat(64));
+      return route.fulfill({status:200,body:tamperOriginal?Buffer.from([255,216,255,9,2,3,4]):originalBytes,
+        headers:{"Access-Control-Allow-Origin":"http://127.0.0.1:8080","Access-Control-Expose-Headers":"X-Capture-Hash, X-Content-SHA256, Content-Length, Content-Type","Content-Type":"image/jpeg","Content-Length":String(originalBytes.length),"X-Capture-Hash":"b".repeat(64),"X-Content-SHA256":originalSha}});
+    }
     if (path === "/rest/v1/rpc/read_ezyvet_attachment_chart") {
       if (failChart) return route.fulfill({ status: 500, json: { message: "unavailable" } });
       const body = route.request().postDataJSON();
@@ -275,9 +284,32 @@ test("mobile household adds two patients, retains identity fields and dated weig
   failChart = false;
   await reviewed.getByRole("button", { name: "Newest reviewed attachments" }).click();
   await expect(reviewed.getByText(/Latest saved approval/)).toBeVisible();
+  const download = page.waitForEvent("download");
+  await reviewed.getByRole("button",{name:"Download verified original version 2"}).click();
+  expect((await download).suggestedFilename()).toBe(`reviewed-original-${staffId}.jpg`);
+  tamperOriginal = true;
+  let unexpectedDownloads = 0;
+  page.on("download",()=>{unexpectedDownloads++;});
+  await reviewed.getByRole("button",{name:"Download verified original version 2"}).click();
+  await expect(reviewed.getByText("The reviewed original could not be verified. No download is available.")).toBeVisible();
+  expect(unexpectedDownloads).toBe(0);
+  tamperOriginal = false;
   await page.screenshot({
     path: testInfo.outputPath("mobile-patient-record.png"),
     fullPage: true,
     animations: "disabled",
   });
+  await page.setViewportSize({width:1280,height:900});
+  let release!:()=>void, started!:()=>void;
+  const gate=new Promise<void>(resolve=>{release=resolve;});
+  const entered=new Promise<void>(resolve=>{started=resolve;});
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-original",async route=>{started();await gate;await route.fallback();});
+  await reviewed.getByRole("button",{name:"Download verified original version 2"}).click();
+  await entered;
+  await page.getByRole("button",{name:"Sign Out",exact:true}).click();
+  await expect(page).toHaveURL(/login/);
+  const response=page.waitForResponse(r=>r.url().endsWith("retrieve-reviewed-ezyvet-original"));
+  release();await(await response).finished();
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>resolve())));
+  expect(unexpectedDownloads).toBe(0);
 });

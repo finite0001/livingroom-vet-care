@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { downloadReviewedOriginal } from "./attachment-chart-api";
 import { captureRpc } from "./attachment-capture-api";
 import { parseAttachmentChart } from "./attachment-chart-state";
 import type { ReviewCursor } from "./attachment-review-history";
@@ -25,6 +26,62 @@ interface ChartProps extends Props {
   actor: string;
 }
 function Chart({ petId, disabled, actor }: ChartProps) {
+  const [busy, setBusy] = useState(false),
+    [notice, setNotice] = useState("");
+  const generation = useRef(0),
+    lock = useRef(false),
+    urls = useRef<string[]>([]),
+    alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    const clear = () => {
+      generation.current++;
+      urls.current.forEach(URL.revokeObjectURL);
+      urls.current = [];
+    };
+    const auth = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user.id !== actor) {
+        alive.current = false;
+        clear();
+      }
+    });
+    window.addEventListener("pagehide", clear);
+    return () => {
+      alive.current = false;
+      clear();
+      auth.data.subscription.unsubscribe();
+      window.removeEventListener("pagehide", clear);
+    };
+  }, [actor]);
+  async function download(id: string, hash: string) {
+    if (lock.current || disabled || !alive.current) return;
+    lock.current = true;
+    setBusy(true);
+    setNotice("");
+    const epoch = generation.current;
+    try {
+      const file = await downloadReviewedOriginal(actor, petId, id, hash);
+      if (!alive.current || epoch !== generation.current) return;
+      const url = URL.createObjectURL(file.blob);
+      urls.current.push(url);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.filename;
+      link.rel = "noopener noreferrer";
+      link.click();
+      setNotice(
+        "Reviewed original downloaded after byte verification. Release remains a separate decision.",
+      );
+    } catch {
+      if (alive.current && epoch === generation.current)
+        setNotice(
+          "The reviewed original could not be verified. No download is available.",
+        );
+    } finally {
+      lock.current = false;
+      if (alive.current) setBusy(false);
+    }
+  }
   const [cursor, setCursor] = useState<ReviewCursor | null>(null);
   const [authorized, setAuthorized] = useState(true);
   useEffect(() => {
@@ -67,6 +124,7 @@ function Chart({ petId, disabled, actor }: ChartProps) {
           history. A saved approval does not establish that all outside records
           were imported or authorize a release.
         </p>
+        {notice && <p role="status">{notice}</p>}
         {history.isFetching && (
           <p role="status">Loading reviewed attachments…</p>
         )}
@@ -104,6 +162,13 @@ function Chart({ petId, disabled, actor }: ChartProps) {
                   <p className="text-xs text-muted-foreground">
                     ezyVet API attachment {r.attachment_external_id}
                   </p>
+                  <Button
+                    variant="outline"
+                    disabled={disabled || busy || history.isFetching}
+                    onClick={() => void download(r.id, r.capture_hash)}
+                  >
+                    Download verified original version {r.version}
+                  </Button>
                 </li>
               ),
             )}
@@ -112,14 +177,14 @@ function Chart({ petId, disabled, actor }: ChartProps) {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            disabled={disabled || history.isFetching}
+            disabled={disabled || busy || history.isFetching}
             onClick={() => void history.refetch()}
           >
             Recheck reviewed attachments
           </Button>
           <Button
             variant="outline"
-            disabled={disabled || history.isFetching || !cursor}
+            disabled={disabled || busy || history.isFetching || !cursor}
             onClick={() => setCursor(null)}
           >
             Newest reviewed attachments

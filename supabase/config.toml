@@ -71,3 +71,7 @@ verify_jwt = true
 # Staff JWT and active-owner checks also run inside the capture handler.
 [functions.capture-ezyvet-attachment]
 verify_jwt = true
+
+# Active-staff review identity is rechecked after the private byte read.
+[functions.retrieve-reviewed-ezyvet-original]
+verify_jwt = true
