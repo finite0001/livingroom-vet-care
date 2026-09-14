@@ -1,5 +1,5 @@
 import { dispatchOne } from "../../supabase/functions/_shared/outbox-dispatch.ts";
-import { createStaffDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
+import { createRetrieveDocumentLinkHandler, createStaffDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
 import { documentLinkConfig } from "../../supabase/functions/_shared/document-link-capability.ts";
 import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
 import { renderRecordRelease } from "../../supabase/functions/_shared/record-release-renderer.ts";
@@ -593,6 +593,14 @@ try {
       check(new Date(capturedLink.grant.expires_at).toISOString() === linkArgs.p_expires_at && typeof capturedLink.client_url === 'string', "Link recovery preserves original expiry and materializes its capability");
       check((await prepareLink({ ...linkArgs, p_message_template: 'Changed {{document_link}}' })).status === 409, "Captured API link rejects changed exact intent");
       await api('/rest/v1/rpc/attest_document_link', { p_request_id: linkId, p_reviewed_artifact_hash: capturedLink.artifact_hash, p_reviewed_message_hash: capturedLink.message_hash, p_attest: true }, chartHeaders);
+      const retrieveLinkHandler = createRetrieveDocumentLinkHandler({ config: linkConfig, service: emailDb(serviceHeaders) });
+      const linkToken = new URL(capturedLink.client_url).hash.slice(1);
+      const retrieveLink = (artifact: number | null, token = linkToken) => retrieveLinkHandler(new Request('http://localhost/retrieve-document-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grant_id: linkId, token, artifact_index: artifact }) }));
+      const publicManifest = await retrieveLink(null);
+      check(publicManifest.status === 200 && (await publicManifest.json()).manifest.length === 2, "Reviewed API link exposes the exact public manifest through the retrieval handler");
+      const publicOriginal = await retrieveLink(1);
+      check(publicOriginal.status === 200 && Buffer.from(await publicOriginal.arrayBuffer()).equals(Buffer.from(original)), "Public API link returns the exact captured original bytes");
+      check((await retrieveLink(1, 'v1.' + 'x'.repeat(43))).status === 404 && (await retrieveLink(24)).status === 404, "Wrong capability and absent artifact cannot retrieve private API bytes");
       const queuedEmail = await api('/rest/v1/rpc/enqueue_release_email', { p_request_id: emailRequest, p_reviewed_payload_hash: capturedEmail.payload_hash, p_attest: true }, chartHeaders);
       const queuedLink = await api('/rest/v1/rpc/enqueue_document_link_sms', { p_request_id: linkId, p_reviewed_artifact_hash: capturedLink.artifact_hash, p_reviewed_message_hash: capturedLink.message_hash, p_attest: true }, chartHeaders);
       ids.push(queuedEmail.id, queuedEmail.message_id, queuedLink.id, queuedLink.message_id);
@@ -620,6 +628,7 @@ try {
       check(historicalLinkBody.artifact_hash === capturedLink.artifact_hash && historicalLinkBody.client_url === capturedLink.client_url && historicalLinkBody.grant.expires_at === capturedLink.grant.expires_at, "Historical link recovery preserves exact artifact, capability and expiry");
       const newLinkId = randomUUID(); ids.push(newLinkId);
       check((await prepareLink({ ...linkArgs, p_request_id: newLinkId })).status === 403 && linkReads === 1, "Invalidated API release cannot prepare a new link or fetch originals");
+      check((await retrieveLink(null)).status === 404 && (await retrieveLink(1)).status === 404, "Source invalidation closes public API manifest and original access");
       let providerCalls = 0;
       const workerEnvironment = { APP_ENV: 'staging', OUTBOUND_DELIVERY_MODE: 'test', OUTBOUND_TEST_EMAILS: email, OUTBOUND_TEST_PHONES: '+13035550481', RESEND_API_KEY: 'synthetic', RESEND_FROM: 'care@example.test', RESEND_REPLY_TO: 'care@example.test', TWILIO_ACCOUNT_SID: 'AC' + 'a'.repeat(32), TWILIO_AUTH_TOKEN: 'synthetic', TWILIO_FROM_NUMBER: '+13035550199', DOCUMENT_LINK_ORIGIN: 'https://thelivingroom.vet', DOCUMENT_LINK_ACTIVE_KEY_VERSION: 'synthetic', DOCUMENT_LINK_KEYS: JSON.stringify({ synthetic: Buffer.from('synthetic-local-secret-00000000000').toString('base64') }), DOCUMENT_LINK_PUBLIC_ENABLED: 'true' };
       const noProvider = (async () => { providerCalls++; throw new Error('Synthetic invalidated work must never reach provider transport'); }) as typeof fetch;
@@ -636,6 +645,48 @@ try {
       check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
       sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);
+      for (const channel of ['EMAIL', 'SMS'] as const) {
+        const acceptedArgs = channel === 'EMAIL' ? packageArgs : smsArgs;
+        const acceptedPreview = await api('/rest/v1/rpc/preview_record_release_v9', acceptedArgs, chartHeaders);
+        const acceptedRelease = randomUUID(), acceptedRequest = randomUUID(); ids.push(acceptedRelease, acceptedRequest);
+        await api('/rest/v1/rpc/confirm_record_release', { ...acceptedArgs, p_id: acceptedRelease, p_reviewed_snapshot: acceptedPreview.snapshot, p_reviewed_hash: acceptedPreview.source_hash, p_attest_review: true }, chartHeaders);
+        let acceptedOutbox;
+        if (channel === 'EMAIL') {
+          const result = await prepareEmail({ ...emailArgs, p_request_id: acceptedRequest, p_release_id: acceptedRelease, p_release_hash: acceptedPreview.source_hash });
+          check(result.status === 200, "Fresh eligible API email prepares for successful worker delivery");
+          const prepared = await result.json();
+          acceptedOutbox = await api('/rest/v1/rpc/enqueue_release_email', { p_request_id: acceptedRequest, p_reviewed_payload_hash: prepared.payload_hash, p_attest: true }, chartHeaders);
+        } else {
+          const preview = await api('/rest/v1/rpc/preview_document_link', { p_family: 'record_release', p_source_id: acceptedRelease, p_client_id: client }, chartHeaders);
+          const result = await prepareLink({ ...linkArgs, p_request_id: acceptedRequest, p_source_id: acceptedRelease, p_source_hash: preview.source_hash });
+          check(result.status === 200, "Fresh eligible API link prepares for successful worker delivery");
+          const prepared = await result.json();
+          await api('/rest/v1/rpc/attest_document_link', { p_request_id: acceptedRequest, p_reviewed_artifact_hash: prepared.artifact_hash, p_reviewed_message_hash: prepared.message_hash, p_attest: true }, chartHeaders);
+          acceptedOutbox = await api('/rest/v1/rpc/enqueue_document_link_sms', { p_request_id: acceptedRequest, p_reviewed_artifact_hash: prepared.artifact_hash, p_reviewed_message_hash: prepared.message_hash, p_attest: true }, chartHeaders);
+        }
+        ids.push(acceptedOutbox.id, acceptedOutbox.message_id); deliveryFixtureIds.push(acceptedOutbox.id);
+        let acceptanceCalls = 0, lostFinish = false;
+        const acceptedTransport = (async (_url, init) => {
+          acceptanceCalls++;
+          if (channel === 'EMAIL') {
+            const payload = JSON.parse(String(init?.body));
+            check(payload.attachments.some((file: { content: string }) => Buffer.from(file.content, 'base64').equals(Buffer.from(original))), "Worker sends exact captured API bytes in frozen email payload");
+          } else {
+            const payload = new URLSearchParams(String(init?.body));
+            check(payload.get('Body')?.includes('/shared/' + acceptedRequest + '#v1.'), "Worker materializes the reviewed API link in its SMS payload");
+          }
+          return new Response(JSON.stringify(channel === 'EMAIL' ? { id: randomUUID() } : { sid: 'SM' + randomUUID().replaceAll('-', '') }), { status: 202 });
+        }) as typeof fetch;
+        const lostFinishDb = { rpc: async (name: string, args: Record<string, unknown> = {}) => {
+          const result = await emailDb(serviceHeaders).rpc(name, args);
+          if (name === 'finish_communication_attempt' && !result.error) { lostFinish = true; return { data: null, error: new Error('Synthetic lost committed finish acknowledgment') }; }
+          return result;
+        } };
+        await assert.rejects(dispatchOne(lostFinishDb, workerEnvironment, acceptedTransport)); assertions++;
+        assert.deepEqual({ channel, lostFinish, acceptanceCalls, saved: sql(`select state||':'||attempt_count::text||':'||coalesce(last_error,'') from communication_outbox where id=${quote(acceptedOutbox.id)};`) }, { channel, lostFinish: true, acceptanceCalls: 1, saved: 'accepted:1:' }, 'Lost finish must preserve exact durable acceptance'); assertions++;
+        await dispatchOne(emailDb(serviceHeaders), workerEnvironment, acceptedTransport);
+        check(acceptanceCalls === 1, "Worker retry after lost finish acknowledgment does not resend accepted API delivery");
+      }
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
       // Exercise the production runtime adapter and handler through actual loopback HTTP.
