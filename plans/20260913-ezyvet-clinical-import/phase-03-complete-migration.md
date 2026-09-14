@@ -22,6 +22,8 @@ The capture increment implements the [documented attachment-ID download route](h
 
 ## Migration orchestration and reconciliation
 
+The [canonical implementation plan](../20260914-ezyvet-migration-reconciliation/plan.md) now maps existing resource ledgers and specifies owner-scoped run membership, durable failure evidence, exact reconciliation counts, immutable reviewed reports and preserved child recovery. This unified workflow remains unimplemented; individual resource acceptance does not close this requirement.
+
 Create an operator-owned migration run covering approved households/patients and explicit resource scopes. Retain durable per-resource checkpoints, observed pages, source versions, failures, skipped/unresolved items and reviewed resolutions. Respect shared provider cooldowns and bounded retry policy; do not spawn competing scans. Resume idempotently without overwriting local edits or treating absent pages as deletions. Report observed, staged, approved, linked, rejected, unresolved and failed counts separately, with drill-down records and exact source identity.
 
 A page-complete scan is not a consistent source export. Establish an issued-site supported export/incremental strategy and cutover window; reconcile changing source records, duplicates, references and original-file hashes. Pilot synthetic then authorized trial data, followed by a supervised practice subset. Confirm backups/restore, source freeze or overlap handling, operator ownership and rollback/recovery before the full migration. Existing Lovable-to-dedicated-backend migration is a separate environment cutover and must not be conflated with ezyVet patient migration.
