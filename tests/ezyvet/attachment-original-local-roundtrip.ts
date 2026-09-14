@@ -441,7 +441,8 @@ try {
   const repairWrite = await storageFetch(objectUrl(privateReady.intent), { method: "PUT", headers: { ...serviceHeaders, "Content-Type": "application/pdf", "x-upsert": "true" }, body: originalBytes });
   check(repairWrite.ok && (await act(id, "retrieve")).ok, "Restored fixture bytes again satisfy immutable receipt");
   const movedClient = (await rpc("save_client", { p_actor_id: actor, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Moved household", p_primary_phone: null, p_primary_email: null, p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null }, true)).id;
-  sql(`update pets set client_id=${quote(movedClient)} where id=${quote(pet)};`);
+  // Owner-only future transfer fixture; production currently forbids direct household changes.
+  sql(`begin; alter table pets disable trigger pets_version; update pets set client_id=${quote(movedClient)} where id=${quote(pet)}; alter table pets enable trigger pets_version; commit;`);
   const historicalMappings = await rpc("list_ezyvet_attachment_capture_mappings", { p_limit: 20 }, true);
   check(historicalMappings.mappings.some((m: { link_id: string }) => m.link_id === mapping), "Owned original discovery survives patient household changes");
   check((await act(id, "retrieve")).ok, "Owned historical original retrieval survives household changes");

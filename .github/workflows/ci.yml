@@ -94,6 +94,8 @@ jobs:
         run: python3 supabase/tests/ezyvet_prescription_review_concurrency.py --project-config supabase/config.toml
       - name: Verify attachment metadata leases, parent locks and replay races
         run: python3 supabase/tests/ezyvet_attachment_metadata_concurrency.py --project-config supabase/config.toml
+      - name: Verify original capture, source leases and fenced Storage races
+        run: python3 supabase/tests/ezyvet_attachment_originals_concurrency.py --project-config supabase/config.toml
       - name: Verify populated additive prescription reference upgrade
         run: python3 supabase/tests/prescription_reference_upgrade.py --project-config supabase/config.toml
       - name: Verify reviewed history, local problem and release concurrency
