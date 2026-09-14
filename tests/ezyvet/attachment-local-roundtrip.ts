@@ -601,6 +601,11 @@ try {
       const publicOriginal = await retrieveLink(1);
       check(publicOriginal.status === 200 && Buffer.from(await publicOriginal.arrayBuffer()).equals(Buffer.from(original)), "Public API link returns the exact captured original bytes");
       check((await retrieveLink(1, 'v1.' + 'x'.repeat(43))).status === 404 && (await retrieveLink(24)).status === 404, "Wrong capability and absent artifact cannot retrieve private API bytes");
+      // Owned disposable fixture clock; preserve the immutable capability context.
+      sql(`begin;alter table document_link_grants disable trigger document_link_immutable;update document_link_grants set expires_at=clock_timestamp()-interval '1 minute' where id=${quote(linkId)};alter table document_link_grants enable trigger document_link_immutable;commit;`);
+      check((await retrieveLink(null)).status === 404 && (await retrieveLink(1)).status === 404, "Expired API link denies both public manifest and original bytes");
+      sql(`begin;alter table document_link_grants disable trigger document_link_immutable;update document_link_grants set expires_at=${quote(capturedLink.grant.expires_at)} where id=${quote(linkId)};alter table document_link_grants enable trigger document_link_immutable;commit;`);
+      check((await retrieveLink(1)).status === 200, "Restoring the synthetic clock restores otherwise-current API link access");
       const queuedEmail = await api('/rest/v1/rpc/enqueue_release_email', { p_request_id: emailRequest, p_reviewed_payload_hash: capturedEmail.payload_hash, p_attest: true }, chartHeaders);
       const queuedLink = await api('/rest/v1/rpc/enqueue_document_link_sms', { p_request_id: linkId, p_reviewed_artifact_hash: capturedLink.artifact_hash, p_reviewed_message_hash: capturedLink.message_hash, p_attest: true }, chartHeaders);
       ids.push(queuedEmail.id, queuedEmail.message_id, queuedLink.id, queuedLink.message_id);
@@ -645,12 +650,12 @@ try {
       check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
       sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);
-      for (const channel of ['EMAIL', 'SMS'] as const) {
+      for (const channel of ['EMAIL', 'SMS'] as const) for (const interruption of ['finish-reply', 'start-reply', 'finish-write'] as const) {
         const acceptedArgs = channel === 'EMAIL' ? packageArgs : smsArgs;
         const acceptedPreview = await api('/rest/v1/rpc/preview_record_release_v9', acceptedArgs, chartHeaders);
         const acceptedRelease = randomUUID(), acceptedRequest = randomUUID(); ids.push(acceptedRelease, acceptedRequest);
         await api('/rest/v1/rpc/confirm_record_release', { ...acceptedArgs, p_id: acceptedRelease, p_reviewed_snapshot: acceptedPreview.snapshot, p_reviewed_hash: acceptedPreview.source_hash, p_attest_review: true }, chartHeaders);
-        let acceptedOutbox;
+        let acceptedOutbox, acceptedLinkUrl = '';
         if (channel === 'EMAIL') {
           const result = await prepareEmail({ ...emailArgs, p_request_id: acceptedRequest, p_release_id: acceptedRelease, p_release_hash: acceptedPreview.source_hash });
           check(result.status === 200, "Fresh eligible API email prepares for successful worker delivery");
@@ -661,6 +666,7 @@ try {
           const result = await prepareLink({ ...linkArgs, p_request_id: acceptedRequest, p_source_id: acceptedRelease, p_source_hash: preview.source_hash });
           check(result.status === 200, "Fresh eligible API link prepares for successful worker delivery");
           const prepared = await result.json();
+          acceptedLinkUrl = prepared.client_url;
           await api('/rest/v1/rpc/attest_document_link', { p_request_id: acceptedRequest, p_reviewed_artifact_hash: prepared.artifact_hash, p_reviewed_message_hash: prepared.message_hash, p_attest: true }, chartHeaders);
           acceptedOutbox = await api('/rest/v1/rpc/enqueue_document_link_sms', { p_request_id: acceptedRequest, p_reviewed_artifact_hash: prepared.artifact_hash, p_reviewed_message_hash: prepared.message_hash, p_attest: true }, chartHeaders);
         }
@@ -677,15 +683,37 @@ try {
           }
           return new Response(JSON.stringify(channel === 'EMAIL' ? { id: randomUUID() } : { sid: 'SM' + randomUUID().replaceAll('-', '') }), { status: 202 });
         }) as typeof fetch;
-        const lostFinishDb = { rpc: async (name: string, args: Record<string, unknown> = {}) => {
+        const interruptedDb = { rpc: async (name: string, args: Record<string, unknown> = {}) => {
+          if (interruption === 'finish-write' && name === 'finish_communication_attempt') {
+            lostFinish = true;
+            return { data: null, error: new Error('Synthetic finish write unavailable') };
+          }
           const result = await emailDb(serviceHeaders).rpc(name, args);
-          if (name === 'finish_communication_attempt' && !result.error) { lostFinish = true; return { data: null, error: new Error('Synthetic lost committed finish acknowledgment') }; }
+          if (!result.error && ((interruption === 'finish-reply' && name === 'finish_communication_attempt') || (interruption === 'start-reply' && name === 'start_communication_attempt'))) {
+            lostFinish = true;
+            return { data: null, error: new Error('Synthetic committed acknowledgment lost') };
+          }
           return result;
         } };
-        await assert.rejects(dispatchOne(lostFinishDb, workerEnvironment, acceptedTransport)); assertions++;
-        assert.deepEqual({ channel, lostFinish, acceptanceCalls, saved: sql(`select state||':'||attempt_count::text||':'||coalesce(last_error,'') from communication_outbox where id=${quote(acceptedOutbox.id)};`) }, { channel, lostFinish: true, acceptanceCalls: 1, saved: 'accepted:1:' }, 'Lost finish must preserve exact durable acceptance'); assertions++;
+        await assert.rejects(dispatchOne(interruptedDb, workerEnvironment, acceptedTransport)); assertions++;
+        const expectedCalls = interruption === 'start-reply' ? 0 : 1;
+        const expectedState = interruption === 'finish-reply' ? 'accepted:1:' : 'claimed:1:';
+        assert.deepEqual({ channel, interruption, lostFinish, acceptanceCalls, saved: sql(`select state||':'||attempt_count::text||':'||coalesce(last_error,'') from communication_outbox where id=${quote(acceptedOutbox.id)};`) }, { channel, interruption, lostFinish: true, acceptanceCalls: expectedCalls, saved: expectedState }, 'Interrupted worker preserves exact attempt state'); assertions++;
         await dispatchOne(emailDb(serviceHeaders), workerEnvironment, acceptedTransport);
-        check(acceptanceCalls === 1, "Worker retry after lost finish acknowledgment does not resend accepted API delivery");
+        check(acceptanceCalls === expectedCalls, "Worker retry does not resend accepted or still-leased API delivery");
+        if (channel === 'SMS' && interruption === 'finish-reply') {
+          const retrieveAccepted = () => retrieveLinkHandler(new Request('http://localhost/retrieve-document-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grant_id: acceptedRequest, token: new URL(acceptedLinkUrl).hash.slice(1), artifact_index: 1 }) }));
+          check((await retrieveAccepted()).status === 200, "Accepted API link remains accessible before explicit revocation");
+          await api('/rest/v1/rpc/revoke_document_link', { p_request_id: acceptedRequest, p_reason: 'Synthetic explicit access revocation' }, chartHeaders);
+          check((await retrieveAccepted()).status === 404, "Explicit staff revocation closes an otherwise-current accepted API link");
+        }
+        if (interruption !== 'finish-reply') {
+          // Owned disposable fixture clock: expire only this recorded delivery lease.
+          sql(`update communication_outbox set lease_expires_at=clock_timestamp()-interval '1 second' where id=${quote(acceptedOutbox.id)};`);
+          await dispatchOne(emailDb(serviceHeaders), workerEnvironment, acceptedTransport);
+          check(acceptanceCalls === expectedCalls && sql(`select state||':'||attempt_count::text from communication_outbox where id=${quote(acceptedOutbox.id)};`) === 'uncertain:1', "Expired interrupted API delivery becomes uncertain without an automatic resend");
+          check(sql(`select outcome||':'||error_code from communication_attempts where outbox_id=${quote(acceptedOutbox.id)};`) === 'uncertain:worker_lease_expired', "Lease recovery retains an uncertain attempt receipt for reconciliation");
+        }
       }
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
