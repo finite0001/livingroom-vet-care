@@ -1,3 +1,4 @@
+import { AttachmentReviewHistory } from "./AttachmentReviewHistory";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -382,6 +383,7 @@ export function AttachmentOriginalCapture({
               >
                 Download verified original
               </Button>
+              <AttachmentReviewHistory key={`${actor}:${capture.id}`} actor={actor} capture={capture} disabled={frozen || uncertain} />
             </>
           )}
           {!["ready", "abandoned"].includes(capture.status) && (

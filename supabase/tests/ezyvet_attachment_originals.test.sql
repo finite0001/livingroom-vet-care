@@ -96,6 +96,17 @@ select throws_ok($$select * from ezyvet_attachment_approval_cancellations$$,'425
 select ok(not has_function_privilege('authenticated','approve_ezyvet_attachment_record_uncancelled(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Staff cannot bypass cancellation wrapper');
 select ok(not has_function_privilege('service_role','approve_ezyvet_attachment_record_uncancelled(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Worker cannot bypass cancellation wrapper');
 
+insert into data select 'review-page',list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='pet'),null,null,1);
+select is((select v#>>'{records,0,id}' from data where k='review-page'),(select id::text from fx where k='correction'),'History starts with latest correction');
+select is((select v->>'latest_record_id' from data where k='review-page'),(select id::text from fx where k='correction'),'Latest review identified independently of page');
+select is((select v->>'has_more' from data where k='review-page'),'true','Review history bounds page size');
+select ok(not (select (v#>'{records,0}') ? 'source_context' from data where k='review-page'),'History omits private source context');
+insert into data select 'review-older',list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='pet'),(select (v#>>'{next_cursor,before_at}')::timestamptz from data where k='review-page'),(select (v#>>'{next_cursor,before_id}')::uuid from data where k='review-page'),1);
+select is((select v#>>'{records,0,version}' from data where k='review-older'),'1','Cursor reaches earlier review without repeating latest');
+select is((select v->>'has_more' from data where k='review-older'),'false','History terminates at earliest review');
+select throws_ok($$select list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='pet'),now(),null,20)$$,'23514',null,'History rejects partial cursor');
+select throws_ok($$select list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='client'))$$,'42501',null,'History rejects another patient');
+
 select throws_ok($$select pg_temp.approve_original('capture3',(select id from fx where k='correction'))$$,'40001',null,'Fresh approval rejects changed parent source');
 select is(recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))->>'source_current','false','Historical capture honestly reports stale source');
 select is(prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','ready','Exact prepare replay remains available historically');
@@ -150,6 +161,7 @@ select is(prepare_ezyvet_attachment_capture((select id from fx where k='capture3
 select is(abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','ready','Abandon preparation cannot alter an existing ready request');
 select throws_ok($$select abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture3'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,2,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Preparation tombstone cannot change observation ordinal');
 select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='pet'))$$,'42501',null,'Another administrator cannot list owned review history');
 select is(jsonb_array_length(list_ezyvet_attachment_capture_mappings()->'mappings'),0,'Another administrator cannot discover historical mappings');
 select throws_ok($$select abandon_ezyvet_attachment_capture_preparation((select id from fx where k='capture3'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Another administrator cannot recover preparation tombstone');
 reset role;

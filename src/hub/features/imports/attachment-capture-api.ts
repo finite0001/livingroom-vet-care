@@ -25,7 +25,7 @@ interface Database {
   };
 }
 const client = supabase as unknown as SupabaseClient<Database>;
-async function rpc(name: string, args: Record<string, unknown>) {
+export async function captureRpc(name: string, args: Record<string, unknown>) {
   const { data, error } = await client.rpc(name, args);
   if (error)
     throw new Error("Capture data unavailable. Recover the original request.");
@@ -37,7 +37,7 @@ export async function prepareCapture(
   mapping: CaptureScope,
 ) {
   return validateCapture(
-    await rpc("prepare_ezyvet_attachment_capture", {
+    await captureRpc("prepare_ezyvet_attachment_capture", {
       ...captureIntentSchema.parse(intent),
     }),
     actor,
@@ -51,7 +51,7 @@ export async function recoverCapture(
   mapping: CaptureScope,
   intent?: CaptureIntent,
 ) {
-  const value = await rpc("recover_ezyvet_attachment_capture", {
+  const value = await captureRpc("recover_ezyvet_attachment_capture", {
     p_id: id,
     p_animal_link_id: mapping.link_id,
   });
@@ -65,7 +65,7 @@ export async function listCaptures(
   cursor: CaptureCursor | null,
 ) {
   return capturePage(
-    await rpc("list_ezyvet_attachment_captures", {
+    await captureRpc("list_ezyvet_attachment_captures", {
       p_animal_link_id: mapping.link_id,
       p_before_at: cursor?.before_at ?? null,
       p_before_id: cursor?.before_id ?? null,
@@ -142,7 +142,7 @@ export async function abandonCapturePreparation(
   mapping: CaptureScope,
 ) {
   return validateCapture(
-    await rpc("abandon_ezyvet_attachment_capture_preparation", {
+    await captureRpc("abandon_ezyvet_attachment_capture_preparation", {
       ...captureIntentSchema.parse(intent),
     }),
     actor,
@@ -152,7 +152,7 @@ export async function abandonCapturePreparation(
 }
 export async function listCaptureMappings(cursor: CaptureCursor | null) {
   return captureMappingPage(
-    await rpc("list_ezyvet_attachment_capture_mappings", {
+    await captureRpc("list_ezyvet_attachment_capture_mappings", {
       p_before_at: cursor?.before_at ?? null,
       p_before_id: cursor?.before_id ?? null,
       p_limit: 20,

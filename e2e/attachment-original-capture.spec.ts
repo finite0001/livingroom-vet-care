@@ -244,6 +244,8 @@ async function fixture(page: Page, mime = "application/pdf") {
     historicalOnly: false,
     racePrepare: false,
     loseAbandon: false,
+    reviews: [] as Row[],
+    failReviews: false,
   };
   function capture(id: unknown) {
     return {
@@ -311,6 +313,17 @@ async function fixture(page: Page, mime = "application/pdf") {
         route.request().method() === "POST"
           ? route.request().postDataJSON()
           : {};
+    if (path.endsWith("list_ezyvet_attachment_record_versions")) {
+      state.calls.push({ path, ...body });
+      if (state.failReviews) return route.fulfill({ status: 500, json: { message: "unavailable" } });
+      const records = body.p_before_id ? state.reviews.slice(1) : state.reviews.slice(0, 1);
+      const more = !body.p_before_id && state.reviews.length > 1;
+      return route.fulfill({ json: {
+        request_id: body.p_request_id, pet_id: pet, animal_link_id: link, attachment_external_id: "7",
+        latest_record_id: state.reviews[0]?.id ?? null, records, has_more: more,
+        next_cursor: more ? { before_at: records[0].created_at, before_id: records[0].id } : null,
+      } });
+    }
     if (path.endsWith("search_ezyvet_mapped_patients") && state.historicalOnly)
       return route.fulfill({ json: [] });
     if (path.endsWith("list_ezyvet_attachment_capture_mappings"))
@@ -802,4 +815,38 @@ test("concurrent preparation during abandonment requires actual unfinished disca
     panel.getByRole("heading", { name: "Unfinished capture discarded" }),
   ).toBeVisible();
   expect(state.calls.filter((c) => c.action === "discard")).toHaveLength(1);
+});
+
+test("review history preserves latest marker, paginates and recovers a failed refresh", async ({ page }) => {
+  const { state, capture, receipt } = await fixture(page);
+  const original = { ...capture(savedId), status: "ready", retryable: false, capture: receipt(savedId) };
+  state.captures = [original];
+  state.reviews = [2, 1].map(version => ({
+    id: version === 2 ? snapshot : actor, actor_id: actor, request_id: savedId, pet_id: pet,
+    animal_link_id: link, source_origin: original.parent_context.source_origin,
+    source_site_uid: original.parent_context.source_site_uid, attachment_external_id: "7",
+    request_hash: original.request_hash, capture_hash: original.capture.capture_hash,
+    title: `Review ${version}`, review_reason: `Verified patient and original ${version}`,
+    previous_record_id: version === 2 ? actor : null, version,
+    entry_method: "staff_reviewed_api_attachment_v2", record_hash: "f".repeat(64),
+    created_at: `2026-09-13T12:00:0${version}Z`,
+  }));
+  const metadata = await select(page);
+  await metadata.getByRole("button", { name: "Recover original 66666666" }).click();
+  const history = metadata.getByRole("region", { name: "Original review history", exact: true });
+  await expect(history.getByText("Review 2 · Version 2 · Latest review")).toBeVisible();
+  await history.getByRole("button", { name: "Older reviews" }).click();
+  await expect(history.getByText("Review 1 · Version 1 · Earlier review")).toBeVisible();
+  expect(state.calls.some(call => call.p_before_id === snapshot && call.p_before_at === "2026-09-13T12:00:02Z")).toBe(true);
+  await expect(history.getByRole("button", { name: "Older reviews" })).toBeDisabled();
+  await history.getByRole("button", { name: "Newest reviews" }).click();
+  await expect(history.getByText(/Latest review/)).toBeVisible();
+  state.failReviews = true;
+  await history.getByRole("button", { name: "Refresh review history" }).click();
+  await expect(history.getByRole("alert")).toBeVisible();
+  await expect(history.getByText(/Latest review/)).toHaveCount(0);
+  await expect(history.getByRole("button", { name: "Older reviews" })).toBeDisabled();
+  state.failReviews = false;
+  await history.getByRole("button", { name: "Refresh review history" }).click();
+  await expect(history.getByText(/Latest review/)).toBeVisible();
 });
