@@ -303,3 +303,12 @@ Migration7400 adds bounded approval-version discovery scoped through an owned ca
 The captured file card now displays the paginated approval history, distinguishing latest saved decision from historical versions and explaining that source freshness and release eligibility are separate. The frontend validates patient/source identity, explicit API provenance, bounded records, lineage and cursor consistency. Failed or refreshed queries withhold stale results. Original inspection and history use distinct React keys to prevent duplicate panel reconciliation during parent updates.
 
 Validation is recorded in `docs/evidence/attachment-review-history-local-20260913.json`. The staff approval/correction form, broader patient-chart discovery, release integration, current95-migration populated upgrade/restore and actual clinical/provider/operator acceptance remain required. No hosted migration, approval or public rollout occurred.
+
+
+### Cancellation boundary for unconfirmed staff decisions
+
+Migration7500 adds immutable approval-cancellation receipts and a unified approved/canceled recovery RPC. Approval and cancellation serialize on the same operation lock. A canceled ID cannot later approve; cancellation after an approval returns the original saved decision without changing it. Both paths validate the current administrator and exact owned capture; cancellation does not depend on current source freshness, so an obsolete pending decision can still be retired safely. The original approval implementation is now internal-only and API roles cannot bypass the cancellation-aware wrapper.
+
+This closes a prerequisite for safe form recovery: removing a browser draft alone could leave an in-flight approval able to commit later. A confirmed cancellation is a server outcome and is distinct from discarding an unsubmitted local edit. No captured file or existing clinical approval is deleted by cancellation.
+
+Validation and observed both-order races are recorded in `docs/evidence/attachment-approval-cancellation-local-20260913.json`. The staff decision form, broader chart discovery, release integration, current96-migration populated upgrade/restore and real operator/clinical/provider acceptance remain required. No hosted migration or approval/cancellation was performed.

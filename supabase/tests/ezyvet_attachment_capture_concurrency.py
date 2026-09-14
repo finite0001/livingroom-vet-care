@@ -11,7 +11,7 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
-approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change']
+approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
 parser.add_argument('--scenario', choices=approval_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 args = parser.parse_args()
@@ -118,6 +118,7 @@ try:
     if not args.skip_authorization_fix:
         pending.append(('20260913720000', "case when obj_description('public.prepare_ezyvet_attachment_download(uuid,uuid,uuid,integer,uuid,text,integer)'::regprocedure,'pg_proc')='Rechecks active administrator after request and source waits.' then true else null end"))
     pending.append(('20260913730000', "to_regclass('public.ezyvet_attachment_record_versions')"))
+    pending.append(('20260913750000', "to_regclass('public.ezyvet_attachment_approval_cancellations')"))
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':
             paths = list(migration_dir.glob(version + '_*'))
@@ -139,7 +140,7 @@ try:
         setup = current + "update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');insert into data select 'lease',pg_temp.claim();"
         if scenario != 'reserve-source-expiry':
             setup += "insert into data select 'intent',pg_temp.reserve();"
-        if scenario.startswith(('complete-', 'cleanup-', 'approval-')):
+        if scenario.startswith(('complete-', 'cleanup-', 'approval-', 'cancel-')):
             setup += "insert into storage.objects(bucket_id,name,owner,metadata) select 'ezyvet-attachments',v->>'object_path','"+actor+"',jsonb_build_object('size',37,'mimetype','application/pdf') from data where k='intent';"
         saved = json.loads(scalar("begin;set local search_path=public,extensions;" + setup + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
         fx, data = saved['fx'], saved['data']
@@ -148,7 +149,7 @@ try:
         metadata = quote(json.dumps(data['saved']['request']['source_context']['attachment_metadata'])) + '::jsonb'
         identity = ','.join(map(quote, [request, actor, lease, request_hash]))
         source_lock = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='attachment' for update;"
-        if scenario.startswith('approval-'):
+        if scenario.startswith(('approval-', 'cancel-')):
             intent = data['intent']
             capture = json.loads(scalar(f"select to_jsonb(complete_ezyvet_attachment_capture({identity},'{intent['intent_hash']}',repeat('a',64),37,'application/pdf',{metadata}));"))
             approval = str(uuid.uuid4())
@@ -157,7 +158,19 @@ try:
                 predecessor = quote(previous) if previous else 'null'
                 return f"select approve_ezyvet_attachment_record('{operation_id}','{request}','{fx['pet']}','{capture['capture_hash']}',{predecessor},'Synthetic approved original','Synthetic original inspection',true);"
             operation = staff + approve(approval)
-            if scenario.endswith('role-loss'):
+            cancel = staff + f"select cancel_ezyvet_attachment_approval('{approval}','{request}','{fx['pet']}','{capture['capture_hash']}',true);"
+            if scenario == 'cancel-before-approval':
+                contend(cancel, operation, 'Approval was canceled')
+                check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{approval}';") == '0', 'Earlier cancellation prevents late approval')
+                check(scalar(f"select count(*) from ezyvet_attachment_approval_cancellations where id='{approval}';") == '1', 'Cancellation remains permanently recorded')
+            elif scenario == 'approval-before-cancel':
+                contend(operation, cancel, None)
+                check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{approval}';") == '1', 'Earlier approval survives later cancellation')
+                check(scalar(f"select count(*) from ezyvet_attachment_approval_cancellations where id='{approval}';") == '0', 'Committed approval cannot also become canceled')
+            elif scenario == 'cancel-role-loss':
+                contend(f"select pg_advisory_xact_lock(hashtextextended('{approval}',7300));", cancel, 'Active administrator required', lambda: sql(f"delete from user_roles where user_id='{actor}' and role='ADMIN';"))
+                check(scalar(f"select count(*) from ezyvet_attachment_approval_cancellations where id='{approval}';") == '0', 'Role loss during wait prevents cancellation')
+            elif scenario.endswith('role-loss'):
                 if scenario == 'approval-request-role-loss':
                     holder = f"select pg_advisory_xact_lock(hashtextextended('{approval}',7300));"
                 elif scenario == 'approval-source-role-loss':
