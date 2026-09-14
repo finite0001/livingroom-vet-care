@@ -1,6 +1,6 @@
 # Supervised ezyVet migration reconciliation
 
-Status: planned; not implemented or commissioned. Baseline `b585f47`; staging has99 canonical migrations. This completes the orchestration/reconciliation requirement in [phase3](../20260913-ezyvet-clinical-import/phase-03-complete-migration.md). Individual import/review/release workflows are implemented; their success is not whole-migration acceptance.
+Status: phase1 manifest foundation implemented locally; child bindings and later phases remain pending. Baseline `b585f47`; staging has99 canonical migrations and the local candidate has100. This plan addresses the orchestration/reconciliation requirement in [phase3](../20260913-ezyvet-clinical-import/phase-03-complete-migration.md). Individual import/review/release workflows are implemented; their success is not whole-migration acceptance.
 
 ## Required result
 
@@ -8,7 +8,7 @@ An active administrator defines an explicit source site, approved households/pat
 
 ## Implementation sequence
 
-1. **Run identity and recovery — pending.** Add immutable run/scope/binding records and narrow owner RPCs. Bind existing child runs without invoking providers or changing child ownership/leases. Prove actor/site/patient/resource validation, retries and post-wait role checks.
+1. **Run identity and recovery — in progress.** Local migration `20260914130000` adds immutable manifest/scope records and owner-only create/read/keyset-list RPCs. Exact retries recover historical scope after parent-head changes. Populated local backup/restore preserves one manifest and three Animal/Consult/Prescription scopes alongside clinical and physical Storage evidence. Child binding, a separate digest of resolved scope receipts and real Auth transport remain pending. Bind existing child runs without invoking providers or changing child ownership/leases. Prove actor/site/patient/resource validation, retries and post-wait role checks.
 2. **Reconciliation projection — pending.** Inventory source occurrences and distinct versions from existing ledgers, join exact review/capture references, and expose bounded drill-down with explicit coverage gaps and stale evidence. Add append-only nonclinical resolution records and frozen report requests.
 3. **Operator UI and orchestration — pending.** Add a migration workspace within the existing ezyVet tool. Preserve existing controls and draft guards. Open/resume the exact bound resource workflow using its existing API; support server recovery after browser state loss. No new background scanner.
 4. **Acceptance and rollout — pending.** Exercise interrupted multi-resource runs, concurrent ownership/source changes, corrections and omitted pages; include populated backup/restore. Then deploy a matching staging database/functions/frontend increment and perform signed-in supervised acceptance with approved samples.
@@ -42,6 +42,8 @@ Supported Consult/Contact attachment contracts and practice entitlement; source 
 
 ## Next concrete increment
 
-Implement phase1 against the current canonical branch with the next verified unused additive migration version. Before reserving a version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
+Finish phase1 child binding against the current canonical branch. The manifest candidate is local only; do not infer a hosted deployment from passing local SQL checks. Before reserving another version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
 
 Planning environment: optional codebase-summary/development-rules/code-standards/design-guidelines files and active-plan helper scripts are absent. Existing AGENTS.md, source contracts and current ledgers are authoritative. No new vendor API contract is asserted by this plan.
+
+Local foundation acceptance: [SQL/concurrency and populated restore receipt](../../docs/evidence/canonical-migration-manifest-foundation-20260914.json). This is not hosted or provider commissioning.

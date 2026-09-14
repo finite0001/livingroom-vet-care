@@ -109,7 +109,7 @@ try:
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
         sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    targeted=['ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    targeted=['ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
@@ -136,6 +136,23 @@ try:
         subprocess.run(prior,check=True)
     saved=json.loads(scalar('begin;set local search_path=public,extensions;'+fixture+"select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
     fx=saved['fx'];page=saved['data']['page']
+    # Migration manifests share none of the child lease/cursor mutation paths.
+    migration_id=str(uuid.uuid4());scope_id=str(uuid.uuid4())
+    def migration_prepare(rid, reason='Observed manifest concurrency'):
+        scope=f"jsonb_build_array(jsonb_build_object('id','{scope_id}','mapping_id','{fx['mapping']}','resource','attachment','parent_type','animal','parent_snapshot_id',m.snapshot_id,'parent_head_version',m.head_version,'disposition','required','reason',{quote(reason)}))"
+        return f"select prepare_ezyvet_migration_run('{rid}','https://api.trial.ezyvet.com','attachment-test-site',{scope}) from ezyvet_record_links m where m.id='{fx['mapping']}';"
+    contended(staff+migration_prepare(migration_id),staff+migration_prepare(migration_id),lambda code,out,err:code==0)
+    check(scalar(f"select count(*) from ezyvet_migration_runs where id='{migration_id}';")=='1','Concurrent exact manifest requests create one run')
+    check(scalar(f"select count(*) from ezyvet_migration_scopes where migration_run_id='{migration_id}';")=='1','Concurrent retries create one scope')
+    manifest_before=scalar(f"select intent::text from ezyvet_migration_runs where id='{migration_id}';")
+    contended(f"select pg_advisory_xact_lock(hashtextextended('ezyvet-migration:{migration_id}',0));",staff+migration_prepare(migration_id,'Changed retry'),lambda code,out,err:code!=0 and 'Migration request identity cannot change' in err)
+    check(scalar(f"select intent::text from ezyvet_migration_runs where id='{migration_id}';")==manifest_before,'Rejected changed retry preserves original intent')
+    denied_migration=str(uuid.uuid4())
+    try:
+        contended(f"select pg_advisory_xact_lock(hashtextextended('ezyvet-migration:{denied_migration}',0));",staff+migration_prepare(denied_migration),lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+        check(scalar(f"select count(*) from ezyvet_migration_runs where id='{denied_migration}';")=='0','Role loss during manifest wait leaves no run')
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
     def prepare(rid):
         return f"select prepare_ezyvet_attachment_capture('{rid}','{fx['mapping']}','{fx['run']}',1,1,'{fx['attachment-snapshot']}',1,repeat('b',64));"
     def fresh():

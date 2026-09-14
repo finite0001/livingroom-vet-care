@@ -38,13 +38,13 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,13)]
+new_versions = [f'20260914{v:02d}0000' for v in range(1,14)]
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 99
+    assert len(migration_files) == 100
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==99 and len(initial_files)==51
+    assert len(migration_files)==100 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -173,7 +173,8 @@ def functions_snapshot(project):
         from pg_default_acl d where d.defaclnamespace='public'::regnamespace));"""))
 
 def vaccination_snapshot(project):
-    tables = ['ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
+    tables = ['ezyvet_migration_runs', 'ezyvet_migration_scopes',
+              'ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
               'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
               'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',
               'ezyvet_vaccination_runs', 'ezyvet_vaccination_pages', 'ezyvet_vaccination_page_observations',
@@ -276,10 +277,19 @@ def seed_vaccination_receipt(project):
       perform public.stage_ezyvet_attachment_page(attachment_run,a,(claimed->>'lease_id')::uuid,attachment_page);
       update public.ezyvet_import_runs set retry_after=now()-interval '1 second' where id=attachment_run;
       perform public.claim_ezyvet_attachment_import(attachment_pending,a,'{site}','https://api.trial.ezyvet.com',mapping);
+      perform public.prepare_ezyvet_migration_run(gen_random_uuid(),'https://api.trial.ezyvet.com','{site}',jsonb_build_array(
+        jsonb_build_object('id',gen_random_uuid(),'mapping_id',mapping,'resource','attachment','parent_type','animal',
+          'parent_snapshot_id',animal,'parent_head_version',1,'disposition','required','reason','Synthetic original coverage'),
+        jsonb_build_object('id',gen_random_uuid(),'mapping_id',mapping,'resource','vaccination','parent_type','consult',
+          'parent_snapshot_id',consult.id,'parent_head_version',head,'disposition','required','reason','Synthetic vaccination coverage'),
+        jsonb_build_object('id',gen_random_uuid(),'mapping_id',mapping,'resource','prescriptionitem','parent_type','prescription',
+          'parent_snapshot_id',rx.id,'parent_head_version',1,'disposition','excluded','reason','Synthetic explicit scope exclusion')));
       if not already_dvm then delete from public.user_roles where user_id=a and role='DVM'; end if;
       if not already_admin then delete from public.user_roles where user_id=a and role='ADMIN'; end if;
     end $fixture$;""")
     captured = vaccination_snapshot(project)
+    assert len(captured['ezyvet_migration_runs']) == 1 and len(captured['ezyvet_migration_scopes']) == 3
+    assert {row['parent_type'] for row in captured['ezyvet_migration_scopes']} == {'animal','consult','prescription'}
     assert len(captured['ezyvet_vaccination_runs']) == 1 and len(captured['ezyvet_vaccination_pages']) == 1 and len(captured['ezyvet_vaccination_page_observations']) == 1
     assert len(captured['ezyvet_clinical_page_observations']) == 1
     assert len(captured['ezyvet_vaccination_review_requests']) == 1 and len(captured['ezyvet_imported_vaccinations']) == 1

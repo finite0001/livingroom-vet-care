@@ -1,6 +1,6 @@
 # Migration reconciliation implementation contract
 
-Status: planned. Repository root `/Users/davidedler/Developer/livingroom-readiness-reconciliation`. This specifies new work; it is not evidence of implemented behavior.
+Status: implementation in progress. Repository root `/Users/davidedler/Developer/livingroom-readiness-reconciliation`. Migration `20260914130000` implements the local manifest/scope create/read/list foundation only. The remaining contracts below are requirements, not evidence of implemented behavior; see the plan status and acceptance receipts.
 
 ## Phase1: immutable scope, child binding and recovery
 
