@@ -107,6 +107,9 @@ async function openSchedule(page: Page, options: FixtureOptions = {}) {
     const path = url.pathname;
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
+    // The shared navigation reads unread totals through a POST RPC.
+    if (path === "/rest/v1/rpc/inbox_unread_totals")
+      return route.fulfill({ json: [] });
     if (request.method() !== "GET") writes.push(path);
     if (path === "/rest/v1/profiles")
       return route.fulfill({

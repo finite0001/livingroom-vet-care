@@ -16,6 +16,8 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title";
 import { denverInstant, denverLocal, reminderOffsets, shiftDay } from "./time";
 import type { Tables } from "@/integrations/supabase/types";
+import { HousecallDayRoute } from "./HousecallDayRoute";
+import { practiceBaseAddress } from "./housecall-route";
 
 type Appointment = Tables<"appointments">;
 const statusLabels = {
@@ -27,7 +29,7 @@ const statusLabels = {
 };
 const selectClass =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
-const baseAddress = "2619 Spruce Street, Boulder, CO";
+const baseAddress = practiceBaseAddress;
 export default function SchedulePage() {
   usePageTitle("Schedule");
   const [day, setDay] = useState(() => denverLocal(new Date()).slice(0, 10));
@@ -37,16 +39,18 @@ export default function SchedulePage() {
   const query = useQuery({
     queryKey: ["schedule", day, count],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error, count: total } = await supabase
         .from("appointments")
         .select(
           "*,pets(name),clients(full_name),profiles!appointments_assigned_dvm_id_fkey(full_name)",
+          { count: "exact" },
         )
         .gte("scheduled_at", denverInstant(`${day}T00:00`))
         .lt("scheduled_at", denverInstant(`${shiftDay(day, count)}T00:00`))
-        .order("scheduled_at");
+        .order("scheduled_at")
+        .order("id");
       if (error) throw error;
-      return data;
+      return { appointments: data, total };
     },
   });
   return (
@@ -92,7 +96,11 @@ export default function SchedulePage() {
         >
           Week
         </Button>
+        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh schedule</Button>
       </div>
+      {query.data && query.data.total !== query.data.appointments.length && (
+        <p role="alert">The schedule may be incomplete. Route planning is unavailable until the full period loads. Try Day view or refresh.</p>
+      )}
       {query.isPending ? (
         <p role="status">Loading schedule…</p>
       ) : query.isError ? (
@@ -108,7 +116,7 @@ export default function SchedulePage() {
         >
           {Array.from({ length: count }, (_, index) => {
             const date = shiftDay(day, index);
-            const entries = query.data.filter((row) =>
+            const entries = query.data.appointments.filter((row) =>
               denverLocal(row.scheduled_at).startsWith(date),
             );
             return (
@@ -146,6 +154,9 @@ export default function SchedulePage() {
                     </button>
                   ))}
                 </div>
+                {query.data.total === query.data.appointments.length && (
+                  <HousecallDayRoute day={date} appointments={entries} refreshing={query.isFetching} />
+                )}
               </section>
             );
           })}
