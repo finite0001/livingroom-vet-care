@@ -1,0 +1,30 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "e45f703c34bf089a5feb9de036cbfecf21215604",
+  "file_sha256": {
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "af6cac30a8850f8e0094152fb491a9924b7fe3229182bdf8944cfdf72befdf11",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "e18bf4649ab96350565f7bf26b0199d2fd96b47ec82e07b40be67b4e5216419b",
+    "supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql": "857aa836de8e9665551214e2cd8ec043b43fdf2a44072e5cab791a0f8a338a58",
+    "supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql": "cd63b0ae5872ff7dea924ce776ddf94f4cfea59ed2952489adf4338f6405851f"
+  },
+  "sql_assertions": 441,
+  "concurrency_checks": 117,
+  "new_checks": 29,
+  "new_observed_cases": [
+    "role loss during request wait",
+    "role loss during source wait",
+    "role loss during approval-chain wait",
+    "role loss during Storage object wait",
+    "source revision before approval",
+    "approval before source revision",
+    "competing corrections with same predecessor"
+  ],
+  "exact_holder_waiter_verified": true,
+  "owned_database_cleanup_verified": true,
+  "log_sha256": "50c334de902a5012b2e1f771d7ebaec364f508e43041810ee83ad1b7c569badf",
+  "limitations": [
+    "SQL and synthetic Storage metadata only; no physical-file or provider operations.",
+    "Chart/UI, schema9 integration, cross-family release races and current-stack populated restore remain required.",
+    "No hosted changes or clinical acceptance."
+  ]
+}

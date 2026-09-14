@@ -233,6 +233,38 @@ try:
             check(scalar(f"select (select count(*) from ezyvet_attachment_record_versions where id='{decision}')+(select count(*) from ezyvet_attachment_approval_cancellations where id='{decision}');")=='0','Role loss during decision wait creates no terminal outcome')
         finally:sql(f"insert into user_roles(user_id,role) values('{actor}','ADMIN') on conflict do nothing;")
 
+
+    # Role loss after every remaining approval lock boundary must roll back writes.
+    source_head="select 1 from ezyvet_identity_heads where resource='attachment' and external_id='701' for update;"
+    boundary_locks={
+        'request':f"select pg_advisory_xact_lock(hashtextextended('{rid}',7000));",
+        'source':source_head,
+        'chain':f"select pg_advisory_xact_lock(hashtextextended('{fx['mapping']}:701',7301));",
+        'object':"select 1 from storage.objects where name="+quote(ctx['intent']['object_path'])+" for update;",
+    }
+    for boundary,hold in boundary_locks.items():
+        decision=str(uuid.uuid4())
+        try:
+            expected_error='Owned ready original required' if boundary=='request' else 'Active administrator required'
+            contended(hold,staff+approval(decision,predecessor),lambda code,out,err:code!=0 and expected_error in err,during_wait=revoke_admin)
+            check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{decision}';")=='0',boundary+' role-loss wait cannot save approval')
+        finally:sql(f"insert into user_roles(user_id,role) values('{actor}','ADMIN') on conflict do nothing;")
+    change="update ezyvet_identity_heads set version=version+1 where resource='attachment' and external_id='701';"
+    decision=str(uuid.uuid4())
+    contended(change,staff+approval(decision,predecessor),lambda code,out,err:code!=0 and 'SOURCE_ATTACHMENT_STALE' in err)
+    check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{decision}';")=='0','Source-first revision rejects fresh approval')
+    sql("update ezyvet_identity_heads set version=version-1 where resource='attachment' and external_id='701';")
+    decision=str(uuid.uuid4())
+    contended(staff+approval(decision,predecessor),change,lambda code,out,err:code==0)
+    check(scalar(f"select source_context->>'attachment_observed_head_version' from ezyvet_attachment_record_versions where id='{decision}';")=='1','Approval-first retains the exact older source version')
+    replay=approval(decision,predecessor).replace('select approve_ezyvet_attachment_record(', 'select to_jsonb(approve_ezyvet_attachment_record(').replace(');', '));')
+    saved_approval=scalar('begin;'+staff+replay+'commit;')
+    check(json.loads(saved_approval)['id']==decision,'Exact approval replay survives the later source revision')
+    sql("update ezyvet_identity_heads set version=version-1 where resource='attachment' and external_id='701';")
+    predecessor=decision;winner,loser=str(uuid.uuid4()),str(uuid.uuid4())
+    contended(staff+approval(winner,predecessor),staff+approval(loser,predecessor),lambda code,out,err:code!=0 and 'Review latest attachment version' in err)
+    check(scalar(f"select count(*) from ezyvet_attachment_record_versions where previous_record_id='{predecessor}';")=='1','Competing corrections append exactly one successor')
+
 finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
