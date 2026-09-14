@@ -10,7 +10,10 @@ function checked(value: CaptureContext, id: string, actor: string): CaptureConte
   const r = value.request, p = r.parent_context;
   if (!p || p.parent_type !== "Animal" || p.animal_link_id !== r.animal_link_id || p.pet_id !== r.pet_id || p.client_id !== r.client_id || p.parent_external_id !== p.animal_external_id ||
     r.metadata?.id !== r.external_id || r.metadata.file_id !== r.file_id || r.metadata.record_type !== "Animal" || r.metadata.record_id !== p.animal_external_id || !digest.test(r.stable_metadata_sha256)) throw new ImportError("CAPTURE_CONTEXT_MISMATCH");
-  if (value.intent && (value.intent.bucket_id !== "ezyvet-attachment-originals" || !value.intent.object_path || value.intent.object_path.startsWith("/") || value.intent.object_path.split("/").some(x => !x || x === "." || x === "..") || !digest.test(value.intent.content_sha256))) throw new ImportError("CAPTURE_CONTEXT_MISMATCH");
+  if (value.intent) {
+    const segments = value.intent.object_path?.split("/") ?? [];
+    if (value.intent.bucket_id !== "ezyvet-attachment-originals" || segments.length !== 5 || segments[0] !== actor || segments[1] !== r.pet_id || segments[2] !== id || !uuid.test(segments[3]) || segments[4] !== "original" || !digest.test(value.intent.content_sha256)) throw new ImportError("CAPTURE_CONTEXT_MISMATCH");
+  }
   if (r.status === "ready" && (!value.intent || !r.capture || r.capture.request_id !== id || r.capture.entry_method !== "ezyvet_api_attachment_original_v1" || r.capture.content_sha256 !== value.intent.content_sha256 || r.capture.mime_type !== value.intent.mime_type || r.capture.file_size !== value.intent.file_size)) throw new ImportError("CAPTURE_CONTEXT_MISMATCH");
   return value;
 }
@@ -116,7 +119,7 @@ export function createHandler(dependencies: CaptureDependencies) {
       if (action === "capture" && context?.lease_id && !failureCodes.has(code)) code = "CAPTURE_UNAVAILABLE";
       const seconds = error instanceof ImportError ? Math.max(2, Math.min(3600, Math.ceil(error.retryAfter || 5))) : 5;
       if (action === "capture" && context?.lease_id) {
-        try { await dependencies.gateway.fail(id, actor, context.lease_id, code, seconds, terminalCodes.has(code)); } catch { /* Owned lease expiry remains recoverable. */ }
+        try { await dependencies.gateway.fail(id, actor, context.lease_id, code, terminalCodes.has(code) ? 0 : seconds, terminalCodes.has(code)); } catch { /* Owned lease expiry remains recoverable. */ }
       }
       return respond({ error: code, retry_after_seconds: seconds, retry_safe: !terminalCodes.has(code) }, denied ? 403 : busy || terminalCodes.has(code) || ["CAPTURE_NOT_READY", "CAPTURE_NOT_RETRYABLE", "CAPTURE_NOT_DISCARDABLE"].includes(code) ? 409 : 503);
     }

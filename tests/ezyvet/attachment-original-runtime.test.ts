@@ -26,9 +26,9 @@ async function fixture() {
   }, gateway: {
     authenticate: async () => state.authorized ? { id: actor, activeAdmin: state.admin } : null,
     context: async () => clone(), claim: async () => { state.context.lease_id = randomUUID(); state.context.lease_until = "later"; return clone(); },
-    reserve: async (_id, _actor, lease, file, beforeRaw, afterRaw) => { assert.equal(lease, state.context.lease_id); state.rawHashes = [beforeRaw, afterRaw]; state.context.intent = { id: randomUUID(), bucket_id: "ezyvet-attachment-originals", object_path: `originals/${id}/file`, content_sha256: file.sha256, mime_type: file.mimeType, file_size: file.size, before_raw_sha256: beforeRaw, after_raw_sha256: afterRaw }; state.context.request.status = "reserved"; return clone(); },
+    reserve: async (_id, _actor, lease, file, beforeRaw, afterRaw) => { assert.equal(lease, state.context.lease_id); state.rawHashes = [beforeRaw, afterRaw]; state.context.intent = { id: randomUUID(), bucket_id: "ezyvet-attachment-originals", object_path: `${actor}/${pet}/${id}/${randomUUID()}/original`, content_sha256: file.sha256, mime_type: file.mimeType, file_size: file.size, before_raw_sha256: beforeRaw, after_raw_sha256: afterRaw }; state.context.request.status = "reserved"; return clone(); },
     complete: async (_id, _actor, lease, intent, file) => { assert.equal(lease, state.context.lease_id); assert.equal(file.sha256, intent.content_sha256); state.context.request.status = "ready"; state.context.request.capture = { id: randomUUID(), request_id: id, entry_method: "ezyvet_api_attachment_original_v1", content_sha256: file.sha256, mime_type: file.mimeType, file_size: file.size, capture_hash: "c".repeat(64), captured_at: "now" }; state.context.lease_id = null; if (state.loseComplete) { state.loseComplete = false; throw new Error("secret lost complete"); } return clone(); },
-    fail: async (_id, _actor, _lease, code) => { state.failures.push(code); },
+    fail: async (_id, _actor, _lease, code, seconds, terminal) => { assert.equal(terminal ? seconds === 0 : seconds >= 1 && seconds <= 3600, true); state.failures.push(code); },
     beginDiscard: async () => { if (state.context.request.status === "ready") throw { code: "42501" }; state.context.request.status = state.context.request.status === "abandoned" ? "abandoned" : "discarding"; state.context.lease_id = null; return clone(); },
     completeDiscard: async () => { assert.equal(state.object, null); state.context.request.status = "abandoned"; return clone(); },
     readObject: async () => { if (state.storageDenied) throw new Error("storage denied secret"); return state.object ? new Response(state.object as Uint8Array<ArrayBuffer>, { headers: { "Content-Type": "application/pdf" } }) : null; },
@@ -86,4 +86,10 @@ test("PNG and JPEG retain exact signatures and reject conflicting MIME", async (
     const bytes = Uint8Array.from(values); const file = await readAttachmentBytes(new Response(bytes), mime, AbortSignal.timeout(1000)); assert.deepEqual(file.bytes, bytes); assert.equal(file.mimeType, mime);
     await assert.rejects(readAttachmentBytes(new Response(bytes), "application/pdf", AbortSignal.timeout(1000)), /ATTACHMENT_INVALID_CONTENT/);
   }
+});
+
+test("private intent path must bind actor, patient and request before privileged Storage access", async () => {
+  const f = await fixture(); await f.send(); f.state.context.intent!.object_path = `${randomUUID()}/${f.state.context.request.pet_id}/${f.state.context.request.id}/${randomUUID()}/original`;
+  let reads = 0; f.dependencies.gateway.readObject = async () => { reads++; throw new Error("Unexpected privileged read"); };
+  assert.equal((await f.send("retrieve")).status, 503); assert.equal(reads, 0);
 });
