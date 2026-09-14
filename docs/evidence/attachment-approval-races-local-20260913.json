@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "fdc20a614b5c46a64e29648d66e170b4533de6fb",
+  "scope": "Observed API attachment approval authorization, competing-correction and source-ordering races",
+  "command": "python3 supabase/tests/ezyvet_attachment_capture_concurrency.py",
+  "checks_passed": 91,
+  "new_scenarios": [
+    "approval-request-role-loss",
+    "approval-source-role-loss",
+    "approval-object-role-loss",
+    "approval-chain-role-loss",
+    "approval-competing-corrections",
+    "approval-source-change-first",
+    "approval-before-source-change"
+  ],
+  "method": "Owned schema-only clone; pending attachment migrations through7300 applied by probe; exact holder/waiter blocking verified with pg_blocking_pids before revocation or commit",
+  "cleanup_verified": true,
+  "harness_sha256": "8fae084027318bd34e2f9181697b3b074a7b1596c9711c616d22ea43542c54cb",
+  "approval_migration_sha256": "551fbfb5498722b858d0a9fda45696b98023e36036b5241723712f4cf30faefc",
+  "log_path": "/tmp/lrv-attachment-approval-races.log",
+  "log_sha256": "004b96c55c3d4897b76bd2cf58adb5b6b280c75cdede1a2d6a4057e6dab484e9",
+  "limitations": [
+    "Synthetic database records and Storage metadata only; no physical file transfer or hosted mutation",
+    "Existing213 HTTP/Auth/Storage checks at prior checkpoint remain separate evidence",
+    "Staff approval UI, chart/history discovery, release integration and release races remain unfinished",
+    "Current populated upgrade/restore, real clinical/provider/operator acceptance and full commercial readiness remain required"
+  ]
+}

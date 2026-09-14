@@ -45,7 +45,7 @@ jobs:
           deno-version: 2.9.6
           cache: true
       - name: Check all Edge Function entry points with the committed dependency lock
-        run: deno check --frozen supabase/functions/*/index.ts
+        run: deno check --frozen supabase/functions/*/index.ts supabase/functions/ezyvet-import/attachment-capture-read.ts
       - name: Verify invoice handler without root Node dependencies
         run: python3 scripts/verify-invoice-edge-isolation.py
 
@@ -169,6 +169,10 @@ jobs:
         run: node --experimental-strip-types tests/ezyvet/prescription-local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify attachment metadata and private capture through HTTP, Auth and Storage
+        run: python3 tests/ezyvet/attachment-disposable.py --run-synthetic-local --include-capture
+      - name: Verify attachment lease expiry and permission loss during actual lock waits
+        run: python3 supabase/tests/ezyvet_attachment_capture_concurrency.py --project-config supabase/config.toml
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage

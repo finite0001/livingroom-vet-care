@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { attachmentPageError } from '../../src/hub/features/imports/attachment-page-errors.ts';
+test('stale and mismatched source context requires a separate reviewed scan',()=>{for(const code of ['SOURCE_ATTACHMENT_PARENT_STALE','ATTACHMENT_RUN_REQUIRES_NEW_CONTEXT','SOURCE_ATTACHMENT_PARENT_MISMATCH','ATTACHMENT_CONTEXT_MISMATCH'])assert.equal(attachmentPageError(code).requiresNewScan,true);});
+test('configuration, authorization and cooldown failures preserve the existing scan',()=>{for(const code of ['IMPORT_DISABLED','RESOURCE_NOT_CONFIGURED','ATTACHMENT_INTAKE_UNAVAILABLE','UPSTREAM_SCOPE_DENIED','UPSTREAM_AUTH_FAILED','IMPORT_BUSY']){const error=attachmentPageError(code);assert.equal(error.requiresNewScan,false);assert.notEqual(error.message,attachmentPageError(undefined).message);}});
+test('unknown or malformed source errors never echo provider content',()=>{for(const code of [null,undefined,{},['IMPORT_DISABLED'],'https://private.example/token?secret=synthetic','<script>synthetic</script>'])assert.equal(attachmentPageError(code).message,'Page response unconfirmed. Recheck this saved scan before continuing.');});

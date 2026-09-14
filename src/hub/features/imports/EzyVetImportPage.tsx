@@ -1,4 +1,5 @@
 import { EzyVetPrescriptionImports } from "./EzyVetPrescriptionImports";
+import { AttachmentScanHistory } from "./AttachmentScanHistory";
 import { EzyVetPrescriptionItemImports } from "./EzyVetPrescriptionItemImports";
 import { EzyVetVaccinationImports } from "./EzyVetVaccinationImports";
 import { EzyVetClinicalImports } from "./EzyVetClinicalImports";
@@ -64,7 +65,8 @@ export function EzyVetImportPage() {
   const [vaccinationDirty, setVaccinationDirty] = useState(false);
   const [prescriptionDirty, setPrescriptionDirty] = useState(false);
   const [prescriptionItemDirty, setPrescriptionItemDirty] = useState(false);
-  const importDirty = enabled && (clinicalDirty || vaccinationDirty || prescriptionDirty || prescriptionItemDirty);
+  const [attachmentDirty, setAttachmentDirty] = useState(false);
+  const importDirty = enabled && (clinicalDirty || vaccinationDirty || prescriptionDirty || prescriptionItemDirty || attachmentDirty);
   const blocker = useBlocker(importDirty);
   useEffect(() => {
     if (!importDirty) return;
@@ -363,9 +365,9 @@ export function EzyVetImportPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {clinicalDirty && !vaccinationDirty && !prescriptionDirty && !prescriptionItemDirty
+                {clinicalDirty && !vaccinationDirty && !prescriptionDirty && !prescriptionItemDirty && !attachmentDirty
                   ? "Leave clinical import recovery?"
-                  : vaccinationDirty && !clinicalDirty && !prescriptionDirty && !prescriptionItemDirty
+                  : vaccinationDirty && !clinicalDirty && !prescriptionDirty && !prescriptionItemDirty && !attachmentDirty
                     ? "Leave vaccination import recovery?"
                     : "Leave import recovery?"}
               </AlertDialogTitle>
@@ -410,6 +412,7 @@ export function EzyVetImportPage() {
           onDirtyChange={setPrescriptionItemDirty}
         />
         <EzyVetWeightImports key={session.user.id} actor={session.user.id} />
+        <AttachmentScanHistory key={`attachments:${session.user.id}`} actor={session.user.id} onDirtyChange={setAttachmentDirty} />
         <header>
           <h1 className="text-2xl font-semibold">ezyVet import review</h1>
           <p className="mt-2 text-sm text-muted-foreground">

@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-13",
+  "scope": "Observed email payload capture/source ordering",
+  "checks_passed": 232,
+  "new_checks": 15,
+  "scenarios": [
+    "release-email-capture-source-first",
+    "release-email-capture-before-source"
+  ],
+  "runner_sha256": "c2465a61f558528a9b25a234090831d84ec065d94ee0a4caf30107048cf4b90e",
+  "log_sha256": "6262aeeab05a61416959f8acaed74d29c14793b48e147897807b8a927d489466",
+  "cleanup_verified": true,
+  "coverage": [
+    "Exact lock holders/waiters observed with pg_blocking_pids",
+    "Synthetic PDF-signature original with matching real SHA256 and Storage metadata",
+    "Earlier source revision rejects capture with no payload row",
+    "Earlier capture commits SQL-validated original bytes; later source revision rejects exact-hash enqueue",
+    "Mixed API original/native summary release hash and captured source request remain unchanged"
+  ],
+  "limits": [
+    "Schema-only owned clone; no physical Storage write or provider call",
+    "Synthetic HTML report satisfies database payload contract; production renderer/physical-byte verification is covered separately in495-check runtime checkpoint",
+    "Observed worker-start and public retrieval lock races, batch/multiple-original composition remain pending",
+    "Current populated upgrade/restore and all broader commercial readiness gates remain open"
+  ]
+}

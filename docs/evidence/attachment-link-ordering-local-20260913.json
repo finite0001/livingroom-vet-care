@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-13",
+  "scope": "Observed API public retrieval and SMS worker/source ordering",
+  "checks_passed": 285,
+  "new_checks": 33,
+  "scenarios": [
+    "release-link-retrieve-source-first",
+    "release-link-retrieve-before-source",
+    "release-link-worker-source-first",
+    "release-link-worker-before-source"
+  ],
+  "runner_sha256": "e8e7edd2c92d8e73f985cf8880f6581f06cf74e3a029891c40b720bb3f38ba37",
+  "log_sha256": "1256044b4a68d3ed3b0a178b576e604a395c88d483240a527226f646ed3ed54c",
+  "cleanup_verified": true,
+  "coverage": [
+    "Distinct synthetic household phone/consent fixtures and reviewed schema9 API/native selection",
+    "Valid original digest and bytes captured by link database contract",
+    "Exact holder/waiter observed through pg_blocking_pids",
+    "Earlier source change denies retrieval and prevents SMS start attempt",
+    "Earlier retrieval returns byte-identical original and consumes one access-budget entry",
+    "Earlier SMS start preserves claimed:1; later source invalidation denies further public retrieval",
+    "Frozen artifact hash remains unchanged in all four orderings"
+  ],
+  "limits": [
+    "Owned schema-only clone; synthetic database token/message hashes do not test HMAC materialization here",
+    "Actual capability/handler/private-byte behavior covered separately by495-check local runtime checkpoint",
+    "No provider send, physical Storage mutation or hosted change",
+    "Batch/multiple-original packages, remaining link-capture/authorization-race review and current populated upgrade/restore remain pending",
+    "Broader clinical/provider/commercial readiness gates remain open"
+  ]
+}

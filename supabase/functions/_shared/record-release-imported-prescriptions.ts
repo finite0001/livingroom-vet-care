@@ -116,7 +116,7 @@ function observation(v: PrescriptionObservation, parent: boolean) {
   );
 }
 export function validateImportedPrescriptions(s: ReleaseSnapshot): void {
-  if (s.schema_version !== 8) return;
+  if (s.schema_version !== 8 && s.schema_version !== 9) return;
   require(
     Array.isArray(s.imported_prescriptions) &&
       s.imported_prescriptions.length <= 20 &&
@@ -350,7 +350,7 @@ const original = (v: PrescriptionObservation) =>
     field("Observation revision", v.observed_head_version)
   }</dl>`;
 export function renderImportedPrescriptions(s: ReleaseSnapshot): string {
-  if (s.schema_version !== 8) return "";
+  if (s.schema_version !== 8 && s.schema_version !== 9) return "";
   validateImportedPrescriptions(s);
   return s.imported_prescriptions!.map((v) => {
     const c = v.context, r = c.reviewed;

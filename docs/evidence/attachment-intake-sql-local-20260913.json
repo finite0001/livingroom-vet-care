@@ -1,0 +1,21 @@
+{
+  "source_revision": "36317807dce64895d012786b07e4f7554d7580ee",
+  "source_sha256": {
+    "supabase/migrations/20260913650000_parent_scoped_attachment_intake.sql": "ccb314a38edb48a24d3ba821470268057344ea578e81afc36fce1ee858a890d2",
+    "supabase/tests/ezyvet_attachment_runs.test.sql": "1904e3530923802cadcf0a84afe99187b8dcfcfa03430ec141c34dd44cbc80de",
+    "supabase/tests/ezyvet_prescription_review_concurrency.py": "a44ef79e60561ad846de882b68275c9d2fb6a3806010554ae5e4e90039e2796f"
+  },
+  "command": "python3 supabase/tests/ezyvet_prescription_review_concurrency.py --overlay-migration supabase/migrations/20260913650000_parent_scoped_attachment_intake.sql --extra-sql-test supabase/tests/ezyvet_attachment_runs.test.sql",
+  "attachment_sql_assertions": 34,
+  "existing_sql_assertions": 457,
+  "harness_checks": 231,
+  "cleanup_verified": true,
+  "hosted_changes": false,
+  "provider_requests": 0,
+  "scope": "Owned local schema clone; attachment metadata SQL and existing concurrency regression with new staging wrapper",
+  "limitations": [
+    "No attachment-specific concurrency or actual HTTP/UI intake evidence yet.",
+    "No byte download, private capture, attachment approval or release capability implemented by this migration.",
+    "No attachment migration hosted deployment or clinical acceptance."
+  ]
+}

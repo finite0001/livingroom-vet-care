@@ -1,3 +1,5 @@
+import { loadAttachmentChartOriginal } from "../imports/attachment-file-api";
+import { validateReleaseApiAttachments } from "../../../../supabase/functions/_shared/record-release-api-attachments";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
 import { mergeReleaseSelection } from "./selection";
@@ -20,7 +22,7 @@ import {
   type ReleaseCandidate,
   type ReleasePreviewArgs,
 } from "./api";
-import type { ReleasePreview, ReleaseBundle, ReleaseArtifact } from "./print";
+import type { ReleasePreview, ReleaseBundle, ReleaseArtifact, ReleaseAttachment } from "./print";
 interface PatientRecordReleasesProps {
   petId: string;
   onDirtyChange?: (dirty: boolean) => void;
@@ -47,6 +49,8 @@ export function PatientRecordReleases({
   const cache = useQueryClient();
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
+  const originalGeneration=useRef(0);
+  useEffect(()=>{const invalidate=()=>{originalGeneration.current++;};const auth=supabase.auth.onAuthStateChange((event,next)=>{if(event==='SIGNED_OUT'||!next||next.user.id!==user?.id)invalidate();});window.addEventListener('pagehide',invalidate);return()=>{invalidate();auth.data.subscription.unsubscribe();window.removeEventListener('pagehide',invalidate);};},[petId,user?.id]);
   const [selection, setSelection] = useState<ReleaseSelection>({});
   const [allSelectionNotice, setAllSelectionNotice] = useState("");
   const [knownSources, setKnownSources] = useState<
@@ -96,10 +100,10 @@ export function PatientRecordReleases({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates-v8", petId, sourcePage],
+    queryKey: ["release-candidates-v9", petId, sourcePage],
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources_v8",
+        "list_record_release_sources_v9",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -110,13 +114,14 @@ export function PatientRecordReleases({
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
-        typeof data.policy_v8_accepted !== "boolean" ||
+        typeof data.policy_v9_accepted !== "boolean" ||
         !data.has_more ||
         !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
           (kind) =>
             Array.isArray(data[kind]) &&
             data[kind].length <= 100 &&
+            (kind !== "api_attachment_ids" || new Set(data[kind].map(item => item.id)).size === data[kind].length) &&
             data[kind].every(
               (item) =>
                 item &&
@@ -135,10 +140,16 @@ export function PatientRecordReleases({
                     typeof item.source_label === "string" &&
                     Number.isSafeInteger(item.acknowledgment_count) &&
                     item.acknowledgment_count! >= 0)) &&
-                ((kind !== "imported_history_ids" && kind !== "imported_vaccination_ids" && kind !== "imported_prescription_ids") ||
+                ((kind !== "imported_history_ids" && kind !== "imported_vaccination_ids" && kind !== "imported_prescription_ids" && kind !== "api_attachment_ids") ||
                   (Number.isSafeInteger(item.version) &&
                     item.version > 0 &&
                     typeof item.source_label === "string")) &&
+                (kind !== "api_attachment_ids" ||
+                  (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(item.id) &&
+                    /^[a-f0-9]{64}$/.test(item.record_hash || "") &&
+                    /^[a-f0-9]{64}$/.test(item.capture_hash || "") &&
+                    ["application/pdf", "image/jpeg", "image/png"].includes(item.mime_type || "") &&
+                    Number.isSafeInteger(item.file_size) && item.file_size! > 0 && item.file_size! <= 20971520)) &&
                 (kind !== "document_ids" ||
                   (Array.isArray(item.required_lab_report_ids) &&
                     item.required_lab_report_ids.every(
@@ -250,7 +261,7 @@ export function PatientRecordReleases({
   };
   const setChosen = (kind: SourceKind, id: string, checked: boolean) => {
     const existing = selection[kind] || [];
-    const limit = (kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100;
+    const limit = (kind === "imported_vaccination_ids" || kind === "imported_prescription_ids" || kind === "api_attachment_ids") ? 20 : 100;
     if (checked && existing.length >= limit) {
       setError(
         `Use a separate package for more than ${limit} records in this source family.`,
@@ -270,7 +281,7 @@ export function PatientRecordReleases({
       const ids = mergeReleaseSelection(
         selection[kind] || [],
         (candidates.data?.[kind] || []).map((item) => item.id),
-        (kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100,
+        (kind === "imported_vaccination_ids" || kind === "imported_prescription_ids" || kind === "api_attachment_ids") ? 20 : 100,
       );
       edit();
       setSelection((current) => ({ ...current, [kind]: ids }));
@@ -281,7 +292,7 @@ export function PatientRecordReleases({
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources_v8",
+        "select_all_record_release_sources_v9",
         { p_pet_id: petId },
       );
       if (error) throw error;
@@ -291,7 +302,7 @@ export function PatientRecordReleases({
         !kinds.every(
           (kind) =>
             Array.isArray(data.selection[kind]) &&
-            data.selection[kind]!.length <= ((kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100) &&
+            data.selection[kind]!.length <= ((kind === "imported_vaccination_ids" || kind === "imported_prescription_ids" || kind === "api_attachment_ids") ? 20 : 100) &&
             data.selection[kind]!.every((id) => typeof id === "string"),
         )
       )
@@ -320,11 +331,11 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v8",
+        "preview_record_release_v9",
         args,
       );
       if (error) throw error;
-      if (!data || data.snapshot.schema_version !== 8)
+      if (!data || data.snapshot.schema_version !== 9)
         throw new Error(
           "Current source-aware release preview is unavailable. Preserve selections and retry.",
         );
@@ -408,8 +419,23 @@ export function PatientRecordReleases({
         queryKey: ["patient-record-releases", petId],
       });
     });
-  const original = (id: string) =>
+  const original = (attachment: ReleaseAttachment | string) =>
     run(async () => {
+      const id=typeof attachment==='string'?attachment:attachment.id;
+      if(typeof attachment!=='string'&&attachment.bucket==='ezyvet-attachments'){
+        if(!preview)throw new Error('Review the selected package first.');
+        validateReleaseApiAttachments(preview.snapshot);
+        const reference=attachment.api_attachment_ref;
+        if(!reference)throw new Error('Verified API original reference required.');
+        const generation=originalGeneration.current;
+        const result=await loadAttachmentChartOriginal(petId,reference.record_id,reference.capture_hash);
+        const {data:current,error:sessionError}=await supabase.auth.getSession();
+        if(sessionError)throw sessionError;
+        if(generation!==originalGeneration.current||current.session?.user.id!==user?.id)return;
+        const url=URL.createObjectURL(result.blob),link=document.createElement('a');
+        try{link.href=url;link.download=result.filename;link.click();}finally{setTimeout(()=>URL.revokeObjectURL(url),1000);}
+        return;
+      }
       const { data: row, error } = await supabase
         .from("patient_documents")
         .select("file_path,file_name,version")
@@ -616,11 +642,11 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_v8_accepted && (
+              {!candidates.data.policy_v9_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 8, including reviewed outside prescriptions and vaccinations, imported clinical narratives,
+                  operator (version 9, including reviewed API originals, outside prescriptions and vaccinations, imported clinical narratives,
                   locally reviewed source findings, verified laboratory and
                   imported-record provenance).
                 </p>
@@ -717,6 +743,9 @@ export function PatientRecordReleases({
                                 separate from clinical acknowledgment.
                               </p>
                             </div>
+                          )}
+                          {kind === "api_attachment_ids" && (
+                            <p className="text-sm">{item.source_label}. Includes this reviewed API original and its source provenance. Only current, latest approvals are listed; changed and older versions remain in chart history. Select at most 20 API originals per package.</p>
                           )}
                           {kind === "imported_prescription_ids" && (
                             <p className="text-sm">{item.source_label}. Includes the approved historical interpretation, original source values and any partial-history disclosure. It does not authorize local prescribing, refills or dispensing. Select at most 20 prescription versions per package.</p>
@@ -830,7 +859,7 @@ export function PatientRecordReleases({
                       key={a.id}
                       variant="outline"
                       disabled={busy}
-                      onClick={() => void original(a.id)}
+                      onClick={() => void original(a)}
                     >
                       Review selected original: {a.file_name}
                     </Button>
@@ -860,7 +889,7 @@ export function PatientRecordReleases({
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !candidates.data.policy_v8_accepted ||
+                      !candidates.data.policy_v9_accepted ||
                       !reviewed
                     }
                     onClick={() => void confirm()}

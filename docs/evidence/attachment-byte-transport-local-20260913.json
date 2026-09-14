@@ -1,0 +1,33 @@
+{
+  "synthetic_only": true,
+  "git_parent_revision": "8f584635206b08844cb666b417c35b5a5a3bb1e4",
+  "unit_cases": 29,
+  "native_loopback_http_scenarios": 1,
+  "application_tests": 496,
+  "commands": [
+    "npm run check",
+    "deno check --frozen supabase/functions/ezyvet-import/index.ts"
+  ],
+  "results": {
+    "lint": "pass (existing AuthContext Fast Refresh warning)",
+    "typescript": "pass",
+    "tests": "496 passed",
+    "build": "pass (existing bundle-size warning)",
+    "deno_frozen_entrypoint": "pass"
+  },
+  "source_sha256": {
+    "supabase/functions/ezyvet-import/adapter.ts": "46581d49410f7a7d4c5279c3c94764b014fd47073b159061995852c174f66826",
+    "supabase/functions/ezyvet-import/attachment-bytes.ts": "2363b7faded6c4427c72eca52f26463e7f5873f04d742aba6a7d140ad8d6d89d",
+    "supabase/functions/ezyvet-import/import-error.ts": "a83f709a2314f1f6d1335337b020df805d89e450b9de90956956f84191222898",
+    "tests/ezyvet/attachment-download.test.ts": "7db3a8873c6e415c93cd524e5033615ed163f3503800691a544fcf31efee4894",
+    "tests/ezyvet/attachment-download-http.test.ts": "3cfb119eb0b2c29b31e9c47a85dbbb1de53cba378746fe46693f610339d6e69a"
+  },
+  "provider_requests": 0,
+  "limitations": [
+    "Adapter/library and native loopback transport tests with synthetic source only.",
+    "Byte transport is not wired to an authenticated worker endpoint or Storage capture.",
+    "Source parent validation and metadata re-read around capture remain necessary; adapter syntax checks do not prove source ownership.",
+    "Signature checks do not establish full file syntax, safety, malware absence or clinical validity.",
+    "No original-file capture/approval/release/UI or issued-site acceptance; download availability remains false."
+  ]
+}

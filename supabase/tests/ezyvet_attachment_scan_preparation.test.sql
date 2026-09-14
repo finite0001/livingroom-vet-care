@@ -1,0 +1,50 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: owner-only synthetic source observations and reviewed mapping.
+insert into auth.users(id,email,raw_user_meta_data) values('db560000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db560000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+insert into user_roles(user_id,role) values('db560000-0000-4000-8000-000000000001','ADMIN'),('db560000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Clinical','Import','+13035550199','clinical-import@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Scoped dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','mapping2','snapshot','snapshot2','legacy','terminal','run','history','other-run']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) select id,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='snapshot' then '77' else '88' end,jsonb_build_object('id',case when k='snapshot' then 77 else 88 end),k,'db560000-0000-4000-8000-000000000001' from fx where k in ('snapshot','snapshot2');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select id,gen_random_uuid(),k,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='mapping' then '77' else '88' end,(select id from fx where k=case when m.k='mapping' then 'snapshot' else 'snapshot2' end),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic approved mapping','db560000-0000-4000-8000-000000000001' from fx m where k in ('mapping','mapping2');
+
+insert into ezyvet_identity_heads(source_origin,source_site_uid,resource,external_id,snapshot_id,version) select source_origin,source_site_uid,resource,external_id,id,1 from ezyvet_import_snapshots where resource='animal' on conflict do nothing;
+insert into fx values('prepared',gen_random_uuid()),('fresh',gen_random_uuid());
+create function pg_temp.prepare_scan(k text default 'prepared',version integer default 1) returns jsonb language sql as $$
+ select prepare_ezyvet_attachment_scan((select id from fx where fx.k=$1),(select id from fx where fx.k='mapping'),'Animal',(select id from fx where fx.k='snapshot'),'snapshot',$2);
+$$;
+set local role authenticated;
+insert into data values('prepared',pg_temp.prepare_scan());
+select is((select v->>'status' from data where k='prepared'),'running','Preparation saves a running scan');
+select is((select v->>'next_page' from data where k='prepared'),'1','First page remains unread');
+select is((select v->>'lease_active' from data where k='prepared'),'false','Preparation takes no worker lease');
+select is((select v#>>'{parent_context,pet_id}' from data where k='prepared'),(select id::text from fx where k='pet'),'Patient is derived from reviewed mapping');
+select is(pg_temp.prepare_scan(),(select v from data where k='prepared'),'Exact retry returns the same projection');
+select is(recover_ezyvet_attachment_run((select id from fx where k='prepared'),(select id from fx where k='mapping')),(select v from data where k='prepared'),'Recovery works before first provider request');
+select is((list_ezyvet_attachment_runs((select id from fx where k='mapping'))->'runs'->0->>'id'),(select id::text from fx where k='prepared'),'Prepared scan appears in server discovery');
+select throws_ok($$select pg_temp.prepare_scan('prepared',2)$$,'42501',null,'Changed retry context rejected');
+select throws_ok($$select prepare_ezyvet_attachment_scan(null,null,null,null,null,null)$$,'23514',null,'Incomplete identity rejected');
+select throws_ok($$select prepare_ezyvet_attachment_scan(gen_random_uuid(),(select id from fx where k='mapping'),'Contact',(select id from fx where k='snapshot'),'snapshot',1)$$,'23514',null,'Unsupported parent rejected');
+select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select pg_temp.prepare_scan()$$,'42501',null,'Different actor cannot reuse operation');
+reset role;
+select is((select count(*)::integer from ezyvet_attachment_pages),0,'No page receipt created by preparation');
+select is((select count(*)::integer from ezyvet_import_runs where resource='attachment' and lease_id is not null),0,'No source lease acquired');
+update ezyvet_identity_heads set version=2 where resource='animal';
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select is(pg_temp.prepare_scan(),(select v from data where k='prepared'),'Exact retry survives newer source head');
+select throws_ok($$select pg_temp.prepare_scan('fresh')$$,'40001','SOURCE_ATTACHMENT_PARENT_STALE','New scan requires current head');
+reset role;
+select is((select count(*)::integer from ezyvet_attachment_runs),1,'Rejected preparation leaves no partial run');
+delete from user_roles where user_id='db560000-0000-4000-8000-000000000001' and role='ADMIN';
+set local role authenticated;
+select throws_ok($$select pg_temp.prepare_scan()$$,'42501',null,'Role loss prevents even exact retry');
+reset role;set local role service_role;
+select throws_ok($$select pg_temp.prepare_scan()$$,'42501',null,'Service role cannot call staff preparation');
+reset role;set local role anon;
+select throws_ok($$select pg_temp.prepare_scan()$$,'42501',null,'Anonymous caller cannot prepare');
+reset role;select * from finish();rollback;

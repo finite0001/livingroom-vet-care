@@ -1,3 +1,7 @@
+import { ImportError } from "./import-error.ts";
+export { ImportError } from "./import-error.ts";
+import { attachmentMime, readAttachmentBytes, type AttachmentBytes } from "./attachment-bytes.ts";
+
 export const resources = [
   "contact",
   "contactdetail",
@@ -14,6 +18,7 @@ export const resources = [
   "healthstatus",
   "prescription",
   "prescriptionitem",
+  "attachment",
 ] as const;
 export const resourceContracts = {
   animal: { path: "/v2/animal", limit: 50 },
@@ -23,7 +28,9 @@ export const resourceContracts = {
   vaccination: { path: "/v1/vaccination", limit: 10 },
   prescription: { path: "/v1/prescription", limit: 10 },
   prescriptionitem: { path: "/v1/prescriptionitem", limit: 10 },
+  attachment: { path: "/v1/attachment", limit: 10 },
 } as const;
+export interface AttachmentParent { parent_type: "Animal" | "Consult"; parent_external_id: string; }
 export type ClinicalResource = "consult" | "history";
 export const patientScoped = (resource: Resource) =>
   ["healthstatus", "consult", "history", "prescription"].includes(resource);
@@ -71,15 +78,6 @@ export interface PageResult {
   items: StagedEntity[];
   complete: boolean;
   page: number;
-}
-export class ImportError extends Error {
-  code: string;
-  retryAfter: number;
-  constructor(code: string, retryAfter = 0) {
-    super(code);
-    this.code = code;
-    this.retryAfter = retryAfter;
-  }
 }
 export function configuration(
   env: (key: string) => string | undefined,
@@ -187,7 +185,7 @@ export function parsePage(
     body.items.length >
       (resource === "consult" || resource === "history" ||
           resource === "vaccination" || resource === "prescription" ||
-          resource === "prescriptionitem"
+          resource === "prescriptionitem" || resource === "attachment"
         ? 10
         : 50)
   ) {
@@ -300,6 +298,18 @@ export function parsePage(
         !["string", "number", "boolean"].includes(typeof payload.active)
       ) {
         throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+    }
+    if (resource === "attachment") {
+      if (!validVaccinationId(payload.id) || !validVaccinationId(payload.record_id) ||
+        typeof payload.record_type !== "string" || !["Animal", "Consult"].includes(payload.record_type)) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      // Unknown file types and URL values remain source evidence, never fetch targets.
+      for (const field of ["name", "notes", "mime_type", "file_download_url"]) {
+        if (payload[field] !== undefined && payload[field] !== null && typeof payload[field] !== "string") {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
       }
     }
     if (resource === "prescription" || resource === "prescriptionitem") {
@@ -464,13 +474,84 @@ export function createAdapter(
     };
     return token.value;
   }
+  function validateAttachmentRequest(attachmentId: string, parent: AttachmentParent) {
+      if (!["https://api.trial.ezyvet.com", "https://api.ezyvet.com"].includes(config.baseUrl) ||
+        !config.readResources.includes("attachment") || typeof attachmentId !== "string" || !validVaccinationId(attachmentId) ||
+        !parent || !["Animal", "Consult"].includes(parent.parent_type) || typeof parent.parent_external_id !== "string" || !validVaccinationId(parent.parent_external_id)) {
+        throw new ImportError("INVALID_ATTACHMENT_REQUEST");
+      }
+  }
   return {
+    async attachmentMetadata(attachmentId: string, parent: AttachmentParent): Promise<StagedEntity> {
+      validateAttachmentRequest(attachmentId, parent);
+      const query = new URLSearchParams({ page: "1", limit: "10", id: attachmentId, record_type: parent.parent_type, record_id: parent.parent_external_id });
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const bearer = await accessToken();
+        const response = await request(`${config.baseUrl}/v1/attachment?${query}`, { method: "GET", headers: { Authorization: `Bearer ${bearer}` } });
+        if (response.status === 401 && attempt === 0) {
+          await response.body?.cancel(); token = null; continue;
+        }
+        if (response.status !== 200) {
+          await response.body?.cancel();
+          throw new ImportError(response.status === 404 ? "SOURCE_ATTACHMENT_METADATA_CHANGED" : response.status === 403 ? "UPSTREAM_SCOPE_DENIED" : response.status === 401 ? "UPSTREAM_AUTH_FAILED" : "UPSTREAM_UNAVAILABLE");
+        }
+        const result = parsePage(await json(response), "attachment", 1);
+        if (!result.complete || result.items.length !== 1 || result.items[0].external_id !== attachmentId ||
+          result.items[0].payload.record_type !== parent.parent_type || String(result.items[0].payload.record_id) !== parent.parent_external_id) {
+          throw new ImportError("SOURCE_ATTACHMENT_METADATA_CHANGED");
+        }
+        return result.items[0];
+      }
+      throw new ImportError("UPSTREAM_AUTH_FAILED");
+    },
+    async downloadAttachment(attachmentId: string, parent: AttachmentParent, metadataMime: string | null): Promise<AttachmentBytes> {
+      validateAttachmentRequest(attachmentId, parent);
+      attachmentMime(metadataMime); // Unsupported declarations must not trigger authentication or a file request.
+      const url = `${config.baseUrl}/v1/attachment/download/${attachmentId}`;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const bearer = await accessToken();
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20_000);
+        try {
+          const response = await dependencies.fetch(url, {
+            method: "GET", headers: { Authorization: `Bearer ${bearer}`, Accept: "application/octet-stream", "Accept-Encoding": "identity" },
+            redirect: "error", signal: controller.signal,
+          });
+          if (response.redirected || (response.url && response.url !== url)) {
+            void response.body?.cancel().catch(() => {});
+            throw new ImportError("ATTACHMENT_INVALID_CONTENT");
+          }
+          if (response.status === 401 && attempt === 0) {
+            void response.body?.cancel().catch(() => {});
+            token = null;
+            continue;
+          }
+          if (response.status === 429) {
+            const raw = Number(response.headers.get("retry-after") || response.headers.get("x-ratelimit-reset") || "60");
+            void response.body?.cancel().catch(() => {});
+            throw new ImportError("RATE_LIMITED", Number.isFinite(raw) ? Math.max(1, Math.min(3600, raw)) : 60);
+          }
+          if (response.status === 401 || response.status === 403 || response.status >= 500) {
+            void response.body?.cancel().catch(() => {});
+            throw new ImportError(response.status === 401 ? "UPSTREAM_AUTH_FAILED" : response.status === 403 ? "UPSTREAM_SCOPE_DENIED" : "UPSTREAM_UNAVAILABLE");
+          }
+          return await readAttachmentBytes(response, metadataMime, controller.signal);
+        } catch (error) {
+          throw error instanceof ImportError ? error : new ImportError("UPSTREAM_UNAVAILABLE");
+        } finally {
+          clearTimeout(timeout);
+          controller.abort();
+        }
+      }
+      throw new ImportError("UPSTREAM_AUTH_FAILED");
+    },
     async page(
       resource: Resource,
       page: number,
       animalExternalId?: string,
       consultExternalId?: string,
       prescriptionExternalId?: string,
+      attachmentParent?: AttachmentParent,
     ): Promise<PageResult> {
       if (
         !config.readResources.includes(resource) ||
@@ -504,10 +585,16 @@ export function createAdapter(
       if (resource !== "prescriptionitem" && prescriptionExternalId !== undefined) {
         throw new ImportError("INVALID_PAGE_REQUEST");
       }
+      if (resource === "attachment") {
+        if (animalExternalId !== undefined || consultExternalId !== undefined || prescriptionExternalId !== undefined ||
+          !attachmentParent || !["Animal", "Consult"].includes(attachmentParent.parent_type) || !validVaccinationId(attachmentParent.parent_external_id)) {
+          throw new ImportError("ATTACHMENT_PARENT_REQUIRED");
+        }
+      } else if (attachmentParent !== undefined) throw new ImportError("INVALID_PAGE_REQUEST");
       const contract = resource === "animal" || resource === "healthstatus" ||
           resource === "consult" || resource === "history" ||
           resource === "vaccination" || resource === "prescription" ||
-          resource === "prescriptionitem"
+          resource === "prescriptionitem" || resource === "attachment"
         ? resourceContracts[resource]
         : { path: `/v1/${resource}`, limit: 50 };
       const query = new URLSearchParams({
@@ -522,6 +609,10 @@ export function createAdapter(
       }
       if (resource === "prescriptionitem") {
         query.set("prescription_id", prescriptionExternalId!);
+      }
+      if (resource === "attachment") {
+        query.set("record_type", attachmentParent!.parent_type);
+        query.set("record_id", attachmentParent!.parent_external_id);
       }
       for (let attempt = 0; attempt < 2; attempt++) {
         const bearer = await accessToken();
@@ -565,6 +656,10 @@ export function createAdapter(
           (item) => String(item.payload.prescription_id) !== prescriptionExternalId,
         )) {
           throw new ImportError("SOURCE_PRESCRIPTION_MISMATCH");
+        }
+        if (resource === "attachment" && result.items.some(item => item.payload.record_type !== attachmentParent!.parent_type ||
+          String(item.payload.record_id) !== attachmentParent!.parent_external_id)) {
+          throw new ImportError("SOURCE_ATTACHMENT_PARENT_MISMATCH");
         }
         return result;
       }

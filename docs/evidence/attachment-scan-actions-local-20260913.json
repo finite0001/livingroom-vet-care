@@ -1,0 +1,38 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "83de19cee4fd9d1647761d6d5630bc042c1504c4",
+  "scope": "Operator recovery and explicit one-page continuation for existing saved attachment scans",
+  "validation": {
+    "app_unit_tests": 575,
+    "browser_cases": 22,
+    "attachment_browser_cases": 12,
+    "neighbor_browser_cases": 10,
+    "lint_typecheck_build": "passed; existing Fast Refresh and bundle-size warnings remain"
+  },
+  "invariants": [
+    "Exact saved run identity and immutable parent pins recovered before and after page attempt",
+    "No automatic page retries; lost acknowledgment resolves through saved-state read",
+    "Terminal runs, active leases and future provider cooldowns prevent page request",
+    "Uncertain recovery guards patient switching and navigation; existing neighboring guards remain functional",
+    "Untrusted provider error text is not rendered"
+  ],
+  "sha256": {
+    "src/hub/features/imports/AttachmentScanHistory.tsx": "46bdc97f8ab88c12a3ef4a496a28a8a7adc7d56ce6ac119b777bd09e6a9784f6",
+    "src/hub/features/imports/EzyVetImportPage.tsx": "6d096fe429f1a9ac7ec96199daf3608974fbdd488cd714ed0106d9640f3c7a3b",
+    "src/hub/features/imports/attachment-discovery-api.ts": "47bce4d6d09de362bed35d28e4fdd83d57353c9de215f0e2ec931ea1b59b516a",
+    "src/hub/features/imports/attachment-discovery-state.ts": "f4e9422aa0a298c21d84ee295a1e234e1c68908db9a5089afbd1d24cd9b780ab",
+    "tests/ezyvet/attachment-discovery-state.test.ts": "619c1ecac55d16f35b690f5b69ab49c9fbab85d439b3b5f04f6b52bb4c0631cd",
+    "e2e/attachment-history.spec.ts": "35bf576bb3a697ee1e54f8bcc26ad99c221a62847aa5c93c83fb25227e0b3751"
+  },
+  "log_sha256": {
+    "/tmp/lrv-attachment-actions-check.log": "ab477413263ff9ff1371244dfaacafa40b8dd4a23a22dd988283dde85b25edcf",
+    "/tmp/lrv-attachment-actions-browser-final.log": "025292268fd038b85a12a3427d51e71d8ed686af305e108dbb77882f37cc30d5"
+  },
+  "limits": [
+    "Browser Auth/RPC/Edge traffic is mocked; no hosted Edge acceptance",
+    "New scan creation and remaining file/clinical/release controls are unfinished",
+    "No new backend migration; prior runtime evidence is separate from this frontend validation",
+    "All mail/Auth, Stripe sandbox, vendor, clinical and coordinated rollout requirements remain open"
+  ],
+  "deployment": "No hosted deployment, real provider call, message send, live payment or policy activation"
+}

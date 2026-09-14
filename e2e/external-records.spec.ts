@@ -177,7 +177,8 @@ async function fixture(page: Page, role = "ADMIN") {
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
-    if (path === "/rest/v1/rpc/list_record_release_sources_v8") {
+    if (path === "/rest/v1/rpc/read_ezyvet_attachment_chart") return route.fulfill({json:{pet_id:petId,records:[],has_more:false,next_cursor:null}});
+    if (path === "/rest/v1/rpc/list_record_release_sources_v9") {
       state.sourceLoads++;
       return route.fulfill({
         json: {
@@ -188,7 +189,8 @@ async function fixture(page: Page, role = "ADMIN") {
           phone: "+13035550100",
           policy_accepted: true,
           policy_v4_accepted: true,
-          policy_v8_accepted: true,
+          policy_v9_accepted: true,
+          api_attachment_ids: [],
           ...Object.fromEntries(Object.keys(sourceLabels).map((k) => [k, []])),
           has_more: Object.fromEntries(
             Object.keys(sourceLabels).map((k) => [k, false]),
@@ -779,4 +781,27 @@ test("DVM acknowledgment refreshes release source evidence without remounting th
     releases.getByText(/1 exact-version DVM acknowledgment\(s\)/),
   ).toBeVisible();
   expect(state.acks).toHaveLength(1);
+});
+
+function apiChartFixture(){
+ const u=(n:number)=>`de790000-0000-4000-8000-${String(n).padStart(12,'0')}`,h='a'.repeat(64),content=Buffer.from('%PDF-1.4\nSynthetic reviewed API source\n%%EOF');
+ const parent={animal_link_id:u(3),pet_id:petId,client_id:clientId,animal_external_id:'77',source_origin:'https://api.trial.ezyvet.com',source_site_uid:'chart-site',parent_type:'Animal',parent_external_id:'77',parent_snapshot_id:u(4),parent_payload_hash:h,parent_observed_head_version:1};
+ const record={id:u(1),actor_id:u(2),request_id:u(5),pet_id:petId,animal_link_id:u(3),source_origin:parent.source_origin,source_site_uid:parent.source_site_uid,attachment_external_id:'701',request_hash:h,capture_hash:h,source_context:{schema_version:1,run_id:u(6),page:1,parent,attachment_snapshot_id:u(7),attachment_external_id:'701',attachment_payload_hash:h,attachment_observed_head_version:1},title:'Reviewed API source',review_reason:'Staff inspected the original',previous_record_id:null,version:1,entry_method:'staff_reviewed_api_attachment_v1',record_hash:h,created_at:'2026-09-13T12:00:00Z'};
+ const capture={request_id:record.request_id,actor_id:record.actor_id,pet_id:petId,intent_hash:h,capture_hash:h,storage_object_id:u(8),bucket:'ezyvet-attachments',object_path:`${record.actor_id}/${petId}/${record.request_id}/${u(9)}/original`,content_sha256:createHash('sha256').update(content).digest('hex'),file_size:content.length,mime_type:'application/pdf',captured_at:'2026-09-13T12:00:00Z'};
+ return {record,capture,content,page:{pet_id:petId,records:[{record,is_latest:true,source_current:false}],has_more:false,next_cursor:null}};
+}
+test('DVM chart shows reviewed API provenance and verifies the approved private original',async({page})=>{
+ await fixture(page,'DVM');const data=apiChartFixture();
+ await page.route('**/rest/v1/rpc/read_ezyvet_attachment_chart',r=>r.fulfill({json:data.page}));
+ await page.route('**/rest/v1/rpc/get_ezyvet_attachment_chart_original',r=>r.fulfill({json:{record:data.record,capture:data.capture}}));
+ await page.route('**/storage/v1/object/ezyvet-attachments/**',r=>r.fulfill({contentType:'application/pdf',body:data.content}));
+ await page.goto(`/hub/patient/${petId}`);const chart=page.getByRole('region',{name:'Reviewed API attachments'});
+ await expect(chart.getByText('Reviewed API source · Version 1',{exact:true})).toBeVisible();await expect(chart.getByText('Source changed or is unavailable. Review required.',{exact:true})).toBeVisible();await chart.getByRole('button',{name:'Verify original for version 1',exact:true}).click();await expect(chart.getByRole('link',{name:'Download reviewed original',exact:true})).toHaveAttribute('href',/^blob:/);
+});
+test('chart rejects wrong-patient records and corrupted approved originals',async({page})=>{
+ await fixture(page,'DVM');const data=apiChartFixture();let wrong=true;
+ await page.route('**/rest/v1/rpc/read_ezyvet_attachment_chart',r=>r.fulfill({json:{...data.page,pet_id:wrong?staffId:petId}}));
+ await page.route('**/rest/v1/rpc/get_ezyvet_attachment_chart_original',r=>r.fulfill({json:{record:data.record,capture:data.capture}}));
+ await page.route('**/storage/v1/object/ezyvet-attachments/**',r=>r.fulfill({contentType:'application/pdf',body:Buffer.alloc(data.content.length)}));
+ await page.goto(`/hub/patient/${petId}`);const chart=page.getByRole('region',{name:'Reviewed API attachments'});await expect(chart.getByText('Reviewed attachment history could not be verified.',{exact:true})).toBeVisible();wrong=false;await chart.getByRole('button',{name:'Recheck reviewed attachments',exact:true}).click();await chart.getByRole('button',{name:'Verify original for version 1',exact:true}).click();await expect(chart.getByText('The reviewed original could not be verified. No download is available.',{exact:true})).toBeVisible();await expect(chart.getByRole('link',{name:'Download reviewed original',exact:true})).toHaveCount(0);
 });

@@ -1,0 +1,376 @@
+# Phase 3d — Source API attachments
+
+Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Migration6600 adds immutable download preparation, recovery, abandonment tombstones and bounded owned discovery; migration6700 adds service leases and immutable retry/discrepancy receipts; bounded byte transport and matching metadata reads around transfer are implemented in the adapter/helper; capture reservation/completion and private Storage policies are implemented; the authenticated default-off worker endpoint is implemented; migration6900 adds abandoned-only cleanup authorization and receipts; the default-off authenticated cleanup worker is implemented; operator recovery and review/release integration remain unfinished. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual local Auth/database metadata verification passes44 checks; interruption cleanup, broader attachment contention, UI, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+
+
+
+
+## Operator discovery checkpoint — 2026-09-13
+
+Migration7000 adds current Animal parent discovery, bounded owned scan-observation pages and bounded owned cleanup history. Observation cursors retain the committed page, snapshot, hash and observed head version, including A-to-B-to-A changes. Parent currentness is separate from file currentness. Filename/notes previews are bounded with explicit truncation flags; unsupported MIME declarations stay visible and provider download URLs are omitted. Cleanup history exposes exact owned operation IDs and point-in-time receipts without service lease IDs, so browser storage is not the only recovery path.
+
+The existing ezyVet import page now includes a read-only Source attachment history section. Operators select an approved patient mapping, browse their saved scans and page through observed files. Historical revisions remain visible with source-change notices. The section shows loading, empty and recoverable error states, escapes source text, clears the selected scan when changing patients and does not create a chart record, start a scan or invoke a file worker. Existing import controls and navigation guards remain in place. Validated browser adapters also provide current-parent and cleanup-history discovery for the remaining action controls.
+
+The focused SQL suite passes36 assertions; the broader regression passes236 harness checks with694 SQL assertions. Browser response validation adds18 cases. Seventeen browser cases pass (seven new attachment cases plus ten neighboring prescription-item import cases), including wrong-patient response rejection, stale evidence, exact cursors, unsupported MIME, escaped text, patient switching, role gating and375px layout. The current91-migration local rehearsal passes153 actual HTTP/Auth/PostgREST/Storage checks and31 contention checks against the fully migrated schema. It verifies the new discovery RPCs alongside capture, cleanup, original receipt recovery and source-change behavior, then removes all owned resources.
+
+An Impeccable code-level audit found no mechanical detector issues. Measured inherited outline text contrast prompted use of the existing sage secondary button variant only in the new section; no global button styling was changed. [Design review](../../docs/evidence/attachment-history-design-review-20260913.md) records the measured scope and limits. Detailed source hashes and validation are in [discovery evidence](../../docs/evidence/attachment-operator-discovery-local-20260913.json).
+
+This completes read-only scan/observation discovery, not the full operator workflow. Scan start/resume, download preparation, capture/abandon/cleanup recovery controls and cleanup history presentation still need UI integration. Original file inspection, clinical approval/corrections, release integration, broader contention, current populated upgrade/restore and issued-site/clinical acceptance remain required. Earlier90-migration evidence is historical; no91-migration hosted deployment is claimed.
+
+## Authenticated cleanup worker checkpoint — 2026-09-13
+
+`ezyvet-attachment-cleanup` implements the authorized Storage API worker with JWT verification and a separate default-off `EZYVET_ATTACHMENT_CLEANUP_ENABLED` gate. It requires `APP_ENV=staging` but no ezyVet credentials or provider access. The caller supplies cleanup ID, request ID, patient ID and request hash only. The worker derives the actor from Auth and checks the retained abandoned request, reservation and cleanup attempt before touching Storage. Bucket/path always come from matching immutable server evidence; pending requests and completed captures are rejected.
+
+Capture and cleanup share the bounded REST/Auth/Storage transport. Storage DELETE and absence readback use the staff JWT, while cleanup claims and completion use server-only RPC access. A lost claim response leaves a recoverable lease. An uncertain deletion response is followed by a Storage read. Completion requires absence plus the database's exact identity/lease and metadata checks; a lost completion response recovers the owned receipt. A completed retry returns the original `cleanup_recorded` timestamp without claiming current perpetual absence or deleting again. A later sweep requires a new explicit cleanup UUID. Expired operations do not silently renew their leases.
+
+Twenty-two focused cleanup tests pass. The full application check passes555 tests, lint, TypeScript and build; frozen Deno entrypoint checks pass. Existing Fast Refresh and bundle-size warnings remain. All three CI jobs passed for the prior cleanup-authorization commit6eeb6f6. The current90-migration runtime rehearsal passes137 checks, including the production capture and cleanup runtime adapters served over Node loopback HTTP, actual Auth/RPC/Storage and synthetic source HTTP. Both Animal and Consult cases exercise pending/captured rejection, grace periods, default-off behavior, discarded cleanup claim/deletion/completion responses, exact receipt recovery, permanent tombstones and a later explicit sweep of an absent path. The worker sends only the reserved path using the staff JWT and makes no provider requests. The same rehearsal passes31 contention checks against its fully migrated schema clone and removes all owned resources. [Worker evidence](../../docs/evidence/attachment-cleanup-worker-local-20260913.json) records hashes and limits. This is Storage API verification, not direct inspection of the underlying object-store filesystem or a deployed Edge gateway.
+
+Operator discovery/resume, cleanup history controls, original inspection and clinical review/corrections, explicit release integration, broader late-upload/abandon/capture contention, current populated upgrade/restore and provider/clinical acceptance remain required. Nothing is deployed or enabled on a hosted project by this checkpoint.
+
+## Abandoned cleanup authorization checkpoint — 2026-09-13
+
+Migration6900 adds immutable cleanup attempts and point-in-time absence receipts. A fresh cleanup claim requires the exact owner/patient/request hash, a retained capture reservation, explicit abandonment, no completed capture, and two minutes beyond both abandonment and every download lease deadline. Failed workers do not bypass this waiting period. Pending requests with ambiguous upload outcomes remain recoverable and ineligible for deletion.
+
+A service claim returns only the existing reserved bucket/path and a90-second cleanup lease. The authenticated Storage DELETE policy permits that exact owner's abandoned object only while an uncompleted cleanup lease is active, and rechecks administrator status after request lock waits. Completed captures are never eligible. No authenticated overwrite or re-upload of an abandoned path is introduced. Server completion requires the exact cleanup/lease/request/intent tuple, affirmative physical-absence verification from the worker and no Storage metadata row. It rechecks eligibility/lease after the metadata query. Direct receipt inserts are denied. Browser recovery hides the lease ID.
+
+Lost claim/completion responses recover the same attempt/receipt without extending the lease. A new explicit cleanup UUID is required for another sweep after expiry or a completed observation. This permits later abandoned-object maintenance while preserving old receipts and the permanent abandonment tombstone. A receipt does not assert perpetual physical absence.
+
+The focused SQL suite passes41 assertions. The dedicated contention runner passes31 checks across six scenarios, adding cleanup-role-loss and cleanup-expiry during exact observed request-lock waits. Both preserve the object and create no cleanup-success receipt. These are schema-only, metadata-level Storage policy tests using the Storage service's delete-transaction flag only inside disposable fixtures; production deletion must use the Storage API. The broader regression passes235 harness checks with658 SQL assertions, including these41 new assertions; exact file hashes are recorded in [cleanup evidence](../../docs/evidence/attachment-cleanup-authorization-local-20260913.json).
+
+This is database authorization/recovery infrastructure, not completed orphan cleanup: the authenticated Storage API worker, physical DELETE/lost-response/absence readback, discovery/UI, abandoned/late-upload/capture ordering and hosted acceptance remain required. The current90-migration local capture rehearsal passes101 actual HTTP/Auth/Storage checks, and its fully migrated schema clone passes31 contention checks. These verify existing capture compatibility and database cleanup authorization; they do not test physical cleanup. The earlier85-migration populated restore remains insufficient for the current revision. No hosted migration or cleanup execution occurred.
+
+The prior head9c1ceda failed CI database testing because a schema-only clone omitted the bucket data row ([run34796938010](https://github.com/finite0001/livingroom-vet-care/actions/runs/34796938010)). The contention runner now seeds and validates the private synthetic bucket whether migrations are replayed or already present. The disposable harness offers `--include-contention` to verify the same fully migrated starting state as CI.
+
+## Attachment lock-wait authorization checkpoint — 2026-09-13
+
+A dedicated PostgreSQL contention runner now observes the exact blocking session with `pg_blocking_pids`. It covers reservation waiting on the attachment source head, completion waiting on the source head, completion waiting on Storage object metadata, and an authenticated upload waiting on the request lock. The first three expire the actual lease while the worker is demonstrably waiting. The fourth revokes the owner's ADMIN role during the observed wait.
+
+The upload case exposed a bug: the original Storage policy checked the role before waiting and accepted the upload after revocation. Migration6800 now rechecks current administrator status after the request advisory/row locks. This migration is still undeployed; no hosted schema was changed. The failing pre-fix case and all four passing post-fix cases are recorded in [contention evidence](../../docs/evidence/attachment-lock-wait-local-20260913.json). The runner passes20 checks and removes its owned schema-only database. It performs no provider calls or physical file uploads. CI now includes the dedicated runner against its freshly migrated local stack.
+
+The broader prescription/source/release regression also passes234 harness checks, with457 prior SQL assertions and160 attachment assertions (617 total). These cases do not establish complete attachment concurrency coverage: claim/abandon ordering, cleanup/late-upload ordering, source-change/capture ordering and review/release contention remain required. Interruption cleanup itself is not implemented by this checkpoint.
+
+The prior endpoint commit b2ea061 passed all three CI jobs in [run34796010477](https://github.com/finite0001/livingroom-vet-care/actions/runs/34796010477). This new change requires its own CI result; prior HTTP/Storage evidence remains pinned to the earlier migration hash.
+
+## Authenticated capture endpoint checkpoint — 2026-09-13
+
+`ezyvet-attachment-capture` now uses the production handler and REST runtime adapter, with JWT verification configured and a separate default-off `EZYVET_ATTACHMENT_CAPTURE_ENABLED` gate. It requires the existing staging/source configuration and explicit attachment read scope. The caller supplies only request ID, patient ID and request hash; actor identity comes from actual Auth and the active-administrator check. Strict response validation binds request, source origin/site, parent, observation, reservation, path and receipt before file traffic. The response exposes only an owned request ID, captured status and capture hash.
+
+Completed requests recover before claims or source reads. A recovered reservation checks Storage first; an absent object permits transfer only when the new bytes still match its immutable digest/size/MIME. Unknown upload replies resolve by readback without overwrite. Lost completion replies recover the exact committed receipt before publishing a failure. Transient failures retain bounded retry receipts; source/file discrepancies require review. Storage requests always use the staff JWT, with service credentials reserved for server RPCs. Source and Storage transport are bounded, and RPC responses have explicit size/time limits.
+
+Twenty-three focused endpoint tests pass. `npm run check` passes533 application tests, lint, TypeScript and build; both import/capture Deno entrypoint checks pass frozen. [Endpoint evidence](../../docs/evidence/attachment-worker-handler-local-20260913.json) records source hashes and remaining limits.
+
+The89-migration local rehearsal now passes101 checks using the actual production runtime adapter served over loopback HTTP, actual Auth/PostgREST/Storage, and synthetic source HTTP. It covers both parent types, anonymous/path/default-off rejection, discarded reservation responses followed by missing-object recovery, discarded upload/completion responses, physical readback, and terminal retries with no new source traffic. The earlier direct-RPC69 checks remain in that run. [Runtime evidence](../../docs/evidence/attachment-worker-runtime-local-20260913.json) binds the files; owned objects, services and temporary files were removed. This is Node loopback execution of the production runtime code with frozen Deno compilation, not a deployed Edge gateway check.
+
+All three CI jobs passed for the prior private-capture checkpoint63c3993 ([run34794649576](https://github.com/finite0001/livingroom-vet-care/actions/runs/34794649576)); the endpoint checkpoint b2ea061 subsequently passed all three jobs in run34796010477. No hosted deployment or enablement occurred, and `download_available` remains false. Interruption/orphan cleanup, dedicated source/lease/role/capture races, operator UI and clinical review/corrections, release integration, current89-migration populated upgrade/restore, and issued-site/clinical acceptance are still required.
+
+## Private capture checkpoint — 2026-09-13
+
+Migration6800 freezes an upload reservation containing the owned request hash, original digest/size/MIME, matching source metadata reads and a server-generated immutable path. The dedicated private `ezyvet-attachments` bucket admits reserved uploads through the intake owner's authenticated JWT; no authenticated overwrite or deletion policy exists. Workers must not upload with a service-role key. Individual owner recovery retains the full reservation; discovery omits repeated raw metadata and all staff projections hide lease IDs.
+
+Service completion requires matching stored-byte verification, exact Storage metadata, a current worker lease, unchanged patient/parent/attachment context and matching final metadata. It rechecks lease validity after source/object lock waits. Capture receipt and request completion commit together. Exact reservation/receipt recovery precedes mutable source checks; completed claims return a receipt without a new lease or source read. Captured evidence cannot be abandoned. Private capture creates no manual patient document, clinical record, stock, billing or message.
+
+Forty-five focused capture SQL assertions and572 prior assertions pass. The existing prescription/source/release contention regression passes234 harness checks with all four attachment migrations overlaid; this remains compatibility coverage rather than dedicated attachment capture contention. [SQL evidence](../../docs/evidence/attachment-private-capture-local-20260913.json) records exact hashes and scope.
+
+`python3 tests/ezyvet/attachment-disposable.py --run-synthetic-local --include-capture` passes69 checks on a fresh89-migration stack, including both Animal and Consult parents. It uses actual local Auth/PostgREST, native source HTTP, private Storage upload with the staff JWT, rejected duplicate/replacement attempts, physical byte readback/digest verification, final metadata re-read, completed capture and recovery after discarded acknowledgments. Owned physical objects are removed through the Storage API, then the runner removes its disposable services/files. [Runtime evidence](../../docs/evidence/attachment-private-capture-runtime-local-20260913.json) binds that revision. CI now invokes this capture-inclusive mode; latest-head CI remains to be verified.
+
+The local harness orchestrates the worker RPCs directly through HTTP; an authenticated capture Edge endpoint is not yet implemented. Safe cleanup of interrupted/expired uploads, dedicated source/lease/capture/role races, user-facing review/corrections and release integration, current89-migration populated upgrade/physical restore and issued-site/clinical acceptance remain required. Matching source reads do not establish a provider snapshot guarantee. `download_available` remains false, and no hosted migrations or provider reads/sends were performed.
+
+## Source consistency read checkpoint — 2026-09-13
+
+The adapter now re-reads a single attachment through the documented ID and parent filters. It requires one matching record and a complete filtered page; missing, mismatched or incomplete results cannot authorize the file. The capture reader validates the saved metadata, performs that read before transfer, downloads the original, and repeats the filtered read afterward. Canonical object ordering permits equivalent JSON key order while every retained metadata value remains significant, including file ID, parent, name, notes, MIME and the original URL. Any change withholds the result from capture. The original URL is never fetched.
+
+Fourteen new focused tests pass, including before/after changes, malformed source context, missing/wrong-ID/wrong-patient/incomplete filtered results and failure ordering. The existing actual loopback HTTP test now also exercises stable and changed metadata–file–metadata sequences with native fetch and real sockets. `npm run check` passes510 tests, lint, TypeScript and build; frozen Deno checks pass for the Edge entrypoint and the new capture helper. CI now includes the helper explicitly in its Deno command. [Sanitized evidence](../../docs/evidence/attachment-capture-read-local-20260913.json) records hashes and limits.
+
+This is a verified read sequence, not a persisted capture or provider snapshot guarantee. Matching before/after metadata cannot prove the provider did not change and revert during transfer. The worker must still bind the returned evidence to its database lease, revalidate source/parent/currentness at final capture, preserve immutable private bytes and handle ambiguous uploads. The helper is not exposed as an enabled staff download endpoint; availability remains false. No hosted or provider operations occurred.
+
+## Bounded byte transport checkpoint — 2026-09-13
+
+The adapter now constructs `/v1/attachment/download/:id` from a canonical attachment ID, with an allowed source origin, configured attachment read scope and syntactically valid Animal/Consult parent. It does not accept a file URL. Unsupported metadata MIME rejects before OAuth or file traffic. Download requests reuse read-only authentication, refresh once on401, propagate bounded429 cooldown, reject redirects and enforce a20-second deadline through the complete response. Failed file reads are left to durable worker recovery rather than in-memory network retries.
+
+The stream reader enforces20MiB while reading, exact declared length when supplied, status200, no Content-Range and no unexpected Content-Encoding. It detects PDF/JPEG/PNG signatures and rejects conflicts with supported metadata/transport MIME. Generic or absent MIME is resolved from the signature. Original bytes and SHA256 are retained without transcoding. Signature checks are not complete file parsing or malware scanning.
+
+Thirty focused tests pass (29 unit cases plus one real loopback HTTP scenario). They cover both parent types, zero traffic for invalid IDs/host/scope/parent/MIME, authentication/cooldown, exact maximum size, chunk boundaries, oversize/truncation, stalled headers/body deadlines, sanitized errors, native redirect rejection and compressed response rejection. `npm run check` passes496 tests, lint, TypeScript and build; the frozen Deno entrypoint check passes. Existing Fast Refresh and bundle-size warnings remain. [Sanitized evidence](../../docs/evidence/attachment-byte-transport-local-20260913.json) binds the source and limitations.
+
+No provider requests or hosted deployment occurred. The method is not yet connected to the download worker endpoint. Parent syntax validation in the adapter does not replace the database's owned source context or the still-required metadata re-read around capture. Original-file Storage capture, ambiguous acknowledgments/cleanup, UI, approval/release integration, dedicated attachment races and current upgrade/restore/issued-site acceptance remain required. `download_available` remains false.
+
+## Download lease and failure checkpoint — 2026-09-13
+
+Migration6700 adds immutable worker attempts, ninety-second leases, and sanitized failure receipts. An exact owned request hash and a currently valid parent/attachment context are required for each new lease. Active attempts cannot be reclaimed or abandoned; expired attempts can be replaced with a new lease, while late superseded workers cannot publish a new failure. Failure acknowledgments recover exactly, including after abandonment. Retryable errors use bounded delays; permanent discrepancies require a new reviewed request. Staff recovery exposes attempt/error/cooldown state without the service lease ID.
+
+Metadata claims and downloads now share source/resource serialization and busy/cooldown checks. A rate-limit receipt persists across different requests and metadata imports. The existing immutable request remains unchanged; worker history is separate. This does not yet allocate Storage objects or permit byte transport: `download_available` remains false.
+
+The existing prescription/source/release concurrency runner passes233 checks with all three attachment migrations overlaid; owned scratch cleanup is verified. Thirty-six focused SQL assertions and536 prior SQL assertions pass, including shared busy/cooldown checks, both owner and service boundaries, stale source rejection, replacement leases, late-worker rejection and immutable receipts. Expiry tests simulate elapsed time through explicitly owner-only fixture updates in the disposable database. [Sanitized evidence](../../docs/evidence/attachment-download-leases-local-20260913.json) records exact hashes and regression scope. The actual metadata HTTP/Auth/PostgREST regression also passes44 checks on a fresh88-migration stack with cleanup verified; [runtime evidence](../../docs/evidence/attachment-metadata-leases-runtime-local-20260913.json) binds that revision. This harness tests metadata, not the new worker RPCs or byte transport. Dedicated concurrent attachment workers/source changes, real HTTP/Storage capture and current88-migration upgrade/restore evidence are still required.
+
+## Durable download preparation checkpoint — 2026-09-13
+
+Migration6600 derives the requested file from an owned, committed page observation and freezes its exact patient, parent, site/origin, source snapshot/hash and observed revision. It accepts a committed page from a still-running list while retaining that run/page identity; preparation does not claim whole-list completeness. Only an active administrator who owns the intake can prepare or recover the request. Same-operation retries return original evidence before currentness checks; fresh preparation revalidates both parent and attachment. Explicit abandonment retains evidence, and an abandonment tombstone rejects a delayed prepare. Bounded discovery omits raw metadata; individual recovery preserves it.
+
+Forty-five focused SQL assertions pass, including actual scoped A→B→A ingestion, wrong owner/patient/page/hash/version, both parent types, abandoned request recovery, role loss, immutable evidence, cursor pagination and absence of document/clinical/billing/stock/outbox writes. The prior491 SQL checks also pass. The existing prescription/source/release contention harness passes232 checks with both attachment migrations and SQL suites overlaid; this establishes regression compatibility, not dedicated attachment contention coverage. Owned scratch database cleanup is verified. [Sanitized evidence](../../docs/evidence/attachment-download-preparation-local-20260913.json) binds the checkpoint and records the broader regression result.
+
+The projection deliberately reports `download_available=false`. This is durable preparation, not file download or clinical approval. Service claims/leases, retryable transfer failures, metadata revalidation around byte capture, immutable Storage capture/cleanup, UI and downstream releases remain required. This87-migration revision needs fresh populated upgrade/restore coverage; neither the85-migration restore nor the86-migration metadata runtime result covers6600.
+
+## Actual local metadata runtime checkpoint — 2026-09-13
+
+`python3 tests/ezyvet/attachment-disposable.py --run-synthetic-local` passes44 checks on a fresh86-migration stack. The handler is served over real loopback HTTP; its gateway calls actual Supabase Auth and PostgREST, and the upstream adapter reaches only a synthetic local HTTP server. Both Animal and Consult parents are exercised through two pages. Discarded acknowledgments recover the actual committed cursor; terminal retries fetch no additional page and retain exactly two page receipts/observations. Wrong-parent data stages nothing, changed parent revisions return409 before upstream access, and existing terminal receipts remain recoverable. Actual private-table/role-loss restrictions, run discovery, native-document/clinical/billing/stock/outbox invariants and cleanup pass.
+
+The runner binds its source and all86 migration hashes; [sanitized evidence](../../docs/evidence/attachment-intake-runtime-local-20260913.json) records the result. The CI workflow now invokes this runner, but that workflow addition has not yet run in a PR. The test mirrors production gateway RPC mappings and checks the actual handler over HTTP; it does not exercise a deployed Edge endpoint or real practice source. UI, file transport/capture, review/release and dedicated attachment races remain required.
+
+## Metadata transport checkpoint — 2026-09-13
+
+The adapter recognizes the explicit attachment read scope, requests at most10 metadata records per page, and filters using the validated parent context returned by SQL. Handler requests require mapping, parent type, snapshot/hash/revision; arbitrary external parent IDs and unrelated parent fields are rejected. The runtime gateway calls only the dedicated attachment claim RPC with the authenticated actor. Returned context must match the requested pins/site/origin before any upstream read. Wrong-parent results reject the whole page; unsupported MIME/name/URL evidence is retained without fetching original files. Exact terminal claim recovery makes no additional upstream request or duplicate staging attempt after a simulated lost response.
+
+Forty-one focused adapter/handler tests pass, including eight new attachment cases. `npm run check` passes466 application tests, lint, TypeScript and build; the frozen Deno entry-point check passes. [Sanitized evidence](../../docs/evidence/attachment-intake-handler-local-20260913.json) records source hashes and limitations. These are mocked gateway/upstream tests, not actual HTTP/Auth/PostgREST or provider acceptance. Attachment scopes remain opt-in and defaults unchanged. The operator UI and file download/capture/review/release workflow remain unfinished.
+
+## Metadata SQL checkpoint — 2026-09-13
+
+Migration6500 freezes Animal or scoped same-patient Consult parent context, including observed source revision, patient/household and mapping. Dedicated immutable run/page/observation tables deny direct API-role access. Generic claims and unscoped legacy staging reject attachments. Fresh pages require the owned lease/cursor and unchanged parent; exact committed page and terminal claim retries recover before mutable source checks. Owner recovery/discovery expose no service lease. Unsupported MIME and original download-URL metadata are retained without fetching or promoting files.
+
+Thirty-four focused SQL assertions and457 existing regressions pass. The existing prescription/source/release concurrency runner passes231 harness checks with6500 overlaid, including the added SQL suite; cleanup is verified. [Sanitized evidence](../../docs/evidence/attachment-intake-sql-local-20260913.json) binds tested files and the reproducible command. This verifies compatibility with existing races, not attachment-specific contention. No actual HTTP intake, byte download, private capture, approval or attachment release is implemented yet. The86-migration attachment checkout is outside the prior85-version full gap/restore evidence; update that explicit inventory and rerun after the attachment implementation is complete.
+
+## Verified contract and boundaries
+
+The official [attachment listing](https://developers.ezyvet.com/#get-attachment) documents `GET /v1/attachment`, bearer authorization with `read-attachment`, and `record_type`/`record_id` filters. Its response preserves `id`, `active`, creation/modification values, `file_id`, `file_download_url`, parent type/ID, `mime_type`, `name`, `primary_image` and `notes`.
+
+The official [Postman collection](https://developers.ezyvet.com/ezyvet-api.postman_collection.json), linked by that documentation, independently defines `GET /v1/attachment/download/:id`, inherited authentication and an octet-stream response. The route parameter is the attachment ID, not `file_id`. These public observations do not prove issued-site scope entitlement, actual parent-type spelling, redirect behavior, pagination guarantees, file-size limits, MIME reliability or consistent metadata/file revisions. Preserve those as acceptance questions.
+
+Implementation choices below are application requirements, not claimed provider guarantees:
+
+- Construct the download path from a validated attachment ID and the already authorized API origin. Preserve `file_download_url` as source evidence; never fetch it or forward credentials to it.
+- Keep the existing trial/production origin allowlist and explicit production-source opt-in. Only read methods are permitted. Default configured resources remain contact/animal until commissioning.
+- Initially support explicitly mapped Animal and same-patient Consult parents. Contact-level files cannot silently become patient records. Other parent types remain visible as unsupported coverage, not silently omitted from migration accounting.
+- Use bounded streaming and a deadline for the complete download. Start with the existing document limit of20MiB and supported PDF/JPEG/PNG types. Validate file signatures separately from metadata and transport MIME; octet-stream is a transport declaration, not a clinical file type. Reject unsupported/conflicting files into an actionable discrepancy state. Do not claim malware scanning from MIME/signature checks.
+- Reject redirects, unexpected compression, partial HTTP responses, oversized/truncated bodies and inconsistent declared lengths. Preserve exact original bytes and SHA256; do not transcode, alter or infer clinical interpretation.
+
+## Existing architecture to reuse carefully
+
+`ezyvet-import/adapter.ts` already controls OAuth scopes, API origins, bounded JSON reads, cooldowns and redirect rejection. Its attachment metadata resource uses scoped database claims, and its ID-based byte-download method implements bounded authenticated transport.
+
+The existing private patient-document bucket, upload/read policies and original-byte release verification remain useful. `external-record-verification.ts` explicitly requires `staff_reviewed_manual_export_v1`; its receipt, capture and release projection cannot be reused unchanged for API attachments. Add an explicit API provenance model and validator. Do not relabel imported bytes as a manual export or weaken existing validators to make them fit.
+
+## Required implementation sequence
+
+1. **Scoped listing and immutable observations.** Add attachment resource handling plus dedicated parent-scoped runs, page receipts and observed attachment versions. Claims derive the external parent from a current reviewed mapping/consult context. Freeze actor, patient/household, site/origin and parent pins. Each page must match that exact parent; malformed/mismatched rows reject the whole page. Generic claim/stage paths reject attachment resources. Exact owned receipt recovery precedes mutable eligibility checks; fresh pages revalidate current pins and acquire canonical patient/source locks.
+2. **Durable download intent and recovery.** Add private download requests with owned operation UUID, immutable requested context/hash and explicit states for pending, captured, abandoned and retryable failures. Authorize active staff/admin according to the existing intake boundary. Server service claims receive a short lease and expected source pins, never an arbitrary URL, bucket or path. Re-read attachment metadata around capture; detect changed observed revisions and record discrepancies rather than associating bytes with a superseded parent. This reduces races but does not establish a provider snapshot guarantee.
+3. **Authenticated bounded byte transport.** Extend the adapter with the verified ID-based route and shared read-only OAuth. Consume the whole response within limits; check allowed file signatures, metadata, length and transport status. Abort/cancel on all failures and sanitize errors so tokens and source URLs do not enter logs. Rate limits persist through the existing durable cooldown workflow. Unit tests must prove zero requests for invalid origin/ID/parent and one authorized host for valid downloads.
+4. **Private capture and ambiguous acknowledgments.** Allocate a server-owned immutable Storage key and capture receipt bound to actor, patient, parent, attachment observation, SHA256, MIME and size. Never overwrite a captured object. On lost upload/capture replies, recover the durable request and verify existing bytes before retrying. Expired partial objects require lease-aware cleanup; do not delete objects referenced by completed captures or retained ambiguous requests. Restore coverage must include request states, receipts and physical bytes.
+5. **Explicit staff review and chart provenance.** Provide intake discovery/resume and an accessible patient-scoped review of original name/notes, parent association, source revision, file type/size and digest. Approval creates an immutable API attachment record; corrections append rather than rewrite. No inferred clinical text, diagnoses, treatments, stock or billing changes. Staff can inspect failed/unsupported records and their reasons. Preserve current page navigation and unsaved-review guards.
+6. **Medical-record release integration.** Add an explicit API attachment source family and a versioned release projection while preserving schemas1–8. Reuse shared print/email/link rendering and original-byte digest verification. Source/parent reassignment, changed attachment metadata or approved replacement must invalidate affected pending packages without rewriting saved snapshots. Selection must never add unrelated attachments implicitly. Show API provenance and completeness limits consistently in chart and all delivery paths.
+7. **Verification and commissioning.** Exercise SQL permissions, wrong actor/patient/site/parent, source A→B→A, exact retries, lease races, interruption/cleanup and correction cases; actual local HTTP/Auth/Storage downloads against synthetic upstream; browser review/recovery; mixed-file release rendering and original-byte replacement rejection; both-order source/capture/review/release contention; populated upgrades and physical restore. Then verify authorized practice samples, actual download/scopes/type/size behavior and operator/clinical acceptance before activating practice reads.
+
+## Completion evidence required
+
+- [ ] Parent-scoped metadata intake and exact run/page recovery, including unsupported-resource accounting.
+- [ ] ID-based authenticated byte transport with tested bounds, redirect/compression rejection and supported-content checks.
+- [ ] Private immutable capture, failed/ambiguous upload recovery and safe orphan cleanup.
+- [ ] Explicit API-origin chart review and correction workflow with preserved original evidence.
+- [ ] Explicit release selection, shared rendering and original-byte verification across all delivery paths; backward compatibility retained.
+- [ ] Permission/contention/runtime/browser/populated-upgrade/restore checks pass on the integrated revision.
+- [ ] Issued-site samples, entitlement, parent/date/file behavior, migration reconciliation and clinical acceptance verified.
+
+No production-source reads, provider write-back, outgoing messages or deployment are authorized by this plan itself. Existing session authorizations and actual commissioning decisions remain authoritative.
+
+
+### Saved-scan continuation checkpoint
+
+The existing attachment-history section now supports explicit recovery and one-page continuation for saved Animal and Consult runs. Each action uses the saved run UUID and immutable parent pins, recovers before sending, and recovers after either a success or an uncertain response. Terminal state, active leases and future retry timestamps prevent a page request. Unresolved recovery locks patient/scan switching and uses the existing import navigation guard; rechecking performs no source request. Server discovery retains the original run after browser navigation.
+
+Local validation: 575 application unit tests and 22 browser cases passed (12 attachment history/action cases and 10 neighboring prescription cases). The browser tests include lost acknowledgments, failed pre/post-request recovery, current leases and canceling navigation. No backend migration or worker code changed; the prior 91-migration runtime evidence remains historical and does not itself prove these new browser controls against a hosted Edge gateway. See `docs/evidence/attachment-scan-actions-local-20260913.json`.
+
+Still required: new Animal/Consult scan selection and creation, prepare/capture/abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore, actual provider and hosted operator acceptance. Full commercial-readiness gates remain open.
+
+
+### Actionable scan failure checkpoint
+
+Saved-scan continuation now distinguishes allowlisted source-context changes, setup requirements, provider authorization and busy/cooldown failures. Unknown or malformed provider text remains a generic unconfirmed response. A confirmed stale or mismatched parent requires fresh source context and disables another page from the selected scan even after a successful recovery read. The original history and patient selection remain available once saved-state recovery succeeds.
+
+Validation: 578 unit tests and 24 browser cases passed, including stale-parent retry prevention and source setup messaging. These are local browser mocks and application tests, not hosted/provider acceptance. No backend or deployment state changed. New scan creation and the remaining capture/review/release and commercial-readiness gates above remain unfinished. Evidence: `docs/evidence/attachment-action-errors-local-20260913.json`.
+
+
+### Durable new-scan preparation checkpoint
+
+Migration7100 adds authenticated `prepare_ezyvet_attachment_scan`. It derives the actor from Auth and source/patient membership from the reviewed mapping, validates exact current Animal/Consult parent pins, then saves an unleased first-page scan. No provider request, page receipt, capture or clinical effect occurs. Same-operation retries recover the existing immutable context before mutable source revalidation, including after source changes; new operations still require current source context. Role checks are repeated after lock/context waits. Existing server recovery and history can discover the operation before the first provider request.
+
+The frontend adapter validates returned operation, actor, mapping and every selected parent pin. New-scan selection/creation UI remains to be connected; the preparation operation is groundwork for that flow, not a finished operator creation experience. Dedicated preparation lock-order races, current populated upgrade/restore, hosted provider/operator acceptance and all remaining capture/review/release and commercial-readiness gates remain open.
+
+Validation: 19 focused SQL assertions, 579 application unit tests, and a fresh92-migration rehearsal with161 HTTP/Auth/Storage and31 existing capture/cleanup contention checks passed. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-scan-preparation-local-20260913.json`. No rendered UI changed in this checkpoint.
+
+
+### Operator scan creation checkpoint
+
+The existing attachment section now offers patient-file and current-consultation scan preparation. Historical consultation candidates remain visible but disabled for creation; context pagination and refresh reuse the existing clinical discovery API. The browser pins operation ID, actor and exact parent context in session storage before the preparation RPC. A lost response retains those pins through reload and recovers the same server operation. A definitive SQL40001 preparation rejection permits fresh-context selection; unknown failures preserve the request. Unreadable local references do not prevent browsing server history. Browser storage failure prevents an untracked preparation request.
+
+Successful preparation opens the saved scan's existing explicit page controls; preparation itself makes no Edge/provider request. The page's combined guard covers creation and existing scan actions without replacing neighboring import navigation behavior. New controls retain existing semantic sage buttons and the prior section layout.
+
+Validation: 581 unit tests and30 browser cases passed (20 attachment history/action/creation and10 neighboring prescription cases), including both parent types, stale consultation display, lost preparation acknowledgment with reload, stale-context reset, unreadable local recovery and storage failure. Lint, TypeScript and build passed with existing warnings. Browser calls are mocked; prior92-migration actual local runtime evidence is separate. Evidence: `docs/evidence/attachment-scan-creation-ui-local-20260913.json`.
+
+Still required: download preparation/capture/abandon/cleanup UI, original inspection, clinical review/corrections/release, dedicated preparation contention, current populated upgrade/restore, actual source/provider/operator acceptance and the full commercial-readiness gates. No hosted migration, function deployment or activation occurred.
+
+
+### Request authorization after lock waits
+
+Migration7200 fixes an observed access-revocation race in download preparation and abandonment. The pre-fix preparation function returned its owned request projection even after the administrator role was removed while it waited on the request advisory lock. The updated functions recheck administrator authority after request/source waits and before returning after mutations, preserving existing request identity, captured-evidence and tombstone rules.
+
+The final93-migration local rehearsal passes161 HTTP/Auth/Storage and55 contention checks. Six additional cases observe the exact blocker before revocation: download preparation request/source locks, abandonment request-row/tombstone locks, and scan preparation request/source locks. Rejected operations preserve pending requests and create no new request, tombstone or scan. Four focused SQL suites pass150 assertions. All owned disposable resources were removed. Evidence: `docs/evidence/attachment-request-role-waits-local-20260913.json`.
+
+This is not proof of every possible role/source/lease ordering. File action UI, original inspection, clinical review/release, current populated upgrade/restore and hosted/provider/operator acceptance remain unfinished. No hosted migration or activation occurred.
+
+
+### Operator private-file capture checkpoint
+
+Saved scan observations now have explicit private-file preparation, request recovery and capture controls. New preparation binds exact operation/actor/patient/parent/page/snapshot/hash/head and persists the local reference before RPC. The frontend reuses the worker's source/intent/capture validator; the shared function's configuration type is narrowed to source origin/site only. No provider credential is needed in the browser.
+
+Capture first recovers the saved request and checks pending status, active lease, retry time and retryability. After a successful or lost capture response, it recovers again; only a matching saved receipt displays captured status. Uncertain file state guards file pagination, patient selection and competing scan/file actions. Recheck remains available. A retained preparation reopens after reload without another prepare request. An unreadable local reference blocks duplicate preparation but leaves scan history usable; server-side saved-request discovery UI remains needed for that recovery path.
+
+Validation:586 unit tests and36 browser cases passed (26 attachment and10 neighboring prescription cases), including explicit prepare/capture separation, lost capture acknowledgment, disabled capture, unavailable recovery, unreadable local reference and reload recovery. Lint/TypeScript/build and frozen capture/cleanup entrypoint checks passed. These browser calls are mocked and do not establish hosted/provider acceptance. Prior93-migration runtime evidence remains separate. Evidence: `docs/evidence/attachment-file-capture-ui-local-20260913.json`.
+
+Still required: server request-history UI, abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore, broader races and actual source/provider/operator/clinical acceptance. Full commercial-readiness gates remain open. No hosted function/migration deployment or activation occurred.
+
+
+### Saved file-request discovery checkpoint
+
+The patient attachment section now lists owned pending, captured and abandoned file requests with bounded timestamp/UUID pagination. Source-less tombstones remain visible; requests belonging to another source mapping are labeled and cannot reopen under the current mapping. Discovery validates request/actor/patient, source pins, summary receipt ownership, terminal state and cursor consistency. Raw provider metadata and original links are not rendered.
+
+Reopening first recovers and validates the full file request, then the exact owned scan and parent context. It repairs the local reference and opens the original source page without creating/capturing another copy. Active file work prevents reopening; once a call finishes, server history can repair an unconfirmed or mismatched local pointer. Existing scan/patient navigation guards remain in place for other actions.
+
+Validation:590 unit tests,40 browser cases and a fresh93-migration runtime with164 HTTP/Auth/Storage and55 contention checks passed. The runtime passes actual captured/abandoned PostgREST history through the same frontend parser and confirms raw metadata omission. Browser cases prove local-reference loss, wrong-patient rejection, pagination and repair of a mismatched local hash. All owned disposable resources were removed. Evidence: `docs/evidence/attachment-file-history-ui-local-20260913.json`.
+
+Abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore and actual hosted/provider/operator acceptance remain unfinished. Full commercial-readiness gates remain open; no hosted deployment or activation occurred.
+
+
+### Unreserved cleanup eligibility correction
+
+The cleanup worker now returns409 `CLEANUP_NOT_ELIGIBLE` with `retry_safe=false` for an owned abandoned request whose capture intent is explicitly null. Previously the shared intent parser turned that ordinary ineligible state into a retryable503. No Storage/provider operation, cleanup attempt or absence receipt occurs. A missing reservation field still fails as malformed; no successful cleanup is claimed.
+
+The regression failed before the fix and now passes. Validation:592 unit tests (24 cleanup-handler cases), frozen cleanup Edge checking, and a fresh93-migration runtime with170 HTTP/Auth/Storage plus55 contention checks passed. Both Animal and Consult unreserved abandonment cases are exercised. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-unreserved-cleanup-local-20260913.json`. No hosted deployment occurred; cleanup/abandon UI and all later clinical/release/readiness gates remain open.
+
+
+### Confirmed operator abandonment checkpoint
+
+File requests now support explicit abandonment confirmation. Canceling sends no abandonment RPC. The action rechecks saved state first, protects captured evidence and active worker leases, then recovers after the mutation even if its response was lost. Unknown preparation can be stopped through the backend's owned source-less tombstone; the frontend accepts that terminal state only when no confirmed request hash was previously pinned. It cannot authorize capture or stand in for a prepared/captured record.
+
+Confirmed abandonment stays in server history. An explicit new-request action clears only the local pointer before another preparation. The UI does not equate abandonment with deleting a reserved file; cleanup remains separate.
+
+Validation:594 unit tests,43 browser cases and a fresh93-migration runtime with174 HTTP/Auth/Storage and55 contention checks passed. Actual source-less abandonment and recovery are parsed for Animal and Consult contexts. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-abandonment-ui-local-20260913.json`. The parent5706f2e full CI run is being allowed to finish before another push. Cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore and full commercial-readiness acceptance remain open. No hosted deployment occurred.
+
+
+### Operator cleanup history checkpoint
+
+Abandoned file requests now expose owned cleanup attempt history in the existing file card. The parser verifies operator, patient, file request/hash, immutable intent hash across rows, receipt ownership, lease ordering and exact timestamp/UUID cursor. Worker lease secrets, duplicate attempts and contradictory active/completed states are rejected. Empty history never implies that a temporary file was deleted. Receipts are explicitly described as point-in-time Storage absence observations.
+
+The panel hides previous results while refreshing and on verification errors; it offers newest/older pagination and recheck. It performs read-only discovery and does not initiate cleanup. Cleanup initiation and same-operation recovery/retry controls are the next implementation, followed by original inspection, clinical review/corrections/release, current populated upgrade/restore and all full commercial-readiness acceptance gates.
+
+Validation is recorded in `docs/evidence/attachment-cleanup-history-ui-local-20260913.json`. The abandonment parent bf168f5 is pushed to draft PR126; its parent5706f2e passed all three CI jobs in run34804078645. No hosted attachment deployment or activation occurred.
+
+
+### Explicit temporary-file cleanup controls
+
+Reserved abandoned files now have a confirmation-based cleanup action, exact-attempt recheck/retry, and an explicit new sweep after a recovered receipt or expired attempt. Cleanup identity pins the operator, patient, file request/hash and reserved intent hash. New identity is persisted before invoking the worker. A failed browser write sends no cleanup mutation. Full owned file recovery precedes every action, and full cleanup recovery validates receipts after successful or lost worker replies.
+
+The same operation survives reload. Verified saved cleanup history can repair a missing local pointer; a known unresolved attempt cannot be replaced by another history selection or new sweep. Busy/uncertain cleanup state participates in the existing file/patient/navigation guards. Unknown server outcomes keep the original reference. Disabled or not-yet-eligible workers return actionable bounded messages. Source-less/unreserved abandoned requests show history but no cleanup action; captured evidence cannot enter this workflow.
+
+Current validation and limits are recorded in `docs/evidence/attachment-cleanup-actions-ui-local-20260913.json`. Original inspection, clinical review/corrections/release, current populated upgrade/restore and actual hosted/provider/operator/clinical acceptance remain required. No hosted activation or real file deletion occurred during implementation; local tests use owned synthetic fixtures.
+
+
+### Verified API original inspection
+
+Captured file cards now offer explicit original verification and a private local download link. The action first recovers the full owned capture, downloads its exact immutable Storage path using the staff JWT, verifies size/MIME/SHA256, and recovers the capture again before exposing bytes. File names derive from the source attachment ID and supported MIME, not untrusted provider names or URLs. Pending and abandoned requests cannot expose the inspection action.
+
+A failed check withholds the download and removes a previous link. Object URLs are revoked on replacement, component cleanup, pagehide and sign-out/account change; late results cannot repopulate a cleared view. Inspection participates in the existing busy/navigation guards. No browser URL, raw bytes or inspection approval is persisted. This verifies captured API source bytes and allows staff inspection; it does not attest review, create a native clinical document, or authorize release.
+
+Evidence: `docs/evidence/attachment-original-inspection-local-20260913.json`. Clinical review/corrections/release, current populated upgrade/restore and all provider/operator/clinical/commercial acceptance gates remain open. No hosted deployment or real provider attachment read was performed.
+
+
+### Immutable API attachment approval groundwork
+
+Migration7300 adds a separate `staff_reviewed_api_attachment_v1` record family. Authenticated active administrators may approve only their exact captured request, supplying the capture hash, explicit review attestation, title/reason and expected predecessor. The function revalidates current parent/source observation under the existing request/run/source locks, serializes each attachment version chain, verifies the reserved Storage object remains present and rechecks authorization after waits. Same-operation recovery compares all caller-controlled decision fields before returning the saved record and precedes mutable source checks.
+
+Corrections append a new version and predecessor pointer. A conflicting initial approval or stale predecessor is rejected; prior versions and capture bytes are never rewritten. Direct table access is revoked for API roles, immutable triggers protect saved versions, and server-role execution cannot impersonate an authenticated reviewer. This is API provenance, not a manual-export receipt or native clinical interpretation.
+
+Local evidence is recorded in `docs/evidence/attachment-approval-foundation-local-20260913.json`. Staff review UI, chart/history discovery, DVM acknowledgement decisions, approval-specific both-order lock races, release integration, current populated94-migration upgrade/restore and real clinical/operator/provider acceptance remain open. Existing capture/cleanup contention checks do not establish approval concurrency coverage. No hosted approval record or migration was created.
+
+
+### Approval concurrency checkpoint
+
+The attachment contention harness now applies migration7300 when its schema clone lacks API record versions. Seven new scenarios observe the exact holder/waiter lock relationship before changing state. Administrator loss while waiting on operation identity, source head, reserved Storage metadata or attachment version-chain locks prevents a committed approval. Concurrent corrections against the same predecessor permit one winner and reject the other. A source-head revision committed first rejects stale approval; approval committed first retains its exact historical source revision when a waiting source update later completes. Captured requests remain unchanged throughout.
+
+All91 harness checks passed and the owned schema-only database was removed. Evidence: `docs/evidence/attachment-approval-races-local-20260913.json`. This adds approval-specific coverage beyond the earlier55 capture/cleanup checks; it does not establish physical Storage behavior, release invalidation/concurrency, UI acceptance, populated upgrade/restore or hosted clinical/provider acceptance. Those remain required along with the full commercial-readiness scope.
+
+
+### Captured-file approval history
+
+Migration7400 adds bounded approval-version discovery scoped through an owned captured request. Each page includes an independently computed latest-record reference so older-page browsing does not misidentify the correction predecessor. History retains saved API source identity and parent pins, titles/reasons, reviewer, version/hash and predecessor, but removes raw attachment metadata and provider URLs. Administrators can read other reviewers' versions in the same patient/source chain through their owned intake; unowned requests and revoked administrators are denied.
+
+The captured file card now displays the paginated approval history, distinguishing latest saved decision from historical versions and explaining that source freshness and release eligibility are separate. The frontend validates patient/source identity, explicit API provenance, bounded records, lineage and cursor consistency. Failed or refreshed queries withhold stale results. Original inspection and history use distinct React keys to prevent duplicate panel reconciliation during parent updates.
+
+Validation is recorded in `docs/evidence/attachment-review-history-local-20260913.json`. The staff approval/correction form, broader patient-chart discovery, release integration, current95-migration populated upgrade/restore and actual clinical/provider/operator acceptance remain required. No hosted migration, approval or public rollout occurred.
+
+
+### Cancellation boundary for unconfirmed staff decisions
+
+Migration7500 adds immutable approval-cancellation receipts and a unified approved/canceled recovery RPC. Approval and cancellation serialize on the same operation lock. A canceled ID cannot later approve; cancellation after an approval returns the original saved decision without changing it. Both paths validate the current administrator and exact owned capture; cancellation does not depend on current source freshness, so an obsolete pending decision can still be retired safely. The original approval implementation is now internal-only and API roles cannot bypass the cancellation-aware wrapper.
+
+This closes a prerequisite for safe form recovery: removing a browser draft alone could leave an in-flight approval able to commit later. A confirmed cancellation is a server outcome and is distinct from discarding an unsubmitted local edit. No captured file or existing clinical approval is deleted by cancellation.
+
+Validation and observed both-order races are recorded in `docs/evidence/attachment-approval-cancellation-local-20260913.json`. The staff decision form, broader chart discovery, release integration, current96-migration populated upgrade/restore and real operator/clinical/provider acceptance remain required. No hosted migration or approval/cancellation was performed.
+
+
+### Staff attachment decision form
+
+Captured file cards now expose the explicit staff approval/correction form. Staff download the verified original, enter a bounded title/reason and attest to the patient/source decision. A fresh latest-version lookup precedes a new submission. The submitted operation freezes actor, patient, captured request/hash, predecessor, title and reason in the browser before RPC. Fields remain immutable until the outcome is recovered or explicitly canceled; retries reuse the original operation. The outcome parser verifies full capture source pins and the exact decision fields rather than trusting a successful HTTP response.
+
+Lost replies recover the authoritative approved/canceled outcome. Reload retains the same submitted decision. Paginated owned decision-history recovery repairs missing references without another approval, while a dirty draft or unresolved submission cannot be silently replaced. Unsubmitted edits have an explicit discard action; submitted cancellation requires confirmation and cannot delete an existing approval. Drafts, busy operations and uncertain submissions participate in existing patient/file/navigation guards.
+
+Evidence: `docs/evidence/attachment-decision-form-local-20260913.json`. Broader patient-chart discovery, release integration, current96-migration populated upgrade/restore and real staff/clinical/provider acceptance remain required. This UI records explicit staff source review; it does not infer DVM interpretation or authorize a release. No hosted clinical decision or deployment occurred.
+
+
+### Reviewed API attachments on the patient chart
+
+Migration7600 exposes patient-scoped reviewed API attachment history to active staff. Pagination computes latest-version status independently of the page; current-source status checks the patient/client mapping plus saved parent and attachment head revisions. Superseded or stale source records remain visible as historical evidence. Summary responses omit raw provider metadata. Reviewed-original access returns the exact immutable capture, without worker leases, and the private Storage policy admits another active staff member only when that capture has an approval. Unreviewed intake remains owner scoped.
+
+The patient page adds a read-only reviewed-attachment card without replacing existing controls or navigation guards. Original download requires matching patient, record, capture, private path, MIME, size and SHA-256 plus a fresh record/capture read after Storage access. Blob URLs are revoked on replacement, explicit recheck, pagination, pagehide, signout and unmount. The chart session is keyed by actor and patient so pagination and download state cannot survive an identity change. Latest approval and source freshness are shown separately; neither implies release eligibility or DVM interpretation.
+
+The fresh97-migration local run passes261 HTTP/Auth/Storage checks and108 existing contention checks. A second synthetic staff account is denied an unreviewed original, then can discover and verify an approved original, and loses chart/Storage access after all staff roles are removed. Both Animal and Consult cases preserve older approval pages and distinguish changed source evidence. Owned resources were removed; shared foundation was untouched. Browser coverage includes stale-source presentation, wrong-patient rejection and corrupted-byte rejection. See `docs/evidence/attachment-patient-chart-local-20260913.json` for app/browser results and source hashes.
+
+Release family/schema integration, clinical acknowledgment policy/acceptance, current populated upgrade/restore, real source samples and the full commercial-readiness gates remain required. No hosted attachment migration, clinical approval or public deployment occurred.
+
+
+### Selected API originals — release validation prerequisite
+
+The [schema9 integration plan](../20260913-api-attachment-releases/plan.md) maps database composition, source invalidation, UI selection, shared rendering, print/email/link byte verification, concurrency and restore requirements. Migration7700 adds a private selected-record validator, not an exposed release API. It accepts1–20 distinct exact approval ID/hash pairs, locks patient/mappings, parent and attachment heads, approval chains and Storage metadata, then returns only current latest same-patient approvals and their exact immutable captures. Raw provider metadata and worker leases are omitted. It does not depend on intake ownership or a mutable import run.
+
+The local runtime adds34 checks across Animal and Consult fixtures, including exact projection, malformed/duplicate/oversized input, wrong hash/patient, absent and superseded approval, stale parent/attachment evidence, changed Storage metadata and API-role execution denial. The initial run caught a PL/pgSQL variable/table-alias ambiguity; the corrected run passed295 HTTP/Auth/Storage checks. Final contention/cleanup evidence is in `docs/evidence/attachment-release-validation-local-20260913.json`. Existing capture/approval races do not yet establish mixed schema9 release ordering.
+
+Schema9 preview/confirmation/source events, all delivery paths, rendered selection, clinical acceptance and current populated upgrade/restore remain unfinished. No existing release schema/policy or hosted state is changed by this private prerequisite.
+
+
+### Schema9 composition and shared artifact foundation
+
+Migration7800 adds explicit `api_attachment_ids` to schema9 preview/confirmation, source registration and current saved-package recovery. It retains schemas1–8, requires policy9 for a new confirmation and limits originals to24. API attachments keep their existing private bucket/capture identity, separate from manual exports and ordinary documents. Source-head, relevant mapping and approval changes append source-change events; saved snapshots are not rewritten. Current original failures return an ineligible package. Confirmation rechecks staff authority before insertion. Dedicated wait-boundary/mixed-release races remain required.
+
+The SQL byte-verification entry retains its original function identity and delegates older original contracts to a private legacy helper. Schema9 API bytes must match the exact projected original, patient, approval/capture references, size and digest; an API original cannot be relabeled as an ordinary document. Shared HTML rendering, email payload construction and document-link artifact construction now validate the API family in both directions, reject missing/duplicate/unselected sources and expose escaped API provenance. The private bucket is accepted only after shared rendering validates its schema9 record/capture/path binding. No provider URL is rendered or fetched.
+
+Verification:628 unit tests,40 targeted browser cases, lint/TypeScript/build and frozen Edge entry checks passed. The99-migration actual local run passed319 HTTP/Auth/Storage checks and108 existing attachment contention checks, with owned cleanup verified. It exercises SQL-produced schema9 rendering, API-only/native-summary mixed preview, policy8 rejection, policy9 confirmation/recovery, exact byte checks, immutable source invalidation and retry after source change. Shared payload tests combine API, lab and manual-export originals and reject same-size, signature-preserving byte corruption. These are not full deployed delivery-handler or mixed-release concurrency acceptance. Older original delivery regression and exact hashes are recorded in `docs/evidence/attachment-schema9-foundation-local-20260913.json`.
+
+Source discovery/selection UI still uses schema8; explicit schema9 operator controls, release/source/approval races, complete delivery-handler acceptance,99-migration populated upgrade/restore and clinical/provider/operator commissioning remain unfinished. Nothing is deployed, enabled or sent on a hosted project.
+
+
+### Operator schema9 source selection
+
+Migration7900 adds read-only current/latest API-original candidates and schema9 select-all composition. Candidate pages retain approval/capture hashes, source labels, file metadata and policy9 state; pagination filters currentness before offset. Locked schema9 preview is still authoritative. Prior source APIs remain available. Only current/latest API approvals enter select-all, with20 API-source and24-original package bounds. Older and changed approvals remain visible in the patient chart.
+
+The existing release page now requests schema9 candidates/preview and adds a reviewed ezyVet API-original group using existing buttons, layout, draft protection, confirmation and recovery. API rows require valid IDs/hashes/type/size and distinct identities. Selection is not silently removed after a stale preview. The policy9 gate allows preview while preventing unaccepted confirmation. Source refresh invalidation uses the new query key. API-original review uses the existing private byte-verification helper; late replies are withheld after patient/account/navigation changes, and the transient download URL is revoked. Ordinary document inspection keeps its existing ID-based call path.
+
+Final verification:628 unit tests,44 targeted browser cases and lint/TypeScript/build passed with existing warnings. The100-migration run passed327 actual local HTTP/Auth/Storage checks and108 existing attachment contention checks, then removed owned resources. New runtime cases cover latest-only candidates, exact pagination, select-all membership and source-change exclusion. Browser cases cover API-only preview, verified original download, identical confirmation retry after lost reply, policy9 gating, stale selection retention, invalid capture hashes and the20-source limit. Initial browser failures identified a missed schema8 preview guard and fixture assumptions; TypeScript caught the ordinary-document caller during download dispatch integration. Those are corrected in the final passing runs.
+
+Evidence: `docs/evidence/attachment-schema9-selection-local-20260913.json`. Dedicated mixed release/source/approval races, complete delivery-handler acceptance,100-migration populated upgrade/physical restore and real operator/clinical/provider commissioning remain required. No hosted migration, clinical policy acceptance, provider send or public cutover occurred.
+
+
+### Release races and current access after waits
+
+The attachment contention harness now covers14 additional release scenarios with selected API originals and native patient summaries. It observes the exact holder/waiter relationship before releasing the lock. Earlier attachment/parent/mapping/native/correction changes reject stale confirmation; later changes preserve the saved snapshot, append invalidation and make the package ineligible. Fresh confirmation checks cover operation and approval-chain waits. Exact confirmation replay and saved-package reads are also tested under staff-role revocation.
+
+The pre-fix tests reproduced two gaps: an already-saved confirmation retry and a package read could return private package data after all staff roles were removed during a wait. Migration8000 rechecks staff after the confirmation operation lock and before returns, and after the public package-read core completes. It preserves exact request identity and the immutable saved snapshot; private worker cores retain their separate authorization contract. Both failed reproduction clones were removed.
+
+The expanded suite passes202 checks (108 existing and94 added across14 release scenarios). Reproduction and fresh-stack/older-delivery evidence is recorded in `docs/evidence/attachment-release-access-races-local-20260913.json`. The harness suppresses query-result output to prevent large package rows filling subprocess pipes and keeps failures focused on database errors.
+
+Batch/multiple-original release combinations, complete delivery-handler acceptance and delivery-worker recovery races, current101-migration populated upgrade/physical restore and real clinical/provider/operator commissioning remain required. This checkpoint performs no hosted migration, role change, send or public rollout.

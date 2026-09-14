@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "34fa965",
+  "scope": "Observed schema9 email preparation/source ordering",
+  "checks_passed": 217,
+  "prior_checks": 202,
+  "new_checks": 15,
+  "scenarios": [
+    "release-email-source-first",
+    "release-email-before-source"
+  ],
+  "runner_sha256": "caadcc7139902255a70e170112bf3e2d234df7e054dfa52b021f410f7668ebe8",
+  "log_sha256": "546f9c3b8761dc1d484c573a56c99113287cc8e0546467f8f5f6522d8e504ec4",
+  "cleanup_verified": true,
+  "coverage": [
+    "Mixed selected API original and native patient summary",
+    "pg_blocking_pids proves exact waiter blocked by exact holder",
+    "Source revision first: email preparation rejected and no request created",
+    "Preparation first: exact request retained, later revision prevents service-authorized payload capture",
+    "Reviewed release hash and captured original request remain unchanged"
+  ],
+  "limits": [
+    "Owned schema-only database clone with Storage metadata; physical bytes tested separately in475-check runtime checkpoint",
+    "No provider request, message sending or hosted mutation",
+    "Worker start/capture/public retrieval lock races, batch/multiple-original composition and current populated restore remain pending",
+    "All broader clinical/provider/commercial gates remain open"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "b2ea061225372fb001a93ac0aeaa98a2558fef32",
+  "scope": "Owned local schema-only PostgreSQL attachment lock contention; synthetic source and Storage metadata only",
+  "reproduced_before_fix": {
+    "scenario": "upload-role-loss",
+    "result": "Authenticated Storage INSERT succeeded after ADMIN role deletion committed during an observed request advisory-lock wait; the regression failed as intended."
+  },
+  "fix": "Undeployed migration6800 rechecks current active administrator status after request advisory/row lock waits before allowing reserved Storage INSERT.",
+  "dedicated_runner": {
+    "command": "python3 supabase/tests/ezyvet_attachment_capture_concurrency.py",
+    "checks": 20,
+    "result": "passed",
+    "scenarios": [
+      "reserve-source-expiry",
+      "complete-source-expiry",
+      "complete-object-expiry",
+      "upload-role-loss"
+    ],
+    "lock_evidence": "Exact waiter blocked by exact holder using pg_blocking_pids and wait_event_type=Lock",
+    "lease_evidence": "Owner-only disposable fixture sets a short lease; runner waits for database clock to cross deadline only after exact lock contention is observed",
+    "cleanup": "Exact ownership marker verified; scratch database absence verified"
+  },
+  "regression": {
+    "runner": "supabase/tests/ezyvet_prescription_review_concurrency.py",
+    "overlay_versions": [
+      "20260913650000",
+      "20260913660000",
+      "20260913670000",
+      "20260913680000"
+    ],
+    "extra_sql_tests": [
+      "ezyvet_attachment_runs.test.sql",
+      "ezyvet_attachment_download_preparation.test.sql",
+      "ezyvet_attachment_download_leases.test.sql",
+      "ezyvet_attachment_capture.test.sql"
+    ],
+    "harness_checks": 234,
+    "prior_sql_assertions": 457,
+    "attachment_sql_assertions": 160,
+    "total_sql_assertions": 617,
+    "result": "passed",
+    "cleanup": "Owned scratch database removed"
+  },
+  "prior_endpoint_ci": {
+    "head": "b2ea061225372fb001a93ac0aeaa98a2558fef32",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/34796010477",
+    "result": "all three jobs succeeded; does not cover this new change"
+  },
+  "sha256": {
+    "supabase/migrations/20260913680000_attachment_private_capture.sql": "4282036820dbce7c31a53a47129f82f4baa3786c042f52517a063e0da8044218",
+    "supabase/tests/ezyvet_attachment_capture_concurrency.py": "ab9937dd4106ce1b3b67629029a028279056b39d5e52fa51910683fab6f5b706",
+    "supabase/tests/ezyvet_attachment_capture.test.sql": "e3a776771b323fdc7ac2ecc132f1d2353860f05b7fa7567b8097d07e4ecd0825",
+    ".github/workflows/ci.yml": "4e41ba4c4ac4eac7b62d4993958d1ea5314c177b9838e377c05909b3389c4c2c"
+  },
+  "logs": {
+    "/tmp/lrv-attachment-races-final.log": "79f30473f351495c95c8cdb8153496b5c95aed59a00cbbac19a8befd87e3488f",
+    "/tmp/lrv-attachment-lock-regression.log": "76ff5110bf917eeb74411a15eb41bea549238de8889d8b94c42142496f0f046e"
+  },
+  "limits": [
+    "No hosted migration, worker activation, provider request, or physical file upload in this rehearsal",
+    "Does not establish full source-change/capture, claim/abandon, cleanup/late-upload, role-change serialization or review/release concurrency coverage",
+    "Interruption cleanup, UI, clinical review/corrections and release integration remain unfinished",
+    "Prior 101-check actual HTTP/Storage runtime is pinned to the earlier migration hash and was not rerun for this SQL authorization fix",
+    "Mail login and commissioning, Stripe acceptance, vendor/clinical approval, current upgrade/restore and public cutover remain required"
+  ]
+}

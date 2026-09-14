@@ -1,0 +1,22 @@
+{
+  "source_revision": "2656c95a723857b3533a591cebe3197bd970636d",
+  "source_sha256": {
+    "supabase/functions/ezyvet-import/adapter.ts": "c89a0477d7ddd76153dc60c2062ac883dfadb7d3dcbb79235c2a5e0228d690e3",
+    "supabase/functions/ezyvet-import/handler.ts": "796677be1180f711a8a348aedfd45606582468fb4c5b4e7ff459748d28e4fcfa",
+    "supabase/functions/ezyvet-import/index.ts": "84ea8e78bfc6a1805ae0bc0e5682b5ce2d230eaaf58a0635ff371cfe3c9edb4b",
+    "tests/ezyvet/attachment-intake.test.ts": "5eef4c2dd5894f35690e24d98c609a24ec2688ec27e2b3aa5cd2b3b091a07e86"
+  },
+  "focused_tests": 41,
+  "application_tests": 466,
+  "lint": true,
+  "typescript": true,
+  "production_build": true,
+  "deno_frozen_entrypoint_check": true,
+  "upstream_requests": "Mocked responses only; zero practice requests",
+  "hosted_changes": false,
+  "limitations": [
+    "Gateway/transport tests use mocked responses; actual Auth/PostgREST/scoped SQL roundtrip remains required.",
+    "No UI intake workflow, attachment download/capture or approved release integration yet.",
+    "Existing Fast Refresh and large-chunk warnings remain."
+  ]
+}

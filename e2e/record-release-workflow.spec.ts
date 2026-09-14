@@ -1,3 +1,5 @@
+import { apiAttachmentArtifact, apiOriginalBytes } from "../tests/record-releases/api-attachment-fixture";
+import { releaseApiAttachmentDocument } from "../supabase/functions/_shared/record-release-api-attachments";
 import { prescriptionArtifact } from "../tests/record-releases/prescription-fixture";
 import { vaccinationArtifact } from "../tests/record-releases/vaccination-fixture";
 import { clinicalHistoryArtifact } from "../tests/record-releases/clinical-history-fixture";
@@ -42,8 +44,9 @@ async function fixture(
   clinicalMode = false,
   vaccinationMode = false,
   prescriptionMode = false,
+  apiMode = false,
 ) {
-  const currentArtifact = prescriptionMode
+  const currentArtifact = apiMode ? apiAttachmentArtifact() : prescriptionMode
     ? prescriptionArtifact()
     : vaccinationMode
     ? vaccinationArtifact()
@@ -52,6 +55,10 @@ async function fixture(
     : sourceMode
       ? sourceProvenanceArtifact()
       : chartArtifact;
+  if (apiMode) {
+    const s=currentArtifact.preview.snapshot;s.patient.id=petId;s.recipient.client_id=clientId;
+    for(const item of s.api_attachments!){const oldPet=item.record.pet_id;item.record.pet_id=petId;item.record.source_context.parent.pet_id=petId;item.record.source_context.parent.client_id=clientId;item.capture.pet_id=petId;item.capture.object_path=item.capture.object_path.replace(`/${oldPet}/`,`/${petId}/`);s.attachments=s.attachments.map(d=>d.id===item.capture.request_id?releaseApiAttachmentDocument(item):d);}
+  }
   const user = {
     id: staffId,
     aud: "authenticated",
@@ -84,6 +91,8 @@ async function fixture(
   );
   const state = {
     malformedSources: false,
+    badApiCapture: false,
+    apiCount: 1,
     emails: [] as Array<{
       request: {
         id: string;
@@ -271,7 +280,7 @@ async function fixture(
         "abandoned";
       return route.fulfill({ json: null });
     }
-    if (path === "/rest/v1/rpc/list_record_release_sources_v8") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v9") {
       state.sourceLoads++;
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
@@ -282,7 +291,8 @@ async function fixture(
         phone: "+13035550100",
         policy_accepted: accepted,
         policy_v4_accepted: v4Accepted,
-        policy_v8_accepted: v4Accepted,
+        policy_v9_accepted: v4Accepted,
+        api_attachment_ids: [],
         lab_report_ids: [],
         external_record_ids: [],
         has_more: Object.fromEntries(
@@ -309,6 +319,7 @@ async function fixture(
             file_size: key === "document_ids" ? 100 : undefined,
           }),
         );
+      if (apiMode) candidates.api_attachment_ids = (currentArtifact.preview.snapshot.api_attachments || []).flatMap(({record:r,capture:c})=>Array.from({length:state.apiCount},(_,n)=>({id:n===0?r.id:`d9000000-0000-4000-8000-${String(100+n).padStart(12,'0')}`,version:r.version,recorded_at:r.created_at,label:r.title,source_label:'ezyVet · synthetic-site · Animal 77',record_hash:r.record_hash,capture_hash:state.badApiCapture?'invalid':c.capture_hash,mime_type:c.mime_type,file_size:c.file_size})));
       if (sourceMode) {
         for (const [key, array] of [
           ["lab_report_ids", "lab_reports"],
@@ -355,7 +366,7 @@ async function fixture(
       }
       return route.fulfill({ json: candidates });
     }
-    if (path === "/rest/v1/rpc/select_all_record_release_sources_v8") {
+    if (path === "/rest/v1/rpc/select_all_record_release_sources_v9") {
       state.allCalls++;
       if (state.oversized)
         return route.fulfill({
@@ -369,6 +380,7 @@ async function fixture(
       return route.fulfill({
         json: {
           selection: {
+            api_attachment_ids: (currentArtifact.preview.snapshot.api_attachments || []).map(x=>x.record.id),
             lab_report_ids: [],
             external_record_ids: [],
             ...Object.fromEntries(
@@ -394,7 +406,7 @@ async function fixture(
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release_v8") {
+    if (path === "/rest/v1/rpc/preview_record_release_v9") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -410,7 +422,8 @@ async function fixture(
         });
       const preview = structuredClone(currentArtifact.preview);
       Object.assign(preview.snapshot, {
-        schema_version: 8,
+        schema_version: 9,
+        api_attachments: [],
         imported_vaccinations: preview.snapshot.imported_vaccinations || [],
         imported_prescriptions: preview.snapshot.imported_prescriptions || [],
         imported_histories: preview.snapshot.imported_histories || [],
@@ -448,9 +461,15 @@ async function fixture(
             })),
           },
         }));
-      preview.snapshot.selection = { ...body.p_selection, imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [], imported_prescription_ids: body.p_selection.imported_prescription_ids || [] };
+      if (apiMode) {
+        preview.snapshot.api_attachments = (currentArtifact.preview.snapshot.api_attachments || []).filter(x=>body.p_selection.api_attachment_ids?.includes(x.record.id));
+        preview.snapshot.attachments.push(...preview.snapshot.api_attachments.map(releaseApiAttachmentDocument));
+      }
+      preview.snapshot.selection = { ...body.p_selection, api_attachment_ids: body.p_selection.api_attachment_ids || [], imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [], imported_prescription_ids: body.p_selection.imported_prescription_ids || [] };
       return route.fulfill({ json: preview });
     }
+    if(apiMode&&path==='/rest/v1/rpc/get_ezyvet_attachment_chart_original') return route.fulfill({json:currentArtifact.preview.snapshot.api_attachments![0]});
+    if(apiMode&&path.startsWith('/storage/v1/object/ezyvet-attachments/')) return route.fulfill({contentType:'application/pdf',body:Buffer.from(apiOriginalBytes)});
     if (path === "/rest/v1/rpc/confirm_record_release") {
       const args = route.request().postDataJSON() as ReleaseConfirmArgs;
       state.requests.push(args);
@@ -972,7 +991,7 @@ test("new package confirmation cannot replace an active release email draft", as
   );
 });
 
-test("legacy acceptance does not enable confirmation of the expanded version 8 form", async ({
+test("legacy acceptance does not enable confirmation of the expanded version 9 form", async ({
   page,
 }) => {
   await fixture(page, true, false);
@@ -989,7 +1008,7 @@ test("legacy acceptance does not enable confirmation of the expanded version 8 f
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
   await expect(
-    panel.getByText("version 8, including reviewed outside prescriptions and vaccinations, imported clinical narratives", {
+    panel.getByText("version 9, including reviewed API originals, outside prescriptions and vaccinations, imported clinical narratives", {
       exact: false,
     }),
   ).toBeVisible();
@@ -1183,7 +1202,7 @@ test("verified lab and imported versions retain explicit matching originals acro
   expect(state.requests[0].p_selection.lab_report_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.external_record_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.document_ids).toHaveLength(4);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
 });
 
 test("all-source selection includes reciprocal provenance and stale source rejection preserves review workflow", async ({
@@ -1235,7 +1254,7 @@ test("all-source selection includes reciprocal provenance and stale source rejec
   expect(state.rows).toHaveLength(0);
 });
 
-test("schema8 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
+test("schema9 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
   page,
 }) => {
   const state = await fixture(page, true, true, true, true);
@@ -1310,12 +1329,12 @@ test("schema8 explicitly selects outside narratives while retaining compact prob
     .click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
 
 
-test("schema8 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
+test("schema9 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1333,12 +1352,12 @@ test("schema8 shares explicitly selected outside vaccination and narrative with 
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
   expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
 
-test("schema8 prescription selection preserves partial evidence and identical confirmation retry", async ({ page }) => {
+test("schema9 prescription selection preserves partial evidence and identical confirmation retry", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1361,7 +1380,7 @@ test("schema8 prescription selection preserves partial evidence and identical co
   expect(state.requests[0].p_selection.imported_vaccination_ids || []).toHaveLength(0);
 });
 
-test("schema8 prescription preview remains available before clinical form acceptance", async ({ page }) => {
+test("schema9 prescription preview remains available before clinical form acceptance", async ({ page }) => {
   const state = await fixture(page, true, false, true, true, true, true);
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
   await panel.getByRole("button", { name: `Select all shown: ${sourceLabels.imported_prescription_ids}`, exact: true }).click();
@@ -1370,4 +1389,53 @@ test("schema8 prescription preview remains available before clinical form accept
   await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
   await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
   expect(state.requests).toHaveLength(0);
+});
+
+
+test('schema9 selects only the API original and recovers the same confirmation after lost reply',async({page})=>{
+ const state=await fixture(page,true,true,true,false,false,false,true);state.ambiguous=true;
+ const panel=page.getByRole('region',{name:'Patient medical-record releases'});
+ await panel.getByRole('button',{name:`Select all shown: ${sourceLabels.api_attachment_ids}`,exact:true}).click();
+ await panel.getByRole('button',{name:'Review selected package',exact:true}).click();
+ await expect(panel.frameLocator('iframe').getByRole('heading',{name:'Selected ezyVet API originals',exact:true})).toBeVisible();
+ await expect(panel.frameLocator('iframe').getByRole('heading',{name:'Selected laboratory report provenance',exact:true})).toHaveCount(0);
+ const downloadPromise=page.waitForEvent('download');
+ await panel.getByRole('button',{name:'Review selected original: ezyvet-attachment-701.pdf',exact:true}).click();
+ const download=await downloadPromise;expect(download.suggestedFilename()).toBe('ezyvet-attachment-701.pdf');
+ expect(await readFile((await download.path())!)).toEqual(Buffer.from(apiOriginalBytes));
+
+ await panel.getByLabel('I reviewed the complete selected records, original attachments and household recipient.').check();
+ await panel.getByRole('button',{name:'Confirm reviewed package',exact:true}).click();
+ await panel.getByRole('button',{name:'Retry same package confirmation',exact:true}).click();
+ expect(state.requests).toHaveLength(2);expect(state.requests[0]).toEqual(state.requests[1]);
+ expect(state.requests[0].p_selection.api_attachment_ids).toHaveLength(1);expect(state.requests[0].p_selection.document_ids||[]).toHaveLength(0);
+ expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
+});
+test('API release preview remains available while policy9 blocks confirmation',async({page})=>{
+ const state=await fixture(page,true,false,true,false,false,false,true);
+ const panel=page.getByRole('region',{name:'Patient medical-record releases'});
+ await panel.getByRole('button',{name:`Select all shown: ${sourceLabels.api_attachment_ids}`,exact:true}).click();
+ await panel.getByRole('button',{name:'Review selected package',exact:true}).click();
+ await expect(panel.frameLocator('iframe').getByRole('heading',{name:'Selected ezyVet API originals',exact:true})).toBeVisible();
+ await panel.getByLabel('I reviewed the complete selected records, original attachments and household recipient.').check();
+ await expect(panel.getByRole('button',{name:'Confirm reviewed package',exact:true})).toBeDisabled();expect(state.requests).toHaveLength(0);
+});
+test('stale API preview retains the explicit source selection without confirmation',async({page})=>{
+ const state=await fixture(page,true,true,true,false,false,false,true);
+ const panel=page.getByRole('region',{name:'Patient medical-record releases'});
+ await panel.getByRole('button',{name:`Select all shown: ${sourceLabels.api_attachment_ids}`,exact:true}).click();
+ await page.route('**/rest/v1/rpc/preview_record_release_v9',route=>route.fulfill({status:400,json:{code:'40001',message:'Current latest same-patient API approval required'}}));
+ await panel.getByRole('button',{name:'Review selected package',exact:true}).click();
+ await expect(panel.getByText('Current latest same-patient API approval required',{exact:true})).toBeVisible();
+ await expect(panel.getByRole('checkbox',{name:/Reviewed API source/})).toBeChecked();expect(state.requests).toHaveLength(0);
+});
+test('API candidate verification rejects invalid capture hashes and preserves the20-source limit',async({page})=>{
+ const state=await fixture(page,true,true,true,false,false,false,true);const panel=page.getByRole('region',{name:'Patient medical-record releases'});
+ state.apiCount=21;
+ await panel.getByRole('button',{name:'Refresh source list',exact:true}).click();
+ await panel.getByRole('button',{name:`Select all shown: ${sourceLabels.api_attachment_ids}`,exact:true}).click();
+ await expect(panel.getByText(/Selecting these records would exceed 20/)).toBeVisible();
+ state.badApiCapture=true;
+ await panel.getByRole('button',{name:'Refresh source list',exact:true}).click();
+ await expect(panel.getByRole('button',{name:'Retry release data',exact:true})).toBeVisible({timeout:15000});expect(state.requests).toHaveLength(0);
 });

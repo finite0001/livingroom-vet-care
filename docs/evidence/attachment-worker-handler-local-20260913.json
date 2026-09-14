@@ -1,0 +1,33 @@
+{
+  "synthetic_only": true,
+  "git_parent_revision": "63c399379948e051a2f766844e0893dc8ff28159",
+  "focused_endpoint_tests": 23,
+  "application_tests": 533,
+  "commands": [
+    "npm run check",
+    "deno check --frozen supabase/functions/ezyvet-attachment-capture/index.ts supabase/functions/ezyvet-import/index.ts"
+  ],
+  "results": {
+    "lint": "pass (existing Fast Refresh warning)",
+    "typescript": "pass",
+    "tests": "533 passed",
+    "build": "pass (existing bundle warning)",
+    "deno_frozen": "pass"
+  },
+  "source_sha256": {
+    "supabase/functions/ezyvet-attachment-capture/index.ts": "89cb8b8a8e7098ab4194f0a2282d4f94aa2e28da746a3c2309977e08861dde37",
+    "supabase/functions/ezyvet-attachment-capture/runtime.ts": "534ece1faab58ea303e9112a936c0b02527980067bcc292993b169ae7bc46b73",
+    "supabase/functions/ezyvet-attachment-capture/handler.ts": "67aa937988d6d3e6f4b93c790541cac2ea0cbf314dad920bdaab648315291cc3",
+    "supabase/functions/ezyvet-attachment-capture/contract.ts": "8fe3477b5f517cf0ab6c01f759bbe13ec6f0b70cea88d3e23dbe6815fa59de41",
+    "supabase/functions/ezyvet-import/attachment-bytes.ts": "378725e8a3acc252bbc81438648a6f80b5edd68b347cc149c472af1adfb6e6f6",
+    "tests/ezyvet/attachment-capture-handler.test.ts": "1f743b3f1de1f21f66b26c1c3816cbab27505206c3d37bf287b19ee9d708889e",
+    "supabase/config.toml": "3b7d26058c642910ae8fdb31dd461a936751b67cbb0d2309658faa2a7bca3754"
+  },
+  "provider_requests": 0,
+  "limitations": [
+    "Endpoint unit tests use synthetic gateway responses; separate runtime evidence covers actual Auth/RPC/Storage.",
+    "No hosted Edge deployment or activation; capture gate and staff availability remain off.",
+    "Interruption/orphan cleanup, dedicated capture/lease/source/role races and staff review/release remain unfinished.",
+    "Current populated upgrade/restore and issued-site/clinical acceptance remain required."
+  ]
+}

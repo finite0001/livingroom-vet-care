@@ -67,3 +67,10 @@ verify_jwt = true
 
 [functions.prepare-external-record]
 verify_jwt = true
+
+# Staff JWT, owned immutable request, source allowlist and default-off capture gate.
+[functions.ezyvet-attachment-capture]
+verify_jwt = true
+
+[functions.ezyvet-attachment-cleanup]
+verify_jwt = true
