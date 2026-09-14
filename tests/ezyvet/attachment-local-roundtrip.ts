@@ -1,3 +1,4 @@
+import { renderRecordRelease } from "../../supabase/functions/_shared/record-release-renderer.ts";
 import { parseAttachmentChart, parseAttachmentChartOriginal } from "../../src/hub/features/imports/attachment-chart-state.ts";
 import { parseAttachmentDecisionOutcome } from "../../src/hub/features/imports/attachment-decision-state.ts";
 import { parseAttachmentReviewHistory } from "../../src/hub/features/imports/attachment-review-state.ts";
@@ -154,7 +155,7 @@ try {
         p_first_name: "Synthetic",
         p_last_name: "PrescriptionItem source",
         p_primary_phone: null,
-        p_primary_email: null,
+        p_primary_email: email,
         p_preferred_channel: "EMAIL",
         p_mailing_address: null,
         p_housecall_address: null,
@@ -479,6 +480,28 @@ try {
       sql(`begin; update storage.objects set metadata='{}' where id=${quote(chartCapture.storage_object_id)}; do $test$ begin perform ${releaseCall(releaseRefs)}; raise exception 'Expected original metadata rejection'; exception when sqlstate '40001' then null; end $test$; rollback;`); assertions++;
       sql(`begin; update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(corrected.source_context.parent.parent_snapshot_id)}; do $test$ begin perform ${releaseCall(releaseRefs)}; raise exception 'Expected stale API parent rejection'; exception when sqlstate '40001' then null; end $test$; rollback;`); assertions++;
       check(sql(`select bool_and(not has_function_privilege(role,'public.ezyvet_validate_release_attachments(uuid,jsonb)','EXECUTE')) from unnest(array['anon','authenticated','service_role']) role;`) === 't', "Selected attachment release helper is private to database composition");
+      const packageArgs = { p_pet_id: pet, p_client_id: client, p_channel: 'EMAIL', p_recipient: email, p_selection: { api_attachment_ids: [correctionId] } };
+      const packagePreview = await api('/rest/v1/rpc/preview_record_release_v9', packageArgs, chartHeaders);
+      const packageDocument = packagePreview.snapshot.attachments[0];
+      check(renderRecordRelease({ preview: packagePreview }).includes("Selected ezyVet API originals"), "Shared renderer accepts actual schema9 SQL projection for the selected captured original");
+      check(packagePreview.snapshot.schema_version === 9 && packagePreview.snapshot.api_attachments.length === 1 && packagePreview.snapshot.attachments.length === 1 && packageDocument.bucket === 'ezyvet-attachments' && packageDocument.id === downloadId && packageDocument.api_attachment_ref.record_id === correctionId, "Schema9 explicitly composes one selected API original without adding patient documents");
+      const priorPreview = await api('/rest/v1/rpc/preview_record_release_v8', { ...packageArgs, p_selection: { patient_summary_ids: [pet] } }, chartHeaders);
+      const mixedPreview = await api('/rest/v1/rpc/preview_record_release_v9', { ...packageArgs, p_selection: { patient_summary_ids: [pet], api_attachment_ids: [correctionId] } }, chartHeaders);
+      check(priorPreview.snapshot.schema_version === 8 && !('api_attachments' in priorPreview.snapshot) && mixedPreview.snapshot.patient_summaries.length === 1 && mixedPreview.snapshot.api_attachments.length === 1, "Schema9 retains explicitly selected native summaries while schema8 keeps its original contract");
+      const verifyOriginalSql = (doc: unknown, bytes: string) => `public.verify_release_source_original_v5(${quote(JSON.stringify(packagePreview.snapshot))}::jsonb,${quote(JSON.stringify(doc))}::jsonb,decode(${quote(bytes)},'hex'))`;
+      sql(`select ${verifyOriginalSql(packageDocument, Buffer.from(original).toString('hex'))};`); assertions++;
+      for (const [doc, content] of [[packageDocument, Buffer.alloc(original.length).toString('hex')], [{ ...packageDocument, api_attachment_ref: { ...packageDocument.api_attachment_ref, record_hash: '0'.repeat(64) } }, Buffer.from(original).toString('hex')], [{ ...packageDocument, bucket: 'patient-documents' }, Buffer.from(original).toString('hex')]] as const) {
+        sql(`do $test$ begin perform ${verifyOriginalSql(doc, content)}; raise exception 'Expected API byte/provenance rejection'; exception when sqlstate '23514' then null; end $test$;`); assertions++;
+      }
+      sql(`insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,${quote(actor)},now(),'Synthetic local policy only',8) on conflict(id) do update set accepted_schema_version=8;`);
+      const packageId = randomUUID(); ids.push(packageId);
+      const confirmPackage = { ...packageArgs, p_id: packageId, p_reviewed_snapshot: packagePreview.snapshot, p_reviewed_hash: packagePreview.source_hash, p_attest_review: true };
+      await assert.rejects(api('/rest/v1/rpc/confirm_record_release', confirmPackage, chartHeaders), (error: { code: string }) => error.code === '42501'); assertions++;
+      sql('update record_release_policy set accepted_schema_version=9 where id;');
+      const savedPackage = await api('/rest/v1/rpc/confirm_record_release', confirmPackage, chartHeaders);
+      const readyPackage = await api('/rest/v1/rpc/read_record_release', { p_id: packageId }, chartHeaders);
+      check(readyPackage.eligible && savedPackage.source_hash === packagePreview.source_hash && sql(`select source_kind from record_release_sources where release_id=${quote(packageId)};`) === 'api_attachment', "Schema9 confirmation requires policy9 and registers exact API source for eligible recovery");
+      sql(`begin; select set_config('request.jwt.claims',${quote(JSON.stringify({ sub: chartActor, role: 'authenticated' }))},true); do $test$ begin if not (public.release_read_internal(${quote(packageId)})->>'eligible')::boolean then raise exception 'Expected eligible baseline'; end if; end $test$; update storage.objects set metadata='{}' where id=${quote(chartCapture.storage_object_id)}; do $test$ begin if (public.release_read_internal(${quote(packageId)})->>'eligible')::boolean then raise exception 'Missing original remained eligible'; end if; end $test$; rollback;`); assertions++;
       sql(`delete from user_roles where user_id=${quote(chartActor)};`);
       await assert.rejects(api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet }, chartHeaders), (error: { code: string }) => error.code === "42501"); assertions++;
       check(!(await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + chartCapture.object_path, { headers: chartHeaders })).ok, "Revoked staff cannot download reviewed original");
@@ -487,6 +510,10 @@ try {
       const staleChart = parseAttachmentChart(await api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet, p_limit: 1 }, chartHeaders), pet);
       check(staleChart.records[0].is_latest && !staleChart.records[0].source_current, "Chart distinguishes latest approval from changed source evidence");
       rejectRelease(releaseRefs, '40001');
+      const invalidatedPackage = await api('/rest/v1/rpc/read_record_release', { p_id: packageId }, chartHeaders);
+      check(!invalidatedPackage.eligible && invalidatedPackage.events.some((event: { kind: string }) => event.kind === 'source_changed') && JSON.stringify(invalidatedPackage.release.snapshot) === JSON.stringify(packagePreview.snapshot), "Source revision adds an invalidation event without rewriting the reviewed API package");
+      check((await api('/rest/v1/rpc/confirm_record_release', confirmPackage, chartHeaders)).id === packageId, "Exact schema9 confirmation retry recovers original after source change");
+
       check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
       sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);

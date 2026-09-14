@@ -77,7 +77,7 @@ const fail = () => {
 };
 /** Validate both directions so missing optional attachment fields cannot downgrade verified sources. */
 export function validateReleaseSourceProvenance(s: ReleaseSnapshot): void {
-  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8) return;
+  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9) return;
   if (
     !Array.isArray(s.lab_reports) || !Array.isArray(s.external_records) ||
     !Array.isArray(s.attachments)
@@ -175,6 +175,7 @@ export function validateReleaseSourceProvenance(s: ReleaseSnapshot): void {
       ":",
     );
   for (const d of s.attachments) {
+    if (s.schema_version === 9 && d.bucket === "ezyvet-attachments") continue;
     const refs = expected.get(d.id);
     if (!refs) {
       if (
@@ -201,7 +202,7 @@ const esc = (v: unknown) =>
       ]!,
   );
 export function renderReleaseSourceProvenance(s: ReleaseSnapshot): string {
-  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8) return "";
+  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9) return "";
   validateReleaseSourceProvenance(s);
   const common = (r: ReleaseSourceVersion) =>
     `<p>Version ${r.version} · ${esc(r.kind)} · ${
