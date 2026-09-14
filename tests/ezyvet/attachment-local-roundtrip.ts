@@ -1,6 +1,9 @@
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
+import { createAdapter } from "../../supabase/functions/ezyvet-import/adapter.ts";
+import { readAttachmentForCapture } from "../../supabase/functions/ezyvet-import/attachment-capture-read.ts";
+import { readAttachmentBytes } from "../../supabase/functions/ezyvet-import/attachment-bytes.ts";
 import { createHandler } from "../../supabase/functions/ezyvet-import/handler.ts";
 import type { ImportRun } from "../../supabase/functions/ezyvet-import/handler.ts";
 import { execFileSync } from "node:child_process";
@@ -45,6 +48,8 @@ const sql = (query: string) =>
   ).trim();
 const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 
+const includeCapture = process.env.INCLUDE_ATTACHMENT_CAPTURE === "true";
+const storageObjects: string[] = [];
 const ids: string[] = [];
 const additionalActors: string[] = [];
 let actor = "",
@@ -204,18 +209,30 @@ try {
   const consult = JSON.parse(sql(`select jsonb_build_object('id',s.id,'hash',s.payload_hash,'version',h.version) from ezyvet_import_snapshots s join ezyvet_identity_heads h on h.snapshot_id=s.id where s.source_site_uid=${quote(site)} and s.resource='consult';`));
   const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox));");
   const beforeEffects = effects();
+  const original = new TextEncoder().encode("%PDF-1.7\nSynthetic captured original\n%%EOF");
+  const attachmentPayload = (kind: string, page: number) => ({ id: (kind === "Animal" ? 700 : 800) + page, record_type: kind, record_id: wrongParent ? "999" : kind === "Animal" ? "77" : "201", mime_type: includeCapture && page === 1 ? "application/pdf" : "unsupported/example", name: "<script>source name</script>", file_download_url: "https://untrusted.example.test/do-not-fetch" });
   const upstream = await serve(async (req, res) => {
     upstreamCalls++;
     const url = new URL(req.url!, "http://synthetic.test");
     res.setHeader("Content-Type", "application/json");
     if (url.pathname === "/v1/oauth/access_token") { res.end(JSON.stringify({ access_token: "synthetic-only", expires_in: 43200 })); return; }
+    if (includeCapture && /^\/v1\/attachment\/download\/(701|801)$/.test(url.pathname)) {
+      assert.equal(req.method, "GET"); res.setHeader("Content-Type", "application/pdf"); res.end(original); return;
+    }
     assert.equal(url.pathname, "/v1/attachment"); assert.equal(req.method, "GET");
+    if (includeCapture && url.searchParams.has("id")) {
+      assert.deepEqual([...url.searchParams.keys()].sort(), ["id", "limit", "page", "record_id", "record_type"]);
+      const kind = url.searchParams.get("record_type")!;
+      assert.ok(kind === "Animal" || kind === "Consult"); assert.equal(url.searchParams.get("record_id"), kind === "Animal" ? "77" : "201");
+      assert.equal(url.searchParams.get("id"), kind === "Animal" ? "701" : "801");
+      res.end(JSON.stringify({ meta: { items_page: 1, items_page_total: 1 }, items: [{ attachment: attachmentPayload(kind, 1) }] })); return;
+    }
     assert.deepEqual([...url.searchParams.keys()].sort(), ["limit", "page", "record_id", "record_type"]);
     const kind = url.searchParams.get("record_type"); assert.ok(kind === "Animal" || kind === "Consult");
     assert.equal(url.searchParams.get("record_id"), kind === "Animal" ? "77" : "201");
     assert.equal(url.searchParams.get("limit"), "10");
     const page = Number(url.searchParams.get("page"));
-    res.end(JSON.stringify({ meta: { items_page: page, items_page_total: 2 }, items: [{ attachment: { id: (kind === "Animal" ? 700 : 800) + page, record_type: kind, record_id: wrongParent ? "999" : kind === "Animal" ? "77" : "201", mime_type: "unsupported/example", name: "<script>source name</script>", file_download_url: "https://untrusted.example.test/do-not-fetch" } }] }));
+    res.end(JSON.stringify({ meta: { items_page: page, items_page_total: 2 }, items: [{ attachment: attachmentPayload(kind!, page) }] }));
   });
   const env: Record<string, string> = { APP_URL: origin, APP_ENV: "staging", EZYVET_IMPORT_MODE: "staging", EZYVET_SITE_UID: site, EZYVET_CLIENT_ID: "synthetic", EZYVET_CLIENT_SECRET: "synthetic", EZYVET_READ_RESOURCES: "attachment" };
   const handler = createHandler({ env: key => env[key], now: Date.now, sleep: async () => {}, fetch: async (input, init) => {
@@ -268,6 +285,48 @@ try {
     check(sql(`select count(*) from ezyvet_attachment_pages where run_id=${quote(runId)};`) === "2", "Lost replies never duplicate page receipts");
     check(sql(`select count(*) from ezyvet_attachment_page_observations where run_id=${quote(runId)};`) === "2", "Exact source page observations retained");
     await assert.rejects(rpc("recover_ezyvet_attachment_run", { p_id: runId, p_animal_link_id: otherMapping }, true), (error: { code: string }) => error.code === "42501"); assertions++;
+    if (includeCapture) {
+      resetCooldown();
+      const selected = JSON.parse(sql(`select jsonb_build_object('id',s.id,'hash',s.payload_hash,'version',o.head_version,'payload',s.payload) from ezyvet_attachment_page_observations o join ezyvet_import_snapshots s on s.id=o.snapshot_id where o.run_id=${quote(runId)} and o.page=1;`));
+      const downloadId = randomUUID(); ids.push(downloadId);
+      const prepared = await rpc("prepare_ezyvet_attachment_download", { p_id: downloadId, p_pet_id: pet, p_run_id: runId, p_page: 1, p_snapshot_id: selected.id, p_payload_hash: selected.hash, p_observed_head_version: selected.version }, true);
+      const requestHash = prepared.request.request_hash;
+      const lease = await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash });
+      check(lease.attempt_no === 1, "Actual service claim creates owned capture attempt");
+      const captureAdapter = createAdapter({ baseUrl: "https://api.trial.ezyvet.com", siteUid: site, clientId: "synthetic", clientSecret: "synthetic", readResources: ["attachment"] }, { now: Date.now, sleep: async () => {}, fetch: async (input, init) => {
+        const url = new URL(String(input)); assert.equal(url.origin, "https://api.trial.ezyvet.com"); assert.equal(init?.redirect, "error");
+        const result = await fetch(upstream + url.pathname + url.search, init);
+        return new Response(result.body, { status: result.status, headers: result.headers });
+      } });
+      const captureParent = { parent_type: parentType as "Animal" | "Consult", parent_external_id: parentType === "Animal" ? "77" : "201" };
+      const read = await readAttachmentForCapture(captureAdapter, String(selected.payload.id), captureParent, selected.payload);
+      check(Buffer.from(read.file.bytes).equals(Buffer.from(original)), "Actual metadata-file-metadata sequence preserves original bytes");
+      const intentArgs = { p_id: downloadId, p_actor: actor, p_lease_id: lease.lease_id, p_request_hash: requestHash, p_content_sha256: read.file.sha256, p_file_size: read.file.size, p_mime_type: read.file.mimeType, p_before_metadata: read.before, p_after_metadata: read.after };
+      const intent = await rpc("prepare_ezyvet_attachment_capture", intentArgs);
+      assert.equal(intent.bucket, "ezyvet-attachments"); assert.ok(intent.object_path.startsWith(`${actor}/${pet}/${downloadId}/`)); storageObjects.push(intent.object_path);
+      check(JSON.stringify(await rpc("prepare_ezyvet_attachment_capture", intentArgs)) === JSON.stringify(intent), "Lost reservation acknowledgment recovers same allocated path");
+      const objectUrl = local.API_URL + "/storage/v1/object/ezyvet-attachments/" + intent.object_path;
+      const uploadHeaders = { apikey: local.ANON_KEY, Authorization: staffHeaders.Authorization, "Content-Type": read.file.mimeType, "x-upsert": "false" };
+      const uploaded = await fetch(objectUrl, { method: "POST", headers: uploadHeaders, body: read.file.bytes });
+      check(uploaded.ok, "Actual staff JWT uploads reserved original through Storage RLS");
+      // Discard the successful upload response and recover through the durable request.
+      const recovery = await rpc("recover_ezyvet_attachment_download", { p_id: downloadId, p_pet_id: pet }, true);
+      check(recovery.capture === null && recovery.capture_intent.object_path === intent.object_path, "Ambiguous upload retains the exact reservation without a false capture receipt");
+      check(!(await fetch(objectUrl, { method: "POST", headers: uploadHeaders, body: read.file.bytes })).ok, "Actual duplicate upload cannot overwrite original");
+      check(!(await fetch(objectUrl, { method: "PUT", headers: { ...uploadHeaders, "x-upsert": "true" }, body: read.file.bytes })).ok, "Actual authenticated replacement is denied");
+      const downloaded = await fetch(local.API_URL + "/storage/v1/object/authenticated/ezyvet-attachments/" + intent.object_path, { headers: { apikey: local.ANON_KEY, Authorization: staffHeaders.Authorization, "Accept-Encoding": "identity" } });
+      const verified = await readAttachmentBytes(downloaded, intent.mime_type, AbortSignal.timeout(5000));
+      check(verified.sha256 === intent.content_sha256 && verified.size === intent.file_size, "Physical Storage readback matches frozen digest and size");
+      const finalMetadata = await captureAdapter.attachmentMetadata(String(selected.payload.id), captureParent);
+      const completeArgs = { p_id: downloadId, p_actor: actor, p_lease_id: lease.lease_id, p_request_hash: requestHash, p_intent_hash: intent.intent_hash, p_verified_sha256: verified.sha256, p_verified_size: verified.size, p_verified_mime: verified.mimeType, p_final_metadata: finalMetadata.payload };
+      const receipt = await rpc("complete_ezyvet_attachment_capture", completeArgs);
+      check(receipt.content_sha256 === read.file.sha256, "Actual capture binds verified physical bytes");
+      check(JSON.stringify(await rpc("complete_ezyvet_attachment_capture", completeArgs)) === JSON.stringify(receipt), "Lost capture acknowledgment recovers exact receipt");
+      const final = await rpc("recover_ezyvet_attachment_download", { p_id: downloadId, p_pet_id: pet }, true);
+      check(final.request.status === "captured" && final.capture.capture_hash === receipt.capture_hash && !JSON.stringify(final).includes(lease.lease_id), "Owner recovery exposes completion without service lease");
+      const noFetch = upstreamCalls;
+      check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
+    }
     const freshId = randomUUID(); ids.push(freshId); resetCooldown(); wrongParent = true;
     check((await post({ ...body, run_id: freshId })).status === 503, "Real HTTP intake rejects wrong-parent upstream metadata"); wrongParent = false;
     check(sql(`select count(*) from ezyvet_attachment_pages where run_id=${quote(freshId)};`) === "0", "Rejected page leaves no receipt");
@@ -293,6 +352,11 @@ try {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
   try {
+    if (storageObjects.length) {
+      const removed = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments", { method: "DELETE", headers: serviceHeaders, body: JSON.stringify({ prefixes: storageObjects }) });
+      assert.ok(removed.ok);
+      check(sql(`select count(*) from storage.objects where bucket_id='ezyvet-attachments' and name in (${storageObjects.map(quote).join(",")});`) === "0", "Owned physical Storage objects removed through actual API");
+    }
     if (ids.length) {
       const patterns = ids.map((value) => quote(`%${value}%`)).join(",");
       sql(
@@ -341,5 +405,5 @@ if (failures.length) {
   );
 }
 console.log(
-  `Attachment metadata HTTP/Auth/PostgREST: ${assertions} checks passed. Synthetic upstream only; no ezyVet requests.`,
+  `${includeCapture ? "Attachment capture HTTP/Auth/Storage" : "Attachment metadata HTTP/Auth/PostgREST"}: ${assertions} checks passed. Synthetic upstream only; no ezyVet requests.`,
 );

@@ -14,11 +14,12 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
+parser.add_argument('--include-capture', action='store_true')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
-fixture = ('attachment-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST')
+fixture = ('attachment-local-roundtrip.ts', 'Attachment capture HTTP/Auth/Storage' if args.include_capture else 'Attachment metadata HTTP/Auth/PostgREST')
 harness_path = root / 'tests/ezyvet' / fixture[0]
 identity = 'lrv-attachment-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
@@ -62,6 +63,8 @@ try:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
     assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000', '20260913620000', '20260913650000'} <= versions, 'Prescription intake and clinical review migrations required'
+    if args.include_capture:
+        assert '20260913680000' in versions, 'Private API capture migration required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 62321
@@ -88,7 +91,7 @@ enabled = false
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
     harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
-    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
+    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project), 'INCLUDE_ATTACHMENT_CAPTURE': 'true' if args.include_capture else 'false'}, cwd=root)
     assert hashlib.sha256(harness_path.read_bytes()).hexdigest() == harness_hash, 'Harness changed during execution; rerun exact source'
     # Only the harness's fixed aggregate evidence line reaches the terminal.
     matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. Synthetic upstream only; no ezyVet requests\.', output.strip())
@@ -107,7 +110,7 @@ finally:
     finally:
         log.close()
 if success:
-    summary = {'synthetic_only': True, 'fixture': 'attachment', 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+    summary = {'synthetic_only': True, 'fixture': 'attachment-capture' if args.include_capture else 'attachment', 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hash,
