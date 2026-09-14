@@ -365,6 +365,11 @@ try {
   const act = (id: string, action = "capture", authorization = staffHeaders.Authorization) => fetch(captureEndpoint, { method: "POST", headers: { Authorization: authorization, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify({ request_id: id, action }) });
   const hash = async (bytes: Uint8Array) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))).map(b => b.toString(16).padStart(2, "0")).join("");
   const nativeEffects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox));");
+  const nativeId=randomUUID(),nativeBytes=originalBytes.slice();nativeBytes[20]^=1;
+  const nativeDoc=await rpc("prepare_patient_document",{p_id:nativeId,p_pet_id:pet,p_encounter_id:null,p_file_name:"synthetic-native.pdf",p_mime_type:"application/pdf",p_file_size:nativeBytes.length,p_category:"medical_record",p_source:"Synthetic mixed-package fixture",p_document_date:null,p_visibility:"client_shareable"},true);
+  const nativeUpload=await fetch(local.API_URL+"/storage/v1/object/patient-documents/"+nativeDoc.file_path.split('/').map(encodeURIComponent).join('/'),{method:"POST",headers:{apikey:local.ANON_KEY,Authorization:staffHeaders.Authorization,"Content-Type":"application/pdf","x-upsert":"false"},body:nativeBytes});
+  check(nativeUpload.ok,"Distinct same-size native PDF uploaded through staff Storage policy");
+  await rpc("finalize_patient_document",{p_id:nativeId},true);
   const initialNative = nativeEffects();
   const id = randomUUID();
   const intentPrepared = await prepare(id);
@@ -435,7 +440,7 @@ try {
       res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
     }catch(error){failures.push(error);res.statusCode=500;res.end('{}');}
   });
-  const prepareEmail=()=>fetch(emailEndpoint,{method:"POST",headers:staffHeaders,body:JSON.stringify(releaseEmailArgs)});
+  const prepareEmail=(args=releaseEmailArgs)=>fetch(emailEndpoint,{method:"POST",headers:staffHeaders,body:JSON.stringify(args)});
   // SQL verifier must reject swapped bytes before any successful capture exists.
   const emailPrepared=await rpc("prepare_release_email",releaseEmailArgs,true);
   const currentRelease=await rpc("read_record_release",{p_id:releaseId},true);
@@ -528,6 +533,40 @@ try {
     for(const role of rolesBeforePublicCheck)sql(`insert into user_roles(user_id,role) values(${quote(actor)},${quote(role)}) on conflict do nothing;`);
   }
   check(releaseReads===readsAfterAllPrepared,"Public retrieval serves captured artifacts without rereading original Storage");
+  // Mixed native/API physical files must remain distinct in every saved package.
+  const mixedSelection={api_attachment_ids:[correctionId],document_ids:[nativeId]};
+  const mixedPreview=await rpc("preview_record_release_v9",{p_pet_id:pet,p_client_id:client,p_channel:"EMAIL",p_recipient:"attachment-owner@example.test",p_selection:mixedSelection},true);
+  check(mixedPreview.snapshot.attachments.length===2&&new Set(mixedPreview.snapshot.attachments.map((d:{bucket:string})=>d.bucket)).size===2,"Actual mixed preview contains both private original families");
+  const nativeIndex=mixedPreview.snapshot.attachments.findIndex((d:{id:string})=>d.id===nativeId)+1;
+  const apiIndex=mixedPreview.snapshot.attachments.findIndex((d:{id:string})=>d.id===id)+1;
+  check(nativeIndex>0&&apiIndex>0&&nativeIndex!==apiIndex,"Mixed descriptor identities are distinct and exact");
+  const mixedEmailId=randomUUID(),mixedRequestId=randomUUID();
+  await rpc("confirm_record_release",{...confirmArgs,p_id:mixedEmailId,p_selection:mixedSelection,p_reviewed_snapshot:mixedPreview.snapshot,p_reviewed_hash:mixedPreview.source_hash},true);
+  const mixedEmailArgs={...releaseEmailArgs,p_request_id:mixedRequestId,p_release_id:mixedEmailId,p_release_hash:mixedPreview.source_hash};
+  const mixedPrepared=await rpc("prepare_release_email",mixedEmailArgs,true);
+  const mixedBundle=await rpc("read_record_release",{p_id:mixedEmailId},true);
+  const mixedFrozen=await buildReleaseEmailPayload(mixedPrepared.request,mixedBundle,{from:"care@example.test",replyTo:"care@example.test"},releaseDownload);
+  const swapped=JSON.parse(mixedFrozen.payload_text);
+  [swapped.attachments[nativeIndex].content,swapped.attachments[apiIndex].content]=[swapped.attachments[apiIndex].content,swapped.attachments[nativeIndex].content];
+  await assert.rejects(rpc("capture_release_email_payload",{p_request_id:mixedRequestId,p_actor_id:actor,p_payload_text:JSON.stringify(swapped)}),(e:{code:string})=>e.code==="23514");assertions++;
+  check(sql(`select count(*) from release_email_payloads where request_id=${quote(mixedRequestId)};`)==="0","Same-size cross-family swap creates no payload");
+  const mixedEmailResponse=await prepareEmail(mixedEmailArgs);check(mixedEmailResponse.ok,"Mixed email preparation succeeds through production HTTP handler");
+  const mixedEmailSaved=await mixedEmailResponse.json();
+  check(mixedEmailSaved.manifest.length===3&&mixedEmailSaved.manifest[nativeIndex].sha256===await hash(nativeBytes)&&mixedEmailSaved.manifest[apiIndex].sha256===await hash(originalBytes),"Mixed email retains separate exact digests for both physical files");
+  const mixedSmsId=randomUUID(),mixedLinkId=randomUUID();
+  const mixedSmsPreview=await rpc("preview_record_release_v9",{p_pet_id:pet,p_client_id:client,p_channel:"SMS",p_recipient:"+13035550481",p_selection:mixedSelection},true);
+  await rpc("confirm_record_release",{...confirmArgs,p_id:mixedSmsId,p_channel:"SMS",p_recipient:"+13035550481",p_selection:mixedSelection,p_reviewed_snapshot:mixedSmsPreview.snapshot,p_reviewed_hash:mixedSmsPreview.source_hash},true);
+  const mixedLinkResponse=await prepareLink({...linkHttpArgs,p_request_id:mixedLinkId,p_source_id:mixedSmsId,p_source_hash:mixedSmsPreview.source_hash});check(mixedLinkResponse.ok,"Mixed document-link preparation succeeds through actual HTTP");
+  const mixedLinkSaved=await mixedLinkResponse.json();
+  check(mixedLinkSaved.manifest.length===3&&mixedLinkSaved.manifest[nativeIndex].sha256===await hash(nativeBytes)&&mixedLinkSaved.manifest[apiIndex].sha256===await hash(originalBytes),"Mixed link retains both physical file digests");
+  const mixedContext=await rpc("document_link_capture_context",{p_id:mixedLinkId,p_actor_id:actor});
+  const mixedCapability=await materializeDocumentLink(mixedContext.grant,linkConfig);
+  await rpc("attest_document_link",{p_request_id:mixedLinkId,p_reviewed_artifact_hash:mixedLinkSaved.artifact_hash,p_reviewed_message_hash:mixedCapability.message_hash,p_attest:true},true);
+  for(const [index,expected] of [[nativeIndex,nativeBytes],[apiIndex,originalBytes]] as const){
+    const response=await publicRetrieve(mixedLinkId,mixedCapability.token,index);
+    check(response.ok&&await hash(new Uint8Array(await response.arrayBuffer()))===await hash(expected),"Mixed public artifact retrieves exact selected physical original");
+  }
+  readsAfterAllPrepared=releaseReads;
   const canceled=await rpc("cancel_ezyvet_attachment_approval",{p_id:cancelId,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash,p_confirmed:true},true);
   check(canceled.status==="canceled","Unconfirmed review obtains durable cancellation");
   await assert.rejects(rpc("approve_ezyvet_attachment_record",approvalArgs(cancelId,correctionId),true),(error:{code:string})=>error.code==="23514");assertions++;
@@ -635,6 +674,7 @@ try {
   const historicalLinkResponse=await prepareLink(),historicalLink=await historicalLinkResponse.json();
   check(historicalLinkResponse.ok&&historicalLink.artifact_hash===recoveredLink.artifact_hash&&releaseReads===readsAfterAllPrepared,"Stale-source link recovery preserves captured artifact without download or message");
   await assert.rejects(rpc("attest_document_link",{p_request_id:linkId,p_reviewed_artifact_hash:linkArtifact.artifact_hash,p_reviewed_message_hash:linkCapability.message_hash,p_attest:true},true),(e:{code:string})=>e.code==="42501");assertions++;
+  check(!(await rpc("read_record_release",{p_id:mixedEmailId},true)).eligible&&!(await publicRetrieve(mixedLinkId,mixedCapability.token,apiIndex)).ok,"API source invalidation blocks mixed release and public package");
   sql("update record_release_policy set enabled=false;");
 
   check((await act(id, "retrieve")).ok, "Original historical bytes remain recoverable after parent changes");
