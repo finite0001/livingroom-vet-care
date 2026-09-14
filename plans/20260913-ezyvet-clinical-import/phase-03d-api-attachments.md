@@ -1,9 +1,17 @@
 # Phase 3d — Source API attachments
 
-Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual local Auth/database metadata verification passes44 checks; UI, attachment-specific contention, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Migration6600 adds immutable download preparation, recovery, abandonment tombstones and bounded owned discovery; service leases, transfer failures and capture transitions remain unfinished. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual local Auth/database metadata verification passes44 checks; UI, attachment-specific contention, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
 
 
 
+
+## Durable download preparation checkpoint — 2026-09-13
+
+Migration6600 derives the requested file from an owned, committed page observation and freezes its exact patient, parent, site/origin, source snapshot/hash and observed revision. It accepts a committed page from a still-running list while retaining that run/page identity; preparation does not claim whole-list completeness. Only an active administrator who owns the intake can prepare or recover the request. Same-operation retries return original evidence before currentness checks; fresh preparation revalidates both parent and attachment. Explicit abandonment retains evidence, and an abandonment tombstone rejects a delayed prepare. Bounded discovery omits raw metadata; individual recovery preserves it.
+
+Forty-five focused SQL assertions pass, including actual scoped A→B→A ingestion, wrong owner/patient/page/hash/version, both parent types, abandoned request recovery, role loss, immutable evidence, cursor pagination and absence of document/clinical/billing/stock/outbox writes. The prior491 SQL checks also pass. The existing prescription/source/release contention harness passes232 checks with both attachment migrations and SQL suites overlaid; this establishes regression compatibility, not dedicated attachment contention coverage. Owned scratch database cleanup is verified. [Sanitized evidence](../../docs/evidence/attachment-download-preparation-local-20260913.json) binds the checkpoint and records the broader regression result.
+
+The projection deliberately reports `download_available=false`. This is durable preparation, not file download or clinical approval. Service claims/leases, retryable transfer failures, metadata revalidation around byte capture, immutable Storage capture/cleanup, UI and downstream releases remain required. This87-migration revision needs fresh populated upgrade/restore coverage; neither the85-migration restore nor the86-migration metadata runtime result covers6600.
 
 ## Actual local metadata runtime checkpoint — 2026-09-13
 
