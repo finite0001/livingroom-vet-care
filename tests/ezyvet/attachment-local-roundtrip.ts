@@ -235,22 +235,22 @@ try {
   const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox));");
   const beforeEffects = effects();
   const original = new TextEncoder().encode("%PDF-1.7\nSynthetic captured original\n%%EOF");
-  const attachmentPayload = (kind: string, page: number) => ({ id: (kind === "Animal" ? 700 : 800) + page, record_type: kind, record_id: wrongParent ? "999" : kind === "Animal" ? "77" : "201", mime_type: includeCapture && page === 1 ? "application/pdf" : "unsupported/example", name: "<script>source name</script>", file_download_url: "https://untrusted.example.test/do-not-fetch" });
+  const attachmentPayload = (kind: string, page: number) => ({ id: (kind === "Animal" ? 700 : 800) + page, record_type: kind, record_id: wrongParent ? "999" : kind === "Animal" ? "77" : "201", mime_type: includeCapture ? "application/pdf" : "unsupported/example", name: "<script>source name</script>", file_download_url: "https://untrusted.example.test/do-not-fetch" });
   const upstream = await serve(async (req, res) => {
     upstreamCalls++;
     const url = new URL(req.url!, "http://synthetic.test");
     res.setHeader("Content-Type", "application/json");
     if (url.pathname === "/v1/oauth/access_token") { res.end(JSON.stringify({ access_token: "synthetic-only", expires_in: 43200 })); return; }
-    if (includeCapture && /^\/v1\/attachment\/download\/(701|801)$/.test(url.pathname)) {
-      assert.equal(req.method, "GET"); res.setHeader("Content-Type", "application/pdf"); res.end(original); return;
+    if (includeCapture && /^\/v1\/attachment\/download\/(701|702|801|802)$/.test(url.pathname)) {
+      assert.equal(req.method, "GET"); res.setHeader("Content-Type", "application/pdf"); const bytes = original.slice(); if (url.pathname.endsWith("2")) bytes[bytes.length - 1] ^= 4; res.end(bytes); return;
     }
     assert.equal(url.pathname, "/v1/attachment"); assert.equal(req.method, "GET");
     if (includeCapture && url.searchParams.has("id")) {
       assert.deepEqual([...url.searchParams.keys()].sort(), ["id", "limit", "page", "record_id", "record_type"]);
       const kind = url.searchParams.get("record_type")!;
       assert.ok(kind === "Animal" || kind === "Consult"); assert.equal(url.searchParams.get("record_id"), kind === "Animal" ? "77" : "201");
-      assert.equal(url.searchParams.get("id"), kind === "Animal" ? "701" : "801");
-      res.end(JSON.stringify({ meta: { items_page: 1, items_page_total: 1 }, items: [{ attachment: attachmentPayload(kind, 1) }] })); return;
+      const selectedPage = Number(url.searchParams.get("id")) - (kind === "Animal" ? 700 : 800); assert.ok(selectedPage === 1 || selectedPage === 2);
+      res.end(JSON.stringify({ meta: { items_page: 1, items_page_total: 1 }, items: [{ attachment: attachmentPayload(kind, selectedPage) }] })); return;
     }
     assert.deepEqual([...url.searchParams.keys()].sort(), ["limit", "page", "record_id", "record_type"]);
     const kind = url.searchParams.get("record_type"); assert.ok(kind === "Animal" || kind === "Consult");
@@ -727,8 +727,22 @@ try {
           check(sql(`select outcome||':'||error_code from communication_attempts where outbox_id=${quote(acceptedOutbox.id)};`) === 'uncertain:worker_lease_expired', "Lease recovery retains an uncertain attempt receipt for reconciliation");
         }
       }
+      const secondSource = JSON.parse(sql(`select jsonb_build_object('id',s.id,'hash',s.payload_hash,'version',o.head_version) from ezyvet_attachment_page_observations o join ezyvet_import_snapshots s on s.id=o.snapshot_id where o.run_id=${quote(runId)} and o.page=2;`));
+      const secondRequest = randomUUID(), secondApproval = randomUUID(); ids.push(secondRequest, secondApproval);
+      const secondPrepared = await rpc('prepare_ezyvet_attachment_download', { p_id: secondRequest, p_pet_id: pet, p_run_id: runId, p_page: 2, p_snapshot_id: secondSource.id, p_payload_hash: secondSource.hash, p_observed_head_version: secondSource.version }, true);
+      const secondWorker = await postCapture({ request_id: secondRequest, pet_id: pet, request_hash: secondPrepared.request.request_hash });
+      check(secondWorker.status === 200, "Actual worker captures the distinct second-page API original");
+      const secondSaved = await rpc('recover_ezyvet_attachment_download', { p_id: secondRequest, p_pet_id: pet }, true);
+      storageObjects.push(secondSaved.capture.object_path);
+      const secondRecord = await rpc('approve_ezyvet_attachment_record', { p_id: secondApproval, p_request_id: secondRequest, p_pet_id: pet, p_capture_hash: secondSaved.capture.capture_hash, p_previous_record_id: null, p_title: 'Second selected API original', p_review_reason: 'Synthetic exact second original review', p_attest: true }, true);
+      check(secondRecord.request_id === secondRequest && secondRecord.id === secondApproval, "Second API approval retains its own capture identity");
+      for (const apiIds of [[correctionId, correctionId], [correctionId, secondApproval, ...Array.from({ length: 19 }, () => randomUUID())]]) {
+        await assert.rejects(api('/rest/v1/rpc/preview_record_release_v9', { ...packageArgs, p_selection: { api_attachment_ids: apiIds } }, chartHeaders), (error: { code: string; message: string }) => error.code === '23514' && error.message.includes('at most20 distinct')); assertions++;
+      }
+      const secondBytes = original.slice(); secondBytes[secondBytes.length - 1] ^= 4;
       const mixedDocuments: string[] = [], mixedFiles = new Map<string, Uint8Array>();
       mixedFiles.set('ezyvet-attachments/' + chartCapture.object_path, original);
+      mixedFiles.set('ezyvet-attachments/' + secondSaved.capture.object_path, secondBytes);
       for (let index = 1; index <= 2; index++) {
         const documentId = randomUUID(); ids.push(documentId); mixedDocuments.push(documentId);
         const bytes = original.slice(); bytes[bytes.length - 1] ^= index;
@@ -758,9 +772,9 @@ try {
       const mixedEmailHandler = createPrepareReleaseEmailHandler({ ...mixedDependencies, sender: { from: 'care@example.test', replyTo: 'care@example.test' } });
       const mixedLinkHandler = createStaffDocumentLinkHandler({ ...mixedDependencies, config: linkConfig, practice: { name: 'Synthetic', address: 'Synthetic', domain: null } }, 'prepare');
       for (const channel of ['EMAIL', 'SMS'] as const) for (const corrupted of [false, true]) {
-        const mixedArgs = { ...(channel === 'EMAIL' ? packageArgs : smsArgs), p_selection: { api_attachment_ids: [correctionId], document_ids: mixedDocuments, patient_summary_ids: [pet] } };
+        const mixedArgs = { ...(channel === 'EMAIL' ? packageArgs : smsArgs), p_selection: { api_attachment_ids: [correctionId, secondApproval], document_ids: mixedDocuments, patient_summary_ids: [pet] } };
         const preview = await api('/rest/v1/rpc/preview_record_release_v9', mixedArgs, chartHeaders);
-        check(preview.snapshot.attachments.length === 3 && preview.snapshot.api_attachments.length === 1 && preview.snapshot.patient_summaries.length === 1, "Actual schema9 preview keeps three explicitly selected originals and native patient summary");
+        check(preview.snapshot.attachments.length === 4 && preview.snapshot.api_attachments.length === 2 && preview.snapshot.patient_summaries.length === 1, "Actual schema9 preview keeps four explicitly selected originals and native patient summary");
         const mixedRelease = randomUUID(), mixedRequest = randomUUID(); ids.push(mixedRelease, mixedRequest);
         await api('/rest/v1/rpc/confirm_record_release', { ...mixedArgs, p_id: mixedRelease, p_reviewed_snapshot: preview.snapshot, p_reviewed_hash: preview.source_hash, p_attest_review: true }, chartHeaders);
         const request = channel === 'EMAIL' ? { ...emailArgs, p_request_id: mixedRequest, p_release_id: mixedRelease, p_release_hash: preview.source_hash } : { ...linkArgs, p_request_id: mixedRequest, p_source_id: mixedRelease, p_source_hash: preview.source_hash };
@@ -771,10 +785,10 @@ try {
           const table = channel === 'EMAIL' ? 'release_email_payloads' : 'document_link_payloads', key = channel === 'EMAIL' ? 'request_id' : 'grant_id';
           check(sql(`select count(*) from ${table} where ${key}=${quote(mixedRequest)};`) === '0', "Rejected mixed bytes leave no frozen delivery artifact");
         } else {
-          check(response.status === 200 && new Set(mixedReads).size === 3 && mixedReads.length === 3, "Mixed handler fetches each selected original exactly once across both private buckets");
+          check(response.status === 200 && new Set(mixedReads).size === 4 && mixedReads.length === 4, "Mixed handler fetches each selected original exactly once across both private buckets");
           const captured = await response.json();
           const expectedDigests = await Promise.all([...mixedFiles.values()].map(async bytes => Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex')));
-          check(captured.manifest.length === 4 && expectedDigests.every(digest => captured.manifest.some((item: { sha256: string }) => item.sha256 === digest)), "SQL-frozen mixed manifest contains report plus all three distinct original digests");
+          check(captured.manifest.length === 5 && expectedDigests.every(digest => captured.manifest.some((item: { sha256: string }) => item.sha256 === digest)), "SQL-frozen mixed manifest contains report plus all four distinct original digests");
         }
       }
       const noFetch = upstreamCalls;
