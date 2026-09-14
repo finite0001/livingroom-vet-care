@@ -1,6 +1,6 @@
 # ezyVet attachment originals
 
-Administrators can explicitly capture a current Animal attachment observation into a private API-original record, recover interrupted work, download verified bytes and discard unfinished requests. This builds on the metadata workflow in PR127. The implementation is awaiting final integrated HTTP/Storage and restore acceptance.
+Administrators can explicitly capture a current Animal attachment observation into a private API-original record, recover interrupted work, download verified bytes and discard unfinished requests. This builds on the metadata workflow in PR127. Local integrated HTTP/Storage, concurrency and populated restore acceptance is complete; hosted commissioning remains pending.
 
 ## Operator workflow
 
@@ -16,7 +16,7 @@ Capture status is `prepared`, `reserved`, `ready`, `blocked`, `discarding` or `a
 
 The official [Postman collection](https://developers.ezyvet.com/ezyvet-api.postman_collection.json) documents the attachment-ID download route `/v1/attachment/download/:id` with bearer authorization and exact-ID/Animal-parent list filters. The worker reads canonical metadata before and after downloading, requiring the frozen attachment ID, file ID, Animal parent and stable metadata digest to match. Temporary URL renewal can change raw-record digests without changing the stable fingerprint. Those before/after raw hashes are retained separately; no temporary download URL or arbitrary provider field is stored.
 
-The application accepts PDF, JPEG and PNG originals up to20MiB. It requires exact200 responses, consistent byte lengths, identity encoding and supported byte signatures, and rejects redirects and partial responses. Streaming limits bound both total bytes and allocation overhead. These are application limits and observed-byte checks, not a vendor guarantee of a consistent export or atomic metadata/file revision.
+The application accepts PDF, JPEG and PNG originals up to 20 MiB. It requires exact 200 responses, consistent byte lengths, identity encoding and supported byte signatures, and rejects redirects and partial responses. Streaming limits bound both total bytes and allocation overhead. These are application limits and observed-byte checks, not a vendor guarantee of a consistent export or atomic metadata/file revision.
 
 After source checks, the worker freezes one immutable object intent containing byte SHA256, size, MIME and before/after observation evidence. Uploads use the authenticated staff JWT, a server-generated path and `upsert:false`. The worker reads the actual private object back and verifies its checksum, size and MIME before committing an immutable capture receipt under current source locks and an unexpired lease.
 
@@ -24,7 +24,7 @@ When an upload or completion response is lost, recovery inspects the reserved pr
 
 ## Database, Storage and cleanup
 
-Additive migration7000 creates the private request, attempt/failure, object-intent and immutable capture ledgers plus the `ezyvet-attachment-originals` bucket. It preserves canonical6300/6500/6900 and extends the verified migration inventory from86 to87. Requests freeze actor, mapping, patient/client, `(run_id,page,ordinal)`, snapshot/head and raw/stable observation identity. Browser RPCs are active-administrator and owner-scoped; direct ledger reads, object reads, object overwrite and object deletion are not granted to browsers.
+Additive migration 7000 creates the private request, attempt/failure, object-intent and immutable capture ledgers plus the `ezyvet-attachment-originals` bucket. It preserves canonical 6300/6500/6900 and extends the verified migration inventory from 86 to 87. Requests freeze actor, mapping, patient/client, `(run_id,page,ordinal)`, snapshot/head and raw/stable observation identity. Browser RPCs are active-administrator and owner-scoped; direct ledger reads, object reads, object overwrite and object deletion are not granted to browsers.
 
 Storage INSERT policy checks the authenticated owner, reserved intent, live lease and current source while locking the request. Capture and metadata claims honor the same source gate and each other's leases/cooldowns. Database operations preserve the established lock order and check wall-clock lease expiry after waits, including source and Storage-object locks.
 
@@ -40,4 +40,12 @@ Issued-practice acceptance still needs bounded samples for exact-ID response sha
 
 ## Validation
 
-Final integrated validation and hash-bound receipts pending. All provider responses used during development are synthetic. See the [implementation contract](../plans/attachment-original-capture-contract.md) for exact RPC/worker shapes and recovery invariants.
+Local validation completed:
+
+- `npm run check`: 516 unit tests, lint, TypeScript and production build passed. Frozen Deno checks passed for all 31 Edge entrypoints and the attachment parser.
+- All 269 browser cases passed across the full run and focused reruns: the full run passed 263; six initially failing cases passed after adding discovery RPC fixtures, scoping one ordering assertion to its workflow, and serially rerunning timing-sensitive cases. This was not a single clean full-suite run. The new capture workflow includes 24 focused browser cases.
+- 73 SQL files passed 2,704 assertions. Original-capture harness: 136 checks including SQL-file success, setup, observed lock races and cleanup; canonical contention: 162 checks. See the [SQL and contention receipt](../evidence/attachment-originals-sql-contention-local-20260913.json).
+- Real local Auth, PostgREST and Storage roundtrips passed 102 checks (50 metadata, 52 originals), including lost responses, denied direct reads/overwrite, tamper rejection, historical recovery and fenced discard. The handler ran in a local harness, not a deployed Edge gateway. Provider HTTP responses were synthetic. See the [HTTP receipt](../evidence/attachment-originals-http-local-20260913.json).
+- A fresh populated 51→87 upgrade/restore preserved two requests, two immutable intents and one ready capture. Both ready and reserved physical originals were reverified, permissions matched, and private reads remained denied. See the [restore receipt](../evidence/attachment-originals-restore-local-20260913.json).
+
+Owned disposable resources were cleaned up. The historical-household test uses an owner-only fixture transaction to simulate a future transfer; it does not establish a household-transfer product feature. No hosted deployment, live provider acceptance, clinical approval or release integration is implied. See the [implementation contract](../plans/attachment-original-capture-contract.md) for exact RPC/worker shapes and recovery invariants.
