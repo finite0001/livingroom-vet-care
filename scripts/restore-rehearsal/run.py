@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913900000']
-    assert len(migration_files)==85 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913900000']
+    assert len(migration_files)==86 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -164,6 +164,7 @@ def vaccination_snapshot(project):
               'ezyvet_prescription_runs', 'ezyvet_prescription_pages', 'ezyvet_prescription_page_observations',
               'ezyvet_prescriptionitem_runs', 'ezyvet_prescriptionitem_pages', 'ezyvet_prescriptionitem_page_observations',
               'ezyvet_prescription_review_requests', 'ezyvet_imported_prescriptions', 'ezyvet_imported_prescription_items',
+              'ezyvet_attachment_runs', 'ezyvet_attachment_pages', 'ezyvet_attachment_page_observations',
               'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
@@ -183,6 +184,7 @@ def seed_vaccination_receipt(project):
       rx_review uuid:=gen_random_uuid(); correction uuid:=gen_random_uuid(); rx_pending uuid:=gen_random_uuid();
       rx public.ezyvet_import_snapshots; rx_item public.ezyvet_import_snapshots;
       rx_payload jsonb; rx_approved jsonb; release_preview jsonb; release_selection jsonb;
+      attachment_run uuid:=gen_random_uuid(); attachment_pending uuid:=gen_random_uuid(); attachment_page jsonb; attachment_observation jsonb;
     begin
       select exists(select 1 from public.user_roles where user_id=a and role='ADMIN') into already_admin;
       if not already_admin then insert into public.user_roles(user_id,role) values(a,'ADMIN'); end if;
@@ -241,6 +243,18 @@ def seed_vaccination_receipt(project):
       perform public.prepare_ezyvet_prescription_review(rx_pending,p,rx_payload);
       update public.ezyvet_import_runs set retry_after=now()-interval '1 second' where id=item_run;
       perform public.claim_ezyvet_prescriptionitem_import(pending_run,a,'{site}','prescriptionitem','https://api.trial.ezyvet.com',mapping,rx.id,rx.payload_hash,1);
+      insert into public.ezyvet_identity_heads(source_origin,source_site_uid,resource,external_id,snapshot_id,version)
+        values('https://api.trial.ezyvet.com','{site}','animal','77',animal,1);
+      attachment_observation:=jsonb_build_object('external_id','701','file_id','42','metadata',
+        jsonb_build_object('id','701','file_id','42','record_type','Animal','record_id','77','name','Synthetic attachment metadata'),
+        'raw_record_sha256',repeat('a',64),'stable_metadata_sha256',repeat('b',64),'file_sha256',null);
+      attachment_page:=jsonb_build_object('contract_version','ezyvet_animal_attachment_metadata_v1','parent',jsonb_build_object('record_type','Animal','record_id','77'),
+        'page',1,'complete',true,'pagination',jsonb_build_object('items_page',1,'items_page_total',1,'items_page_size',10,'items_total',2),
+        'observations',jsonb_build_array(attachment_observation,jsonb_set(attachment_observation,'{{raw_record_sha256}}',to_jsonb(repeat('c',64)))),'page_sha256',repeat('d',64));
+      claimed:=public.claim_ezyvet_attachment_import(attachment_run,a,'{site}','https://api.trial.ezyvet.com',mapping);
+      perform public.stage_ezyvet_attachment_page(attachment_run,a,(claimed->>'lease_id')::uuid,attachment_page);
+      update public.ezyvet_import_runs set retry_after=now()-interval '1 second' where id=attachment_run;
+      perform public.claim_ezyvet_attachment_import(attachment_pending,a,'{site}','https://api.trial.ezyvet.com',mapping);
       if not already_dvm then delete from public.user_roles where user_id=a and role='DVM'; end if;
       if not already_admin then delete from public.user_roles where user_id=a and role='ADMIN'; end if;
     end $fixture$;""")
@@ -252,6 +266,9 @@ def seed_vaccination_receipt(project):
     assert len(captured['ezyvet_imported_prescriptions']) == 2 and len(captured['ezyvet_imported_prescription_items']) == 2
     assert len(captured['ezyvet_prescription_review_requests']) == 3
     assert len(captured['record_releases']) == 1 and any(row['source_kind']=='imported_prescription' for row in captured['record_release_sources'])
+    assert len(captured['ezyvet_attachment_runs']) == 2 and len(captured['ezyvet_attachment_pages']) == 1
+    assert len(captured['ezyvet_attachment_page_observations']) == 2
+    assert len({row['snapshot_id'] for row in captured['ezyvet_attachment_page_observations']}) == 1
     (run/'vaccination-receipt-fixture.json').write_text(json.dumps(captured, sort_keys=True))
 
 
@@ -377,6 +394,9 @@ try:
                                'approved_prescription_rows': len(expected_vaccinations['ezyvet_imported_prescriptions']),
                                'prescription_review_requests': len(expected_vaccinations['ezyvet_prescription_review_requests']),
                                'prescription_item_runs': len(expected_vaccinations['ezyvet_prescriptionitem_runs']),
+                               'attachment_metadata_runs': len(expected_vaccinations['ezyvet_attachment_runs']),
+                               'attachment_metadata_pages': len(expected_vaccinations['ezyvet_attachment_pages']),
+                               'attachment_metadata_observations': len(expected_vaccinations['ezyvet_attachment_page_observations']),
                                'frozen_release_rows': len(expected_vaccinations['record_releases']),
                                'source_and_receipt_rows_match': True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
