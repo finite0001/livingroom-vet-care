@@ -54,7 +54,7 @@ The [original-capture workflow](../../docs/features/ezyvet-attachment-originals.
 
 Captures use `ezyvet_api_attachment_original_v1` and do not pass through `staff_reviewed_manual_export_v1` RPCs or become native `patient_documents`. Owned request recovery, historical mapping discovery, uncreated-request abandonment and fenced unfinished-object discard are specified in the [frozen capture contract](../../docs/plans/attachment-original-capture-contract.md). Metadata observations retain `file_sha256:null` and metadata runs retain `capture_available:false`.
 
-Subsequent work includes API-original provenance review, native chart integration, DVM acknowledgment where required, immutable release projection/invalidation, both delivery paths, Consult/Contact parent contracts and whole-migration reconciliation. Capture and metadata implementation do not complete those gates. The original-capture feature document records its own byte-preserving restore and integrated acceptance evidence; prior metadata-only evidence does not establish those results.
+The separate [API-original chart review workflow](../../docs/features/reviewed-api-originals.md) implements provenance admission, patient-chart history and exact DVM acknowledgment, with local acceptance complete. Subsequent work includes immutable release projection/invalidation, both delivery paths, Consult/Contact parent contracts and whole-migration reconciliation. Capture and metadata implementation do not complete those gates. The original-capture feature document records its own byte-preserving restore and integrated acceptance evidence; prior metadata-only evidence does not establish those results.
 
 ## Owned implementation areas and verification
 

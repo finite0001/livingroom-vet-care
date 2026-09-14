@@ -1,14 +1,14 @@
 {
   "synthetic_only": true,
   "fixture": "attachment-all",
-  "project_id": "lrv-attachment-e411beac3252",
+  "project_id": "lrv-attachment-5af228e226f7",
   "checks_passed": 133,
   "cleanup_verified": true,
-  "git_revision": "f37d11d6a59da2c016762725f176738652bbffda",
+  "git_revision": "dc7c3da0e1ebb9f6d73bd22190fd4a98cc76cc4e",
   "runner_sha256": "605472859927dba8c75a44e24c90cf9f01cfb0ea20c96fa86750090ccb55eb6e",
   "harness_sha256": {
     "metadata": "0644b2bb7fc7f8bcb1bdad4b0a97e1d4e824f0f13c001594b87988a6da0f7184",
-    "originals": "f710b49a38eb2679a1b847167e957a2d86a15ba8c28786e41b8332f654cfe842"
+    "originals": "31b350968416b5409fed76d64bf4b4a971c73fd4f2aa195cfc447e06addbf427"
   },
   "checks_by_fixture": {
     "metadata": 50,
@@ -101,13 +101,13 @@
     "20260913650000_prescription_release_reference_hardening.sql": "b65de6b1174a29697005b4712f6d8ea29a3232beade870b9d6d674e9f15b2314",
     "20260913690000_attachment_metadata_runs.sql": "4bd2efe726b1a65e234789b6ed3e782119f18a8489f717d4fa23f8199e74f675",
     "20260913700000_attachment_original_capture.sql": "a7bdad11bd33ddc708cc6f4d961d0dd4c54c441e3a5d6202ab89fe1a5c4ce851",
-    "20260913710000_attachment_original_review.sql": "fb6698fce2b2c63b7de3452b5f40878ae2cec47fe574810ce49e020f7f4a309b",
+    "20260913710000_attachment_original_review.sql": "6f46806319d02c5d164ca5f97bab84ea662ab2b74b2dca717b291f5b2bfb78ba",
     "20260913900000_payment_immutable_search_path.sql": "10d42581e8fab9fe793d4cd5685e600106332476be5f4a4ef53d846d158ef335"
   },
   "source_sha256": {
     "tests/ezyvet/attachment-metadata-disposable.py": "605472859927dba8c75a44e24c90cf9f01cfb0ea20c96fa86750090ccb55eb6e",
     "tests/ezyvet/attachment-metadata-local-roundtrip.ts": "0644b2bb7fc7f8bcb1bdad4b0a97e1d4e824f0f13c001594b87988a6da0f7184",
-    "tests/ezyvet/attachment-original-local-roundtrip.ts": "f710b49a38eb2679a1b847167e957a2d86a15ba8c28786e41b8332f654cfe842",
+    "tests/ezyvet/attachment-original-local-roundtrip.ts": "31b350968416b5409fed76d64bf4b4a971c73fd4f2aa195cfc447e06addbf427",
     "supabase/functions/ezyvet-import/adapter.ts": "d8ed2e414eb91137a287088caced836da078a203cfe7555d4a0166758ecd5118",
     "supabase/functions/ezyvet-import/attachment-bytes.ts": "c3ad663f77d5e7bad02a763043b32f76043b545d55b2eacdac208534b27d3452",
     "supabase/functions/ezyvet-import/attachment-metadata.ts": "e1462310234d7f0da9e9e0d8af98a61830247f2f94e075c1935873449e2f99f6",
@@ -121,7 +121,7 @@
     "supabase/functions/retrieve-reviewed-ezyvet-attachment/handler.ts": "1803107e0ddeaadfbff4b63708de90cfd74bd6b58627f57ce0c1b46abca76f47",
     "supabase/functions/retrieve-reviewed-ezyvet-attachment/index.ts": "6eb2ebd9bf25fde19b626ab8aa4e0e53b4ee67309cb50e40810ec8ef4326dd55",
     "supabase/functions/retrieve-reviewed-ezyvet-attachment/types.ts": "ccb38f23bcc297b7b60324fa62064ab8006097313f582caff82704febd53072f",
-    "tests/ezyvet/attachment-original-review-local-roundtrip.ts": "b8f02eebad288ac39d22e2adcb1923afbc4222e9e6ce5b5e501c19d230dbe769"
+    "tests/ezyvet/attachment-original-review-local-roundtrip.ts": "9ff88344f5d1d974c87fa4a945f123313c33d9108d3ecd9788401f75fd19ac7e"
   },
   "provider_requests": 0
 }

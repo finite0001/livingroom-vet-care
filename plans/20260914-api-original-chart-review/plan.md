@@ -1,6 +1,6 @@
 # Reviewed API originals in the patient chart
 
-Status: implementation design. Base: merged PR128, `705d7a1`; canonical 87 migrations through 7000.
+Status: implemented and locally verified; see [validation evidence](../../docs/features/reviewed-api-originals.md#validation). Base: merged PR128, `705d7a1`; canonical 87 migrations through 7000.
 
 ## Outcome
 

@@ -1,6 +1,6 @@
 # Reviewed ezyVet API originals
 
-Status: implementation and local acceptance in progress. Builds on merged PR128 capture receipts and canonical migration 7000; additive migration 7100 introduces chart review.
+Status: implemented and locally verified. Hosted commissioning remains pending. Builds on merged PR128 capture receipts and canonical migration 7000; additive migration 7100 introduces chart review.
 
 ## Staff workflow
 
@@ -28,4 +28,12 @@ Live source acceptance, Dr. Susan Edler's clinical-form review, additional attac
 
 ## Validation
 
-Acceptance results will be recorded after integrated unit, browser, SQL, contention, actual HTTP/Auth/Storage and populated restore checks. See the [implementation contract](../plans/attachment-original-review-contract.md).
+Local validation:
+
+- 534 unit tests, lint, TypeScript and the production build passed with the final UI fixes. All 32 Edge entrypoints passed frozen Deno checks.
+- All 288 browser cases passed across full and focused runs: the 286-case full run passed 285, its existing client-address timeout passed three serial reruns without changes, and two subsequent failed-reread regressions passed separately. This was not a single clean full-suite run. The new workflow includes 19 browser scenarios.
+- The broad SQL run passed 74 files / 2,752 assertions. Final review tests passed 53 assertions, including release exclusions and raw reason bounds; the final targeted lane passed 471 assertions and 96 contention/setup/cleanup checks. Earlier broad contention passed 160 checks and the canonical child passed 468 assertions / 162 checks. See the [SQL and contention receipt](../evidence/attachment-original-review-sql-contention-local-20260914.json).
+- Final actual local HTTP/Auth/PostgREST/Storage acceptance passed 133 checks (50 metadata, 83 capture/chart review), with synthetic provider responses and the handler harness, not a deployed Edge gateway. An earlier parallel run hit a database statement timeout during concurrent local restores; the final sequential rerun passed without changing application timeouts. Owned resources were cleaned up. See the [HTTP receipt](../evidence/attachment-original-review-http-local-20260914.json).
+- Fresh populated 51→88 restore passed: three originals (two ready, one reserved), six immutable actions, two admitted versions, two DVM acknowledgments and one withdrawal survived. Original bytes, owned action recovery and history were verified. Canonical permissions matched before and after restore; owned resources were cleaned up. See the [restore receipt](../evidence/attachment-original-review-restore-local-20260914.json).
+
+No live provider or hosted acceptance is implied. See the [implementation contract](../plans/attachment-original-review-contract.md).
