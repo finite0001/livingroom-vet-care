@@ -2,20 +2,21 @@ import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const actor = id(1), runId = id(2), scopeId = id(3), bindingId = id(4), child = id(5), snapshot = id(6), mapping = id(7), pet = id(8), client = id(9), otherScope = id(10);
 const at = "2026-09-14T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic migration source";
-async function fixture(page: Page, admin = true) {
+async function fixture(page: Page, admin = true, history = false) {
+  const resource = history ? "history" : "attachment", parentEvidence = history ? "mapping_identity_only" : "exact_parent_version";
   const user = { id: actor, aud: "authenticated", role: "authenticated", email: "synthetic@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: at };
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`, refresh_token: "synthetic", token_type: "bearer", expires_in: 3600, expires_at: exp, user };
   await page.addInitScript(s => localStorage.setItem("sb-127-auth-token", JSON.stringify(s)), session);
-  const inputs = [{ id: scopeId, mapping_id: mapping, resource: "attachment", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Saved original-file scope" },
-    { id: otherScope, mapping_id: mapping, resource: "history", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "excluded", reason: "Awaiting clinician scope review" }];
+  const inputs = [{ id: scopeId, mapping_id: mapping, resource, parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Saved original-file scope" },
+    { id: otherScope, mapping_id: mapping, resource: history ? "consult" : "history", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "excluded", reason: "Awaiting clinician scope review" }];
   const summary = { id: runId, source_origin: origin, source_site_uid: site, intent_hash: "a".repeat(64), created_at: at };
   const manifest = { run: { ...summary, actor_id: actor, intent: { version: 1, source_origin: origin, source_site_uid: site, scopes: inputs } },
     scopes: inputs.map(s => ({ ...s, migration_run_id: runId, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
-    child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource: "attachment", parent_evidence: "exact_parent_version", context: {} } };
+    child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource, parent_evidence: parentEvidence, context: {} } };
   const savedPlans = new Map<string, typeof manifest>(), savedBindings = new Map<string, typeof binding>();
-  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -61,12 +62,17 @@ async function fixture(page: Page, admin = true) {
     if (rpc === "list_ezyvet_migration_bindings") return route.fulfill({ json: { bindings: body.p_scope_id === scopeId ? (body.p_limit === 1 ? [...savedBindings.values()].concat([binding]).slice(0,1) : [...savedBindings.values()].concat([binding])) : [], has_more: body.p_limit === 1 && savedBindings.size > 0 } });
     if (rpc === "read_ezyvet_migration_binding") return route.fulfill({ json: body.p_id === bindingId ? binding : savedBindings.get(body.p_id) ?? null });
     if (rpc === "read_ezyvet_migration_binding_progress") return state.failProgress ? unavailable() : route.fulfill({ json: {
-      version: 2, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource: "attachment", context_hash: binding.context_hash,
-      superseded: false, parent_evidence: "exact_parent_version", parent_current: !state.stale, household_current: true,
+      version: 2, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource, context_hash: binding.context_hash,
+      superseded: false, parent_evidence: parentEvidence, parent_current: !state.stale, household_current: true,
       scan: { status: state.resumeRunning ? "running" : "review_ready", next_page: state.resumePage, pages_observed: 3, traversal_ended: !state.resumeRunning, page_limit_reached: false, retry_after: null, latest_error_code: null, provider_total: null, complete_coverage_verified: false },
-      observations: { occurrences: 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: "page_ordinal", exact_current_occurrences: state.stale ? 0 : 21, currentness_available: true },
+      observations: { occurrences: history ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: history ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: state.stale ? 0 : history ? 1 : 21, currentness_available: true },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
+    if (rpc === "list_ezyvet_migration_history_evidence") return state.failHistory ? unavailable() : route.fulfill({ json: {
+      version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
+      visibility: "approved_patient_history", has_more: false, next_before_version: null, discrepancies_assessed: false, complete_coverage_verified: false, observed_at: at,
+      approvals: [{ id: id(50), version: 2, version_hash: "d".repeat(64), approved_at: at, relationship: "different_source_version", source_current: false, superseded: false, consult_status: "unresolved", extraction_receipts: 2, locally_edited_receipts: 1 },
+        { id: id(51), version: 1, version_hash: "e".repeat(64), approved_at: at, relationship: "exact_source_version", source_current: false, superseded: true, consult_status: "not_referenced", extraction_receipts: 1, locally_edited_receipts: 1 }] } });
     if (rpc === "list_ezyvet_migration_capture_evidence") return state.failCaptures ? unavailable() : route.fulfill({ json: {
       version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, ordinal: body.p_ordinal, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
       ownership: "current_actor_only", has_more: false, next_cursor: null, original_bytes_reverified: false, complete_coverage_verified: false, observed_at: at,
@@ -76,13 +82,13 @@ async function fixture(page: Page, admin = true) {
     if (rpc === "list_ezyvet_migration_items") {
       if (state.holdItems) await new Promise<void>(resolve => { state.releaseItems = resolve; });
       if (state.failItems) return unavailable();
-      const start = body.p_after_page ? 20 : 0, count = Math.min(start ? 1 : 20, body.p_limit ?? 20);
-      const items = Array.from({ length: count }, (_, index) => ({ page: Math.floor((start + index) / 10) + 1, ordinal: (start + index) % 10 + 1, snapshot_id: snapshot,
-        observed_head_version: 1, external_id: "701", payload_hash: "a".repeat(64), file_id: "42", raw_record_sha256: "b".repeat(64), stable_metadata_sha256: "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
+      const start = body.p_after_page ? 20 : 0, count = history ? 1 : Math.min(start ? 1 : 20, body.p_limit ?? 20);
+      const items = Array.from({ length: count }, (_, index) => ({ page: Math.floor((start + index) / 10) + 1, ordinal: history ? 0 : (start + index) % 10 + 1, snapshot_id: snapshot,
+        observed_head_version: 1, external_id: "701", payload_hash: "a".repeat(64), file_id: history ? null : "42", raw_record_sha256: history ? null : "b".repeat(64), stable_metadata_sha256: history ? null : "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
         current_snapshot_id: snapshot, current_head_version: state.stale ? 3 : 1, payload_current: true, exact_source_current: !state.stale }));
-      return route.fulfill({ json: { version: 1, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource: "attachment", context_hash: binding.context_hash,
-        superseded: false, mapping_matches_manifest: true, mapping_source_current: !state.stale, parent_current: !state.stale, household_current: true, occurrence_fidelity: "page_ordinal", review_reconciled: false, complete_coverage_verified: false,
-        observed_at: at, items, has_more: !start, next_cursor: start ? null : { page: items.at(-1)!.page, ordinal: items.at(-1)!.ordinal, snapshot_id: snapshot } } });
+      return route.fulfill({ json: { version: 1, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource, context_hash: binding.context_hash,
+        superseded: false, mapping_matches_manifest: true, mapping_source_current: !state.stale, parent_current: !state.stale, household_current: true, occurrence_fidelity: history ? "deduplicated_page_snapshot" : "page_ordinal", review_reconciled: false, complete_coverage_verified: false,
+        observed_at: at, items, has_more: !history && !start, next_cursor: history || start ? null : { page: items.at(-1)!.page, ordinal: items.at(-1)!.ordinal, snapshot_id: snapshot } } });
     }
     return route.fulfill({ json: [] });
   });
@@ -350,4 +356,28 @@ for (const width of [390, 1440]) test(`saved resume controls at ${width}px requi
   await form.getByRole("button", { name: "Recover run before resume", exact: true }).click();
   await expect(form.getByText(/next page 5/)).toBeVisible();
   await expect(form.getByLabel("I reviewed this saved source run and want to request one more page.")).not.toBeChecked();
+});
+
+for (const width of [390, 1440]) test(`history evidence preserves corrections and local edits at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1100 }); const state = await fixture(page, true, true);
+  const workspace = page.getByRole("region", { name: "Migration reconciliation" });
+  await workspace.getByRole("button", { name: "Browse saved migrations" }).click();
+  await workspace.getByRole("button", { name: /Open migration/ }).click();
+  await workspace.getByRole("button", { name: /Inspect history scope/ }).first().click();
+  await workspace.getByRole("button", { name: /Inspect attempt/ }).click();
+  state.failHistory = true;
+  await workspace.getByRole("button", { name: /Evidence references for source/ }).click();
+  const panel = workspace.getByRole("region", { name: "History review evidence" });
+  await expect(panel.getByRole("alert")).toContainText("could not be loaded");
+  await expect(panel.getByText(/No approved history/)).toHaveCount(0);
+  state.failHistory = false;
+  await panel.getByRole("button", { name: "Refresh history evidence" }).click();
+  await expect(panel.getByText(/Version 1 · Replaced by a later approval/)).toBeVisible();
+  await expect(panel.getByText("Matches this observed source version.")).toBeVisible();
+  await expect(panel.getByText("Reviews a different version of the same source record.")).toBeVisible();
+  await expect(panel.getByText("Local finding extraction receipts: 2. Edited since extraction: 1.")).toBeVisible();
+  await expect(panel.getByText(/unresolved consult reference/)).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Next history evidence" })).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await panel.screenshot({ path: `docs/evidence/migration-history-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
 });

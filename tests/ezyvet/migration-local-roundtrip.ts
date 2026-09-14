@@ -1,3 +1,4 @@
+import { createMigrationHistoryApi } from "../../src/hub/features/imports/migration-history-api.ts";
 import { createMigrationResumeApi } from "../../src/hub/features/imports/migration-resume-api.ts";
 import { createClient } from "@supabase/supabase-js";
 import { createMigrationSelectionApi } from "../../src/hub/features/imports/migration-selection-api.ts";
@@ -15,7 +16,9 @@ assert.ok(project, "Explicit owned local project required");
 const projectId = readFileSync(`${project}/supabase/config.toml`, "utf8").match(/^project_id\s*=\s*"([a-zA-Z0-9_-]+)"/m)?.[1];
 assert.match(projectId ?? "", /^lrv-attachment-[a-f0-9]{12}$/);
 const local = JSON.parse(execFileSync("supabase", ["status", "--workdir", project, "--output", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }));
-assert.equal(local.API_URL, "http://127.0.0.1:62421");
+const apiPort = Number(process.env.PAYMENT_TEST_API_PORT ?? "62421");
+assert.ok(Number.isInteger(apiPort) && apiPort >= 1025 && apiPort <= 65532);
+assert.equal(local.API_URL, `http://127.0.0.1:${apiPort}`);
 const sql = (query: string) => execFileSync("docker", ["exec", "-i", `supabase_db_${projectId}`, "psql", "-U", "postgres", "-d", "postgres", "-X", "-q", "-t", "-A", "-v", "ON_ERROR_STOP=1"], { input: query, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
 const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 const headers = (token: string) => ({ apikey: local.ANON_KEY, Authorization: `Bearer ${token}`, "Content-Type": "application/json" });
@@ -68,6 +71,28 @@ check(selectedMapping?.patient_name === "Synthetic migration patient" && selecte
 const selectedParents = await selector.parents(selectedMapping!, "attachment");
 check(selectedParents.rows.some(p => p.id === snapshot && p.version === 1 && p.external_id === "77"), "Real parent selector matches source head and exact mapped identity");
 await assert.rejects(() => selector.mappings(-1)); checks++;
+
+// Actual clinical history receipt read through authenticated PostgREST.
+const historyRun = randomUUID();
+const historyClaim = await request("/rest/v1/rpc/claim_ezyvet_clinical_import", { p_id: historyRun, p_actor: owner.id, p_site_uid: site, p_resource: "history", p_source_origin: origin, p_animal_link_id: mapping });
+await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: historyRun, p_actor: owner.id, p_lease_id: historyClaim.lease_id, p_page: 1, p_complete: true, p_items: [{ external_id: "101", payload: { id: 101, animal_id: 77, comments: "Synthetic outside history" } }] });
+const candidate = (await staffRpc("list_ezyvet_clinical_candidates", { p_animal_link_id: mapping, p_resource: "history" })).candidates[0];
+const historyApproval = randomUUID();
+const preparedHistory = await staffRpc("prepare_ezyvet_history_approval", { p_id: historyApproval, p_pet_id: pet, p_payload: { animal_link_id: mapping, snapshot_id: candidate.id, payload_hash: candidate.payload_hash, observed_head_version: candidate.head_version,
+  patient_version: 1, consult_mode: "not_referenced", consult_snapshot_id: null, consult_payload_hash: null, consult_head_version: null, reason: "Synthetic history review" } });
+await staffRpc("approve_ezyvet_history", { p_id: historyApproval, p_pet_id: pet, p_expected_hash: preparedHistory.request.request_hash, p_confirmed: true });
+const historyManifest = await api.prepare({ id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "history", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Synthetic history selection" }] });
+const historyBinding = await api.bind({ id: randomUUID(), scope_id: historyManifest.scopes[0].id, child_run_id: historyRun, reason: "Synthetic scoped history", replaces_id: null });
+const historyItems = await api.items(historyManifest, historyBinding);
+const historyApi = createMigrationHistoryApi(ownerTransport, owner.id);
+const histories = await historyApi.list(historyBinding, historyItems.items[0]);
+check(histories.approvals.length === 1 && histories.approvals[0].id === historyApproval && histories.approvals[0].relationship === "exact_source_version", "Actual history approval matches exact observed evidence over HTTP");
+check(histories.approvals[0].source_current && histories.approvals[0].extraction_receipts === 0 && !histories.complete_coverage_verified, "Approved outside history does not imply extracted diagnosis or accepted coverage");
+check((await historyApi.list(historyBinding, historyItems.items[0], 1)).approvals.length === 0, "History version cursor is terminal over HTTP");
+await assert.rejects(() => historyApi.list(historyBinding, { ...historyItems.items[0], evidence_hash: "f".repeat(64) })); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_history_evidence", { p_binding_id: historyBinding.id, p_page: 1, p_snapshot_id: candidate.id, p_evidence_hash: historyItems.items[0].evidence_hash }, other.auth)); checks++;
+sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${quote(site)} and resource='history';`);
+check(!(await historyApi.list(historyBinding, historyItems.items[0])).approvals[0].source_current, "Actual history currentness detects same-payload later source head");
 
 const manifestRequest: MigrationRequest = { id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "attachment", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Synthetic supervised selection" }] };
 const uncertain = createMigrationRunApi({ async rpc(name, args) {
@@ -155,7 +180,7 @@ for (let i = 0; i < 2; i++) await api.prepare({ ...manifestRequest, id: randomUU
 const first = await api.list(null, 2);
 check(first.runs.length === 2 && first.has_more && first.next_cursor, "HTTP history returns bounded first page");
 const last = await api.list(first.next_cursor, 2);
-check(last.runs.length === 1 && last.runs[0].id === manifestRequest.id && !last.has_more && !last.next_cursor, "HTTP history cursor recovers original request");
+check(last.runs.length === 2 && last.runs[0].id === manifestRequest.id && last.runs[1].id === historyManifest.run.id && !last.has_more && !last.next_cursor, "HTTP history cursor recovers original and earlier clinical request");
 for (const auth of [owner.auth, headers(local.ANON_KEY), service]) {
   for (const table of ["ezyvet_migration_runs", "ezyvet_migration_scopes", "ezyvet_migration_bindings", "ezyvet_migration_attempt_events"]) {
     const response = await fetch(`${local.API_URL}/rest/v1/${table}?select=id`, { headers: auth });

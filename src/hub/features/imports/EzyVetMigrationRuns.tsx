@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createMigrationRunApi } from "./migration-run-api";
 import type { MigrationBinding, MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
+import { MigrationHistoryEvidence } from "./MigrationHistoryEvidence";
 import { createMigrationCaptureApi } from "./migration-capture-api";
 import type { MigrationItem, MigrationItemCursor } from "./migration-items-api";
 
@@ -123,7 +124,7 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, bindingDirty 
   return <section aria-label="Migration source evidence" className="space-y-3 rounded-md border bg-muted/30 p-3 md:p-4">
     <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-medium">Source evidence</h4><Button type="button" variant="outline" size="sm" disabled={items.isFetching || progress.isFetching} onClick={() => { void items.refetch(); void progress.refetch(); }}>Refresh source evidence</Button></div>
     {manifest.scopes.find(s => s.id === binding.scope_id)?.disposition === "required" && <fieldset disabled={bindingDirty}><MigrationResume actor={actor} manifest_id={manifest.run.id} scope_id={binding.scope_id} binding_id={binding.id} onDirtyChange={onResumeDirty} onUpdated={() => { void progress.refetch(); void items.refetch(); }} /></fieldset>}
-    <p className="text-sm text-muted-foreground">Source evidence only. Clinical review, original-file verification and migration acceptance are not assessed here.</p>
+    <p className="text-sm text-muted-foreground">Source observations and available review receipts. Original-file verification and migration acceptance are not assessed here.</p>
     {progress.isFetching ? <p role="status">Loading run progress…</p> : progress.isError ? <Failure message="Run progress is unavailable; counts are not shown." retry={() => void progress.refetch()} /> : progress.data ? <>
       <dl className="grid gap-3 sm:grid-cols-3">{[["Observed occurrences", progress.data.observations.occurrences], ["Distinct source records", progress.data.observations.distinct_source_identities], ["Distinct snapshots", progress.data.observations.distinct_snapshot_versions]].map(([label, count]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-lg font-semibold">{count}</dd></div>)}</dl>
       <p className="text-sm">{progress.data.scan.page_limit_reached ? "Page limit reached; source coverage is incomplete." : progress.data.scan.traversal_ended ? "Traversal ended; source coverage has not been accepted." : "Source traversal is unfinished."}</p>
@@ -143,6 +144,7 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, bindingDirty 
         <p className="text-muted-foreground">Page {item.page}{item.ordinal > 0 ? ` · Occurrence ${item.ordinal}` : " · Deduplicated snapshot"}</p>
         <Button type="button" variant="ghost" size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-left" aria-expanded={expanded === item.evidence_hash} onClick={() => setExpanded(expanded === item.evidence_hash ? null : item.evidence_hash)}>Evidence references for source {item.external_id}, page {item.page}{item.ordinal > 0 ? `, occurrence ${item.ordinal}` : ""}</Button>
         {expanded === item.evidence_hash && <><dl className="mt-2 space-y-1 break-all text-xs"><dt className="text-muted-foreground">Snapshot reference</dt><dd>{item.snapshot_id}</dd><dt className="text-muted-foreground">Occurrence evidence hash</dt><dd>{item.evidence_hash}</dd></dl>
+          {items.data.resource === "history" && <MigrationHistoryEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "attachment" && <CaptureEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
         </>}
       </li>)}</ul>}
