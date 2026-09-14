@@ -1,6 +1,16 @@
 -- Animal-scoped, sanitized metadata only. No download, clinical promotion or delivery.
 alter table public.ezyvet_import_runs drop constraint ezyvet_import_runs_resource_check;
 alter table public.ezyvet_import_runs add constraint ezyvet_import_runs_resource_check check(resource in ('contact','contactdetail','address','animal','species','breed','sex','animalcolour','appointment','consult','history','vaccination','diagnostic','healthstatus','prescription','prescriptionitem','attachment'));
+-- Older import browsers read shared staging tables directly. Restrictive policies
+-- hide this new family there, including service lease tokens; owned RPCs are the
+-- only browser entry point. Existing resource policies remain unchanged.
+create policy "Attachment runs require owned discovery" on public.ezyvet_import_runs as restrictive for select to authenticated using(resource<>'attachment');
+create policy "Attachment snapshots require owned discovery" on public.ezyvet_import_snapshots as restrictive for select to authenticated using(resource<>'attachment');
+create policy "Attachment heads require owned discovery" on public.ezyvet_identity_heads as restrictive for select to authenticated using(resource<>'attachment');
+create policy "Attachment pages require owned discovery" on public.ezyvet_import_pages as restrictive for select to authenticated
+ using(exists(select 1 from public.ezyvet_import_runs r where r.id=run_id and r.resource<>'attachment'));
+create policy "Attachment page items require owned discovery" on public.ezyvet_import_page_items as restrictive for select to authenticated
+ using(exists(select 1 from public.ezyvet_import_runs r where r.id=run_id and r.resource<>'attachment'));
 create table public.ezyvet_attachment_runs (
  run_id uuid primary key references public.ezyvet_import_runs(id),
  actor_id uuid not null references public.profiles(id),
@@ -55,6 +65,16 @@ create or replace function public.claim_ezyvet_import(p_id uuid,p_actor uuid,p_s
  if p_resource in ('healthstatus','diagnostic','consult','history','vaccination','prescription','prescriptionitem','attachment') then raise exception 'Resource requires a supported patient-scoped contract' using errcode='23514';end if;
  return public.claim_ezyvet_import_core(p_id,p_actor,p_site_uid,p_resource,p_source_origin);
 end $$;
+alter function public.review_ezyvet_snapshot(uuid,text,uuid,uuid,text) rename to review_ezyvet_snapshot_pre_attachment;
+revoke all on function public.review_ezyvet_snapshot_pre_attachment(uuid,text,uuid,uuid,text) from public,anon,authenticated,service_role;
+create function public.review_ezyvet_snapshot(p_snapshot_id uuid,p_decision text,p_client_id uuid,p_pet_id uuid,p_reason text)
+returns public.ezyvet_import_reviews language plpgsql security definer set search_path=public as $$begin
+ if public.ezyvet_is_active_admin(auth.uid()) is not true then raise exception 'Active administrator required' using errcode='42501';end if;
+ if exists(select 1 from public.ezyvet_import_snapshots where id=p_snapshot_id and resource='attachment') then raise exception 'Attachment metadata is not available for generic review' using errcode='23514';end if;
+ return public.review_ezyvet_snapshot_pre_attachment(p_snapshot_id,p_decision,p_client_id,p_pet_id,p_reason);
+end $$;
+revoke all on function public.review_ezyvet_snapshot(uuid,text,uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.review_ezyvet_snapshot(uuid,text,uuid,uuid,text) to authenticated;
 create function public.claim_ezyvet_attachment_import(p_id uuid,p_actor uuid,p_site_uid text,p_source_origin text,p_animal_link_id uuid) returns jsonb
 language plpgsql security definer set search_path=public as $$
 declare c public.ezyvet_attachment_runs;r public.ezyvet_import_runs;context jsonb;

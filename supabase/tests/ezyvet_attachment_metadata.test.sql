@@ -62,8 +62,19 @@ select is((select staged_count from ezyvet_attachment_pages),1,'Staged count dis
 select is((select observed_count from ezyvet_attachment_pages),2,'Observed count includes duplicates');
 select lives_ok($$select stage_ezyvet_attachment_page((select id from fx where k='run'),'db690000-0000-4000-8000-000000000001',null,(select v from data where k='page'))$$,'Exact committed replay needs no active lease');
 select throws_ok($$select stage_ezyvet_attachment_page((select id from fx where k='run'),'db690000-0000-4000-8000-000000000001',null,(select jsonb_set(v,'{observations,0,raw_record_sha256}',to_jsonb(repeat('f',64))) from data where k='page'))$$,'40001',null,'Changed raw evidence cannot rewrite committed page');
+insert into fx select 'attachment-snapshot',id from ezyvet_import_snapshots where resource='attachment';
 set local role authenticated;
+select throws_ok($$select review_ezyvet_snapshot((select id from fx where k='attachment-snapshot'),'ignored',null,null,'Metadata is not reviewable')$$,'23514',null,'Generic review cannot mutate attachment metadata history');
 select is(jsonb_array_length(list_ezyvet_attachment_runs((select id from fx where k='mapping'))->'runs'),1,'Browser discovers owned runs');
+select is((select count(*)::integer from ezyvet_import_runs where resource='attachment'),0,'Own attachment runs and lease tokens hidden from direct SELECT');
+select is((select count(*)::integer from ezyvet_import_snapshots where resource='attachment'),0,'Attachment snapshots require owned RPC');
+select is((select count(*)::integer from ezyvet_identity_heads where resource='attachment'),0,'Attachment heads require owned RPC');
+select is((select count(*)::integer from ezyvet_import_pages where run_id=(select id from fx where k='run')),0,'Attachment pages require owned RPC');
+select is((select count(*)::integer from ezyvet_import_page_items where run_id=(select id from fx where k='run')),0,'Attachment page items require owned RPC');
+select is((select count(*)::integer from ezyvet_import_runs where resource='animal'),1,'Older generic animal runs stay readable');
+select is((select count(*)::integer from ezyvet_import_pages where run_id=(select id from fx where k='animal-run')),1,'Older animal page policy preserved');
+select is((select count(*)::integer from ezyvet_import_page_items where run_id=(select id from fx where k='animal-run')),1,'Older animal page item policy preserved');
+
 select ok(not(recover_ezyvet_attachment_run((select id from fx where k='run'),(select id from fx where k='mapping')) ? 'lease_id'),'Browser cannot see service lease');
 select is(recover_ezyvet_attachment_run((select id from fx where k='run'),(select id from fx where k='mapping'))->>'observed_count','2','Recovered observed count explicit');
 select is(recover_ezyvet_attachment_run((select id from fx where k='run'),(select id from fx where k='mapping'))->>'capture_available','false','No file capture implied');
@@ -73,6 +84,8 @@ select is(list_ezyvet_attachment_observations((select id from fx where k='run'),
 select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='mapping'),1,null,20)$$,'23514',null,'Incomplete cursor rejected');
 select set_config('request.jwt.claims','{"sub":"db690000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select throws_ok($$select recover_ezyvet_attachment_run((select id from fx where k='run'),(select id from fx where k='mapping'))$$,'42501',null,'Another admin cannot recover owned operation');
+select is((select count(*)::integer from ezyvet_import_runs where resource='attachment'),0,'Other admin cannot directly read attachment lease tokens');
+select is((select count(*)::integer from ezyvet_import_snapshots where resource='attachment'),0,'Other admin cannot bypass owned metadata RPC');
 select throws_ok($$select list_ezyvet_attachment_observations((select id from fx where k='run'),(select id from fx where k='mapping'))$$,'42501',null,'Another admin cannot read observations');
 select is(jsonb_array_length(list_ezyvet_attachment_runs((select id from fx where k='mapping'))->'runs'),0,'Discovery is actor scoped');
 reset role;
