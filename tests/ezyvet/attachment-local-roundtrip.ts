@@ -63,6 +63,7 @@ const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 
 const includeCapture = process.env.INCLUDE_ATTACHMENT_CAPTURE === "true";
 const storageObjects: string[] = [];
+const nativeFixturePaths: string[] = [];
 const deliveryFixtureIds: string[] = [];
 const ids: string[] = [];
 const additionalActors: string[] = [];
@@ -726,6 +727,56 @@ try {
           check(sql(`select outcome||':'||error_code from communication_attempts where outbox_id=${quote(acceptedOutbox.id)};`) === 'uncertain:worker_lease_expired', "Lease recovery retains an uncertain attempt receipt for reconciliation");
         }
       }
+      const mixedDocuments: string[] = [], mixedFiles = new Map<string, Uint8Array>();
+      mixedFiles.set('ezyvet-attachments/' + chartCapture.object_path, original);
+      for (let index = 1; index <= 2; index++) {
+        const documentId = randomUUID(); ids.push(documentId); mixedDocuments.push(documentId);
+        const bytes = original.slice(); bytes[bytes.length - 1] ^= index;
+        const document = await api('/rest/v1/rpc/prepare_patient_document', { p_id: documentId, p_pet_id: pet, p_encounter_id: null, p_file_name: `synthetic-mixed-${index}.pdf`, p_mime_type: 'application/pdf', p_file_size: bytes.length, p_category: 'medical_record', p_source: 'Synthetic multiple-original acceptance', p_document_date: null, p_visibility: 'client_shareable' }, chartHeaders);
+        nativeFixturePaths.push(document.file_path);
+        mixedFiles.set('patient-documents/' + document.file_path, bytes);
+        const upload = await fetch(local.API_URL + '/storage/v1/object/patient-documents/' + document.file_path, { method: 'POST', headers: { ...chartHeaders, 'Content-Type': 'application/pdf', 'x-upsert': 'false' }, body: bytes });
+        check(upload.ok, "Distinct ordinary original uploads through actual staff Storage policy");
+        await api('/rest/v1/rpc/finalize_patient_document', { p_id: documentId }, chartHeaders);
+      }
+      let mixedReads: string[] = [], swapApiBytes = false;
+      const mixedDependencies = {
+        service: emailDb(serviceHeaders),
+        authenticate: async (token: string) => {
+          const response = await fetch(local.API_URL + '/auth/v1/user', { headers: { apikey: local.ANON_KEY, Authorization: `Bearer ${token}` } });
+          if (!response.ok) return null;
+          const user = await response.json(); return { actorId: user.id, db: emailDb({ ...chartHeaders, Authorization: `Bearer ${token}` }) };
+        },
+        download: async (bucket: string, path: string, expectedSize: number) => {
+          const key = bucket + '/' + path; mixedReads.push(key); assert.ok(mixedFiles.has(key), 'Only explicitly selected original paths may be fetched');
+          const response = await fetch(local.API_URL + '/storage/v1/object/' + key, { headers: serviceHeaders }); assert.ok(response.ok);
+          const bytes = new Uint8Array(await response.arrayBuffer()); assert.equal(bytes.length, expectedSize);
+          assert.deepEqual(bytes, mixedFiles.get(key), 'Actual private Storage bytes match the selected file');
+          return swapApiBytes && bucket === 'ezyvet-attachments' ? mixedFiles.get('patient-documents/' + nativeFixturePaths.at(-1))! : bytes;
+        },
+      };
+      const mixedEmailHandler = createPrepareReleaseEmailHandler({ ...mixedDependencies, sender: { from: 'care@example.test', replyTo: 'care@example.test' } });
+      const mixedLinkHandler = createStaffDocumentLinkHandler({ ...mixedDependencies, config: linkConfig, practice: { name: 'Synthetic', address: 'Synthetic', domain: null } }, 'prepare');
+      for (const channel of ['EMAIL', 'SMS'] as const) for (const corrupted of [false, true]) {
+        const mixedArgs = { ...(channel === 'EMAIL' ? packageArgs : smsArgs), p_selection: { api_attachment_ids: [correctionId], document_ids: mixedDocuments, patient_summary_ids: [pet] } };
+        const preview = await api('/rest/v1/rpc/preview_record_release_v9', mixedArgs, chartHeaders);
+        check(preview.snapshot.attachments.length === 3 && preview.snapshot.api_attachments.length === 1 && preview.snapshot.patient_summaries.length === 1, "Actual schema9 preview keeps three explicitly selected originals and native patient summary");
+        const mixedRelease = randomUUID(), mixedRequest = randomUUID(); ids.push(mixedRelease, mixedRequest);
+        await api('/rest/v1/rpc/confirm_record_release', { ...mixedArgs, p_id: mixedRelease, p_reviewed_snapshot: preview.snapshot, p_reviewed_hash: preview.source_hash, p_attest_review: true }, chartHeaders);
+        const request = channel === 'EMAIL' ? { ...emailArgs, p_request_id: mixedRequest, p_release_id: mixedRelease, p_release_hash: preview.source_hash } : { ...linkArgs, p_request_id: mixedRequest, p_source_id: mixedRelease, p_source_hash: preview.source_hash };
+        mixedReads = []; swapApiBytes = corrupted;
+        const response = await (channel === 'EMAIL' ? mixedEmailHandler : mixedLinkHandler)(new Request('http://localhost/prepare-mixed', { method: 'POST', headers: chartHeaders, body: JSON.stringify(request) }));
+        if (corrupted) {
+          check(response.status !== 200, "Mixed package rejects a same-size ordinary original swapped into the API slot");
+          const table = channel === 'EMAIL' ? 'release_email_payloads' : 'document_link_payloads', key = channel === 'EMAIL' ? 'request_id' : 'grant_id';
+          check(sql(`select count(*) from ${table} where ${key}=${quote(mixedRequest)};`) === '0', "Rejected mixed bytes leave no frozen delivery artifact");
+        } else {
+          check(response.status === 200 && new Set(mixedReads).size === 3 && mixedReads.length === 3, "Mixed handler fetches each selected original exactly once across both private buckets");
+          const captured = await response.json();
+          const expectedDigests = await Promise.all([...mixedFiles.values()].map(async bytes => Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex')));
+          check(captured.manifest.length === 4 && expectedDigests.every(digest => captured.manifest.some((item: { sha256: string }) => item.sha256 === digest)), "SQL-frozen mixed manifest contains report plus all three distinct original digests");
+        }
+      }
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
       // Exercise the production runtime adapter and handler through actual loopback HTTP.
@@ -850,7 +901,7 @@ try {
   check((await post({ run_id: randomUUID(), resource: "attachment" })).status === 403, "Role loss prevents HTTP import");
   await assert.rejects(rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true), (error: { code: string }) => error.code === "42501"); assertions++;
   await assert.rejects(rpc("list_ezyvet_attachment_observations", { p_run_id: lastAttachmentRun, p_pet_id: pet }, true), (error: { code: string }) => error.code === "42501"); assertions++;
-  const expectedEffects = JSON.parse(beforeEffects); expectedEffects[4] += deliveryFixtureIds.length;
+  const expectedEffects = JSON.parse(beforeEffects); expectedEffects[0] += nativeFixturePaths.length; expectedEffects[4] += deliveryFixtureIds.length;
   check(JSON.stringify(JSON.parse(effects())) === JSON.stringify(expectedEffects), "Intake creates no clinical/billing/stock effects or outbox work beyond the explicitly reviewed release fixtures");
 } catch (error) {
   failures.push(error);
@@ -859,6 +910,10 @@ try {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
   try {
+    if (nativeFixturePaths.length) {
+      const removed = await fetch(local.API_URL + '/storage/v1/object/patient-documents', { method: 'DELETE', headers: serviceHeaders, body: JSON.stringify({ prefixes: nativeFixturePaths }) }); assert.ok(removed.ok);
+      check(sql(`select count(*) from storage.objects where bucket_id='patient-documents' and name in (${nativeFixturePaths.map(quote).join(',')});`) === '0', "Owned ordinary originals removed through actual Storage API");
+    }
     if (storageObjects.length) {
       const removed = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments", { method: "DELETE", headers: serviceHeaders, body: JSON.stringify({ prefixes: storageObjects }) });
       assert.ok(removed.ok);
