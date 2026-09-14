@@ -1,0 +1,32 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "8eaa6da5d30d6d7f19b18fd0123da6fb4c27d391",
+  "file_sha256": {
+    "supabase/migrations/20260914070000_canonical_api_release_preview.sql": "6904f48810147c251ee808554efaf70234380eb3cabcada1c1346e42aae6ca32",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "b6bf1e2ec454381eac940fa35a05901883affb06978c32f7638227776bdbe3c3",
+    "tests/ezyvet/attachment-metadata-disposable.py": "dbf96452dc99a7c4b0a9d197ac7e68c2002d8b9e378bf39a90d893db17e8cb7f"
+  },
+  "sql_assertions": 500,
+  "new_sql_assertions": 18,
+  "concurrency_checks": 140,
+  "new_concurrency_cases": 0,
+  "owned_database_cleanup_verified": true,
+  "python_runner_syntax_verified": true,
+  "log_sha256": "828d80378d502e7b88d611a0c7c3030223918e5c4bebd731ad09a57a29d51aef",
+  "verified_behaviors": [
+    "API-only snapshot carries schema9, exact canonical file and approval reference",
+    "Mixed native weight/API preview preserves schema8 weight representation",
+    "Household recipient and unknown/empty selection rejection",
+    "Selection count cap and malformed file/bucket rejection",
+    "Complete snapshot hash binding",
+    "Invalid prescription still rejected by canonical schema8 validation",
+    "Preview/mapper unavailable directly to browser or service role"
+  ],
+  "limitations": [
+    "Private preview only; public confirmation and delivery dispatch remain schema8.",
+    "20API/24total limits exist, but maximum-count mixed physical-file acceptance remains pending.",
+    "Positive prescription-plus-API composition and cross-family snapshot races remain pending.",
+    "Current94-migration local HTTP/Storage and populated upgrade/restore remain pending.",
+    "No hosted changes, clinical policy activation or provider messages."
+  ]
+}
