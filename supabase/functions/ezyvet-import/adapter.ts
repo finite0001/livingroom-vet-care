@@ -14,6 +14,7 @@ export const resources = [
   "healthstatus",
   "prescription",
   "prescriptionitem",
+  "attachment",
 ] as const;
 export const resourceContracts = {
   animal: { path: "/v2/animal", limit: 50 },
@@ -23,7 +24,9 @@ export const resourceContracts = {
   vaccination: { path: "/v1/vaccination", limit: 10 },
   prescription: { path: "/v1/prescription", limit: 10 },
   prescriptionitem: { path: "/v1/prescriptionitem", limit: 10 },
+  attachment: { path: "/v1/attachment", limit: 10 },
 } as const;
+export interface AttachmentParent { parent_type: "Animal" | "Consult"; parent_external_id: string; }
 export type ClinicalResource = "consult" | "history";
 export const patientScoped = (resource: Resource) =>
   ["healthstatus", "consult", "history", "prescription"].includes(resource);
@@ -187,7 +190,7 @@ export function parsePage(
     body.items.length >
       (resource === "consult" || resource === "history" ||
           resource === "vaccination" || resource === "prescription" ||
-          resource === "prescriptionitem"
+          resource === "prescriptionitem" || resource === "attachment"
         ? 10
         : 50)
   ) {
@@ -300,6 +303,18 @@ export function parsePage(
         !["string", "number", "boolean"].includes(typeof payload.active)
       ) {
         throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+    }
+    if (resource === "attachment") {
+      if (!validVaccinationId(payload.id) || !validVaccinationId(payload.record_id) ||
+        typeof payload.record_type !== "string" || !["Animal", "Consult"].includes(payload.record_type)) {
+        throw new ImportError("INVALID_UPSTREAM_SHAPE");
+      }
+      // Unknown file types and URL values remain source evidence, never fetch targets.
+      for (const field of ["name", "notes", "mime_type", "file_download_url"]) {
+        if (payload[field] !== undefined && payload[field] !== null && typeof payload[field] !== "string") {
+          throw new ImportError("INVALID_UPSTREAM_SHAPE");
+        }
       }
     }
     if (resource === "prescription" || resource === "prescriptionitem") {
@@ -471,6 +486,7 @@ export function createAdapter(
       animalExternalId?: string,
       consultExternalId?: string,
       prescriptionExternalId?: string,
+      attachmentParent?: AttachmentParent,
     ): Promise<PageResult> {
       if (
         !config.readResources.includes(resource) ||
@@ -504,10 +520,16 @@ export function createAdapter(
       if (resource !== "prescriptionitem" && prescriptionExternalId !== undefined) {
         throw new ImportError("INVALID_PAGE_REQUEST");
       }
+      if (resource === "attachment") {
+        if (animalExternalId !== undefined || consultExternalId !== undefined || prescriptionExternalId !== undefined ||
+          !attachmentParent || !["Animal", "Consult"].includes(attachmentParent.parent_type) || !validVaccinationId(attachmentParent.parent_external_id)) {
+          throw new ImportError("ATTACHMENT_PARENT_REQUIRED");
+        }
+      } else if (attachmentParent !== undefined) throw new ImportError("INVALID_PAGE_REQUEST");
       const contract = resource === "animal" || resource === "healthstatus" ||
           resource === "consult" || resource === "history" ||
           resource === "vaccination" || resource === "prescription" ||
-          resource === "prescriptionitem"
+          resource === "prescriptionitem" || resource === "attachment"
         ? resourceContracts[resource]
         : { path: `/v1/${resource}`, limit: 50 };
       const query = new URLSearchParams({
@@ -522,6 +544,10 @@ export function createAdapter(
       }
       if (resource === "prescriptionitem") {
         query.set("prescription_id", prescriptionExternalId!);
+      }
+      if (resource === "attachment") {
+        query.set("record_type", attachmentParent!.parent_type);
+        query.set("record_id", attachmentParent!.parent_external_id);
       }
       for (let attempt = 0; attempt < 2; attempt++) {
         const bearer = await accessToken();
@@ -565,6 +591,10 @@ export function createAdapter(
           (item) => String(item.payload.prescription_id) !== prescriptionExternalId,
         )) {
           throw new ImportError("SOURCE_PRESCRIPTION_MISMATCH");
+        }
+        if (resource === "attachment" && result.items.some(item => item.payload.record_type !== attachmentParent!.parent_type ||
+          String(item.payload.record_id) !== attachmentParent!.parent_external_id)) {
+          throw new ImportError("SOURCE_ATTACHMENT_PARENT_MISMATCH");
         }
         return result;
       }

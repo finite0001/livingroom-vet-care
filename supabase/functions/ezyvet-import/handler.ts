@@ -6,6 +6,7 @@ import {
   resources,
 } from "./adapter.ts";
 import type {
+  AttachmentParent,
   AdapterDependencies,
   ClinicalResource,
   PageResult,
@@ -22,6 +23,7 @@ export interface ImportRun {
   animal_external_id?: string;
   consult_external_id?: string;
   prescription_external_id?: string;
+  parent_context?: AttachmentParent & { animal_link_id: string; parent_snapshot_id: string; parent_payload_hash: string; parent_observed_head_version: number; source_origin: string; source_site_uid: string };
 }
 export interface ImportGateway {
   authenticate: (
@@ -68,6 +70,10 @@ export interface ImportGateway {
     prescriptionSnapshotId: string,
     prescriptionPayloadHash: string,
     prescriptionObservedHeadVersion: number,
+  ) => Promise<ImportRun>;
+  claimAttachment?: (
+    id: string, actor: string, site: string, sourceOrigin: string, animalLinkId: string,
+    parentType: "Animal" | "Consult", parentSnapshotId: string, parentPayloadHash: string, parentVersion: number,
   ) => Promise<ImportRun>;
   claimPrescription?: (
     id: string, actor: string, site: string, sourceOrigin: string, animalLinkId: string,
@@ -177,6 +183,7 @@ export function createHandler(dependencies: HandlerDependencies) {
               "prescription_snapshot_id",
               "prescription_payload_hash",
               "prescription_observed_head_version",
+              "parent_type", "parent_snapshot_id", "parent_payload_hash", "parent_observed_head_version",
             ].includes(key),
         ) ||
         typeof body.run_id !== "string" ||
@@ -193,7 +200,7 @@ export function createHandler(dependencies: HandlerDependencies) {
       }
       if (
         (patientScoped(body.resource as Resource) ||
-          body.resource === "vaccination" || body.resource === "prescriptionitem") &&
+          body.resource === "vaccination" || body.resource === "prescriptionitem" || body.resource === "attachment") &&
         (typeof body.animal_link_id !== "string" ||
           !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
             .test(body.animal_link_id))
@@ -202,7 +209,7 @@ export function createHandler(dependencies: HandlerDependencies) {
       }
       if (
         !patientScoped(body.resource as Resource) &&
-        body.resource !== "vaccination" && body.resource !== "prescriptionitem" &&
+        body.resource !== "vaccination" && body.resource !== "prescriptionitem" && body.resource !== "attachment" &&
         body.animal_link_id !== undefined
       ) {
         return respond({ error: "INVALID_REQUEST" }, 400);
@@ -253,11 +260,27 @@ export function createHandler(dependencies: HandlerDependencies) {
       ) {
         return respond({ error: "INVALID_REQUEST" }, 400);
       }
+      if (body.resource === "attachment") {
+        if (typeof body.parent_type !== "string" || !["Animal", "Consult"].includes(body.parent_type) ||
+          typeof body.parent_snapshot_id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.parent_snapshot_id) ||
+          typeof body.parent_payload_hash !== "string" || !/^[0-9a-f]{64}$/.test(body.parent_payload_hash) ||
+          typeof body.parent_observed_head_version !== "number" || !Number.isSafeInteger(body.parent_observed_head_version) ||
+          body.parent_observed_head_version < 1 || body.parent_observed_head_version > 2147483647) {
+          return respond({ error: "ATTACHMENT_PARENT_REQUIRED" }, 400);
+        }
+        if (!dependencies.gateway.claimAttachment) return respond({ error: "ATTACHMENT_INTAKE_UNAVAILABLE" }, 503);
+      } else if (["parent_type", "parent_snapshot_id", "parent_payload_hash", "parent_observed_head_version"].some(key => key in body)) {
+        return respond({ error: "INVALID_REQUEST" }, 400);
+      }
       if ((body.resource === "prescription" && !dependencies.gateway.claimPrescription) ||
         (body.resource === "prescriptionitem" && !dependencies.gateway.claimPrescriptionItem)) {
         return respond({ error: "PRESCRIPTION_INTAKE_UNAVAILABLE" }, 503);
       }
-      run = body.resource === "prescription"
+      run = body.resource === "attachment"
+        ? await dependencies.gateway.claimAttachment!(body.run_id, actor, config.siteUid, config.baseUrl,
+          body.animal_link_id as string, body.parent_type as "Animal" | "Consult", body.parent_snapshot_id as string,
+          body.parent_payload_hash as string, body.parent_observed_head_version as number)
+        : body.resource === "prescription"
         ? await dependencies.gateway.claimPrescription!(body.run_id, actor, config.siteUid,
           config.baseUrl, body.animal_link_id as string)
         : body.resource === "prescriptionitem"
@@ -299,6 +322,17 @@ export function createHandler(dependencies: HandlerDependencies) {
           body.resource as Resource,
           config.baseUrl,
         );
+      if (body.resource === "attachment") {
+        const context = run.parent_context;
+        if (run.id !== body.run_id || run.requested_by !== actor || run.resource !== "attachment" ||
+          run.source_site_uid !== config.siteUid || !context || context.animal_link_id !== body.animal_link_id ||
+          context.parent_type !== body.parent_type || context.parent_snapshot_id !== body.parent_snapshot_id ||
+          context.parent_payload_hash !== body.parent_payload_hash || context.parent_observed_head_version !== body.parent_observed_head_version ||
+          context.source_origin !== config.baseUrl || context.source_site_uid !== config.siteUid) {
+          run = null;
+          throw new ImportError("ATTACHMENT_CONTEXT_MISMATCH");
+        }
+      }
       const summary = (value: ImportRun) => ({
         run_id: value.id,
         status: value.status,
@@ -314,9 +348,10 @@ export function createHandler(dependencies: HandlerDependencies) {
       const page = await adapter.page(
         run.resource,
         run.next_page,
-        run.resource === "vaccination" || run.resource === "prescriptionitem" ? undefined : run.animal_external_id,
+        run.resource === "vaccination" || run.resource === "prescriptionitem" || run.resource === "attachment" ? undefined : run.animal_external_id,
         run.consult_external_id,
         run.prescription_external_id,
+        run.parent_context,
       );
       const result = await dependencies.gateway.stage(run, actor, page);
       return respond(
@@ -336,7 +371,10 @@ export function createHandler(dependencies: HandlerDependencies) {
         ((error.code === "22023" && ["PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING", "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT"].includes(String(error.message))) ||
           (error.code === "40001" && error.message === "SOURCE_PRESCRIPTION_STALE"))
         ? String(error.message) : null;
-      const code = prescriptionCode ?? vaccinationCode ??
+      const attachmentCode = error && typeof error === "object" && "code" in error && "message" in error &&
+        ((error.code === "22023" && error.message === "ATTACHMENT_RUN_REQUIRES_NEW_CONTEXT") ||
+          (error.code === "40001" && error.message === "SOURCE_ATTACHMENT_PARENT_STALE")) ? String(error.message) : null;
+      const code = attachmentCode ?? prescriptionCode ?? vaccinationCode ??
         (error && typeof error === "object" && "code" in error &&
             error.code === "22023" && "message" in error &&
             error.message === "CLINICAL_RUN_REQUIRES_NEW_MAPPING"
@@ -366,6 +404,8 @@ export function createHandler(dependencies: HandlerDependencies) {
         "PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING",
         "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT",
         "SOURCE_PRESCRIPTION_STALE",
+        "ATTACHMENT_RUN_REQUIRES_NEW_CONTEXT",
+        "SOURCE_ATTACHMENT_PARENT_STALE",
       ].includes(code);
       return respond(
         {

@@ -111,6 +111,16 @@ const handler = createHandler({
       if (error) throw error;
       return data as ImportRun;
     },
+    async claimAttachment(id, actor, site, sourceOrigin, animalLinkId, parentType, parentSnapshotId, parentPayloadHash, parentVersion) {
+      const { data, error } = await admin.rpc("claim_ezyvet_attachment_import", {
+        p_id: id, p_actor: actor, p_site_uid: site, p_source_origin: sourceOrigin,
+        p_animal_link_id: animalLinkId, p_parent_type: parentType,
+        p_parent_snapshot_id: parentSnapshotId, p_parent_payload_hash: parentPayloadHash,
+        p_parent_observed_head_version: parentVersion,
+      });
+      if (error) throw error;
+      return data as ImportRun;
+    },
     async claimPrescription(id, actor, site, sourceOrigin, animalLinkId) {
       const { data, error } = await admin.rpc("claim_ezyvet_prescription_import", {
         p_id: id, p_actor: actor, p_site_uid: site, p_resource: "prescription",

@@ -1,7 +1,14 @@
 # Phase 3d — Source API attachments
 
-Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter/HTTP/UI wiring, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual Auth/database runtime verification, UI, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
 
+
+
+## Metadata transport checkpoint — 2026-09-13
+
+The adapter recognizes the explicit attachment read scope, requests at most10 metadata records per page, and filters using the validated parent context returned by SQL. Handler requests require mapping, parent type, snapshot/hash/revision; arbitrary external parent IDs and unrelated parent fields are rejected. The runtime gateway calls only the dedicated attachment claim RPC with the authenticated actor. Returned context must match the requested pins/site/origin before any upstream read. Wrong-parent results reject the whole page; unsupported MIME/name/URL evidence is retained without fetching original files. Exact terminal claim recovery makes no additional upstream request or duplicate staging attempt after a simulated lost response.
+
+Forty-one focused adapter/handler tests pass, including eight new attachment cases. `npm run check` passes466 application tests, lint, TypeScript and build; the frozen Deno entry-point check passes. [Sanitized evidence](../../docs/evidence/attachment-intake-handler-local-20260913.json) records source hashes and limitations. These are mocked gateway/upstream tests, not actual HTTP/Auth/PostgREST or provider acceptance. Attachment scopes remain opt-in and defaults unchanged. The operator UI and file download/capture/review/release workflow remain unfinished.
 
 ## Metadata SQL checkpoint — 2026-09-13
 
@@ -25,7 +32,7 @@ Implementation choices below are application requirements, not claimed provider 
 
 ## Existing architecture to reuse carefully
 
-`ezyvet-import/adapter.ts` already controls OAuth scopes, API origins, bounded JSON reads, cooldowns and redirect rejection. It has no attachment resource or byte-download method. Add these only after scoped database claims prevent generic intake bypasses.
+`ezyvet-import/adapter.ts` already controls OAuth scopes, API origins, bounded JSON reads, cooldowns and redirect rejection. Its attachment metadata resource now uses scoped database claims; the byte-download method remains to be implemented.
 
 The existing private patient-document bucket, upload/read policies and original-byte release verification remain useful. `external-record-verification.ts` explicitly requires `staff_reviewed_manual_export_v1`; its receipt, capture and release projection cannot be reused unchanged for API attachments. Add an explicit API provenance model and validator. Do not relabel imported bytes as a manual export or weaken existing validators to make them fit.
 
