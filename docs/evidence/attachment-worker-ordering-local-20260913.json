@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-13",
+  "scope": "Observed API email worker-start/source ordering",
+  "checks_passed": 252,
+  "new_checks": 20,
+  "scenarios": [
+    "release-email-worker-source-first",
+    "release-email-worker-before-source"
+  ],
+  "runner_sha256": "086d882900f12999f19b5e123dfc6a7e7c72cfd483f6445137b6408aad2e06fb",
+  "log_sha256": "5023220dc60a711c7685161dbba37452e288e9e556349c781c2401a0148775ef",
+  "cleanup_verified": true,
+  "coverage": [
+    "SQL-validated original bytes, explicit reviewed email queue and exact worker claim",
+    "pg_blocking_pids verifies exact holder/waiter in both orders",
+    "Source-first: failed:0 and no communication_attempts receipt",
+    "Worker-first: claimed:1 and exactly one retained attempt receipt",
+    "Later source revision remains recorded as a release invalidation event; reviewed hash and captured source request unchanged"
+  ],
+  "limits": [
+    "Schema-only owned clone with synthetic original bytes and Storage metadata; no provider call",
+    "These observed worker-start races cover email; document-link/SMS and public retrieval races remain pending",
+    "Batch/multiple-original composition and current populated upgrade/physical restore remain pending",
+    "Broader commercial readiness, clinical/provider commissioning and hosted deployment gates remain open"
+  ]
+}

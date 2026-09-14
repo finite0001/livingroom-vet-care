@@ -15,7 +15,7 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
 approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
-release_scenarios = ['release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
+release_scenarios = ['release-email-worker-source-first', 'release-email-worker-before-source', 'release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
 parser.add_argument('--scenario', choices=approval_scenarios + release_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 parser.add_argument('--skip-release-access-fix', action='store_true', help='Reproduce pre8000 access waits in an owned clone when the source lacks8000; never revert an existing fix')
@@ -201,7 +201,7 @@ try:
                     sql(f"insert into conversations(id,client_id) values('{conversation}','{fx['client']}');")
                 prepare = staff + f"select prepare_release_email('{email_request}','{release_id}','{conversation}','Synthetic race','Synthetic reviewed API original','{preview['source_hash']}');"
                 capture_operation = None
-                if 'capture-' in scenario:
+                if 'capture-' in scenario or 'worker-' in scenario:
                     sql('begin;' + prepare + 'commit;')
                     doc = preview['snapshot']['attachments'][0]
                     stem = re.sub(r'[^A-Za-z0-9 _.-]', '_', re.sub(r'\.[^.]*$', '', doc['file_name'])).strip(' .')[:100] or 'record'
@@ -211,7 +211,24 @@ try:
                     ]})
                     service = "set local role service_role;select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
                     capture_operation = service + f"select capture_release_email_payload('{email_request}','{actor}',{quote(payload)});"
-                if capture_operation:
+                if 'worker-' in scenario:
+                    sql('begin;' + capture_operation + 'commit;')
+                    payload_hash = scalar(f"select payload_hash from release_email_payloads where request_id='{email_request}';")
+                    queued = json.loads(scalar('begin;' + staff + f"select to_jsonb(enqueue_release_email('{email_request}','{payload_hash}',true));commit;"))
+                    claimed = json.loads(scalar('begin;' + service + 'select to_jsonb(claim_communication());commit;'))
+                    check(claimed['id'] == queued['id'], 'Worker claims exact synthetic reviewed email')
+                    config = quote(json.dumps({'from': 'care@example.test', 'reply_to': 'care@example.test'}))
+                    start = service + f"select start_communication_attempt('{queued['id']}','{claimed['lease_token']}',{config}::jsonb);"
+                    if scenario.endswith('source-first'):
+                        contend(change, start, None)
+                        check(scalar(f"select state||':'||attempt_count::text from communication_outbox where id='{queued['id']}';") == 'failed:0', 'Source change wins lock race and prevents worker attempt')
+                        check(scalar(f"select count(*) from communication_attempts where outbox_id='{queued['id']}';") == '0', 'Rejected worker start leaves no provider attempt receipt')
+                    else:
+                        contend(start, change, None)
+                        check(scalar(f"select state||':'||attempt_count::text from communication_outbox where id='{queued['id']}';") == 'claimed:1', 'Earlier authorized start retains one recorded attempt')
+                        check(scalar(f"select count(*) from communication_attempts where outbox_id='{queued['id']}';") == '1', 'Later source change does not erase the earlier attempt receipt')
+                    check(scalar(f"select exists(select 1 from record_release_events where release_id='{release_id}' and kind='source_changed');") == 't', 'Source revision appends release invalidation evidence')
+                elif capture_operation:
                     if scenario.endswith('source-first'):
                         contend(change, capture_operation, 'Release, household or recipient is no longer eligible')
                         check(scalar(f"select count(*) from release_email_payloads where request_id='{email_request}';") == '0', 'Earlier source revision prevents payload capture')
