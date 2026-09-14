@@ -62,6 +62,7 @@ def contended(first_query, second_query, second_expected, hold_seconds=2):
     second.stdin.write(f"set application_name='{tag}_waiter';begin;{second_query}commit;")
     second.stdin.close()
     waiting = False
+    deadline = time.monotonic() + 8
     while time.monotonic() < deadline:
         if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_waiter' and wait_event_type='Lock';").stdout.strip() == '1':
             waiting = True
@@ -104,8 +105,10 @@ try:
     check(restored.returncode==0,restored.stderr.decode())
     # Foundation ledger can lag its schema. Rebuild public only in this owned empty copy.
     sql('drop schema public cascade;create schema public;grant usage on schema public to anon,authenticated,service_role;create publication supabase_realtime;')
-    for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
-        sql('begin;'+migration.read_text()+'commit;')
+    migrations=sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql'))
+    # Preserve transactions and fresh-session state while avoiding89 Docker startups.
+    sql('\n'.join('begin;\n'+migration.read_text()+'\ncommit;\nDISCARD ALL;' for migration in migrations))
+    print(f'Replayed {len(migrations)} canonical migrations in owned database.',flush=True)
     regressions=0
     targeted=['ezyvet_api_original_release.test.sql','ezyvet_attachment_original_reviews.test.sql','ezyvet_prescription_release_reference.test.sql','release_source_byte_binding.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
