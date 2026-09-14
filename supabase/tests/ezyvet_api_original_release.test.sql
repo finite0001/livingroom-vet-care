@@ -98,6 +98,38 @@ reset role;
 update ezyvet_identity_heads set version=version+1 where resource in('animal','attachment');
 select is(release_preview_v9_internal((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select v from data where k='selection')),(select v from data where k='preview'),'Provider head refresh preserves admitted original');
 select is((release_read_internal((select id from fx where k='release'))->>'eligible')::boolean,true,'Provider head refresh does not invalidate API-only release');
+-- Ordinary documents and API originals remain distinct in mixed packages.
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx values('document',gen_random_uuid());
+select prepare_patient_document((select id from fx where k='document'),(select id from fx where k='pet'),null,'ordinary.pdf','application/pdf',9,'medical_record','Synthetic ordinary original',null,'client_shareable');
+insert into storage.objects(bucket_id,name,metadata) select 'patient-documents',file_path,'{"size":9,"mimetype":"application/pdf"}'::jsonb from patient_documents where id=(select id from fx where k='document');
+select finalize_patient_document((select id from fx where k='document'));
+insert into data select 'mixed-selection',v||jsonb_build_object('document_ids',jsonb_build_array((select id from fx where k='document'))) from data where k='selection';
+insert into data select 'mixed',preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select v from data where k='mixed-selection'));
+select is(jsonb_array_length((select v#>'{snapshot,attachments}' from data where k='mixed')),1,'Mixed package keeps ordinary attachment');
+select is((select v#>'{snapshot,api_originals}' from data where k='mixed'),(select v#>'{snapshot,api_originals}' from data where k='preview'),'Mixed package preserves exact API evidence');
+select throws_ok($$select preview_record_release_v8((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select v from data where k='selection'))$$,'23514',null,'Older preview cannot silently include API originals');
+select throws_ok($$select preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test','{"api_original_ids":null}')$$,'23514',null,'Null API selection rejected');
+select throws_ok($$select preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select jsonb_build_object('api_original_ids',(v->'api_original_ids')||(v->'api_original_ids')) from data where k='selection'))$$,'23514',null,'Duplicate API IDs rejected');
+savepoint file_limit;
+create temp table limit_docs(id uuid);grant all on limit_docs to authenticated;
+do $$declare d uuid;begin for i in 1..24 loop d:=gen_random_uuid();perform prepare_patient_document(d,(select id from fx where k='pet'),null,'limit.pdf','application/pdf',9,'medical_record','Synthetic boundary',null,'client_shareable');insert into storage.objects(bucket_id,name,metadata) select 'patient-documents',file_path,'{"size":9,"mimetype":"application/pdf"}'::jsonb from patient_documents where id=d;perform finalize_patient_document(d);insert into limit_docs values(d);end loop;end $$;
+select throws_ok($$select preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select v||jsonb_build_object('document_ids',(select jsonb_agg(id) from limit_docs)) from data where k='selection'))$$,'23514',null,'Combined25 originals rejected before transport');
+rollback to file_limit;
+reset role;
+savepoint storage_lost;
+set local storage.allow_delete_query='true';
+delete from storage.objects where id=(select storage_object_id from ezyvet_attachment_original_captures where id=(select(v#>>'{record,capture_id}')::uuid from data where k='approved'));
+select is((release_read_internal((select id from fx where k='release'))->>'eligible')::boolean,false,'Missing Storage returns frozen ineligible release');
+rollback to storage_lost;
+savepoint mapping_changed;
+-- Privileged synthetic repair exercises the defensive release boundary; normal
+-- source mapping writes remain restricted by their existing API grants.
+update ezyvet_record_links set source_site_uid=source_site_uid||'-changed' where id=(select id from fx where k='mapping');
+select is((release_read_internal((select id from fx where k='release'))->>'eligible')::boolean,false,'Mapping identity mutation invalidates release');
+update ezyvet_record_links set source_site_uid='attachment-test-site' where id=(select id from fx where k='mapping');
+select is((release_read_internal((select id from fx where k='release'))->>'eligible')::boolean,false,'Restoring mapping cannot remove invalidation event');
+rollback to mapping_changed;
 savepoint replaced;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"db710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select approve_ezyvet_attachment_original((select id from fx where k='approve2'),(select id from fx where k='pet'),(select v#>>'{request,capture,id}' from data where k='ready2')::uuid,(select v#>>'{request,capture,capture_hash}' from data where k='ready2'),1,(select v#>>'{record,id}' from data where k='approved')::uuid,'Explicit replacement',true);
@@ -108,6 +140,9 @@ set local role authenticated;select set_config('request.jwt.claims','{"sub":"db7
 select withdraw_ezyvet_attachment_original((select id from fx where k='withdraw'),(select id from fx where k='pet'),(select v#>>'{record,id}' from data where k='approved')::uuid,(select v#>>'{record,record_hash}' from data where k='approved'),'Withdraw after review');
 select is((read_record_release((select id from fx where k='release'))->>'eligible')::boolean,false,'Withdrawal invalidates pending release');
 select is(jsonb_array_length(list_record_release_sources_v9((select id from fx where k='pet'))->'api_original_ids'),0,'Withdrawn record excluded from candidates');
+select set_config('request.jwt.claims','{"sub":"db710000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+select is(to_jsonb(confirm_record_release((select id from fx where k='release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',(select v from data where k='selection'),(select v->'snapshot' from data where k='preview'),(select v->>'source_hash' from data where k='preview'),true)),(select v from data where k='release'),'Exact committed confirmation recovers after withdrawal');
+
 rollback to withdrawn;
 reset role;
 select ok(not has_function_privilege('authenticated','public.get_release_api_original_context(text,uuid,uuid,uuid)','execute'),'Staff cannot get private byte locator');
