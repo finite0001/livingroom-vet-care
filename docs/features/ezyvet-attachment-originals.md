@@ -49,3 +49,9 @@ Local validation completed:
 - A fresh populated 51→87 upgrade/restore preserved two requests, two immutable intents and one ready capture. Both ready and reserved physical originals were reverified, permissions matched, and private reads remained denied. See the [restore receipt](../evidence/attachment-originals-restore-local-20260913.json).
 
 Owned disposable resources were cleaned up. The historical-household test uses an owner-only fixture transaction to simulate a future transfer; it does not establish a household-transfer product feature. No hosted deployment, live provider acceptance, clinical approval or release integration is implied. See the [implementation contract](../plans/attachment-original-capture-contract.md) for exact RPC/worker shapes and recovery invariants.
+
+## Canonical reviewed-original integration checkpoint — 2026-09-14
+
+Approved originals now appear in the patient chart with separate latest-review and source-currentness indicators. Active staff can retrieve exact reviewed versions through the verified server path; owner-only capture and direct Storage restrictions remain intact. Approval/correction/cancellation preserve exact decision identity.
+
+The reconciled92-migration stack passed120 disposable HTTP/Auth/PostgREST/Storage checks (50 metadata,70 originals), including actual approval-response parsing, non-owner staff byte retrieval, deactivation during read, corruption denial and historical access. The [sanitized receipt](../evidence/canonical-api-auth-storage-20260914.json) fingerprints tested files and migrations and confirms owned cleanup. The handlers ran in local HTTP bindings; this is not hosted Edge deployment, live provider, clinician or clinical-release acceptance. Schema9 mixed releases, populated upgrade/restore and hosted commissioning remain pending.

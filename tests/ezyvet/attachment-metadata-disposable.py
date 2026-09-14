@@ -39,7 +39,7 @@ checks = 0
 checks_by_fixture = {}
 harness_hashes = {}
 migration_hashes = {}
-source_paths = [Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts'))]
+source_paths = [Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
 source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
 
 def command(argv, **kwargs):
@@ -75,7 +75,8 @@ try:
     assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000', '20260913620000', '20260913650000'} <= versions, 'Prescription intake and clinical review migrations required'
     assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
     assert '20260913700000' in versions, 'Canonical original capture migration required'
-    assert len(versions) == 87 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    assert {'20260914010000','20260914020000','20260914030000','20260914040000','20260914050000'} <= versions, 'Canonical approval, history, chart and verified retrieval migrations required'
+    assert len(versions) == 92 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 62421

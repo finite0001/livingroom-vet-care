@@ -2,6 +2,9 @@
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
 import { createHandler as createImportHandler } from "../../supabase/functions/ezyvet-import/handler.ts";
+import { createHandler as createReviewedHandler } from "../../supabase/functions/retrieve-reviewed-ezyvet-original/handler.ts";
+import { parseAttachmentDecision, parseAttachmentDecisionOutcome } from "../../src/hub/features/imports/attachment-decision-state.ts";
+import { validateCapture } from "../../src/hub/features/imports/attachment-capture-state.ts";
 import { createHandler as createCaptureHandler } from "../../supabase/functions/capture-ezyvet-attachment/handler.ts";
 import type { ImportRun } from "../../supabase/functions/ezyvet-import/handler.ts";
 import { execFileSync } from "node:child_process";
@@ -377,6 +380,59 @@ try {
   check(!JSON.stringify(ready).includes('private?cap=') && !('lease_id' in ready) && !('object_path' in ready), "Browser capture receipt excludes temporary capabilities and service context");
   const privateReady = await rpc("get_ezyvet_attachment_capture_context", { p_id: id, p_actor: actor });
   check(privateReady.intent.before_raw_sha256 !== privateReady.intent.after_raw_sha256, "URL-only renewal retains distinct before/after observations");
+  // Exercise canonical approvals over PostgREST against the actual captured file.
+  const parsedCapture=validateCapture(ready,actor,{link_id:mapping,pet_id:pet,external_id:"77",source_origin:"https://api.trial.ezyvet.com",source_site_uid:site});
+  check((await rpc("read_ezyvet_attachment_chart",{p_pet_id:pet},true)).records.length===0,"Unreviewed physical capture stays out of chart");
+  const reviewId=randomUUID(),correctionId=randomUUID(),cancelId=randomUUID();
+  const decision=parseAttachmentDecision({id:reviewId,actor,pet,request:id,captureHash:ready.capture.capture_hash,previous:null,title:"Reviewed real local original",reason:"Synthetic patient and original verified"},parsedCapture,actor);
+  const approvalArgs=(review:string,previous:string|null=null)=>({p_id:review,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash,p_previous_record_id:previous,p_title:decision.title,p_review_reason:decision.reason,p_attest:true});
+  const approved=await rpc("approve_ezyvet_attachment_record",approvalArgs(reviewId),true);
+  check(parseAttachmentDecisionOutcome({status:"approved",record:approved,cancellation:null},decision,parsedCapture)?.status==="approved","Actual SQL approval provenance passes canonical client parser");
+  const recoveredDecision=await rpc("recover_ezyvet_attachment_approval",{p_id:reviewId,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash},true);
+  check(parseAttachmentDecisionOutcome(recoveredDecision,decision,parsedCapture)?.record?.record_hash===approved.record_hash,"Actual lost approval reply recovers exact immutable record");
+  const corrected=await rpc("approve_ezyvet_attachment_record",approvalArgs(correctionId,reviewId),true);
+  check(corrected.version===2&&corrected.previous_record_id===reviewId,"Actual correction preserves predecessor");
+  const canceled=await rpc("cancel_ezyvet_attachment_approval",{p_id:cancelId,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash,p_confirmed:true},true);
+  check(canceled.status==="canceled","Unconfirmed review obtains durable cancellation");
+  await assert.rejects(rpc("approve_ezyvet_attachment_record",approvalArgs(cancelId,correctionId),true),(error:{code:string})=>error.code==="23514");assertions++;
+  const readerEmail=`attachment-reader-${randomUUID()}@example.test`,readerPassword=`Synthetic-${randomUUID()}-Aa1!`;
+  const readerActor=(await api("/auth/v1/admin/users",{email:readerEmail,password:readerPassword,email_confirm:true})).id;
+  sql(`insert into user_roles(user_id,role) values(${quote(readerActor)},'STAFF') on conflict do nothing;`);
+  const readerAuth=await api("/auth/v1/token?grant_type=password",{email:readerEmail,password:readerPassword},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
+  const readerHeaders={...staffHeaders,Authorization:`Bearer ${readerAuth.access_token}`};
+  const chart=await api("/rest/v1/rpc/read_ezyvet_attachment_chart",{p_pet_id:pet},readerHeaders);
+  check(chart.records.length===2&&chart.records[0].is_latest&&!chart.records[1].is_latest,"Non-owner staff sees both actual approval versions");
+  check(!JSON.stringify(chart).includes('object_path')&&!JSON.stringify(chart).includes('source_context'),"Actual staff chart projection omits private context");
+  await assert.rejects(api("/rest/v1/rpc/get_reviewed_ezyvet_original_context",{p_actor:readerActor,p_record_id:reviewId,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash},readerHeaders),(error:{code:string})=>error.code==="42501");assertions++;
+  let revokeReaderDuringRead=false,reviewedReads=0;
+  const setReaderActive=(active:boolean)=>sql(`begin;select set_config('request.jwt.claims',${quote(JSON.stringify({sub:actor,role:"authenticated"}))},true);update profiles set is_active=${active} where id=${quote(readerActor)};commit;`);
+  const reviewedHandler=createReviewedHandler({env:key=>env[key],authenticate:async token=>{
+    const response=await fetch(local.API_URL+"/auth/v1/user",{headers:{apikey:local.ANON_KEY,Authorization:`Bearer ${token}`}});
+    if(!response.ok)return null;return(await response.json()).id;
+  },context:(reader,record,patient,captureHash)=>rpc("get_reviewed_ezyvet_original_context",{p_actor:reader,p_record_id:record,p_pet_id:patient,p_capture_hash:captureHash}),read:async context=>{
+    reviewedReads++;
+    const response=await storageFetch(objectUrl({...context,id:context.intent_id},true),{headers:{...serviceHeaders,"Accept-Encoding":"identity"}});
+    if(revokeReaderDuringRead){revokeReaderDuringRead=false;setReaderActive(false);}
+    return response;
+  }});
+  const reviewedEndpoint=await serve(async(req,res)=>{
+    try{let body="";for await(const chunk of req)body+=chunk;
+      const response=await reviewedHandler(new Request("http://local.test/reviewed",{method:req.method,headers:req.headers as Record<string,string>,body}));
+      res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
+    }catch(error){failures.push(error);res.statusCode=500;res.end('{}');}
+  });
+  const reviewedDownload=(record=reviewId,patient=pet,captureHash=ready.capture.capture_hash)=>fetch(reviewedEndpoint,{method:"POST",headers:{...readerHeaders,Origin:origin},body:JSON.stringify({record_id:record,pet_id:patient,capture_hash:captureHash})});
+  const verifiedOriginal=await reviewedDownload();
+  check(verifiedOriginal.ok&&await hash(new Uint8Array(await verifiedOriginal.arrayBuffer()))===ready.capture.content_sha256,"Non-owner staff retrieves exact physical original through reviewed handler");
+  check(!(await storageFetch(objectUrl(privateReady.intent,true),{headers:readerHeaders})).ok,"Reviewed staff cannot bypass handler via direct Storage");
+  const readsBeforeMismatch=reviewedReads;
+  check(!(await reviewedDownload(reviewId,client)).ok&&!(await reviewedDownload(reviewId,pet,'f'.repeat(64))).ok&&reviewedReads===readsBeforeMismatch,"Wrong patient or capture hash denied before physical read");
+  revokeReaderDuringRead=true;
+  check(!(await reviewedDownload()).ok,"Deactivation after actual Storage response prevents reviewed download");
+  const readsBeforeInactive=reviewedReads;
+  check(!(await reviewedDownload()).ok&&reviewedReads===readsBeforeInactive,"Inactive reader denied before physical read");
+  setReaderActive(true);
+  check((await reviewedDownload(correctionId)).ok,"Reactivated staff can retrieve explicitly corrected version");
   env.EZYVET_IMPORT_MODE = "disabled";
   check((await act(id)).status === 200 && upstreamCalls === sourceAfterUpload, "Ready capture retry bypasses disabled source configuration");
   const downloaded = await act(id, "retrieve");
@@ -426,6 +482,8 @@ try {
   check(abandonedUnknown.status === "abandoned", "Unknown stale preparation receives durable owned cancellation receipt");
   check((await prepare(uncreatedId)).status === "abandoned", "Delayed prepare cannot recreate abandoned request");
   check((await rpc("abandon_ezyvet_attachment_capture_preparation", prepareArgs(id), true)).status === "ready", "Preparation cancellation recovers existing capture without deleting bytes");
+  const historicalChart=await api("/rest/v1/rpc/read_ezyvet_attachment_chart",{p_pet_id:pet},readerHeaders);
+  check(historicalChart.records.every((row:{source_current:boolean})=>!row.source_current)&&(await reviewedDownload()).ok,"Source changes retain historical staff access with honest stale chart flags");
   const historical = await captureRecover(id);
   check(historical.status === "ready" && historical.source_current === false, "Historical capture remains ready with explicit stale source badge");
   check((await act(id, "retrieve")).ok, "Original historical bytes remain recoverable after parent changes");
@@ -436,6 +494,7 @@ try {
   const tampered = originalBytes.slice(); tampered[12] ^= 1;
   const tamperWrite = await storageFetch(objectUrl(privateReady.intent), { method: "PUT", headers: { ...serviceHeaders, "Content-Type": "application/pdf", "x-upsert": "true" }, body: tampered });
   check(tamperWrite.ok, "Owned local fixture simulates same-size private object corruption");
+  check(!(await reviewedDownload()).ok,"Reviewed handler rejects actual same-size private Storage corruption");
   const tamperRetrieval = await act(id, "retrieve");
   check(!tamperRetrieval.ok, "Same-size Storage byte substitution cannot be served under original receipt");
   const repairWrite = await storageFetch(objectUrl(privateReady.intent), { method: "PUT", headers: { ...serviceHeaders, "Content-Type": "application/pdf", "x-upsert": "true" }, body: originalBytes });
@@ -446,6 +505,7 @@ try {
   const historicalMappings = await rpc("list_ezyvet_attachment_capture_mappings", { p_limit: 20 }, true);
   check(historicalMappings.mappings.some((m: { link_id: string }) => m.link_id === mapping), "Owned original discovery survives patient household changes");
   check((await act(id, "retrieve")).ok, "Owned historical original retrieval survives household changes");
+  check((await reviewedDownload()).ok,"Reviewed physical original remains bound to patient after household move");
   const otherEmail = `attachment-other-${randomUUID()}@example.test`, otherPassword = `Synthetic-${randomUUID()}-Aa1!`;
   const otherActor = (await api("/auth/v1/admin/users", { email: otherEmail, password: otherPassword, email_confirm: true })).id;
   sql(`insert into user_roles(user_id,role) values(${quote(otherActor)},'ADMIN');`);
