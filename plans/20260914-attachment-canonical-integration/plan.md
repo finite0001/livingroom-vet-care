@@ -24,3 +24,5 @@ The alternative branch contains useful reviewed-original/chart/schema9 behavior 
 ## Exit evidence
 
 A migration-safe integrated branch with retained canonical safeguards; hash-bound current-stack validation and populated84-to-target upgrade/restore; exact coordinated staging parity; actual authorized staff/clinical/provider acceptance. The broad commercial-readiness goal still includes Fastmail/Auth onboarding, Stripe sandbox/live eligibility, lab/anesthesia contracts, stock/opening balances, monitoring and domain/brand acceptance. This plan does not shrink that goal to attachment tests.
+
+First increment: [capture contract mapping](capture-contract-map.md) is complete. Additive20260914010000 implements canonical ready-capture approval/correction and exact recovery without changing Storage policies. Evidence: `docs/evidence/canonical-api-approval-sql-20260914.json` (432 SQL assertions including14 new,72 existing capture contention checks, owned cleanup). Approval-specific races, cancellation and subsequent integration steps remain required.
