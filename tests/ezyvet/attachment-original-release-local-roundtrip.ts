@@ -22,8 +22,9 @@ export async function prepareOriginalReleaseChecks(f: Fixture) {
   const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
   const rpc = async (name: string, args: object, headers = f.staffHeaders) => {
     const response = await fetch(`${f.apiUrl}/rest/v1/rpc/${name}`, { method: "POST", headers, body: JSON.stringify(args) });
-    const data = await response.json();
-    if (!response.ok) throw Object.assign(new Error(`Local release RPC rejected: ${name}`), { code: data.code || String(response.status) });
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!response.ok) throw Object.assign(new Error(`Local release RPC rejected: ${name}`), { code: data?.code || String(response.status) });
     return data;
   };
   const database = (headers: Record<string, string>) => ({ rpc: async (name: string, args: object) => {
