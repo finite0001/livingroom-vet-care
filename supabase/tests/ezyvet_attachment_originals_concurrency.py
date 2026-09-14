@@ -5,6 +5,8 @@ import json
 import subprocess
 import time
 import uuid
+import base64
+import datetime
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--full-regression',action='store_true',help='Also run all SQL files and canonical prescription/release contention')
@@ -131,12 +133,12 @@ try:
     def claim_capture(rid):return f"select claim_ezyvet_attachment_capture('{rid}','{actor}');"
     def reserved(rid):
         claimed=json.loads(run(claim_capture(rid)))
-        query=f"select reserve_ezyvet_attachment_original('{rid}','{actor}','{claimed['lease_id']}',repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64));"
+        query=f"select reserve_ezyvet_attachment_original('{rid}','{actor}','{claimed['lease_id']}',encode(sha256(convert_to('%PDF-example','UTF8')),'hex'),'application/pdf',12,repeat('a',64),repeat('c',64));"
         return json.loads(run(query))
     def upload(ctx):return "insert into storage.objects(bucket_id,name,metadata) values('ezyvet-attachment-originals',"+quote(ctx['intent']['object_path'])+",'{\"size\":12,\"mimetype\":\"application/pdf\"}');"
     def discard(rid):return f"select begin_discard_ezyvet_attachment_capture('{rid}','{actor}');"
     def finish_discard(rid):return f"select complete_discard_ezyvet_attachment_capture('{rid}','{actor}');"
-    def complete(ctx):return f"select complete_ezyvet_attachment_capture('{ctx['request']['id']}','{actor}','{ctx['lease_id']}','{ctx['intent']['id']}',repeat('e',64),'application/pdf',12);"
+    def complete(ctx):return f"select complete_ezyvet_attachment_capture('{ctx['request']['id']}','{actor}','{ctx['lease_id']}','{ctx['intent']['id']}',encode(sha256(convert_to('%PDF-example','UTF8')),'hex'),'application/pdf',12);"
     def remove(ctx):return "set local storage.allow_delete_query='true';delete from storage.objects where bucket_id='ezyvet-attachment-originals' and name="+quote(ctx['intent']['object_path'])+";"
     def metadata_claim():return f"select claim_ezyvet_attachment_import('{uuid.uuid4()}','{actor}','attachment-test-site','https://api.trial.ezyvet.com','{fx['mapping']}');"
     # Preparation and scoped abandonment serialize on the same UUID in either order.
@@ -180,7 +182,7 @@ try:
     for resource,external_id in [('animal','77'),('attachment','701')]:
         rid=fresh();claimed=json.loads(run(claim_capture(rid)))
         sql(f"update ezyvet_attachment_capture_requests set lease_until=clock_timestamp()+interval '3 seconds' where id='{rid}';")
-        reserve_query=f"select reserve_ezyvet_attachment_original('{rid}','{actor}','{claimed['lease_id']}',repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64));"
+        reserve_query=f"select reserve_ezyvet_attachment_original('{rid}','{actor}','{claimed['lease_id']}',encode(sha256(convert_to('%PDF-example','UTF8')),'hex'),'application/pdf',12,repeat('a',64),repeat('c',64));"
         contended(f"select 1 from ezyvet_identity_heads where resource='{resource}' and external_id='{external_id}' for update;",service+reserve_query,lambda code,out,err:code!=0 and 'lease changed or expired' in err, hold_seconds=4)
         check(scalar(f"select count(*) from ezyvet_attachment_original_intents where request_id='{rid}';")=='0','Expired waiting lease cannot reserve an object')
     rid=fresh();ctx=reserved(rid);sql('begin;'+staff+upload(ctx)+'commit;')
@@ -338,6 +340,36 @@ try:
     final_review=str(uuid.uuid4())
     contended(staff+pending_confirmation,staff+approval(final_review,corrected_review),lambda code,out,err:code==0)
     check(scalar(f"select count(*)>0 from record_release_events where release_id='{pending_id}' and kind='source_changed';")=='t','Confirmation-first correction invalidates saved package')
+
+
+    # Fully captured schema9 SQL artifacts, with known bytes; no physical Storage reads.
+    sql('begin;'+staff+f"select record_sms_consent('{actor}','{fx['client']}','+13035550196',true,'WRITTEN','Synthetic race fixture',null);commit;")
+    selection={'api_attachment_ids':[final_review]}
+    sms_preview=json.loads(scalar('begin;'+staff+f"select preview_record_release_v9('{fx['pet']}','{fx['client']}','SMS','+13035550196',{quote(json.dumps(selection))}::jsonb);commit;"))
+    sms_release=str(uuid.uuid4())
+    sql('begin;'+staff+f"select confirm_record_release('{sms_release}','{fx['pet']}','{fx['client']}','SMS','+13035550196',{quote(json.dumps(selection))}::jsonb,{quote(json.dumps(sms_preview['snapshot']))}::jsonb,'{sms_preview['source_hash']}',true);commit;")
+    token_hash='a'*64;message_hash='b'*64
+    def worker_rpc(query):return scalar('begin;'+worker+service+query+'commit;')
+    def prepared_link(seconds=60):
+        grant_id=str(uuid.uuid4())
+        saved=json.loads(scalar('begin;'+staff+f"select prepare_document_link('{grant_id}','record_release','{sms_release}','{fx['client']}','{conversation_id}','+13035550196','{sms_preview['source_hash']}',clock_timestamp()+interval '{seconds} seconds','Synthetic {{{{document_link}}}}','https://example.test','synthetic');commit;"))
+        payload={'artifacts':[{'filename':'review.html','mime_type':'text/html','document_id':None,'content':base64.b64encode(b'<html>Synthetic authorization fixture</html>').decode()},{'filename':'original.pdf','mime_type':'application/pdf','document_id':sms_preview['snapshot']['attachments'][0]['id'],'content':base64.b64encode(b'%PDF-example').decode()}]}
+        worker_rpc(f"select capture_document_link('{grant_id}','{actor}',{quote(json.dumps(payload))},'{token_hash}','{message_hash}');")
+        captured=json.loads(scalar('begin;'+staff+f"select recover_document_link('record_release','{sms_release}','{grant_id}');commit;"))
+        sql('begin;'+staff+f"select attest_document_link('{grant_id}','{captured['artifact_hash']}','{message_hash}',true);commit;")
+        return grant_id,datetime.datetime.fromisoformat(saved['grant']['expires_at']).timestamp()
+    grant_id,_=prepared_link()
+    check(json.loads(worker_rpc(f"select retrieve_document_link('{grant_id}','{token_hash}',null);"))['grant_id']==grant_id,'Current reviewed schema9 link returns manifest')
+    check(base64.b64decode(json.loads(worker_rpc(f"select retrieve_document_link('{grant_id}','{token_hash}',1);"))['content'])==b'%PDF-example','Current schema9 link returns exact captured original bytes')
+    for boundary in ['source','budget']:
+        for change_kind in ['role','expiry']:
+            grant_id,expires=prepared_link(15 if change_kind=='expiry' else 60)
+            hold=boundary_locks['object'] if boundary=='source' else f"select 1 from document_link_access_budget where grant_id='{grant_id}' for update;"
+            def expire():time.sleep(max(0,expires-time.time()+.15))
+            try:
+                contended(hold,worker+service+f"select retrieve_document_link('{grant_id}','{token_hash}',1);",lambda code,out,err:code!=0 and 'Document link unavailable' in err,during_wait=revoke_staff if change_kind=='role' else expire)
+                check(scalar(f"select used from document_link_access_budget where grant_id='{grant_id}';")=='0',change_kind+' rejection after '+boundary+' wait rolls back access counter')
+            finally:restore_staff()
 
 finally:
     if created:
