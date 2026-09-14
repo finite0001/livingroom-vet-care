@@ -1,6 +1,6 @@
 # ezyVet clinical migration into Living Room Vet
 
-Status: phase1 implemented with local verification and green PR106 CI; phase2 is implemented with local verification and pending PR CI, and phase3/commissioning remain unfinished. Planning baseline: PR104, `c85b5f0`, migrations through4800. Phase2 implementation base: PR106, `e80cf62`, migrations through4900. Living Room Vet remains primary; ezyVet is a read-only import source. This plan preserves the full clinical migration scope and sequences implementation without treating manual originals or raw staging as a completed migration.
+Status: phase1 implemented with local verification and green PR106 CI; phase2 is implemented with local verification and pending PR CI, and phase3/commissioning remain unfinished. Animal attachment metadata is verified in merged [PR127](https://github.com/finite0001/livingroom-vet-care/pull/127); independent [original capture](../../docs/features/ezyvet-attachment-originals.md) is implemented pending final integrated acceptance under its [frozen contract](../../docs/plans/attachment-original-capture-contract.md). Planning baseline: PR104, `c85b5f0`, migrations through4800. Phase2 implementation base: PR106, `e80cf62`, migrations through4900. Living Room Vet remains primary; ezyVet is a read-only import source. This plan preserves the full clinical migration scope and sequences implementation without treating manual originals or raw staging as a completed migration.
 
 ## Required outcome
 
@@ -17,7 +17,7 @@ An authorized operator imports the selected patient's clinical history, reviews 
 
 1. [Patient-scoped clinical API ingestion](phase-01-patient-scoped-ingestion.md) — implemented with local evidence and green PR106 CI. Correct history bounds; tie consult/history runs and every stored page to an approved patient mapping, preserve leases/recovery, and expose the bounded workflow in the administrator page.
 2. [Reviewed history and actionable diagnoses/reactions](phase-02-reviewed-chart-history.md) — implemented and locally verified; PR CI pending. Immutable imported-history representation plus explicit locally authored create/link decisions for native problems, source discrepancy handling, clinical alerts and frozen-release provenance.
-3. [Vaccinations, prescriptions, attachments and migration reconciliation](phase-03-complete-migration.md) — required subsequent work. Do not omit these resources from completion because phase1/2 passes.
+3. [Vaccinations, prescriptions, attachments and migration reconciliation](phase-03-complete-migration.md) — partially implemented; attachment metadata has merged verification and independent original capture is pending final integrated acceptance. Native chart/API-original provenance review, release integration, Consult/Contact attachment scope, whole-migration reconciliation and provider/clinical acceptance remain required. Do not omit these resources from completion because phase1/2 passes.
 
 Use separate owned worktrees for database, adapter/runtime and UI once a phase contract is frozen. Root integrates, runs combined checks and stacks draft PRs. Do not merge main, commission provider reads, change hosted schemas or create clinician approval during local implementation.
 
@@ -35,4 +35,4 @@ Use separate owned worktrees for database, adapter/runtime and UI once a phase c
 
 ## Open external evidence
 
-Practice ezyVet API entitlement/account status and authorized sample data remain unanswered. Public documentation supports implementation of explicit read contracts, but does not establish actual site access, history-category semantics, completeness, source signature authenticity or timezone interpretation. Keep these gates open; do not request credentials in chat. Antech and the undecided anesthesia system remain independent launch workstreams.
+Basic read-only authentication is verified; broader practice resource entitlement and authorized clinical/attachment sample acceptance remain open. Public documentation supports implementation of explicit read contracts, but does not establish actual site access, history-category semantics, completeness, source signature authenticity or timezone interpretation. Keep these gates open; do not request credentials in chat. Antech and the undecided anesthesia system remain independent launch workstreams.
