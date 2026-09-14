@@ -1,3 +1,4 @@
+import { parseAttachmentChart, parseAttachmentChartOriginal } from "../../src/hub/features/imports/attachment-chart-state.ts";
 import { parseAttachmentDecisionOutcome } from "../../src/hub/features/imports/attachment-decision-state.ts";
 import { parseAttachmentReviewHistory } from "../../src/hub/features/imports/attachment-review-state.ts";
 import { verifyAttachmentOriginal } from "../../src/hub/features/imports/attachment-original.ts";
@@ -73,6 +74,7 @@ const serviceHeaders = {
   "Content-Type": "application/json",
 };
 let staffHeaders: Record<string, string> = {};
+let chartActor = "", chartHeaders: Record<string, string> = {};
 async function api(
   path: string,
   args: unknown,
@@ -134,6 +136,14 @@ try {
       actor,
     )},'ADMIN') on conflict do nothing;`,
   );
+  if (includeCapture) {
+    const chartEmail = `attachment-reviewer-${randomUUID()}@example.test`, chartPassword = `Synthetic-${randomUUID()}-Aa1!`;
+    chartActor = (await api("/auth/v1/admin/users", { email: chartEmail, password: chartPassword, email_confirm: true })).id;
+    additionalActors.push(chartActor); ids.push(chartActor);
+    sql(`insert into user_roles(user_id,role) values(${quote(chartActor)},'DVM');`);
+    const chartAuth = await api("/auth/v1/token?grant_type=password", { email: chartEmail, password: chartPassword }, { apikey: local.ANON_KEY, "Content-Type": "application/json" });
+    chartHeaders = { apikey: local.ANON_KEY, Authorization: `Bearer ${chartAuth.access_token}`, "Content-Type": "application/json" };
+  }
   client = (
     await rpc(
       "save_client",
@@ -404,6 +414,7 @@ try {
       check(final.request.status === "captured" && final.capture.capture_hash === receipt.capture_hash && !JSON.stringify(final).includes(lease.lease_id), "Owner recovery exposes completion without service lease");
       const sdkOriginal = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + intent.object_path, { headers: { apikey: local.ANON_KEY, Authorization: staffHeaders.Authorization } });
       check(sdkOriginal.ok && (await verifyAttachmentOriginal(await sdkOriginal.blob(), intent)).size === intent.file_size, "Exact frontend SDK route returns verifiable captured bytes under staff JWT");
+      check(!(await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + intent.object_path, { headers: chartHeaders })).ok, "Different staff member cannot read an unreviewed capture");
       const approvalId = randomUUID(), correctionId = randomUUID(), conflictingApproval = randomUUID(); ids.push(approvalId, correctionId, conflictingApproval);
       const approvalArgs = { p_id: approvalId, p_request_id: downloadId, p_pet_id: pet, p_capture_hash: receipt.capture_hash, p_previous_record_id: null, p_title: "Synthetic reviewed API attachment", p_review_reason: "Synthetic staff inspected the captured original", p_attest: true };
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_attest: false }, true), (error: { code: string }) => error.code === "23514"); assertions++;
@@ -441,7 +452,24 @@ try {
       const olderReview = await rpc("list_ezyvet_attachment_record_versions", { p_request_id: downloadId, p_pet_id: pet, p_limit: 1, p_before_at: reviewHistory.next_cursor.before_at, p_before_id: reviewHistory.next_cursor.before_id }, true);
       check(parseAttachmentReviewHistory(olderReview, expectedReview).records[0].id === approvalId && olderReview.latest_record_id === correctionId && !olderReview.has_more, "Older history retains latest decision identity and exact cursor");
       await assert.rejects(rpc("list_ezyvet_attachment_record_versions", { p_request_id: downloadId, p_pet_id: randomUUID() }, true), (error: { code: string }) => error.code === "42501"); assertions++;
+      const chart = await api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet, p_limit: 1 }, chartHeaders);
+      const parsedChart = parseAttachmentChart(chart, pet);
+      check(parsedChart.records[0].record.id === correctionId && parsedChart.records[0].is_latest && parsedChart.records[0].source_current, "Other active staff discovers latest reviewed API record with current source pins");
+      const chartOlder = await api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet, p_limit: 1, p_before_at: chart.next_cursor.before_at, p_before_id: chart.next_cursor.before_id }, chartHeaders);
+      check(parseAttachmentChart(chartOlder, pet).records[0].record.id === approvalId && !chartOlder.records[0].is_latest, "Chart cursor retains superseded original approval");
+      const chartOriginal = await api("/rest/v1/rpc/get_ezyvet_attachment_chart_original", { p_record_id: correctionId, p_pet_id: pet }, chartHeaders);
+      const chartCapture = parseAttachmentChartOriginal(chartOriginal, pet, correctionId, receipt.capture_hash).capture;
+      check(chartCapture.actor_id === actor && !("lease_id" in chartOriginal.capture), "Reviewed original retains capture owner and hides worker lease");
+      const chartDownload = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + chartCapture.object_path, { headers: chartHeaders });
+      check(chartDownload.ok && (await verifyAttachmentOriginal(await chartDownload.blob(), intent)).size === intent.file_size, "Different active staff downloads only approved original and verifies its exact bytes");
+      await assert.rejects(api("/rest/v1/rpc/get_ezyvet_attachment_chart_original", { p_record_id: correctionId, p_pet_id: randomUUID() }, chartHeaders), (error: { code: string }) => error.code === "42501"); assertions++;
+      sql(`delete from user_roles where user_id=${quote(chartActor)};`);
+      await assert.rejects(api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet }, chartHeaders), (error: { code: string }) => error.code === "42501"); assertions++;
+      check(!(await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + chartCapture.object_path, { headers: chartHeaders })).ok, "Revoked staff cannot download reviewed original");
+      sql(`insert into user_roles(user_id,role) values(${quote(chartActor)},'DVM');`);
       sql(`update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(selected.id)};`);
+      const staleChart = parseAttachmentChart(await api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet, p_limit: 1 }, chartHeaders), pet);
+      check(staleChart.records[0].is_latest && !staleChart.records[0].source_current, "Chart distinguishes latest approval from changed source evidence");
       check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
       sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);

@@ -1,3 +1,4 @@
+import { PatientApiAttachments } from "@/hub/features/imports/PatientApiAttachments";
 import { PatientImportedPrescriptions } from "@/hub/features/imports/PatientImportedPrescriptions";
 import { PatientImportedVaccinations } from "@/hub/features/imports/PatientImportedVaccinations";
 import { PatientImportedHistory } from "@/hub/features/imports/PatientImportedHistory";
@@ -44,7 +45,8 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
+  const workspaceDirty = (importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
+  const navigationGuard = useUnsavedChanges(workspaceDirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -79,6 +81,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientImportedVaccinations petId={petId} patientVersion={patient.version} disabled={importedPrescriptionDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedVaccinationDirty} />
     <PatientImportedPrescriptions petId={petId} patientVersion={patient.version} disabled={importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedPrescriptionDirty} />
     <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={importedPrescriptionDirty || importedVaccinationDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedHistoryDirty} />
+    <PatientApiAttachments petId={petId} disabled={workspaceDirty} />
     <PatientExternalRecords petId={petId} disabled={importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setExternalDirty} />
     <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />
     <PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} />

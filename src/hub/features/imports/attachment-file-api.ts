@@ -1,3 +1,4 @@
+import { parseAttachmentChart, parseAttachmentChartOriginal } from "./attachment-chart-state";
 import { parseAttachmentDecisionOutcome, type AttachmentDecision } from "./attachment-decision-state";
 import { parseAttachmentReviewHistory, type AttachmentReviewCursor } from "./attachment-review-state";
 import { verifyAttachmentOriginal, attachmentOriginalFilename } from "./attachment-original";
@@ -87,4 +88,18 @@ export async function submitAttachmentDecision(op: AttachmentDecision) {
 }
 export async function cancelAttachmentDecision(op: AttachmentDecision) {
   await rpc("cancel_ezyvet_attachment_approval", { p_id: op.id, p_request_id: op.request, p_pet_id: op.pet, p_capture_hash: op.captureHash, p_confirmed: true });
+}
+
+export async function readAttachmentChart(pet: string, cursor: AttachmentReviewCursor | null) {
+  return parseAttachmentChart(await rpc("read_ezyvet_attachment_chart", { p_pet_id: pet, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), pet);
+}
+export async function loadAttachmentChartOriginal(pet: string, id: string, captureHash: string) {
+  const recover = async () => parseAttachmentChartOriginal(await rpc("get_ezyvet_attachment_chart_original", { p_record_id: id, p_pet_id: pet }), pet, id, captureHash);
+  const before = await recover();
+  const { data, error } = await supabase.storage.from(before.capture.bucket).download(before.capture.object_path);
+  if (error) throw error;
+  const blob = await verifyAttachmentOriginal(data, { file_size: before.capture.file_size!, content_sha256: before.capture.content_sha256!, mime_type: before.capture.mime_type! });
+  const after = await recover();
+  if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error("Reviewed original changed.");
+  return { blob, filename: attachmentOriginalFilename(after.record.attachment_external_id, after.capture.mime_type) };
 }
