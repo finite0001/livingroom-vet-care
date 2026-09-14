@@ -1,5 +1,7 @@
 # Commercial-readiness evidence tracker
 
+Current integration checkpoint (2026-09-14): read-only staging has84 migrations with canonical prescription release6300 and version5 export functions; schema9 and attachment capture tables are not deployed. A concurrently developed alternative branch has migration collisions at6300/6500/6900/7000. Its local restore successes cannot be used as hosted compatibility evidence. [The active reconciliation plan](../plans/20260914-attachment-canonical-integration/plan.md) preserves deployed history and canonical safeguards while porting reviewed-original/chart/schema9 functionality. No hosted writes or sends occurred during this preflight.
+
 ## September 13 — prescription review and releases deployed to staging
 
 [Verified staging rollout](prescription-review-release-staging.md) now includes84 migrations, seven matching version5 export functions and a refreshed protected frontend with schema8 prescription selection. PR121's corrected CI passes all three jobs, including245 browser cases. A fresh populated upgrade/restore verifies both record preservation and exact restored permissions. Staff login/workflow acceptance, Dr. Edler's clinical approval, live source samples and provider delivery remain pending. [Attachment metadata intake](../plans/20260913-ezyvet-clinical-import/phase-03d-attachment-intake.md) is the next planned implementation; it does not yet capture original files.

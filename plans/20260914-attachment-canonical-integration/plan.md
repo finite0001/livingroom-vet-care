@@ -1,0 +1,26 @@
+# Integrate reviewed API originals on the deployed-compatible stack
+
+Status: active; implementation and hosted parity unproven.
+
+## Authoritative baseline
+
+Read-only staging checks on2026-09-14 found84 migrations, deployed6300 `record_release_prescription_history`, schema8 present, schema9 and alternative attachment captures absent, and zero Auth users/clients/pets/Storage objects/outbox rows. Seven export functions are version5. This supersedes this thread's earlier75-migration staging assumption.
+
+Start from canonical capture revision74d0c0c, which preserves deployed6300 and additive6500 prescription hardening, metadata6900 and capture7000. Preserve its stable metadata hashes, separate file IDs, owner/history recovery, URL redaction, currentness and bounded streaming. Compare with alternative f8c63ca in the preserved `livingroom-readiness-security` worktree. Do not merge its replacement6300 or recreate schema8 via6400. Same-version semantic collisions also exist at6500,6900 and7000; exact paths/hashes are in `docs/evidence/attachment-canonical-preflight-20260914.json`.
+
+The alternative branch contains useful reviewed-original/chart/schema9 behavior and tests, but its local102-migration evidence is not proof of compatibility with staging. Preserve that work as a reference and port behavior explicitly. Do not discard canonical prescription reconciliation validation, partial-history UI disclosures or post-restore relation/RLS/default-privilege checks.
+
+## Implementation sequence and acceptance
+
+1. Map canonical capture request/intent/receipt and metadata observation contracts to alternative approval, correction, cancellation and release provenance. Document every identity/hash/status difference before SQL changes. Use `ezyvet_attachment_original_captures` and its saved request/observation context; do not create a competing capture store or duplicate originals. Identify which private original access can safely be expanded from owner to active staff after approval.
+2. Add immutable approval/correction/cancellation and exact retry/recovery against canonical ready captures. Use unused additive migration versions after reviewing the current remote ledger. Retain predecessor/source lock order, actor scoping, original inspection and explicit attestation. Port meaningful contention tests, including revoked roles during waits and cancellation versus delayed approval.
+3. Integrate reviewed originals into the patient chart with bounded discovery, latest/superseded and source-currentness distinctions, verified byte access and existing draft/navigation guards. Retain current buttons, routes and layout. Unreviewed originals stay owner scoped.
+4. Add schema9 through the canonical schema8 implementation. Preserve canonical prescription validators/renderers and partial-history disclosures. Select exact approved records; compose mixed native/API originals; enforce20API/24total limits; register invalidation; bind both SQL and worker artifact verification to canonical captures. Port replay/read/public-link post-wait authorization fixes as additive checked changes, not reused migration numbers.
+5. Integrate both email and document-link preparation, recovery and worker paths. Reuse canonical capture source identity and private bucket. Verify swapped/missing/duplicate bytes, lost replies, source invalidation, role/expiry lock waits, uncertain delivery and exact saved recovery without automatic resend. Use simulated transports only until explicitly authorized provider commissioning.
+6. Validate parent contracts against canonical provider documentation and accepted samples. Preserve Animal support. Resolve Consult/Contact contracts explicitly; alternative synthetic Consult fixtures do not establish vendor entitlement or accepted real-source semantics. Implement required supported parent paths with independent recovery/currentness evidence.
+7. Run integrated checks on this reconciled stack: unit, browser, SQL, observed contention, actual local Auth/HTTP/Storage, mixed/max-count packages and populated upgrade/physical restore. Restore checks must include public routines, permissions, triggers, relations, RLS policies and default privileges after restoration, plus original bytes, approval/cancellation, saved delivery artifacts, source changes and disabled-policy behavior.
+8. Revalidate staging immediately before coordinated migration/function/frontend updates. Preserve the deployed6300 receipt. Rehearse the actual84-version baseline and exact additive bridge locally; compare hosted bodies/permissions with expected baseline first. Keep sends, import scopes, reminders and clinical policy disabled. Hosted staff workflow, clinician/provider acceptance and public cutover remain separate gates in `docs/commercial-readiness.md`.
+
+## Exit evidence
+
+A migration-safe integrated branch with retained canonical safeguards; hash-bound current-stack validation and populated84-to-target upgrade/restore; exact coordinated staging parity; actual authorized staff/clinical/provider acceptance. The broad commercial-readiness goal still includes Fastmail/Auth onboarding, Stripe sandbox/live eligibility, lab/anesthesia contracts, stock/opening balances, monitoring and domain/brand acceptance. This plan does not shrink that goal to attachment tests.
