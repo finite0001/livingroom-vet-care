@@ -1,4 +1,5 @@
 /** Original capture through real local HTTP, Auth and private Storage; synthetic source only. */
+import { verifyOriginalChartReview } from "./attachment-original-review-local-roundtrip.ts";
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
 import { createHandler as createImportHandler } from "../../supabase/functions/ezyvet-import/handler.ts";
@@ -355,7 +356,7 @@ try {
   });
   const act = (id: string, action = "capture", authorization = staffHeaders.Authorization) => fetch(captureEndpoint, { method: "POST", headers: { Authorization: authorization, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify({ request_id: id, action }) });
   const hash = async (bytes: Uint8Array) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))).map(b => b.toString(16).padStart(2, "0")).join("");
-  const nativeEffects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox));");
+  const nativeEffects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox),(select count(*) from record_releases),(select count(*) from record_release_sources),(select count(*) from release_email_requests),(select count(*) from document_link_grants));");
   const initialNative = nativeEffects();
   const id = randomUUID();
   const intentPrepared = await prepare(id);
@@ -388,6 +389,10 @@ try {
   const overwrite = await storageFetch(objectUrl(privateReady.intent), { method: "PUT", headers: { ...staffHeaders, "Content-Type": "application/pdf", "x-upsert": "true" }, body: originalBytes });
   check(!overwrite.ok, "Captured object cannot be overwritten through staff Storage access");
   check(!(await act(id, "discard")).ok && (await captureRecover(id)).status === "ready", "Captured originals cannot be discarded through pending cleanup");
+  const sourceBeforeReview = upstreamCalls;
+  assertions += await verifyOriginalChartReview({ apiUrl: local.API_URL, anonKey: local.ANON_KEY, serviceHeaders, staffHeaders,
+    actor, pet, captureId: ready.capture.id, captureHash: ready.capture.capture_hash, originalBytes, origin, sql, serve });
+  check(upstreamCalls === sourceBeforeReview && nativeEffects() === initialNative, "Chart admission and DVM review make no provider or native/release delivery side effects");
   env.EZYVET_IMPORT_MODE = "staging";
   const interruptedId = randomUUID(); await prepare(interruptedId); resetCaptureCooldown(); resetCooldown(); stopBeforeUpload = true;
   await act(interruptedId);
