@@ -1,5 +1,6 @@
 """Actual local PostgreSQL contention; synthetic fixtures only, never provider calls."""
 import argparse
+from owned_database_cleanup import cleanup_owned_database
 from pathlib import Path
 import json
 import subprocess
@@ -152,9 +153,5 @@ try:
     check(scalar("select count(distinct raw_record_sha256) from ezyvet_attachment_page_observations;")=='3','All raw observation digests retained')
 finally:
     if created:
-        COMMAND=FOUNDATION_COMMAND.copy()
-        check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
-        sql(f'drop database "{database}";')
-        check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
+        cleanup_owned_database(FOUNDATION_COMMAND, database, marker, check=check)
 print(f'Attachment metadata concurrency: {checks} checks passed; no provider or Storage operations.')

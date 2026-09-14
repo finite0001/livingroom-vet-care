@@ -1,5 +1,6 @@
 """Actual local PostgreSQL contention; synthetic fixtures only, never provider calls."""
 import argparse
+from owned_database_cleanup import cleanup_owned_database
 from pathlib import Path
 import json
 import subprocess
@@ -170,9 +171,7 @@ try:
 
 finally:
     if created:
-        COMMAND=FOUNDATION_COMMAND.copy();check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Owned scratch marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();");sql(f'drop database "{database}";')
-        check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Owned database removed')
+        cleanup_owned_database(FOUNDATION_COMMAND, database, marker, check=check)
 print(f'Imported history contention: {checks} checks passed; no provider calls or foundation policy changes.')
 if not args.reverse:
     import sys
