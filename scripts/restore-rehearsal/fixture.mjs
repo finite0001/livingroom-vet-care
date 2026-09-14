@@ -158,7 +158,7 @@ select jsonb_object_agg(k,id) from fx;commit;`);
       assert.equal(hash(stored), digest);
       assert.ok((await api.storage.from(reserved.intent.bucket_id).download(reserved.intent.object_path)).error, 'Owning administrator cannot read private API original directly');
       let result = reserved;
-      if (index !== 1) result = checked(await admin.rpc('complete_ezyvet_attachment_capture', {p_id:id,p_actor:state.user,p_lease_id:claim.lease_id,p_intent_id:reserved.intent.id,p_content_sha256:digest,p_mime_type:'application/pdf',p_file_size:bytes.length}));
+      if (index !== 2) result = checked(await admin.rpc('complete_ezyvet_attachment_capture', {p_id:id,p_actor:state.user,p_lease_id:claim.lease_id,p_intent_id:reserved.intent.id,p_content_sha256:digest,p_mime_type:'application/pdf',p_file_size:bytes.length}));
       state.apiOriginals.push({id,mapping:row.mapping,requestHash:result.request.request_hash,status:result.request.status,intent:reserved.intent,contentSha256:digest,bytes:bytes.length,capture:result.request.capture});
     }
   } finally {
