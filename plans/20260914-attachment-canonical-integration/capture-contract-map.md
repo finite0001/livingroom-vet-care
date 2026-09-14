@@ -25,3 +25,5 @@ Fourteen new SQL checks cover explicit attestation, canonical provenance/file ID
 ## Remaining integration
 
 Add serialized approval cancellation and discovery/recovery; test approval-specific contention; integrate verified inspection UI and chart server reads; compose schema9 on canonical schema8 without relaxing prescription validation/disclosures. Preserve worker-only private paths and leases. Replay/read/link post-wait fixes require additive versions and canonical-source comparisons. Run actual Auth/HTTP/Storage and populated upgrade/restore on this stack before any hosted proposal. Clinical review and policy activation remain separate from staff original-intake approval.
+
+Cancellation is now implemented in additive20260914020000 against canonical request ownership and immutable capture hashes. It does not require source currentness, allowing abandonment of an unconfirmed historical decision. The same7300 decision lock serializes approval and cancellation; exact already-approved outcomes are preserved. Nine SQL cases and four observed race scenarios pass, with source/request/chain/object approval races still pending.

@@ -41,7 +41,7 @@ def check(condition, message):
 
 staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
 
-def contended(first_query, second_query, second_expected, hold_seconds=2):
+def contended(first_query, second_query, second_expected, hold_seconds=2, during_wait=None):
     """Wait for an observed lock holder and then an observed lock waiter."""
     tag = 'lrv_attachment_' + uuid.uuid4().hex
     owned_sessions.extend([tag + '_holder', tag + '_waiter'])
@@ -62,11 +62,12 @@ def contended(first_query, second_query, second_expected, hold_seconds=2):
     second.stdin.close()
     waiting = False
     while time.monotonic() < deadline:
-        if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_waiter' and wait_event_type='Lock';").stdout.strip() == '1':
+        if sql(f"select count(*) from pg_stat_activity w join pg_stat_activity h on h.application_name='{tag}_holder' where w.application_name='{tag}_waiter' and w.wait_event_type='Lock' and h.pid=any(pg_blocking_pids(w.pid));").stdout.strip() == '1':
             waiting = True
             break
         time.sleep(.03)
     if waiting and hold_seconds>2:time.sleep(hold_seconds)
+    if waiting and during_wait: during_wait()
     first.stdin.write('commit;\n');first.stdin.close()
     check(waiting, 'Second operation actually waits on the first transaction lock')
     first.wait(timeout=10)
@@ -206,6 +207,31 @@ try:
     run(failure.replace(old['lease_id'],new['lease_id']))
     failed=sql('begin;'+service+metadata_claim()+'commit;',fail=False)
     check(failed.returncode!=0 and 'cooling down' in failed.stderr,'Published capture cooldown gates metadata claims')
+
+
+    # Canonical approval/cancellation serialize on the same decision identity.
+    rid=fresh();ctx=reserved(rid);sql('begin;'+staff+upload(ctx)+'commit;');run(complete(ctx))
+    capture_hash=scalar(f"select capture_hash from ezyvet_attachment_original_captures where request_id='{rid}';")
+    def approval(operation,previous=None):
+        predecessor=quote(previous) if previous else 'null'
+        return f"select approve_ezyvet_attachment_record('{operation}','{rid}','{fx['pet']}','{capture_hash}',{predecessor},'Canonical race original','Synthetic observed original review',true);"
+    def cancel(operation):return f"select cancel_ezyvet_attachment_approval('{operation}','{rid}','{fx['pet']}','{capture_hash}',true);"
+    decision=str(uuid.uuid4())
+    contended(staff+cancel(decision),staff+approval(decision),lambda code,out,err:code!=0 and 'Approval was canceled' in err)
+    check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{decision}';")=='0','Canceled-first decision never creates approval')
+    decision=str(uuid.uuid4())
+    contended(staff+approval(decision),staff+cancel(decision),lambda code,out,err:code==0 and 'approved' in out)
+    check(scalar(f"select count(*) from ezyvet_attachment_approval_cancellations where id='{decision}';")=='0','Approved-first decision is never canceled')
+    predecessor=decision
+    for action in ['approval','cancellation']:
+        decision=str(uuid.uuid4())
+        hold=f"select pg_advisory_xact_lock(hashtextextended('{decision}',7300));"
+        operation=approval(decision,predecessor) if action=='approval' else cancel(decision)
+        def revoke_admin():sql(f"delete from user_roles where user_id='{actor}' and role='ADMIN';")
+        try:
+            contended(hold,staff+operation,lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=revoke_admin)
+            check(scalar(f"select (select count(*) from ezyvet_attachment_record_versions where id='{decision}')+(select count(*) from ezyvet_attachment_approval_cancellations where id='{decision}');")=='0','Role loss during decision wait creates no terminal outcome')
+        finally:sql(f"insert into user_roles(user_id,role) values('{actor}','ADMIN') on conflict do nothing;")
 
 finally:
     if created:

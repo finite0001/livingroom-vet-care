@@ -1,0 +1,28 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "c879bc4d726a3e65285a3b015ed35aebd820d1fe",
+  "file_sha256": {
+    "supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql": "cd63b0ae5872ff7dea924ce776ddf94f4cfea59ed2952489adf4338f6405851f",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "e18bf4649ab96350565f7bf26b0199d2fd96b47ec82e07b40be67b4e5216419b",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "0345f090135cf6fc11c2e52f53bec9e0fa327d44fa6125e93471d65d4598c649"
+  },
+  "sql_assertions": 441,
+  "new_cancellation_sql_assertions": 9,
+  "concurrency_checks": 88,
+  "new_decision_race_checks": 16,
+  "observed_cases": [
+    "cancellation before delayed approval",
+    "approval before cancellation",
+    "administrator revoked during approval decision wait",
+    "administrator revoked during cancellation decision wait"
+  ],
+  "waiter_blocked_by_exact_holder": true,
+  "owned_database_cleanup_verified": true,
+  "log_sha256": "db79e75632705cd3f52997d243adc11b4ce0fbc57beabd82856b037e0276040a",
+  "limitations": [
+    "Synthetic SQL/Storage metadata, no physical file access or provider requests.",
+    "Request/source/chain/object approval wait boundaries and correction contention still require targeted coverage.",
+    "UI/chart/release integration and current-stack populated restore remain incomplete.",
+    "No hosted changes."
+  ]
+}

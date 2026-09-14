@@ -83,6 +83,19 @@ update ezyvet_identity_heads set version=version+1 where resource='animal' and e
 set local role authenticated;
 select is(recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))->>'status','ready','Ready historical capture recovers after parent changes');
 select is(to_jsonb(pg_temp.approve_original()),(select v from data where k='approved'),'Exact approval recovery survives later source changes');
+select is(cancel_ezyvet_attachment_approval((select id from fx where k='approval'),(select id from fx where k='capture'),(select id from fx where k='pet'),(select v#>>'{request,capture,capture_hash}' from data where k='ready'),true)->>'status','approved','Cancellation cannot erase committed approval');
+insert into fx select 'cancel-approval',gen_random_uuid();
+create function pg_temp.cancel_original(attest boolean default true) returns jsonb language sql as $$select cancel_ezyvet_attachment_approval((select id from fx where k='cancel-approval'),(select id from fx where k='capture'),(select id from fx where k='pet'),(select v#>>'{request,capture,capture_hash}' from data where k='ready'),$1);$$;
+select throws_ok($$select pg_temp.cancel_original(false)$$,'23514',null,'Cancellation requires explicit confirmation');
+insert into data select 'canceled-approval',pg_temp.cancel_original();
+select is((select v->>'status' from data where k='canceled-approval'),'canceled','Cancellation remains available for a historical capture');
+select is(pg_temp.cancel_original(),(select v from data where k='canceled-approval'),'Exact canceled outcome recovers');
+select is(recover_ezyvet_attachment_approval((select id from fx where k='cancel-approval'),(select id from fx where k='capture'),(select id from fx where k='pet'),(select v#>>'{request,capture,capture_hash}' from data where k='ready')),(select v from data where k='canceled-approval'),'Recovery returns immutable cancellation');
+select throws_ok($$select pg_temp.approve_original('cancel-approval',(select id from fx where k='correction'))$$,'23514','Approval was canceled; use an explicitly new decision','Late approval cannot revive cancellation');
+select throws_ok($$select * from ezyvet_attachment_approval_cancellations$$,'42501',null,'Cancellation ledger stays private');
+select ok(not has_function_privilege('authenticated','approve_ezyvet_attachment_record_uncancelled(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Staff cannot bypass cancellation wrapper');
+select ok(not has_function_privilege('service_role','approve_ezyvet_attachment_record_uncancelled(uuid,uuid,uuid,text,uuid,text,text,boolean)','execute'),'Worker cannot bypass cancellation wrapper');
+
 select throws_ok($$select pg_temp.approve_original('capture3',(select id from fx where k='correction'))$$,'40001',null,'Fresh approval rejects changed parent source');
 select is(recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))->>'source_current','false','Historical capture honestly reports stale source');
 select is(prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','ready','Exact prepare replay remains available historically');
