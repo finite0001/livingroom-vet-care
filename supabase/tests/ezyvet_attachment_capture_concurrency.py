@@ -11,7 +11,8 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
-parser.add_argument('--scenario', choices=['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
+approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change']
+parser.add_argument('--scenario', choices=approval_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 args = parser.parse_args()
 project = 'livingroom-vet-foundation'
@@ -116,6 +117,7 @@ try:
     ]
     if not args.skip_authorization_fix:
         pending.append(('20260913720000', "case when obj_description('public.prepare_ezyvet_attachment_download(uuid,uuid,uuid,integer,uuid,text,integer)'::regprocedure,'pg_proc')='Rechecks active administrator after request and source waits.' then true else null end"))
+    pending.append(('20260913730000', "to_regclass('public.ezyvet_attachment_record_versions')"))
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':
             paths = list(migration_dir.glob(version + '_*'))
@@ -127,7 +129,7 @@ try:
     check(scalar("select not public and file_size_limit=20971520 and allowed_mime_types=array['application/pdf','image/jpeg','image/png'] from storage.buckets where id='ezyvet-attachments';") == 't', 'Private fixture bucket matches capture contract')
     fixture = Path(__file__).with_name('ezyvet_attachment_capture.test.sql').read_text().split('-- FIXTURE_BEGIN:')[1].split('select throws_ok(')[0]
     fixture = '\n'.join(fixture.splitlines()[1:])
-    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry', 'prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'], 1):
+    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry', 'prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'] + approval_scenarios, 1):
         if args.scenario and scenario != args.scenario:
             continue
         prefix = f'db569{index:03d}'
@@ -137,7 +139,7 @@ try:
         setup = current + "update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');insert into data select 'lease',pg_temp.claim();"
         if scenario != 'reserve-source-expiry':
             setup += "insert into data select 'intent',pg_temp.reserve();"
-        if scenario.startswith(('complete-', 'cleanup-')):
+        if scenario.startswith(('complete-', 'cleanup-', 'approval-')):
             setup += "insert into storage.objects(bucket_id,name,owner,metadata) select 'ezyvet-attachments',v->>'object_path','"+actor+"',jsonb_build_object('size',37,'mimetype','application/pdf') from data where k='intent';"
         saved = json.loads(scalar("begin;set local search_path=public,extensions;" + setup + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
         fx, data = saved['fx'], saved['data']
@@ -146,7 +148,42 @@ try:
         metadata = quote(json.dumps(data['saved']['request']['source_context']['attachment_metadata'])) + '::jsonb'
         identity = ','.join(map(quote, [request, actor, lease, request_hash]))
         source_lock = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='attachment' for update;"
-        if scenario.startswith(('prepare-', 'abandon-', 'scan-')):
+        if scenario.startswith('approval-'):
+            intent = data['intent']
+            capture = json.loads(scalar(f"select to_jsonb(complete_ezyvet_attachment_capture({identity},'{intent['intent_hash']}',repeat('a',64),37,'application/pdf',{metadata}));"))
+            approval = str(uuid.uuid4())
+            staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
+            def approve(operation_id, previous=None):
+                predecessor = quote(previous) if previous else 'null'
+                return f"select approve_ezyvet_attachment_record('{operation_id}','{request}','{fx['pet']}','{capture['capture_hash']}',{predecessor},'Synthetic approved original','Synthetic original inspection',true);"
+            operation = staff + approve(approval)
+            if scenario.endswith('role-loss'):
+                if scenario == 'approval-request-role-loss':
+                    holder = f"select pg_advisory_xact_lock(hashtextextended('{approval}',7300));"
+                elif scenario == 'approval-source-role-loss':
+                    holder = source_lock
+                elif scenario == 'approval-chain-role-loss':
+                    holder = f"select pg_advisory_xact_lock(hashtextextended('{fx['mapping']}:701',7301));"
+                else:
+                    holder = f"select 1 from storage.objects where bucket_id='ezyvet-attachments' and name={quote(intent['object_path'])} for update;"
+                contend(holder, operation, 'Active administrator required', lambda: sql(f"delete from user_roles where user_id='{actor}' and role='ADMIN';"))
+                check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{approval}';") == '0', 'Role loss prevents a saved clinical approval after observed lock wait')
+            elif scenario == 'approval-competing-corrections':
+                original, winner = str(uuid.uuid4()), str(uuid.uuid4())
+                sql('begin;' + staff + approve(original) + 'commit;')
+                contend(staff + approve(winner, original), staff + approve(approval, original), 'Review latest attachment version before correction')
+                check(scalar(f"select count(*) from ezyvet_attachment_record_versions where animal_link_id='{fx['mapping']}';") == '2', 'Only one correction commits against the same predecessor')
+                check(scalar(f"select previous_record_id='{original}' and version=2 from ezyvet_attachment_record_versions where id='{winner}';") == 't', 'Winning correction retains exact predecessor and version')
+            else:
+                change = f"update ezyvet_identity_heads set version=version+1 where source_site_uid='{scenario}' and resource='attachment';"
+                if scenario == 'approval-source-change-first':
+                    contend(change, operation, 'SOURCE_ATTACHMENT_STALE')
+                    check(scalar(f"select count(*) from ezyvet_attachment_record_versions where id='{approval}';") == '0', 'Earlier source revision prevents approval of stale observation')
+                else:
+                    contend(operation, change, None)
+                    check(scalar(f"select (v.source_context->>'attachment_observed_head_version')::integer < h.version from ezyvet_attachment_record_versions v join ezyvet_identity_heads h on h.source_origin=v.source_origin and h.source_site_uid=v.source_site_uid and h.resource='attachment' and h.external_id=v.attachment_external_id where v.id='{approval}';") == 't', 'Later source change preserves the earlier approved source version')
+            check(scalar(f"select status='captured' from ezyvet_attachment_download_requests where id='{request}';") == 't', 'Approval race never rewrites the captured request')
+        elif scenario.startswith(('prepare-', 'abandon-', 'scan-')):
             staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
             selected = data['saved']['request']['request_payload']
             target = request if scenario in ('prepare-request-role-loss', 'abandon-request-role-loss') else str(uuid.uuid4())
