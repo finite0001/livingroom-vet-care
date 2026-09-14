@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "160afd88d50012b7b3018569cb2cd6903da44a40",
+  "scope": "Actionable allowlisted attachment scan errors and retained stale-context retry prevention",
+  "validation": {
+    "app_unit_tests": 578,
+    "browser_cases": 24,
+    "new_error_unit_tests": 3,
+    "new_error_browser_cases": 2,
+    "lint_typecheck_build": "passed with pre-existing warnings"
+  },
+  "sha256": {
+    "src/hub/features/imports/attachment-page-errors.ts": "2a1fc5f7b784cc52c1b043e66119aaf834e32fe251a83bc22b3345a6d7d53adb",
+    "src/hub/features/imports/AttachmentScanHistory.tsx": "f2476ed125611e1f4e3482a14ba69e389218ec954b59585ac01039b524507c9c",
+    "src/hub/features/imports/attachment-discovery-api.ts": "23b757013a0c92ba0b4ec735a78af4fc77c63613d6c6efbc0a13efa903adda46",
+    "tests/ezyvet/attachment-page-errors.test.ts": "4ed060bf7f3f2884e304f7075a5df6cb965e2ab7c6b747af9761f9be96b40c2e",
+    "e2e/attachment-history.spec.ts": "903c2793156cc3e6f1448ed83cde1273d588d28a4ef0be14acc398c69115f728"
+  },
+  "log_sha256": {
+    "/tmp/lrv-attachment-action-errors-check.log": "5a088f8bca22f619363659a88985aa4beb28ecd9a151f96ae667bfb12adf56ca",
+    "/tmp/lrv-attachment-action-errors-browser.log": "2fddf49fd887329542f0cd7decad5aa4f7f3ee929117ac6fe5375481b1898e67"
+  },
+  "limits": [
+    "Local browser Auth/RPC/Edge mocks; no hosted/provider acceptance",
+    "No new backend code or migrations",
+    "New scan creation, file capture/cleanup UI, original inspection and clinical review/release remain unfinished",
+    "Full mail/Auth, Stripe sandbox, vendor, clinical, restore and public rollout requirements remain open"
+  ],
+  "deployment": "No hosted deployment or activation, real source call, message or payment"
+}

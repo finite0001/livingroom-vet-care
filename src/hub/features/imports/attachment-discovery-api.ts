@@ -1,3 +1,4 @@
+import { attachmentPageError } from "./attachment-page-errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { parseAttachmentParent, parseAttachmentObservations, parseAttachmentCleanups, parseAttachmentRuns, parseRecoveredAttachmentRun } from "./attachment-discovery-state";
@@ -40,6 +41,12 @@ export async function stageAttachmentPage(actor: string, mapping: AttachmentMapp
     parent_type: parent.parent_type, parent_snapshot_id: parent.parent_snapshot_id,
     parent_payload_hash: parent.parent_payload_hash, parent_observed_head_version: parent.parent_observed_head_version,
   } });
-  if (error || !data || data.run_id !== run.id || data.review_only !== true)
-    throw new Error("Page response unconfirmed. Recheck this saved scan before continuing.");
+  if (error) {
+    let code: unknown;
+    if ("context" in error && error.context instanceof Response) {
+      try { const body = await error.context.json(); code = body?.error; } catch { /* Only known codes become operator messages. */ }
+    }
+    throw attachmentPageError(code);
+  }
+  if (!data || data.run_id !== run.id || data.review_only !== true) throw attachmentPageError(undefined);
 }

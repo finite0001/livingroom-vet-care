@@ -177,3 +177,10 @@ The existing attachment-history section now supports explicit recovery and one-p
 Local validation: 575 application unit tests and 22 browser cases passed (12 attachment history/action cases and 10 neighboring prescription cases). The browser tests include lost acknowledgments, failed pre/post-request recovery, current leases and canceling navigation. No backend migration or worker code changed; the prior 91-migration runtime evidence remains historical and does not itself prove these new browser controls against a hosted Edge gateway. See `docs/evidence/attachment-scan-actions-local-20260913.json`.
 
 Still required: new Animal/Consult scan selection and creation, prepare/capture/abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore, actual provider and hosted operator acceptance. Full commercial-readiness gates remain open.
+
+
+### Actionable scan failure checkpoint
+
+Saved-scan continuation now distinguishes allowlisted source-context changes, setup requirements, provider authorization and busy/cooldown failures. Unknown or malformed provider text remains a generic unconfirmed response. A confirmed stale or mismatched parent requires fresh source context and disables another page from the selected scan even after a successful recovery read. The original history and patient selection remain available once saved-state recovery succeeds.
+
+Validation: 578 unit tests and 24 browser cases passed, including stale-parent retry prevention and source setup messaging. These are local browser mocks and application tests, not hosted/provider acceptance. No backend or deployment state changed. New scan creation and the remaining capture/review/release and commercial-readiness gates above remain unfinished. Evidence: `docs/evidence/attachment-action-errors-local-20260913.json`.

@@ -1,3 +1,4 @@
+import { AttachmentPageError, attachmentPageError } from "./attachment-page-errors";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,7 @@ function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [notice, setNotice] = useState("");
+  const [sourceFailure, setSourceFailure] = useState<AttachmentPageError | null>(null);
   const lock = useRef(false);
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; onLocked(false); }; }, [onLocked]);
@@ -100,10 +102,10 @@ function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
       let recovered = await recoverAttachmentRun(actor, mapping, scan);
       if (!alive.current) return;
       setCurrent(recovered); setUncertain(false);
-      let pageError = false;
-      if (readPage && attachmentScanCanContinue(recovered)) {
+      let pageError: AttachmentPageError | null = null;
+      if (readPage && !sourceFailure?.requiresNewScan && attachmentScanCanContinue(recovered)) {
         setUncertain(true);
-        try { await stageAttachmentPage(actor, mapping, recovered); } catch { pageError = true; }
+        try { await stageAttachmentPage(actor, mapping, recovered); setSourceFailure(null); } catch (error) { pageError = error instanceof AttachmentPageError ? error : attachmentPageError(undefined); if (alive.current) setSourceFailure(pageError); }
         // Both success and a lost response require the authoritative saved state.
         recovered = await recoverAttachmentRun(actor, mapping, scan);
         if (!alive.current) return;
@@ -125,10 +127,11 @@ function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
     <p className="text-sm">Saved scan: {current.status === "running" ? `next page ${current.next_page}` : current.status === "review_ready" ? "complete" : "page limit reached"}. Reading a page saves source metadata for review.</p>
     {current.lease_active && <p role="status">Another request is active for this scan. Recheck its saved state.</p>}
     {current.retry_after && <p className="text-sm">Provider retry time: {new Date(current.retry_after).toLocaleString()}.</p>}
+    {sourceFailure && <p role="alert">{sourceFailure.message}</p>}
     {notice && <p role={uncertain ? "alert" : "status"}>{notice}</p>}
     <div className="flex flex-wrap gap-2">
       <Button variant="secondary" disabled={busy} onClick={() => void act(false)}>Recheck saved attachment scan</Button>
-      <Button variant="secondary" disabled={busy || uncertain || !attachmentScanCanContinue(current)} onClick={() => void act(true)}>Read next attachment page</Button>
+      <Button variant="secondary" disabled={busy || uncertain || !!sourceFailure?.requiresNewScan || !attachmentScanCanContinue(current)} onClick={() => void act(true)}>Read next attachment page</Button>
     </div>
   </div>;
 }
