@@ -184,6 +184,7 @@ def vaccination_snapshot(project):
               'ezyvet_attachment_runs', 'ezyvet_attachment_pages', 'ezyvet_attachment_page_observations',
               'ezyvet_attachment_capture_requests','ezyvet_attachment_capture_attempts','ezyvet_attachment_capture_failures',
               'ezyvet_attachment_original_intents','ezyvet_attachment_original_captures',
+              'ezyvet_attachment_record_versions','ezyvet_attachment_approval_cancellations',
               'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
@@ -423,6 +424,8 @@ try:
                                'api_original_requests':len(expected_vaccinations['ezyvet_attachment_capture_requests']),
                                'api_original_intents':len(expected_vaccinations['ezyvet_attachment_original_intents']),
                                'api_original_captures':len(expected_vaccinations['ezyvet_attachment_original_captures']),
+                               'api_original_approval_versions':len(expected_vaccinations['ezyvet_attachment_record_versions']),
+                               'api_original_cancellations':len(expected_vaccinations['ezyvet_attachment_approval_cancellations']),
                                'frozen_release_rows': len(expected_vaccinations['record_releases']),
                                'source_and_receipt_rows_match': True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}

@@ -161,6 +161,23 @@ select jsonb_object_agg(k,id) from fx;commit;`);
       if (index === 0) result = checked(await admin.rpc('complete_ezyvet_attachment_capture', {p_id:id,p_actor:state.user,p_lease_id:claim.lease_id,p_intent_id:reserved.intent.id,p_content_sha256:digest,p_mime_type:'application/pdf',p_file_size:bytes.length}));
       state.apiOriginals.push({id,mapping:row.mapping,requestHash:result.request.request_hash,status:result.request.status,intent:reserved.intent,contentSha256:digest,bytes:bytes.length,capture:result.request.capture});
     }
+    const ready = state.apiOriginals.find(original => original.status === 'ready');
+    assert.ok(ready);
+    const approvalArgs = (id, previous = null) => ({p_id:id,p_request_id:ready.id,p_pet_id:state.pet,p_capture_hash:ready.capture.capture_hash,p_previous_record_id:previous,p_title:'Synthetic reviewed restore original',p_review_reason:'Synthetic inspection of exact local fixture bytes',p_attest:true});
+    state.apiDecisions = [];
+    let previous = null;
+    for (let version = 1; version <= 2; version++) {
+      const args = approvalArgs(randomUUID(), previous);
+      const record = checked(await api.rpc('approve_ezyvet_attachment_record', args));
+      assert.equal(record.version, version);
+      assert.equal(record.previous_record_id, previous);
+      state.apiDecisions.push({args, outcome:{status:'approved',record,cancellation:null}});
+      previous = record.id;
+    }
+    const args = approvalArgs(randomUUID(), previous);
+    const outcome = checked(await api.rpc('cancel_ezyvet_attachment_approval', {p_id:args.p_id,p_request_id:args.p_request_id,p_pet_id:args.p_pet_id,p_capture_hash:args.p_capture_hash,p_confirmed:true}));
+    assert.equal(outcome.status, 'canceled');
+    state.apiDecisions.push({args,outcome});
   } finally {
     if (!hadAdmin) sql(`delete from user_roles where user_id='${state.user}' and role='ADMIN'`);
   }
@@ -248,6 +265,38 @@ select jsonb_object_agg(k,id) from fx;commit;`);
         assert.equal(bytes.length, original.bytes);
         assert.ok((await api.storage.from(context.intent.bucket_id).download(context.intent.object_path)).error);
         assert.ok((await anonymous.storage.from(context.intent.bucket_id).download(context.intent.object_path)).error);
+      }
+      assert.equal(state.apiDecisions.length, 3);
+      for (const decision of state.apiDecisions) {
+        const {args, outcome} = decision;
+        const identity = {p_id:args.p_id,p_request_id:args.p_request_id,p_pet_id:args.p_pet_id,p_capture_hash:args.p_capture_hash};
+        assert.deepEqual(checked(await api.rpc('recover_ezyvet_attachment_approval', identity)), outcome);
+        assert.deepEqual(checked(await api.rpc('cancel_ezyvet_attachment_approval', {...identity,p_confirmed:true})), outcome, 'Committed approval wins cancellation; canceled retry preserves receipt');
+        if (outcome.status === 'approved') {
+          assert.deepEqual(checked(await api.rpc('approve_ezyvet_attachment_record', args)), outcome.record, 'Exact approval retry preserves historical version');
+          const context = checked(await admin.rpc('get_reviewed_ezyvet_original_context', {p_actor:state.user,p_record_id:args.p_id,p_pet_id:state.pet,p_capture_hash:args.p_capture_hash}));
+          const bytes = Buffer.from(await checked(await admin.storage.from(context.bucket_id).download(context.object_path)).arrayBuffer());
+          assert.equal(hash(bytes), context.content_sha256);
+          assert.equal(context.content_sha256, state.apiOriginals.find(original => original.id === args.p_request_id).contentSha256);
+        } else {
+          const rejected = await api.rpc('approve_ezyvet_attachment_record', args);
+          assert.equal(rejected.error?.code, '23514');
+          assert.match(rejected.error.message, /Approval was canceled/);
+        }
+        assert.equal((await anonymous.rpc('recover_ezyvet_attachment_approval', identity)).error?.code, '42501');
+      }
+      for (const table of ['ezyvet_attachment_record_versions','ezyvet_attachment_approval_cancellations']) {
+        assert.equal((await api.from(table).select('*')).error?.code, '42501');
+        const before = sql(`select jsonb_agg(to_jsonb(t) order by id) from ${table} t`);
+        for (const operation of ['update','delete']) {
+          sql(`begin; do $probe$ begin
+            begin
+              ${operation === 'update' ? `update ${table} set pet_id=pet_id` : `delete from ${table}`};
+              raise exception 'Expected immutable history rejection';
+            exception when check_violation then null; end;
+          end $probe$; rollback;`);
+        }
+        assert.equal(sql(`select jsonb_agg(to_jsonb(t) order by id) from ${table} t`), before);
       }
     } finally {
       if (!hadAdmin) sql(`delete from user_roles where user_id='${state.user}' and role='ADMIN'`);
@@ -432,6 +481,8 @@ rollback;`);
         outbox_empty: true,
         cron_absent: true,
         api_originals_restored: state.apiOriginals?.length ?? 0,
+        approved_corrected_canceled_decisions_restored: state.apiDecisions?.length ?? 0,
+        decision_replay_private_bytes_and_immutability_verified: Boolean(state.apiDecisions?.length),
         ready_and_reserved_api_original_bytes_verified: Boolean(state.apiOriginals?.length),
       },
       null,
