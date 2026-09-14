@@ -463,6 +463,22 @@ try {
       const chartDownload = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + chartCapture.object_path, { headers: chartHeaders });
       check(chartDownload.ok && (await verifyAttachmentOriginal(await chartDownload.blob(), intent)).size === intent.file_size, "Different active staff downloads only approved original and verifies its exact bytes");
       await assert.rejects(api("/rest/v1/rpc/get_ezyvet_attachment_chart_original", { p_record_id: correctionId, p_pet_id: randomUUID() }, chartHeaders), (error: { code: string }) => error.code === "42501"); assertions++;
+      const releaseRefs = [{ id: correctionId, record_hash: corrected.record_hash }];
+      const releaseCall = (refs: unknown, selectedPet = pet) => `public.ezyvet_validate_release_attachments(${quote(selectedPet)},${quote(JSON.stringify(refs))}::jsonb)`;
+      const rejectRelease = (refs: unknown, code: string, selectedPet = pet) => {
+        sql(`do $test$ begin perform ${releaseCall(refs, selectedPet)}; raise exception 'Expected selected API validation rejection'; exception when sqlstate '${code}' then null; end $test$;`); assertions++;
+      };
+      const releaseOriginals = JSON.parse(sql(`select ${releaseCall(releaseRefs)};`));
+      check(releaseOriginals.length === 1 && parseAttachmentChartOriginal(releaseOriginals[0], pet, correctionId, receipt.capture_hash).capture.storage_object_id === chartCapture.storage_object_id, "Selected release projection binds the exact reviewed capture without intake ownership");
+      check(!JSON.stringify(releaseOriginals).includes('attachment_metadata') && !JSON.stringify(releaseOriginals).includes('lease_id'), "Selected release projection omits provider metadata and worker leases");
+      for (const invalid of [null, [], Array(21).fill(releaseRefs[0]), [{ id: 'invalid', record_hash: corrected.record_hash }], [releaseRefs[0], releaseRefs[0]], [{ id: correctionId, record_hash: null }], [{ ...releaseRefs[0], extra: true }]]) rejectRelease(invalid, '23514');
+      rejectRelease([{ id: correctionId, record_hash: '0'.repeat(64) }], '40001');
+      rejectRelease(releaseRefs, '40001', randomUUID());
+      rejectRelease([{ id: approvalId, record_hash: approved.record_hash }], '40001');
+      rejectRelease([{ id: randomUUID(), record_hash: corrected.record_hash }], '40001');
+      sql(`begin; update storage.objects set metadata='{}' where id=${quote(chartCapture.storage_object_id)}; do $test$ begin perform ${releaseCall(releaseRefs)}; raise exception 'Expected original metadata rejection'; exception when sqlstate '40001' then null; end $test$; rollback;`); assertions++;
+      sql(`begin; update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(corrected.source_context.parent.parent_snapshot_id)}; do $test$ begin perform ${releaseCall(releaseRefs)}; raise exception 'Expected stale API parent rejection'; exception when sqlstate '40001' then null; end $test$; rollback;`); assertions++;
+      check(sql(`select bool_and(not has_function_privilege(role,'public.ezyvet_validate_release_attachments(uuid,jsonb)','EXECUTE')) from unnest(array['anon','authenticated','service_role']) role;`) === 't', "Selected attachment release helper is private to database composition");
       sql(`delete from user_roles where user_id=${quote(chartActor)};`);
       await assert.rejects(api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet }, chartHeaders), (error: { code: string }) => error.code === "42501"); assertions++;
       check(!(await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + chartCapture.object_path, { headers: chartHeaders })).ok, "Revoked staff cannot download reviewed original");
@@ -470,6 +486,7 @@ try {
       sql(`update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(selected.id)};`);
       const staleChart = parseAttachmentChart(await api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet, p_limit: 1 }, chartHeaders), pet);
       check(staleChart.records[0].is_latest && !staleChart.records[0].source_current, "Chart distinguishes latest approval from changed source evidence");
+      rejectRelease(releaseRefs, '40001');
       check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
       sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);

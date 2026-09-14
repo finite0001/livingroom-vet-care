@@ -1,0 +1,27 @@
+# Schema9 API attachment releases
+
+Status: implementation in progress; no release activation or clinical acceptance.
+Repository root: `/Users/davidedler/Developer/livingroom-readiness-security`.
+Parent scope: `plans/20260913-ezyvet-clinical-import/phase-03d-api-attachments.md` steps5–7 and `docs/commercial-readiness.md`.
+
+## Findings and decisions
+
+Schema8 composes schemas1–7 via private preview functions. Confirmation, recovery, source events and SQL byte verification have explicit schema dispatch. Shared renderer validators also dispatch by schema. Email and document-link builders currently allow only `patient-documents`. API originals live in `ezyvet-attachments` and have immutable request/capture/approval hashes, not patient-document versions. Reusing the manual-export family would misrepresent provenance. Copying into patient_documents would create a second original and additional consistency obligations. Use a separate `api_attachment` family in schema9, retaining the existing capture and bucket.
+
+Chart visibility is not release authorization. Staff select exact reviewed API records; preview must reject superseded, stale, wrong-patient or missing originals. Existing release confirmation/policy approval remains mandatory. No inferred clinical interpretation, provider signature or migration completeness. Any additional DVM acknowledgment requirement must be explicit in clinical acceptance, not silently inferred from staff intake approval.
+
+## Work and acceptance
+
+1. Implemented locally; runtime validation passed295 checks. `supabase/migrations/20260913770000_api_attachment_release_validation.sql`: private bounded selected-record validator using exact ID/record_hash. Reuse parent validation without owned intake-run locks. Lock patient/mappings, parent heads, attachment heads, approval chains and Storage rows before final projection. Preserve source context except raw provider metadata; return exact immutable capture. Deny all API-role execution. Tests must reject wrong hash/patient, stale/superseded records, malformed/duplicate references and missing or mismatched originals. Do not expose release APIs yet.
+2. Add schema9 composition migration after7700, modeled on6400. Add `api_attachment_ids`, explicitly selected originals and bounded deterministic snapshot projection. Preserve1–8. Extend confirmation/source registration/recovery/policy checks and inherited provenance guards with checked migration replacements. Add append-only invalidation on mapping/patient/source/approval changes. Keep exact replay before mutable currentness checks. Public preview/confirmation must recheck staff authority after lock waits. Define lock order across mixed source families and prove correction/source/release races before considering complete.
+3. Extend `supabase/functions/_shared/record-release-renderer.ts` and its source/history/vaccination/prescription validators to schema9. Add a strict API-family validator/renderer. Require bidirectional exact selection/provenance/original correspondence, safe private path, capture/record hashes and parent pins. Keep old-schema fixtures unchanged. Include visible API provenance and limits in all output.
+4. Extend `_shared/release-email-payload.ts`, `_shared/document-link-artifacts.ts` and print/original routes. Admit the API bucket only for a fully validated schema9 API capture; reject arbitrary bucket/path changes. SQL `verify_release_source_original_v5` must also verify schema9 API bytes so worker-side checks are not the only defense. Actual digest replacement, omission, duplicate and mixed-file tests required for email and links.
+5. Extend existing patient release UI and source discovery. Add explicit API selection, source-change notices, policy9 gate and existing draft/recovery guards. Keep current routes, buttons and layout patterns. Select-all must disclose exact included sources and obey package bounds. Do not implicitly include API captures from ordinary document selection.
+6. Run unit, browser, SQL and actual local Auth/HTTP/Storage mixed-release verification. Extend observed-lock concurrency harness for both correction/release and source/release orderings, parent reassignment, role revocation and captured delivery recovery. Verify immutable saved snapshots and blocked pending delivery after invalidation.
+7. Update frozen upgrade inventory only after integrated workflow; run populated upgrade and physical database/Storage restore with selected API originals and source-change recovery. Coordinate hosted migration/function/frontend versions after local acceptance; gates remain off until clinical/provider/operator acceptance.
+
+All paths above are relative to the repository root. Existing SQL runtime harness: `tests/ezyvet/attachment-local-roundtrip.ts`; disposable runner: `tests/ezyvet/attachment-disposable.py`; source delivery harness: `tests/record-releases/source-local-roundtrip.ts`.
+
+## Risks and unresolved acceptance
+
+Mixed family lock order is a release gate, not established by existing attachment-only races. A new currentness helper must not inherit administrator-owned intake constraints, nor bypass mapping/parent checks. Storage metadata existence is not byte authenticity; both worker and SQL capture paths must verify digest. Clinical policy9 approval, issued-site sample acceptance, current populated restore and public rollout remain unapproved/unverified. This plan does not replace mail/Auth, Stripe sandbox, vendor, stock/billing or other commercial-readiness requirements.
