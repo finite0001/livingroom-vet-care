@@ -1,0 +1,40 @@
+{
+  "synthetic_only": true,
+  "schema_commit": "7e86931",
+  "harness_commit": "a60844f",
+  "command": "python3 supabase/tests/ezyvet_attachment_original_reviews_concurrency.py --full-regression",
+  "full_sql_files": 74,
+  "full_sql_assertions": 2752,
+  "full_run_review_assertions": 48,
+  "full_run_review_file_sha256": "b97a4f2ac02ff5db66ea3383e91af92a437f897a8846d817e1a160a2cf7a69ec",
+  "followup_review_assertions": 53,
+  "followup_note": "The final53-assertion review file adds three explicit release-exclusion checks and two raw-reason-size checks. Final migration7e86931 changes only approval/withdrawal raw reason bounds; the complete targeted lane and dedicated review races passed again on that migration.",
+  "final_distinct_sql_assertions_verified": 2757,
+  "canonical_child_sql_assertions": 468,
+  "canonical_child_checks": 162,
+  "review_harness_total_checks": 160,
+  "review_harness_sql_file_checks": 74,
+  "review_harness_setup_lock_race_cleanup_checks": 86,
+  "default_configuration": {
+    "sql_files": 10,
+    "sql_assertions": 471,
+    "total_harness_checks": 96
+  },
+  "owned_scratch_databases_removed": true,
+  "no_provider_calls": true,
+  "no_physical_storage_operations_in_sql_harness": true,
+  "sha256": {
+    "supabase/migrations/20260913710000_attachment_original_review.sql": "6f46806319d02c5d164ca5f97bab84ea662ab2b74b2dca717b291f5b2bfb78ba",
+    "supabase/tests/ezyvet_attachment_original_reviews.test.sql": "d21ec540af6c1dae4205e4cab4ea9b725a4d4c0155eb38d0a75edf84e8d8f0d0",
+    "supabase/tests/ezyvet_attachment_original_reviews_concurrency.py": "c0c5d9b88ccb44d14fd67eac398c705cef17ac5bc3f37b333a0fe960ca546e1d"
+  },
+  "broad_schema_commit": "2efe6df",
+  "final_targeted_lane": {
+    "command": "python3 supabase/tests/ezyvet_attachment_original_reviews_concurrency.py",
+    "sql_files": 10,
+    "sql_assertions": 471,
+    "review_assertions": 53,
+    "harness_checks": 96,
+    "cleanup_verified": true
+  }
+}

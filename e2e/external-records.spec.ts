@@ -409,6 +409,8 @@ async function fixture(page: Page, role = "ADMIN") {
         json: state.acks.find((a) => a.id === body.p_id) ?? null,
       });
     }
+    if (path.endsWith("read_ezyvet_attachment_original_history")) return route.fulfill({json:{pet_id:petId,records:[],has_more:false,next_cursor:null}});
+    if (path.endsWith("list_ezyvet_attachment_original_candidates")) return route.fulfill({json:{candidates:[],has_more:false,next_cursor:null}});
     return route.fulfill({ json: [] });
   });
   return state;

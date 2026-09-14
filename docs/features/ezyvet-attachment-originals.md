@@ -30,7 +30,7 @@ Storage INSERT policy checks the authenticated owner, reserved intent, live leas
 
 Discard first fences an unfinished request, invalidating its lease. The worker rechecks that owned, immutable discarding intent and performs privileged deletion only for its path, then confirms absence before recording `abandoned`. Staff uploads cannot create an accessible object after the fence. Lost deletion or finalization acknowledgements recover the same operation. Ready captures cannot enter discard, and cleanup does not delete request or observation history.
 
-API originals remain separate from `patient_documents` and manual-export receipts. Capture does not promote the clinical chart, approve source claims, enable a release, create billing/inventory effects or send messages. Future explicit API-provenance review and release integration must preserve the original byte receipt rather than relabel it as a manual export.
+API originals remain separate from `patient_documents` and manual-export receipts. Capture does not promote the clinical chart, approve source claims, enable a release, create billing/inventory effects or send messages. The separate [API-original chart review workflow](reviewed-api-originals.md) preserves this receipt for explicit admission and DVM acknowledgment. Client release integration remains separate; neither workflow relabels the original as a manual export.
 
 ## Configuration and remaining work
 
