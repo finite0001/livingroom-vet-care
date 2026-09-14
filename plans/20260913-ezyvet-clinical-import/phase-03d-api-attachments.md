@@ -1,8 +1,15 @@
 # Phase 3d — Source API attachments
 
-Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual Auth/database runtime verification, UI, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual local Auth/database metadata verification passes44 checks; UI, attachment-specific contention, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
 
 
+
+
+## Actual local metadata runtime checkpoint — 2026-09-13
+
+`python3 tests/ezyvet/attachment-disposable.py --run-synthetic-local` passes44 checks on a fresh86-migration stack. The handler is served over real loopback HTTP; its gateway calls actual Supabase Auth and PostgREST, and the upstream adapter reaches only a synthetic local HTTP server. Both Animal and Consult parents are exercised through two pages. Discarded acknowledgments recover the actual committed cursor; terminal retries fetch no additional page and retain exactly two page receipts/observations. Wrong-parent data stages nothing, changed parent revisions return409 before upstream access, and existing terminal receipts remain recoverable. Actual private-table/role-loss restrictions, run discovery, native-document/clinical/billing/stock/outbox invariants and cleanup pass.
+
+The runner binds its source and all86 migration hashes; [sanitized evidence](../../docs/evidence/attachment-intake-runtime-local-20260913.json) records the result. The CI workflow now invokes this runner, but that workflow addition has not yet run in a PR. The test mirrors production gateway RPC mappings and checks the actual handler over HTTP; it does not exercise a deployed Edge endpoint or real practice source. UI, file transport/capture, review/release and dedicated attachment races remain required.
 
 ## Metadata transport checkpoint — 2026-09-13
 
