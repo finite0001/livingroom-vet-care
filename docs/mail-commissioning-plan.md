@@ -61,3 +61,7 @@ The owner subsequently authorized completing Fastmail setup, including the root 
 September14 staging frontend update: canonical schema9 frontend is now READY at the stable protected origin https://livingroom-vet-care-daves-projects-e0da43ba.vercel.app. APP_URL was changed to this origin and importer CORS verified200/403. Earlier Auth Site URL and exact reset redirect still point to the historical preview; align those settings before staff onboarding. No message sent.
 
 September14 Auth-origin alignment: authenticated dashboard saved Site URL to the stable staging origin and now lists exactly one redirect, that origin plus `/hub/reset-password`. Removed the historical preview redirect. The deployed reset route with no token shows the invalid/expired-link explanation and sign-in link. Auth Emails confirms custom SMTP is still unset; Fastmail session remains expired. Evidence: `evidence/canonical-staging-auth-origin-20260914.json`. No reset email/invitation sent and no staff account created.
+
+## September 14 — DNS recheck; account access unavailable
+
+A fresh public DNS query still returns Fastmail MX targets `us1-smtp.messagingengine.com` and `us2-smtp.messagingengine.com`, SPF `v=spf1 include:spf.messagingengine.com ?all`, and all three `fm1`–`fm3` DKIM CNAME targets under `thelivingroom.vet.dkim.fmhosted.com`. No DNS changes were made. Browser access timed out, so mailbox delivery, account security, Auth SMTP and staff onboarding were not reverified or completed in this checkpoint.

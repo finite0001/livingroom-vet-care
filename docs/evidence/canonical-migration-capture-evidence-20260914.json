@@ -1,0 +1,93 @@
+{
+  "date": "2026-09-14",
+  "scope": "Owner-scoped attachment capture and approval receipt projection; not complete clinical reconciliation or fresh byte verification",
+  "migration_count": 107,
+  "sql_assertions": 1135,
+  "concurrency_harness_checks": 318,
+  "unit_tests": 561,
+  "lint_typecheck_build_passed": true,
+  "browser_tests": 24,
+  "viewport_cases_after_screenshot_adjustment": 2,
+  "browser_transport": "Synthetic RPC fixtures; actual Auth/PostgREST tested separately",
+  "runtime_checks": 384,
+  "runtime_checks_by_fixture": {
+    "metadata": 50,
+    "originals": 121,
+    "maximum": 137,
+    "migration": 76
+  },
+  "runtime_result_sha256": "a5fb040ee26a3ad7c05a265afe561671974af492d0f1e8f80873a034ac151255",
+  "runtime_cleanup_verified": true,
+  "source_sha256": {
+    "supabase/migrations/20260914200000_ezyvet_migration_capture_evidence.sql": "d77f381718e70a4b9bf4e5ac1bc44225621c30c52f1e40c9407d1461dd55a9dc",
+    "src/hub/features/imports/migration-capture-api.ts": "c73145296d94063093f289dc25276711efc77a1c13b3d7fa40d1558a02e8f3c6",
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "e09bb11e4defd733cf5d5c1e0732e1e5990ab388c7d444c074501a63a0ca8eb7",
+    "supabase/tests/ezyvet_migration_capture_evidence.test.sql": "5182877ddbdd3e97356b932e0cb342b2bae9296c4198bddcb624a58257b78f46",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "132a56b8bdf958bf8ad8b2a787bc69c868b68d55d312b344da5f21e7a0c63c8e",
+    "tests/ezyvet/migration-capture-api.test.ts": "a256f7d11a093034d3d879dbf2d7fcd286e635069fa8df2da365b718c0afd34f",
+    "tests/ezyvet/migration-local-roundtrip.ts": "996f866b8c07323014d25691b3548ec02fbdbe19b46b77408b5a518a1476d815",
+    "tests/ezyvet/attachment-metadata-disposable.py": "b94c7df34b2da07e9149b0d29646404a1bcf2f6f60694ced165727d6a528f092",
+    "e2e/migration-workspace.spec.ts": "065a938e987bce518254af1160d3b74f270fbd623c5eec894c988e313453dac4",
+    "scripts/restore-rehearsal/run.py": "d2e2acfd6cda10a2fa00dc6bcb979713d21e120b0fa8d001b225f13321b9adee",
+    "scripts/restore-rehearsal/fixture.mjs": "01f65570e2ef129cdbb0b8cafdb562e1fb55d5f1dee163972228d3563e96ace2"
+  },
+  "screenshots_sha256": {
+    "docs/evidence/migration-capture-mobile-20260914.png": "cb9df4c92cf1386d8217b03611757a00dadf23a813ec15509064e83360da1d34",
+    "docs/evidence/migration-capture-desktop-20260914.png": "1c3b21c7bc105af270c5ffedebbff7d714360623906ab657a28e55a0729cb372"
+  },
+  "logs_sha256": {
+    "sql": "1bc837c6a46419b730917adc61fcbe454683c4c715673daab80d761423081602",
+    "final-check": "b00f987ec5b27579c3f9dc904d5b224b9c258d05404da3fc1402a87ffa8a41eb",
+    "browser": "9551250daeeb852a8e7e8dc0385068e2b5da4bd41bec63404f9077ff3afe104c",
+    "visual": "cf8b370098702d32a36c5840dbf66c814ea2ae15fb188ebe4a831a951f3df510",
+    "runtime": "a98a693c23d5e19c165bd2c6f4f5a938547659aaca466316dcb4adf976cf5bf4",
+    "restore-final": "5acf7ac17140c3588fb982ef474eafe2b221f827c512d26d76e92a5c574ba83e"
+  },
+  "verified_cases": [
+    "Exact owner, binding, source occurrence hash and parent/source-version matching",
+    "Duplicate occurrences reference the same source-version capture without ownership transfer",
+    "Prepared, reserved and captured requests remain distinct",
+    "Approval versions and canceled unconfirmed decisions remain separate",
+    "Correction supersedes historical approval; parent drift preserves historical receipt",
+    "Bounded microsecond history and invalid/private response rejection",
+    "Role revocation during observed database wait denies receipt lookup",
+    "Failed UI lookup does not display missing originals; refresh recovers",
+    "Existing importer navigation and recovery checks pass; desktop/mobile panel inspected"
+  ],
+  "restore": {
+    "result_sha256": "3d700865e860fef936d96a5a4555ac4009367559653379dcab728fd69598e014",
+    "recovery_fixture_sha256": "d8672a67e67da3ae5c00552e9f1349c990971252885b4597047f4da99d785606",
+    "initial_migrations": 84,
+    "final_migrations": 107,
+    "capture_item_pages": 2,
+    "capture_receipt_occurrences": 6,
+    "distinct_capture_requests": 3,
+    "request_states": [
+      "prepared",
+      "reserved",
+      "ready"
+    ],
+    "approval_versions_on_ready_capture": 2,
+    "canceled_unconfirmed_decisions_on_ready_capture": 1,
+    "exact_projection_before_after_restore": true,
+    "physical_storage_files": 3,
+    "exact_rows_before_reads": true,
+    "canonical_functions_grants_triggers_match": true,
+    "post_restore_canonical_match": true,
+    "cleanup_verified": true,
+    "total_seconds": 402.7
+  },
+  "validation_notes": [
+    "First restore attempt stopped before data loading because another owned project occupied the default database port. Its generated resources were verified absent. Final rehearsal passed on disjoint 60321/61321 API port groups without stopping the other project.",
+    "The new receipt projection never reads original bytes. Separate existing restore checks verified physical originals and reviewed release retrieval."
+  ],
+  "provider_requests": 0,
+  "hosted_changes": false,
+  "remaining": [
+    "Other clinical outcome adapters and global reconciliation totals",
+    "Operational resolutions, frozen reports and acceptance",
+    "Scope creation, binding and explicit resume UI",
+    "Matching staging rollout and signed-in supervised acceptance",
+    "Mail delivery/Auth SMTP, provider/clinical commissioning and full commercial launch gates"
+  ]
+}

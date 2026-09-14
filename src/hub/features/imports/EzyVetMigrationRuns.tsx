@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createMigrationRunApi } from "./migration-run-api";
 import type { MigrationBinding, MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
-import type { MigrationItemCursor } from "./migration-items-api";
+import { createMigrationCaptureApi } from "./migration-capture-api";
+import type { MigrationItem, MigrationItemCursor } from "./migration-items-api";
 
 interface Props { actor: string }
 const resourceNames: Record<string, string> = { contact: "Contacts", animal: "Patients", healthstatus: "Weights", consult: "Consultations", history: "History", vaccination: "Vaccinations", prescription: "Prescriptions", prescriptionitem: "Prescription items", attachment: "Attachments" };
@@ -127,9 +128,37 @@ function SourceEvidence({ actor, manifest, binding }: EvidenceProps) {
         <div className="flex flex-wrap items-center justify-between gap-2"><span className="break-all font-medium">{resourceName(items.data.resource)} #{item.external_id}</span><Badge variant="outline">{item.exact_source_current === null ? "Observed version not recorded" : item.exact_source_current ? "Observed version is current" : "Source version changed"}</Badge></div>
         <p className="text-muted-foreground">Page {item.page}{item.ordinal > 0 ? ` · Occurrence ${item.ordinal}` : " · Deduplicated snapshot"}</p>
         <Button type="button" variant="ghost" size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-left" aria-expanded={expanded === item.evidence_hash} onClick={() => setExpanded(expanded === item.evidence_hash ? null : item.evidence_hash)}>Evidence references for source {item.external_id}, page {item.page}{item.ordinal > 0 ? `, occurrence ${item.ordinal}` : ""}</Button>
-        {expanded === item.evidence_hash && <dl className="mt-2 space-y-1 break-all text-xs"><dt className="text-muted-foreground">Snapshot reference</dt><dd>{item.snapshot_id}</dd><dt className="text-muted-foreground">Occurrence evidence hash</dt><dd>{item.evidence_hash}</dd></dl>}
+        {expanded === item.evidence_hash && <><dl className="mt-2 space-y-1 break-all text-xs"><dt className="text-muted-foreground">Snapshot reference</dt><dd>{item.snapshot_id}</dd><dt className="text-muted-foreground">Occurrence evidence hash</dt><dd>{item.evidence_hash}</dd></dl>
+          {items.data.resource === "attachment" && <CaptureEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
+        </>}
       </li>)}</ul>}
       <Pagination label="source item" previous={previous.length > 0} next={items.data.has_more} onPrevious={() => { setExpanded(null); setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setExpanded(null); setPrevious([...previous, cursor]); setCursor(items.data.next_cursor); }} />
+    </>}
+  </section>;
+}
+
+interface CaptureProps extends Props { binding: MigrationBinding; item: MigrationItem }
+function CaptureEvidence({ actor, binding, item }: CaptureProps) {
+  const api = useMemo(() => createMigrationCaptureApi(supabase as unknown as MigrationRpc, actor), [actor]);
+  const [cursor, setCursor] = useState<MigrationCursor | null>(null);
+  const [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]);
+  const query = useQuery({ queryKey: ["migration-capture-evidence", actor, binding.id, item.evidence_hash, cursor], retry: false, queryFn: () => api.list(binding, item, cursor) });
+  const statuses: Record<string, string> = { prepared: "Capture prepared", reserved: "Upload reserved", ready: "Original captured", blocked: "Capture blocked", discarding: "Discard in progress", abandoned: "Capture abandoned" };
+  return <section aria-label="Owned capture evidence" className="mt-3 space-y-3 border-t pt-3">
+    <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="font-medium">Your capture evidence</h5><Button type="button" size="sm" variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh capture evidence</Button></div>
+    <p className="text-xs text-muted-foreground">Your requests for this source version. Other staff’s pending requests are not included. Stored bytes are not reverified by this view.</p>
+    {query.isFetching ? <p role="status">Loading capture evidence…</p> : query.isError ? <Failure message="Capture evidence could not be loaded." retry={() => void query.refetch()} /> : query.data && <>
+      <p className="text-xs text-muted-foreground">Capture state checked {recorded(query.data.observed_at)}.</p>
+      {query.data.captures.length === 0 ? <p>No owned capture requests match this source version.</p> : <ul className="space-y-3">{query.data.captures.map(row => <li key={row.request_id} className="space-y-1 rounded-md border p-3">
+        <p className="font-medium">{statuses[row.status]}</p>
+        <p className="text-xs text-muted-foreground">{row.relationship === "exact_occurrence" ? "Request for this occurrence" : "Request for the same source version on another occurrence"} · {recorded(row.created_at)}</p>
+        {!row.source_current && <p>Source changed since this request.</p>}
+        {row.latest_error_code && <p>Latest capture error: {row.latest_error_code.toLowerCase().replace(/_/g, " ")}</p>}
+        {row.capture && <p>Stored original receipt: {row.capture.mime_type} · {row.capture.file_size.toLocaleString()} bytes</p>}
+        <p>Recorded approval versions: {row.approved_versions}</p><p>Canceled unconfirmed decisions: {row.canceled_unconfirmed_decisions}</p>
+        {row.latest_approval && <p>Latest approval on this capture: version {row.latest_approval.version}{row.latest_approval.superseded ? " · Replaced by a later record" : ""}</p>}
+      </li>)}</ul>}
+      <Pagination label="capture evidence" previous={previous.length > 0} next={query.data.has_more} onPrevious={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setPrevious([...previous, cursor]); setCursor(query.data.next_cursor); }} />
     </>}
   </section>;
 }

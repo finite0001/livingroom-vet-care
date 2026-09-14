@@ -1,5 +1,6 @@
 /** Actual local Auth/PostgREST acceptance; no provider or outbound delivery. */
 import assert from "node:assert/strict";
+import { createMigrationCaptureApi } from "../../src/hub/features/imports/migration-capture-api.ts";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -113,6 +114,16 @@ check(firstItems.has_more && !secondItems.has_more && firstItems.items[0].ordina
 check(firstItems.items[0].snapshot_id === secondItems.items[0].snapshot_id && firstItems.items[0].evidence_hash !== secondItems.items[0].evidence_hash, "HTTP hashes distinguish occurrence evidence from deduplicated snapshots");
 check(firstItems.mapping_source_current && firstItems.items[0].exact_source_current && !firstItems.review_reconciled, "HTTP source currentness is separate from clinical review");
 await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_items", { p_binding_id: bound.id }, other.auth)); checks++;
+const captureApi = createMigrationCaptureApi(ownerTransport, owner.id), captureItem = firstItems.items[0];
+check((await captureApi.list(bound, captureItem)).captures.length === 0, "Uncaptured metadata has no fabricated capture receipt");
+const captureId = randomUUID();
+await staffRpc("prepare_ezyvet_attachment_capture", { p_id: captureId, p_animal_link_id: mapping, p_run_id: child, p_page: captureItem.page, p_ordinal: captureItem.ordinal, p_snapshot_id: captureItem.snapshot_id, p_observed_head_version: captureItem.observed_head_version, p_stable_metadata_sha256: captureItem.stable_metadata_sha256 });
+const capturedEvidence = await captureApi.list(bound, captureItem);
+check(capturedEvidence.captures.length === 1 && capturedEvidence.captures[0].request_id === captureId && capturedEvidence.captures[0].status === "prepared" && capturedEvidence.captures[0].capture === null, "Actual HTTP evidence distinguishes prepared capture from verified original");
+check((await captureApi.list(bound, secondItems.items[0])).captures[0].relationship === "same_source_version", "Duplicate occurrence finds the same owned source-version request");
+await assert.rejects(() => captureApi.list(bound, { ...captureItem, evidence_hash: "f".repeat(64) })); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_capture_evidence", { p_binding_id: bound.id, p_page: captureItem.page, p_ordinal: captureItem.ordinal, p_snapshot_id: captureItem.snapshot_id, p_evidence_hash: captureItem.evidence_hash }, other.auth)); checks++;
+
 for (let i = 0; i < 2; i++) await api.prepare({ ...manifestRequest, id: randomUUID(), scopes: manifestRequest.scopes.map(scope => ({ ...scope, id: randomUUID() })) });
 const first = await api.list(null, 2);
 check(first.runs.length === 2 && first.has_more && first.next_cursor, "HTTP history returns bounded first page");
@@ -151,5 +162,6 @@ await assert.rejects(() => api.listBindings(bindingRequest.scope_id)); checks++;
 await assert.rejects(() => api.progress(saved, bound)); checks++;
 await assert.rejects(() => api.attempts(bound)); checks++;
 await assert.rejects(() => api.items(saved, bound)); checks++;
+await assert.rejects(() => captureApi.list(bound, captureItem)); checks++;
 check(effects() === beforeEffects, "Migration operations cause no clinical, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);

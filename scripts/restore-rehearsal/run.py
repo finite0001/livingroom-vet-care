@@ -11,13 +11,20 @@ import subprocess
 import tempfile
 import time
 import uuid
+import tomllib
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local-rehearsal', action='store_true')
+parser.add_argument('--source-port', type=int, default=58321, help='Loopback API port for this owned source; adjacent database/mail ports are reserved too')
+parser.add_argument('--destination-port', type=int, default=59321, help='Loopback API port for this owned restore destination')
 parser.add_argument('--resume-backup', type=Path, help='Retry only a retained synthetic backup destination')
 parser.add_argument('--rehearse-observed-hosted-gaps', action='store_true')
 parser.add_argument('--rehearse-staging-baseline', action='store_true')
 args = parser.parse_args()
+if any(port not in range(1025,65533) for port in [args.source_port,args.destination_port]):
+    parser.error('Source and destination API ports must be between1025 and65532')
+if {args.source_port+d for d in [-1,0,1,3]} & {args.destination_port+d for d in [-1,0,1,3]}:
+    parser.error('Source and destination port groups must not overlap')
 upgrade_mode = args.rehearse_observed_hosted_gaps or args.rehearse_staging_baseline
 if args.rehearse_observed_hosted_gaps and args.rehearse_staging_baseline:
     parser.error('Choose one baseline')
@@ -38,13 +45,13 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,20)]
+new_versions = [f'20260914{v:02d}0000' for v in range(1,21)]
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 106
+    assert len(migration_files) == 107
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==106 and len(initial_files)==51
+    assert len(migration_files)==107 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -200,7 +207,9 @@ def migration_recovery_snapshot(project):
       select jsonb_build_object(
         'manifests',(select jsonb_agg(public.read_ezyvet_migration_run(id) order by id) from public.ezyvet_migration_runs),
         'bindings',(select jsonb_agg(public.read_ezyvet_migration_binding(id) order by id) from public.ezyvet_migration_bindings),
-        'items',(select jsonb_agg(public.list_ezyvet_migration_items(id)-'observed_at' order by id) from public.ezyvet_migration_bindings));
+        'items',(select jsonb_agg(public.list_ezyvet_migration_items(id)-'observed_at' order by id) from public.ezyvet_migration_bindings),
+        'capture_evidence',(select jsonb_agg(public.list_ezyvet_migration_capture_evidence(b.id,(i->>'page')::integer,(i->>'ordinal')::integer,(i->>'snapshot_id')::uuid,i->>'evidence_hash')-'observed_at' order by b.id,i->>'evidence_hash')
+          from public.ezyvet_migration_bindings b join public.ezyvet_migration_scopes s on s.id=b.scope_id cross join lateral jsonb_array_elements(public.list_ezyvet_migration_items(b.id)->'items') i where s.resource='attachment'));
       rollback;"""))
 
 def seed_vaccination_receipt(project):
@@ -287,6 +296,8 @@ def seed_vaccination_receipt(project):
         'observations',jsonb_build_array(attachment_observation,jsonb_set(attachment_observation,'{{raw_record_sha256}}',to_jsonb(repeat('c',64)))),'page_sha256',repeat('d',64));
       claimed:=public.claim_ezyvet_attachment_import(attachment_run,a,'{site}','https://api.trial.ezyvet.com',mapping);
       perform public.stage_ezyvet_attachment_page(attachment_run,a,(claimed->>'lease_id')::uuid,attachment_page);
+      perform public.prepare_ezyvet_attachment_capture(gen_random_uuid(),mapping,attachment_run,1,1,
+        (select snapshot_id from public.ezyvet_attachment_page_observations where run_id=attachment_run and page=1 and ordinal=1),1,repeat('b',64));
       update public.ezyvet_import_runs set retry_after=now()-interval '1 second' where id=attachment_run;
       perform public.claim_ezyvet_attachment_import(attachment_pending,a,'{site}','https://api.trial.ezyvet.com',mapping);
       prepared:=public.prepare_ezyvet_migration_run(gen_random_uuid(),'https://api.trial.ezyvet.com','{site}',jsonb_build_array(
@@ -328,7 +339,7 @@ def services(project):
 try:
     if not args.resume_backup:
         print('Starting isolated synthetic source; artifacts:',run,flush=True)
-        source=project('source',58321,True)
+        source=project('source',args.source_port,True)
         command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
         if upgrade_mode:
             assert ledger(source)==[p.name.split('_')[0] for p in initial_files]
@@ -393,7 +404,7 @@ try:
         backup_seconds=time.monotonic()-backup_started
         (run/'backup-manifest.json').write_text(json.dumps({'run_id':run_id,'database_sha256':hashlib.sha256(dump).hexdigest(),'files':manifest,'backup_seconds':backup_seconds}))
     else:
-        source={'id':'lrv-restore-'+run_id+'-source','path':run/'source','port':58321}
+        source={'id':'lrv-restore-'+run_id+'-source','path':run/'source','port':tomllib.loads((run/'source/supabase/config.toml').read_text())['api']['port']}
         saved=json.loads((run/'backup-manifest.json').read_text())
         assert saved['run_id']==run_id
         dump=(run/'database.dump').read_bytes()
@@ -409,7 +420,7 @@ try:
         evidence=json.loads((run/'backfill-evidence.json').read_text())
         assert evidence['migration_sha256']=={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files}, 'Resume canonical migration sources changed'
     verify_canonical=upgrade_mode or resume_backfill
-    destination=project('destination',59321,verify_canonical)
+    destination=project('destination',args.destination_port,verify_canonical)
     canonical_inventory=functions_snapshot(destination) if verify_canonical else None
     if upgrade_mode:
         assert canonical_inventory==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'

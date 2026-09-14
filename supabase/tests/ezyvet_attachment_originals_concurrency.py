@@ -110,7 +110,7 @@ try:
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
         sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    targeted=['ezyvet_migration_items.test.sql','ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    targeted=['ezyvet_migration_capture_evidence.test.sql','ezyvet_migration_items.test.sql','ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
@@ -250,6 +250,11 @@ try:
     check(scalar(f"select count(*) from ezyvet_migration_bindings where scope_id='{scope_id}';")=='1','Concurrent exact binding creates one historical membership')
     try:
         contended('lock table ezyvet_attachment_page_observations in access exclusive mode;',staff+f"select list_ezyvet_migration_items('{binding_id}');",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
+    capture_item=json.loads(scalar('begin;'+staff+f"select list_ezyvet_migration_items('{binding_id}')->'items'->0;commit;"))
+    try:
+        contended('lock table ezyvet_attachment_capture_requests in access exclusive mode;',staff+f"select list_ezyvet_migration_capture_evidence('{binding_id}',{capture_item['page']},{capture_item['ordinal']},'{capture_item['snapshot_id']}','{capture_item['evidence_hash']}');",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
     finally:
         sql(f"update profiles set is_active=true where id='{actor}';")
     competing_binding=str(uuid.uuid4())

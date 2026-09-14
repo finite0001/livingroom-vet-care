@@ -114,3 +114,7 @@ The claim-authorization candidate reaches104 migrations. It rechecks active admi
 The staging/failure authorization candidate reaches 105 migrations. It rechecks administrator access before staging returns and after failure updates, so revocation during a database wait rolls back page and attempt history together. The exact 84→105 populated upgrade and restore comparisons apply.
 
 The source-item candidate reaches 106 migrations. Owned binding recovery now also compares bounded item pages before and after restore, excluding only the live observation timestamp. Occurrence hashes and mapping/parent currentness must match, alongside the existing physical Storage and canonical routine/access checks.
+
+The capture-evidence candidate reaches 107 migrations. The migration fixture adds an owned prepared capture and compares prepared, reserved and ready requests, two approval versions and one canceled unconfirmed decision for both duplicate observations after restore. Exact-occurrence versus same-source-version relationships remain distinct. Ready physical originals and clinical approval rows retain their existing full-row and physical-file restore checks; this added projection fixture does not claim a fresh readback of those bytes.
+
+If the default port groups are occupied by another rehearsal, use `--source-port 60321 --destination-port 61321`. Each group reserves API−1, API, API+1 and API+3. Groups must be disjoint; loopback, generated-project identity and source/destination checks remain enforced. Never stop a different project to acquire its ports.

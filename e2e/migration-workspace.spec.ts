@@ -14,7 +14,7 @@ async function fixture(page: Page, admin = true) {
     scopes: inputs.map(s => ({ ...s, migration_run_id: runId, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
     child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource: "attachment", parent_evidence: "exact_parent_version", context: {} } };
-  const state = { empty: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const state = { empty: false, failCaptures: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -37,6 +37,12 @@ async function fixture(page: Page, admin = true) {
       observations: { occurrences: 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: "page_ordinal", exact_current_occurrences: state.stale ? 0 : 21, currentness_available: true },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
+    if (rpc === "list_ezyvet_migration_capture_evidence") return state.failCaptures ? unavailable() : route.fulfill({ json: {
+      version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, ordinal: body.p_ordinal, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
+      ownership: "current_actor_only", has_more: false, next_cursor: null, original_bytes_reverified: false, complete_coverage_verified: false, observed_at: at,
+      captures: [{ request_id: id(30), created_at: at, status: "ready", relationship: "exact_occurrence", source_current: !state.stale, retry_after: null, latest_error_code: null,
+        capture: { id: id(31), capture_hash: "d".repeat(64), content_sha256: "e".repeat(64), mime_type: "application/pdf", file_size: 12, captured_at: at },
+        approved_versions: 1, canceled_unconfirmed_decisions: 1, latest_approval: { id: id(32), version: 1, record_hash: "f".repeat(64), created_at: at, superseded: false } }] } });
     if (rpc === "list_ezyvet_migration_items") {
       if (state.holdItems) await new Promise<void>(resolve => { state.releaseItems = resolve; });
       if (state.failItems) return unavailable();
@@ -73,12 +79,15 @@ for (const width of [390, 1440]) test(`saved migration evidence at ${width}px pr
   await expect(workspace.getByText("Page 3 · Occurrence 1", { exact: true })).toBeVisible();
   await workspace.getByRole("button", { name: /Evidence references for source 701/ }).click();
   await expect(workspace.getByText("Occurrence evidence hash", { exact: true })).toBeVisible();
+  await expect(workspace.getByText("Original captured", { exact: true })).toBeVisible();
+  await expect(workspace.getByText("Recorded approval versions: 1", { exact: true })).toBeVisible();
+  await expect(workspace.getByText("Canceled unconfirmed decisions: 1", { exact: true })).toBeVisible();
   state.stale = true;
   await workspace.getByRole("button", { name: "Refresh source evidence" }).click();
   await expect(workspace.getByText("The saved patient or contact mapping requires review.")).toBeVisible();
   await expect(workspace.getByText("Source version changed", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await workspace.getByRole("region", { name: "Migration source evidence" }).scrollIntoViewIfNeeded();
+  await workspace.getByRole("region", { name: "Owned capture evidence" }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: `/tmp/lrv-migration-workspace-${width}.png` });
   expect(state.calls.filter(name => name.includes("migration")).every(name => name.startsWith("list_") || name.startsWith("read_"))).toBe(true);
 });
@@ -115,4 +124,15 @@ test("empty saved history is explicit and non-administrators cannot open the wor
   await expect(page.getByText("No saved migrations on this page.", { exact: false })).toBeVisible();
   await page.unrouteAll({ behavior: "wait" }); await fixture(page, false);
   await expect(page.getByText("Migration reconciliation", { exact: true })).toHaveCount(0);
+});
+
+test("failed capture lookup never masquerades as missing originals", async ({ page }) => {
+  const state = await fixture(page); state.failCaptures = true;
+  const workspace = await openEvidence(page);
+  await workspace.getByRole("button", { name: /Evidence references for source 701/ }).first().click();
+  await expect(workspace.getByText("Capture evidence could not be loaded.")).toBeVisible();
+  await expect(workspace.getByText("No owned capture requests match this source version.")).toHaveCount(0);
+  state.failCaptures = false;
+  await workspace.getByRole("button", { name: "Refresh capture evidence" }).click();
+  await expect(workspace.getByText("Original captured", { exact: true })).toBeVisible();
 });
