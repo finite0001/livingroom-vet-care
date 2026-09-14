@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {parseAttachmentDecision,parseAttachmentDecisionOutcome} from '../../src/hub/features/imports/attachment-decision-state.ts';
+import type {AttachmentFileIntent} from '../../src/hub/features/imports/attachment-file-state.ts';
+const id=(n:number)=>`de700000-0000-4000-8000-${String(n).padStart(12,'0')}`,hash='a'.repeat(64);
+const file={id:id(1),actor:id(2),pet:id(3)} as AttachmentFileIntent;
+const op={id:id(4),actor:file.actor,pet:file.pet,request:file.id,captureHash:hash,previous:null,title:'Reviewed original',reason:'Patient confirmed'};
+test('decision identity binds operator, patient, request and capture',()=>{assert.deepEqual(parseAttachmentDecision(op,file,hash),op);for(const key of ['actor','pet','request'] as const)assert.throws(()=>parseAttachmentDecision({...op,[key]:id(99)},file,hash));assert.throws(()=>parseAttachmentDecision(op,file,'b'.repeat(64)));});
+test('decision requires complete bounded review fields',()=>{assert.throws(()=>parseAttachmentDecision({...op,title:'  '},file,hash));assert.throws(()=>parseAttachmentDecision({...op,reason:'x'.repeat(2001)},file,hash));});
+test('cancellation outcome cannot impersonate another decision or coexist with approval',()=>{const c={id:op.id,actor_id:op.actor,pet_id:op.pet,request_id:op.request,capture_hash:op.captureHash,created_at:'2026-09-13T12:00:00Z'};assert.equal(parseAttachmentDecisionOutcome({status:'canceled',record:null,cancellation:c},op,file)?.status,'canceled');assert.throws(()=>parseAttachmentDecisionOutcome({status:'canceled',record:null,cancellation:{...c,id:id(99)}},op,file));assert.throws(()=>parseAttachmentDecisionOutcome({status:'canceled',record:{id:op.id},cancellation:c},op,file));assert.equal(parseAttachmentDecisionOutcome(null,op,file),null);});

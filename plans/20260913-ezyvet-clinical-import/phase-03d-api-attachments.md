@@ -312,3 +312,12 @@ Migration7500 adds immutable approval-cancellation receipts and a unified approv
 This closes a prerequisite for safe form recovery: removing a browser draft alone could leave an in-flight approval able to commit later. A confirmed cancellation is a server outcome and is distinct from discarding an unsubmitted local edit. No captured file or existing clinical approval is deleted by cancellation.
 
 Validation and observed both-order races are recorded in `docs/evidence/attachment-approval-cancellation-local-20260913.json`. The staff decision form, broader chart discovery, release integration, current96-migration populated upgrade/restore and real operator/clinical/provider acceptance remain required. No hosted migration or approval/cancellation was performed.
+
+
+### Staff attachment decision form
+
+Captured file cards now expose the explicit staff approval/correction form. Staff download the verified original, enter a bounded title/reason and attest to the patient/source decision. A fresh latest-version lookup precedes a new submission. The submitted operation freezes actor, patient, captured request/hash, predecessor, title and reason in the browser before RPC. Fields remain immutable until the outcome is recovered or explicitly canceled; retries reuse the original operation. The outcome parser verifies full capture source pins and the exact decision fields rather than trusting a successful HTTP response.
+
+Lost replies recover the authoritative approved/canceled outcome. Reload retains the same submitted decision. Paginated owned decision-history recovery repairs missing references without another approval, while a dirty draft or unresolved submission cannot be silently replaced. Unsubmitted edits have an explicit discard action; submitted cancellation requires confirmation and cannot delete an existing approval. Drafts, busy operations and uncertain submissions participate in existing patient/file/navigation guards.
+
+Evidence: `docs/evidence/attachment-decision-form-local-20260913.json`. Broader patient-chart discovery, release integration, current96-migration populated upgrade/restore and real staff/clinical/provider acceptance remain required. This UI records explicit staff source review; it does not infer DVM interpretation or authorize a release. No hosted clinical decision or deployment occurred.

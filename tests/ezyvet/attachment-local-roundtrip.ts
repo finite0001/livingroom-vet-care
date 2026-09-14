@@ -1,3 +1,4 @@
+import { parseAttachmentDecisionOutcome } from "../../src/hub/features/imports/attachment-decision-state.ts";
 import { parseAttachmentReviewHistory } from "../../src/hub/features/imports/attachment-review-state.ts";
 import { verifyAttachmentOriginal } from "../../src/hub/features/imports/attachment-original.ts";
 import { parseAttachmentCleanupHistory, parseAttachmentCleanupRecovery } from "../../src/hub/features/imports/attachment-cleanup-state.ts";
@@ -416,6 +417,10 @@ try {
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: canceledApproval }, true), (error: { code: string }) => error.code === "23514"); assertions++;
       await assert.rejects(rpc("cancel_ezyvet_attachment_approval", { ...cancelArgs, p_pet_id: randomUUID() }, true), (error: { code: string }) => error.code === "42501"); assertions++;
       const approved = await rpc("approve_ezyvet_attachment_record", approvalArgs, true); lastAttachmentApproval = approvalId; lastCapturedAttachment = downloadId;
+      const decisionFile = { id: downloadId, actor, pet, requestHash, runId, page: 1, snapshotId: selected.id, payloadHash: selected.hash, headVersion: selected.version, externalId: String(selected.payload.id), parent: approved.source_context.parent, name: "Synthetic original" };
+      const decision = { id: approvalId, actor, pet, request: downloadId, captureHash: receipt.capture_hash, previous: null, title: approvalArgs.p_title, reason: approvalArgs.p_review_reason };
+      check(parseAttachmentDecisionOutcome({ status: "approved", record: approved, cancellation: null }, decision, decisionFile)?.status === "approved", "Form validator accepts actual saved approval and exact captured source pins");
+      check(parseAttachmentDecisionOutcome(canceled, { ...decision, id: canceledApproval }, decisionFile)?.status === "canceled", "Form validator accepts actual durable cancellation outcome");
       const retained = await rpc("cancel_ezyvet_attachment_approval", { ...cancelArgs, p_id: approvalId }, true);
       check(retained.status === "approved" && retained.cancellation === null, "Cancellation after approval preserves the approved outcome");
       assert.deepEqual(retained.record, approved, "Cancellation preserves every saved approval field regardless of JSON key order"); assertions++;

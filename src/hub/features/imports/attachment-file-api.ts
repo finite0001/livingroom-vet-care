@@ -1,3 +1,4 @@
+import { parseAttachmentDecisionOutcome, type AttachmentDecision } from "./attachment-decision-state";
 import { parseAttachmentReviewHistory, type AttachmentReviewCursor } from "./attachment-review-state";
 import { verifyAttachmentOriginal, attachmentOriginalFilename } from "./attachment-original";
 import { parseAttachmentCleanupRecovery, type AttachmentCleanupOperation } from "./attachment-cleanup-state";
@@ -76,4 +77,14 @@ export async function loadAttachmentOriginal(intent: AttachmentFileIntent) {
 
 export async function listAttachmentReviewHistory(intent: AttachmentFileIntent, cursor: AttachmentReviewCursor | null) {
   return parseAttachmentReviewHistory(await rpc("list_ezyvet_attachment_record_versions", { p_request_id: intent.id, p_pet_id: intent.pet, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), intent);
+}
+
+export async function recoverAttachmentDecision(op: AttachmentDecision, file: AttachmentFileIntent) {
+  return parseAttachmentDecisionOutcome(await rpc("recover_ezyvet_attachment_approval", { p_id: op.id, p_request_id: op.request, p_pet_id: op.pet, p_capture_hash: op.captureHash }), op, file);
+}
+export async function submitAttachmentDecision(op: AttachmentDecision) {
+  await rpc("approve_ezyvet_attachment_record", { p_id: op.id, p_request_id: op.request, p_pet_id: op.pet, p_capture_hash: op.captureHash, p_previous_record_id: op.previous, p_title: op.title, p_review_reason: op.reason, p_attest: true });
+}
+export async function cancelAttachmentDecision(op: AttachmentDecision) {
+  await rpc("cancel_ezyvet_attachment_approval", { p_id: op.id, p_request_id: op.request, p_pet_id: op.pet, p_capture_hash: op.captureHash, p_confirmed: true });
 }
