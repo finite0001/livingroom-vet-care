@@ -71,3 +71,27 @@ test("combined size and count bounds reject before any Storage read",async()=>{
  f.bundle.release.channel="SMS";const grant={family:"record_release",source_bundle:f.bundle,source_id:f.bundle.release.id,client_id:f.bundle.release.client_id,recipient:f.bundle.release.recipient,source_hash:f.bundle.release.source_hash} as DocumentLinkGrant;
  await assert.rejects(()=>buildDocumentLinkArtifacts(grant,{name:"Practice",address:"Boulder",domain:"example.test"},async()=>{reads++;return bytes;},async()=>{reads++;return bytes;}));assert.equal(reads,0);}
 });
+
+
+test("schema9 requires API-original evidence in canonical UUID order regardless of selection order", () => {
+  const f = fixture();
+  const first = f.original;
+  first.record.id = "11111111-1111-4111-8111-111111111111";
+  first.acknowledgment.record_id = first.record.id;
+  const second = structuredClone(first);
+  second.record.id = "22222222-2222-4222-8222-222222222222";
+  second.record.capture_id = randomUUID();
+  second.record.source_attachment_id = "702";
+  second.record.metadata.id = "702";
+  second.acknowledgment.id = randomUUID();
+  second.acknowledgment.record_id = second.record.id;
+  f.s.selection!.api_original_ids = [second.record.id, first.record.id];
+  f.s.api_originals = [first, second];
+  assert.doesNotThrow(() => validateReleaseApiOriginals(f.s));
+  const selectionBefore = [...f.s.selection!.api_original_ids];
+  assert.match(renderRecordRelease(f.artifact), /Reviewed ezyVet API originals/);
+  assert.deepEqual(f.s.selection!.api_original_ids, selectionBefore);
+  f.s.api_originals.reverse();
+  assert.throws(() => validateReleaseApiOriginals(f.s), /provenance is incomplete or differs/);
+  assert.throws(() => renderRecordRelease(f.artifact), /provenance is incomplete or differs/);
+});

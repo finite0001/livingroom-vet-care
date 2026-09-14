@@ -30,15 +30,16 @@ export function validateReleaseApiOriginals(s: ReleaseSnapshot): void {
   }
   const ids = s.selection?.api_original_ids;
   if (!Array.isArray(ids) || ids.length > 20 || ids.some(id => !uuid(id)) || new Set(ids).size !== ids.length || !Array.isArray(s.api_originals) || s.api_originals.length !== ids.length) fail();
+  const orderedIds = [...ids!].sort();
   const seen = new Set<string>();
-  for (const entry of s.api_originals!) {
+  for (const [index, entry] of s.api_originals!.entries()) {
     exact(entry, ["record", "acknowledgment"]);
     const r = entry.record, a = entry.acknowledgment;
     exact(r, ["id", "action_id", "approved_by", "approved_at", "pet_id", "client_id", "patient_version", "animal_link_id", "capture_id", "capture_request_id", "capture_hash", "request_hash", "record_hash", "source_origin", "source_site_uid", "source_animal_id", "source_attachment_id", "source_file_id", "snapshot_id", "observed_head_version", "stable_metadata_sha256", "raw_record_sha256", "metadata", "content_sha256", "mime_type", "file_size", "captured_at", "entry_method", "source_current_at_review", "previous_record_id", "version", "kind", "review_reason"]);
     exact(a, ["id", "action_id", "record_id", "pet_id", "actor_id", "record_hash", "capture_hash", "created_at"]);
     if (["id", "action_id", "approved_by", "pet_id", "client_id", "animal_link_id", "capture_id", "capture_request_id", "snapshot_id"].some(k => !uuid(r[k])) ||
       ["capture_hash", "request_hash", "record_hash", "stable_metadata_sha256", "raw_record_sha256", "content_sha256"].some(k => !hash(r[k])) ||
-      !ids!.includes(r.id as string) || seen.has(r.id as string) || r.pet_id !== s.patient.id || r.client_id !== s.recipient.client_id ||
+      r.id !== orderedIds[index] || seen.has(r.id as string) || r.pet_id !== s.patient.id || r.client_id !== s.recipient.client_id ||
       !positive(r.patient_version) || !positive(r.observed_head_version) || !positive(r.version) || !positive(r.file_size) || Number(r.file_size) > 20971520 ||
       !date(r.approved_at) || !date(r.captured_at) || r.entry_method !== "staff_reviewed_ezyvet_api_attachment_v1" || typeof r.source_current_at_review !== "boolean" ||
       !["https://api.ezyvet.com", "https://api.trial.ezyvet.com"].includes(String(r.source_origin)) || typeof r.source_site_uid !== "string" || !r.source_site_uid || r.source_site_uid.length > 4096 ||
