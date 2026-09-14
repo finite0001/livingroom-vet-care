@@ -1,3 +1,4 @@
+import { createMigrationVaccinationApi } from "../../src/hub/features/imports/migration-vaccination-api.ts";
 import { createMigrationHistoryApi } from "../../src/hub/features/imports/migration-history-api.ts";
 import { createMigrationResumeApi } from "../../src/hub/features/imports/migration-resume-api.ts";
 import { createClient } from "@supabase/supabase-js";
@@ -61,7 +62,7 @@ await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: animalRun, p_acto
 const snapshot = sql(`select id from ezyvet_import_snapshots where source_site_uid=${quote(site)} and resource='animal';`);
 sql(`insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
  values(${quote(mapping)},${quote(mapping)},'synthetic-review',${quote(origin)},${quote(site)},'animal','77',${quote(snapshot)},1,${quote(client)},${quote(pet)},1,'link','SYNTHETIC REVIEWED MAPPING',${quote(owner.id)});`);
-const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox),(select count(*) from storage.objects));");
+const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox),(select count(*) from storage.objects),(select count(*) from vaccine_certificates),(select count(*) from patient_vaccine_due_plans),(select count(*) from care_reminder_jobs));");
 const beforeEffects = effects();
 const selector = createMigrationSelectionApi(createClient(local.API_URL, local.ANON_KEY, { global: { headers: owner.auth }, auth: { persistSession: false, autoRefreshToken: false } }), owner.id);
 let mappingPage = 0, mapped = await selector.mappings();
@@ -193,6 +194,39 @@ for (const auth of [headers(local.ANON_KEY), service]) {
   await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_attempt_events", { p_binding_id: bound.id }, auth)); checks++;
   await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_items", { p_binding_id: bound.id }, auth)); checks++;
 }
+// Vaccination review is separate from administration and uses exact Consult context.
+const consultRun = randomUUID(), vaccineRun = randomUUID();
+const consultClaim = await request("/rest/v1/rpc/claim_ezyvet_clinical_import", { p_id: consultRun, p_actor: owner.id, p_site_uid: site, p_resource: "consult", p_source_origin: origin, p_animal_link_id: mapping });
+await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: consultRun, p_actor: owner.id, p_lease_id: consultClaim.lease_id, p_page: 1, p_complete: true, p_items: [{ external_id: "801", payload: { id: 801, animal_id: 77 } }] });
+const consultCandidate = (await staffRpc("list_ezyvet_clinical_candidates", { p_animal_link_id: mapping, p_resource: "consult" })).candidates[0];
+const vaccineClaim = await request("/rest/v1/rpc/claim_ezyvet_vaccination_import", { p_id: vaccineRun, p_actor: owner.id, p_site_uid: site, p_resource: "vaccination", p_source_origin: origin, p_animal_link_id: mapping,
+  p_consult_snapshot_id: consultCandidate.id, p_consult_payload_hash: consultCandidate.payload_hash, p_consult_observed_head_version: consultCandidate.observed_head_version });
+await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: vaccineRun, p_actor: owner.id, p_lease_id: vaccineClaim.lease_id, p_page: 1, p_complete: true, p_items: [{ external_id: "501", payload: { id: 501, consult_id: 801, product_id: null, date_of_administration: null, date_of_next_administration: "unknown" } }] });
+const vaccineManifest = await api.prepare({ id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "vaccination", parent_type: "consult", parent_snapshot_id: consultCandidate.id, parent_head_version: consultCandidate.observed_head_version, disposition: "required", reason: "Synthetic outside vaccination scope" }] });
+const vaccineBinding = await api.bind({ id: randomUUID(), scope_id: vaccineManifest.scopes[0].id, child_run_id: vaccineRun, reason: "Synthetic consultation-bound vaccination", replaces_id: null });
+const vaccineItems = await api.items(vaccineManifest, vaccineBinding);
+const vaccineApi = createMigrationVaccinationApi(ownerTransport, owner.id);
+check((await vaccineApi.list(vaccineBinding, vaccineItems.items[0])).approvals.length === 0, "Staged vaccination is not approved outside history over HTTP");
+const vc = (await staffRpc("list_ezyvet_vaccination_candidates", { p_animal_link_id: mapping })).candidates[0];
+const vaccineApproval = randomUUID();
+const vaccinePayload = { animal_link_id: mapping, patient_version: 1, snapshot_id: vc.id, payload_hash: vc.payload_hash, observed_head_version: vc.observed_head_version,
+  consult_snapshot_id: vc.consult_snapshot_id, consult_payload_hash: vc.consult_payload_hash, consult_observed_head_version: vc.consult_observed_head_version,
+  product_id: null, product_version: null, administered_on: null, administration_date_status: "unknown", source_next_due_on: null, next_date_status: "uninterpreted", status: "unknown", outside_author: null,
+  reason: "Synthetic explicit outside vaccination interpretation", replaces_id: null, expected_predecessor_hash: null };
+await assert.rejects(() => staffRpc("prepare_ezyvet_vaccination_review", { p_id: vaccineApproval, p_pet_id: pet, p_payload: vaccinePayload })); checks++;
+sql(`insert into user_roles(user_id,role) values(${quote(owner.id)},'DVM');`);
+const vaccinePrepared = await staffRpc("prepare_ezyvet_vaccination_review", { p_id: vaccineApproval, p_pet_id: pet, p_payload: vaccinePayload });
+check((await vaccineApi.list(vaccineBinding, vaccineItems.items[0])).approvals.length === 0, "Prepared veterinarian review is not an approval receipt");
+await staffRpc("approve_ezyvet_vaccination_review", { p_id: vaccineApproval, p_pet_id: pet, p_expected_hash: vaccinePrepared.request.request_hash, p_confirmed: true });
+const vaccineEvidence = await vaccineApi.list(vaccineBinding, vaccineItems.items[0]);
+check(vaccineEvidence.approvals[0].id === vaccineApproval && vaccineEvidence.approvals[0].relationship === "exact_source_version" && vaccineEvidence.approvals[0].source_current, "Approved vaccination matches exact saved vaccination and consultation over HTTP");
+check(vaccineEvidence.approvals[0].outside_status === "unknown" && !vaccineEvidence.local_administration_verified && !vaccineEvidence.due_plan_adoption_verified, "Unknown interpretation never establishes native administration or active due plan");
+check((await vaccineApi.list(vaccineBinding, vaccineItems.items[0], 1)).approvals.length === 0, "Vaccination version cursor terminates over HTTP");
+await assert.rejects(() => vaccineApi.list(vaccineBinding, { ...vaccineItems.items[0], evidence_hash: "f".repeat(64) })); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_vaccination_evidence", { p_binding_id: vaccineBinding.id, p_page: 1, p_snapshot_id: vc.id, p_evidence_hash: vaccineItems.items[0].evidence_hash }, other.auth)); checks++;
+sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${quote(site)} and resource='consult' and external_id='801';`);
+check(!(await vaccineApi.list(vaccineBinding, vaccineItems.items[0])).approvals[0].source_current, "Actual consultation source reversion invalidates vaccination context");
+
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
@@ -215,5 +249,6 @@ await assert.rejects(() => api.progress(saved, bound)); checks++;
 await assert.rejects(() => api.attempts(bound)); checks++;
 await assert.rejects(() => api.items(saved, bound)); checks++;
 await assert.rejects(() => captureApi.list(bound, captureItem)); checks++;
-check(effects() === beforeEffects, "Migration operations cause no clinical, invoice, stock, Storage or delivery mutations");
+await assert.rejects(() => vaccineApi.list(vaccineBinding, vaccineItems.items[0])); checks++;
+check(effects() === beforeEffects, "Migration operations cause no native treatment, vaccine certificate, due-plan, reminder, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);
