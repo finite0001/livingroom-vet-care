@@ -418,12 +418,13 @@ try:
         expected_after_reads=json.loads(json.dumps(expected_vaccinations))
         fixture_state=json.loads((run/'synthetic-fixture.json').read_text())
         verified_link_reads=0
-        if fixture_state.get('releasePackages'):
-            grant_id=fixture_state['releasePackages']['SMS']['prepare']['p_request_id']
-            budgets=[row for row in expected_after_reads['document_link_access_budget'] if row['grant_id']==grant_id]
-            assert len(budgets)==1
-            verified_link_reads=2
-            budgets[0]['used']+=verified_link_reads
+        for key in ['releasePackages','mixedReleasePackages']:
+            if fixture_state.get(key):
+                grant_id=fixture_state[key]['SMS']['prepare']['p_request_id']
+                budgets=[row for row in expected_after_reads['document_link_access_budget'] if row['grant_id']==grant_id]
+                assert len(budgets)==1
+                verified_link_reads+=2
+                budgets[0]['used']+=2
         assert vaccination_snapshot(destination) == expected_after_reads, 'Restored rows differ beyond exactly verified link access accounting'
         vaccination_evidence = {'receipt_rows': len(expected_vaccinations['ezyvet_vaccination_pages']),
                                'scoped_context_rows': len(expected_vaccinations['ezyvet_vaccination_runs']),

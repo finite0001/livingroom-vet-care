@@ -8,7 +8,7 @@ const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
 const checked = result => { if (result.error) throw new Error(result.error.message); return result.data; };
 
-export async function seedReleasePackages({state, api, admin, sql}) {
+export async function seedReleasePackages({state, api, admin, sql, includePrescription=false}) {
   const staff = async (name,args) => checked(await api.rpc(name,args));
   const service = async (name,args) => checked(await admin.rpc(name,args));
   const download = async (bucket,path,size) => {
@@ -16,18 +16,37 @@ export async function seedReleasePackages({state, api, admin, sql}) {
     assert.equal(bytes.length,size); return bytes;
   };
   const selected = state.apiDecisions.find(item => item.outcome.record?.version === 2).outcome.record;
-  const conversation = randomUUID();
-  sql(`insert into conversations(id,client_id) values('${conversation}','${state.client}');
+  const conversation = state.releasePackages?.conversation ?? randomUUID();
+  if (!state.releasePackages) sql(`insert into conversations(id,client_id) values('${conversation}','${state.client}');
     update record_release_policy set accepted_schema_version=9,acceptance_reference='Synthetic isolated restore schema9 only',enabled=true;`);
   const saved = {selection:{api_attachment_ids:[selected.id]},conversation};
+  if (includePrescription) {
+    const prescription = JSON.parse(sql(`select to_jsonb(p) from ezyvet_imported_prescriptions p where pet_id='${state.pet}' and version=2`));
+    assert.equal(prescription.version,2);
+    saved.prescription = {id:prescription.id,version_hash:prescription.version_hash,source_site_uid:prescription.source_site_uid,prescription_external_id:prescription.prescription_external_id};
+    saved.selection.imported_prescription_ids = [prescription.id];
+  }
   for (const channel of ['EMAIL','SMS']) {
     const recipient = channel === 'EMAIL' ? 'restore@example.test' : '+13035550481';
     const previewArgs = {p_pet_id:state.pet,p_client_id:state.client,p_channel:channel,p_recipient:recipient,p_selection:saved.selection};
     const preview = await staff('preview_record_release_v9',previewArgs);
     assert.equal(preview.snapshot.schema_version,9);
+    assert.equal(preview.snapshot.api_attachments.length,1);
+    if (includePrescription) {
+      assert.equal(preview.snapshot.imported_prescriptions.length,1);
+      const prescription=preview.snapshot.imported_prescriptions[0];
+      assert.equal(prescription.id,saved.prescription.id);
+      assert.equal(prescription.version_hash,saved.prescription.version_hash);
+      assert.equal(prescription.context.reviewed.completeness,'partial');
+      assert.equal(prescription.context.reviewed.partial_reason,'Source item 5 was not observed');
+    }
     const args = {...previewArgs,p_id:randomUUID(),p_reviewed_snapshot:preview.snapshot,p_reviewed_hash:preview.source_hash,p_attest_review:true};
     const release = await staff('confirm_record_release',args);
     saved[channel] = {args,release};
+    if (includePrescription) {
+      const sources=JSON.parse(sql(`select jsonb_agg(source_kind order by source_kind) from record_release_sources where release_id='${release.id}'`));
+      assert.deepEqual(sources,['api_attachment','imported_prescription']);
+    }
   }
   const email = saved.EMAIL;
   email.prepare = {p_request_id:randomUUID(),p_release_id:email.release.id,p_conversation_id:conversation,p_subject:'Synthetic restore records',p_body:'Synthetic package; never sent',p_release_hash:email.release.source_hash};
@@ -37,7 +56,7 @@ export async function seedReleasePackages({state, api, admin, sql}) {
   email.recovered = await staff('recover_release_email',{p_release_id:email.release.id,p_request_id:email.prepare.p_request_id});
   assert.equal(email.recovered.payload_hash,email.payload.payload_hash);
   const sms = saved.SMS;
-  await staff('record_sms_consent',{p_actor_id:state.user,p_client_id:state.client,p_phone:'+13035550481',p_opted_in:true,p_method:'WRITTEN',p_details:'Synthetic local restore consent only',p_expected_updated_at:null});
+  await staff('record_sms_consent',{p_actor_id:state.user,p_client_id:state.client,p_phone:'+13035550481',p_opted_in:true,p_method:'WRITTEN',p_details:'Synthetic local restore consent only',p_expected_updated_at:sql(`select coalesce(max(updated_at)::text,'') from sms_consent where client_id='${state.client}' and phone_number='+13035550481'`) || null});
   const preview = await staff('preview_document_link',{p_family:'record_release',p_source_id:sms.release.id,p_client_id:state.client});
   sms.prepare = {p_request_id:randomUUID(),p_family:'record_release',p_source_id:sms.release.id,p_client_id:state.client,p_conversation_id:conversation,p_recipient:'+13035550481',p_source_hash:preview.source_hash,p_expires_at:new Date(Date.now()+86400000).toISOString(),p_message_template:'Synthetic restore: {{document_link}}',p_origin:'https://thelivingroom.vet',p_key_version:'synthetic'};
   await staff('prepare_document_link',sms.prepare);
@@ -52,8 +71,8 @@ export async function seedReleasePackages({state, api, admin, sql}) {
   state.releasePackages = saved;
 }
 
-export async function verifyReleasePackages({state,api,admin,sql}) {
-  const saved = state.releasePackages;
+export async function verifyReleasePackages({state,api,admin,sql,packages=state.releasePackages}) {
+  const saved = packages;
   assert.ok(saved);
   const staff = async (name,args) => checked(await api.rpc(name,args));
   const service = async (name,args) => checked(await admin.rpc(name,args));
@@ -73,6 +92,14 @@ export async function verifyReleasePackages({state,api,admin,sql}) {
   assert.equal(digest(rows.link.payload_text),sms.payload.artifact_hash);
   for (const [payload,key] of [[JSON.parse(rows.email.payload_text),'attachments'],[JSON.parse(rows.link.payload_text),'artifacts']]) {
     assert.equal(payload[key].length,2);
+    const report=Buffer.from(payload[key][0].content,'base64').toString('utf8');
+    assert.match(report,/Selected ezyVet API originals/);
+    if (saved.prescription) {
+      assert.match(report,/Clinician-reviewed outside prescription history/);
+      assert.match(report,/Partial history disclosure/);
+      assert.match(report,/Source item 5 was not observed/);
+      assert.match(report,/does not authorize local prescribing/);
+    }
     const original = state.apiOriginals.find(item => item.status==='ready');
     assert.equal(digest(Buffer.from(payload[key][1].content,'base64')),original.contentSha256);
   }
@@ -85,16 +112,18 @@ export async function verifyReleasePackages({state,api,admin,sql}) {
   // Each mutation is isolated and rolled back: the second case must not inherit
   // disabled policy or an already-invalid release from the first case.
   const review = state.apiDecisions.find(item => item.outcome.record?.version===2).outcome.record;
-  for (const [kind,mutation] of [
+  const mutations = [
     ['policy','update record_release_policy set enabled=false;'],
     ['source',`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(review.source_site_uid)} and resource='animal' and external_id=${quote(review.source_context.parent.animal_external_id)};`],
-  ]) {
+  ];
+  if (saved.prescription) mutations.push(['prescription',`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(saved.prescription.source_site_uid)} and resource='prescription' and external_id=${quote(saved.prescription.prescription_external_id)};`]);
+  for (const [kind,mutation] of mutations) {
     sql(`begin;
       select set_config('request.jwt.claims','{"sub":"${state.user}","role":"authenticated"}',true);
       ${mutation}
       do $probe$ declare result jsonb; old_used integer; begin
         result:=read_record_release('${email.release.id}');
-        ${kind === 'source' ? "if (result->>'eligible')::boolean is distinct from false or jsonb_array_length(result->'events')=0 then raise exception 'Source change must invalidate release';end if;" : ''}
+        ${kind !== 'policy' ? "if (result->>'eligible')::boolean is distinct from false or jsonb_array_length(result->'events')=0 then raise exception 'Source change must invalidate release';end if;" : ''}
         begin
           perform authorize_record_release('${email.release.id}','${state.client}','EMAIL','restore@example.test');
           raise exception 'Changed policy/source must deny release authorization';

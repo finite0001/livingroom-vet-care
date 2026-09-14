@@ -197,6 +197,10 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   checked(await api.auth.signInWithPassword({email:state.email,password:state.password}));
   const previous = snapshot();
   await seedReleasePackages({state,api,admin,sql});
+  const apiOnlyPackages=state.releasePackages;
+  await seedReleasePackages({state,api,admin,sql,includePrescription:true});
+  state.mixedReleasePackages=state.releasePackages;
+  state.releasePackages=apiOnlyPackages;
   const captured = snapshot();
   const oldAudits = new Set(previous.audit_logs.map(row => row.id));
   const addedAudits = captured.audit_logs.filter(row => !oldAudits.has(row.id));
@@ -481,12 +485,15 @@ rollback;`);
   );
   if (state.releasePackages) {
     await verifyReleasePackages({state,api,admin,sql});
+    if (state.mixedReleasePackages) await verifyReleasePackages({state,api,admin,sql,packages:state.mixedReleasePackages});
     assert.deepEqual(snapshot(),state.snapshot,'Artifact verification and rolled-back source/policy probes preserve original records');
   }
   writeFileSync(
     join(run, "verification.json"),
     JSON.stringify(
       {
+        mixed_prescription_api_release_packages_restored: Boolean(state.mixedReleasePackages),
+        partial_prescription_disclosure_and_source_invalidation_verified: Boolean(state.mixedReleasePackages),
         saved_schema9_email_and_link_restored: Boolean(state.releasePackages),
         restored_saved_artifact_recovery_and_current_access: Boolean(state.releasePackages),
         restored_policy_and_source_invalidation_denied: Boolean(state.releasePackages),
