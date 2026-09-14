@@ -10,6 +10,8 @@ Each package freezes the exact admitted record and its earliest matching DVM ack
 
 The report discloses source provenance and review evidence. Original files are delivered separately with their unchanged bytes. They do not become `patient_documents`, and no clinical interpretations are generated from their contents.
 
+Active DVMs can download each selected API original directly from the package preview without clearing selection. The existing chart-original endpoint authorizes the request, and the browser verifies size, file signature and SHA-256 against the preview's immutable record. A download clears prior package attestation and blocks confirmation while running; staff must open/review the file and attest separately afterward. ADMIN-only and other staff retain provenance visibility and DVM handoff guidance, with no new file-access permission. Late responses after session/role/preview changes or page exit do not trigger downloads.
+
 ## Verified delivery
 
 Email attachments and document-link files share the same original-byte verification. The server derives the private Storage locator from the prepared delivery and frozen record; staff snapshots and public metadata do not contain private paths. A bounded native download checks HTTP status, redirects, type/signature, size and SHA-256, then rechecks the authorized delivery context. SQL independently validates the decoded bytes and exact file identity before saving the payload.

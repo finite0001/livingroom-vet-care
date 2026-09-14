@@ -1,8 +1,8 @@
 # Dr. Susan Edler — clinical acceptance review pack
 
-**DRAFT v5 · NOT APPROVED · updated 2026-09-14**
+**DRAFT v6 · NOT APPROVED · updated 2026-09-14**
 
-New: [ezyVet original-file chart and schema 9 package review](api-originals-and-release.md), with a [blank session worksheet](api-originals-session-worksheet.md), prepared against PR130 revision `69f509aa`. This adds review cases, not approval or a completed staff rehearsal. The older generated HTML examples retain their original revision and schema coverage.
+New: [ezyVet original-file chart and schema 9 package review](api-originals-and-release.md), with a [blank session worksheet](api-originals-session-worksheet.md), originally prepared against PR130 revision `69f509aa` and now extended for DVM downloads within the package preview. Record the actual deployed revision during review. This adds review cases, not approval or a completed staff rehearsal. The older generated HTML examples retain their original revision and schema coverage.
 
 Review baseline: use the exact code revision recorded in each generated example banner. The original v3 baseline `63414e8` covered schema-4 weight provenance; the expanded pack requires new review for selected source originals and imported API history. This is a review artifact, not an approval record or a statement that the practice is ready to launch. No reviewer approval has been recorded. Every decision below remains **pending**.
 

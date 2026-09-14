@@ -2,7 +2,7 @@ import { validateReleaseApiOriginals } from "../../../../supabase/functions/_sha
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
 import { mergeReleaseSelection, releaseSelectionLimit } from "./selection";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { denverLocal } from "../scheduling/time";
 import { RecordReleaseArtifact } from "./RecordReleaseArtifact";
+import { ApiOriginalPreviewDownloads } from "./ApiOriginalPreviewDownloads";
 import {
   releases,
   readRelease,
@@ -44,7 +45,7 @@ export function PatientRecordReleases({
   petId,
   onDirtyChange,
 }: PatientRecordReleasesProps) {
-  const { user, profile } = useAuth();
+  const { user, profile, hasRole } = useAuth();
   const cache = useQueryClient();
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
@@ -59,7 +60,13 @@ export function PatientRecordReleases({
   const [preview, setPreview] = useState<ReleasePreview | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [opened, setOpened] = useState<ReleaseBundle | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const [apiDownloadBusy, setApiDownloadBusy] = useState(false);
+  const busy = operationBusy || apiDownloadBusy;
+  const onApiDownloadBusy = useCallback((value: boolean) => {
+    setApiDownloadBusy(value);
+    if (value) setReviewed(false);
+  }, []);
   const [error, setError] = useState("");
   const [pending, setPending] = useState<ReleaseConfirmArgs | null>(null);
   const [withdrawReason, setWithdrawReason] = useState("");
@@ -856,17 +863,25 @@ export function PatientRecordReleases({
                 <>
                   <RecordReleaseArtifact artifact={{ preview }} />
                   {!!preview.snapshot.api_originals?.length && (
-                    <p className="rounded-md bg-muted p-3 text-sm">
-                      This preview shows API-original provenance, not the file
-                      contents. A DVM must review the exact files in this
-                      patient’s Imported API originals panel before starting
-                      package selection. If that review is incomplete, use Clear
-                      package selection, have a DVM download and review the chart
-                      originals, then select and review the package again before
-                      attesting below. Chart-original actions are unavailable
-                      while package selection is unfinished. Email and
-                      secure-link delivery include the original files separately.
-                    </p>
+                    user && profile?.is_active && hasRole("DVM") ? (
+                      <ApiOriginalPreviewDownloads
+                        key={`${user.id}:${petId}:${preview.source_hash}`}
+                        originals={preview.snapshot.api_originals!}
+                        actor={user.id}
+                        petId={petId}
+                        disabled={operationBusy || !!pending}
+                        onBusyChange={onApiDownloadBusy}
+                      />
+                    ) : (
+                      <p className="rounded-md bg-muted p-3 text-sm">
+                        This preview shows API-original provenance, not the file
+                        contents. An authorized DVM can download the selected
+                        originals from the package preview. Ask a DVM to complete
+                        the package review if you cannot inspect the files; do
+                        not attest to a review you have not performed. Email and
+                        secure-link delivery include the original files separately.
+                      </p>
+                    )
                   )}
                   {preview.snapshot.attachments.map((a) => (
                     <Button
