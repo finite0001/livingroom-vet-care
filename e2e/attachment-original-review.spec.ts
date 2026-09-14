@@ -640,3 +640,135 @@ test("late clinical original bytes after signout cannot be downloaded", async ({
   );
   expect(downloads).toBe(0);
 });
+async function refreshRole(page: Page) {
+  await page.evaluate(async (moduleUrl) => {
+    const { supabase } = await import(moduleUrl);
+    const { error } = await supabase.auth.refreshSession();
+    if (error) throw error;
+  }, "/src/integrations/supabase/client.ts");
+}
+test("ADMIN role loss clears hidden admission draft and unlocks DVM history", async ({
+  page,
+}) => {
+  const roles = ["ADMIN"];
+  const { state, r } = await fixture(page, roles);
+  state.records = [
+    {
+      record: r,
+      latest_record_id: r.id,
+      is_latest: true,
+      withdrawal: null,
+      acknowledgments: [],
+    },
+  ];
+  await open(page);
+  await panel(page)
+    .getByRole("button", { name: "Review capture 44444444" })
+    .click();
+  await panel(page).getByLabel("Provenance review reason").fill("Unsent draft");
+  roles.splice(0, 1, "DVM");
+  await refreshRole(page);
+  await expect(
+    panel(page).getByRole("region", { name: "Owned API original admission" }),
+  ).toHaveCount(0);
+  await expect(
+    panel(page).getByRole("button", {
+      name: "Download chart original version 1",
+    }),
+  ).toBeEnabled();
+  await expect(
+    panel(page).getByRole("button", { name: "Refresh API original history" }),
+  ).toBeEnabled();
+});
+test("DVM role loss clears unsent clinical attestation", async ({ page }) => {
+  const roles = ["DVM"];
+  const { state, r } = await fixture(page, roles);
+  state.records = [
+    {
+      record: r,
+      latest_record_id: r.id,
+      is_latest: true,
+      withdrawal: null,
+      acknowledgments: [],
+    },
+  ];
+  await open(page);
+  await panel(page)
+    .getByRole("button", { name: "Download chart original version 1" })
+    .click();
+  await expect(
+    panel(page).getByText(/Original downloaded after checksum/),
+  ).toBeVisible();
+  await panel(page).getByRole("checkbox").check();
+  await expect(
+    panel(page).getByRole("button", { name: "Refresh API original history" }),
+  ).toBeDisabled();
+  roles.splice(0, 1, "STAFF");
+  await refreshRole(page);
+  await expect(
+    panel(page).getByRole("button", { name: "Acknowledge original version 1" }),
+  ).toHaveCount(0);
+  await expect(
+    panel(page).getByRole("button", { name: "Refresh API original history" }),
+  ).toBeEnabled();
+});
+test("role loss preserves pending immutable review action", async ({
+  page,
+}) => {
+  const roles = ["ADMIN"];
+  const { state } = await fixture(page, roles);
+  state.reject = true;
+  await admission(page);
+  await panel(page)
+    .getByRole("button", {
+      name: "Admit original to patient chart",
+      exact: true,
+    })
+    .click();
+  await expect(
+    panel(page).getByRole("button", { name: "Retry original review action" }),
+  ).toBeEnabled();
+  const before = await panel(page)
+    .getByText(/Unconfirmed approve action/)
+    .textContent();
+  roles.splice(0, 1, "DVM");
+  await refreshRole(page);
+  await expect(
+    panel(page).getByRole("region", { name: "Owned API original admission" }),
+  ).toHaveCount(0);
+  await expect(panel(page).getByText(/Unconfirmed approve action/)).toHaveText(
+    before!,
+  );
+  expect(state.actions).toHaveLength(0);
+});
+test("own admission cancel remains available while sibling care draft is dirty", async ({
+  page,
+}) => {
+  await fixture(page);
+  await open(page);
+  await panel(page)
+    .getByRole("button", { name: "Review capture 44444444" })
+    .click();
+  await page
+    .getByRole("button", { name: "New QOL observation", exact: true })
+    .click();
+  await page
+    .getByLabel("Observer / source", { exact: true })
+    .fill("Synthetic observer draft");
+  await expect(
+    panel(page).getByRole("button", {
+      name: "Download captured original for provenance review",
+    }),
+  ).toBeDisabled();
+  await panel(page)
+    .getByRole("button", { name: "Cancel original admission review" })
+    .click();
+  await expect(
+    panel(page).getByRole("article", {
+      name: "Selected API original admission",
+    }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Observer / source", { exact: true }),
+  ).toHaveValue("Synthetic observer draft");
+});

@@ -122,6 +122,13 @@ function Originals({
     generation.current++;
     setVerified("");
     setAttest(false);
+    if (!admin) {
+      setSelected(null);
+      setReason("");
+      setWithdrawId(null);
+      setWithdrawReason("");
+    }
+    // Pending action identity survives role changes for authorized recovery.
   }, [admin, dvm]);
   function clearDraft() {
     generation.current++;
@@ -441,7 +448,11 @@ function Originals({
                   </Button>
                 </>
               )}
-              <Button variant="outline" disabled={frozen} onClick={clearDraft}>
+              <Button
+                variant="outline"
+                disabled={busy || !!pending}
+                onClick={clearDraft}
+              >
                 Cancel original admission review
               </Button>
             </article>
@@ -595,7 +606,7 @@ function Originals({
                   </Button>
                   <Button
                     variant="outline"
-                    disabled={frozen}
+                    disabled={busy || !!pending}
                     onClick={clearDraft}
                   >
                     Cancel original withdrawal
