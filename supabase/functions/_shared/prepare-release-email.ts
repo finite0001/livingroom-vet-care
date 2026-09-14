@@ -1,3 +1,4 @@
+import type { ReadReleaseApiOriginal } from "./release-api-original-download.ts";
 import {
   buildReleaseEmailPayload,
   type ReleaseEmailIntent,
@@ -17,6 +18,7 @@ export interface PreparedReleaseEmail {
   receipt: unknown | null;
 }
 export interface ReleaseEmailPreparationDependencies {
+  readApiOriginal?: ReadReleaseApiOriginal;
   authenticate: (
     token: string,
   ) => Promise<{ actorId: string; db: ReleaseEmailDatabase } | null>;
@@ -111,6 +113,7 @@ export function createPrepareReleaseEmailHandler(
           context.bundle,
           deps.sender,
           deps.download,
+          deps.readApiOriginal ? original => deps.readApiOriginal!(original, "release_email", args.p_request_id, auth.actorId) : undefined,
         );
         await rpc(deps.service, "capture_release_email_payload", {
           p_request_id: args.p_request_id,

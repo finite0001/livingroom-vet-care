@@ -1,3 +1,4 @@
+import { validateReleaseApiOriginals, type ReleaseApiOriginal } from "./record-release-api-originals.ts";
 import {
   renderInvoiceDocument,
   type InvoicePractice,
@@ -32,6 +33,7 @@ export interface FrozenLinkArtifact {
   filename: string;
   mime_type: string;
   document_id: string | null;
+  api_original_id?: string;
   content: string;
 }
 export async function buildDocumentLinkArtifacts(
@@ -42,9 +44,11 @@ export async function buildDocumentLinkArtifacts(
     path: string,
     expectedSize: number,
   ) => Promise<Uint8Array>,
+  downloadApiOriginal?: (original: ReleaseApiOriginal) => Promise<Uint8Array>,
 ) {
   let report: string;
   let sourceByteBound = false;
+  let apiOriginals: ReleaseApiOriginal[] = [];
   let originals: ReleaseBundle["release"]["snapshot"]["attachments"] = [];
   if (grant.family === "invoice")
     report = renderInvoiceDocument(
@@ -63,8 +67,10 @@ export async function buildDocumentLinkArtifacts(
       b.release.source_hash !== grant.source_hash
     )
       throw new Error("Reviewed SMS release unavailable");
+    validateReleaseApiOriginals(b.release.snapshot);
+    apiOriginals = b.release.snapshot.api_originals || [];
     originals = b.release.snapshot.attachments;
-    sourceByteBound = [5, 6, 7, 8].includes(b.release.snapshot.schema_version);
+    sourceByteBound = [5, 6, 7, 8, 9].includes(b.release.snapshot.schema_version);
     report = renderRecordRelease({
       preview: b.release,
       confirmed: {
@@ -90,10 +96,10 @@ export async function buildDocumentLinkArtifacts(
     "<head>",
     '<head><meta name="referrer" content="no-referrer">',
   );
-  if (originals.length > 24) throw new Error("Document limit exceeded");
+  if (originals.length + apiOriginals.length > 24) throw new Error("Document limit exceeded");
   const bytes = new TextEncoder().encode(report);
   let estimated = Math.ceil(bytes.length / 3) * 4 + 8192;
-  for (const d of originals) {
+  for (const d of [...originals, ...apiOriginals.map(v => v.record)]) {
     if (
       !Number.isSafeInteger(d.file_size) ||
       d.file_size < 1 ||
@@ -138,6 +144,13 @@ export async function buildDocumentLinkArtifacts(
       document_id: d.id,
       content: base64Bytes(original),
     });
+  }
+  for (const [index, original] of apiOriginals.entries()) {
+    if (!downloadApiOriginal) throw new Error("API original reader unavailable");
+    const r = original.record, bytes = await downloadApiOriginal(original);
+    const matches = r.mime_type === "application/pdf" ? new TextDecoder().decode(bytes.subarray(0,5)) === "%PDF-" : r.mime_type === "image/jpeg" ? [255,216,255].every((v,i)=>bytes[i]===v) : [137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
+    if (bytes.length !== r.file_size || !matches || await sha256Hex(bytes) !== r.content_sha256) throw new Error("API original bytes differ");
+    artifacts.push({filename:releaseAttachmentFilename(originals.length + index + 1, `ezyvet-original-${r.source_attachment_id}`,r.mime_type),mime_type:r.mime_type,document_id:null,api_original_id:r.id,content:base64Bytes(bytes)});
   }
   const payload_text = JSON.stringify({ artifacts });
   const encoded = new TextEncoder().encode(payload_text);

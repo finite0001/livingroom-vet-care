@@ -1,3 +1,4 @@
+import type { ReadReleaseApiOriginal } from "./release-api-original-download.ts";
 import {
   materializeDocumentLink,
   constantTimeText,
@@ -26,6 +27,7 @@ interface PreparedLink {
   receipt: null;
 }
 export interface LinkDependencies {
+  readApiOriginal?: ReadReleaseApiOriginal;
   config: DocumentLinkConfig | null;
   service: LinkDatabase;
   authenticate: (
@@ -158,6 +160,7 @@ export function createStaffDocumentLinkHandler(
               context.grant,
               deps.practice,
               deps.download,
+              deps.readApiOriginal ? original => deps.readApiOriginal!(original, "document_link", context.grant.id, auth.actorId) : undefined,
             );
             await rpc(deps.service, "capture_document_link", {
               p_id: context.grant.id,

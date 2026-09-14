@@ -1,3 +1,4 @@
+import { createReleaseApiOriginalReader } from "../_shared/release-api-original-download.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.110.3";
 import { createPrepareReleaseEmailHandler } from "../_shared/prepare-release-email.ts";
 const url = Deno.env.get("SUPABASE_URL")!;
@@ -18,6 +19,7 @@ Deno.serve(
         }),
       };
     },
+    readApiOriginal: createReleaseApiOriginalReader({ service, url, serviceKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, apiKey: Deno.env.get("SUPABASE_ANON_KEY")! }),
     download: async (bucket, path, expectedSize) => {
       const { data, error } = await service.storage.from(bucket).download(path);
       if (error) throw error;
