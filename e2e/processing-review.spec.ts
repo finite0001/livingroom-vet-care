@@ -428,7 +428,9 @@ test("changed work permits local draft cleanup only after another exact receipt 
       exact: true,
     }),
   ).toHaveCount(0);
-  const calls = state.calls.map((c) => c.path.split("/").pop());
+  const calls = state.calls.map((c) => c.path.split("/").pop()).filter((name) =>
+    name === "recover_communication_event_retry" || name === "preview_communication_event_retry",
+  );
   expect(calls.slice(-3)).toEqual([
     "recover_communication_event_retry",
     "preview_communication_event_retry",

@@ -1,3 +1,6 @@
+import { ImportError } from "./import-error.ts";
+export { ImportError } from "./import-error.ts";
+import { attachmentMime, readAttachmentBytes, type AttachmentBytes } from "./attachment-bytes.ts";
 import { AttachmentMetadataError, attachmentMetadataContract, parseAttachmentMetadataPage, type AttachmentMetadataPage } from "./attachment-metadata.ts";
 
 export const resources = [
@@ -74,15 +77,6 @@ export interface PageResult {
   items: StagedEntity[];
   complete: boolean;
   page: number;
-}
-export class ImportError extends Error {
-  code: string;
-  retryAfter: number;
-  constructor(code: string, retryAfter = 0) {
-    super(code);
-    this.code = code;
-    this.retryAfter = retryAfter;
-  }
 }
 export function configuration(
   env: (key: string) => string | undefined,
@@ -384,7 +378,7 @@ export function createAdapter(
         await response.body?.cancel();
         throw new ImportError(
           "RATE_LIMITED",
-          Number.isFinite(raw) ? Math.max(1, Math.min(3600, raw)) : 60,
+          Number.isFinite(raw) ? Math.max(1, Math.min(3600, Math.ceil(raw))) : 60,
         );
       }
       if (response.status >= 500 && attempt < 2) {
@@ -472,7 +466,66 @@ export function createAdapter(
     };
     return token.value;
   }
+  function validateOriginalRequest(animalExternalId: string, attachmentId: string) {
+    if (!["https://api.trial.ezyvet.com", "https://api.ezyvet.com"].includes(config.baseUrl) ||
+      !config.readResources.includes("attachment") || typeof animalExternalId !== "string" ||
+      typeof attachmentId !== "string" || !validVaccinationId(animalExternalId) || !validVaccinationId(attachmentId)) {
+      throw new ImportError("INVALID_ATTACHMENT_REQUEST");
+    }
+  }
   return {
+    async attachmentMetadata(animalExternalId: string, attachmentId: string) {
+      validateOriginalRequest(animalExternalId, attachmentId);
+      const query = new URLSearchParams({ page: "1", limit: "10", id: attachmentId, record_type: "Animal", record_id: animalExternalId });
+      const url = `${config.baseUrl}${attachmentMetadataContract.path}?${query}`;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const bearer = await accessToken();
+        const response = await request(url, { method: "GET", headers: { Authorization: `Bearer ${bearer}` } });
+        if (response.redirected || (response.url && response.url !== url)) {
+          void response.body?.cancel().catch(() => {}); throw new ImportError("INVALID_UPSTREAM_RESPONSE");
+        }
+        if (response.status === 401 && attempt === 0) { void response.body?.cancel().catch(() => {}); token = null; continue; }
+        if (response.status !== 200) {
+          void response.body?.cancel().catch(() => {});
+          throw new ImportError(response.status === 404 ? "SOURCE_ATTACHMENT_METADATA_CHANGED" : response.status === 403 ? "UPSTREAM_SCOPE_DENIED" : response.status === 401 ? "UPSTREAM_AUTH_FAILED" : "UPSTREAM_REQUEST_FAILED");
+        }
+        try {
+          const page = await parseAttachmentMetadataPage(await json(response, attachmentMetadataContract.maxPageBytes), { animalId: animalExternalId, page: 1 });
+          if (!page.complete || page.observations.length !== 1 || page.observations[0].external_id !== attachmentId) throw new ImportError("SOURCE_ATTACHMENT_METADATA_CHANGED");
+          return page.observations[0];
+        } catch (error) {
+          if (error instanceof AttachmentMetadataError) throw new ImportError(error.code);
+          throw error instanceof ImportError ? error : new ImportError("UPSTREAM_UNAVAILABLE");
+        }
+      }
+      throw new ImportError("UPSTREAM_AUTH_FAILED");
+    },
+    async downloadAttachment(animalExternalId: string, attachmentId: string, metadataMime: string | null): Promise<AttachmentBytes> {
+      validateOriginalRequest(animalExternalId, attachmentId);
+      attachmentMime(metadataMime);
+      const url = `${config.baseUrl}/v1/attachment/download/${attachmentId}`;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const bearer = await accessToken();
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20_000);
+        try {
+          const response = await dependencies.fetch(url, { method: "GET", headers: { Authorization: `Bearer ${bearer}`, Accept: "application/octet-stream", "Accept-Encoding": "identity" }, redirect: "error", signal: controller.signal });
+          if (response.redirected || (response.url && response.url !== url)) { void response.body?.cancel().catch(() => {}); throw new ImportError("ATTACHMENT_INVALID_CONTENT"); }
+          if (response.status === 401 && attempt === 0) { void response.body?.cancel().catch(() => {}); token = null; continue; }
+          if (response.status === 429) {
+            const raw = Number(response.headers.get("retry-after") || response.headers.get("x-ratelimit-reset") || "60");
+            void response.body?.cancel().catch(() => {});
+            throw new ImportError("RATE_LIMITED", Number.isFinite(raw) ? Math.max(1, Math.min(3600, Math.ceil(raw))) : 60);
+          }
+          if (response.status === 401 || response.status === 403 || response.status >= 500) {
+            void response.body?.cancel().catch(() => {}); throw new ImportError(response.status === 401 ? "UPSTREAM_AUTH_FAILED" : response.status === 403 ? "UPSTREAM_SCOPE_DENIED" : "UPSTREAM_UNAVAILABLE");
+          }
+          return await readAttachmentBytes(response, metadataMime, controller.signal);
+        } catch (error) { throw error instanceof ImportError ? error : new ImportError("UPSTREAM_UNAVAILABLE"); }
+        finally { clearTimeout(timeout); controller.abort(); }
+      }
+      throw new ImportError("UPSTREAM_AUTH_FAILED");
+    },
     async attachmentPage(animalExternalId: string, page: number): Promise<AttachmentMetadataPage> {
       if (!["https://api.trial.ezyvet.com", "https://api.ezyvet.com"].includes(config.baseUrl) ||
         !config.readResources.includes("attachment") || typeof animalExternalId !== "string" ||

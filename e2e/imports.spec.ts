@@ -173,6 +173,10 @@ async function fixture(page: Page, admin = true) {
         },
       });
     }
+    if (path.endsWith("list_ezyvet_attachment_capture_mappings"))
+      return route.fulfill({
+        json: { mappings: [], has_more: false, next_cursor: null },
+      });
     return route.fulfill({ json: [] });
   });
   return state;
