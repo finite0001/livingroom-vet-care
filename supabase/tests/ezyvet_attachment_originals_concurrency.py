@@ -110,7 +110,7 @@ try:
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
         sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    targeted=['ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    targeted=['ezyvet_migration_items.test.sql','ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
@@ -248,6 +248,10 @@ try:
     children_before=scalar('select jsonb_agg(to_jsonb(r) order by id)::text from ezyvet_import_runs r;')
     contended(staff+bind_child(binding_id),staff+bind_child(binding_id),lambda code,out,err:code==0)
     check(scalar(f"select count(*) from ezyvet_migration_bindings where scope_id='{scope_id}';")=='1','Concurrent exact binding creates one historical membership')
+    try:
+        contended('lock table ezyvet_attachment_page_observations in access exclusive mode;',staff+f"select list_ezyvet_migration_items('{binding_id}');",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
     competing_binding=str(uuid.uuid4())
     contended(f"select pg_advisory_xact_lock(hashtextextended('ezyvet-migration-scope-binding:{scope_id}',0));",staff+bind_child(competing_binding),lambda code,out,err:code!=0 and 'Exact preceding binding required' in err)
     denied_binding=str(uuid.uuid4())
@@ -502,9 +506,19 @@ try:
         for change_kind in ['role','expiry']:
             grant_id,expires=prepared_link(15 if change_kind=='expiry' else 60)
             hold=boundary_locks['object'] if boundary=='source' else f"select 1 from document_link_access_budget where grant_id='{grant_id}' for update;"
-            def expire():time.sleep(max(0,expires-time.time()+.15))
+            def expire():
+                # The server decides expiry. Host/VM clocks can drift independently.
+                deadline=time.monotonic()+25
+                while time.monotonic()<deadline:
+                    if scalar(f"select expires_at<=clock_timestamp() from document_link_grants where id='{grant_id}';")=='t':
+                        return
+                    time.sleep(.1)
+                raise AssertionError('Database grant expiry was not observed')
+            def denied_retrieval(code,out,err):
+                assert code!=0 and 'Document link unavailable' in err, f'{boundary}/{change_kind}: retrieval did not reject after observed boundary change (exit={code})'
+                return True
             try:
-                contended(hold,worker+service+f"select retrieve_document_link('{grant_id}','{token_hash}',1);",lambda code,out,err:code!=0 and 'Document link unavailable' in err,during_wait=revoke_staff if change_kind=='role' else expire)
+                contended(hold,worker+service+f"select retrieve_document_link('{grant_id}','{token_hash}',1);",denied_retrieval,during_wait=revoke_staff if change_kind=='role' else expire)
                 check(scalar(f"select used from document_link_access_budget where grant_id='{grant_id}';")=='0',change_kind+' rejection after '+boundary+' wait rolls back access counter')
             finally:restore_staff()
 

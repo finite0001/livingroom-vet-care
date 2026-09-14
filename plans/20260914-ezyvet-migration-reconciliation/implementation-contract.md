@@ -1,6 +1,6 @@
 # Migration reconciliation implementation contract
 
-Status: implementation in progress. Repository root `/Users/davidedler/Developer/livingroom-readiness-reconciliation`. Migrations `20260914130000` through `20260914160000` implement local manifest/scope recovery, immutable child bindings, a versioned resolved-scope digest and an initial per-binding scan-evidence projection. Transactional attempt events now preserve canonical run transitions and an explicit baseline; clinical outcomes, item drill-down and reports remain pending. The remaining contracts below are requirements, not evidence of implemented behavior; see the plan status and acceptance receipts.
+Status: implementation in progress. Repository root `/Users/davidedler/Developer/livingroom-readiness-reconciliation`. Migrations `20260914130000` through `20260914160000` implement local manifest/scope recovery, immutable child bindings, a versioned resolved-scope digest and an initial per-binding scan-evidence projection. Transactional attempt events now preserve canonical run transitions and an explicit baseline; Migration `20260914190000` adds bounded source-item drill-down with immutable occurrence hashes, exact/unknown observed head fidelity and mapping/parent/household currentness. Clinical outcomes and reports remain pending. The remaining contracts below are requirements, not evidence of implemented behavior; see the plan status and acceptance receipts.
 
 ## Phase1: immutable scope, child binding and recovery
 
@@ -51,3 +51,9 @@ Extend owned disposable Auth/PostgREST acceptance to create/bind/recover actual 
 ## Unresolved external inputs
 
 Which authorized practice subset and source cutover window; supported export or overlap strategy; provider resource/parent entitlement and samples; clinician-approved interpretation/mapping/exclusions. Obtain these before real-source acceptance. Ledger implementation and synthetic recovery validation can proceed without inventing answers.
+
+## Source item API implemented locally
+
+`list_ezyvet_migration_items(binding_id, after_page, after_ordinal, after_snapshot_id, limit)` reads only the owned bound child. Its ascending `(page, ordinal, snapshot_id)` cursor uses original attachment ordinals and zero for the other ledgers; all cursor fields travel together. Pages default to 20 and stop at 100, with a sentinel and explicit continuation. Generic contact/animal rows are restricted to the manifest-selected external identity.
+
+The fixed v1 occurrence hash binds child, page/ordinal, source identity, snapshot/hash, observed head and attachment file/raw/stable metadata hashes. Live source, mapping, household and parent changes never rewrite that hash. `payload_current` is separate from `exact_source_current`; the latter remains null where legacy observations lack head versions. Responses contain references and hashes, no source medical payloads, original bytes, storage paths or worker credentials. Clinical review and complete coverage remain explicitly unverified. Each page is a live statement snapshot, not a frozen whole-report snapshot.

@@ -32,8 +32,8 @@ do $$declare a uuid:='db700000-0000-4000-8000-000000000001';m uuid:=(select id f
  c uuid;claimed jsonb;s public.ezyvet_import_snapshots;cm uuid:=gen_random_uuid();resource_name text;
 begin
  c:=gen_random_uuid();claimed:=to_jsonb(claim_ezyvet_import(c,a,'attachment-test-site','contact','https://api.trial.ezyvet.com'));
- perform stage_ezyvet_import_page(c,a,(claimed->>'lease_id')::uuid,1,true,'[{"external_id":"8","payload":{"id":8}}]');
- select * into strict s from ezyvet_import_snapshots where source_site_uid='attachment-test-site' and resource='contact';
+ perform stage_ezyvet_import_page(c,a,(claimed->>'lease_id')::uuid,1,true,'[{"external_id":"8","payload":{"id":8}},{"external_id":"999","payload":{"id":999}}]');
+ select * into strict s from ezyvet_import_snapshots where source_site_uid='attachment-test-site' and resource='contact' and external_id='8';
  insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
  values(cm,cm,'synthetic-contact-mapping',s.source_origin,s.source_site_uid,s.resource,s.external_id,s.id,1,(select id from fx where k='client'),null,1,'link','Synthetic reviewed contact',a);
  insert into adapters(resource,child,mapping,parent_type,parent,head) values('contact',c,cm,'contact',s.id,1);
@@ -74,4 +74,18 @@ reset role;
 select is((select count(*)::integer from ezyvet_migration_bindings),9,'All supported resource families have a binding');
 select is((select jsonb_agg(to_jsonb(r) order by id) from ezyvet_import_runs r),(select v from data where k='adapter-children'),'All resource bindings leave child state unchanged');
 select is((select count(*)::integer from communication_outbox),0,'Adapter acceptance sends nothing');
+
+-- Populate the remaining child families through their actual stage contract.
+do $$declare x record;r public.ezyvet_import_runs;payload jsonb;begin
+ for x in select * from adapters where resource in ('healthstatus','history','vaccination','prescriptionitem') loop
+  select * into r from ezyvet_import_runs where id=x.child;
+  payload:=jsonb_build_object('id','9',case when x.resource='vaccination' then 'consult_id' when x.resource='prescriptionitem' then 'prescription_id' else 'animal_id' end,
+   case when x.resource='vaccination' then '1' when x.resource='prescriptionitem' then '3' else '77' end);
+  perform stage_ezyvet_import_page(x.child,'db700000-0000-4000-8000-000000000001',r.lease_id,1,true,jsonb_build_array(jsonb_build_object('external_id','9','payload',payload)));
+ end loop;
+end $$;
+set local role authenticated;
+select is(jsonb_array_length(list_ezyvet_migration_items(binding)->'items'),case when resource='attachment' then 2 else 1 end,resource||' item adapter reads its populated canonical ledger') from adapters;
+select is(list_ezyvet_migration_items(binding)#>>'{items,0,exact_source_current}',case when resource in ('animal','contact','healthstatus') then null else 'true' end,resource||' item preserves observed head fidelity') from adapters;
+select is(list_ezyvet_migration_items(binding)#>>'{items,0,ordinal}',case when resource='attachment' then '1' else '0' end,resource||' has a stable occurrence cursor') from adapters;
 select * from finish();rollback;

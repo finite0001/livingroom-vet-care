@@ -97,10 +97,22 @@ check(attemptPage.events.length === 2 && attemptPage.has_more && attemptPage.eve
 const earlierAttempts = await api.attempts(bound, attemptPage.next_sequence, 2);
 check(!earlierAttempts.has_more && earlierAttempts.events[1].history_origin === "run_created", "Sequence cursor reaches the actual tracking origin");
 check(!JSON.stringify(attemptPage).includes(retry.lease_id) && !JSON.stringify(earlierAttempts).includes(firstLease), "History exposes no raw lease token");
+const emptyItems = await api.items(saved, bound);
+check(emptyItems.items.length === 0 && !emptyItems.has_more && !emptyItems.complete_coverage_verified, "Empty HTTP item list does not claim coverage");
 const retryProgress = await api.progress(saved, bound);
 check(retryProgress.attempt_history.claims === 2 && retryProgress.attempt_history.failed_pages === 1 && retryProgress.attempt_history.complete_since_run_creation, "Progress counts durable attempts independently from source observations");
 await assert.rejects(() => otherApi.attempts(bound)); checks++;
 await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_attempt_events", { p_binding_id: bound.id }, other.auth)); checks++;
+const observation = { external_id: "701", file_id: "42", metadata: { id: "701", file_id: "42", record_type: "Animal", record_id: "77", name: "Synthetic report", mime_type: "application/pdf", notes: null }, raw_record_sha256: "a".repeat(64), stable_metadata_sha256: "b".repeat(64), file_sha256: null };
+await request("/rest/v1/rpc/stage_ezyvet_attachment_page", { p_run_id: child, p_actor: owner.id, p_lease_id: retry.lease_id, p_page: {
+  contract_version: "ezyvet_animal_attachment_metadata_v1", parent: { record_type: "Animal", record_id: "77" }, page: 1, complete: true,
+  pagination: { items_page: 1, items_page_total: 1, items_page_size: 10, items_total: 2 }, observations: [observation, { ...observation, raw_record_sha256: "c".repeat(64) }], page_sha256: "d".repeat(64) } });
+const firstItems = await api.items(saved, bound, null, 1);
+const secondItems = await api.items(saved, bound, firstItems.next_cursor, 1);
+check(firstItems.has_more && !secondItems.has_more && firstItems.items[0].ordinal === 1 && secondItems.items[0].ordinal === 2, "HTTP item cursor retains distinct duplicate occurrences");
+check(firstItems.items[0].snapshot_id === secondItems.items[0].snapshot_id && firstItems.items[0].evidence_hash !== secondItems.items[0].evidence_hash, "HTTP hashes distinguish occurrence evidence from deduplicated snapshots");
+check(firstItems.mapping_source_current && firstItems.items[0].exact_source_current && !firstItems.review_reconciled, "HTTP source currentness is separate from clinical review");
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_items", { p_binding_id: bound.id }, other.auth)); checks++;
 for (let i = 0; i < 2; i++) await api.prepare({ ...manifestRequest, id: randomUUID(), scopes: manifestRequest.scopes.map(scope => ({ ...scope, id: randomUUID() })) });
 const first = await api.list(null, 2);
 check(first.runs.length === 2 && first.has_more && first.next_cursor, "HTTP history returns bounded first page");
@@ -116,11 +128,14 @@ for (const auth of [headers(local.ANON_KEY), service]) {
   await assert.rejects(() => request("/rest/v1/rpc/read_ezyvet_migration_run", { p_id: manifestRequest.id }, auth)); checks++;
   await assert.rejects(() => request("/rest/v1/rpc/bind_ezyvet_migration_child", { p_id: randomUUID(), p_scope_id: bindingRequest.scope_id, p_child_run_id: child, p_reason: "Unauthorized", p_replaces_id: null }, auth)); checks++;
   await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_attempt_events", { p_binding_id: bound.id }, auth)); checks++;
+  await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_items", { p_binding_id: bound.id }, auth)); checks++;
 }
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
 check(!(await api.progress(saved, bound)).parent_current, "HTTP progress exposes source drift without changing saved digest");
+const driftedItems = await api.items(saved, bound, null, 1);
+check(!driftedItems.mapping_source_current && !driftedItems.parent_current && driftedItems.items[0].evidence_hash === firstItems.items[0].evidence_hash, "HTTP mapping drift preserves occurrence evidence hash");
 await assert.rejects(() => api.prepare({ ...manifestRequest, id: randomUUID(), scopes: manifestRequest.scopes.map(scope => ({ ...scope, id: randomUUID() })) })); checks++;
 assert.throws(() => parseMigrationManifest({ ...saved, run: { ...saved!.run, actor_id: other.id } }, owner.id, manifestRequest.id)); checks++;
 assert.throws(() => parseMigrationManifest({ ...saved, scopes: [] }, owner.id, manifestRequest.id)); checks++;
@@ -135,5 +150,6 @@ await assert.rejects(() => api.readBinding(bindingRequest.id, bindingRequest.sco
 await assert.rejects(() => api.listBindings(bindingRequest.scope_id)); checks++;
 await assert.rejects(() => api.progress(saved, bound)); checks++;
 await assert.rejects(() => api.attempts(bound)); checks++;
+await assert.rejects(() => api.items(saved, bound)); checks++;
 check(effects() === beforeEffects, "Migration operations cause no clinical, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);

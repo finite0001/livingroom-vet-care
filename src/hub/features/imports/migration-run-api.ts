@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { migrationItemCursorSchema, parseMigrationItems } from "./migration-items-api.ts";
+import type { MigrationItemCursor } from "./migration-items-api.ts";
 import { precedes } from "./attachment-review-history.ts";
 
 const uuid = z.string().uuid();
@@ -173,6 +175,16 @@ export function createMigrationRunApi(client: MigrationRpc, actorId: string) {
       if (!saved.scopes.some(scope => scope.id === membership.scope_id)) throw new Error("Binding belongs to another migration");
       const value = await rpc("read_ezyvet_migration_binding_progress", { p_id: membership.id });
       return value === null ? null : parseMigrationProgress(value, saved, membership);
+    },
+    async items(manifest: MigrationManifest, binding: MigrationBinding, cursor: MigrationItemCursor | null = null, limit = 20) {
+      const saved = parseMigrationManifest(manifest, actorId, manifest.run.id);
+      const membership = parseMigrationBinding(binding, actorId, binding.scope_id);
+      if (!saved.scopes.some(scope => scope.id === membership.scope_id)) throw new Error("Binding belongs to another migration");
+      z.number().int().min(1).max(100).parse(limit);
+      if (cursor) migrationItemCursorSchema.parse(cursor);
+      const value = await rpc("list_ezyvet_migration_items", { p_binding_id: membership.id, p_after_page: cursor?.page ?? null,
+        p_after_ordinal: cursor?.ordinal ?? null, p_after_snapshot_id: cursor?.snapshot_id ?? null, p_limit: limit });
+      return parseMigrationItems(value, saved, membership, cursor, limit);
     },
     async attempts(binding: MigrationBinding, beforeSequence: number | null = null, limit = 20) {
       const membership = parseMigrationBinding(binding, actorId, binding.scope_id);

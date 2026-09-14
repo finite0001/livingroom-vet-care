@@ -112,3 +112,5 @@ The attempt-history candidate reaches103 migrations. Before the baseline upgrade
 The claim-authorization candidate reaches104 migrations. It rechecks active administrator status after source/run waits and before returning from the canonical core and six scoped claim functions. The latest attachment original-capture interlock is preserved. The same populated restore and routine/permission comparisons apply.
 
 The staging/failure authorization candidate reaches 105 migrations. It rechecks administrator access before staging returns and after failure updates, so revocation during a database wait rolls back page and attempt history together. The exact 84→105 populated upgrade and restore comparisons apply.
+
+The source-item candidate reaches 106 migrations. Owned binding recovery now also compares bounded item pages before and after restore, excluding only the live observation timestamp. Occurrence hashes and mapping/parent currentness must match, alongside the existing physical Storage and canonical routine/access checks.
