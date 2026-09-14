@@ -15,7 +15,7 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
 approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
-release_scenarios = ['release-email-worker-source-first', 'release-email-worker-before-source', 'release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
+release_scenarios = ['release-link-retrieve-source-first', 'release-link-retrieve-before-source', 'release-link-worker-source-first', 'release-link-worker-before-source', 'release-email-worker-source-first', 'release-email-worker-before-source', 'release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
 parser.add_argument('--scenario', choices=approval_scenarios + release_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 parser.add_argument('--skip-release-access-fix', action='store_true', help='Reproduce pre8000 access waits in an owned clone when the source lacks8000; never revert an existing fix')
@@ -174,7 +174,12 @@ try:
             sql(f"insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'{actor}',now(),'Synthetic observed race only',9) on conflict(id) do update set enabled=true,accepted_schema_version=9;")
             selection = quote(json.dumps({'api_attachment_ids': [approval], 'patient_summary_ids': [fx['pet']]})) + '::jsonb'
             recipient = scalar(f"select primary_email from clients where id='{fx['client']}';")
-            arguments = f"'{fx['pet']}','{fx['client']}','EMAIL',{quote(recipient)},{selection}"
+            channel = 'EMAIL'
+            if scenario.startswith('release-link-'):
+                channel, recipient = 'SMS', '+1303555' + f'{index:04d}'
+                sql(f"update clients set primary_phone='{recipient}' where id='{fx['client']}';")
+                sql('begin;' + staff + f"select record_sms_consent('{actor}','{fx['client']}','{recipient}',true,'WRITTEN','Synthetic race consent',null);commit;")
+            arguments = f"'{fx['pet']}','{fx['client']}','{channel}',{quote(recipient)},{selection}"
             preview = json.loads(scalar('begin;' + staff + f"select preview_record_release_v9({arguments});commit;"))
             check(len(preview['snapshot']['api_attachments']) == 1 and len(preview['snapshot']['patient_summaries']) == 1, 'Race uses mixed selected API and native patient evidence')
             confirm = staff + f"select confirm_record_release('{release_id}',{arguments},{quote(json.dumps(preview['snapshot']))}::jsonb,'{preview['source_hash']}',true);"
@@ -191,7 +196,42 @@ try:
                 error = 'Release sources or recipient changed'
             elif 'correction' in scenario:
                 change = staff + release_approve(correction, approval)
-            if scenario.startswith('release-email-'):
+            if scenario.startswith('release-link-'):
+                sql('begin;' + confirm + 'commit;')
+                conversation, link_id = str(uuid.uuid4()), str(uuid.uuid4())
+                sql(f"insert into conversations(id,client_id) values('{conversation}','{fx['client']}');")
+                service = "set local role service_role;select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
+                sql('begin;' + staff + f"select prepare_document_link('{link_id}','record_release','{release_id}','{fx['client']}','{conversation}','{recipient}','{preview['source_hash']}',now()+interval '1 day','Synthetic {{{{document_link}}}}','https://thelivingroom.vet','synthetic');commit;")
+                doc = preview['snapshot']['attachments'][0]
+                link_payload = json.dumps({'artifacts': [
+                    {'filename': 'records.html', 'mime_type': 'text/html', 'document_id': None, 'content': base64.b64encode(b'<html>Synthetic concurrency report</html>').decode()},
+                    {'filename': 'original.pdf', 'mime_type': 'application/pdf', 'document_id': doc['id'], 'content': base64.b64encode(original_bytes).decode()}
+                ]})
+                sql('begin;' + service + f"select capture_document_link('{link_id}','{actor}',{quote(link_payload)},repeat('a',64),repeat('b',64));commit;")
+                artifact_hash = scalar(f"select artifact_hash from document_link_payloads where grant_id='{link_id}';")
+                sql('begin;' + staff + f"select attest_document_link('{link_id}','{artifact_hash}',repeat('b',64),true);commit;")
+                operation = service + f"do $test$ declare result jsonb;begin result:=retrieve_document_link('{link_id}',repeat('a',64),1);if result->>'content' is distinct from '{base64.b64encode(original_bytes).decode()}' then raise exception 'Original bytes changed';end if;end $test$;"
+                queued = None
+                if 'worker-' in scenario:
+                    queued = json.loads(scalar('begin;' + staff + f"select to_jsonb(enqueue_document_link_sms('{link_id}','{artifact_hash}',repeat('b',64),true));commit;"))
+                    claimed = json.loads(scalar('begin;' + service + 'select to_jsonb(claim_communication());commit;'))
+                    check(claimed['id'] == queued['id'], 'Worker claims exact reviewed synthetic link')
+                    config = quote(json.dumps({'from': '+13035550199', 'account_sid': 'AC' + 'a'*32, 'document_link_token_hash': 'a'*64, 'document_link_message_hash': 'b'*64, 'document_link_artifact_hash': artifact_hash}))
+                    operation = service + f"select start_communication_attempt('{queued['id']}','{claimed['lease_token']}',{config}::jsonb);"
+                if scenario.endswith('source-first'):
+                    contend(change, operation, None if queued else 'SMS release unavailable')
+                    if queued:
+                        check(scalar(f"select state||':'||attempt_count::text from communication_outbox where id='{queued['id']}';") == 'failed:0', 'Earlier source revision prevents SMS worker attempt')
+                else:
+                    contend(operation, change, None)
+                    if queued:
+                        check(scalar(f"select state||':'||attempt_count::text from communication_outbox where id='{queued['id']}';") == 'claimed:1', 'Earlier SMS worker start retains its authorized attempt')
+                    else:
+                        check(scalar(f"select used from document_link_access_budget where grant_id='{link_id}';") == '1', 'Earlier public retrieval consumes exactly one access budget entry')
+                denied = sql('begin;' + service + f"select retrieve_document_link('{link_id}',repeat('a',64),1);commit;", fail=False)
+                check(denied.returncode != 0 and 'SMS release unavailable' in denied.stderr, 'Later public retrieval is denied after source invalidation: ' + denied.stderr)
+                check(scalar(f"select artifact_hash='{artifact_hash}' from document_link_payloads where grant_id='{link_id}';") == 't', 'Link races retain the exact frozen artifact hash')
+            elif scenario.startswith('release-email-'):
                 sql('begin;' + confirm + 'commit;')
                 conversation, email_request = str(uuid.uuid4()), str(uuid.uuid4())
                 existing = scalar(f"select coalesce(min(id::text),'none') from conversations where client_id='{fx['client']}' and status='ACTIVE';")
