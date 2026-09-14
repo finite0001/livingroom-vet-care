@@ -1,5 +1,7 @@
 # Commercial-readiness evidence tracker
 
+The current API-attachment backend checkpoint is tracked in [draft PR126](https://github.com/finite0001/livingroom-vet-care/pull/126) and [phase3d](../plans/20260913-ezyvet-clinical-import/phase-03d-api-attachments.md). Parent-scoped intake, immutable private capture and an authenticated default-off worker are implemented locally. The current runtime rehearsal passes101 checks on89 migrations, including actual private file upload/readback and lost-response recovery. Staff review/release UI, interruption cleanup, dedicated attachment races, current upgrade/restore and provider/clinical acceptance remain open. No hosted attachment migration or worker activation is claimed. The broader mail/Auth, Stripe sandbox acceptance, vendor integration, clinical and public-cutover gates remain part of commercial readiness.
+
 ## September 13 — private mailbox verified; application mail capacity pending
 
 The owner-created Fastmail trial now has the designated administrator mailbox. GoDaddy saved six root-mail DNS records; Fastmail verifies MX, DKIM and SPF and reports the domain ready to send and receive mail. [Mail commissioning evidence](mail-commissioning-plan.md) also records the staging APP_URL, Auth Site URL and exact password-reset redirect configuration. Actual message delivery, Auth SMTP, staff onboarding and clinical/provider acceptance remain unverified. Earlier mailbox-creation statements below are historical.

@@ -2,7 +2,7 @@ import { ImportError } from "./import-error.ts";
 
 export const maxAttachmentBytes = 20 * 1024 * 1024;
 export interface AttachmentBytes {
-  bytes: Uint8Array;
+  bytes: Uint8Array<ArrayBuffer>;
   mimeType: "application/pdf" | "image/jpeg" | "image/png";
   size: number;
   sha256: string;

@@ -1,6 +1,7 @@
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
+import { attachmentCaptureRuntime } from "../../supabase/functions/ezyvet-attachment-capture/runtime.ts";
 import { createAdapter } from "../../supabase/functions/ezyvet-import/adapter.ts";
 import { readAttachmentForCapture } from "../../supabase/functions/ezyvet-import/attachment-capture-read.ts";
 import { readAttachmentBytes } from "../../supabase/functions/ezyvet-import/attachment-bytes.ts";
@@ -261,6 +262,30 @@ try {
     } catch { res.writeHead(500); res.end("Synthetic HTTP adapter failed"); }
   });
   const post = (body: Record<string, unknown>, authorized = true) => fetch(edge, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...(authorized ? { Authorization: staffHeaders.Authorization } : {}) }, body: JSON.stringify(body) });
+  let captureEnabled = true, loseWorkerUpload = false, loseWorkerComplete = false, loseWorkerReserve = false;
+  const captureRuntime = attachmentCaptureRuntime(key => ({ ...env, SUPABASE_URL: local.API_URL, SUPABASE_ANON_KEY: local.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: local.SERVICE_ROLE_KEY, EZYVET_ATTACHMENT_CAPTURE_ENABLED: captureEnabled ? "true" : "false" })[key], async (input, init) => {
+    const url = new URL(String(input));
+    if (url.origin === "https://api.trial.ezyvet.com") {
+      const response = await fetch(upstream + url.pathname + url.search, init);
+      return new Response(response.body, { status: response.status, headers: response.headers });
+    }
+    assert.equal(url.origin, local.API_URL);
+    const response = await fetch(input, init);
+    if (response.ok && init?.method === "POST") {
+      if (loseWorkerUpload && url.pathname.startsWith("/storage/v1/object/ezyvet-attachments/")) { loseWorkerUpload = false; void response.body?.cancel(); throw new Error("Discarded upload acknowledgment"); }
+      if (loseWorkerComplete && url.pathname.endsWith("/rpc/complete_ezyvet_attachment_capture")) { loseWorkerComplete = false; void response.body?.cancel(); throw new Error("Discarded capture acknowledgment"); }
+      if (loseWorkerReserve && url.pathname.endsWith("/rpc/prepare_ezyvet_attachment_capture")) { loseWorkerReserve = false; void response.body?.cancel(); throw new Error("Discarded reservation acknowledgment"); }
+    }
+    return response;
+  });
+  const captureEdge = await serve(async (req, res) => {
+    try {
+      const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(Buffer.from(chunk));
+      const response = await captureRuntime(new Request(origin + "/ezyvet-attachment-capture", { method: req.method, headers: req.headers as Record<string, string>, body: Buffer.concat(chunks) }));
+      res.writeHead(response.status, Object.fromEntries(response.headers)); res.end(await response.text());
+    } catch { res.writeHead(500); res.end("Synthetic capture HTTP adapter failed"); }
+  });
+  const postCapture = (payload: Record<string, unknown>, authorized = true) => fetch(captureEdge, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...(authorized ? { Authorization: staffHeaders.Authorization } : {}) }, body: JSON.stringify(payload) });
   const resetCooldown = () => sql(`update ezyvet_import_runs set retry_after=null,lease_until=null where source_site_uid=${quote(site)} and resource='attachment';`);
   for (const parentType of ["Animal", "Consult"]) {
     resetCooldown();
@@ -326,6 +351,36 @@ try {
       check(final.request.status === "captured" && final.capture.capture_hash === receipt.capture_hash && !JSON.stringify(final).includes(lease.lease_id), "Owner recovery exposes completion without service lease");
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
+      // Exercise the production runtime adapter and handler through actual loopback HTTP.
+      for (const reservationInterrupted of [false, true]) {
+        const operation = randomUUID(); ids.push(operation);
+        const preparedWorker = await rpc("prepare_ezyvet_attachment_download", { p_id: operation, p_pet_id: pet, p_run_id: runId, p_page: 1, p_snapshot_id: selected.id, p_payload_hash: selected.hash, p_observed_head_version: selected.version }, true);
+        const workerBody = { request_id: operation, pet_id: pet, request_hash: preparedWorker.request.request_hash };
+        const beforeWorker = upstreamCalls;
+        check((await postCapture(workerBody, false)).status === 401, "Actual worker HTTP rejects an anonymous request");
+        check((await postCapture({ ...workerBody, object_path: "untrusted/original" })).status === 400, "Actual worker rejects caller-chosen Storage path");
+        captureEnabled = false;
+        check((await postCapture(workerBody)).status === 503 && upstreamCalls === beforeWorker, "Disabled worker makes no source read or claim"); captureEnabled = true;
+        if (reservationInterrupted) {
+          loseWorkerReserve = true;
+          check((await postCapture(workerBody)).status === 503, "Lost reservation acknowledgment remains recoverable through worker response");
+          const interrupted = await rpc("recover_ezyvet_attachment_download", { p_id: operation, p_pet_id: pet }, true);
+          check(interrupted.request.status === "pending" && interrupted.capture_intent && interrupted.capture === null, "Interrupted worker retains reservation and no false capture");
+          storageObjects.push(interrupted.capture_intent.object_path);
+          // Explicit owner-only disposable clock simulation for the retry receipt.
+          sql(`begin;set local session_replication_role=replica;update ezyvet_attachment_download_failures set retry_after=clock_timestamp()-interval '1 second' where lease_id in(select lease_id from ezyvet_attachment_download_attempts where request_id=${quote(operation)});commit;`);
+        } else { loseWorkerUpload = true; loseWorkerComplete = true; }
+        const workerResponse = await postCapture(workerBody);
+        check(workerResponse.status === 200, "Actual capture endpoint completes through Auth, RPC, source and private Storage");
+        const workerResult = await workerResponse.json();
+        check(Object.keys(workerResult).sort().join(",") === "capture_hash,request_id,status" && workerResult.request_id === operation && workerResult.status === "captured", "Worker returns only an owned capture summary");
+        const workerRecovery = await rpc("recover_ezyvet_attachment_download", { p_id: operation, p_pet_id: pet }, true);
+        if (!reservationInterrupted) storageObjects.push(workerRecovery.capture_intent.object_path);
+        check(workerRecovery.capture.capture_hash === workerResult.capture_hash && workerRecovery.capture.content_sha256 === read.file.sha256, "Production runtime receipt matches verified original");
+        const unchangedCalls = upstreamCalls;
+        check((await postCapture(workerBody)).status === 200 && upstreamCalls === unchangedCalls, "Completed worker retry performs no source or file transfer");
+      }
+
     }
     const freshId = randomUUID(); ids.push(freshId); resetCooldown(); wrongParent = true;
     check((await post({ ...body, run_id: freshId })).status === 503, "Real HTTP intake rejects wrong-parent upstream metadata"); wrongParent = false;
