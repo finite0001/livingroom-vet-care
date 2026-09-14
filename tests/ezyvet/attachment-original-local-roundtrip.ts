@@ -1,3 +1,6 @@
+import { buildDocumentLinkArtifacts } from "../../supabase/functions/_shared/document-link-artifacts.ts";
+import { documentLinkConfig, materializeDocumentLink } from "../../supabase/functions/_shared/document-link-capability.ts";
+import { createStaffDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
 import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
 import { buildReleaseEmailPayload } from "../../supabase/functions/_shared/release-email-payload.ts";
 import { renderRecordRelease } from "../../supabase/functions/_shared/record-release-renderer.ts";
@@ -135,7 +138,7 @@ try {
         p_expected_version: null,
         p_first_name: "Synthetic",
         p_last_name: "Attachment source",
-        p_primary_phone: null,
+        p_primary_phone: "+13035550481",
         p_primary_email: "attachment-owner@example.test",
         p_preferred_channel: "EMAIL",
         p_mailing_address: null,
@@ -448,6 +451,46 @@ try {
   check(recoveredEmail.payload_hash===frozen.payload_hash&&releaseReads===readsAfterPayload,"Lost response recovery preserves bytes without downloading again");
   check(recoveredEmail.manifest[1].sha256===ready.capture.content_sha256,"Actual SQL payload manifest binds captured original digest");
   check(sql(`select count(*) from release_email_payloads where request_id=${quote(emailRequestId)};`)==="1","Unknown response produces exactly one immutable payload");
+  // Prepare a separate reviewed SMS-source artifact without queueing a message.
+  const smsReleaseId=randomUUID(),linkId=randomUUID();
+  const smsPreviewArgs={p_pet_id:pet,p_client_id:client,p_channel:"SMS",p_recipient:"+13035550481",p_selection:releaseSelection};
+  const smsPreview=await rpc("preview_record_release_v9",smsPreviewArgs,true);
+  await rpc("confirm_record_release",{...confirmArgs,p_id:smsReleaseId,p_channel:"SMS",p_recipient:"+13035550481",p_reviewed_snapshot:smsPreview.snapshot,p_reviewed_hash:smsPreview.source_hash},true);
+  await assert.rejects(rpc("preview_document_link",{p_family:"record_release",p_source_id:smsReleaseId,p_client_id:client},true),(e:{code:string})=>e.code==="42501");assertions++;
+  await rpc("record_sms_consent",{p_actor_id:actor,p_client_id:client,p_phone:"+13035550481",p_opted_in:true,p_method:"WRITTEN",p_details:"Synthetic local consent only",p_expected_updated_at:null},true);
+  const linkPreview=await rpc("preview_document_link",{p_family:"record_release",p_source_id:smsReleaseId,p_client_id:client},true);
+  check(linkPreview.source_hash===smsPreview.source_hash,"Actual document-link preview retains canonical release hash");
+  const linkArgs={p_request_id:linkId,p_family:"record_release",p_source_id:smsReleaseId,p_client_id:client,p_conversation_id:conversationId,p_recipient:"+13035550481",p_source_hash:linkPreview.source_hash,p_expires_at:new Date(Date.now()+86400000).toISOString(),p_message_template:"Synthetic records: {{document_link}}",p_origin:origin,p_key_version:"synthetic"};
+  await rpc("prepare_document_link",linkArgs,true);
+  const linkContext=await rpc("document_link_capture_context",{p_id:linkId,p_actor_id:actor});
+  const linkConfig=documentLinkConfig({origin,activeKeyVersion:"synthetic",keys:JSON.stringify({synthetic:Buffer.from("synthetic-local-secret-00000000000").toString('base64')}),publicEnabled:"true"});
+  const linkCapability=await materializeDocumentLink(linkContext.grant,linkConfig);
+  const linkArtifact=await buildDocumentLinkArtifacts(linkContext.grant,{name:"Synthetic",address:"Synthetic",domain:null},releaseDownload);
+  const changedLink=JSON.parse(linkArtifact.payload_text);changedLink.artifacts[1].content=Buffer.from(changedBytes).toString('base64');
+  await assert.rejects(rpc("capture_document_link",{p_id:linkId,p_actor_id:actor,p_token_hash:linkCapability.token_hash,p_message_hash:linkCapability.message_hash,p_payload_text:JSON.stringify(changedLink)}),(e:{code:string})=>e.code==="23514");assertions++;
+  check(sql(`select count(*) from document_link_payloads where grant_id=${quote(linkId)};`)==="0","Changed API bytes cannot create a document-link artifact");
+  let loseLinkReply=true;
+  const linkHandler=createStaffDocumentLinkHandler({config:linkConfig,authenticate:async(token)=>{
+    const response=await fetch(local.API_URL+"/auth/v1/user",{headers:{apikey:local.ANON_KEY,Authorization:`Bearer ${token}`}});
+    if(!response.ok)return null;const user=await response.json();return user.id===actor?{actorId:user.id,db:releaseDb(true)}:null;
+  },service:{rpc:async(name,args)=>{const result=await releaseDb(false).rpc(name,args);
+    if(name==="capture_document_link"&&!result.error&&loseLinkReply){loseLinkReply=false;return {data:null,error:new Error("Lost committed link capture reply")};}return result;
+  }},download:releaseDownload,practice:{name:"Synthetic",address:"Synthetic",domain:null}},"prepare");
+  const linkEndpoint=await serve(async(req,res)=>{
+    try{let body="";for await(const chunk of req)body+=chunk;
+      const response=await linkHandler(new Request("http://local.test/prepare-document-link",{method:req.method,headers:req.headers as Record<string,string>,body}));
+      res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
+    }catch(error){failures.push(error);res.statusCode=500;res.end('{}');}
+  });
+  const {p_origin:_linkOrigin,p_key_version:_linkKey,...linkHttpArgs}=linkArgs;
+  const prepareLink=()=>fetch(linkEndpoint,{method:"POST",headers:{...staffHeaders,Origin:origin},body:JSON.stringify(linkHttpArgs)});
+  check(!(await prepareLink()).ok&&!loseLinkReply,"Link handler loses response after actual SQL artifact capture");
+  const readsAfterAllPrepared=releaseReads;
+  const recoveredLinkResponse=await prepareLink();check(recoveredLinkResponse.ok,"Actual link handler recovers ambiguous capture");
+  const recoveredLink=await recoveredLinkResponse.json();
+  check(recoveredLink.artifact_hash===linkArtifact.artifact_hash&&releaseReads===readsAfterAllPrepared,"Link recovery preserves exact artifact without another Storage read");
+  check(recoveredLink.manifest[1].sha256===ready.capture.content_sha256,"Actual link manifest binds physical API original digest");
+  check(sql(`select count(*) from document_link_payloads where grant_id=${quote(linkId)};`)==="1","Lost link reply creates exactly one immutable artifact");
   const canceled=await rpc("cancel_ezyvet_attachment_approval",{p_id:cancelId,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash,p_confirmed:true},true);
   check(canceled.status==="canceled","Unconfirmed review obtains durable cancellation");
   await assert.rejects(rpc("approve_ezyvet_attachment_record",approvalArgs(cancelId,correctionId),true),(error:{code:string})=>error.code==="23514");assertions++;
@@ -545,8 +588,12 @@ try {
   const staleRelease=await rpc("read_record_release",{p_id:releaseId},true);
   check(!staleRelease.eligible&&staleRelease.events.some((e:{kind:string})=>e.kind==="source_changed"),"Actual source revision invalidates confirmed API release");
   const historicalEmailResponse=await prepareEmail(),historicalEmail=await historicalEmailResponse.json();
-  check(historicalEmailResponse.ok&&historicalEmail.payload_hash===recoveredEmail.payload_hash&&releaseReads===readsAfterPayload,"Historical handler recovery returns saved artifact without source read or send");
+  check(historicalEmailResponse.ok&&historicalEmail.payload_hash===recoveredEmail.payload_hash&&releaseReads===readsAfterAllPrepared,"Historical handler recovery returns saved artifact without source read or send");
   check((await rpc("confirm_record_release",confirmArgs,true)).source_hash===confirmedRelease.source_hash,"Actual confirmation replay preserves immutable historical receipt");
+  check(!(await rpc("read_record_release",{p_id:smsReleaseId},true)).eligible,"Actual source revision also invalidates document-link release");
+  const historicalLinkResponse=await prepareLink(),historicalLink=await historicalLinkResponse.json();
+  check(historicalLinkResponse.ok&&historicalLink.artifact_hash===recoveredLink.artifact_hash&&releaseReads===readsAfterAllPrepared,"Stale-source link recovery preserves captured artifact without download or message");
+  await assert.rejects(rpc("attest_document_link",{p_request_id:linkId,p_reviewed_artifact_hash:linkArtifact.artifact_hash,p_reviewed_message_hash:linkCapability.message_hash,p_attest:true},true),(e:{code:string})=>e.code==="42501");assertions++;
   sql("update record_release_policy set enabled=false;");
 
   check((await act(id, "retrieve")).ok, "Original historical bytes remain recoverable after parent changes");
