@@ -126,4 +126,9 @@ select ok(not has_function_privilege('service_role','ezyvet_attachment_review_or
 select ok(not exists(select 1 from patient_documents),'No native document promotion');
 select ok(not exists(select 1 from external_record_versions),'No manual export provenance forged');
 select ok(not exists(select 1 from record_release_sources),'No release inclusion');
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db710000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+select is(jsonb_array_length(list_record_release_sources_v8((select id from fx where k='pet'))->'document_ids'),0,'Current release candidates exclude API originals');
+select is(jsonb_array_length(select_all_record_release_sources_v8((select id from fx where k='pet'))#>'{selection,external_record_ids}'),0,'Select-all does not mislabel API originals as manual exports');
+select throws_ok($$select preview_record_release_v8((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',jsonb_build_object('document_ids',jsonb_build_array((select v#>>'{record,id}' from data where k='approved'))))$$,'23514',null,'API chart record ID cannot substitute a release document');
+reset role;
 select * from finish();rollback;
