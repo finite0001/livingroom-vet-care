@@ -650,7 +650,7 @@ try {
       check(JSON.stringify(await rpc("approve_ezyvet_attachment_record", approvalArgs, true)) === JSON.stringify(approved), "Exact approval retry survives a later source revision");
       await assert.rejects(rpc("approve_ezyvet_attachment_record", { ...approvalArgs, p_id: conflictingApproval, p_previous_record_id: correctionId }, true), (error: { code: string }) => error.code === "40001"); assertions++;
       sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);
-      for (const channel of ['EMAIL', 'SMS'] as const) for (const interruption of ['finish-reply', 'start-reply', 'finish-write'] as const) {
+      for (const channel of ['EMAIL', 'SMS'] as const) for (const interruption of ['finish-reply', 'start-reply', 'finish-write', 'source-before-start'] as const) {
         const acceptedArgs = channel === 'EMAIL' ? packageArgs : smsArgs;
         const acceptedPreview = await api('/rest/v1/rpc/preview_record_release_v9', acceptedArgs, chartHeaders);
         const acceptedRelease = randomUUID(), acceptedRequest = randomUUID(); ids.push(acceptedRelease, acceptedRequest);
@@ -684,6 +684,9 @@ try {
           return new Response(JSON.stringify(channel === 'EMAIL' ? { id: randomUUID() } : { sid: 'SM' + randomUUID().replaceAll('-', '') }), { status: 202 });
         }) as typeof fetch;
         const interruptedDb = { rpc: async (name: string, args: Record<string, unknown> = {}) => {
+          if (interruption === 'source-before-start' && name === 'start_communication_attempt') {
+            sql(`update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(selected.id)};`);
+          }
           if (interruption === 'finish-write' && name === 'finish_communication_attempt') {
             lostFinish = true;
             return { data: null, error: new Error('Synthetic finish write unavailable') };
@@ -695,6 +698,14 @@ try {
           }
           return result;
         } };
+        if (interruption === 'source-before-start') {
+          const result = await dispatchOne(interruptedDb, workerEnvironment, acceptedTransport);
+          check(result.processed && result.state === 'failed' && acceptanceCalls === 0, "Source revision after payload materialization stops actual worker before provider transport");
+          check(sql(`select state||':'||attempt_count::text from communication_outbox where id=${quote(acceptedOutbox.id)};`) === 'failed:0', "Final start guard records no provider attempt for newly invalidated API source");
+          check(sql(`select count(*) from communication_attempts where outbox_id=${quote(acceptedOutbox.id)};`) === '0', "Rejected start creates no ambiguous provider attempt receipt");
+          sql(`update ezyvet_identity_heads set version=version-1 where snapshot_id=${quote(selected.id)};`);
+          continue;
+        }
         await assert.rejects(dispatchOne(interruptedDb, workerEnvironment, acceptedTransport)); assertions++;
         const expectedCalls = interruption === 'start-reply' ? 0 : 1;
         const expectedState = interruption === 'finish-reply' ? 'accepted:1:' : 'claimed:1:';
