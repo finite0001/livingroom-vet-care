@@ -213,3 +213,14 @@ Migration7200 fixes an observed access-revocation race in download preparation a
 The final93-migration local rehearsal passes161 HTTP/Auth/Storage and55 contention checks. Six additional cases observe the exact blocker before revocation: download preparation request/source locks, abandonment request-row/tombstone locks, and scan preparation request/source locks. Rejected operations preserve pending requests and create no new request, tombstone or scan. Four focused SQL suites pass150 assertions. All owned disposable resources were removed. Evidence: `docs/evidence/attachment-request-role-waits-local-20260913.json`.
 
 This is not proof of every possible role/source/lease ordering. File action UI, original inspection, clinical review/release, current populated upgrade/restore and hosted/provider/operator acceptance remain unfinished. No hosted migration or activation occurred.
+
+
+### Operator private-file capture checkpoint
+
+Saved scan observations now have explicit private-file preparation, request recovery and capture controls. New preparation binds exact operation/actor/patient/parent/page/snapshot/hash/head and persists the local reference before RPC. The frontend reuses the worker's source/intent/capture validator; the shared function's configuration type is narrowed to source origin/site only. No provider credential is needed in the browser.
+
+Capture first recovers the saved request and checks pending status, active lease, retry time and retryability. After a successful or lost capture response, it recovers again; only a matching saved receipt displays captured status. Uncertain file state guards file pagination, patient selection and competing scan/file actions. Recheck remains available. A retained preparation reopens after reload without another prepare request. An unreadable local reference blocks duplicate preparation but leaves scan history usable; server-side saved-request discovery UI remains needed for that recovery path.
+
+Validation:586 unit tests and36 browser cases passed (26 attachment and10 neighboring prescription cases), including explicit prepare/capture separation, lost capture acknowledgment, disabled capture, unavailable recovery, unreadable local reference and reload recovery. Lint/TypeScript/build and frozen capture/cleanup entrypoint checks passed. These browser calls are mocked and do not establish hosted/provider acceptance. Prior93-migration runtime evidence remains separate. Evidence: `docs/evidence/attachment-file-capture-ui-local-20260913.json`.
+
+Still required: server request-history UI, abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore, broader races and actual source/provider/operator/clinical acceptance. Full commercial-readiness gates remain open. No hosted function/migration deployment or activation occurred.

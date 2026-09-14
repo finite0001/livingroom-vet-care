@@ -1,6 +1,7 @@
+import { AttachmentFileCapture } from "./AttachmentFileCapture";
 import { AttachmentScanPreparation } from "./AttachmentScanPreparation";
 import { AttachmentPageError, attachmentPageError } from "./attachment-page-errors";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,13 +59,19 @@ function PatientScans({ actor, mapping, onLocked }: PatientProps) {
     {selected && !preparing && <ScanFiles key={selected.id} actor={actor} mapping={mapping} scan={selected} onLocked={setLocked} />}
   </div>;
 }
-interface FilesProps extends PatientProps { scan: AttachmentRun; }
+interface FilesProps extends PatientProps { scan: AttachmentRun; disabled?: boolean; }
 function ScanFiles({ actor, mapping, scan, onLocked }: FilesProps) {
+  const [scanLocked, setScanLocked] = useState(false);
+  const [fileLocks, setFileLocks] = useState<Record<string, boolean>>({});
+  const fileLocked = Object.values(fileLocks).some(Boolean);
+  const updateFileLock = useCallback((id: string, locked: boolean) => setFileLocks(previous => previous[id] === locked ? previous : { ...previous, [id]: locked }), []);
+  useEffect(() => { onLocked(scanLocked || fileLocked); }, [scanLocked, fileLocked, onLocked]);
+  useEffect(() => () => onLocked(false), [onLocked]);
   const [cursor, setCursor] = useState<AttachmentObservationCursor | null>(null);
   const files = useQuery({ queryKey: ["attachment-observations", actor, mapping.link_id, scan.id, cursor], queryFn: () => listAttachmentObservations(scan.id, mapping, scan.parent_context, cursor), retry: false });
   return <section aria-label="Files observed in selected scan" className="space-y-3">
     <h3 className="font-semibold">Files observed in this scan</h3>
-    <AttachmentScanActions actor={actor} mapping={mapping} scan={scan} onLocked={onLocked} />
+    <AttachmentScanActions actor={actor} mapping={mapping} scan={scan} onLocked={setScanLocked} disabled={fileLocked} />
     <p className="text-sm text-muted-foreground">{scan.status === "running" ? "This scan is still in progress. The list includes only pages already saved." : scan.status === "page_limit_reached" ? "The scan reached its limit. More source files may remain." : "This scan completed for the selected patient or consultation. It does not establish complete migration of the patient's records."}</p>
     {files.isFetching && <p role="status">Loading observed files…</p>}
     {files.isError && <p role="alert">File evidence is unavailable or changed unexpectedly. Recheck the saved scan.</p>}
@@ -76,18 +83,19 @@ function ScanFiles({ actor, mapping, scan, onLocked }: FilesProps) {
         <div className="flex flex-wrap gap-2"><Badge variant="secondary">{file.is_current ? "Latest observed file revision" : "File source changed"}</Badge><span className="text-sm">{file.metadata.mime_type || "File type not supplied"}</span></div>
         {file.metadata.mime_type && !["application/pdf", "image/jpeg", "image/png", "application/octet-stream"].includes(file.metadata.mime_type.toLowerCase().split(";")[0].trim()) && <p className="text-sm">This file type needs separate review; it is not supported by the current file capture process.</p>}
         {file.metadata.notes && <p className="whitespace-pre-wrap break-words text-sm">{file.metadata.notes}{file.metadata.notes_truncated ? "\nNotes preview shortened; full source evidence is retained." : ""}</p>}
+        <AttachmentFileCapture actor={actor} mapping={mapping} file={file} parent={scan.parent_context} parentCurrent={files.data.parent_is_current} disabled={scanLocked || Object.entries(fileLocks).some(([id, locked]) => locked && id !== `${file.run_id}:${file.page}:${file.snapshot_id}:${file.observed_head_version}`)} onLocked={updateFileLock} />
         <p className="text-xs text-muted-foreground">Source attachment {file.external_id} · saved page {file.page} · observed revision {file.observed_head_version}</p>
       </article>)}
     </>}
     <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" disabled={files.isFetching} onClick={() => void files.refetch()}>Recheck observed files</Button>
-      <Button variant="secondary" disabled={!cursor || files.isFetching} onClick={() => setCursor(null)}>First file page</Button>
-      <Button variant="secondary" disabled={files.isFetching || files.isError || !files.data?.next_cursor} onClick={() => setCursor(files.data?.next_cursor ?? null)}>Next file page</Button>
+      <Button variant="secondary" disabled={files.isFetching || fileLocked || scanLocked} onClick={() => void files.refetch()}>Recheck observed files</Button>
+      <Button variant="secondary" disabled={!cursor || files.isFetching || fileLocked || scanLocked} onClick={() => setCursor(null)}>First file page</Button>
+      <Button variant="secondary" disabled={files.isFetching || fileLocked || scanLocked || files.isError || !files.data?.next_cursor} onClick={() => setCursor(files.data?.next_cursor ?? null)}>Next file page</Button>
     </div>
   </section>;
 }
 
-function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
+function AttachmentScanActions({ actor, mapping, scan, onLocked, disabled = false }: FilesProps) {
   const queryClient = useQueryClient();
   const [current, setCurrent] = useState(scan);
   const [busy, setBusy] = useState(false);
@@ -99,7 +107,7 @@ function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
   useEffect(() => { alive.current = true; return () => { alive.current = false; onLocked(false); }; }, [onLocked]);
   useEffect(() => { onLocked(busy || uncertain); }, [busy, uncertain, onLocked]);
   async function act(readPage: boolean) {
-    if (lock.current) return;
+    if (lock.current || disabled) return;
     lock.current = true; setBusy(true); setNotice("");
     try {
       let recovered = await recoverAttachmentRun(actor, mapping, scan);
@@ -133,8 +141,8 @@ function AttachmentScanActions({ actor, mapping, scan, onLocked }: FilesProps) {
     {sourceFailure && <p role="alert">{sourceFailure.message}</p>}
     {notice && <p role={uncertain ? "alert" : "status"}>{notice}</p>}
     <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" disabled={busy} onClick={() => void act(false)}>Recheck saved attachment scan</Button>
-      <Button variant="secondary" disabled={busy || uncertain || !!sourceFailure?.requiresNewScan || !attachmentScanCanContinue(current)} onClick={() => void act(true)}>Read next attachment page</Button>
+      <Button variant="secondary" disabled={busy || disabled} onClick={() => void act(false)}>Recheck saved attachment scan</Button>
+      <Button variant="secondary" disabled={busy || disabled || uncertain || !!sourceFailure?.requiresNewScan || !attachmentScanCanContinue(current)} onClick={() => void act(true)}>Read next attachment page</Button>
     </div>
   </div>;
 }

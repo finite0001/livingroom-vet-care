@@ -1,0 +1,51 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "2fe01f7fba339544a5a76dcb54ce6632ce058d33",
+  "scope": "Explicit private-file preparation/capture and same-request recovery in saved scan observations",
+  "validation": {
+    "unit_tests": 586,
+    "browser_cases": 36,
+    "attachment_browser_cases": 26,
+    "neighbor_browser_cases": 10,
+    "new_file_state_unit_tests": 5,
+    "new_file_browser_cases": 6,
+    "lint_typecheck_build": "passed with existing warnings",
+    "frozen_edge_checks": [
+      "ezyvet-attachment-capture",
+      "ezyvet-attachment-cleanup"
+    ]
+  },
+  "behavior": [
+    "Exact operation, actor, patient, parent and observed snapshot/head validation",
+    "Browser and worker reuse capture receipt/source validators; frontend needs only source origin/site from config, never provider credentials",
+    "Persist request identity before prepare RPC; capture is a separate explicit action",
+    "Recover before capture and after either success or uncertain response; completion requires saved matching receipt",
+    "Unconfirmed file operations guard pagination, patient selection and competing actions; recheck remains available",
+    "Active lease, cooldown, permanent failure and terminal request state disable capture",
+    "Prepared file recovers same ID after reload; unreadable local reference prevents duplicate preparation while leaving scan history usable",
+    "Captured status explicitly retains clinical-review requirement; no original/provider URLs rendered"
+  ],
+  "sha256": {
+    "src/hub/features/imports/AttachmentFileCapture.tsx": "5b367b975ca3b98a50129dd1fc1369bb84b1dc04af3838643e83fd887b2fabc6",
+    "src/hub/features/imports/AttachmentScanHistory.tsx": "d06c12d740168d208c0b47af9ae1012bcfe76ba9986afa4f1c1b86fdda11e439",
+    "src/hub/features/imports/attachment-file-api.ts": "18f8973ac8c7529607fbcc04832b594cc7b138451454afa9e7a218930cd381e9",
+    "src/hub/features/imports/attachment-file-state.ts": "cf64e12e8b4a27072b2ac63ee36df0c8e635b25270eb9cb272061bd9d3ac505d",
+    "supabase/functions/ezyvet-attachment-capture/contract.ts": "eb963af22d4590f788ac3c850c78fbaef3fea84227b9b1abbfe565bffdc95914",
+    "tests/ezyvet/attachment-file-state.test.ts": "bc61adc14a4f081166b9b77365db3b584c9aa8dd7250b21d1c31d842f8956345",
+    "e2e/attachment-history.spec.ts": "228467e1e2833b7a232aca8ab6f71368e3725060385752dbc64e31a47d3edb33"
+  },
+  "log_sha256": {
+    "/tmp/lrv-attachment-file-ui-check-final-confirm.log": "47baee8318f285d047aabc468a47265f7a6c3ea55b86e1b858a8562c37622a75",
+    "/tmp/lrv-attachment-file-ui-browser-confirm.log": "ccbf39e2e21040a657cd9ef98ebf600d4a17cb3521fcf0d27ed509f700169119",
+    "/tmp/lrv-attachment-file-ui-deno.log": "b57bb3d67dfc9784a7103151324a2cf4c358a3e66aedf430182f34ac44ff211d"
+  },
+  "limits": [
+    "Browser Auth/RPC/Edge traffic is mocked; prior actual93-migration runtime evidence is separate",
+    "No new migration; shared worker validator change narrows only its configuration type",
+    "Saved-request server discovery UI, abandonment/cleanup controls and original inspection remain unfinished",
+    "Clinical approval/corrections/release, current populated upgrade/restore and actual hosted provider/operator acceptance remain open",
+    "Screen-reader, full keyboard/zoom and rendered dark-mode acceptance remain unverified",
+    "Full mail/Auth, Stripe sandbox, vendor, clinical and coordinated rollout requirements remain active"
+  ],
+  "deployment": "No hosted deployment, real provider call, message, payment or clinical-policy activation"
+}

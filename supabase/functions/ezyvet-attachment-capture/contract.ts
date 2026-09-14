@@ -45,7 +45,7 @@ export function parseCapture(value: unknown, identity: Identity, intent: Intent)
   text(c.storage_object_id, uuid);
   return { request_id: identity.id, capture_hash: text(c.capture_hash, hash), content_sha256: intent.content_sha256 };
 }
-export function parseRecovery(value: unknown, identity: Identity, config: EzyVetConfig): Recovery {
+export function parseRecovery(value: unknown, identity: Identity, config: Pick<EzyVetConfig, "baseUrl" | "siteUid">): Recovery {
   const envelope = object(value), r = object(envelope.request);
   if (r.id !== identity.id || r.actor_id !== identity.actor || r.pet_id !== identity.pet || r.request_hash !== identity.requestHash || (typeof r.status !== "string" || !["pending", "captured", "abandoned"].includes(r.status))) invalid();
   const c = object(r.source_context), p = object(c.parent), selected = object(r.request_payload);

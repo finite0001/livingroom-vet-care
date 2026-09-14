@@ -1,0 +1,29 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseAttachmentFileRecovery, AttachmentFileActionError } from "./attachment-file-state";
+import type { AttachmentFileIntent } from "./attachment-file-state";
+interface Database { public: { Tables: Record<never, never>; Views: Record<never, never>; Enums: Record<never, never>; CompositeTypes: Record<never, never>; Functions: { [key: string]: { Args: Record<string, unknown>; Returns: unknown } }; }; }
+const client = supabase as unknown as SupabaseClient<Database>;
+async function rpc(name: string, args: Record<string, unknown>) {
+  const { data, error } = await client.rpc(name, args);
+  if (error) throw new AttachmentFileActionError("File request is unconfirmed. Recover the original request before continuing.");
+  return data;
+}
+export async function prepareAttachmentFile(intent: AttachmentFileIntent) {
+  return parseAttachmentFileRecovery(await rpc("prepare_ezyvet_attachment_download", { p_id: intent.id, p_pet_id: intent.pet, p_run_id: intent.runId, p_page: intent.page, p_snapshot_id: intent.snapshotId, p_payload_hash: intent.payloadHash, p_observed_head_version: intent.headVersion }), intent);
+}
+export async function recoverAttachmentFile(intent: AttachmentFileIntent) {
+  const value = await rpc("recover_ezyvet_attachment_download", { p_id: intent.id, p_pet_id: intent.pet });
+  return value === null ? null : parseAttachmentFileRecovery(value, intent);
+}
+export async function captureAttachmentFile(intent: AttachmentFileIntent) {
+  if (!intent.requestHash) throw new AttachmentFileActionError("Recover the saved file request before capture.");
+  const { data, error } = await supabase.functions.invoke("ezyvet-attachment-capture", { body: { request_id: intent.id, pet_id: intent.pet, request_hash: intent.requestHash } });
+  if (error) {
+    let code: unknown;
+    if ("context" in error && error.context instanceof Response) { try { code = (await error.context.json())?.error; } catch { /* Never display raw provider text. */ } }
+    if (code === "CAPTURE_DISABLED" || code === "IMPORT_DISABLED") throw new AttachmentFileActionError("Private file capture is not commissioned. An administrator must finish server setup.");
+    throw new AttachmentFileActionError("Capture response was unconfirmed. Recover this file request before trying again.");
+  }
+  if (!data || data.request_id !== intent.id) throw new AttachmentFileActionError("Capture response was unconfirmed. Recover this file request before trying again.");
+}
