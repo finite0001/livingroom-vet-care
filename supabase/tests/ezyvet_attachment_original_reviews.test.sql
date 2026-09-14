@@ -131,4 +131,8 @@ select is(jsonb_array_length(list_record_release_sources_v8((select id from fx w
 select is(jsonb_array_length(select_all_record_release_sources_v8((select id from fx where k='pet'))#>'{selection,external_record_ids}'),0,'Select-all does not mislabel API originals as manual exports');
 select throws_ok($$select preview_record_release_v8((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',jsonb_build_object('document_ids',jsonb_build_array((select v#>>'{record,id}' from data where k='approved'))))$$,'23514',null,'API chart record ID cannot substitute a release document');
 reset role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($$select approve_ezyvet_attachment_original((select id from fx where k='approve'),(select id from fx where k='pet'),(select(v#>>'{request,capture,id}')::uuid from data where k='ready1'),(select v#>>'{request,capture,capture_hash}' from data where k='ready1'),1,null,'x'||repeat(' ',2000),true)$$,'23514',null,'Approval action cannot persist oversized raw whitespace');
+select throws_ok($$select withdraw_ezyvet_attachment_original((select id from fx where k='withdraw'),(select id from fx where k='pet'),(select(v#>>'{record,id}')::uuid from data where k='approved'),(select v#>>'{record,record_hash}' from data where k='approved'),'x'||repeat(' ',2000))$$,'23514',null,'Withdrawal action cannot persist oversized raw whitespace');
+reset role;
 select * from finish();rollback;
