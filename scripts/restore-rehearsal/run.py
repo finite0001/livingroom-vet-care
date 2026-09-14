@@ -283,7 +283,7 @@ try:
     if not args.resume_backup:
         print('Starting isolated synthetic source; artifacts:',run,flush=True)
         source=project('source',58321,True)
-        command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
+        command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
         if args.rehearse_observed_hosted_gaps:
             assert ledger(source)==[p.name.split('_')[0] for p in initial_files]
             # Reproduce the six direct ACL differences observed by read-only hosted
@@ -304,16 +304,16 @@ try:
             verify_identity(source)
             command(push+['--include-all','--yes'])
             assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
-            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
+            command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
             (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         if any(p.name.startswith('20260913520000_') for p in migration_files):
             seed_vaccination_receipt(source)
             # Preserve all prior rows and explicitly capture the four new release audit entries.
-            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-review-audit',str(source['path']/'status.json'),str(run)])
-            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-originals',str(source['path']/'status.json'),str(run)])
-            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-review',str(source['path']/'status.json'),str(run)])
-            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-release',str(source['path']/'status.json'),str(run)])
+            command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-review-audit',str(source['path']/'status.json'),str(run)])
+            command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-originals',str(source['path']/'status.json'),str(run)])
+            command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-review',str(source['path']/'status.json'),str(run)])
+            command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-release',str(source['path']/'status.json'),str(run)])
             (run/'vaccination-receipt-fixture.json').write_text(json.dumps(vaccination_snapshot(source),sort_keys=True))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
@@ -383,7 +383,7 @@ try:
         except Exception:
             if attempt==59: raise RuntimeError('Restored Auth/PostgREST/Storage did not become healthy')
             time.sleep(1)
-    command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
+    command(['node','--experimental-strip-types',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
     if verify_canonical:
         assert functions_snapshot(destination)==canonical_inventory, 'Restored backfilled routines/grants/triggers differ from canonical order'
         evidence['canonical_functions_grants_triggers_match']=True
