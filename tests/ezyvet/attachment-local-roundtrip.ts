@@ -1,4 +1,4 @@
-import { parseAttachmentFileHistory } from "../../src/hub/features/imports/attachment-file-state.ts";
+import { parseAttachmentFileHistory, parseAttachmentFileRecovery } from "../../src/hub/features/imports/attachment-file-state.ts";
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
@@ -433,6 +433,13 @@ try {
       check(noReservationResponse.status === 409 && (await noReservationResponse.json()).retry_safe === false, "Unreserved abandoned request is explicitly ineligible, not a retryable cleanup failure");
       check(cleanupStorageCalls === unreservedStorageCalls && upstreamCalls === unreservedSourceCalls, "Unreserved cleanup performs no Storage or provider operation");
       check(await rpc("recover_ezyvet_attachment_cleanup", { p_cleanup_id: unreservedCleanup, p_id: unreservedRequest, p_pet_id: pet }, true) === null, "Unreserved cleanup creates no attempt or absence receipt");
+      const emptyAbandonId = randomUUID(); ids.push(emptyAbandonId);
+      const emptyAbandon = await rpc("abandon_ezyvet_attachment_download", { p_id: emptyAbandonId, p_pet_id: pet, p_confirmed: true }, true);
+      const emptyIntent = { id: emptyAbandonId, actor, pet, runId, page: 1, snapshotId: selected.id, payloadHash: selected.hash, headVersion: selected.version, externalId: String(unreserved.request.source_context.attachment_external_id), parent: unreserved.request.source_context.parent, name: "Synthetic unprepared request" };
+      const emptyState = parseAttachmentFileRecovery(emptyAbandon, emptyIntent);
+      check(emptyState.status === "abandoned" && emptyState.requestHash === null && !emptyState.captured, "Browser parser recognizes actual owned unprepared abandonment without inventing capture evidence");
+      const emptyRecovered = await rpc("recover_ezyvet_attachment_download", { p_id: emptyAbandonId, p_pet_id: pet }, true);
+      check(parseAttachmentFileRecovery(emptyRecovered, emptyIntent).status === "abandoned", "Lost unprepared abandonment acknowledgment recovers exact terminal state");
       const cleanupRequest = randomUUID(), cleanupId = randomUUID(); ids.push(cleanupRequest, cleanupId);
       const cleanupPrepared = await rpc("prepare_ezyvet_attachment_download", { p_id: cleanupRequest, p_pet_id: pet, p_run_id: runId, p_page: 1, p_snapshot_id: selected.id, p_payload_hash: selected.hash, p_observed_head_version: selected.version }, true);
       const cleanupHash = cleanupPrepared.request.request_hash;

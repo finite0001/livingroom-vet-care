@@ -15,6 +15,11 @@ export function parseAttachmentFileIntent(value: unknown, actor: string, mapping
 }
 export function parseAttachmentFileRecovery(value: unknown, expected: AttachmentFileIntent) {
   const intent = intentSchema.parse(expected), envelope = object(value), request = object(envelope.request);
+  if (request.source_context === null) {
+    if (request.id !== intent.id || request.actor_id !== intent.actor || request.pet_id !== intent.pet || request.status !== "abandoned" || request.request_payload !== null || request.request_hash !== null || intent.requestHash !== undefined || envelope.capture_intent !== null || envelope.capture !== null || envelope.worker !== null || envelope.download_available !== false) throw new Error("Abandonment receipt differs from the unprepared request.");
+    date.parse(request.created_at); date.parse(request.resolved_at);
+    return { status: "abandoned" as const, requestHash: null, worker: null, captured: false, fileSize: null };
+  }
   const requestHash = hash.parse(request.request_hash);
   if (intent.requestHash && intent.requestHash !== requestHash) throw new Error("Saved file request changed.");
   const identity = { id: intent.id!, actor: intent.actor!, pet: intent.pet!, requestHash };

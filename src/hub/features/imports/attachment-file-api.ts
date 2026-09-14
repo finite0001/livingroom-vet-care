@@ -36,3 +36,7 @@ export async function recoverAttachmentFileScan(intent: AttachmentFileIntent, ma
   const value = await rpc("recover_ezyvet_attachment_run", { p_id: intent.runId, p_animal_link_id: mapping.link_id });
   return parsePreparedAttachmentRun(value, intent.runId, intent.actor, mapping, intent.parent);
 }
+
+export async function abandonAttachmentFile(intent: AttachmentFileIntent) {
+  return parseAttachmentFileRecovery(await rpc("abandon_ezyvet_attachment_download", { p_id: intent.id, p_pet_id: intent.pet, p_confirmed: true }), intent);
+}

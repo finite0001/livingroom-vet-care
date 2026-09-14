@@ -242,3 +242,12 @@ Abandon/cleanup controls, original inspection, clinical review/corrections/relea
 The cleanup worker now returns409 `CLEANUP_NOT_ELIGIBLE` with `retry_safe=false` for an owned abandoned request whose capture intent is explicitly null. Previously the shared intent parser turned that ordinary ineligible state into a retryable503. No Storage/provider operation, cleanup attempt or absence receipt occurs. A missing reservation field still fails as malformed; no successful cleanup is claimed.
 
 The regression failed before the fix and now passes. Validation:592 unit tests (24 cleanup-handler cases), frozen cleanup Edge checking, and a fresh93-migration runtime with170 HTTP/Auth/Storage plus55 contention checks passed. Both Animal and Consult unreserved abandonment cases are exercised. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-unreserved-cleanup-local-20260913.json`. No hosted deployment occurred; cleanup/abandon UI and all later clinical/release/readiness gates remain open.
+
+
+### Confirmed operator abandonment checkpoint
+
+File requests now support explicit abandonment confirmation. Canceling sends no abandonment RPC. The action rechecks saved state first, protects captured evidence and active worker leases, then recovers after the mutation even if its response was lost. Unknown preparation can be stopped through the backend's owned source-less tombstone; the frontend accepts that terminal state only when no confirmed request hash was previously pinned. It cannot authorize capture or stand in for a prepared/captured record.
+
+Confirmed abandonment stays in server history. An explicit new-request action clears only the local pointer before another preparation. The UI does not equate abandonment with deleting a reserved file; cleanup remains separate.
+
+Validation:594 unit tests,43 browser cases and a fresh93-migration runtime with174 HTTP/Auth/Storage and55 contention checks passed. Actual source-less abandonment and recovery are parsed for Animal and Consult contexts. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-abandonment-ui-local-20260913.json`. The parent5706f2e full CI run is being allowed to finish before another push. Cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore and full commercial-readiness acceptance remain open. No hosted deployment occurred.
