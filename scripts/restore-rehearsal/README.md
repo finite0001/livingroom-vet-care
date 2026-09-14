@@ -106,3 +106,5 @@ The local migration-manifest candidate reaches100 migrations. Its populated fixt
 The child-binding candidate reaches101 migrations. The same fixture now binds its existing attachment and vaccination child runs to the saved scopes; binding rows participate in the exact restore comparison. No provider calls or child claims occur inside a binding.
 
 The scan-progress candidate reaches102 migrations. The rehearsal also saves the actual owned manifest and binding recovery responses before backup, then compares them after restoration. This explicitly verifies the versioned resolved-scope digest, rather than inferring API recovery from table parity alone.
+
+The attempt-history candidate reaches103 migrations. Before the baseline upgrade, the fixture creates one synthetic leased import with a latest error. Upgrade must leave that row unchanged and add exactly one `migration_baseline` event with a hashed lease reference. All attempt-event rows join the exact database restore comparison; prior history is never manufactured.

@@ -109,7 +109,7 @@ try:
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
         sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    targeted=['ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    targeted=['ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
@@ -153,6 +153,17 @@ try:
         check(scalar(f"select count(*) from ezyvet_migration_runs where id='{denied_migration}';")=='0','Role loss during manifest wait leaves no run')
     finally:
         sql(f"update profiles set is_active=true where id='{actor}';")
+    attempt_child=str(uuid.uuid4())
+    attempt_claim=json.loads(run(claim(attempt_child)))
+    attempt_fail=f"select fail_ezyvet_import_page('{attempt_child}','{actor}','{attempt_claim['lease_id']}','UPSTREAM_TIMEOUT',1);"
+    contended(service+attempt_fail,service+attempt_fail,lambda code,out,err:code==0)
+    check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{attempt_child}' and kind='page_failed';")=='1','Concurrent failure replay creates one durable event')
+    sql(f"update ezyvet_import_runs set retry_after=null where id='{attempt_child}';")
+    attempt_retry=json.loads(run(claim(attempt_child)))
+    contended(service+stage(attempt_child,attempt_retry['lease_id'],page),service+stage(attempt_child,attempt_retry['lease_id'],page),lambda code,out,err:code==0)
+    check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{attempt_child}' and kind='page_staged';")=='1','Concurrent staged-page replay creates one durable event')
+    check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{attempt_child}';")=='5','Baseline, two claims, one failure and one success retained')
+    sql(f"update ezyvet_import_runs set retry_after=null where id='{attempt_child}';")
     binding_id=str(uuid.uuid4())
     def bind_child(bid):
         return f"select bind_ezyvet_migration_child('{bid}','{scope_id}','{fx['run']}','Observed binding concurrency');"

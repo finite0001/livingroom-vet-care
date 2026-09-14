@@ -38,13 +38,13 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,16)]
+new_versions = [f'20260914{v:02d}0000' for v in range(1,17)]
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 102
+    assert len(migration_files) == 103
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==102 and len(initial_files)==51
+    assert len(migration_files)==103 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -173,7 +173,7 @@ def functions_snapshot(project):
         from pg_default_acl d where d.defaclnamespace='public'::regnamespace));"""))
 
 def vaccination_snapshot(project):
-    tables = ['ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings',
+    tables = ['ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings', 'ezyvet_migration_attempt_events',
               'ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
               'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
               'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',
@@ -341,6 +341,13 @@ try:
             (run/'initial-routine-inventory.json').write_text(sql(source,inventory_sql))
             access_sql=(root/'scripts/restore-rehearsal/access-inventory.sql').read_text()
             (run/'initial-access-inventory.json').write_text(sql(source,access_sql))
+            # An existing leased run proves the new ledger starts with an honest
+            # migration baseline and does not alter the old cursor/lease/error.
+            pretracking_actor=str(uuid.UUID(json.loads((run/'synthetic-fixture.json').read_text())['user']))
+            pretracking_id=str(uuid.uuid4())
+            sql(source,f"""insert into public.ezyvet_import_runs(id,source_origin,source_site_uid,resource,requested_by,lease_id,lease_until,last_error_code)
+              values('{pretracking_id}','https://api.trial.ezyvet.com','Synthetic-Pretracking-{run_id}','animal','{pretracking_actor}',gen_random_uuid(),now()+interval '1 minute','UPSTREAM_TIMEOUT');""")
+            pretracking_before=json.loads(sql(source,f"select to_jsonb(r) from public.ezyvet_import_runs r where id='{pretracking_id}';"))
             for migration in missing_files: shutil.copy2(migration,source['path']/'supabase/migrations'/migration.name)
             verify_identity(source)
             push=['supabase','db','push','--local','--skip-vault','--workdir',str(source['path'])]
@@ -353,6 +360,12 @@ try:
             verify_identity(source)
             command(push+['--include-all','--yes'])
             assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
+            assert json.loads(sql(source,f"select to_jsonb(r) from public.ezyvet_import_runs r where id='{pretracking_id}';"))==pretracking_before
+            pretracking_events=json.loads(sql(source,f"select jsonb_agg(to_jsonb(e) order by sequence) from public.ezyvet_migration_attempt_events e where child_run_id='{pretracking_id}';"))
+            assert len(pretracking_events)==1 and pretracking_events[0]['kind']=='baseline' and pretracking_events[0]['history_origin']=='migration_baseline'
+            assert pretracking_events[0]['error_code']=='UPSTREAM_TIMEOUT' and pretracking_events[0]['attempt_hash']==hashlib.sha256(pretracking_before['lease_id'].encode()).hexdigest()
+            assert pretracking_before['lease_id'] not in json.dumps(pretracking_events)
+            (run/'migration-attempt-baseline-evidence.json').write_text(json.dumps({'existing_run_unchanged':True,'baseline_rows':1,'origin':'migration_baseline','raw_lease_stored_in_events':False}))
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
             (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':args.rehearse_observed_hosted_gaps,'baseline_kind':'staging_20260914' if args.rehearse_staging_baseline else 'legacy_51','baseline_ledger_sha256':hashlib.sha256(baseline_path.read_bytes()).hexdigest() if args.rehearse_staging_baseline else None,'hosted_body_parity_verified':False,'initial_access_inventory_sha256':hashlib.sha256((run/'initial-access-inventory.json').read_bytes()).hexdigest(),'access_inventory_sql_sha256':hashlib.sha256(access_sql.encode()).hexdigest(),'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))

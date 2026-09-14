@@ -33,7 +33,7 @@ const bindingSchema = z.object({
 const cursorSchema = z.object({ before_at: date, before_id: uuid }).strict();
 const count = z.number().int().nonnegative().safe();
 const progressSchema = z.object({
-  version: z.literal(1), binding_id: uuid, scope_id: uuid, migration_run_id: uuid, child_run_id: uuid, resource, context_hash: hash,
+  version: z.literal(2), binding_id: uuid, scope_id: uuid, migration_run_id: uuid, child_run_id: uuid, resource, context_hash: hash,
   superseded: z.boolean(), parent_evidence: descriptor.shape.parent_evidence, parent_current: z.boolean(), household_current: z.boolean(),
   scan: z.object({ status: z.enum(["running", "review_ready", "page_limit_reached"]), next_page: z.number().int().min(1).max(1001), pages_observed: count.max(1000),
     traversal_ended: z.boolean(), page_limit_reached: z.boolean(), retry_after: date.nullable(), latest_error_code: z.string().regex(/^[A-Z_]{1,64}$/).nullable(),
@@ -41,13 +41,19 @@ const progressSchema = z.object({
   observations: z.object({ occurrences: count, distinct_source_identities: count, distinct_snapshot_versions: count,
     occurrence_fidelity: z.enum(["page_ordinal", "deduplicated_page_snapshot"]), exact_current_occurrences: count.nullable(), currentness_available: z.boolean() }).strict(),
   clinical_review: z.object({ reconciled: z.literal(false), approved_local_outcomes: z.null() }).strict(),
-  attempt_history_available: z.literal(false), observed_at: date,
+  attempt_history_available: z.boolean(), attempt_history: z.object({ origin: z.enum(["run_created", "migration_baseline"]).nullable(), started_at: date.nullable(),
+    complete_since_run_creation: z.boolean(), claims: count, failed_pages: count, staged_pages: count }).strict(), observed_at: date,
 }).strict();
+const attemptEventSchema = z.object({ id: uuid, sequence: z.number().int().positive(), kind: z.enum(["baseline", "claimed", "page_staged", "page_failed"]),
+  attempt_hash: hash.nullable(), page: z.number().int().min(1).max(1001), run_status: z.enum(["running", "review_ready", "page_limit_reached"]),
+  next_page: z.number().int().min(1).max(1001), retry_after: date.nullable(), error_code: z.string().regex(/^[A-Z_]{1,64}$/).nullable(),
+  staged_item_count: count.max(50).nullable(), history_origin: z.enum(["run_created", "migration_baseline"]).nullable(), recorded_at: date }).strict();
 export interface MigrationScopeInput extends z.infer<typeof scopeInput> {}
 export interface MigrationManifest extends z.infer<typeof manifestSchema> {}
 export interface MigrationBinding extends z.infer<typeof bindingSchema> {}
 export interface MigrationCursor extends z.infer<typeof cursorSchema> {}
 export interface MigrationProgress extends z.infer<typeof progressSchema> {}
+export interface MigrationAttemptEvent extends z.infer<typeof attemptEventSchema> {}
 export interface MigrationRequest { id: string; source_origin: string; source_site_uid: string; scopes: MigrationScopeInput[] }
 export interface MigrationBindingRequest { id: string; scope_id: string; child_run_id: string; reason: string; replaces_id: string | null }
 export interface MigrationRpc {
@@ -90,7 +96,9 @@ export function parseMigrationProgress(value: unknown, manifest: MigrationManife
     observed.distinct_snapshot_versions > observed.occurrences || observed.exact_current_occurrences > observed.occurrences ||
     observed.currentness_available !== !["contact", "animal", "healthstatus"].includes(result.resource) ||
     observed.currentness_available !== (observed.exact_current_occurrences !== null) ||
-    observed.occurrence_fidelity !== (result.resource === "attachment" ? "page_ordinal" : "deduplicated_page_snapshot"))
+    observed.occurrence_fidelity !== (result.resource === "attachment" ? "page_ordinal" : "deduplicated_page_snapshot") ||
+    result.attempt_history_available !== Boolean(result.attempt_history.origin && result.attempt_history.started_at) ||
+    result.attempt_history.complete_since_run_creation !== (result.attempt_history.origin === "run_created"))
     throw new Error("Migration progress scope or counts differ");
   return result;
 }
@@ -165,6 +173,24 @@ export function createMigrationRunApi(client: MigrationRpc, actorId: string) {
       if (!saved.scopes.some(scope => scope.id === membership.scope_id)) throw new Error("Binding belongs to another migration");
       const value = await rpc("read_ezyvet_migration_binding_progress", { p_id: membership.id });
       return value === null ? null : parseMigrationProgress(value, saved, membership);
+    },
+    async attempts(binding: MigrationBinding, beforeSequence: number | null = null, limit = 20) {
+      const membership = parseMigrationBinding(binding, actorId, binding.scope_id);
+      z.number().int().min(1).max(100).parse(limit);
+      if (beforeSequence !== null) z.number().int().positive().parse(beforeSequence);
+      const page = z.object({ version: z.literal(1), binding_id: uuid, scope_id: uuid, child_run_id: uuid, events: z.array(attemptEventSchema).max(100), has_more: z.boolean() }).strict()
+        .parse(await rpc("list_ezyvet_migration_attempt_events", { p_binding_id: membership.id, p_before_sequence: beforeSequence, p_limit: limit }));
+      if (page.binding_id !== membership.id || page.scope_id !== membership.scope_id || page.child_run_id !== membership.child_run_id ||
+        page.events.length > limit || (page.has_more && page.events.length !== limit)) throw new Error("Attempt history scope or page differs");
+      let previous = beforeSequence ?? Infinity;
+      const ids = new Set<string>();
+      for (const event of page.events) {
+        if (event.sequence >= previous || ids.has(event.id) || (event.kind === "baseline") !== (event.history_origin !== null) ||
+          (event.kind !== "baseline" && event.attempt_hash === null) || (event.kind === "page_staged") !== (event.staged_item_count !== null) ||
+          (event.kind === "page_failed" && event.error_code === null)) throw new Error("Attempt history identity or transition differs");
+        previous = event.sequence; ids.add(event.id);
+      }
+      return { ...page, next_sequence: page.has_more ? page.events[page.events.length - 1].sequence : null };
     },
   };
 }

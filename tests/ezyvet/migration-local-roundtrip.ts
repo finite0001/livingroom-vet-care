@@ -20,8 +20,9 @@ let checks = 0;
 const check = (value: unknown, message: string) => { assert.ok(value, message); checks++; };
 async function request(path: string, body: unknown, auth = service) {
   const response = await fetch(local.API_URL + path, { method: "POST", headers: auth, body: JSON.stringify(body) });
-  const value = await response.json();
-  if (!response.ok) throw { code: value.code, message: value.message };
+  const text = await response.text();
+  const value = text ? JSON.parse(text) : null;
+  if (!response.ok) throw { code: value?.code, message: value?.message };
   return value;
 }
 async function account() {
@@ -87,13 +88,26 @@ check(await otherApi.readBinding(bindingRequest.id, bindingRequest.scope_id) ===
 await assert.rejects(() => otherApi.listBindings(bindingRequest.scope_id)); checks++;
 await assert.rejects(() => otherApi.bind(bindingRequest)); checks++;
 check(sql(`select to_jsonb(r) from ezyvet_import_runs r where id=${quote(child)};`) === childBefore, "HTTP binding leaves child lease, owner and cursor untouched");
+const firstLease = JSON.parse(childBefore).lease_id;
+await request("/rest/v1/rpc/fail_ezyvet_import_page", { p_id: child, p_actor: owner.id, p_lease_id: firstLease, p_code: "UPSTREAM_TIMEOUT", p_retry_seconds: 1 });
+sql(`update ezyvet_import_runs set retry_after=null where id=${quote(child)};`);
+const retry = await request("/rest/v1/rpc/claim_ezyvet_attachment_import", { p_id: child, p_actor: owner.id, p_site_uid: site, p_source_origin: origin, p_animal_link_id: mapping });
+const attemptPage = await api.attempts(bound, null, 2);
+check(attemptPage.events.length === 2 && attemptPage.has_more && attemptPage.events[0].kind === "claimed" && attemptPage.events[1].error_code === "UPSTREAM_TIMEOUT", "HTTP history retains failure after retry clears latest error");
+const earlierAttempts = await api.attempts(bound, attemptPage.next_sequence, 2);
+check(!earlierAttempts.has_more && earlierAttempts.events[1].history_origin === "run_created", "Sequence cursor reaches the actual tracking origin");
+check(!JSON.stringify(attemptPage).includes(retry.lease_id) && !JSON.stringify(earlierAttempts).includes(firstLease), "History exposes no raw lease token");
+const retryProgress = await api.progress(saved, bound);
+check(retryProgress.attempt_history.claims === 2 && retryProgress.attempt_history.failed_pages === 1 && retryProgress.attempt_history.complete_since_run_creation, "Progress counts durable attempts independently from source observations");
+await assert.rejects(() => otherApi.attempts(bound)); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_attempt_events", { p_binding_id: bound.id }, other.auth)); checks++;
 for (let i = 0; i < 2; i++) await api.prepare({ ...manifestRequest, id: randomUUID(), scopes: manifestRequest.scopes.map(scope => ({ ...scope, id: randomUUID() })) });
 const first = await api.list(null, 2);
 check(first.runs.length === 2 && first.has_more && first.next_cursor, "HTTP history returns bounded first page");
 const last = await api.list(first.next_cursor, 2);
 check(last.runs.length === 1 && last.runs[0].id === manifestRequest.id && !last.has_more && !last.next_cursor, "HTTP history cursor recovers original request");
 for (const auth of [owner.auth, headers(local.ANON_KEY), service]) {
-  for (const table of ["ezyvet_migration_runs", "ezyvet_migration_scopes", "ezyvet_migration_bindings"]) {
+  for (const table of ["ezyvet_migration_runs", "ezyvet_migration_scopes", "ezyvet_migration_bindings", "ezyvet_migration_attempt_events"]) {
     const response = await fetch(`${local.API_URL}/rest/v1/${table}?select=id`, { headers: auth });
     check(response.status === 401 || response.status === 403, "Private ledger table cannot be read over HTTP");
   }
@@ -101,6 +115,7 @@ for (const auth of [owner.auth, headers(local.ANON_KEY), service]) {
 for (const auth of [headers(local.ANON_KEY), service]) {
   await assert.rejects(() => request("/rest/v1/rpc/read_ezyvet_migration_run", { p_id: manifestRequest.id }, auth)); checks++;
   await assert.rejects(() => request("/rest/v1/rpc/bind_ezyvet_migration_child", { p_id: randomUUID(), p_scope_id: bindingRequest.scope_id, p_child_run_id: child, p_reason: "Unauthorized", p_replaces_id: null }, auth)); checks++;
+  await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_attempt_events", { p_binding_id: bound.id }, auth)); checks++;
 }
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
@@ -119,5 +134,6 @@ await assert.rejects(() => api.bind(bindingRequest)); checks++;
 await assert.rejects(() => api.readBinding(bindingRequest.id, bindingRequest.scope_id)); checks++;
 await assert.rejects(() => api.listBindings(bindingRequest.scope_id)); checks++;
 await assert.rejects(() => api.progress(saved, bound)); checks++;
+await assert.rejects(() => api.attempts(bound)); checks++;
 check(effects() === beforeEffects, "Migration operations cause no clinical, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);

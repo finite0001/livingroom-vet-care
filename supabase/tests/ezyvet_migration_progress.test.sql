@@ -42,7 +42,7 @@ select is((select v#>>'{scan,traversal_ended}' from data where k='progress'),'tr
 select is((select v#>>'{scan,complete_coverage_verified}' from data where k='progress'),'false','Finished scan does not certify complete migration');
 select is((select v#>'{scan,provider_total}' from data where k='progress'),'null'::jsonb,'Unknown provider total remains unknown');
 select is((select v#>'{clinical_review,approved_local_outcomes}' from data where k='progress'),'null'::jsonb,'Observed source is not clinical approval');
-select is((select v->>'attempt_history_available' from data where k='progress'),'false','Unavailable pre-binding attempt history not invented');
+select is((select v->>'attempt_history_available' from data where k='progress'),'true','Transactional attempt history remains available before binding');
 select is((select v->>'parent_current' from data where k='progress'),'true','Exact saved parent is current');
 select is((select v->>'household_current' from data where k='progress'),'true','Patient still belongs to selected household');
 select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
