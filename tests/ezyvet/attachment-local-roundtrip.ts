@@ -1,3 +1,4 @@
+import { parseAttachmentCleanupHistory } from "../../src/hub/features/imports/attachment-cleanup-state.ts";
 import { parseAttachmentFileHistory, parseAttachmentFileRecovery } from "../../src/hub/features/imports/attachment-file-state.ts";
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
@@ -481,6 +482,8 @@ try {
       const cleanupHistory = await rpc("list_ezyvet_attachment_cleanups", { p_id: cleanupRequest, p_pet_id: pet, p_limit: 1 }, true);
       check(cleanupHistory.cleanups[0].attempt.id === laterCleanup && cleanupHistory.cleanups[0].receipt.cleanup_id === laterCleanup && !cleanupHistory.cleanups[0].lease_active && !("lease_id" in cleanupHistory.cleanups[0].attempt), "Actual cleanup discovery exposes newest receipt without worker lease");
       const cleanupOlder = await rpc("list_ezyvet_attachment_cleanups", { p_id: cleanupRequest, p_pet_id: pet, p_limit: 1, p_before_at: cleanupHistory.next_cursor.before_at, p_before_id: cleanupHistory.next_cursor.before_id }, true);
+      check(parseAttachmentCleanupHistory(cleanupHistory, { id: cleanupRequest, actor, pet, requestHash: cleanupBody.request_hash }).next_cursor?.before_id === laterCleanup, "Frontend cleanup history validates actual newest receipt and cursor");
+      check(parseAttachmentCleanupHistory(cleanupOlder, { id: cleanupRequest, actor, pet, requestHash: cleanupBody.request_hash }).cleanups[0].receipt?.cleanup_id === cleanupId, "Frontend cleanup history validates actual prior receipt");
       check(cleanupOlder.cleanups[0].receipt.cleanup_id === cleanupId && !cleanupOlder.has_more, "Actual cleanup cursor recovers prior exact operation without browser storage");
       check(upstreamCalls === sourceCallsBeforeCleanup, "Cleanup needs no provider credentials or source traffic");
 

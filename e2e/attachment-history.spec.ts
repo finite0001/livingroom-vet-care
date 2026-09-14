@@ -23,6 +23,7 @@ async function fixture(page:Page,admin=true){
   state.calls.push({path,body});
   if(path.endsWith('search_ezyvet_mapped_patients'))return r.fulfill({json:[mapping,{...mapping,link_id:uid(30),pet_id:uid(31),patient_name:'Synthetic Other'}]});
   const saved={id:run,requested_by:actor,resource:'attachment',source_origin:mapping.source_origin,source_site_uid:mapping.source_site_uid,status:state.running?'running':'review_ready',next_page:state.nextPage,retry_after:null,last_error_code:null,created_at:at,updated_at:at,lease_active:state.lease,scope:'parent_scoped',parent_context:parent};
+  if(path.endsWith('list_ezyvet_attachment_cleanups'))return r.fulfill({json:{request_id:body.p_id,pet_id:pet,cleanups:[],has_more:false,next_cursor:null}});
   if(path.endsWith('list_ezyvet_attachment_downloads')){
    if(state.fileTombstone)return r.fulfill({json:{requests:[state.fileTombstone],has_more:false,next_cursor:null}});
    const item=state.fileRequest?structuredClone(state.fileRequest):null;
@@ -113,3 +114,27 @@ test('verified server history repairs a mismatched local request hash',async({pa
 test('file abandonment requires confirmation and preserves the request in history',async({page})=>{const f=await fixture(page);await f.open();await f.section.getByRole('button',{name:'Prepare private file copy',exact:true}).click();await expect(f.section.getByRole('button',{name:'Capture file privately',exact:true})).toBeEnabled();await f.section.getByRole('button',{name:'Abandon file request',exact:true}).click();await page.getByRole('button',{name:'Keep file request',exact:true}).click();expect(f.state.calls.some(c=>c.path.endsWith('abandon_ezyvet_attachment_download'))).toBe(false);await f.section.getByRole('button',{name:'Abandon file request',exact:true}).click();await page.getByRole('button',{name:'Confirm file abandonment',exact:true}).click();await expect(f.section.getByText('This file request was abandoned. It cannot be resumed.',{exact:true})).toBeVisible();await expect(f.section.getByRole('button',{name:'Capture file privately',exact:true})).toBeDisabled();expect(f.state.calls.find(c=>c.path.endsWith('abandon_ezyvet_attachment_download'))?.body).toEqual({p_id:f.state.fileRequest!.request.id,p_pet_id:pet,p_confirmed:true});});
 test('lost abandonment response recovers terminal state and allows a new explicit request',async({page})=>{const f=await fixture(page);f.state.fileAbandonLost=true;await f.open();await f.section.getByRole('button',{name:'Prepare private file copy',exact:true}).click();await expect(f.section.getByRole('button',{name:'Capture file privately',exact:true})).toBeEnabled();await f.section.getByRole('button',{name:'Abandon file request',exact:true}).click();await page.getByRole('button',{name:'Confirm file abandonment',exact:true}).click();await expect(f.section.getByText('This file request was abandoned. It cannot be resumed.',{exact:true})).toBeVisible();await f.section.getByRole('button',{name:'Start another file request',exact:true}).click();await expect(f.section.getByRole('button',{name:'Prepare private file copy',exact:true})).toBeEnabled();expect(f.state.calls.filter(c=>c.path.endsWith('abandon_ezyvet_attachment_download'))).toHaveLength(1);});
 test('unconfirmed preparation can be abandoned before a source request exists',async({page})=>{const f=await fixture(page);f.state.filePrepareFails=true;await f.open();await f.section.getByRole('button',{name:'Prepare private file copy',exact:true}).click();await expect(f.section.getByLabel('Find attachment history patient')).toBeDisabled();await f.section.getByRole('button',{name:'Abandon file request',exact:true}).click();await page.getByRole('button',{name:'Confirm file abandonment',exact:true}).click();await expect(f.section.getByText('This file request was abandoned. It cannot be resumed.',{exact:true})).toBeVisible();await expect(f.section.getByLabel('Find attachment history patient')).toBeEnabled();expect(f.state.fileTombstone).not.toBeNull();expect(f.state.calls.some(c=>c.path==='/functions/v1/ezyvet-attachment-capture')).toBe(false);});
+
+
+test('abandoned file cleanup history distinguishes receipts and unfinished attempts',async({page})=>{
+ const f=await fixture(page); let older=false;
+ await page.route('**/rest/v1/rpc/list_ezyvet_attachment_cleanups',async r=>{
+  const body=r.request().postDataJSON(); older=!!body.p_before_id;
+  const attempt={id:uid(80),request_id:body.p_id,actor_id:actor,pet_id:pet,request_hash:'a'.repeat(64),intent_hash:'b'.repeat(64),created_at:at,lease_until:'2026-09-13T12:01:30Z'};
+  attempt.request_hash=f.state.fileRequest!.request.request_hash;
+  await r.fulfill({json:{request_id:body.p_id,pet_id:pet,cleanups:[{attempt,receipt:older?null:{cleanup_id:attempt.id,request_id:body.p_id,actor_id:actor,intent_hash:attempt.intent_hash,verified_absent_at:'2026-09-13T12:00:01Z'},lease_active:false}],has_more:!older,next_cursor:older?null:{before_at:at,before_id:attempt.id}}});
+ });
+ await f.open();await f.section.getByRole('button',{name:'Prepare private file copy',exact:true}).click();
+ await expect(f.section.getByRole('button',{name:'Capture file privately',exact:true})).toBeEnabled();
+ await f.section.getByRole('button',{name:'Abandon file request',exact:true}).click();await page.getByRole('button',{name:'Confirm file abandonment',exact:true}).click();
+ const history=f.section.getByRole('region',{name:'Temporary file cleanup history'});
+ await expect(history.getByText(/Storage absence verified at/)).toBeVisible();
+ await history.getByRole('button',{name:'Older cleanup attempts',exact:true}).click();
+ await expect(history.getByText('Cleanup attempt ended without an absence receipt.',{exact:true})).toBeVisible();expect(older).toBe(true);
+ expect(f.state.calls.some(c=>c.path==='/functions/v1/ezyvet-attachment-cleanup')).toBe(false);
+});
+test('unverified cleanup history never displays a deletion success',async({page})=>{
+ const f=await fixture(page);await page.route('**/rest/v1/rpc/list_ezyvet_attachment_cleanups',r=>r.fulfill({status:503,json:{message:'untrusted failure'}}));
+ await f.open();await f.section.getByRole('button',{name:'Prepare private file copy',exact:true}).click();await expect(f.section.getByRole('button',{name:'Capture file privately',exact:true})).toBeEnabled();await f.section.getByRole('button',{name:'Abandon file request',exact:true}).click();await page.getByRole('button',{name:'Confirm file abandonment',exact:true}).click();
+ await expect(f.section.getByText('Cleanup history could not be verified. No file deletion is confirmed.',{exact:true})).toBeVisible();await expect(f.section.getByText(/Storage absence verified at/)).toHaveCount(0);
+});

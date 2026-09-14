@@ -251,3 +251,12 @@ File requests now support explicit abandonment confirmation. Canceling sends no 
 Confirmed abandonment stays in server history. An explicit new-request action clears only the local pointer before another preparation. The UI does not equate abandonment with deleting a reserved file; cleanup remains separate.
 
 Validation:594 unit tests,43 browser cases and a fresh93-migration runtime with174 HTTP/Auth/Storage and55 contention checks passed. Actual source-less abandonment and recovery are parsed for Animal and Consult contexts. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-abandonment-ui-local-20260913.json`. The parent5706f2e full CI run is being allowed to finish before another push. Cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore and full commercial-readiness acceptance remain open. No hosted deployment occurred.
+
+
+### Operator cleanup history checkpoint
+
+Abandoned file requests now expose owned cleanup attempt history in the existing file card. The parser verifies operator, patient, file request/hash, immutable intent hash across rows, receipt ownership, lease ordering and exact timestamp/UUID cursor. Worker lease secrets, duplicate attempts and contradictory active/completed states are rejected. Empty history never implies that a temporary file was deleted. Receipts are explicitly described as point-in-time Storage absence observations.
+
+The panel hides previous results while refreshing and on verification errors; it offers newest/older pagination and recheck. It performs read-only discovery and does not initiate cleanup. Cleanup initiation and same-operation recovery/retry controls are the next implementation, followed by original inspection, clinical review/corrections/release, current populated upgrade/restore and all full commercial-readiness acceptance gates.
+
+Validation is recorded in `docs/evidence/attachment-cleanup-history-ui-local-20260913.json`. The abandonment parent bf168f5 is pushed to draft PR126; its parent5706f2e passed all three CI jobs in run34804078645. No hosted attachment deployment or activation occurred.

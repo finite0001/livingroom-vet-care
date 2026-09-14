@@ -1,3 +1,4 @@
+import { AttachmentCleanupHistory } from "./AttachmentCleanupHistory";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -89,5 +90,6 @@ export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurr
       {saved?.status === "abandoned" && <Button variant="secondary" disabled={busy || disabled || !parentCurrent || !file.is_current} onClick={startAnother}>Start another file request</Button>}
       <Button variant="secondary" disabled={busy || disabled || uncertain || !saved || !attachmentFileCanCapture(saved)} onClick={() => void act("capture")}>Capture file privately</Button>
     </div>
+    {intent && saved?.status === "abandoned" && !uncertain && <AttachmentCleanupHistory key={intent.id} intent={intent} disabled={busy || disabled} />}
   </div>;
 }

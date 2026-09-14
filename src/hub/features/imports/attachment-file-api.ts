@@ -1,3 +1,4 @@
+import { parseAttachmentCleanupHistory, type AttachmentCleanupCursor } from "./attachment-cleanup-state";
 import { parsePreparedAttachmentRun } from "./attachment-discovery-state";
 import type { AttachmentMapping, AttachmentHistoryCursor } from "./attachment-discovery-state";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,4 +40,8 @@ export async function recoverAttachmentFileScan(intent: AttachmentFileIntent, ma
 
 export async function abandonAttachmentFile(intent: AttachmentFileIntent) {
   return parseAttachmentFileRecovery(await rpc("abandon_ezyvet_attachment_download", { p_id: intent.id, p_pet_id: intent.pet, p_confirmed: true }), intent);
+}
+
+export async function listAttachmentCleanupHistory(intent: AttachmentFileIntent, cursor: AttachmentCleanupCursor | null) {
+  return parseAttachmentCleanupHistory(await rpc("list_ezyvet_attachment_cleanups", { p_id: intent.id, p_pet_id: intent.pet, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), intent);
 }
