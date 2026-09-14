@@ -26,8 +26,8 @@ migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 missing_files = [p for p in migration_files if p not in initial_files]
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913710000','20260913900000']
-    assert len(migration_files)==88 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913710000','20260913720000','20260913900000']
+    assert len(migration_files)==89 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -168,7 +168,8 @@ def vaccination_snapshot(project):
               'ezyvet_attachment_capture_requests','ezyvet_attachment_capture_attempts','ezyvet_attachment_capture_failures',
               'ezyvet_attachment_original_intents','ezyvet_attachment_original_captures',
               'ezyvet_attachment_review_actions','ezyvet_attachment_review_records','ezyvet_attachment_review_acknowledgments','ezyvet_attachment_review_withdrawals',
-              'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy']
+              'record_releases', 'record_release_sources', 'record_release_events', 'record_release_policy',
+              'release_email_requests','release_email_payloads','release_email_outbox_links']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
 
@@ -312,6 +313,7 @@ try:
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-review-audit',str(source['path']/'status.json'),str(run)])
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-originals',str(source['path']/'status.json'),str(run)])
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-review',str(source['path']/'status.json'),str(run)])
+            command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-release',str(source['path']/'status.json'),str(run)])
             (run/'vaccination-receipt-fixture.json').write_text(json.dumps(vaccination_snapshot(source),sort_keys=True))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
@@ -411,6 +413,7 @@ try:
                                'api_review_acknowledgments':len(expected_vaccinations['ezyvet_attachment_review_acknowledgments']),
                                'api_review_withdrawals':len(expected_vaccinations['ezyvet_attachment_review_withdrawals']),
                                'frozen_release_rows': len(expected_vaccinations['record_releases']),
+                               'frozen_email_payloads': len(expected_vaccinations['release_email_payloads']),
                                'source_and_receipt_rows_match': True,
                                'fixture_sha256': hashlib.sha256((run/'vaccination-receipt-fixture.json').read_bytes()).hexdigest()}
     # Compare the restored physical files as well as authorized downloaded original bytes.
