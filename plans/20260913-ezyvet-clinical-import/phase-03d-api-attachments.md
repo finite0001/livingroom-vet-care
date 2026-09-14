@@ -1,9 +1,19 @@
 # Phase 3d — Source API attachments
 
-Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Migration6600 adds immutable download preparation, recovery, abandonment tombstones and bounded owned discovery; migration6700 adds service leases and immutable retry/discrepancy receipts; byte transport and capture transitions remain unfinished. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual local Auth/database metadata verification passes44 checks; UI, attachment-specific contention, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Migration6600 adds immutable download preparation, recovery, abandonment tombstones and bounded owned discovery; migration6700 adds service leases and immutable retry/discrepancy receipts; bounded byte transport is implemented in the adapter; the worker endpoint and capture transitions remain unfinished. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter and handler wiring are implemented with mocked transport/gateway tests; actual local Auth/database metadata verification passes44 checks; UI, attachment-specific contention, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
 
 
 
+
+## Bounded byte transport checkpoint — 2026-09-13
+
+The adapter now constructs `/v1/attachment/download/:id` from a canonical attachment ID, with an allowed source origin, configured attachment read scope and syntactically valid Animal/Consult parent. It does not accept a file URL. Unsupported metadata MIME rejects before OAuth or file traffic. Download requests reuse read-only authentication, refresh once on401, propagate bounded429 cooldown, reject redirects and enforce a20-second deadline through the complete response. Failed file reads are left to durable worker recovery rather than in-memory network retries.
+
+The stream reader enforces20MiB while reading, exact declared length when supplied, status200, no Content-Range and no unexpected Content-Encoding. It detects PDF/JPEG/PNG signatures and rejects conflicts with supported metadata/transport MIME. Generic or absent MIME is resolved from the signature. Original bytes and SHA256 are retained without transcoding. Signature checks are not complete file parsing or malware scanning.
+
+Thirty focused tests pass (29 unit cases plus one real loopback HTTP scenario). They cover both parent types, zero traffic for invalid IDs/host/scope/parent/MIME, authentication/cooldown, exact maximum size, chunk boundaries, oversize/truncation, stalled headers/body deadlines, sanitized errors, native redirect rejection and compressed response rejection. `npm run check` passes496 tests, lint, TypeScript and build; the frozen Deno entrypoint check passes. Existing Fast Refresh and bundle-size warnings remain. [Sanitized evidence](../../docs/evidence/attachment-byte-transport-local-20260913.json) binds the source and limitations.
+
+No provider requests or hosted deployment occurred. The method is not yet connected to the download worker endpoint. Parent syntax validation in the adapter does not replace the database's owned source context or the still-required metadata re-read around capture. Original-file Storage capture, ambiguous acknowledgments/cleanup, UI, approval/release integration, dedicated attachment races and current upgrade/restore/issued-site acceptance remain required. `download_available` remains false.
 
 ## Download lease and failure checkpoint — 2026-09-13
 
