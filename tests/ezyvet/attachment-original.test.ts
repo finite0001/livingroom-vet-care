@@ -1,0 +1,10 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { verifyAttachmentOriginal, attachmentOriginalFilename } from '../../src/hub/features/imports/attachment-original.ts';
+const bytes=Buffer.from('%PDF-1.4\nSynthetic original\n%%EOF');
+const original={file_size:bytes.length,mime_type:'application/pdf',content_sha256:createHash('sha256').update(bytes).digest('hex')};
+test('original verifier preserves exact captured bytes',async()=>{const value=await verifyAttachmentOriginal(new Blob([bytes],{type:'application/pdf'}),original);assert.deepEqual(Buffer.from(await value.arrayBuffer()),bytes);});
+test('original verifier rejects equal-sized corruption, truncation and MIME mismatch',async()=>{await assert.rejects(verifyAttachmentOriginal(new Blob([Buffer.alloc(bytes.length)],{type:'application/pdf'}),original));await assert.rejects(verifyAttachmentOriginal(new Blob([bytes.subarray(1)],{type:'application/pdf'}),original));await assert.rejects(verifyAttachmentOriginal(new Blob([bytes],{type:'text/html'}),original));});
+test('inspection rejects unsupported and oversized captured metadata',async()=>{await assert.rejects(verifyAttachmentOriginal(new Blob([bytes]),{...original,file_size:20*1024*1024+1}));await assert.rejects(verifyAttachmentOriginal(new Blob([bytes],{type:'text/html'}),{...original,mime_type:'text/html'}));});
+test('inspection filename is derived from source identity and supported MIME only',()=>{assert.equal(attachmentOriginalFilename('88','application/pdf'),'ezyvet-attachment-88.pdf');assert.equal(attachmentOriginalFilename('88','image/jpeg'),'ezyvet-attachment-88.jpg');assert.throws(()=>attachmentOriginalFilename('../../bad','application/pdf'));assert.throws(()=>attachmentOriginalFilename('88','text/html'));});

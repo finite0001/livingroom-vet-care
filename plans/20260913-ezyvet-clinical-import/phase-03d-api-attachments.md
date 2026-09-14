@@ -269,3 +269,12 @@ Reserved abandoned files now have a confirmation-based cleanup action, exact-att
 The same operation survives reload. Verified saved cleanup history can repair a missing local pointer; a known unresolved attempt cannot be replaced by another history selection or new sweep. Busy/uncertain cleanup state participates in the existing file/patient/navigation guards. Unknown server outcomes keep the original reference. Disabled or not-yet-eligible workers return actionable bounded messages. Source-less/unreserved abandoned requests show history but no cleanup action; captured evidence cannot enter this workflow.
 
 Current validation and limits are recorded in `docs/evidence/attachment-cleanup-actions-ui-local-20260913.json`. Original inspection, clinical review/corrections/release, current populated upgrade/restore and actual hosted/provider/operator/clinical acceptance remain required. No hosted activation or real file deletion occurred during implementation; local tests use owned synthetic fixtures.
+
+
+### Verified API original inspection
+
+Captured file cards now offer explicit original verification and a private local download link. The action first recovers the full owned capture, downloads its exact immutable Storage path using the staff JWT, verifies size/MIME/SHA256, and recovers the capture again before exposing bytes. File names derive from the source attachment ID and supported MIME, not untrusted provider names or URLs. Pending and abandoned requests cannot expose the inspection action.
+
+A failed check withholds the download and removes a previous link. Object URLs are revoked on replacement, component cleanup, pagehide and sign-out/account change; late results cannot repopulate a cleared view. Inspection participates in the existing busy/navigation guards. No browser URL, raw bytes or inspection approval is persisted. This verifies captured API source bytes and allows staff inspection; it does not attest review, create a native clinical document, or authorize release.
+
+Evidence: `docs/evidence/attachment-original-inspection-local-20260913.json`. Clinical review/corrections/release, current populated upgrade/restore and all provider/operator/clinical/commercial acceptance gates remain open. No hosted deployment or real provider attachment read was performed.

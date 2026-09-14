@@ -1,3 +1,4 @@
+import { AttachmentOriginal } from "./AttachmentOriginal";
 import { AttachmentCleanupActions } from "./AttachmentCleanupActions";
 import { AttachmentCleanupHistory } from "./AttachmentCleanupHistory";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -10,6 +11,7 @@ import type { AttachmentFileIntent, AttachmentFileRecovery } from "./attachment-
 import type { AttachmentMapping, AttachmentObservation, AttachmentParent } from "./attachment-discovery-state";
 interface Props { actor: string; mapping: AttachmentMapping; file: AttachmentObservation; parent: AttachmentParent; parentCurrent: boolean; disabled: boolean; onLocked: (id: string, locked: boolean, busy?: boolean) => void; }
 export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurrent, disabled, onLocked }: Props) {
+  const [inspectionBusy, setInspectionBusy] = useState(false);
   const [cleanupLocked, setCleanupLocked] = useState(false), [cleanupBusy, setCleanupBusy] = useState(false);
   const onCleanupState = useCallback((locked: boolean, working: boolean) => { setCleanupLocked(locked); setCleanupBusy(working); }, []);
   const queryClient = useQueryClient();
@@ -32,9 +34,9 @@ export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurr
     } catch { setNotice("The local file reference could not be read. Saved request history must be recovered before preparing another copy."); setInvalidPointer(true); }
     return () => { alive.current = false; onLocked(identity, false, false); };
   }, [identity, key, onLocked]);
-  useEffect(() => { onLocked(identity, busy || uncertain || cleanupLocked, busy || cleanupBusy); }, [identity, busy, uncertain, cleanupLocked, cleanupBusy, onLocked]);
+  useEffect(() => { onLocked(identity, busy || uncertain || cleanupLocked || inspectionBusy, busy || cleanupBusy || inspectionBusy); }, [identity, busy, uncertain, cleanupLocked, cleanupBusy, inspectionBusy, onLocked]);
   async function act(action: "prepare" | "recover" | "capture" | "abandon") {
-    if (cleanupLocked || lock.current || (action !== "recover" && disabled)) return;
+    if (inspectionBusy || cleanupLocked || lock.current || (action !== "recover" && disabled)) return;
     lock.current = true; setBusy(true); setNotice("");
     let current = intent;
     try {
@@ -87,12 +89,13 @@ export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurr
     {saved?.captured && <p className="text-sm">Captured source size: {saved.fileSize?.toLocaleString()} bytes.</p>}
     {intent && <p className="break-all text-xs text-muted-foreground">File request reference: {intent.id}</p>}
     <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" disabled={cleanupLocked || busy || disabled || invalidPointer || !!saved || (!intent && (!parentCurrent || !file.is_current))} onClick={() => void act("prepare")}>{intent ? "Retry original file preparation" : "Prepare private file copy"}</Button>
-      <Button variant="secondary" disabled={cleanupLocked || busy || !intent} onClick={() => void act("recover")}>Recheck file request</Button>
-      <Button variant="secondary" disabled={cleanupLocked || busy || disabled || !intent || saved?.status === "captured" || saved?.status === "abandoned" || saved?.worker?.lease_active} onClick={() => setConfirmAbandon(true)}>Abandon file request</Button>
-      {saved?.status === "abandoned" && <Button variant="secondary" disabled={cleanupLocked || busy || disabled || !parentCurrent || !file.is_current} onClick={startAnother}>Start another file request</Button>}
-      <Button variant="secondary" disabled={cleanupLocked || busy || disabled || uncertain || !saved || !attachmentFileCanCapture(saved)} onClick={() => void act("capture")}>Capture file privately</Button>
+      <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || disabled || invalidPointer || !!saved || (!intent && (!parentCurrent || !file.is_current))} onClick={() => void act("prepare")}>{intent ? "Retry original file preparation" : "Prepare private file copy"}</Button>
+      <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || !intent} onClick={() => void act("recover")}>Recheck file request</Button>
+      <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || disabled || !intent || saved?.status === "captured" || saved?.status === "abandoned" || saved?.worker?.lease_active} onClick={() => setConfirmAbandon(true)}>Abandon file request</Button>
+      {saved?.status === "abandoned" && <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || disabled || !parentCurrent || !file.is_current} onClick={startAnother}>Start another file request</Button>}
+      <Button variant="secondary" disabled={inspectionBusy || cleanupLocked || busy || disabled || uncertain || !saved || !attachmentFileCanCapture(saved)} onClick={() => void act("capture")}>Capture file privately</Button>
     </div>
+    {intent && saved?.captured && !uncertain && <AttachmentOriginal key={intent.id} intent={intent} disabled={busy || disabled} onBusy={setInspectionBusy} />}
     {intent && saved?.status === "abandoned" && !uncertain && (saved.cleanupIntentHash ? <AttachmentCleanupActions key={intent.id} intent={intent} intentHash={saved.cleanupIntentHash} disabled={busy || disabled} onState={onCleanupState} /> : <AttachmentCleanupHistory key={intent.id} intent={intent} disabled={busy || disabled} />)}
   </div>;
 }

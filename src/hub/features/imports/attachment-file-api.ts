@@ -1,3 +1,4 @@
+import { verifyAttachmentOriginal, attachmentOriginalFilename } from "./attachment-original";
 import { parseAttachmentCleanupRecovery, type AttachmentCleanupOperation } from "./attachment-cleanup-state";
 import { parseAttachmentCleanupHistory, type AttachmentCleanupCursor } from "./attachment-cleanup-state";
 import { parsePreparedAttachmentRun } from "./attachment-discovery-state";
@@ -59,4 +60,15 @@ export async function runAttachmentCleanup(op: AttachmentCleanupOperation) {
     if (code === "CLEANUP_NOT_ELIGIBLE") throw new AttachmentFileActionError("Cleanup is not eligible yet. The server requires an abandoned reserved file and a grace period after capture workers finish.");
     throw new AttachmentFileActionError("Cleanup response was unconfirmed. Recover the original attempt before continuing.");
   }
+}
+
+export async function loadAttachmentOriginal(intent: AttachmentFileIntent) {
+  const before = await recoverAttachmentFile(intent);
+  if (!before?.captured || !before.original) throw new AttachmentFileActionError("Recover a captured private file before inspecting the original.");
+  const { data, error } = await supabase.storage.from(before.original.bucket).download(before.original.object_path);
+  if (error) throw new AttachmentFileActionError("The private original could not be read. Check your access and try again.");
+  const blob = await verifyAttachmentOriginal(data, before.original);
+  const after = await recoverAttachmentFile(intent);
+  if (!after?.original || after.original.captureHash !== before.original.captureHash || after.original.intent_hash !== before.original.intent_hash) throw new AttachmentFileActionError("The captured file could not be reverified. No original is available for inspection.");
+  return { blob, captureHash: after.original.captureHash, filename: attachmentOriginalFilename(intent.externalId, after.original.mime_type) };
 }

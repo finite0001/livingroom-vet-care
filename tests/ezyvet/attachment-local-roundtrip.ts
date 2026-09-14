@@ -1,3 +1,4 @@
+import { verifyAttachmentOriginal } from "../../src/hub/features/imports/attachment-original.ts";
 import { parseAttachmentCleanupHistory, parseAttachmentCleanupRecovery } from "../../src/hub/features/imports/attachment-cleanup-state.ts";
 import { parseAttachmentFileHistory, parseAttachmentFileRecovery } from "../../src/hub/features/imports/attachment-file-state.ts";
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
@@ -385,7 +386,9 @@ try {
       check(!(await fetch(objectUrl, { method: "POST", headers: uploadHeaders, body: read.file.bytes })).ok, "Actual duplicate upload cannot overwrite original");
       check(!(await fetch(objectUrl, { method: "PUT", headers: { ...uploadHeaders, "x-upsert": "true" }, body: read.file.bytes })).ok, "Actual authenticated replacement is denied");
       const downloaded = await fetch(local.API_URL + "/storage/v1/object/authenticated/ezyvet-attachments/" + intent.object_path, { headers: { apikey: local.ANON_KEY, Authorization: staffHeaders.Authorization, "Accept-Encoding": "identity" } });
+      const inspectionBlob = await downloaded.clone().blob();
       const verified = await readAttachmentBytes(downloaded, intent.mime_type, AbortSignal.timeout(5000));
+      check((await verifyAttachmentOriginal(inspectionBlob, intent)).size === intent.file_size, "Frontend original verifier accepts actual private Storage bytes");
       check(verified.sha256 === intent.content_sha256 && verified.size === intent.file_size, "Physical Storage readback matches frozen digest and size");
       const finalMetadata = await captureAdapter.attachmentMetadata(String(selected.payload.id), captureParent);
       const completeArgs = { p_id: downloadId, p_actor: actor, p_lease_id: lease.lease_id, p_request_hash: requestHash, p_intent_hash: intent.intent_hash, p_verified_sha256: verified.sha256, p_verified_size: verified.size, p_verified_mime: verified.mimeType, p_final_metadata: finalMetadata.payload };
@@ -394,6 +397,8 @@ try {
       check(JSON.stringify(await rpc("complete_ezyvet_attachment_capture", completeArgs)) === JSON.stringify(receipt), "Lost capture acknowledgment recovers exact receipt");
       const final = await rpc("recover_ezyvet_attachment_download", { p_id: downloadId, p_pet_id: pet }, true);
       check(final.request.status === "captured" && final.capture.capture_hash === receipt.capture_hash && !JSON.stringify(final).includes(lease.lease_id), "Owner recovery exposes completion without service lease");
+      const sdkOriginal = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + intent.object_path, { headers: { apikey: local.ANON_KEY, Authorization: staffHeaders.Authorization } });
+      check(sdkOriginal.ok && (await verifyAttachmentOriginal(await sdkOriginal.blob(), intent)).size === intent.file_size, "Exact frontend SDK route returns verifiable captured bytes under staff JWT");
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
       // Exercise the production runtime adapter and handler through actual loopback HTTP.
