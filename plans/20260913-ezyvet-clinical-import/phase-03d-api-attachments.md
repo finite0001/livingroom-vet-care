@@ -1,6 +1,13 @@
 # Phase 3d — Source API attachments
 
-Status: public contract and existing-document architecture reviewed on2026-09-13. Implementation and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+Status: migration6500 implements parent-scoped metadata claims/staging and owned run recovery/discovery. Public contract and existing-document architecture reviewed on2026-09-13. Metadata adapter/HTTP/UI wiring, downloads, capture, review/release integration and issued-site sample acceptance remain unfinished. This is part of the required complete migration, alongside prescription history and whole-migration reconciliation; manual exports do not substitute for it.
+
+
+## Metadata SQL checkpoint — 2026-09-13
+
+Migration6500 freezes Animal or scoped same-patient Consult parent context, including observed source revision, patient/household and mapping. Dedicated immutable run/page/observation tables deny direct API-role access. Generic claims and unscoped legacy staging reject attachments. Fresh pages require the owned lease/cursor and unchanged parent; exact committed page and terminal claim retries recover before mutable source checks. Owner recovery/discovery expose no service lease. Unsupported MIME and original download-URL metadata are retained without fetching or promoting files.
+
+Thirty-four focused SQL assertions and457 existing regressions pass. The existing prescription/source/release concurrency runner passes231 harness checks with6500 overlaid, including the added SQL suite; cleanup is verified. [Sanitized evidence](../../docs/evidence/attachment-intake-sql-local-20260913.json) binds tested files and the reproducible command. This verifies compatibility with existing races, not attachment-specific contention. No actual HTTP intake, byte download, private capture, approval or attachment release is implemented yet. The86-migration attachment checkout is outside the prior85-version full gap/restore evidence; update that explicit inventory and rerun after the attachment implementation is complete.
 
 ## Verified contract and boundaries
 
