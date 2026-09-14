@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-14",
+  "scope": "Read-only approved outside prescription evidence for exact owned header observations; individual item reconciliation remains pending",
+  "migration_count": 110,
+  "unit_tests": 583,
+  "lint_typecheck_build_passed": true,
+  "sql_assertions": 100,
+  "sql_by_suite": {
+    "migration_prescription_evidence": 37,
+    "prescription_review_regression": 35,
+    "migration_vaccination_evidence_regression": 28
+  },
+  "sql_disposable_cleanup_verified": true,
+  "browser_tests": 28,
+  "browser_workers": 1,
+  "browser_transport": "Synthetic RPC fixtures; actual Auth/PostgREST tested separately",
+  "viewports": [
+    390,
+    1440
+  ],
+  "screenshots_visually_inspected": true,
+  "runtime_checks": 113,
+  "runtime_result_sha256": "9dd3505d33163f9dba50ca63be5eacaacca20a5076e23e6a7148e5ff235af00a",
+  "runtime_cleanup_verified": true,
+  "fresh_110_migration_runtime": true,
+  "populated_110_migration_restore_rerun": false,
+  "restore_inventory_modes_validated": [
+    "staging_baseline",
+    "observed_hosted_gaps"
+  ],
+  "hosted_staging_read": {
+    "project_id": "kothoqicubowyhwfsrte",
+    "migration_count": 99,
+    "last_version": "20260914120000"
+  },
+  "source_sha256": {
+    "supabase/migrations/20260914230000_ezyvet_migration_prescription_evidence.sql": "3743aa061f51443b12436aaf2310e0d8bc7cef4086805a6ff69d9b29317ae612",
+    "supabase/tests/ezyvet_migration_prescription_evidence.test.sql": "8318365a67ad7fb03cc567b531516239d0ce353a94ee2e7d25c0f8c693b74f23",
+    "src/hub/features/imports/migration-prescription-api.ts": "21b91a5ffe4cd4572eb21625fef4f3651a43459ce7b14b65c052625efbd85029",
+    "src/hub/features/imports/MigrationPrescriptionEvidence.tsx": "553ee5ad5405b21e3ea72cd4f89f8359c4eb41fcee5ca5e4055414f81e9453f7",
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "5b2ef57087348bc3a3be7f0290581d5a99300bb4f7a499021d250024b9296c19",
+    "tests/ezyvet/migration-prescription-api.test.ts": "7c46c15473be85ea2bede19b6e7c171e6e6960d9a034ad8da78963ee71fcc694",
+    "tests/ezyvet/migration-local-roundtrip.ts": "6518f215c89fb11e8342c773e921d9bfe2b64dabbd27b5d03883db0d809d489b",
+    "tests/ezyvet/attachment-metadata-disposable.py": "63216f70eb09b47222f2e8ad54ead4ea73d36cce8f7160b4580d66ae2eee608e",
+    "e2e/migration-workspace.spec.ts": "5125edc83d332fcef7b3c99d771f7d063a8de1d735f42bac4b398c84f5d04d62",
+    "scripts/restore-rehearsal/run.py": "736d84b851eafdcfa0def31d8c8c9c90c29082675939fe7412ce8c4ffb3a6719"
+  },
+  "screenshots_sha256": {
+    "docs/evidence/migration-prescription-desktop-20260914.png": "5273e536b9173edfd038b9c3877a4a4ad15f340fd4412301d605811ecc930d7d",
+    "docs/evidence/migration-prescription-mobile-20260914.png": "0986dd11ffdcbd21f1f30a9a95e0ca5492f9023ccdeacfb37501ced478e35294"
+  },
+  "logs_sha256": {
+    "check": "8ae0088649835fefc3de799b58916184f22a07e5c36a34a4e57b7b0017a030e0",
+    "sql": "1cecaca9683ca9b9c09b493a4500bf8ac751d28f32da0ed2b1f6fd4bae46cea9",
+    "browser": "c1af841ede4d3e3741ced51e64df45a8835f0ef5871c1f74692a32da360bfeaa",
+    "runtime": "fc959cb254c59e2570dd266b8fc2c030fb2b04ea0fcd89d2de3ddb6cdd5a3ed6"
+  },
+  "verified_cases": [
+    "Exact owned page/snapshot/hash; staged and prepared records excluded",
+    "Approved partial, unknown and uninterpreted values remain explicit",
+    "Missing, duplicate and omitted item evidence preserved over actual HTTP",
+    "Corrections and bounded descending version history",
+    "Header A to B to A prevents old observed version credit",
+    "Item A to B to A invalidates currentness, including omitted items",
+    "Other administrator, inactive owner, anonymous and worker denial",
+    "Private prose and request data excluded",
+    "No native clinical, invoice, stock, Storage or delivery side effects",
+    "Lookup failure differs from empty evidence; mobile and desktop refresh work"
+  ],
+  "provider_requests": 0,
+  "hosted_writes": false,
+  "pushed": false,
+  "limitations": [
+    "Prescription item occurrence reconciliation is not implemented",
+    "Unresolved supplied consultations remain blocked by existing clinical approval rules; no unapproved context is projected",
+    "Whole migration totals, operational resolutions, frozen reports and supervised acceptance remain pending",
+    "No populated restore or hosted frontend/backend rollout in this pass"
+  ]
+}

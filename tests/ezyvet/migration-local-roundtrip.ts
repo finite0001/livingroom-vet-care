@@ -1,3 +1,4 @@
+import { createMigrationPrescriptionApi } from "../../src/hub/features/imports/migration-prescription-api.ts";
 import { createMigrationVaccinationApi } from "../../src/hub/features/imports/migration-vaccination-api.ts";
 import { createMigrationHistoryApi } from "../../src/hub/features/imports/migration-history-api.ts";
 import { createMigrationResumeApi } from "../../src/hub/features/imports/migration-resume-api.ts";
@@ -227,6 +228,35 @@ await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_vaccinati
 sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${quote(site)} and resource='consult' and external_id='801';`);
 check(!(await vaccineApi.list(vaccineBinding, vaccineItems.items[0])).approvals[0].source_current, "Actual consultation source reversion invalidates vaccination context");
 
+// Outside prescription header receipts expose partial evidence without local prescribing.
+const prescriptionRun = randomUUID(), itemRun = randomUUID(), prescriptionApproval = randomUUID();
+const prescriptionClaim = await request("/rest/v1/rpc/claim_ezyvet_prescription_import", { p_id: prescriptionRun, p_actor: owner.id, p_site_uid: site, p_resource: "prescription", p_source_origin: origin, p_animal_link_id: mapping });
+await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: prescriptionRun, p_actor: owner.id, p_lease_id: prescriptionClaim.lease_id, p_page: 1, p_complete: true, p_items: [{ external_id: "901", payload: { id: 901, animal_id: 77, prescription_item_list: [902, 903, 903] } }] });
+const pc = (await staffRpc("list_ezyvet_prescription_candidates", { p_animal_link_id: mapping, p_resource: "prescription" })).candidates[0];
+const itemClaim = await request("/rest/v1/rpc/claim_ezyvet_prescriptionitem_import", { p_id: itemRun, p_actor: owner.id, p_site_uid: site, p_resource: "prescriptionitem", p_source_origin: origin, p_animal_link_id: mapping,
+  p_prescription_snapshot_id: pc.id, p_prescription_payload_hash: pc.payload_hash, p_prescription_observed_head_version: pc.observed_head_version });
+await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: itemRun, p_actor: owner.id, p_lease_id: itemClaim.lease_id, p_page: 1, p_complete: true, p_items: [{ external_id: "902", payload: { id: 902, prescription_id: 901 } }] });
+const prescriptionManifest = await api.prepare({ id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "prescription", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Synthetic outside prescription scope" }] });
+const prescriptionBinding = await api.bind({ id: randomUUID(), scope_id: prescriptionManifest.scopes[0].id, child_run_id: prescriptionRun, reason: "Synthetic prescription header evidence", replaces_id: null });
+const prescriptionItems = await api.items(prescriptionManifest, prescriptionBinding);
+const prescriptionApi = createMigrationPrescriptionApi(ownerTransport, owner.id);
+check((await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])).approvals.length === 0, "Staged prescription header is not approval over HTTP");
+const prescriptionPayload = { item_run_id: itemRun, patient_version: 1, interpretation: { reason: "Synthetic outside history review", outside_author: null, prescribed_on: null, prescription_date_status: "unknown", status: "unknown", completeness: "partial", partial_reason: "Source item references incomplete; observed item not selected", items: [], replaces_id: null, expected_predecessor_hash: null } };
+const prescriptionPrepared = await staffRpc("prepare_ezyvet_prescription_review", { p_id: prescriptionApproval, p_pet_id: pet, p_payload: prescriptionPayload });
+check((await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])).approvals.length === 0, "Prepared prescription is not approved over HTTP");
+await staffRpc("approve_ezyvet_prescription_review", { p_id: prescriptionApproval, p_pet_id: pet, p_expected_hash: prescriptionPrepared.request.request_hash, p_confirmed: true });
+const prescriptionEvidence = await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0]);
+const pr = prescriptionEvidence.approvals[0];
+check(pr.id === prescriptionApproval && pr.relationship === "exact_source_version" && pr.source_current, "Approved prescription matches exact observed header over HTTP");
+check(pr.completeness === "partial" && pr.selected_items === 0 && pr.omitted_items === 1, "Partial approval preserves omitted observation count over HTTP");
+check(pr.expected_items === 2 && pr.observed_items === 1 && pr.missing_items === 1 && pr.duplicate_source_ids === 1 && pr.reference_status === "unresolved", "Missing and duplicate source references survive approved receipt projection");
+check(!prescriptionEvidence.local_prescribing_verified && !prescriptionEvidence.item_coverage_verified && !prescriptionEvidence.complete_coverage_verified, "Outside prescription does not infer local prescribing or item coverage");
+check((await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0], 1)).approvals.length === 0, "Prescription version cursor terminates over HTTP");
+await assert.rejects(() => prescriptionApi.list(prescriptionBinding, { ...prescriptionItems.items[0], evidence_hash: "f".repeat(64) })); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_prescription_evidence", { p_binding_id: prescriptionBinding.id, p_page: 1, p_snapshot_id: pc.id, p_evidence_hash: prescriptionItems.items[0].evidence_hash }, other.auth)); checks++;
+sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${quote(site)} and resource='prescriptionitem' and external_id='902';`);
+check(!(await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])).approvals[0].source_current, "Omitted item source reversion invalidates prescription context over HTTP");
+
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
@@ -250,5 +280,6 @@ await assert.rejects(() => api.attempts(bound)); checks++;
 await assert.rejects(() => api.items(saved, bound)); checks++;
 await assert.rejects(() => captureApi.list(bound, captureItem)); checks++;
 await assert.rejects(() => vaccineApi.list(vaccineBinding, vaccineItems.items[0])); checks++;
+await assert.rejects(() => prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])); checks++;
 check(effects() === beforeEffects, "Migration operations cause no native treatment, vaccine certificate, due-plan, reminder, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);

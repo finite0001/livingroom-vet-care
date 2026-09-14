@@ -25,3 +25,7 @@ Read-only code review at `b585f47`. No hosted query or provider sample claim. Pa
 - `EzyVetImportPage.tsx` aggregates child draft guards and actor keys; `EzyVetClinicalImports.tsx` demonstrates server read-before-resume and retained IDs when recovery is uncertain. Reuse those patterns.
 
 Reviewed by two independent codebase explorers: one mapped ledger identities/count semantics; one reviewed owner, lock and recovery risks. Their findings informed the implementation contract; no additional agents or external scans are part of the production design.
+
+## Prescription-header reconciliation receipt
+
+`20260914230000_ezyvet_migration_prescription_evidence.sql` connects an exact owned header observation to approved outside prescription versions for the same mapping/patient/household/source identity. The fixed v1 observation hash includes its recorded head version. Header matching, whole approved-context currentness and correction supersession are independent. Only counts and interpretation categories leave the private approval ledger; source instructions, review reasons, omitted source payloads and request drafts remain private. Source-reference counts distinguish distinct IDs, duplicate-ID counts and invalid references; selected/omitted counts describe approval evidence, not native prescriptions. Individual prescription-item observation credit remains unimplemented.

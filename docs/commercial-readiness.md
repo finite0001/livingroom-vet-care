@@ -368,3 +368,9 @@ Schema8 medical-record packages now include explicitly selected DVM-reviewed out
 Validation passed459 unit tests,31 combined browser cases,441 SQL assertions,161 contention checks and51 actual local Auth/Storage/PostgREST checks. The51→84 populated restore passed and now compares restored routine, table/sequence, RLS and default privileges to canonical state. That stronger check exposed and corrected restore-account creation-default grant leakage. All generated resources were removed; [feature and evidence](features/reviewed-prescription-releases.md) record the scope.
 
 No hosted review/release migration, policy activation, live source read or message occurred. PR CI, staged frontend/staff acceptance, ezyVet resource samples, Dr. Edler's clinical acceptance, attachments and migration reconciliation remain outstanding.
+
+## Local migration prescription-header review evidence — 2026-09-14
+
+The migration workspace now shows approved outside prescription versions against each observed header, preserving partial review, omitted observations, missing/duplicate references, correction history and changed source context. These summaries do not prescribe or dispense medication or certify individual item/migration coverage. Existing buttons, navigation and draft protection are retained.
+
+The candidate now contains 110 canonical migrations; hosted staging was read at 99 through `20260914120000` and was not changed. [Local validation evidence](evidence/canonical-migration-prescription-evidence-20260914.json) records the checks and their limits. This pass does not include a populated 110-migration restore, hosted rollout, provider requests or operator acceptance. Individual prescription-item, identity and weight reconciliation, global totals, operational resolutions and frozen acceptance remain outstanding.
