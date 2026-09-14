@@ -64,6 +64,7 @@ const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 const includeCapture = process.env.INCLUDE_ATTACHMENT_CAPTURE === "true";
 const storageObjects: string[] = [];
 const nativeFixturePaths: string[] = [];
+const boundaryRunIds: string[] = [];
 const deliveryFixtureIds: string[] = [];
 const ids: string[] = [];
 const additionalActors: string[] = [];
@@ -235,21 +236,22 @@ try {
   const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox));");
   const beforeEffects = effects();
   const original = new TextEncoder().encode("%PDF-1.7\nSynthetic captured original\n%%EOF");
+  let boundaryBatch = false;
   const attachmentPayload = (kind: string, page: number) => ({ id: (kind === "Animal" ? 700 : 800) + page, record_type: kind, record_id: wrongParent ? "999" : kind === "Animal" ? "77" : "201", mime_type: includeCapture ? "application/pdf" : "unsupported/example", name: "<script>source name</script>", file_download_url: "https://untrusted.example.test/do-not-fetch" });
   const upstream = await serve(async (req, res) => {
     upstreamCalls++;
     const url = new URL(req.url!, "http://synthetic.test");
     res.setHeader("Content-Type", "application/json");
     if (url.pathname === "/v1/oauth/access_token") { res.end(JSON.stringify({ access_token: "synthetic-only", expires_in: 43200 })); return; }
-    if (includeCapture && /^\/v1\/attachment\/download\/(701|702|801|802)$/.test(url.pathname)) {
-      assert.equal(req.method, "GET"); res.setHeader("Content-Type", "application/pdf"); const bytes = original.slice(); if (url.pathname.endsWith("2")) bytes[bytes.length - 1] ^= 4; res.end(bytes); return;
+    if (includeCapture && /^\/v1\/attachment\/download\/[78][0-9]{2}$/.test(url.pathname)) {
+      assert.equal(req.method, "GET"); res.setHeader("Content-Type", "application/pdf"); const bytes = original.slice(); const number = Number(url.pathname.split("/").at(-1)) % 100; assert.ok(number >= 1 && number <= 20); if (number > 1) bytes[bytes.length - 1] ^= number === 2 ? 4 : number + 4; res.end(bytes); return;
     }
     assert.equal(url.pathname, "/v1/attachment"); assert.equal(req.method, "GET");
     if (includeCapture && url.searchParams.has("id")) {
       assert.deepEqual([...url.searchParams.keys()].sort(), ["id", "limit", "page", "record_id", "record_type"]);
       const kind = url.searchParams.get("record_type")!;
       assert.ok(kind === "Animal" || kind === "Consult"); assert.equal(url.searchParams.get("record_id"), kind === "Animal" ? "77" : "201");
-      const selectedPage = Number(url.searchParams.get("id")) - (kind === "Animal" ? 700 : 800); assert.ok(selectedPage === 1 || selectedPage === 2);
+      const selectedPage = Number(url.searchParams.get("id")) - (kind === "Animal" ? 700 : 800); assert.ok(selectedPage >= 1 && selectedPage <= 20);
       res.end(JSON.stringify({ meta: { items_page: 1, items_page_total: 1 }, items: [{ attachment: attachmentPayload(kind, selectedPage) }] })); return;
     }
     assert.deepEqual([...url.searchParams.keys()].sort(), ["limit", "page", "record_id", "record_type"]);
@@ -257,7 +259,7 @@ try {
     assert.equal(url.searchParams.get("record_id"), kind === "Animal" ? "77" : "201");
     assert.equal(url.searchParams.get("limit"), "10");
     const page = Number(url.searchParams.get("page"));
-    res.end(JSON.stringify({ meta: { items_page: page, items_page_total: 2 }, items: [{ attachment: attachmentPayload(kind!, page) }] }));
+    res.end(JSON.stringify({ meta: { items_page: page, items_page_total: 2 }, items: (boundaryBatch ? Array.from({ length: 10 }, (_, index) => (page - 1) * 10 + index + 1) : [page]).map(index => ({ attachment: attachmentPayload(kind!, index) })) }));
   });
   const env: Record<string, string> = { APP_URL: origin, APP_ENV: "staging", EZYVET_IMPORT_MODE: "staging", EZYVET_SITE_UID: site, EZYVET_CLIENT_ID: "synthetic", EZYVET_CLIENT_SECRET: "synthetic", EZYVET_READ_RESOURCES: "attachment" };
   const handler = createHandler({ env: key => env[key], now: Date.now, sleep: async () => {}, fetch: async (input, init) => {
@@ -791,6 +793,54 @@ try {
           check(captured.manifest.length === 5 && expectedDigests.every(digest => captured.manifest.some((item: { sha256: string }) => item.sha256 === digest)), "SQL-frozen mixed manifest contains report plus all four distinct original digests");
         }
       }
+      boundaryBatch = true; resetCooldown();
+      const batchRun = randomUUID(); ids.push(batchRun); boundaryRunIds.push(batchRun);
+      await rpc('prepare_ezyvet_attachment_scan', { ...prepareArgs, p_id: batchRun }, true);
+      for (let page = 1; page <= 2; page++) {
+        resetCooldown(); check((await post({ ...body, run_id: batchRun })).ok, "Boundary fixture imports an actual full page of ten API attachments");
+      }
+      boundaryBatch = false;
+      // Advance the owned fixture past metadata-import cooldown before file capture.
+      resetCooldown();
+      const batchSources = JSON.parse(sql(`select jsonb_agg(jsonb_build_object('id',s.id,'hash',s.payload_hash,'version',o.head_version,'page',o.page,'external_id',s.external_id) order by s.external_id::integer) from ezyvet_attachment_page_observations o join ezyvet_import_snapshots s on s.id=o.snapshot_id where o.run_id=${quote(batchRun)};`));
+      check(batchSources.length === 20, "Two actual import pages preserve twenty exact source observations");
+      const boundaryApiIds = [correctionId, secondApproval];
+      for (const source of batchSources.slice(2)) {
+        const requestId = randomUUID(), approvalId = randomUUID(); ids.push(requestId, approvalId);
+        const prepared = await rpc('prepare_ezyvet_attachment_download', { p_id: requestId, p_pet_id: pet, p_run_id: batchRun, p_page: source.page, p_snapshot_id: source.id, p_payload_hash: source.hash, p_observed_head_version: source.version }, true);
+        const capturedResponse = await postCapture({ request_id: requestId, pet_id: pet, request_hash: prepared.request.request_hash });
+        const capturedSummary = await capturedResponse.json();
+        check(capturedResponse.ok, `Boundary API capture ${source.external_id}: HTTP ${capturedResponse.status}, code ${capturedSummary.code ?? capturedSummary.error ?? 'unknown'}`);
+        const saved = await rpc('recover_ezyvet_attachment_download', { p_id: requestId, p_pet_id: pet }, true); storageObjects.push(saved.capture.object_path);
+        await rpc('approve_ezyvet_attachment_record', { p_id: approvalId, p_request_id: requestId, p_pet_id: pet, p_capture_hash: saved.capture.capture_hash, p_previous_record_id: null, p_title: 'Boundary API original ' + source.external_id, p_review_reason: 'Synthetic exact captured original review', p_attest: true }, true);
+        boundaryApiIds.push(approvalId);
+        const bytes = original.slice(); bytes[bytes.length - 1] ^= Number(source.external_id) % 100 + 4;
+        mixedFiles.set('ezyvet-attachments/' + saved.capture.object_path, bytes);
+      }
+      for (let index = 3; index <= 5; index++) {
+        const id = randomUUID(); ids.push(id); mixedDocuments.push(id);
+        const bytes = original.slice(); bytes[bytes.length - 1] ^= index + 40;
+        const document = await api('/rest/v1/rpc/prepare_patient_document', { p_id: id, p_pet_id: pet, p_encounter_id: null, p_file_name: `synthetic-boundary-${index}.pdf`, p_mime_type: 'application/pdf', p_file_size: bytes.length, p_category: 'medical_record', p_source: 'Synthetic package limit', p_document_date: null, p_visibility: 'client_shareable' }, chartHeaders);
+        nativeFixturePaths.push(document.file_path);
+        if (index < 5) mixedFiles.set('patient-documents/' + document.file_path, bytes);
+        const uploaded = await fetch(local.API_URL + '/storage/v1/object/patient-documents/' + document.file_path, { method: 'POST', headers: { ...chartHeaders, 'Content-Type': 'application/pdf', 'x-upsert': 'false' }, body: bytes }); assert.ok(uploaded.ok);
+        await api('/rest/v1/rpc/finalize_patient_document', { p_id: id }, chartHeaders);
+      }
+      for (const channel of ['EMAIL', 'SMS'] as const) {
+        const boundaryArgs = { ...(channel === 'EMAIL' ? packageArgs : smsArgs), p_selection: { api_attachment_ids: boundaryApiIds, document_ids: mixedDocuments.slice(0, 4), patient_summary_ids: [pet] } };
+        const preview = await api('/rest/v1/rpc/preview_record_release_v9', boundaryArgs, chartHeaders);
+        check(preview.snapshot.api_attachments.length === 20 && preview.snapshot.attachments.length === 24, "Actual preview accepts the full twenty-API/twenty-four-original boundary");
+        const releaseId = randomUUID(), requestId = randomUUID(); ids.push(releaseId, requestId);
+        await api('/rest/v1/rpc/confirm_record_release', { ...boundaryArgs, p_id: releaseId, p_reviewed_snapshot: preview.snapshot, p_reviewed_hash: preview.source_hash, p_attest_review: true }, chartHeaders);
+        const request = channel === 'EMAIL' ? { ...emailArgs, p_request_id: requestId, p_release_id: releaseId, p_release_hash: preview.source_hash } : { ...linkArgs, p_request_id: requestId, p_source_id: releaseId, p_source_hash: preview.source_hash };
+        mixedReads = []; swapApiBytes = false;
+        const response = await (channel === 'EMAIL' ? mixedEmailHandler : mixedLinkHandler)(new Request('http://localhost/prepare-boundary', { method: 'POST', headers: chartHeaders, body: JSON.stringify(request) }));
+        check(response.ok && mixedReads.length === 24 && new Set(mixedReads).size === 24, "Boundary handler downloads every selected original exactly once");
+        const captured = await response.json();
+        const digests = await Promise.all([...mixedFiles.values()].map(async bytes => Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex')));
+        check(captured.manifest.length === 25 && digests.length === 24 && digests.every(digest => captured.manifest.some((item: { sha256: string }) => item.sha256 === digest)), "Boundary frozen manifest preserves report plus all twenty-four originals");
+        await assert.rejects(api('/rest/v1/rpc/preview_record_release_v9', { ...boundaryArgs, p_selection: { ...boundaryArgs.p_selection, document_ids: mixedDocuments } }, chartHeaders), (error: { code: string; message: string }) => error.code === '23514' && error.message.includes('within24-file')); assertions++;
+      }
       const noFetch = upstreamCalls;
       check((await rpc("claim_ezyvet_attachment_download", { p_id: downloadId, p_actor: actor, p_pet_id: pet, p_request_hash: requestHash })).status === "captured" && upstreamCalls === noFetch, "Terminal service claim recovers without a new source read");
       // Exercise the production runtime adapter and handler through actual loopback HTTP.
@@ -899,7 +949,8 @@ try {
     check(upstreamCalls === staleCalls, "Changed parent cannot trigger a fresh upstream read");
     check((await post(body)).status === 200 && upstreamCalls === staleCalls, "Original terminal receipt remains recoverable after parent revision");
   }
-  check((await rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true)).runs.length === 4, "Actual staff discovery includes terminal and pending runs");
+  const discoveredRuns = (await rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true)).runs;
+  check(discoveredRuns.length === 4 + boundaryRunIds.length && boundaryRunIds.every(id => discoveredRuns.some((run: { id: string }) => run.id === id)), "Actual staff discovery includes original terminal/pending runs and exact boundary fixture runs");
   const privateRows = await fetch(local.API_URL + "/rest/v1/ezyvet_attachment_runs?select=run_id", { headers: staffHeaders });
   check(privateRows.status === 401 || privateRows.status === 403, "Private run table denies direct staff access");
   if (includeCapture) {
