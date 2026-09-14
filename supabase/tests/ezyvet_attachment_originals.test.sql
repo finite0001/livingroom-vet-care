@@ -126,6 +126,32 @@ select throws_ok($$select release_api_attachment_document(jsonb_set((select v->0
 select throws_ok($$select release_api_attachment_document(jsonb_set((select v->0 from data where k='release-original'),'{capture,bucket_id}','"patient-documents"'))$$,'23514',null,'API source cannot masquerade as a native document');
 select ok(not has_function_privilege('authenticated','release_preview_v9_internal(uuid,uuid,text,text,jsonb)','execute'),'Schema9 composition remains private behind authorized wrappers');
 select ok(not has_function_privilege('service_role','release_api_attachment_document(jsonb)','execute'),'Original mapper is not a direct worker entrypoint');
+-- Source discovery is current-only; chart history remains complete.
+set local role authenticated;
+insert into data select 'api-candidates',list_record_release_sources_v9((select id from fx where k='pet'));
+select is(jsonb_array_length((select v->'api_attachment_ids' from data where k='api-candidates')),1,'Release chooser offers only latest approved API original');
+select is((select v#>>'{api_attachment_ids,0,id}' from data where k='api-candidates'),(select id::text from fx where k='correction'),'Chooser identifies exact correction');
+select is((select v#>>'{api_attachment_ids,0,record_hash}' from data where k='api-candidates'),(select v->>'record_hash' from data where k='corrected'),'Chooser retains reviewed hash');
+select is((select v#>>'{api_attachment_ids,0,file_size}' from data where k='api-candidates'),'12','Chooser supplies original size without private path');
+select ok(not (select (v#>'{api_attachment_ids,0}') ?| array['source_context','object_path','file_path','bucket_id'] from data where k='api-candidates'),'Chooser omits private original context');
+select is((select v->>'policy_v9_accepted' from data where k='api-candidates'),'false','Discovery does not imply clinical acceptance');
+select is((select (v-'api_attachment_ids'-'policy_v9_accepted')||jsonb_build_object('has_more',(v->'has_more')-'api_attachment_ids') from data where k='api-candidates'),list_record_release_sources_v8((select id from fx where k='pet')),'Schema9 discovery preserves every canonical schema8 source and disclosure');
+select is(jsonb_array_length(list_record_release_sources_v9((select id from fx where k='pet'),1)->'api_attachment_ids'),0,'Next source page excludes already paged approval');
+select throws_ok($$select list_record_release_sources_v9((select id from fx where k='pet'),-1)$$,'23514',null,'Negative source offset rejected');
+select throws_ok($$select list_record_release_sources_v9((select id from fx where k='pet'),null)$$,'23514',null,'Null source offset rejected');
+insert into data select 'all-api-sources',select_all_record_release_sources_v9((select id from fx where k='pet'));
+select is((select v#>'{selection,api_attachment_ids}' from data where k='all-api-sources'),jsonb_build_array((select id from fx where k='correction')),'Select all retains exact current API approval');
+select is((select (v->'selection')-'api_attachment_ids' from data where k='all-api-sources'),select_all_record_release_sources_v8((select id from fx where k='pet'))->'selection','Select all preserves canonical schema8 family choices');
+reset role;
+update storage.objects set metadata=jsonb_set(metadata,'{size}','13') where name=(select v#>>'{intent,object_path}' from data where k='reserved');
+set local role authenticated;
+select is(jsonb_array_length(list_record_release_sources_v9((select id from fx where k='pet'))->'api_attachment_ids'),0,'Changed Storage identity is omitted from discovery');
+select is(jsonb_array_length(select_all_record_release_sources_v9((select id from fx where k='pet'))#>'{selection,api_attachment_ids}'),0,'Select all cannot include unavailable original');
+reset role;
+update storage.objects set metadata=jsonb_set(metadata,'{size}','12') where name=(select v#>>'{intent,object_path}' from data where k='reserved');
+select ok(not has_function_privilege('authenticated','ezyvet_release_attachment_current(uuid)','execute'),'Private discovery currentness helper is not an API');
+select ok(not has_function_privilege('anon','list_record_release_sources_v9(uuid,integer)','execute'),'Anonymous source discovery denied');
+select ok(not has_function_privilege('service_role','select_all_record_release_sources_v9(uuid)','execute'),'Worker cannot act as staff choosing all sources');
 -- Public confirmation and recovery on canonical schema9; acceptance is rollback-only.
 insert into fx values('api-release',gen_random_uuid());
 create function pg_temp.confirm_api_release() returns jsonb language sql as $$
@@ -181,6 +207,8 @@ update ezyvet_identity_heads set version=version+1 where resource='animal' and e
 select ok(exists(select 1 from record_release_events where release_id=(select id from fx where k='api-release') and kind='source_changed'),'Canonical Animal head change appends release invalidation');
 select is(read_record_release((select id from fx where k='api-release'))->>'eligible','false','Changed source makes saved release ineligible');
 select is(pg_temp.confirm_api_release(),(select v from data where k='confirmed-api'),'Exact saved receipt remains recoverable after source invalidation');
+select is(jsonb_array_length(list_record_release_sources_v9((select id from fx where k='pet'))->'api_attachment_ids'),0,'Stale source disappears from release chooser while chart history survives');
+
 
 select throws_ok($$select pg_temp.release_original()$$,'40001',null,'Source change prevents a new release of retained original');
 set local role authenticated;
