@@ -1,6 +1,6 @@
 # Supervised ezyVet migration reconciliation
 
-Status: phase1 recovery implemented locally; phase2 scan-evidence projection is in progress. Baseline `b585f47`; staging has99 canonical migrations and the local candidate has103. This plan addresses the orchestration/reconciliation requirement in [phase3](../20260913-ezyvet-clinical-import/phase-03-complete-migration.md). Individual import/review/release workflows are implemented; their success is not whole-migration acceptance.
+Status: phase1 recovery implemented locally; phase2 scan-evidence projection is in progress. Baseline `b585f47`; staging has99 canonical migrations and the local candidate has104. This plan addresses the orchestration/reconciliation requirement in [phase3](../20260913-ezyvet-clinical-import/phase-03-complete-migration.md). Individual import/review/release workflows are implemented; their success is not whole-migration acceptance.
 
 ## Required result
 
@@ -42,7 +42,7 @@ Supported Consult/Contact attachment contracts and practice entitlement; source 
 
 ## Next concrete increment
 
-Extend phase2 with exact review/capture reconciliation, followed by item drill-down and frozen reports. Also verify the older core import claim rechecks active administrator status after waiting on its source gate; its source definition currently checks before that wait. The manifest candidate is local only; do not infer a hosted deployment from passing local SQL checks. Before reserving another version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
+Extend phase2 with exact review/capture reconciliation, followed by item drill-down and frozen reports. The core source-gate authorization gap was reproduced and corrected locally by migration `20260914170000`, together with terminal recovery checks in all six patient-scoped claim functions. Verify the older staging and failure mutation paths after waits separately; claim hardening does not establish their behavior. The manifest candidate is local only; do not infer a hosted deployment from passing local SQL checks. Before reserving another version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
 
 Planning environment: optional codebase-summary/development-rules/code-standards/design-guidelines files and active-plan helper scripts are absent. Existing AGENTS.md, source contracts and current ledgers are authoritative. No new vendor API contract is asserted by this plan.
 
@@ -55,3 +55,5 @@ Client and runtime acceptance: [43 real Auth/PostgREST migration checks, 351 com
 Resolved-scope digest and initial scan projection: [SQL/concurrency, real HTTP and recovery-after-restore evidence](../../docs/evidence/canonical-migration-scan-progress-20260914.json). This does not establish whole-migration acceptance.
 
 Transactional attempt history: [SQL/concurrency, 369 runtime checks and populated baseline/restore evidence](../../docs/evidence/canonical-migration-attempt-history-20260914.json). This remains local and is not migration cutover acceptance.
+
+Import claim wait authorization: [reproduction, seven-function correction and serial SQL/HTTP/restore evidence](../../docs/evidence/canonical-import-claim-wait-authorization-20260914.json). No hosted deployment occurred.

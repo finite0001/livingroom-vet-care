@@ -72,11 +72,12 @@ def contended(first_query, second_query, second_expected, hold_seconds=2, during
     if waiting and during_wait: during_wait()
     first.stdin.write('commit;\n');first.stdin.close()
     check(waiting, 'Second operation actually waits on the first transaction lock')
-    first.wait(timeout=10)
-    second.wait(timeout=10)
-    first_error = first.stderr.read()
-    second_output = second.stdout.read()
-    second_error = second.stderr.read()
+    # Drain results while waiting: a large recovery response can otherwise fill
+    # the pipe and prevent psql from consuming COMMIT, retaining the tested lock.
+    first.stdin=None
+    second.stdin=None
+    _,first_error=first.communicate(timeout=10)
+    second_output,second_error=second.communicate(timeout=10)
     check(first.returncode == 0, first_error)
     check(second_expected(second.returncode, second_output, second_error), second_error or second_output)
 
@@ -136,6 +137,51 @@ try:
         subprocess.run(prior,check=True)
     saved=json.loads(scalar('begin;set local search_path=public,extensions;'+fixture+"select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
     fx=saved['fx'];page=saved['data']['page']
+    revoked_claim=str(uuid.uuid4())
+    try:
+        contended("select pg_advisory_xact_lock(hashtextextended('https://api.trial.ezyvet.com:role-wait-test:contact',0));",service+f"select claim_ezyvet_import('{revoked_claim}','{actor}','role-wait-test','contact','https://api.trial.ezyvet.com');",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+        check(scalar(f"select count(*) from ezyvet_import_runs where id='{revoked_claim}';")=='0','Revoked administrator cannot create a run after source-gate wait')
+        check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{revoked_claim}';")=='0','Rejected post-wait claim leaves no attempt events')
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
+    # Build actual terminal resource runs to exercise recovery paths that can
+    # return before the shared core claim is reached.
+    adapter_source=Path(__file__).with_name('ezyvet_migration_binding_adapters.test.sql').read_text()
+    adapter_setup=adapter_source.split('create temp table adapters',1)[1].split("insert into data select 'adapter-children'",1)[0]
+    adapter_fx='create temp table fx(k text primary key,id uuid);insert into fx values '+','.join(f"({quote(k)},{quote(v)})" for k,v in fx.items())+';'
+    adapters=json.loads(scalar('begin;'+adapter_fx+'create temp table adapters'+adapter_setup+'select jsonb_agg(to_jsonb(a) order by resource) from adapters a;commit;'))
+    for entry in adapters:
+        child=json.loads(scalar(f"select to_jsonb(r) from ezyvet_import_runs r where id='{entry['child']}';"))
+        if child['status']=='running':
+            run(f"select stage_ezyvet_import_page('{entry['child']}','{actor}','{child['lease_id']}',1,true,'[]');")
+    contact=next(entry for entry in adapters if entry['resource']=='contact')
+    terminal_before=scalar(f"select to_jsonb(r)::text from ezyvet_import_runs r where id='{contact['child']}';")
+    try:
+        contended(f"select 1 from ezyvet_import_runs where id='{contact['child']}' for update;",service+f"select claim_ezyvet_import('{contact['child']}','{actor}','attachment-test-site','contact','https://api.trial.ezyvet.com');",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+        check(scalar(f"select to_jsonb(r)::text from ezyvet_import_runs r where id='{contact['child']}';")==terminal_before,'Terminal core recovery denies role loss during row wait without changing run')
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
+    for entry in adapters:
+        resource=entry['resource'];rid=entry['child'];mapping=entry['mapping']
+        if resource in ('contact','animal'):continue
+        if resource=='healthstatus':
+            prefix='weight-run:';query=f"select claim_ezyvet_weight_import('{rid}','{actor}','attachment-test-site','https://api.trial.ezyvet.com','{mapping}');"
+        elif resource=='attachment':
+            prefix='attachment-run:';query=claim(rid)
+        else:
+            family='clinical' if resource in ('consult','history') else resource
+            prefix=family+'-run:'
+            extra=''
+            if resource in ('vaccination','prescriptionitem'):
+                parent_hash=scalar(f"select payload_hash from ezyvet_import_snapshots where id='{entry['parent']}';")
+                extra=f",'{entry['parent']}','{parent_hash}',{entry['head']}"
+            query=f"select claim_ezyvet_{family}_import('{rid}','{actor}','attachment-test-site','{resource}','https://api.trial.ezyvet.com','{mapping}'{extra});"
+        history_before=scalar(f"select jsonb_build_object('run',(select to_jsonb(r) from ezyvet_import_runs r where id='{rid}'),'events',(select jsonb_agg(to_jsonb(e) order by sequence) from ezyvet_migration_attempt_events e where child_run_id='{rid}'))::text;")
+        try:
+            contended(f"select pg_advisory_xact_lock(hashtextextended('{prefix}{rid}',0));",service+query,lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+            check(scalar(f"select jsonb_build_object('run',(select to_jsonb(r) from ezyvet_import_runs r where id='{rid}'),'events',(select jsonb_agg(to_jsonb(e) order by sequence) from ezyvet_migration_attempt_events e where child_run_id='{rid}'))::text;")==history_before,resource+' recovery after role loss preserves run and event history')
+        finally:
+            sql(f"update profiles set is_active=true where id='{actor}';")
     # Migration manifests share none of the child lease/cursor mutation paths.
     migration_id=str(uuid.uuid4());scope_id=str(uuid.uuid4())
     def migration_prepare(rid, reason='Observed manifest concurrency'):

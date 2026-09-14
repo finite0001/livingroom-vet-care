@@ -108,3 +108,5 @@ The child-binding candidate reaches101 migrations. The same fixture now binds it
 The scan-progress candidate reaches102 migrations. The rehearsal also saves the actual owned manifest and binding recovery responses before backup, then compares them after restoration. This explicitly verifies the versioned resolved-scope digest, rather than inferring API recovery from table parity alone.
 
 The attempt-history candidate reaches103 migrations. Before the baseline upgrade, the fixture creates one synthetic leased import with a latest error. Upgrade must leave that row unchanged and add exactly one `migration_baseline` event with a hashed lease reference. All attempt-event rows join the exact database restore comparison; prior history is never manufactured.
+
+The claim-authorization candidate reaches104 migrations. It rechecks active administrator status after source/run waits and before returning from the canonical core and six scoped claim functions. The latest attachment original-capture interlock is preserved. The same populated restore and routine/permission comparisons apply.
