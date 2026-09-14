@@ -115,7 +115,8 @@ begin
  perform pg_advisory_xact_lock(hashtextextended(i.request_id::text,6600));
  select * into r from public.ezyvet_attachment_download_requests where id=i.request_id for share;
  select * into a from public.ezyvet_attachment_download_attempts where request_id=i.request_id order by attempt_no desc limit 1;
- return r.status='pending' and a.lease_until>clock_timestamp() and not exists(select 1 from public.ezyvet_attachment_download_failures where lease_id=a.lease_id);
+ -- Authorization may change while the request advisory/row lock is waiting.
+ return public.ezyvet_is_active_admin(auth.uid()) and r.status='pending' and a.lease_until>clock_timestamp() and not exists(select 1 from public.ezyvet_attachment_download_failures where lease_id=a.lease_id);
 end $$;
 create function public.ezyvet_attachment_storage_read(p_path text) returns boolean language sql stable security definer set search_path=public as $$
  select public.ezyvet_is_active_admin(auth.uid()) and exists(select 1 from public.ezyvet_attachment_capture_intents where object_path=p_path and actor_id=auth.uid());

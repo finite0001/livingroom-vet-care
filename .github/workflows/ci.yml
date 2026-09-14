@@ -171,6 +171,8 @@ jobs:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify attachment metadata and private capture through HTTP, Auth and Storage
         run: python3 tests/ezyvet/attachment-disposable.py --run-synthetic-local --include-capture
+      - name: Verify attachment lease expiry and permission loss during actual lock waits
+        run: python3 supabase/tests/ezyvet_attachment_capture_concurrency.py --project-config supabase/config.toml
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage
