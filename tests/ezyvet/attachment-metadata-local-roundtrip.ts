@@ -319,6 +319,28 @@ try {
   check(sql(`select count(*) from ezyvet_import_snapshots where resource='attachment' and (payload::text like '%private-capability%' or payload::text like '%private-unknown-field%');`) === '0', "Raw snapshot storage has no temporary capabilities or unknown fields");
   check(sql(`select count(*) from ezyvet_import_snapshots where resource='attachment' and payload->>'representation'='sanitized_attachment_metadata_v1';`) === '2', "Stored metadata snapshots are explicitly labeled sanitized");
   check(effects() === beforeEffects, "Metadata intake creates no native treatment, invoice, inventory, outbox or private file effects");
+  const otherEmail = `attachment-other-${randomUUID()}@example.test`, otherPassword = `Synthetic-${randomUUID()}-Aa1!`;
+  const otherActor = (await api("/auth/v1/admin/users", { email: otherEmail, password: otherPassword, email_confirm: true })).id;
+  sql(`insert into user_roles(user_id,role) values(${quote(otherActor)},'ADMIN');`);
+  const otherAuth = await api("/auth/v1/token?grant_type=password", { email: otherEmail, password: otherPassword }, { apikey: local.ANON_KEY, "Content-Type": "application/json" });
+  const otherHeaders = { ...staffHeaders, Authorization: `Bearer ${otherAuth.access_token}` };
+  await assert.rejects(api("/rest/v1/rpc/recover_ezyvet_attachment_run", { p_id: runId, p_animal_link_id: mapping }, otherHeaders), (e: { code: string }) => e.code === "42501"); assertions++;
+  await assert.rejects(api("/rest/v1/rpc/list_ezyvet_attachment_observations", { p_run_id: runId, p_animal_link_id: mapping }, otherHeaders), (e: { code: string }) => e.code === "42501"); assertions++;
+  check((await api("/rest/v1/rpc/list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, otherHeaders)).runs.length === 0, "Another active administrator cannot discover owned run history");
+  for (const headers of [staffHeaders, otherHeaders]) {
+    for (const path of [
+      "/ezyvet_import_runs?resource=eq.attachment",
+      "/ezyvet_import_snapshots?resource=eq.attachment",
+      `/ezyvet_import_pages?run_id=eq.${runId}`,
+      `/ezyvet_import_page_items?run_id=eq.${runId}`,
+      "/ezyvet_identity_heads?resource=eq.attachment",
+    ]) {
+      const response = await fetch(local.API_URL + "/rest/v1" + path, { headers });
+      check(response.ok && (await response.json()).length === 0, "Shared table reads cannot bypass owned attachment RPCs");
+    }
+  }
+  const legacyRead = await fetch(local.API_URL + "/rest/v1/ezyvet_import_snapshots?resource=eq.animal", { headers: staffHeaders });
+  check(legacyRead.ok && (await legacyRead.json()).length === 2, "Attachment restriction preserves prior Animal source reads");
   sql(`delete from user_roles where user_id=${quote(actor)} and role='ADMIN';`);
   const callsBeforeRoleRemoval = upstreamCalls;
   check((await post(body)).status === 403 && upstreamCalls === callsBeforeRoleRemoval, "Removed administrator role rejects valid JWT before provider traffic");
