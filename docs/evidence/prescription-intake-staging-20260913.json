@@ -1,0 +1,38 @@
+{
+  "project_ref": "kothoqicubowyhwfsrte",
+  "date": "2026-09-13",
+  "tested_revision": "0041468399ba4753c4f5f5f593bb2437f573eedf",
+  "ci_run": "34782248989",
+  "migration_count": 77,
+  "migrations": {
+    "20260913550000_patient_scoped_prescription_import.sql": "c88563d4f7be486e342bbd861fee3ce64c757ac7a8bac3b11aeb0cb61ce64fa8",
+    "20260913560000_parent_scoped_prescription_items.sql": "c0e54a6e493fdbbb2a6dc5929e77c25f7b799b94e930a3eb5fb3faa614f26d48"
+  },
+  "function": {
+    "name": "ezyvet-import",
+    "version": 5,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "bundle_sha256": "b5cec0923218daf80fd5c67d014cf6e6a188a72689c67ca2ec1c7a7a8e5f7536",
+    "source_revision": "0041468399ba4753c4f5f5f593bb2437f573eedf"
+  },
+  "deployed_files_match_tested_source": 3,
+  "private_rls_tables": 6,
+  "immutable_triggers": 6,
+  "authenticated_without_staff_denials": 6,
+  "anonymous_function_http_status": 401,
+  "counts": {
+    "auth_users": 0,
+    "clients": 0,
+    "pets": 0,
+    "import_runs": 0,
+    "storage_objects": 0,
+    "outbox": 0
+  },
+  "limits": [
+    "No source reads or live import activation",
+    "No signed-in staff acceptance",
+    "No frontend deployment in this increment",
+    "Prescription review, chart adoption, release integration and populated restore evidence remain pending"
+  ]
+}

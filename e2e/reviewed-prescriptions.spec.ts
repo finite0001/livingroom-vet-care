@@ -83,8 +83,9 @@ async function fixture(
     allergies: null,
     version: 1,
   };
+  const appOrigin = new URL(test.info().project.use.baseURL!).origin;
   await page.route("**/*", (r) =>
-    new URL(r.request().url()).origin === "http://127.0.0.1:8080"
+    new URL(r.request().url()).origin === appOrigin
       ? r.continue()
       : r.abort(),
   );

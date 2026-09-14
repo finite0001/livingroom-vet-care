@@ -1,0 +1,51 @@
+{
+  "synthetic_only": true,
+  "git_commit": "1f58fd65d9378c76d4069d44e5bdb1cdf1de646d",
+  "runner_sha256": "8754a9d605dae53049fef0af75ec531a33bc427cf567e67ca204aebf76f50d09",
+  "fixture_sha256": "abf884fc7142e571d19a7311b6481d58cafd06109ff567c98d1b0632540508ce",
+  "database_sha256": "4aec6d5e3133b00fd6672d194b6d1542a8a1730c4b224053a79db504ca4ef962",
+  "backup_seconds": 17.63,
+  "restore_and_verify_seconds": 22.97,
+  "total_seconds": 256.84,
+  "cleanup_verified": true,
+  "vaccination_receipt_restore": {
+    "receipt_rows": 1,
+    "scoped_context_rows": 1,
+    "observation_rows": 1,
+    "approved_vaccination_rows": 1,
+    "review_request_rows": 1,
+    "approved_prescription_rows": 2,
+    "prescription_review_requests": 3,
+    "prescription_item_runs": 2,
+    "frozen_release_rows": 1,
+    "source_and_receipt_rows_match": true,
+    "fixture_sha256": "2df357cc0f3cb28e1d12a2babe38ab9e213783a80ed5ab8b884d048e8ea32de7"
+  },
+  "verification": {
+    "fresh_local_login": true,
+    "identical_rows_and_ids": true,
+    "signed_soap_and_addendum": true,
+    "invoice_total_cents": 9000,
+    "credit_cents": 500,
+    "stock_units": 8,
+    "private_original_sha256": "1fc62aca512802276c79f6f3fc12c6dc743239fde62ad71938e6b698dc1d9c5e",
+    "private_original_bytes": 78,
+    "anonymous_and_public_denied": true,
+    "ready_original_and_signed_history_immutable": true,
+    "outbox_empty": true,
+    "cron_absent": true
+  },
+  "execution": "Fresh populated 51-to-84 migration upgrade and restore; no resume",
+  "canonical_inventory_counts": {
+    "policies": 235,
+    "triggers": 252,
+    "functions": 473,
+    "relations": 191,
+    "default_privileges": 6
+  },
+  "pre_restore_canonical_match": true,
+  "post_restore_canonical_match": true,
+  "migration_count": 84,
+  "physical_storage_file_count": 1,
+  "limits": "Synthetic local only. No hosted actions or provider sends; not a production recovery-time commitment."
+}

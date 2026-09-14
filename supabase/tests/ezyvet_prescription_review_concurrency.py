@@ -5,9 +5,11 @@ import json
 import subprocess
 import time
 import uuid
+import sys
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
+parser.add_argument('--sql-only',action='store_true',help='Run SQL regressions and clean up without contention cases')
 parser.add_argument('--overlay-migration',type=Path,action='append',default=[])
 parser.add_argument('--extra-sql-test',type=Path,action='append',default=[])
 args = parser.parse_args()
@@ -113,6 +115,7 @@ try:
     pending=[
       ('20260913520000',"to_regclass('public.ezyvet_vaccination_runs')"),
       ('20260913530000',"to_regclass('public.ezyvet_imported_vaccinations')"),
+      ('20260913540000',"to_regprocedure('public.preview_record_release_v7(uuid,uuid,text,text,jsonb)')"),
       ('20260913550000',"to_regclass('public.ezyvet_prescription_runs')"),
       ('20260913560000',"to_regclass('public.ezyvet_prescriptionitem_runs')"),
       ('20260913570000',"to_regprocedure('public.ezyvet_reconcile_prescription_items(jsonb,jsonb,boolean)')"),
@@ -121,15 +124,18 @@ try:
       ('20260913600000',"to_regprocedure('public.ezyvet_prescription_interpretation_context(jsonb,jsonb)')"),
       ('20260913610000',"to_regclass('public.ezyvet_imported_prescriptions')"),
       ('20260913620000',"to_regprocedure('public.get_ezyvet_prescription_review_candidate(uuid,uuid)')"),
+      ('20260913630000',"to_regprocedure('public.preview_record_release_v8(uuid,uuid,text,text,jsonb)')"),
     ]
     for version,probe in pending:
         if scalar(f'select {probe} is null;')=='t':
             paths=list(migration_dir.glob(version+'_*'))
             assert len(paths)==1,version
             sql(paths[0].read_text())
+    # Additive private-helper replacement follows the deployed schema8 baseline.
+    sql((migration_dir/'20260913650000_prescription_release_reference_hardening.sql').read_text())
     for migration in args.overlay_migration:sql(migration.read_text())
     regression_count=0
-    for filename in ['ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
+    for filename in ['ezyvet_prescription_release_reference.test.sql','release_imported_prescription.test.sql','release_imported_vaccination.test.sql','ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
         result=sql(Path(__file__).with_name(filename).read_text())
         plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
         check('not ok' not in result.stdout and bool(plans),filename+'\n'+result.stdout)
@@ -138,6 +144,9 @@ try:
     for test in args.extra_sql_test:
         extra=sql(test.read_text())
         check('not ok' not in extra.stdout and re.search(r'1\.\.[0-9]+',extra.stdout) is not None,extra.stdout)
+    if args.sql_only:
+        print('SQL-only run complete; cleaning owned scratch database.',flush=True)
+        sys.exit(0)
     saved=json.loads(scalar('begin;set local search_path=public,extensions;'+fixture+"select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
     fx=saved['fx'];payload=saved['data']['payload'];pet=fx['pet']
     check(saved['data']['context']['consult']['status']=='resolved','Race fixture has real patient-scoped consultation evidence')
@@ -256,6 +265,45 @@ try:
         check(scalar(f"select status from ezyvet_prescription_review_requests where id='{pending}';")=='approved','Real review-first ingestion preserves committed approval')
         check(scalar(f"select ezyvet_prescription_current('{pending}')->>'is_current';")=='false','Subsequent real source change visibly invalidates approved currentness')
         print(f'Observed actual {resource} page ingestion versus approval in both orders.',flush=True)
+
+    # Real release confirmation races against source ingestion and corrections.
+    # The frozen preview is prepared before either contender starts.
+    sql("insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic race reviewer',now(),'TEST ONLY',8);")
+    def release_for(review_id):
+        selection={'imported_prescription_ids':[review_id]}
+        preview=json.loads(scalar('begin;'+staff+f"select preview_record_release_v8('{pet}','{fx['client']}','EMAIL','clinical-import@example.test',{quote(json.dumps(selection))}::jsonb);commit;"))
+        rid=str(uuid.uuid4())
+        confirm=f"select confirm_record_release('{rid}','{pet}','{fx['client']}','EMAIL','clinical-import@example.test',{quote(json.dumps(selection))}::jsonb,{quote(json.dumps(preview['snapshot']))}::jsonb,'{preview['source_hash']}',true);"
+        return rid,confirm,preview['snapshot']
+    def approved_rescan():
+        p,_=rescan();pending=fresh(p);sql('begin;'+staff+approve(pending)+'commit;')
+        review_id=scalar(f"select approved_record_id from ezyvet_prescription_review_requests where id='{pending}';")
+        return p,review_id
+    for resource in ['prescription','prescriptionitem','consult']:
+        for source_first in [True,False]:
+            p,review_id=approved_rescan();rid,confirmation,frozen=release_for(review_id);change=writer()
+            if source_first:
+                contended(change,staff+confirmation,lambda c,o,e:c!=0 and 'Current latest' in e)
+                check(scalar(f"select count(*) from record_releases where id='{rid}';")=='0','Source-first release creates no stale package')
+            else:
+                contended(staff+confirmation,change,lambda c,o,e:c==0)
+                eligible=scalar('begin;'+staff+f"select read_record_release('{rid}')->>'eligible';commit;")
+                check(eligible=='false','Release-first source ingestion invalidates pending package')
+                check(json.loads(scalar(f"select snapshot from record_releases where id='{rid}';"))==frozen,'Source ingestion leaves frozen release unchanged')
+        print(f'Observed actual {resource} ingestion versus release confirmation in both orders.',flush=True)
+    for correction_first in [True,False]:
+        p,review_id=approved_rescan();rid,confirmation,frozen=release_for(review_id)
+        latest=json.loads(scalar(f"select to_jsonb(v) from ezyvet_imported_prescriptions v where id='{review_id}';"))
+        changed=p|{'interpretation':p['interpretation']|{'outside_author':'Release race '+str(uuid.uuid4()),'replaces_id':review_id,'expected_predecessor_hash':latest['version_hash'],'reason':'Explicit release contention correction'}}
+        correction_id=fresh(changed)
+        if correction_first:
+            contended(staff+approve(correction_id),staff+confirmation,lambda c,o,e:c!=0 and 'Current latest' in e)
+            check(scalar(f"select count(*) from record_releases where id='{rid}';")=='0','Correction-first release rejects superseded selection')
+        else:
+            contended(staff+confirmation,staff+approve(correction_id),lambda c,o,e:c==0)
+            check(scalar('begin;'+staff+f"select read_record_release('{rid}')->>'eligible';commit;")=='false','Release-first correction invalidates pending package')
+            check(json.loads(scalar(f"select snapshot from record_releases where id='{rid}';"))==frozen,'Correction leaves frozen release unchanged')
+    print('Observed correction versus release confirmation in both orders.',flush=True)
 
     sql(f"delete from user_roles where user_id='{actor}' and role='DVM';")
     denied=sql('begin;'+staff+f"select recover_ezyvet_prescription_review('{a}','{pet}');commit;",False)

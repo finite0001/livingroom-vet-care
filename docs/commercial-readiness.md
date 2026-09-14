@@ -1,5 +1,9 @@
 # Commercial-readiness evidence tracker
 
+## September 13 — prescription review and releases deployed to staging
+
+[Verified staging rollout](prescription-review-release-staging.md) now includes84 migrations, seven matching version5 export functions and a refreshed protected frontend with schema8 prescription selection. PR121's corrected CI passes all three jobs, including245 browser cases. A fresh populated upgrade/restore verifies both record preservation and exact restored permissions. Staff login/workflow acceptance, Dr. Edler's clinical approval, live source samples and provider delivery remain pending. [Attachment metadata intake](../plans/20260913-ezyvet-clinical-import/phase-03d-attachment-intake.md) is the next planned implementation; it does not yet capture original files.
+
 ## September 13 — private mailbox verified; application mail capacity pending
 
 The owner-created Fastmail trial now has the designated administrator mailbox. GoDaddy saved six root-mail DNS records; Fastmail verifies MX, DKIM and SPF and reports the domain ready to send and receive mail. [Mail commissioning evidence](mail-commissioning-plan.md) also records the staging APP_URL, Auth Site URL and exact password-reset redirect configuration. Actual message delivery, Auth SMTP, staff onboarding and clinical/provider acceptance remain unverified. Earlier mailbox-creation statements below are historical.
@@ -341,3 +345,17 @@ The patient chart now provides DVM-reviewed interpretation of scoped ezyVet vacc
 Validation:418 unit tests,45 targeted browser cases,57 focused review SQL assertions,143 existing regressions,59 observed concurrency checks,24 release SQL assertions,70 actual local review API checks and42 actual local mixed-release checks passed. The51→74 upgrade/restore preserved reviewed vaccination/source lineage and existing fixtures, with cleanup verified. [Feature/evidence](features/reviewed-outside-vaccinations.md) and [Dr. Edler's unapproved review cases](clinical-review/outside-vaccination-history.md) are recorded.
 
 This increment is not yet deployed to hosted staging. Active due-plan adoption, global source-product mapping, clinical approval and authorized practice acceptance remain required subsequent work. No public cutover or clinical policy activation occurred.
+
+## Prescription intake staging rollout
+
+PR118 passed frontend, database and Edge CI. The staging database now has77 migrations, including5500/5600, and the matching JWT-protected importer is deployed. Six private table boundaries, six administrator rejection probes, deployed-source comparison and anonymous HTTP denial passed; no patients, imports or outgoing messages were created. See [rollout evidence](prescription-intake-staging.md). The prior reviewed-vaccination deployment is recorded in [its staging report](reviewed-vaccination-staging.md), superseding the earlier not-deployed checkpoint above.
+
+Prescription reconciliation/review, patient chart history, release inclusion, populated restore coverage and live clinical acceptance remain unfinished. The protected frontend has not yet been updated for prescription intake. No production cutover or provider activation occurred.
+
+## Reviewed prescription releases and verified restoration
+
+Schema8 medical-record packages now include explicitly selected DVM-reviewed outside prescriptions with original instructions/quantities, partial-history disclosures, reconciliation and correction history. Print, email and linked-document paths share validation and original-file byte checks. Source changes and corrections invalidate pending packages while preserving frozen content.
+
+Validation passed459 unit tests,31 combined browser cases,441 SQL assertions,161 contention checks and51 actual local Auth/Storage/PostgREST checks. The51→84 populated restore passed and now compares restored routine, table/sequence, RLS and default privileges to canonical state. That stronger check exposed and corrected restore-account creation-default grant leakage. All generated resources were removed; [feature and evidence](features/reviewed-prescription-releases.md) record the scope.
+
+No hosted review/release migration, policy activation, live source read or message occurred. PR CI, staged frontend/staff acceptance, ezyVet resource samples, Dr. Edler's clinical acceptance, attachments and migration reconciliation remain outstanding.

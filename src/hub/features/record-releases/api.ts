@@ -9,6 +9,7 @@ import type {
 } from "./print";
 export { sourceLabels, type SourceKind } from "./selection";
 export interface ReleaseSelection extends SharedReleaseSelection {
+  imported_prescription_ids?: string[];
   lab_report_ids?: string[];
   external_record_ids?: string[];
 }
@@ -18,6 +19,9 @@ export interface ReleaseCandidate {
   recorded_at: string;
   label: string;
   importance?: string;
+  version_hash?: string;
+  completeness?: "complete" | "partial";
+  partial_disclosure?: string | null;
   required_document_id?: string | null;
   required_document_version?: number;
   kind?: "original" | "corrected" | "replacement";
@@ -37,10 +41,11 @@ export interface ReleaseCandidates {
   phone: string | null;
   policy_accepted: boolean;
   policy_v4_accepted?: boolean;
-  policy_v7_accepted: boolean;
+  policy_v8_accepted: boolean;
   has_more: Record<import("./selection").SourceKind, boolean>;
   imported_history_ids: ReleaseCandidate[];
   imported_vaccination_ids: ReleaseCandidate[];
+  imported_prescription_ids: ReleaseCandidate[];
   lab_report_ids: ReleaseCandidate[];
   external_record_ids: ReleaseCandidate[];
   problem_ids: ReleaseCandidate[];
@@ -82,7 +87,7 @@ interface ReleaseDatabase {
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
     Functions: {
-      select_all_record_release_sources_v7: {
+      select_all_record_release_sources_v8: {
         Args: { p_pet_id: string };
         Returns: {
           selection: ReleaseSelection;
@@ -91,11 +96,11 @@ interface ReleaseDatabase {
           scope: string;
         };
       };
-      list_record_release_sources_v7: {
+      list_record_release_sources_v8: {
         Args: { p_pet_id: string; p_offset: number };
         Returns: ReleaseCandidates;
       };
-      preview_record_release_v7: {
+      preview_record_release_v8: {
         Args: { [K in keyof ReleasePreviewArgs]: ReleasePreviewArgs[K] };
         Returns: ReleasePreview;
       };

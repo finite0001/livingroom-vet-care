@@ -1,0 +1,17 @@
+/.git
+/.env*
+/.github
+/.lovable
+/node_modules
+/dist
+/supabase/migrations
+/supabase/tests
+/supabase/.temp
+/supabase/config.toml
+/tests
+/e2e
+/test-results
+/playwright-report
+/docs
+/plans
+*.log
