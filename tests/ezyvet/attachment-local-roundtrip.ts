@@ -320,6 +320,14 @@ try {
     resetCooldown();
     const runId = randomUUID(); ids.push(runId); lastAttachmentRun = runId;
     const body = { run_id: runId, resource: "attachment", animal_link_id: mapping, parent_type: parentType, parent_snapshot_id: parentType === "Animal" ? snapshot : consult.id, parent_payload_hash: parentType === "Animal" ? "a".repeat(64) : consult.hash, parent_observed_head_version: 1 };
+    const prepareArgs = { p_id: runId, p_animal_link_id: mapping, p_parent_type: parentType, p_parent_snapshot_id: body.parent_snapshot_id, p_parent_payload_hash: body.parent_payload_hash, p_parent_observed_head_version: 1 };
+    const preparationCalls = upstreamCalls;
+    const preparedScan = await rpc("prepare_ezyvet_attachment_scan", prepareArgs, true);
+    check(preparedScan.id === runId && preparedScan.status === "running" && preparedScan.next_page === 1 && !preparedScan.lease_active, "Authenticated preparation saves an unleased first-page scan");
+    check(preparedScan.parent_context.parent_type === parentType && preparedScan.parent_context.pet_id === pet, "Prepared Animal/Consult scan pins exact reviewed patient context");
+    const preparedRetry = await rpc("prepare_ezyvet_attachment_scan", prepareArgs, true);
+    check(JSON.stringify(preparedRetry) === JSON.stringify(preparedScan), "Lost preparation acknowledgment recovers exact original scan");
+    check(upstreamCalls === preparationCalls, "Scan preparation performs no provider requests");
     const beforeCalls = upstreamCalls;
     check((await post(body, false)).status === 401, "Anonymous metadata HTTP request denied");
     check((await post({ ...body, record_id: "999" })).status === 400, "Caller cannot choose arbitrary upstream parent ID");

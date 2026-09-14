@@ -184,3 +184,12 @@ Still required: new Animal/Consult scan selection and creation, prepare/capture/
 Saved-scan continuation now distinguishes allowlisted source-context changes, setup requirements, provider authorization and busy/cooldown failures. Unknown or malformed provider text remains a generic unconfirmed response. A confirmed stale or mismatched parent requires fresh source context and disables another page from the selected scan even after a successful recovery read. The original history and patient selection remain available once saved-state recovery succeeds.
 
 Validation: 578 unit tests and 24 browser cases passed, including stale-parent retry prevention and source setup messaging. These are local browser mocks and application tests, not hosted/provider acceptance. No backend or deployment state changed. New scan creation and the remaining capture/review/release and commercial-readiness gates above remain unfinished. Evidence: `docs/evidence/attachment-action-errors-local-20260913.json`.
+
+
+### Durable new-scan preparation checkpoint
+
+Migration7100 adds authenticated `prepare_ezyvet_attachment_scan`. It derives the actor from Auth and source/patient membership from the reviewed mapping, validates exact current Animal/Consult parent pins, then saves an unleased first-page scan. No provider request, page receipt, capture or clinical effect occurs. Same-operation retries recover the existing immutable context before mutable source revalidation, including after source changes; new operations still require current source context. Role checks are repeated after lock/context waits. Existing server recovery and history can discover the operation before the first provider request.
+
+The frontend adapter validates returned operation, actor, mapping and every selected parent pin. New-scan selection/creation UI remains to be connected; the preparation operation is groundwork for that flow, not a finished operator creation experience. Dedicated preparation lock-order races, current populated upgrade/restore, hosted provider/operator acceptance and all remaining capture/review/release and commercial-readiness gates remain open.
+
+Validation: 19 focused SQL assertions, 579 application unit tests, and a fresh92-migration rehearsal with161 HTTP/Auth/Storage and31 existing capture/cleanup contention checks passed. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-scan-preparation-local-20260913.json`. No rendered UI changed in this checkpoint.

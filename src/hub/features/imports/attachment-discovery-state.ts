@@ -95,3 +95,10 @@ export function parseRecoveredAttachmentRun(value: unknown, actor: string, mappi
 export function attachmentScanCanContinue(value: AttachmentRun, now = Date.now()) {
   return value.status === "running" && !value.lease_active && (!value.retry_after || Date.parse(value.retry_after) <= now);
 }
+
+export function parsePreparedAttachmentRun(value: unknown, id: string, actor: string, mapping: AttachmentMapping, parent: AttachmentParent) {
+  const pinned = parseAttachmentParent(attachmentParentSchema.parse(parent), mapping)!;
+  const prepared = parseAttachmentRuns({ runs: [value], has_more: false, next_cursor: null }, actor, mapping).runs[0];
+  requireMatch(prepared.id === uuid.parse(id) && Object.keys(pinned).every(key => prepared.parent_context[key as keyof AttachmentParent] === pinned[key as keyof AttachmentParent]));
+  return prepared;
+}
