@@ -63,7 +63,7 @@ interface ContactFormData {
 }
 
 const Contact = () => {
-  usePageTitle("Contact Us");
+  usePageTitle("Contact Us", "Get in touch with The Living Room Vet in Boulder, Colorado about housecalls, appointments, and our clinic at 2619 Spruce Street.");
   const { toast } = useToast();
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",

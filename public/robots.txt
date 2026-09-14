@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://livingroom-vet-care.lovable.app/sitemap.xml

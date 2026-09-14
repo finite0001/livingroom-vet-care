@@ -8,7 +8,7 @@ import CTASection from "@/components/sections/CTASection";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 const Experience = () => {
-  usePageTitle("The Experience");
+  usePageTitle("The Experience", "See how a visit works at The Living Room Vet in Boulder: no waiting room, separate paths for cats and dogs, and you stay with your pet through the whole appointment.");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

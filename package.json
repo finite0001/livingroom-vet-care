@@ -13,7 +13,9 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "test": "node --experimental-strip-types --test tests/**/*.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "predev": "node --experimental-strip-types scripts/generate-sitemap.ts",
+    "prebuild": "node --experimental-strip-types scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
