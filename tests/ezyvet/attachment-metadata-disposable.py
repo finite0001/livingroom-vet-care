@@ -15,7 +15,7 @@ import urllib.request
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
-parser.add_argument('--fixture', choices=['metadata','originals','all'], default='metadata')
+parser.add_argument('--fixture', choices=['metadata','originals','maximum','all'], default='metadata')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
@@ -24,8 +24,9 @@ root = Path(__file__).resolve().parents[2]
 fixtures = {
     'metadata': ('attachment-metadata-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST'),
     'originals': ('attachment-original-local-roundtrip.ts', 'Attachment original HTTP/Auth/Storage'),
+    'maximum': ('attachment-max-package-roundtrip.mjs', 'Attachment maximum physical packages'),
 }
-selected = ['metadata','originals'] if args.fixture == 'all' else [args.fixture]
+selected = ['metadata','originals','maximum'] if args.fixture == 'all' else [args.fixture]
 harness_paths = [root / 'tests/ezyvet' / fixtures[name][0] for name in selected]
 identity = 'lrv-attachment-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
