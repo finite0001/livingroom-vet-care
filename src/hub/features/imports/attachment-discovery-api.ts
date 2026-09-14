@@ -1,4 +1,4 @@
-import { attachmentPageError } from "./attachment-page-errors";
+import { attachmentPageError, AttachmentPreparationError } from "./attachment-page-errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { parseAttachmentParent, parseAttachmentObservations, parseAttachmentCleanups, parseAttachmentRuns, parseRecoveredAttachmentRun, parsePreparedAttachmentRun } from "./attachment-discovery-state";
@@ -54,10 +54,11 @@ export async function stageAttachmentPage(actor: string, mapping: AttachmentMapp
 export async function prepareAttachmentScan(id: string, actor: string, mapping: AttachmentMapping, parent: AttachmentParent) {
   const pinned = parseAttachmentParent(parent, mapping);
   if (!pinned) throw new Error("A current patient or consultation source is required.");
-  const value = await rpc("prepare_ezyvet_attachment_scan", {
+  const { data: value, error } = await client.rpc("prepare_ezyvet_attachment_scan", {
     p_id: id, p_animal_link_id: mapping.link_id, p_parent_type: pinned.parent_type,
     p_parent_snapshot_id: pinned.parent_snapshot_id, p_parent_payload_hash: pinned.parent_payload_hash,
     p_parent_observed_head_version: pinned.parent_observed_head_version,
   });
+  if (error) throw new AttachmentPreparationError(error.code);
   return parsePreparedAttachmentRun(value, id, actor, mapping, pinned);
 }

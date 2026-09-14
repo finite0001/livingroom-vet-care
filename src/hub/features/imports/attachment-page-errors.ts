@@ -23,3 +23,12 @@ export function attachmentPageError(code: unknown): AttachmentPageError {
       return new AttachmentPageError("Page response unconfirmed. Recheck this saved scan before continuing.");
   }
 }
+
+export class AttachmentPreparationError extends Error {
+  readonly canChooseFreshContext: boolean;
+  constructor(code: unknown) {
+    super(code === "40001" ? "The source changed before this scan could be prepared. Choose fresh source context." : "Scan preparation is unconfirmed. Retain this request and recover it before choosing another source.");
+    this.name = "AttachmentPreparationError";
+    this.canChooseFreshContext = code === "40001";
+  }
+}

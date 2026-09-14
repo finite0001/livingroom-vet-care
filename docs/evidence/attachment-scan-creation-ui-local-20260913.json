@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-13",
+  "parent_commit": "f2b94427b77b7c9b3ca79f619017b9173d5be53e",
+  "scope": "Patient/consultation source selection and durable operator scan preparation",
+  "validation": {
+    "unit_tests": 581,
+    "browser_cases": 30,
+    "attachment_browser_cases": 20,
+    "neighbor_browser_cases": 10,
+    "lint_typecheck_build": "passed with existing Fast Refresh and bundle-size warnings"
+  },
+  "behavior": [
+    "Current same-patient consultation source required, including current client membership and exact observed head",
+    "Preparation intent persisted before RPC; provider page is never automatically read",
+    "Unconfirmed preparation survives reload and recovers same ID and parent pins",
+    "Definitive stale-context rejection permits fresh selection; unknown outcome remains guarded",
+    "Unreadable local reference preserves server history access; storage failure sends no preparation RPC",
+    "Existing import navigation guard aggregates creation and scan-action state"
+  ],
+  "sha256": {
+    "src/hub/features/imports/AttachmentScanPreparation.tsx": "3e8bd1e0b785ec1b08c944cf5706f2e8f515f11df74c73862e69bbdeb3cf1fb3",
+    "src/hub/features/imports/AttachmentScanHistory.tsx": "8be2d5f811e50f0e5a17cda1c0dc4d7cf9dcc4ba6d0bd7a663e650bfbd6f93d6",
+    "src/hub/features/imports/attachment-discovery-api.ts": "767c37f343f196052ec7c78dcad398e82d4ee0d49c9f98f7f4edbbda9b68dae7",
+    "src/hub/features/imports/attachment-discovery-state.ts": "b921c568122e960ae30d6ae31a5e05d9678fd209a69cc3a6b12dac943fc1bb26",
+    "src/hub/features/imports/attachment-page-errors.ts": "023e275667c1a5cfd689a41cc90ab4e326c5ba5460352594c510f0768246a22a",
+    "tests/ezyvet/attachment-discovery-state.test.ts": "f14a247dd26288356417c4654ef06c48733defb437cebd900c0cb61240fed763",
+    "e2e/attachment-history.spec.ts": "f052077f81eddfe04dc8d57a1d9643cf31181af4c12f0f83692f32969765ed50"
+  },
+  "log_sha256": {
+    "/tmp/lrv-attachment-create-ui-check-complete.log": "89c5a1f1e2d98a876d5ce589670cc4a7d426ccc6fbe49c457f1f6bdbca73cc7b",
+    "/tmp/lrv-attachment-create-ui-browser-complete.log": "15b248efb32263b38749ee292074c6cdbf7274b951b479a1a952a233fccd455a"
+  },
+  "limits": [
+    "Browser Auth/RPC/Edge traffic is mocked; hosted/provider/operator acceptance is unverified",
+    "No backend changes in this checkpoint; prior92-migration runtime evidence remains separate",
+    "Full screen-reader, keyboard/zoom and rendered dark-mode acceptance remain open",
+    "Capture/cleanup/original inspection/clinical review/release controls, dedicated preparation races and current populated restore remain unfinished",
+    "Mail/Auth, Stripe sandbox, vendor, clinical and coordinated rollout requirements remain active"
+  ],
+  "deployment": "No hosted deployment, real provider traffic, message, payment or policy activation"
+}

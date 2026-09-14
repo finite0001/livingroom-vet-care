@@ -102,3 +102,19 @@ export function parsePreparedAttachmentRun(value: unknown, id: string, actor: st
   requireMatch(prepared.id === uuid.parse(id) && Object.keys(pinned).every(key => prepared.parent_context[key as keyof AttachmentParent] === pinned[key as keyof AttachmentParent]));
   return prepared;
 }
+
+const preparationSchema = z.object({ id: uuid, actor: uuid, parent: attachmentParentSchema }).strict();
+export type AttachmentPreparation = z.infer<typeof preparationSchema>;
+export function parseAttachmentPreparation(value: unknown, actor: string, mapping: AttachmentMapping) {
+  const intent = preparationSchema.parse(value);
+  requireMatch(intent.actor === actor);
+  parseAttachmentParent(intent.parent, mapping);
+  return intent;
+}
+export function attachmentConsultParent(value: unknown, animal: AttachmentParent, mapping: AttachmentMapping) {
+  const c = z.object({ id: uuid, payload_hash: digest, external_id: externalId, resource: z.literal("consult"), source_origin: z.string().url(), source_site_uid: z.string(),
+    observed_head_version: z.number().int().positive(), head_version: z.number().int().positive(), current_snapshot_id: uuid, is_current: z.boolean(), current_head_scoped: z.boolean(), animal_link_id: uuid, pet_id: uuid, client_id: uuid }).parse(value);
+  const current = parseAttachmentParent(animal, mapping)!;
+  requireMatch(!!current && current.parent_type === "Animal" && c.animal_link_id === mapping.link_id && c.pet_id === mapping.pet_id && c.client_id === current.client_id && c.source_origin === mapping.source_origin && c.source_site_uid === mapping.source_site_uid && c.is_current && c.current_head_scoped && c.id === c.current_snapshot_id && c.observed_head_version === c.head_version);
+  return attachmentParentSchema.parse({ ...current, parent_type: "Consult", parent_external_id: c.external_id, parent_snapshot_id: c.id, parent_payload_hash: c.payload_hash, parent_observed_head_version: c.observed_head_version });
+}

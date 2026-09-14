@@ -193,3 +193,14 @@ Migration7100 adds authenticated `prepare_ezyvet_attachment_scan`. It derives th
 The frontend adapter validates returned operation, actor, mapping and every selected parent pin. New-scan selection/creation UI remains to be connected; the preparation operation is groundwork for that flow, not a finished operator creation experience. Dedicated preparation lock-order races, current populated upgrade/restore, hosted provider/operator acceptance and all remaining capture/review/release and commercial-readiness gates remain open.
 
 Validation: 19 focused SQL assertions, 579 application unit tests, and a fresh92-migration rehearsal with161 HTTP/Auth/Storage and31 existing capture/cleanup contention checks passed. Owned disposable resources were removed. Evidence: `docs/evidence/attachment-scan-preparation-local-20260913.json`. No rendered UI changed in this checkpoint.
+
+
+### Operator scan creation checkpoint
+
+The existing attachment section now offers patient-file and current-consultation scan preparation. Historical consultation candidates remain visible but disabled for creation; context pagination and refresh reuse the existing clinical discovery API. The browser pins operation ID, actor and exact parent context in session storage before the preparation RPC. A lost response retains those pins through reload and recovers the same server operation. A definitive SQL40001 preparation rejection permits fresh-context selection; unknown failures preserve the request. Unreadable local references do not prevent browsing server history. Browser storage failure prevents an untracked preparation request.
+
+Successful preparation opens the saved scan's existing explicit page controls; preparation itself makes no Edge/provider request. The page's combined guard covers creation and existing scan actions without replacing neighboring import navigation behavior. New controls retain existing semantic sage buttons and the prior section layout.
+
+Validation: 581 unit tests and30 browser cases passed (20 attachment history/action/creation and10 neighboring prescription cases), including both parent types, stale consultation display, lost preparation acknowledgment with reload, stale-context reset, unreadable local recovery and storage failure. Lint, TypeScript and build passed with existing warnings. Browser calls are mocked; prior92-migration actual local runtime evidence is separate. Evidence: `docs/evidence/attachment-scan-creation-ui-local-20260913.json`.
+
+Still required: download preparation/capture/abandon/cleanup UI, original inspection, clinical review/corrections/release, dedicated preparation contention, current populated upgrade/restore, actual source/provider/operator acceptance and the full commercial-readiness gates. No hosted migration, function deployment or activation occurred.

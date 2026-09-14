@@ -1,3 +1,4 @@
+import { AttachmentScanPreparation } from "./AttachmentScanPreparation";
 import { AttachmentPageError, attachmentPageError } from "./attachment-page-errors";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,7 +32,8 @@ export function AttachmentScanHistory({ actor, onDirtyChange }: Props) {
 interface PatientProps { actor: string; mapping: SelectedMapping; onLocked: (locked: boolean) => void; }
 function PatientScans({ actor, mapping, onLocked }: PatientProps) {
   const [locked, setLocked] = useState(false);
-  useEffect(() => { onLocked(locked); }, [locked, onLocked]);
+  const [preparing, setPreparing] = useState(false);
+  useEffect(() => { onLocked(locked || preparing); }, [locked, preparing, onLocked]);
   const [cursor, setCursor] = useState<AttachmentHistoryCursor | null>(null);
   const [selected, setSelected] = useState<AttachmentRun | null>(null);
   const scans = useQuery({ queryKey: ["attachment-scans", actor, mapping.link_id, cursor], queryFn: () => listAttachmentRuns(actor, mapping, cursor), retry: false });
@@ -39,20 +41,21 @@ function PatientScans({ actor, mapping, onLocked }: PatientProps) {
   const labels = { running: "Scan in progress", review_ready: "Scan complete", page_limit_reached: "Scan limit reached" };
   return <div className="space-y-3">
     <p className="font-medium">Selected patient: {mapping.patient_name} · {mapping.household_name}</p>
+    <AttachmentScanPreparation actor={actor} mapping={mapping} disabled={locked} onLocked={setPreparing} onCreated={run => { setSelected(run); setCursor(null); }} />
     {scans.isFetching && <p role="status">Loading saved attachment scans…</p>}
     {scans.isError && <p role="alert">Saved attachment scans are unavailable. Recheck before choosing a file.</p>}
     {!scans.isError && scans.data?.runs.length === 0 && <p>No saved attachment scans on this page.</p>}
     {!scans.isError && scans.data?.runs.map(item => <div key={item.id} className="flex flex-wrap items-center gap-2 rounded border p-3">
       <Badge variant="secondary">{item.parent_context.parent_type === "Animal" ? "Patient files" : `Consultation ${item.parent_context.parent_external_id}`}</Badge>
       <span>{labels[item.status]} · {new Date(item.created_at).toLocaleString()}</span>
-      <Button variant="secondary" disabled={locked} onClick={() => setSelected(item)} aria-pressed={selected?.id === item.id}>View files from scan {item.id.slice(0, 8)}</Button>
+      <Button variant="secondary" disabled={locked || preparing} onClick={() => setSelected(item)} aria-pressed={selected?.id === item.id}>View files from scan {item.id.slice(0, 8)}</Button>
     </div>)}
     <div className="flex flex-wrap gap-2">
       <Button variant="secondary" disabled={scans.isFetching} onClick={() => void scans.refetch()}>Refresh attachment scans</Button>
       <Button variant="secondary" disabled={!cursor || scans.isFetching} onClick={() => setCursor(null)}>Newest attachment scans</Button>
       <Button variant="secondary" disabled={scans.isFetching || scans.isError || !scans.data?.next_cursor} onClick={() => setCursor(scans.data?.next_cursor ?? null)}>Older attachment scans</Button>
     </div>
-    {selected && <ScanFiles key={selected.id} actor={actor} mapping={mapping} scan={selected} onLocked={setLocked} />}
+    {selected && !preparing && <ScanFiles key={selected.id} actor={actor} mapping={mapping} scan={selected} onLocked={setLocked} />}
   </div>;
 }
 interface FilesProps extends PatientProps { scan: AttachmentRun; }
