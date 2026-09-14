@@ -1,6 +1,7 @@
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
+import { attachmentCleanupRuntime } from "../../supabase/functions/ezyvet-attachment-cleanup/runtime.ts";
 import { attachmentCaptureRuntime } from "../../supabase/functions/ezyvet-attachment-capture/runtime.ts";
 import { createAdapter } from "../../supabase/functions/ezyvet-import/adapter.ts";
 import { readAttachmentForCapture } from "../../supabase/functions/ezyvet-import/attachment-capture-read.ts";
@@ -286,6 +287,31 @@ try {
     } catch { res.writeHead(500); res.end("Synthetic capture HTTP adapter failed"); }
   });
   const postCapture = (payload: Record<string, unknown>, authorized = true) => fetch(captureEdge, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...(authorized ? { Authorization: staffHeaders.Authorization } : {}) }, body: JSON.stringify(payload) });
+  let cleanupEnabled = true, loseCleanupClaim = false, loseCleanupDelete = false, loseCleanupComplete = false, cleanupStorageCalls = 0;
+  let expectedCleanupPath = "";
+  const cleanupRuntime = attachmentCleanupRuntime(key => ({ APP_ENV: "staging", APP_URL: origin, SUPABASE_URL: local.API_URL, SUPABASE_ANON_KEY: local.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: local.SERVICE_ROLE_KEY, EZYVET_ATTACHMENT_CLEANUP_ENABLED: cleanupEnabled ? "true" : undefined })[key], async (input, init) => {
+    const url = new URL(String(input)); assert.equal(url.origin, local.API_URL);
+    if (url.pathname.startsWith("/storage/v1/")) {
+      cleanupStorageCalls++;
+      assert.equal(new Headers(init?.headers).get("Authorization"), staffHeaders.Authorization);
+      if (init?.method === "DELETE") assert.deepEqual(JSON.parse(String(init.body)), { prefixes: [expectedCleanupPath] });
+    }
+    const response = await fetch(input, init);
+    if (response.ok) {
+      if (loseCleanupClaim && url.pathname.endsWith("/rpc/claim_ezyvet_attachment_cleanup")) { loseCleanupClaim = false; void response.body?.cancel(); throw new Error("Discarded cleanup claim acknowledgment"); }
+      if (loseCleanupDelete && init?.method === "DELETE") { loseCleanupDelete = false; void response.body?.cancel(); throw new Error("Discarded cleanup deletion acknowledgment"); }
+      if (loseCleanupComplete && url.pathname.endsWith("/rpc/complete_ezyvet_attachment_cleanup")) { loseCleanupComplete = false; void response.body?.cancel(); throw new Error("Discarded cleanup completion acknowledgment"); }
+    }
+    return response;
+  });
+  const cleanupEdge = await serve(async (req, res) => {
+    try {
+      const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(Buffer.from(chunk));
+      const response = await cleanupRuntime(new Request(origin + "/ezyvet-attachment-cleanup", { method: req.method, headers: req.headers as Record<string, string>, body: Buffer.concat(chunks) }));
+      res.writeHead(response.status, Object.fromEntries(response.headers)); res.end(await response.text());
+    } catch { res.writeHead(500); res.end("Synthetic cleanup HTTP adapter failed"); }
+  });
+  const postCleanup = (payload: Record<string, unknown>, authorized = true) => fetch(cleanupEdge, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...(authorized ? { Authorization: staffHeaders.Authorization } : {}) }, body: JSON.stringify(payload) });
   const resetCooldown = () => sql(`update ezyvet_import_runs set retry_after=null,lease_until=null where source_site_uid=${quote(site)} and resource='attachment';`);
   for (const parentType of ["Animal", "Consult"]) {
     resetCooldown();
@@ -380,6 +406,46 @@ try {
         const unchangedCalls = upstreamCalls;
         check((await postCapture(workerBody)).status === 200 && upstreamCalls === unchangedCalls, "Completed worker retry performs no source or file transfer");
       }
+
+      const cleanupRequest = randomUUID(), cleanupId = randomUUID(); ids.push(cleanupRequest, cleanupId);
+      const cleanupPrepared = await rpc("prepare_ezyvet_attachment_download", { p_id: cleanupRequest, p_pet_id: pet, p_run_id: runId, p_page: 1, p_snapshot_id: selected.id, p_payload_hash: selected.hash, p_observed_head_version: selected.version }, true);
+      const cleanupHash = cleanupPrepared.request.request_hash;
+      const cleanupCaptureLease = await rpc("claim_ezyvet_attachment_download", { p_id: cleanupRequest, p_actor: actor, p_pet_id: pet, p_request_hash: cleanupHash });
+      const cleanupIntent = await rpc("prepare_ezyvet_attachment_capture", { ...intentArgs, p_id: cleanupRequest, p_lease_id: cleanupCaptureLease.lease_id, p_request_hash: cleanupHash });
+      expectedCleanupPath = cleanupIntent.object_path; storageObjects.push(expectedCleanupPath);
+      const cleanupUpload = await fetch(local.API_URL + "/storage/v1/object/ezyvet-attachments/" + expectedCleanupPath, { method: "POST", headers: uploadHeaders, body: read.file.bytes });
+      check(cleanupUpload.ok, "Actual abandoned-cleanup fixture uploads original with owner JWT"); void cleanupUpload.body?.cancel();
+      const cleanupBody = { cleanup_id: cleanupId, request_id: cleanupRequest, pet_id: pet, request_hash: cleanupHash };
+      const sourceCallsBeforeCleanup = upstreamCalls, storageCallsBeforeCleanup = cleanupStorageCalls;
+      check((await postCleanup(cleanupBody, false)).status === 401, "Cleanup HTTP rejects anonymous callers");
+      check((await postCleanup({ ...cleanupBody, object_path: expectedCleanupPath })).status === 400, "Cleanup HTTP rejects caller-supplied paths");
+      check((await postCleanup(cleanupBody)).status === 409, "Pending ambiguous upload is not cleaned");
+      check((await postCleanup({ ...cleanupBody, request_id: downloadId, request_hash: requestHash })).status === 409, "Completed capture cannot enter cleanup");
+      check(cleanupStorageCalls === storageCallsBeforeCleanup, "Denied cleanup performs no Storage operation");
+      // Disposable fixture clock only: expire upload lease, explicitly abandon,
+      // then move the abandonment grace deadline into the past.
+      sql(`begin;set local session_replication_role=replica;update ezyvet_attachment_download_attempts set created_at=clock_timestamp()-interval '10 minutes',lease_until=clock_timestamp()-interval '5 minutes' where lease_id=${quote(cleanupCaptureLease.lease_id)};commit;`);
+      await rpc("abandon_ezyvet_attachment_download", { p_id: cleanupRequest, p_pet_id: pet, p_confirmed: true }, true);
+      check((await postCleanup(cleanupBody)).status === 409, "Fresh abandonment still requires cleanup grace period");
+      sql(`begin;set local session_replication_role=replica;update ezyvet_attachment_download_requests set resolved_at=clock_timestamp()-interval '5 minutes' where id=${quote(cleanupRequest)};commit;`);
+      cleanupEnabled = false; check((await postCleanup(cleanupBody)).status === 503, "Cleanup remains separately default-off"); cleanupEnabled = true;
+      loseCleanupClaim = true;
+      check((await postCleanup(cleanupBody)).status === 503, "Lost cleanup claim response leaves a retryable durable operation");
+      const cleanupSaved = await rpc("recover_ezyvet_attachment_cleanup", { p_cleanup_id: cleanupId, p_id: cleanupRequest, p_pet_id: pet }, true);
+      check(cleanupSaved.attempt.id === cleanupId && cleanupSaved.receipt === null && !("lease_id" in cleanupSaved.attempt), "Owner recovers cleanup attempt without exposing worker lease");
+      loseCleanupDelete = true; loseCleanupComplete = true;
+      const cleanupResponse = await postCleanup(cleanupBody); check(cleanupResponse.status === 200, "Actual deletion and completion recover after both successful replies are lost");
+      const cleanupResult = await cleanupResponse.json();
+      check(Object.keys(cleanupResult).sort().join(",") === "cleanup_id,request_id,status,verified_absent_at" && cleanupResult.status === "cleanup_recorded", "Cleanup HTTP exposes only owned point-in-time receipt summary");
+      const afterCleanup = await rpc("recover_ezyvet_attachment_cleanup", { p_cleanup_id: cleanupId, p_id: cleanupRequest, p_pet_id: pet }, true);
+      check(afterCleanup.receipt.verified_absent_at === cleanupResult.verified_absent_at, "Lost cleanup completion recovers exact durable receipt");
+      check(sql(`select count(*) from storage.objects where bucket_id='ezyvet-attachments' and name=${quote(expectedCleanupPath)};`) === "0", "Storage API deletion removes actual reserved object metadata");
+      check(sql(`select status from ezyvet_attachment_download_requests where id=${quote(cleanupRequest)};`) === "abandoned", "Physical cleanup retains permanent abandonment tombstone");
+      const retryCalls = cleanupStorageCalls;
+      check((await postCleanup(cleanupBody)).status === 200 && cleanupStorageCalls === retryCalls, "Completed cleanup retry returns receipt without another file operation");
+      const laterCleanup = randomUUID(); ids.push(laterCleanup);
+      check((await postCleanup({ ...cleanupBody, cleanup_id: laterCleanup })).status === 200, "Later explicit sweep verifies already absent reserved path");
+      check(upstreamCalls === sourceCallsBeforeCleanup, "Cleanup needs no provider credentials or source traffic");
 
     }
     const freshId = randomUUID(); ids.push(freshId); resetCooldown(); wrongParent = true;

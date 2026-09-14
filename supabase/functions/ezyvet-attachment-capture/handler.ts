@@ -13,7 +13,7 @@ export interface CaptureGateway {
   upload: (path: string, bytes: Uint8Array<ArrayBuffer>, mime: string, bearer: string, signal: AbortSignal) => Promise<void>;
 }
 export interface CaptureDependencies extends AdapterDependencies { env: (name: string) => string | undefined; gateway: CaptureGateway; }
-async function requestBody(request: Request): Promise<Record<string, unknown>> {
+export async function requestBody(request: Request): Promise<Record<string, unknown>> {
   const reader = request.body?.getReader();
   if (!reader) throw new ImportError("INVALID_REQUEST");
   const chunks: Uint8Array[] = []; let length = 0;
