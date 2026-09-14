@@ -7,6 +7,7 @@ import time
 import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--full-regression',action='store_true',help='Also run all SQL files and canonical prescription/release contention')
 parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
 args = parser.parse_args()
 CONTAINER = 'supabase_db_livingroom-vet-foundation'
@@ -96,18 +97,26 @@ try:
     sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp" with schema extensions;')
     dump=dump.replace(b'CREATE SCHEMA extensions;',b'CREATE SCHEMA IF NOT EXISTS extensions;')
     dump=b"\n".join(line for line in dump.splitlines() if not line.startswith(b'ALTER DEFAULT PRIVILEGES'))
-    restored=subprocess.run(COMMAND,input=dump,capture_output=True)
+    restored=subprocess.run(COMMAND,input=b"BEGIN;\n"+dump+b"\nCOMMIT;",capture_output=True)
     check(restored.returncode==0,restored.stderr.decode())
     # Foundation ledger can lag its schema. Rebuild public only in this owned empty copy.
     sql('drop schema public cascade;create schema public;grant usage on schema public to anon,authenticated,service_role;create publication supabase_realtime;')
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
-        sql(migration.read_text())
+        sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    for filename in ['ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']:
+    targeted=['ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
+    for test_file in test_files:
+        filename=test_file.name
         result=sql(Path(__file__).with_name(filename).read_text());plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
         check('not ok' not in result.stdout and bool(plans),filename+'\n'+result.stdout)
         regressions+=int(plans[-1])
     print(f'Attachment and prior SQL: {regressions} assertions passed.',flush=True)
+    # Broad verification is opt-in; CI already has independent canonical lanes.
+    if args.full_regression:
+        prior=['python3',str(Path(__file__).with_name('ezyvet_prescription_review_concurrency.py')),'--source-database',database]
+        if args.project_config:prior.extend(['--project-config',str(args.project_config.resolve())])
+        subprocess.run(prior,check=True)
     saved=json.loads(scalar('begin;set local search_path=public,extensions;'+fixture+"select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
     fx=saved['fx'];page=saved['data']['page']
     contended(service+claim(fx['run']),service+claim(fx['other-run']),lambda code,out,err:code!=0 and 'busy or cooling down' in err)
