@@ -10,6 +10,7 @@ export const sourceLabels = {
   imported_prescription_ids: "Clinician-reviewed outside prescriptions",
   imported_vaccination_ids: "Clinician-reviewed outside vaccinations",
   imported_history_ids: "Approved ezyVet clinical narratives",
+  api_attachment_ids: "Reviewed ezyVet API originals",
   external_record_ids: "Approved imported record originals",
   document_ids: "Shareable original documents",
   dental_ids: "Signed dental charts",

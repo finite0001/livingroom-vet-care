@@ -481,6 +481,12 @@ try {
       sql(`begin; update ezyvet_identity_heads set version=version+1 where snapshot_id=${quote(corrected.source_context.parent.parent_snapshot_id)}; do $test$ begin perform ${releaseCall(releaseRefs)}; raise exception 'Expected stale API parent rejection'; exception when sqlstate '40001' then null; end $test$; rollback;`); assertions++;
       check(sql(`select bool_and(not has_function_privilege(role,'public.ezyvet_validate_release_attachments(uuid,jsonb)','EXECUTE')) from unnest(array['anon','authenticated','service_role']) role;`) === 't', "Selected attachment release helper is private to database composition");
       const packageArgs = { p_pet_id: pet, p_client_id: client, p_channel: 'EMAIL', p_recipient: email, p_selection: { api_attachment_ids: [correctionId] } };
+      const releaseCandidates = await api('/rest/v1/rpc/list_record_release_sources_v9', { p_pet_id: pet, p_offset: 0 }, chartHeaders);
+      const releaseCandidate = releaseCandidates.api_attachment_ids.find((item: { id: string }) => item.id === correctionId);
+      check(releaseCandidate?.record_hash === corrected.record_hash && releaseCandidate.capture_hash === receipt.capture_hash && !releaseCandidates.api_attachment_ids.some((item: { id: string }) => item.id === approvalId) && typeof releaseCandidates.policy_v9_accepted === 'boolean', "Schema9 source discovery offers current latest approval with exact capture identity");
+      check((await api('/rest/v1/rpc/list_record_release_sources_v9', { p_pet_id: pet, p_offset: 100 }, chartHeaders)).api_attachment_ids.length === 0, "API source candidate pagination does not repeat prior results");
+      const allReleaseSources = await api('/rest/v1/rpc/select_all_record_release_sources_v9', { p_pet_id: pet }, chartHeaders);
+      check(allReleaseSources.selection.api_attachment_ids.includes(correctionId) && !allReleaseSources.selection.api_attachment_ids.includes(approvalId), "Select-all returns exact current API approvals alongside existing explicit source families");
       const packagePreview = await api('/rest/v1/rpc/preview_record_release_v9', packageArgs, chartHeaders);
       const packageDocument = packagePreview.snapshot.attachments[0];
       check(renderRecordRelease({ preview: packagePreview }).includes("Selected ezyVet API originals"), "Shared renderer accepts actual schema9 SQL projection for the selected captured original");
@@ -510,6 +516,7 @@ try {
       const staleChart = parseAttachmentChart(await api("/rest/v1/rpc/read_ezyvet_attachment_chart", { p_pet_id: pet, p_limit: 1 }, chartHeaders), pet);
       check(staleChart.records[0].is_latest && !staleChart.records[0].source_current, "Chart distinguishes latest approval from changed source evidence");
       rejectRelease(releaseRefs, '40001');
+      check(!(await api('/rest/v1/rpc/list_record_release_sources_v9', { p_pet_id: pet, p_offset: 0 }, chartHeaders)).api_attachment_ids.some((item: { id: string }) => item.id === correctionId), "Changed API evidence is removed from current eligible source candidates");
       const invalidatedPackage = await api('/rest/v1/rpc/read_record_release', { p_id: packageId }, chartHeaders);
       check(!invalidatedPackage.eligible && invalidatedPackage.events.some((event: { kind: string }) => event.kind === 'source_changed') && JSON.stringify(invalidatedPackage.release.snapshot) === JSON.stringify(packagePreview.snapshot), "Source revision adds an invalidation event without rewriting the reviewed API package");
       check((await api('/rest/v1/rpc/confirm_record_release', confirmPackage, chartHeaders)).id === packageId, "Exact schema9 confirmation retry recovers original after source change");
