@@ -12,8 +12,10 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
 approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
-parser.add_argument('--scenario', choices=approval_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
+release_scenarios = ['release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
+parser.add_argument('--scenario', choices=approval_scenarios + release_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
+parser.add_argument('--skip-release-access-fix', action='store_true', help='Reproduce pre8000 access waits in an owned clone when the source lacks8000; never revert an existing fix')
 args = parser.parse_args()
 project = 'livingroom-vet-foundation'
 if args.project_config:
@@ -58,12 +60,12 @@ def contend(holder_query, waiter_query, expected_error, during_wait=None):
     tag = 'attachment_' + uuid.uuid4().hex
     holder = subprocess.Popen(base + [database], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     processes.append(holder)
-    holder.stdin.write(f"set application_name='{tag}_holder';set statement_timeout='15s';begin;{holder_query}\n")
+    holder.stdin.write(f"\\o /dev/null\nset application_name='{tag}_holder';set statement_timeout='15s';begin;{holder_query}\n")
     holder.stdin.flush()
     wait_for(f"select exists(select 1 from pg_stat_activity where datname='{database}' and application_name='{tag}_holder' and state='idle in transaction');", 'Holder did not acquire locks')
     waiter = subprocess.Popen(base + [database], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     processes.append(waiter)
-    waiter.stdin.write(f"set application_name='{tag}_waiter';set statement_timeout='15s';begin;{waiter_query}commit;\n")
+    waiter.stdin.write(f"\\o /dev/null\nset application_name='{tag}_waiter';set statement_timeout='15s';begin;{waiter_query}commit;\n")
     waiter.stdin.close()
     wait_for(f"select exists(select 1 from pg_stat_activity w join pg_stat_activity h on h.pid=any(pg_blocking_pids(w.pid)) where w.datname='{database}' and w.application_name='{tag}_waiter' and h.application_name='{tag}_holder' and w.wait_event_type='Lock');", 'Exact waiter was not blocked by exact holder')
     check(True, 'Observed exact holder via pg_blocking_pids')
@@ -78,7 +80,7 @@ def contend(holder_query, waiter_query, expected_error, during_wait=None):
     if expected_error is None:
         check(waiter.returncode == 0, error)
     else:
-        check(waiter.returncode != 0 and expected_error in error, 'Expected '+expected_error+', got '+error+' / '+waiter.stdout.read())
+        check(waiter.returncode != 0 and expected_error in error, 'Expected '+expected_error+', got '+(error.strip() or f'no database error (exit {waiter.returncode})'))
 
 created = False
 try:
@@ -119,6 +121,10 @@ try:
         pending.append(('20260913720000', "case when obj_description('public.prepare_ezyvet_attachment_download(uuid,uuid,uuid,integer,uuid,text,integer)'::regprocedure,'pg_proc')='Rechecks active administrator after request and source waits.' then true else null end"))
     pending.append(('20260913730000', "to_regclass('public.ezyvet_attachment_record_versions')"))
     pending.append(('20260913750000', "to_regclass('public.ezyvet_attachment_approval_cancellations')"))
+    pending += [('20260913770000', "to_regprocedure('public.ezyvet_validate_release_attachments(uuid,jsonb)')"), ('20260913780000', "to_regprocedure('public.preview_record_release_v9(uuid,uuid,text,text,jsonb)')"), ('20260913790000', "to_regprocedure('public.list_record_release_sources_v9(uuid,integer)')")]
+
+    if not args.skip_release_access_fix:
+        pending.append(('20260913800000', "case when obj_description('public.read_record_release(uuid)'::regprocedure,'pg_proc')='Rechecks active staff after release/source waits.' and obj_description('public.confirm_record_release(uuid,uuid,uuid,text,text,jsonb,jsonb,text,boolean)'::regprocedure,'pg_proc')='Rechecks active staff after operation waits and before returning.' then true else null end"))
     for version, probe in pending:
         if scalar(f'select {probe} is null;') == 't':
             paths = list(migration_dir.glob(version + '_*'))
@@ -130,7 +136,7 @@ try:
     check(scalar("select not public and file_size_limit=20971520 and allowed_mime_types=array['application/pdf','image/jpeg','image/png'] from storage.buckets where id='ezyvet-attachments';") == 't', 'Private fixture bucket matches capture contract')
     fixture = Path(__file__).with_name('ezyvet_attachment_capture.test.sql').read_text().split('-- FIXTURE_BEGIN:')[1].split('select throws_ok(')[0]
     fixture = '\n'.join(fixture.splitlines()[1:])
-    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry', 'prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'] + approval_scenarios, 1):
+    for index, scenario in enumerate(['reserve-source-expiry', 'complete-source-expiry', 'complete-object-expiry', 'upload-role-loss', 'cleanup-role-loss', 'cleanup-expiry', 'prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'] + approval_scenarios + release_scenarios, 1):
         if args.scenario and scenario != args.scenario:
             continue
         prefix = f'db569{index:03d}'
@@ -140,7 +146,7 @@ try:
         setup = current + "update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');insert into data select 'lease',pg_temp.claim();"
         if scenario != 'reserve-source-expiry':
             setup += "insert into data select 'intent',pg_temp.reserve();"
-        if scenario.startswith(('complete-', 'cleanup-', 'approval-', 'cancel-')):
+        if scenario.startswith(('complete-', 'cleanup-', 'approval-', 'cancel-', 'release-')):
             setup += "insert into storage.objects(bucket_id,name,owner,metadata) select 'ezyvet-attachments',v->>'object_path','"+actor+"',jsonb_build_object('size',37,'mimetype','application/pdf') from data where k='intent';"
         saved = json.loads(scalar("begin;set local search_path=public,extensions;" + setup + "select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
         fx, data = saved['fx'], saved['data']
@@ -149,7 +155,59 @@ try:
         metadata = quote(json.dumps(data['saved']['request']['source_context']['attachment_metadata'])) + '::jsonb'
         identity = ','.join(map(quote, [request, actor, lease, request_hash]))
         source_lock = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='attachment' for update;"
-        if scenario.startswith(('approval-', 'cancel-')):
+        if scenario.startswith('release-'):
+            intent = data['intent']
+            capture = json.loads(scalar(f"select to_jsonb(complete_ezyvet_attachment_capture({identity},'{intent['intent_hash']}',repeat('a',64),37,'application/pdf',{metadata}));"))
+            approval, correction, release_id = (str(uuid.uuid4()) for _ in range(3))
+            staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
+            def release_approve(operation_id, previous=None):
+                return f"select approve_ezyvet_attachment_record('{operation_id}','{request}','{fx['pet']}','{capture['capture_hash']}',{quote(previous) if previous else 'null'},'Synthetic API source','Synthetic original inspection',true);"
+            sql('begin;' + staff + release_approve(approval) + 'commit;')
+            sql(f"insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'{actor}',now(),'Synthetic observed race only',9) on conflict(id) do update set enabled=true,accepted_schema_version=9;")
+            selection = quote(json.dumps({'api_attachment_ids': [approval], 'patient_summary_ids': [fx['pet']]})) + '::jsonb'
+            recipient = scalar(f"select primary_email from clients where id='{fx['client']}';")
+            arguments = f"'{fx['pet']}','{fx['client']}','EMAIL',{quote(recipient)},{selection}"
+            preview = json.loads(scalar('begin;' + staff + f"select preview_record_release_v9({arguments});commit;"))
+            check(len(preview['snapshot']['api_attachments']) == 1 and len(preview['snapshot']['patient_summaries']) == 1, 'Race uses mixed selected API and native patient evidence')
+            confirm = staff + f"select confirm_record_release('{release_id}',{arguments},{quote(json.dumps(preview['snapshot']))}::jsonb,'{preview['source_hash']}',true);"
+            change = f"update ezyvet_identity_heads set version=version+1 where source_site_uid='{scenario}' and resource='attachment';"
+            error = 'Current latest same-patient API approval required'
+            if 'parent' in scenario:
+                change = f"update ezyvet_identity_heads set version=version+1 where source_site_uid='{scenario}' and resource='animal';"
+                error = 'SOURCE_ATTACHMENT_PARENT_STALE'
+            elif 'mapping' in scenario:
+                change = f"update ezyvet_record_links set external_id='99' where id='{fx['mapping']}';"
+                error = 'Attachment animal parent mismatch'
+            elif 'native' in scenario:
+                change = f"update pets set name=name||' changed' where id='{fx['pet']}';"
+                error = 'Release sources or recipient changed'
+            elif 'correction' in scenario:
+                change = staff + release_approve(correction, approval)
+            if scenario.endswith('role-loss'):
+                expected_rows = 0
+                waiter = confirm
+                holder = f"select pg_advisory_xact_lock(hashtextextended('{release_id}',13));"
+                if scenario == 'release-chain-role-loss':
+                    holder = f"select pg_advisory_xact_lock(hashtextextended('{fx['mapping']}:701',7301));"
+                elif scenario in ['release-replay-role-loss', 'release-read-role-loss']:
+                    sql('begin;' + confirm + 'commit;'); expected_rows = 1
+                    if scenario == 'release-read-role-loss':
+                        holder = f"select 1 from record_releases where id='{release_id}' for update;"
+                        waiter = staff + f"select read_record_release('{release_id}');"
+                contend(holder, waiter, 'Active staff access required', lambda: sql(f"delete from user_roles where user_id='{actor}';"))
+                check(scalar(f"select count(*) from record_releases where id='{release_id}';") == str(expected_rows), 'Revoked staff cannot create another release or rewrite existing release')
+            elif scenario.endswith('-first'):
+                contend(change, confirm, error)
+                check(scalar(f"select count(*) from record_releases where id='{release_id}';") == '0', 'Earlier source/review/native change rejects stale mixed confirmation')
+            else:
+                contend(confirm, change, None)
+                check(scalar(f"select source_hash='{preview['source_hash']}' and snapshot#>>'{{api_attachments,0,record,id}}'='{approval}' from record_releases where id='{release_id}';") == 't', 'Earlier confirmation preserves exact reviewed snapshot and approval')
+                check(scalar(f"select exists(select 1 from record_release_events where release_id='{release_id}' and kind='source_changed');") == 't', 'Later change appends a source invalidation event')
+                eligible = json.loads(scalar('begin;' + staff + f"select read_record_release('{release_id}');commit;"))
+                check(eligible['eligible'] is False, 'Changed mixed release is no longer eligible')
+            check(scalar(f"select status='captured' from ezyvet_attachment_download_requests where id='{request}';") == 't', 'Release race never rewrites captured source request')
+        elif scenario.startswith(('approval-', 'cancel-')):
+
             intent = data['intent']
             capture = json.loads(scalar(f"select to_jsonb(complete_ezyvet_attachment_capture({identity},'{intent['intent_hash']}',repeat('a',64),37,'application/pdf',{metadata}));"))
             approval = str(uuid.uuid4())
