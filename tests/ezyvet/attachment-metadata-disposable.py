@@ -15,18 +15,19 @@ import urllib.request
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
-parser.add_argument('--fixture', choices=['metadata','originals','maximum','all'], default='metadata')
+parser.add_argument('--fixture', choices=['metadata','originals','maximum','migration','all'], default='metadata')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
 fixtures = {
+    'migration': ('migration-local-roundtrip.ts', 'Migration manifest HTTP/Auth/PostgREST'),
     'metadata': ('attachment-metadata-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST'),
     'originals': ('attachment-original-local-roundtrip.ts', 'Attachment original HTTP/Auth/Storage'),
     'maximum': ('attachment-max-package-roundtrip.mjs', 'Attachment maximum physical packages'),
 }
-selected = ['metadata','originals','maximum'] if args.fixture == 'all' else [args.fixture]
+selected = ['metadata','originals','maximum','migration'] if args.fixture == 'all' else [args.fixture]
 harness_paths = [root / 'tests/ezyvet' / fixtures[name][0] for name in selected]
 identity = 'lrv-attachment-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
@@ -40,7 +41,7 @@ checks = 0
 checks_by_fixture = {}
 harness_hashes = {}
 migration_hashes = {}
-source_paths = [*sorted((root / 'supabase/functions/_shared').glob('*.ts')), Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
+source_paths = [root / 'src/hub/features/imports/migration-run-api.ts', root / 'src/hub/features/imports/attachment-review-history.ts', *sorted((root / 'supabase/functions/_shared').glob('*.ts')), Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
 source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
 
 def command(argv, **kwargs):
