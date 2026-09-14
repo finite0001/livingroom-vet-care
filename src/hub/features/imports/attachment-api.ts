@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { PrescriptionItemMapping } from "./prescription-item-api";
-export type AttachmentMapping = PrescriptionItemMapping;
+export interface AttachmentMapping extends Required<PrescriptionItemMapping> {}
 const uuid = z.string().uuid();
 const date = z.string().refine((v) => Number.isFinite(Date.parse(v)));
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
@@ -103,6 +103,7 @@ const observationSchema = z
     file_sha256: z.null(),
   })
   .strict();
+export type AttachmentObservation = z.infer<typeof observationSchema>;
 interface Database {
   public: {
     Tables: Record<never, never>;

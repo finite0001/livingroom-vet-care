@@ -1,3 +1,4 @@
+import { AttachmentOriginalCapture } from "./AttachmentOriginalCapture";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,19 @@ function AttachmentSelector({ actor, onDirtyChange }: Props) {
             key={m.link_id}
             variant="outline"
             disabled={locked}
-            onClick={() => setMapping(m)}
+            onClick={() =>
+              setMapping({
+                ...m,
+                link_id: m.link_id!,
+                pet_id: m.pet_id!,
+                patient_name: m.patient_name!,
+                household_name: m.household_name!,
+                source_origin: m.source_origin!,
+                source_site_uid: m.source_site_uid!,
+                external_id: m.external_id!,
+                patient_version: m.patient_version!,
+              })
+            }
           >
             {m.patient_name} · {m.household_name} · {m.source_site_uid}
           </Button>
@@ -88,6 +101,7 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
   const [id, setId] = useState<string | null>(null);
   const idRef = useRef<string | null>(null);
   const [run, setRun] = useState<AttachmentRun | null>(null);
+  const [captureDirty, setCaptureDirty] = useState(false);
   const [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState(""),
@@ -123,8 +137,8 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
     };
   }, [onLocked]);
   useEffect(() => {
-    onLocked(busy || uncertain);
-  }, [busy, uncertain, onLocked]);
+    onLocked(busy || uncertain || captureDirty);
+  }, [busy, uncertain, captureDirty, onLocked]);
   useEffect(() => {
     let saved: string | null = null;
     try {
@@ -237,7 +251,7 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
       {notice && <p role="status">{notice}</p>}
       <div className="flex flex-wrap gap-2">
         <Button
-          disabled={busy || !!(run && blocked(run))}
+          disabled={captureDirty || busy || !!(run && blocked(run))}
           onClick={() => void work(stage)}
         >
           {id
@@ -246,14 +260,20 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
         </Button>
         <Button
           variant="outline"
-          disabled={busy || !id}
+          disabled={captureDirty || busy || !id}
           onClick={() => void work(() => recover())}
         >
           Recheck saved attachment run
         </Button>
         <Button
           variant="outline"
-          disabled={busy || uncertain || !run || run.status === "running"}
+          disabled={
+            captureDirty ||
+            busy ||
+            uncertain ||
+            !run ||
+            run.status === "running"
+          }
           onClick={() => {
             sessionStorage.removeItem(key);
             idRef.current = null;
@@ -278,7 +298,7 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
           </p>
           <p>
             {run.observed_count} metadata observations · {run.staged_count}{" "}
-            distinct staged versions · files captured: 0
+            distinct staged versions. This metadata scan does not capture files.
           </p>
           {run.last_error_code && (
             <p>Last scan result: {run.last_error_code}</p>
@@ -299,7 +319,7 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
             </p>
             <Button
               variant="outline"
-              disabled={busy || uncertain}
+              disabled={captureDirty || busy || uncertain}
               onClick={() =>
                 void work(async () => {
                   persist(r.id);
@@ -316,7 +336,7 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            disabled={busy}
+            disabled={captureDirty || busy}
             onClick={() =>
               void work(async () => {
                 await runs.refetch();
@@ -328,25 +348,33 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
           </Button>
           <Button
             variant="outline"
-            disabled={busy || !runCursor}
+            disabled={captureDirty || busy || !runCursor}
             onClick={() => setRunCursor(null)}
           >
             Newest attachment scans
           </Button>
           <Button
             variant="outline"
-            disabled={busy || !runs.data?.next_cursor}
+            disabled={captureDirty || busy || !runs.data?.next_cursor}
             onClick={() => setRunCursor(runs.data!.next_cursor)}
           >
             Older attachment scans
           </Button>
         </div>
       </section>
+      <AttachmentOriginalCapture
+        actor={actor}
+        mapping={mapping}
+        observations={observations.data?.observations ?? []}
+        disabled={busy || uncertain}
+        onDirtyChange={setCaptureDirty}
+      />
       {run && (
         <section aria-label="Attachment observations" className="space-y-2">
           <h3 className="font-semibold">Observed attachment metadata</h3>
           <p>
-            Source metadata only. No file bytes or file checksum are available.
+            Source metadata only. Independent original captures appear in the
+            capture panel below.
           </p>
           {observations.isError && (
             <p role="alert">Attachment observations unavailable.</p>
@@ -403,14 +431,14 @@ function AttachmentPatient({ actor, mapping, onLocked }: PatientProps) {
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
-              disabled={busy || !observationCursor}
+              disabled={captureDirty || busy || !observationCursor}
               onClick={() => setObservationCursor(null)}
             >
               First attachment observations
             </Button>
             <Button
               variant="outline"
-              disabled={busy || !observations.data?.next_cursor}
+              disabled={captureDirty || busy || !observations.data?.next_cursor}
               onClick={() =>
                 setObservationCursor(observations.data!.next_cursor)
               }
