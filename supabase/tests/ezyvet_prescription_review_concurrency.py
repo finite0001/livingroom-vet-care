@@ -9,6 +9,7 @@ import sys
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
+parser.add_argument('--source-database',help='Clone an explicitly marked owned attachment scratch database')
 parser.add_argument('--sql-only',action='store_true',help='Run SQL regressions and clean up without contention cases')
 parser.add_argument('--overlay-migration',type=Path,action='append',default=[])
 parser.add_argument('--extra-sql-test',type=Path,action='append',default=[])
@@ -18,7 +19,11 @@ if args.project_config:
     import tomllib
     with args.project_config.open('rb') as config_file:
         CONTAINER = 'supabase_db_' + tomllib.load(config_file)['project_id']
-FOUNDATION_COMMAND = ['docker', 'exec', '-i', CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1']
+source_database = args.source_database or 'postgres'
+if args.source_database:
+    import re
+    assert re.fullmatch(r'lrv_attachment_race_[a-f0-9]{32}', source_database), 'Only generated attachment scratch sources allowed'
+FOUNDATION_COMMAND = ['docker', 'exec', '-i', CONTAINER, 'psql', '-U', 'postgres', '-d', source_database, '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1']
 
 COMMAND = FOUNDATION_COMMAND.copy()
 
@@ -101,14 +106,16 @@ select stage_ezyvet_import_page((select id from fx where k='race-consult-run'),'
 """
 fixture=fixture.replace("insert into fx values('prescription-run'",consult_fixture+"insert into fx values('prescription-run'",1)
 try:
-    dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--schema-only','--no-owner','--schema=public','--schema=auth','--schema=storage','--schema=extensions','postgres'],capture_output=True,check=True).stdout
+    if args.source_database:
+        assert scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{source_database}';").startswith('owned-attachment-race-'), 'Owned source marker required'
+    dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--schema-only','--no-owner','--schema=public','--schema=auth','--schema=storage','--schema=extensions',source_database],capture_output=True,check=True).stdout
     sql(f'create database "{database}";');created=True
     sql(f'comment on database "{database}" is {quote(marker)};')
     COMMAND=FOUNDATION_COMMAND.copy();COMMAND[COMMAND.index('-d')+1]=database
     sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp" with schema extensions;')
     dump=dump.replace(b'CREATE SCHEMA extensions;',b'CREATE SCHEMA IF NOT EXISTS extensions;')
     dump=b"\n".join(line for line in dump.splitlines() if not line.startswith(b'ALTER DEFAULT PRIVILEGES'))
-    restored=subprocess.run(COMMAND,input=dump,capture_output=True)
+    restored=subprocess.run(COMMAND,input=b"BEGIN;\n"+dump+b"\nCOMMIT;",capture_output=True)
     check(restored.returncode==0,restored.stderr.decode())
 
     migration_dir=Path(__file__).resolve().parents[1]/'migrations'

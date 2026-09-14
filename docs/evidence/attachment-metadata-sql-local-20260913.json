@@ -1,0 +1,36 @@
+{
+  "synthetic_only": true,
+  "command": "python3 supabase/tests/ezyvet_attachment_metadata_concurrency.py --full-regression",
+  "git_revision": "9779f295c84a08334fa34f218e6e75647a2905f7",
+  "canonical_migration_count": 86,
+  "sql_files": 72,
+  "sql_assertions": 2648,
+  "canonical_prescription_sql_assertions_repeated": 468,
+  "canonical_prescription_contention_harness_checks": 162,
+  "attachment_harness_checks": 105,
+  "attachment_harness_sql_suite_checks": 72,
+  "attachment_harness_other_checks": 33,
+  "checks_note": "The repeated468 SQL assertions are already included in2648. Attachment105 includes72 per-file SQL success checks and33 setup, actual lock-contention/state, and cleanup assertions; targeted default runs8 SQL files and41 total harness checks.",
+  "scenarios": [
+    "Distinct raw observations preserve one stable metadata snapshot, including repeated IDs across pages.",
+    "Malformed pagination, unsafe identifiers, unknown metadata keys, temporary URLs, and conflicting duplicates reject without advancing the cursor.",
+    "Owned run recovery and observation pagination preserve stale receipts without exposing service leases.",
+    "Shared import-table restrictive RLS blocks own and other administrator direct attachment reads; older resource reads remain available.",
+    "Generic snapshot review denies attachment metadata.",
+    "Concurrent source claims reject overlapping provider scans; exact committed replay is idempotent.",
+    "Parent revision versus staging tested in both lock orders.",
+    "Lease expiry while waiting for parent and attachment-head locks rejects stale stage.",
+    "Changed committed-page digest rejects replay; raw-only renewal does not advance the stable head.",
+    "Canonical prescription/item/consult ingestion and correction versus reviewed-release confirmation in both orders."
+  ],
+  "file_sha256": {
+    "supabase/migrations/20260913690000_attachment_metadata_runs.sql": "4bd2efe726b1a65e234789b6ed3e782119f18a8489f717d4fa23f8199e74f675",
+    "supabase/tests/ezyvet_attachment_metadata.test.sql": "b9d1acc815bed0d27c54fce3afff94ca1bba55dfc723c57548bd40f20e5bdb90",
+    "supabase/tests/ezyvet_attachment_metadata_concurrency.py": "9d0b82902a29dcd33c04fcc02b620192ff153d5e1375659749fbbd8ad1589d91",
+    "supabase/tests/ezyvet_prescription_review_concurrency.py": "3b260c57578466c9d2d4ae357e914cdb62c29e663c3faedb2a23e230d639a0ed"
+  },
+  "provider_requests": 0,
+  "storage_writes": 0,
+  "cleanup_verified": true,
+  "shared_foundation_modified": false
+}

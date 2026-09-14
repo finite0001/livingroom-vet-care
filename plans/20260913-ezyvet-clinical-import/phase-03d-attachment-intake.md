@@ -1,6 +1,6 @@
 # Phase 3d — Animal-scoped attachment metadata intake
 
-Status: the [bounded metadata parser](../../docs/features/ezyvet-attachment-metadata.md) and generic-snapshot exclusion guards are implemented. Durable database runs, scoped HTTP dispatch, operator UI and original-file capture remain unimplemented. No source-scope expansion or provider download is enabled. Living Room Vet remains primary and ezyVet access remains read-only.
+Status: the [bounded metadata parser](../../docs/features/ezyvet-attachment-metadata.md), durable run/page/observation ledgers, dedicated metadata dispatch and operator UI are implemented in this increment, verified locally. Original-file capture remains subsequent work. No hosted source-scope expansion or provider download is enabled. Living Room Vet remains primary and ezyVet access remains read-only.
 
 ## Outcome and boundary
 
@@ -12,9 +12,9 @@ Consult and Contact parents are excluded from this increment. Contact attachment
 
 Refreshed September 13, 2026 from the public [Attachment operation](https://developers.ezyvet.com/#get-attachment): GET `/v1/attachment`, OAuth `read-attachment`, `record_type` and `record_id` query filters, `items[].attachment` records, and pagination metadata. Preserve documented attachment identity, file reference, parent, timestamps, active status, MIME, name, primary-image flag and notes without interpreting clinical content. See the [source contract evidence](research/source-contracts.md#attachment-contract-refresh--september-13-2026).
 
-The page lists [GET /v1/file/{id}](https://developers.ezyvet.com/#get-file) but currently lacks its operation section. Supported download authentication, host/redirect rules, expiry, content length and response behavior have not been verified. No authorized practice attachment sample has been used. This does not block synthetic implementation of the metadata contract or imply a new private API registration is required.
+The official [ezyVet Postman collection](https://developers.ezyvet.com/ezyvet-api.postman_collection.json) documents GET `/v1/attachment/download/:id`, using the attachment ID and bearer authorization. The route can be constructed without following a returned download URL. Redirect behavior, bounded content handling and authorized practice sample acceptance remain to be verified before capture is commissioned. No authorized practice attachment sample has been used; a new private API registration is not implied.
 
-The provider's general pagination parameters have now been refreshed against the [official paging guide](https://developers.ezyvet.com/#paging); the parser uses an application page cap of 10 and validates all four documented cursor fields. It accepts a smaller advertised effective page size within that cap and verifies count/totals arithmetic against that size. No actual practice partial/empty-page sample has been accepted. Network dispatch remains disabled until durable scoped staging exists. Never label the application cap a documented provider maximum; reject oversized or inconsistent pages rather than silently truncating them.
+The provider's general pagination parameters have now been refreshed against the [official paging guide](https://developers.ezyvet.com/#paging); the parser uses an application page cap of 10 and validates all four documented cursor fields. It accepts a smaller advertised effective page size within that cap and verifies count/totals arithmetic against that size. No actual practice partial/empty-page sample has been accepted. Dedicated metadata dispatch is implemented; hosted import mode and source scopes remain unchanged pending commissioning. Never label the application cap a documented provider maximum; reject oversized or inconsistent pages rather than silently truncating them.
 
 ## Parent identity and authorization
 
@@ -42,11 +42,11 @@ Each committed page records run/page identity, request contract fingerprint, obs
 
 Stage the complete validated page and advance its checkpoint in one transaction under a current lease. Exact committed-page replay recovers its receipt; different content under that committed page does not replace it. An uncertain stage response requires receipt/checkpoint recovery before a new provider fetch. Expired leases cannot commit. Rate limits reuse shared provider cooldowns and bounded retry, with no competing scan for the same active scope.
 
-Track separate observed and uniquely staged counts; retain duplicates and changed observations as reconciliation evidence. Completion means the observed pagination ended, not a consistent full export. Never interpret an absent item/page as deletion. Inconsistent page metadata, parent drift, source changes and failed pages leave explicit unresolved status. Failed or interrupted runs remain discoverable and resumable or explicitly abandoned without deleting observations.
+Track separate observed and uniquely staged counts; retain duplicates and changed observations as reconciliation evidence. Completion means the observed pagination ended, not a consistent full export. Never interpret an absent item/page as deletion. Inconsistent page metadata, parent drift, source changes and failed pages leave explicit unresolved status. Failed or interrupted runs remain discoverable without deleting observations. Valid unchanged parent contexts can resume; changed contexts require a new scan.
 
 ## Operator surface
 
-Add a clearly labeled “Attachment metadata” section to the existing import workflow, showing the approved Animal source, safe file metadata, run state, checkpoint and recoverable errors. Show discovered files separately from captured originals; this increment has no captured-file action. Do not display download links. Account changes and signout discard browser pointers and invalidate late responses while retaining authorized server recovery.
+Add a clearly labeled “Attachment metadata” section to the existing import workflow, showing the approved Animal source, safe file metadata, run state, checkpoint and recoverable errors. Show discovered files separately from captured originals; this increment has no captured-file action. Do not display download links. Account changes and signout clear the active browser view and invalidate late responses. Retained request references are scoped to actor and mapping and cannot cross accounts; authorized server discovery also survives browser pointer loss.
 
 ## Later original-byte capture requirements
 
@@ -64,3 +64,7 @@ Subsequent work includes explicit staff review, DVM acknowledgment where require
 4. Real local Auth/PostgREST harness with synthetic source responses: assert exact run/checkpoint behavior and zero Storage objects, outgoing messages or native clinical writes. Add populated upgrade/restore coverage for the new ledgers and exact grants.
 
 Run relevant unit, SQL, contention, browser and frozen Edge entrypoint checks. Keep source commissioning disabled until authorized sample acceptance; do not expand hosted scopes or call the live provider as a side effect of these checks. Record deployment, source acceptance and clinical acceptance separately from implementation status.
+
+## Integrated acceptance evidence
+
+Locally verified: 490 unit tests, 256 browser cases, 2,648 SQL assertions, existing and attachment contention checks, 50 actual HTTP/Auth/PostgREST checks, frozen Edge checks and a populated51→86 upgrade/restore with matching permissions/RLS and verified cleanup. See the [feature validation and hash-bound receipts](../../docs/features/ezyvet-attachment-metadata.md#validation). No hosted deployment, provider sample acceptance or clinical approval is implied. Original-byte capture remains the next implementation increment.

@@ -9,7 +9,9 @@ parser.add_argument('--project-config', type=Path, help='Use the explicitly sele
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[2]
 migrations = root / 'supabase/migrations'
-files = sorted(migrations.glob('*.sql'))
+# This regression remains the frozen84-to85 reference-hardening experiment.
+# Later additive features must not make its historical inventory assertion fail.
+files = sorted(p for p in migrations.glob('*.sql') if p.name.split('_')[0] <= '20260913650000' or p.name.startswith('20260913900000'))
 assert len(files) == 85
 assert len([p for p in files if not p.name.startswith('20260913650000')]) == 84
 old = (migrations / '20260913630000_record_release_prescription_history.sql').read_text()

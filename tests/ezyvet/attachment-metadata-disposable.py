@@ -1,0 +1,137 @@
+"""Run attachment metadata intake acceptance in an owned disposable local Auth/Storage stack."""
+import argparse
+import json
+import hashlib
+import re
+import os
+from pathlib import Path
+import shutil
+import socket
+import subprocess
+import tempfile
+import uuid
+import time
+import urllib.request
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--run-synthetic-local', action='store_true')
+parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
+args = parser.parse_args()
+if not args.run_synthetic_local:
+    parser.error('Explicit --run-synthetic-local required')
+root = Path(__file__).resolve().parents[2]
+fixture = ('attachment-metadata-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST')
+harness_path = root / 'tests/ezyvet' / fixture[0]
+identity = 'lrv-attachment-' + uuid.uuid4().hex[:12]
+os.umask(0o077)
+work = Path(tempfile.mkdtemp(prefix=identity + '-'))
+project = work / 'project'
+(project / 'supabase/migrations').mkdir(parents=True)
+log = (work / 'commands.log').open('w')
+started = False
+success = False
+checks = 0
+migration_hashes = {}
+source_paths = [Path(__file__).resolve(), harness_path, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts'))]
+source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
+
+def command(argv, **kwargs):
+    result = subprocess.run(argv, capture_output=True, text=True, **kwargs)
+    log.write('COMMAND ' + ' '.join(map(str, argv)) + '\n' + result.stdout + result.stderr + '\n')
+    log.flush()
+    if result.returncode:
+        raise RuntimeError('Disposable local command failed; inspect protected log: ' + str(work / 'commands.log'))
+    return result.stdout
+
+def verify_identity():
+    assert (project / 'supabase/config.toml').read_text().startswith('project_id = "' + identity + '"\n')
+    probe = subprocess.run(['docker', 'inspect', 'supabase_db_' + identity], capture_output=True, text=True)
+    if not probe.returncode:
+        labels = json.loads(probe.stdout)[0]['Config']['Labels']
+        assert labels['com.supabase.cli.project'] == identity
+        assert Path(labels['com.supabase.cli.workdir']).resolve() == project.resolve()
+
+try:
+    for port in [62420, 62421, 62422, 62424]:
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', port))
+    assert not command(['docker', 'ps', '-a', '--filter', 'name=' + identity, '--format', '{{.Names}}']).splitlines(), 'Refuse existing matching containers'
+    assert not any(v.endswith('_' + identity) for v in command(['docker', 'volume', 'ls', '--format', '{{.Name}}']).splitlines()), 'Refuse existing matching volumes'
+    versions = set()
+    for migration in sorted((root / 'supabase/migrations').glob('*.sql')) + args.additional_migration:
+        version = migration.name.split('_')[0]
+        assert version.isdigit() and len(version) == 14 and version not in versions, 'Duplicate or malformed migration overlay'
+        versions.add(version)
+        migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
+        shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
+    assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
+    assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000', '20260913620000', '20260913650000'} <= versions, 'Prescription intake and clinical review migrations required'
+    assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
+    assert len(versions) == 86 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
+[api]
+port = 62421
+[db]
+port = 62422
+shadow_port = 62420
+major_version = 17
+[studio]
+enabled = false
+[analytics]
+enabled = false
+[inbucket]
+port = 62424
+[auth]
+site_url = "http://127.0.0.1:62421"
+enable_signup = false
+[storage]
+enabled = true
+[edge_runtime]
+enabled = false
+''')
+    print('Starting owned disposable attachment project; no hosted or provider operations.', flush=True)
+    started = True
+    command(['supabase', 'start', '--workdir', str(project), '--ignore-health-check', '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
+    verify_identity()
+    local = json.loads(command(['supabase', 'status', '--workdir', str(project), '--output', 'json']))
+    assert local['API_URL'] == 'http://127.0.0.1:62421'
+    for attempt in range(120):
+        try:
+            for endpoint in ['/auth/v1/health', '/rest/v1/', '/storage/v1/status']:
+                probe = urllib.request.Request(local['API_URL'] + endpoint, headers={'apikey': local['ANON_KEY'], 'Authorization': 'Bearer ' + local['SERVICE_ROLE_KEY']})
+                urllib.request.urlopen(probe, timeout=2).close()
+            break
+        except Exception:
+            if attempt == 119:
+                raise RuntimeError('Owned Auth/PostgREST/Storage did not become ready')
+            time.sleep(1)
+    harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
+    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
+    assert all(hashlib.sha256((root / path).read_bytes()).hexdigest() == digest for path, digest in source_hashes.items()), 'Source changed during execution; rerun exact source'
+    # Only the harness's fixed aggregate evidence line reaches the terminal.
+    matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. Synthetic upstream only; no ezyVet requests\.', output.strip())
+    assert matched, 'Refuse unexpected harness output'
+    checks = int(matched[1])
+    print(matched[0], flush=True)
+    success = True
+finally:
+    try:
+        if started:
+            verify_identity()
+            command(['supabase', 'stop', '--workdir', str(project), '--no-backup'])
+            containers = command(['docker', 'ps', '-a', '--filter', 'name=' + identity, '--format', '{{.Names}}']).splitlines()
+            volumes = command(['docker', 'volume', 'ls', '--format', '{{.Name}}']).splitlines()
+            assert not containers and not any(v.endswith('_' + identity) for v in volumes), 'Owned disposable resources remain'
+    finally:
+        log.close()
+if success:
+    summary = {'synthetic_only': True, 'fixture': 'attachment-metadata', 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+               'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
+               'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+               'harness_sha256': harness_hash,
+               'migration_sha256': migration_hashes, 'source_sha256': source_hashes, 'provider_requests': 0}
+    summary_path = work.parent / (identity + '-result.json')
+    summary_path.write_text(json.dumps(summary, indent=2) + '\n')
+    shutil.rmtree(work)
+    print('Sanitized result: ' + str(summary_path), flush=True)
+    print('Disposable project containers, volumes and private temporary files removed; shared foundation untouched.', flush=True)
