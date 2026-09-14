@@ -110,3 +110,5 @@ The scan-progress candidate reaches102 migrations. The rehearsal also saves the 
 The attempt-history candidate reaches103 migrations. Before the baseline upgrade, the fixture creates one synthetic leased import with a latest error. Upgrade must leave that row unchanged and add exactly one `migration_baseline` event with a hashed lease reference. All attempt-event rows join the exact database restore comparison; prior history is never manufactured.
 
 The claim-authorization candidate reaches104 migrations. It rechecks active administrator status after source/run waits and before returning from the canonical core and six scoped claim functions. The latest attachment original-capture interlock is preserved. The same populated restore and routine/permission comparisons apply.
+
+The staging/failure authorization candidate reaches 105 migrations. It rechecks administrator access before staging returns and after failure updates, so revocation during a database wait rolls back page and attempt history together. The exact 84→105 populated upgrade and restore comparisons apply.

@@ -202,11 +202,43 @@ try:
     attempt_child=str(uuid.uuid4())
     attempt_claim=json.loads(run(claim(attempt_child)))
     attempt_fail=f"select fail_ezyvet_import_page('{attempt_child}','{actor}','{attempt_claim['lease_id']}','UPSTREAM_TIMEOUT',1);"
+    for entry in adapters:
+        resource=entry['resource'];rid=entry['child']
+        if resource not in ('consult','history','vaccination','prescription','prescriptionitem'):continue
+        family='clinical' if resource in ('consult','history') else resource
+        items=scalar(f"select coalesce(jsonb_agg(jsonb_build_object('external_id',s.external_id,'payload',s.payload) order by s.external_id),'[]') from ezyvet_import_page_items i join ezyvet_import_snapshots s on s.id=i.snapshot_id where i.run_id='{rid}' and i.page=1;")
+        before=scalar(f"select to_jsonb(r)::text from ezyvet_import_runs r where id='{rid}';")
+        try:
+            contended(f"lock table ezyvet_{family}_pages in access exclusive mode;",service+f"select stage_ezyvet_import_page('{rid}','{actor}',null,1,true,{quote(items)}::jsonb);",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+            check(scalar(f"select to_jsonb(r)::text from ezyvet_import_runs r where id='{rid}';")==before,resource+' replay rejects role loss during committed-page lookup')
+        finally:
+            sql(f"update profiles set is_active=true where id='{actor}';")
+    def import_state(rid):
+        return scalar(f"select jsonb_build_object('run',(select to_jsonb(r) from ezyvet_import_runs r where id='{rid}'),'events',(select jsonb_agg(to_jsonb(e) order by sequence) from ezyvet_migration_attempt_events e where child_run_id='{rid}'),'pages',(select jsonb_agg(to_jsonb(p) order by page) from ezyvet_import_pages p where run_id='{rid}'),'attachment_pages',(select jsonb_agg(to_jsonb(p) order by page) from ezyvet_attachment_pages p where run_id='{rid}'),'observations',(select jsonb_agg(to_jsonb(o) order by page,ordinal) from ezyvet_attachment_page_observations o where run_id='{rid}'))::text;")
+    failure_before=import_state(attempt_child)
+    try:
+        contended(f"select 1 from ezyvet_import_runs where id='{attempt_child}' for update;",service+attempt_fail,lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+        check(import_state(attempt_child)==failure_before,'Failure denied after role loss preserves lease, run, pages and attempt history')
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
+    # Pause after the core has staged its page, at the attachment-specific write.
+    # A denial must roll back core progress and the newly emitted attempt event.
+    try:
+        contended('lock table ezyvet_attachment_pages in share mode;',service+stage(attempt_child,attempt_claim['lease_id'],page),lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+        check(import_state(attempt_child)==failure_before,'Late stage denial rolls back core progress and attachment records together')
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
     contended(service+attempt_fail,service+attempt_fail,lambda code,out,err:code==0)
     check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{attempt_child}' and kind='page_failed';")=='1','Concurrent failure replay creates one durable event')
     sql(f"update ezyvet_import_runs set retry_after=null where id='{attempt_child}';")
     attempt_retry=json.loads(run(claim(attempt_child)))
     contended(service+stage(attempt_child,attempt_retry['lease_id'],page),service+stage(attempt_child,attempt_retry['lease_id'],page),lambda code,out,err:code==0)
+    replay_before=import_state(attempt_child)
+    try:
+        contended(f"select pg_advisory_xact_lock(hashtextextended('attachment-run:{attempt_child}',0));",service+stage(attempt_child,attempt_retry['lease_id'],page),lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+        check(import_state(attempt_child)==replay_before,'Committed attachment replay denies role loss without changing stored evidence')
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
     check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{attempt_child}' and kind='page_staged';")=='1','Concurrent staged-page replay creates one durable event')
     check(scalar(f"select count(*) from ezyvet_migration_attempt_events where child_run_id='{attempt_child}';")=='5','Baseline, two claims, one failure and one success retained')
     sql(f"update ezyvet_import_runs set retry_after=null where id='{attempt_child}';")

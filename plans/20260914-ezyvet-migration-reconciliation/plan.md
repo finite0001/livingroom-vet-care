@@ -42,7 +42,7 @@ Supported Consult/Contact attachment contracts and practice entitlement; source 
 
 ## Next concrete increment
 
-Extend phase2 with exact review/capture reconciliation, followed by item drill-down and frozen reports. The core source-gate authorization gap was reproduced and corrected locally by migration `20260914170000`, together with terminal recovery checks in all six patient-scoped claim functions. Verify the older staging and failure mutation paths after waits separately; claim hardening does not establish their behavior. The manifest candidate is local only; do not infer a hosted deployment from passing local SQL checks. Before reserving another version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
+Extend phase2 with exact review/capture reconciliation, followed by item drill-down and frozen reports. The core source-gate authorization gap was reproduced and corrected locally by migration `20260914170000`, together with terminal recovery checks in all six patient-scoped claim functions. Migration `20260914180000` extends the local candidate to staging replay/final returns and failure updates; observed contention verifies role revocation and transaction rollback. Broader reconciliation and operator acceptance remain separate from this authorization correction. The manifest candidate is local only; do not infer a hosted deployment from passing local SQL checks. Before reserving another version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
 
 Planning environment: optional codebase-summary/development-rules/code-standards/design-guidelines files and active-plan helper scripts are absent. Existing AGENTS.md, source contracts and current ledgers are authoritative. No new vendor API contract is asserted by this plan.
 
@@ -57,3 +57,5 @@ Resolved-scope digest and initial scan projection: [SQL/concurrency, real HTTP a
 Transactional attempt history: [SQL/concurrency, 369 runtime checks and populated baseline/restore evidence](../../docs/evidence/canonical-migration-attempt-history-20260914.json). This remains local and is not migration cutover acceptance.
 
 Import claim wait authorization: [reproduction, seven-function correction and serial SQL/HTTP/restore evidence](../../docs/evidence/canonical-import-claim-wait-authorization-20260914.json). No hosted deployment occurred.
+
+Import staging/failure wait authorization: [observed contention, transactional rollback and SQL/HTTP/restore evidence](../../docs/evidence/canonical-import-stage-failure-wait-authorization-20260914.json). The 105-migration candidate remains local; hosted staging remains at 99 migrations.
