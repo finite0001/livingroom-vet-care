@@ -77,9 +77,23 @@ test("mobile household adds two patients, retains identity fields and dated weig
       ? route.continue()
       : route.abort(),
   );
+  let failChart = false;
   await page.route(`${backend}/**`, async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
+    if (path === "/rest/v1/rpc/read_ezyvet_attachment_chart") {
+      if (failChart) return route.fulfill({ status: 500, json: { message: "unavailable" } });
+      const body = route.request().postDataJSON();
+      const version = body.p_before_id ? 1 : 2;
+      const record = { id: version === 2 ? staffId : clientId, actor_id: staffId, request_id: staffId,
+        pet_id: body.p_pet_id, animal_link_id: clientId, source_origin: "https://api.trial.ezyvet.com",
+        source_site_uid: "synthetic-site", attachment_external_id: "7", request_hash: "a".repeat(64),
+        capture_hash: "b".repeat(64), title: "Reviewed API original", review_reason: "Source and patient verified",
+        previous_record_id: version === 2 ? clientId : null, version, entry_method: "staff_reviewed_api_attachment_v2",
+        record_hash: "c".repeat(64), created_at: `2026-09-14T12:00:0${version}Z` };
+      return route.fulfill({ json: { pet_id: body.p_pet_id, records: [{ record, is_latest: version === 2, source_current: false }],
+        has_more: version === 2, next_cursor: version === 2 ? { before_at: record.created_at, before_id: record.id } : null } });
+    }
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/rest/v1/profiles")
@@ -247,6 +261,20 @@ test("mobile household adds two patients, retains identity fields and dated weig
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  const reviewed = page.getByRole("region", { name: "Reviewed API attachments", exact: true });
+  await expect(reviewed.getByText("Reviewed API original · Version 2")).toBeVisible();
+  await expect(reviewed.getByText(/Latest saved approval/)).toBeVisible();
+  await expect(reviewed.getByText("Source changed or is unavailable. Review required.")).toBeVisible();
+  await reviewed.getByRole("button", { name: "Older reviewed attachments" }).click();
+  await expect(reviewed.getByText(/Superseded approval/)).toBeVisible();
+  await expect(reviewed.getByRole("button", { name: "Older reviewed attachments" })).toBeDisabled();
+  failChart = true;
+  await reviewed.getByRole("button", { name: "Recheck reviewed attachments" }).click();
+  await expect(reviewed.getByRole("alert")).toBeVisible();
+  await expect(reviewed.getByText(/Superseded approval/)).toHaveCount(0);
+  failChart = false;
+  await reviewed.getByRole("button", { name: "Newest reviewed attachments" }).click();
+  await expect(reviewed.getByText(/Latest saved approval/)).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("mobile-patient-record.png"),
     fullPage: true,

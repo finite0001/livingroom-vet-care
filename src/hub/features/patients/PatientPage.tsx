@@ -21,6 +21,7 @@ import { WeightHistory } from "./WeightHistory";
 import { patientAge } from "./patient-details";
 import { PatientCareCharts } from "@/hub/features/care-charts/PatientCareCharts";
 import { PatientTreatments } from "@/hub/features/treatments/PatientTreatments";
+import { PatientApiAttachments } from "@/hub/features/imports/PatientApiAttachments";
 import { PatientDocuments } from "@/hub/features/documents/PatientDocuments";
 import { PatientDentalChart } from "@/hub/features/dental/PatientDentalChart";
 import { ClinicalWorkspace } from "@/hub/features/clinical/ClinicalWorkspace";
@@ -44,7 +45,8 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
-  const navigationGuard = useUnsavedChanges(importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty);
+  const dirty = importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty;
+  const navigationGuard = useUnsavedChanges(dirty);
   const query = useQuery({ queryKey: ["patient", petId], queryFn: async () => {
     const { data, error } = await supabase.from("pets").select("*").eq("id", petId).maybeSingle();
     if (error) throw error;
@@ -76,6 +78,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} />
     <PatientCareCharts petId={petId} onDirtyChange={setCareDirty} />
     <PatientDocuments petId={petId} />
+    <PatientApiAttachments petId={petId} disabled={dirty} />
     <PatientImportedVaccinations petId={petId} patientVersion={patient.version} disabled={importedPrescriptionDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedVaccinationDirty} />
     <PatientImportedPrescriptions petId={petId} patientVersion={patient.version} disabled={importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedPrescriptionDirty} />
     <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={importedPrescriptionDirty || importedVaccinationDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setImportedHistoryDirty} />

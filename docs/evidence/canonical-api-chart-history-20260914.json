@@ -1,0 +1,39 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "375cc38d5a896d805e3ac3fa96dfed856613819c",
+  "file_sha256": {
+    "src/hub/features/imports/PatientApiAttachments.tsx": "c92974d436ff45c7ac145ac92d5309898712e976c2a09b054dea970f0e14f1f4",
+    "src/hub/features/imports/attachment-chart-state.ts": "2f7f1bc67a256620ba1352621d5dc89a246b20e1c433722ada5533b7e32c9f4e",
+    "src/hub/features/imports/attachment-review-history.ts": "9da442b7c1867f4138788d6d8085276132bd14a58c4a42923881df0c0ef5b933",
+    "src/hub/features/patients/PatientPage.tsx": "d3e3d88e2508bcdf48d66e89a3eeccc8a76cc180dd615b5e3414cbbc5c34b463",
+    "supabase/migrations/20260914040000_canonical_api_patient_chart.sql": "7b99052b98a6b04bf2a3576bbd9eb6fb39ee39ce91fe9a4a9e2572ec8b3aa3a7",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "4876f853534def74f970e8b4c78dec2e2412a64592693de570cb07a85eff5cf0",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "af6cac30a8850f8e0094152fb491a9924b7fe3229182bdf8944cfdf72befdf11",
+    "tests/ezyvet/attachment-chart-state.test.ts": "451721c80ecd769783ddbe4151abfb46699bb1ce43ff0521e8bc533fe6acda0b",
+    "e2e/patients.spec.ts": "20042d73e1ae5ca21ee32e107cf4df278d243f55b7eb3bfe7722fb37f423a4d1"
+  },
+  "sql_assertions": 463,
+  "new_sql_assertions": 13,
+  "concurrency_checks": 117,
+  "unit_tests": 525,
+  "new_parser_tests": 3,
+  "browser_tests": 18,
+  "browser_scope": "Existing mobile patient workflow extended with chart history, source status, pagination and failed-refresh recovery; 17 attachment capture/decision tests retained.",
+  "check_passed": true,
+  "owned_database_cleanup_verified": true,
+  "log_sha256": {
+    "/tmp/lrv-canonical-chart-sql.log": "1971790fceaca5d531af627e9c0e9cda6e05fbeefd65899344dffebf81ceb90f",
+    "/tmp/lrv-canonical-chart-check.log": "413500d4246449181b7d1760c1e3134b0d79bc32ae0df3f93db215b48d5eb8b6",
+    "/tmp/lrv-canonical-chart-browser.log": "4ac5e9c36216a44a6648e133be2d08071ca4ffe63bce16614ad5c70c9ed5f7d5"
+  },
+  "warnings": [
+    "Existing AuthContext fast-refresh lint warning",
+    "Existing large production chunk warning"
+  ],
+  "limitations": [
+    "Chart history only: verified chart original download still requires server-side integration; Storage policies unchanged.",
+    "Local SQL and mocked browser transport; no physical Storage or hosted acceptance.",
+    "Schema9, mixed releases and populated upgrade/restore remain pending.",
+    "No provider messages, invitations or deployments performed."
+  ]
+}

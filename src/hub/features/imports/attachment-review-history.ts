@@ -9,7 +9,7 @@ function timestamp(value: string): bigint {
   const fraction = /\.(\d+)(?:Z|[+-]\d{2}:?\d{2})$/.exec(value)?.[1] ?? "";
   return BigInt(Date.parse(value)) * 1000n + BigInt(fraction.padEnd(6, "0").slice(3));
 }
-function precedes(at: string, id: string, beforeAt: string, beforeId: string) {
+export function precedes(at: string, id: string, beforeAt: string, beforeId: string) {
   const delta = timestamp(at) - timestamp(beforeAt);
   return delta < 0n || (delta === 0n && id < beforeId);
 }
@@ -21,7 +21,7 @@ export const recordSchema = z.object({
   version: z.number().int().positive(), entry_method: z.literal("staff_reviewed_api_attachment_v2"),
   record_hash: hash, created_at: date,
 }).strict();
-const cursorSchema = z.object({ before_at: date, before_id: uuid }).strict();
+export const cursorSchema = z.object({ before_at: date, before_id: uuid }).strict();
 export interface ReviewCursor extends z.infer<typeof cursorSchema> {}
 export interface OriginalReviewRecord extends z.infer<typeof recordSchema> {}
 const pageSchema = z.object({
