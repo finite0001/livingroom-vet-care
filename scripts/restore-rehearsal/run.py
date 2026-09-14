@@ -16,18 +16,35 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local-rehearsal', action='store_true')
 parser.add_argument('--resume-backup', type=Path, help='Retry only a retained synthetic backup destination')
 parser.add_argument('--rehearse-observed-hosted-gaps', action='store_true')
+parser.add_argument('--rehearse-staging-baseline', action='store_true')
 args = parser.parse_args()
-if args.rehearse_observed_hosted_gaps and args.resume_backup:
+upgrade_mode = args.rehearse_observed_hosted_gaps or args.rehearse_staging_baseline
+if args.rehearse_observed_hosted_gaps and args.rehearse_staging_baseline:
+    parser.error('Choose one baseline')
+if upgrade_mode and args.resume_backup:
     parser.error('Gap rehearsal requires a fresh run; resume cannot prove the upgrade')
 if not args.run_synthetic_local_rehearsal:
     parser.error('Explicit --run-synthetic-local-rehearsal is required')
 root = Path(__file__).resolve().parents[2]
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
+baseline_path = Path(__file__).with_name('staging-baseline-20260914.json')
+if args.rehearse_staging_baseline:
+    baseline = json.loads(baseline_path.read_text())
+    versions = [m['version'] for m in baseline['migrations']]
+    assert len(versions) == len(set(versions)) == 84
+    assert versions == sorted(versions)
+    initial_files = [p for p in migration_files if p.name.split('_')[0] in versions]
+    assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
+    assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
+new_versions = [f'20260914{v:02d}0000' for v in range(1,12)]
+if args.rehearse_staging_baseline:
+    assert len(migration_files) == 98
+    assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
-    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000']
-    assert len(migration_files)==87 and len(initial_files)==51
+    expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
+    assert len(migration_files)==98 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -108,7 +125,7 @@ enabled = false
     (path/'supabase/config.toml').write_text(config)
     if migrations:
         (path/'supabase/migrations').mkdir(exist_ok=bool(args.resume_backup))
-        selected = initial_files if kind=='source' and args.rehearse_observed_hosted_gaps else migration_files
+        selected = initial_files if kind=='source' and upgrade_mode else migration_files
         for migration in selected: shutil.copy2(migration,path/'supabase/migrations'/migration.name)
     result={'id':identity,'path':path,'port':port}
     projects.append(result)
@@ -282,12 +299,13 @@ try:
         print('Starting isolated synthetic source; artifacts:',run,flush=True)
         source=project('source',58321,True)
         command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'create',str(source['path']/'status.json'),str(run)])
-        if args.rehearse_observed_hosted_gaps:
+        if upgrade_mode:
             assert ledger(source)==[p.name.split('_')[0] for p in initial_files]
             # Reproduce the six direct ACL differences observed by read-only hosted
             # comparison. Only this generated local source is altered; 4600 must
             # normalize it to the canonical destination's explicit permissions.
-            sql(source, '''grant execute on function public.admin_set_staff_active(uuid,boolean),public.admin_update_staff_role(uuid,public.user_role) to anon,service_role;
+            if args.rehearse_observed_hosted_gaps:
+                sql(source, '''grant execute on function public.admin_set_staff_active(uuid,boolean),public.admin_update_staff_role(uuid,public.user_role) to anon,service_role;
                 grant execute on function public.clock_in(),public.clock_out(),public.get_consent_submission(text),public.review_ezyvet_snapshot(uuid,text,uuid,uuid,text) to service_role;''')
             inventory_sql=(root/'scripts/restore-rehearsal/routine-inventory.sql').read_text()
             (run/'initial-routine-inventory.json').write_text(sql(source,inventory_sql))
@@ -297,14 +315,15 @@ try:
             probe=subprocess.run(push+['--dry-run'],capture_output=True,text=True,cwd=root)
             output=probe.stdout+probe.stderr
             log.write(output);log.flush()
-            assert probe.returncode!=0 and '20260913280000' in output and '20260913290000' in output and '20260913320000' in output and '--include-all' in output, 'Expected old-gap refusal was not observed'
+            historical_gaps = [p.name.split('_')[0] for p in missing_files if p.name.split('_')[0] < initial_files[-1].name.split('_')[0]]
+            assert probe.returncode != 0 and historical_gaps and all(v in output for v in historical_gaps) and '--include-all' in output, 'Expected old-gap refusal was not observed'
             command(push+['--include-all','--dry-run'])
             verify_identity(source)
             command(push+['--include-all','--yes'])
             assert ledger(source)==[p.name.split('_')[0] for p in migration_files]
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify-upgrade',str(source['path']/'status.json'),str(run)])
             upgraded_functions=functions_snapshot(source)
-            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':True,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
+            (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':args.rehearse_observed_hosted_gaps,'baseline_kind':'staging_20260914' if args.rehearse_staging_baseline else 'legacy_51','baseline_ledger_sha256':hashlib.sha256(baseline_path.read_bytes()).hexdigest() if args.rehearse_staging_baseline else None,'hosted_body_parity_verified':False,'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         if any(p.name.startswith('20260913520000_') for p in migration_files):
             seed_vaccination_receipt(source)
             # Preserve all prior rows and explicitly capture the four new release audit entries.
@@ -341,10 +360,10 @@ try:
     if resume_backfill:
         evidence=json.loads((run/'backfill-evidence.json').read_text())
         assert evidence['migration_sha256']=={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files}, 'Resume canonical migration sources changed'
-    verify_canonical=args.rehearse_observed_hosted_gaps or resume_backfill
+    verify_canonical=upgrade_mode or resume_backfill
     destination=project('destination',59321,verify_canonical)
     canonical_inventory=functions_snapshot(destination) if verify_canonical else None
-    if args.rehearse_observed_hosted_gaps:
+    if upgrade_mode:
         assert canonical_inventory==upgraded_functions, 'Backfilled routines/grants/triggers differ from canonical migration order'
         evidence=json.loads((run/'backfill-evidence.json').read_text())
         evidence['canonical_functions_grants_triggers_match']=True
