@@ -1,6 +1,6 @@
 # ezyVet attachment metadata contract
 
-Animal-scoped attachment discovery now includes the bounded metadata parser, durable actor/mapping-bound runs and ordered observations, dedicated importer dispatch and an administrator recovery interface. These components are implemented in this increment, pending final integrated acceptance. The workflow cannot fetch files or create Storage objects. Metadata discovery is not migration completion or clinical approval.
+Animal-scoped attachment discovery now includes the bounded metadata parser, durable actor/mapping-bound runs and ordered observations, dedicated importer dispatch and an administrator recovery interface. These components are implemented in this increment, verified locally. The workflow cannot fetch files or create Storage objects. Metadata discovery is not migration completion or clinical approval.
 
 ## Primary contract verification
 
@@ -14,6 +14,16 @@ Metadata retains original scalar representations and distinguishes omitted field
 
 The raw-record digest hashes canonical JSON of the observed attachment record, including unknown fields and its download reference; it is not a wire-response checksum. The stable digest hashes only safe documented metadata, excluding the download URL and unknown fields. A URL-only change changes raw evidence without changing the stable fingerprint. Returned results and fixed errors contain no download-reference field or unknown provider fields. Documented free-text fields remain source content and are not promised to be free of information entered by a clinician. UTF-8 limits are 256 KiB per canonical page, 32 KiB per record, 16 KiB for notes and 1 KiB per other metadata string. Serialized UTF-8 bytes are charged incrementally for each primitive, key and punctuation token before containing strings are assembled. JSON depth, node count, key count and IDs are independently bounded.
 
+## Durable workflow
+
+In the staff import page, an active administrator selects an approved Animal mapping under “Import attachment metadata” and starts a scan. Each explicit request reads at most ten records. The original actor can recover saved scans from server history, inspect ordered observations and continue an eligible checkpoint. An uncertain response keeps the same request reference; recovery checks the committed database state before another provider read.
+
+Migration6900 freezes the source site/origin, patient/client membership and Animal snapshot/hash/head version in each run. New claims and page staging revalidate that context. Exact committed-page replay and completed-run recovery preserve historical receipts after the source changes. Page staging locks the relevant source and run state, then checks the lease against the wall clock after lock waits.
+
+The private observation ledger retains every ordinal and its raw/stable digests. Shared snapshots contain only the safe metadata projection, explicitly marked `sanitized_attachment_metadata_v1`. Identical duplicates retain all observations but reuse a stable snapshot; conflicting duplicates reject the whole page. The run reports total observations and globally distinct snapshot versions separately. URL renewal changes observed raw evidence without advancing the stable source head.
+
+Owned administrator RPCs paginate scans and observations. The new ledgers deny direct API reads, and restrictive policies exclude attachments from inherited shared-table reads, including lease fields. Generic snapshot review rejects attachments. Other existing import resources retain their original access behavior. The UI displays stale history, renders source strings as text and offers no download, clinical approval or release action.
+
 ## Remaining gates
 
 The generic `parsePage` and adapter `page` paths explicitly reject attachment resources. Dedicated metadata dispatch requires explicit attachment configuration and an approved Animal mapping; it uses the bounded parser and narrow staging RPCs. Sanitized metadata, immutable raw-record digests and ordered observations remain separate from download capabilities. Generic claim/stage paths cannot bypass this contract. The default read resources remain `contact,animal`, and hosted configuration is unchanged.
@@ -22,6 +32,16 @@ The official [ezyVet Postman collection](https://developers.ezyvet.com/ezyvet-ap
 
 ## Validation
 
-The prior parser-only increment passed481 unit tests, lint, application TypeScript checks and the production build. The22 attachment-specific cases cover parent substitution, unknown-field/URL exclusion, URL-only revision evidence, duplicate observations, effective pagination, Unicode and incremental byte bounds, independent digest verification, and generic-import refusal before provider traffic. All30 existing Edge entrypoints and the standalone parser pass frozen Deno checks; the final serializer change was rechecked with Deno, focused lint and the complete unit suite. No browser UI changed, no provider was called, and no hosted configuration was changed by this increment.
+The prior parser-only increment passed 481 unit tests, lint, application TypeScript checks and the production build. The 22 attachment-specific cases cover parent substitution, unknown-field/URL exclusion, URL-only revision evidence, duplicate observations, effective pagination, Unicode and incremental byte bounds, independent digest verification, and generic-import refusal before provider traffic. All 30 existing Edge entrypoints and the standalone parser pass frozen Deno checks; the final serializer change was rechecked with Deno, focused lint and the complete unit suite. No browser UI changed, no provider was called, and no hosted configuration was changed by that prior parser-only increment.
 
-The metadata workflow increment is pending final integrated acceptance. Record its exact revision and unit, SQL/contention, browser, actual local Auth/PostgREST, frozen Edge and populated upgrade/restore results here after verification. The prior parser-only results above do not establish acceptance of the new database or operator workflow.
+The integrated metadata workflow passed 490 unit tests, lint (one existing Fast Refresh warning), application TypeScript checks, production build and all 30 frozen Deno Edge entrypoints plus the parser. All 256 browser cases passed, including 11 attachment cases. The local browser run used isolated port8089 and temporary test copies replacing only the hardcoded8080 fixture addresses; committed test behavior was preserved.
+
+The [actual HTTP/Auth/PostgREST receipt](../evidence/attachment-metadata-http-local-20260913.json) binds 50 passing checks to the harness, runtime and all 86 migration hashes. It covers lost first/terminal replies, ordered duplicates, URL renewal, source mismatch, stale-parent recovery, actor and current-role isolation, inherited table access restrictions and zero native clinical/billing/Storage/outgoing effects. The generated local project's containers, volumes and private temporary files were removed. This tests the real handler with a loopback synthetic provider and real local Auth/PostgREST; it does not claim a deployed Edge or live-provider acceptance test.
+
+The [SQL and contention receipt](../evidence/attachment-metadata-sql-local-20260913.json) records 2,648 assertions across all 72 SQL files, 162 existing prescription/release harness checks and 105 attachment harness checks. The latter includes 72 per-file SQL checks and 33 setup, race/state and cleanup checks; the targeted default runs 362 SQL assertions and 41 harness checks. The repeated 468 prescription SQL assertions are part of the full total, not additional coverage.
+
+The [populated restore receipt](../evidence/attachment-metadata-restore-local-20260913.json) verifies the actual 51→86 gap upgrade, backup and restoration. Completed and unfinished attachment scans and duplicate observations survive alongside existing Auth, clinical, financial and private Storage fixtures. Canonical comparisons match 483 functions, 255 triggers, 194 relations, 240 policies and six default-privilege entries before and after restore. Owned resources were cleaned up. Five restore-comparison unit tests also pass.
+
+## Branch and deployment coordination
+
+This increment builds on merged PRs124/125 and adds migration6900 to the canonical85-migration baseline. It preserves canonical6300 and6500. Concurrent PR126 targets the alternative PR122 stack and reuses6500 for different SQL; do not combine those migration files with this branch. No hosted migration, function deployment, source-scope change, live provider call or outbound message was performed by this increment.

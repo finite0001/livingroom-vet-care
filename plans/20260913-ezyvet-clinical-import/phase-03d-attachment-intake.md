@@ -1,6 +1,6 @@
 # Phase 3d — Animal-scoped attachment metadata intake
 
-Status: the [bounded metadata parser](../../docs/features/ezyvet-attachment-metadata.md), durable run/page/observation ledgers, dedicated metadata dispatch and operator UI are implemented in this increment, pending final integrated acceptance. Original-file capture remains subsequent work. No hosted source-scope expansion or provider download is enabled. Living Room Vet remains primary and ezyVet access remains read-only.
+Status: the [bounded metadata parser](../../docs/features/ezyvet-attachment-metadata.md), durable run/page/observation ledgers, dedicated metadata dispatch and operator UI are implemented in this increment, verified locally. Original-file capture remains subsequent work. No hosted source-scope expansion or provider download is enabled. Living Room Vet remains primary and ezyVet access remains read-only.
 
 ## Outcome and boundary
 
@@ -14,7 +14,7 @@ Refreshed September 13, 2026 from the public [Attachment operation](https://deve
 
 The official [ezyVet Postman collection](https://developers.ezyvet.com/ezyvet-api.postman_collection.json) documents GET `/v1/attachment/download/:id`, using the attachment ID and bearer authorization. The route can be constructed without following a returned download URL. Redirect behavior, bounded content handling and authorized practice sample acceptance remain to be verified before capture is commissioned. No authorized practice attachment sample has been used; a new private API registration is not implied.
 
-The provider's general pagination parameters have now been refreshed against the [official paging guide](https://developers.ezyvet.com/#paging); the parser uses an application page cap of 10 and validates all four documented cursor fields. It accepts a smaller advertised effective page size within that cap and verifies count/totals arithmetic against that size. No actual practice partial/empty-page sample has been accepted. Network dispatch remains disabled until durable scoped staging exists. Never label the application cap a documented provider maximum; reject oversized or inconsistent pages rather than silently truncating them.
+The provider's general pagination parameters have now been refreshed against the [official paging guide](https://developers.ezyvet.com/#paging); the parser uses an application page cap of 10 and validates all four documented cursor fields. It accepts a smaller advertised effective page size within that cap and verifies count/totals arithmetic against that size. No actual practice partial/empty-page sample has been accepted. Dedicated metadata dispatch is implemented; hosted import mode and source scopes remain unchanged pending commissioning. Never label the application cap a documented provider maximum; reject oversized or inconsistent pages rather than silently truncating them.
 
 ## Parent identity and authorization
 
@@ -42,7 +42,7 @@ Each committed page records run/page identity, request contract fingerprint, obs
 
 Stage the complete validated page and advance its checkpoint in one transaction under a current lease. Exact committed-page replay recovers its receipt; different content under that committed page does not replace it. An uncertain stage response requires receipt/checkpoint recovery before a new provider fetch. Expired leases cannot commit. Rate limits reuse shared provider cooldowns and bounded retry, with no competing scan for the same active scope.
 
-Track separate observed and uniquely staged counts; retain duplicates and changed observations as reconciliation evidence. Completion means the observed pagination ended, not a consistent full export. Never interpret an absent item/page as deletion. Inconsistent page metadata, parent drift, source changes and failed pages leave explicit unresolved status. Failed or interrupted runs remain discoverable and resumable or explicitly abandoned without deleting observations.
+Track separate observed and uniquely staged counts; retain duplicates and changed observations as reconciliation evidence. Completion means the observed pagination ended, not a consistent full export. Never interpret an absent item/page as deletion. Inconsistent page metadata, parent drift, source changes and failed pages leave explicit unresolved status. Failed or interrupted runs remain discoverable without deleting observations. Valid unchanged parent contexts can resume; changed contexts require a new scan.
 
 ## Operator surface
 
@@ -67,4 +67,4 @@ Run relevant unit, SQL, contention, browser and frozen Edge entrypoint checks. K
 
 ## Integrated acceptance evidence
 
-Pending final integration verification. Add the exact integrated revision, SQL/contention, browser, actual local Auth/PostgREST and populated restore results here after they pass. Do not infer hosted deployment, provider sample acceptance or clinical approval from local implementation.
+Locally verified: 490 unit tests, 256 browser cases, 2,648 SQL assertions, existing and attachment contention checks, 50 actual HTTP/Auth/PostgREST checks, frozen Edge checks and a populated51→86 upgrade/restore with matching permissions/RLS and verified cleanup. See the [feature validation and hash-bound receipts](../../docs/features/ezyvet-attachment-metadata.md#validation). No hosted deployment, provider sample acceptance or clinical approval is implied. Original-byte capture remains the next implementation increment.
