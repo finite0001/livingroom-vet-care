@@ -14,6 +14,10 @@ prepare_ezyvet_attachment_capture(p_id uuid,p_animal_link_id uuid,p_run_id uuid,
 recover_ezyvet_attachment_capture(p_id uuid,p_animal_link_id uuid) -> Capture|null.
 list_ezyvet_attachment_captures(p_animal_link_id uuid,p_before_at timestamptz=null,p_before_id uuid=null,p_limit integer=20) -> {captures:Capture[],has_more:boolean,next_cursor:{before_at,before_id}|null}.
 
+Additional recovery RPCs:
+- list_ezyvet_attachment_capture_mappings(p_before_at timestamptz=null,p_before_id uuid=null,p_limit integer=20) -> {mappings:[{link_id,pet_id,patient_name,household_name,source_origin,source_site_uid,external_id,patient_version,last_capture_at}],has_more,next_cursor:{before_at,before_id}|null}. Group only actor-owned captures by frozen mapping; no current household-membership search filter. Order latest request.created_at then mappingID descending. Historical selection opens capture-only recovery, never weakens fresh-import eligibility.
+- abandon_ezyvet_attachment_capture_preparation has the exact eight prepare arguments and returns Capture. Under the same request advisory lock, validate immutable actor-owned observation and expected tuple without currentness. Existing exact request returns actual Capture unchanged. Otherwise insert a full abandoned request/tombstone so a delayed prepare cannot recreate it. UI clears unknown local intent only after abandoned receipt; a concurrently prepared request must use normal fenced discard.
+
 All browser RPCs require active administrator/auth.uid ownership. Exact preparation replay recovers existing owned intent before mutable source eligibility; conflicting input under an existing UUID rejects. New prepare validates immutable run/page/ordinal, expected snapshot/head/stable hash and frozen run parent against current mapping/client/patient/source. Server derives all IDs/metadata; browser supplies no URL, file bytes or claimed byte hash. Cursor pair bothnull/bothvalid, limit1–50.
 
 Capture exact fields:

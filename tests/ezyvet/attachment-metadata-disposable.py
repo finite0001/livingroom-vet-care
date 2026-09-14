@@ -15,13 +15,18 @@ import urllib.request
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
+parser.add_argument('--fixture', choices=['metadata','originals','all'], default='metadata')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
-fixture = ('attachment-metadata-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST')
-harness_path = root / 'tests/ezyvet' / fixture[0]
+fixtures = {
+    'metadata': ('attachment-metadata-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST'),
+    'originals': ('attachment-original-local-roundtrip.ts', 'Attachment original HTTP/Auth/Storage'),
+}
+selected = ['metadata','originals'] if args.fixture == 'all' else [args.fixture]
+harness_paths = [root / 'tests/ezyvet' / fixtures[name][0] for name in selected]
 identity = 'lrv-attachment-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
 work = Path(tempfile.mkdtemp(prefix=identity + '-'))
@@ -31,8 +36,10 @@ log = (work / 'commands.log').open('w')
 started = False
 success = False
 checks = 0
+checks_by_fixture = {}
+harness_hashes = {}
 migration_hashes = {}
-source_paths = [Path(__file__).resolve(), harness_path, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts'))]
+source_paths = [Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts'))]
 source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
 
 def command(argv, **kwargs):
@@ -67,7 +74,8 @@ try:
     assert {'20260913470000', '20260913480000'} <= versions, 'Both source snapshot and byte-binding migrations required'
     assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000', '20260913620000', '20260913650000'} <= versions, 'Prescription intake and clinical review migrations required'
     assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
-    assert len(versions) == 86 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    assert '20260913700000' in versions, 'Canonical original capture migration required'
+    assert len(versions) == 87 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 62421
@@ -105,14 +113,17 @@ enabled = false
             if attempt == 119:
                 raise RuntimeError('Owned Auth/PostgREST/Storage did not become ready')
             time.sleep(1)
-    harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
-    output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
-    assert all(hashlib.sha256((root / path).read_bytes()).hexdigest() == digest for path, digest in source_hashes.items()), 'Source changed during execution; rerun exact source'
-    # Only the harness's fixed aggregate evidence line reaches the terminal.
-    matched = re.fullmatch(re.escape(fixture[1]) + r': ([0-9]+) checks passed\. Synthetic upstream only; no ezyVet requests\.', output.strip())
-    assert matched, 'Refuse unexpected harness output'
-    checks = int(matched[1])
-    print(matched[0], flush=True)
+    for name in selected:
+        harness_path = root / 'tests/ezyvet' / fixtures[name][0]
+        harness_hashes[name] = hashlib.sha256(harness_path.read_bytes()).hexdigest()
+        output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
+        assert all(hashlib.sha256((root / path).read_bytes()).hexdigest() == digest for path, digest in source_hashes.items()), 'Source changed during execution; rerun exact source'
+        # Only each harness's fixed aggregate evidence line reaches the terminal.
+        matched = re.fullmatch(re.escape(fixtures[name][1]) + r': ([0-9]+) checks passed\. Synthetic upstream only; no ezyVet requests\.', output.strip())
+        assert matched, 'Refuse unexpected harness output'
+        checks_by_fixture[name] = int(matched[1])
+        checks += int(matched[1])
+        print(matched[0], flush=True)
     success = True
 finally:
     try:
@@ -125,10 +136,10 @@ finally:
     finally:
         log.close()
 if success:
-    summary = {'synthetic_only': True, 'fixture': 'attachment-metadata', 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+    summary = {'synthetic_only': True, 'fixture': 'attachment-' + args.fixture, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-               'harness_sha256': harness_hash,
+               'harness_sha256': harness_hashes, 'checks_by_fixture': checks_by_fixture,
                'migration_sha256': migration_hashes, 'source_sha256': source_hashes, 'provider_requests': 0}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')

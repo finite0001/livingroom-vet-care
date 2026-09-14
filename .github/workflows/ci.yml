@@ -177,5 +177,5 @@ jobs:
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture clinical-history
-      - name: Verify attachment metadata recovery through disposable HTTP, Auth and PostgREST
-        run: python3 tests/ezyvet/attachment-metadata-disposable.py --run-synthetic-local
+      - name: Verify attachment metadata and original capture through disposable Auth and Storage
+        run: python3 tests/ezyvet/attachment-metadata-disposable.py --run-synthetic-local --fixture all
