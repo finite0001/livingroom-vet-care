@@ -1,0 +1,48 @@
+{
+  "date": "2026-09-14",
+  "scope": "Read-only migration workspace appended to existing ezyVet tools",
+  "source_sha256": {
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "5cbfc78cd7497fc939b389e357ef59e8ad08c7a2c2cd463e1377806e0b9e4cf1",
+    "src/hub/features/imports/EzyVetImportPage.tsx": "a7df22c937c06f66e213111d9dd93b9a25cb7f0d1786e7c559436c9986d98dc2",
+    "e2e/migration-workspace.spec.ts": "168bb7557bf5fceba3eb0a952e64b15378f6829d10f84051fd903ed021dfaee7"
+  },
+  "unit_tests": 558,
+  "lint_typecheck_build_passed": true,
+  "browser_tests": 23,
+  "workspace_browser_tests_after_touch_sizing": 6,
+  "browser_transport": "Synthetic RPC fixtures; no hosted or provider calls",
+  "verified_cases": [
+    "Browse owner server history without browser recovery pointers",
+    "Open exact saved manifest, scope and bound child",
+    "Separate failed counts/items from empty results",
+    "Paginate source evidence and expand immutable references",
+    "Display mapping and source drift without claiming clinical approval or acceptance",
+    "Link saved patient and household using existing routes",
+    "Ignore late item response after scope switch",
+    "Remove pending private state on sign-out",
+    "Hide workspace from non-administrators",
+    "Existing attachment/clinical recovery and navigation guards pass",
+    "390px and 1440px viewports inspected, with no horizontal overflow"
+  ],
+  "screenshots_sha256": {
+    "docs/evidence/migration-workspace-mobile-20260914.png": "d69d33da1b8f978528b043370111157ac4808c47a4998478664d67eb826c3242",
+    "docs/evidence/migration-workspace-desktop-20260914.png": "cbfd890c767ac06eb5d2fe972dd0be08970790ae12c5898417173bf3c44c70b0"
+  },
+  "check_log_sha256": "beedeb69f91563af75057970d0c32dc0496a55cabf96b3866f33d0cdff62b9db",
+  "browser_log_sha256": "bd60805d72cb84e22ab62c52e6f29da5fe35c45dda6b8d1e66e64052a17f10df",
+  "touch_browser_log_sha256": "bf9bf0cb83cf96cfc3b08cd8651d5b90c2f28458c9554288bc157d50c8a863a7",
+  "database_changes": false,
+  "hosted_changes": false,
+  "backend_prerequisite": {
+    "migration_count": 106,
+    "evidence": "canonical-migration-source-items-20260914.json",
+    "sha256": "8a3ce478a3c0e9bd640e57fb3f136b577739201d3273488d2b790ecd69ab95ad"
+  },
+  "remaining": [
+    "Clinical/capture receipt reconciliation and operational resolutions",
+    "Frozen reports and acceptance",
+    "Scope creation, binding and explicit resume UI",
+    "Actual signed-in staff workflow acceptance against matching staging backend",
+    "Mail/provider/clinical commissioning and public cutover"
+  ]
+}

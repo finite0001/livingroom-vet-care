@@ -1,5 +1,7 @@
 # Commercial-readiness evidence tracker
 
+Local migration workspace checkpoint (2026-09-14): the 106-migration candidate now has source-item APIs and an adjacent read-only operator workspace for saved scope, bound attempts and source evidence. This candidate is not deployed. Clinical/capture outcome reconciliation, operational resolutions, frozen reports, creation/binding/resume UI, supervised staff acceptance and external commissioning remain unfinished. The latest hosted backend remains the 99-migration checkpoint below.
+
 Latest staging backend checkpoint (2026-09-14): the canonical99-migration database and10 matching Edge Functions are now deployed and verified against the rehearsed target. [Deployment evidence](evidence/canonical-staging-backend-deployment-20260914.json) records exact source/permission checks and disabled delivery with no staff/patient/outbox data. The matching schema9 protected frontend is now READY at the stable staging alias; Auth reset-origin alignment is now saved and verified; custom Auth SMTP, staff onboarding, clinical/provider acceptance and public cutover remain pending. This supersedes the earlier84-migration backend checkpoint below.
 
 

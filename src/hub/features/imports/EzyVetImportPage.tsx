@@ -1,3 +1,4 @@
+import { EzyVetMigrationRuns } from "./EzyVetMigrationRuns";
 import { EzyVetAttachmentImports } from "./EzyVetAttachmentImports";
 import { EzyVetPrescriptionImports } from "./EzyVetPrescriptionImports";
 import { EzyVetPrescriptionItemImports } from "./EzyVetPrescriptionItemImports";
@@ -908,6 +909,7 @@ export function EzyVetImportPage() {
             </Card>
           )}
         </div>
+        <EzyVetMigrationRuns key={`migration:${session.user.id}`} actor={session.user.id} />
       </div>
     </section>
   );
