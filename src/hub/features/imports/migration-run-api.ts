@@ -20,7 +20,7 @@ const scopeSchema = scopeInput.extend({
   migration_run_id: uuid, mapping_snapshot_id: uuid, mapping_head_version: z.number().int().positive(),
   client_id: uuid, pet_id: uuid.nullable(), parent_external_id: z.string().min(1), parent_payload_hash: hash,
 }).strict();
-const manifestSchema = z.object({ run: runSchema, scopes: z.array(scopeSchema).min(1).max(100) }).strict();
+const manifestSchema = z.object({ run: runSchema, scopes: z.array(scopeSchema).min(1).max(100), scope_manifest_version: z.literal(1), scope_manifest_hash: hash }).strict();
 const descriptor = z.object({
   version: z.literal(1), run_id: uuid, owner: uuid, source_origin: origin, source_site_uid: site, resource,
   parent_evidence: z.enum(["selected_identity_filter", "mapping_identity_only", "exact_parent_version"]),
@@ -31,10 +31,23 @@ const bindingSchema = z.object({
   reason: z.string().min(1).max(2000), child_context: descriptor, context_hash: hash, created_at: date,
 }).strict();
 const cursorSchema = z.object({ before_at: date, before_id: uuid }).strict();
+const count = z.number().int().nonnegative().safe();
+const progressSchema = z.object({
+  version: z.literal(1), binding_id: uuid, scope_id: uuid, migration_run_id: uuid, child_run_id: uuid, resource, context_hash: hash,
+  superseded: z.boolean(), parent_evidence: descriptor.shape.parent_evidence, parent_current: z.boolean(), household_current: z.boolean(),
+  scan: z.object({ status: z.enum(["running", "review_ready", "page_limit_reached"]), next_page: z.number().int().min(1).max(1001), pages_observed: count.max(1000),
+    traversal_ended: z.boolean(), page_limit_reached: z.boolean(), retry_after: date.nullable(), latest_error_code: z.string().regex(/^[A-Z_]{1,64}$/).nullable(),
+    provider_total: z.null(), complete_coverage_verified: z.literal(false) }).strict(),
+  observations: z.object({ occurrences: count, distinct_source_identities: count, distinct_snapshot_versions: count,
+    occurrence_fidelity: z.enum(["page_ordinal", "deduplicated_page_snapshot"]), exact_current_occurrences: count.nullable(), currentness_available: z.boolean() }).strict(),
+  clinical_review: z.object({ reconciled: z.literal(false), approved_local_outcomes: z.null() }).strict(),
+  attempt_history_available: z.literal(false), observed_at: date,
+}).strict();
 export interface MigrationScopeInput extends z.infer<typeof scopeInput> {}
 export interface MigrationManifest extends z.infer<typeof manifestSchema> {}
 export interface MigrationBinding extends z.infer<typeof bindingSchema> {}
 export interface MigrationCursor extends z.infer<typeof cursorSchema> {}
+export interface MigrationProgress extends z.infer<typeof progressSchema> {}
 export interface MigrationRequest { id: string; source_origin: string; source_site_uid: string; scopes: MigrationScopeInput[] }
 export interface MigrationBindingRequest { id: string; scope_id: string; child_run_id: string; reason: string; replaces_id: string | null }
 export interface MigrationRpc {
@@ -63,6 +76,22 @@ export function parseMigrationBinding(value: unknown, actorId: string, scopeId: 
   const result = bindingSchema.parse(value);
   if (result.actor_id !== actorId || result.scope_id !== scopeId || result.child_context.owner !== actorId || result.child_context.run_id !== result.child_run_id)
     throw new Error("Migration binding identity differs");
+  return result;
+}
+export function parseMigrationProgress(value: unknown, manifest: MigrationManifest, binding: MigrationBinding): MigrationProgress {
+  const result = progressSchema.parse(value);
+  const scope = manifest.scopes.find(row => row.id === binding.scope_id);
+  const { scan, observations: observed } = result;
+  if (!scope || result.binding_id !== binding.id || result.scope_id !== scope.id || result.migration_run_id !== manifest.run.id ||
+    result.child_run_id !== binding.child_run_id || result.context_hash !== binding.context_hash || result.resource !== scope.resource || result.resource !== binding.child_context.resource ||
+    binding.child_context.source_origin !== manifest.run.source_origin || binding.child_context.source_site_uid !== manifest.run.source_site_uid ||
+    result.parent_evidence !== binding.child_context.parent_evidence || scan.traversal_ended !== (scan.status === "review_ready") ||
+    scan.page_limit_reached !== (scan.status === "page_limit_reached") || observed.distinct_source_identities > observed.distinct_snapshot_versions ||
+    observed.distinct_snapshot_versions > observed.occurrences || observed.exact_current_occurrences > observed.occurrences ||
+    observed.currentness_available !== !["contact", "animal", "healthstatus"].includes(result.resource) ||
+    observed.currentness_available !== (observed.exact_current_occurrences !== null) ||
+    observed.occurrence_fidelity !== (result.resource === "attachment" ? "page_ordinal" : "deduplicated_page_snapshot"))
+    throw new Error("Migration progress scope or counts differ");
   return result;
 }
 function pageArguments(cursor: MigrationCursor | null, limit: number) {
@@ -129,6 +158,13 @@ export function createMigrationRunApi(client: MigrationRpc, actorId: string) {
       const page = z.object({ bindings: z.array(bindingSchema).max(100), has_more: z.boolean() }).strict().parse(await rpc("list_ezyvet_migration_bindings", { p_scope_id: scopeId, ...pageArguments(cursor, limit) }));
       const bindings = page.bindings.map(value => parseMigrationBinding(value, actorId, scopeId));
       return { ...page, bindings, next_cursor: verifyPage(bindings, page.has_more, cursor, limit) };
+    },
+    async progress(manifest: MigrationManifest, binding: MigrationBinding) {
+      const saved = parseMigrationManifest(manifest, actorId, manifest.run.id);
+      const membership = parseMigrationBinding(binding, actorId, binding.scope_id);
+      if (!saved.scopes.some(scope => scope.id === membership.scope_id)) throw new Error("Binding belongs to another migration");
+      const value = await rpc("read_ezyvet_migration_binding_progress", { p_id: membership.id });
+      return value === null ? null : parseMigrationProgress(value, saved, membership);
     },
   };
 }

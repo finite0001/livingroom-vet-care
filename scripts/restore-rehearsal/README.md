@@ -104,3 +104,5 @@ The [prescription/API composition receipt](../../docs/evidence/canonical-prescri
 The local migration-manifest candidate reaches100 migrations. Its populated fixture adds one immutable manifest with three Animal/Consult/Prescription parent scopes through the create RPC. Both manifest tables participate in exact before/after restore comparisons. The [foundation receipt](../../docs/evidence/canonical-migration-manifest-foundation-20260914.json) records the passing84→100 rehearsal. Child binding, manifest Auth transport and hosted rollout remain pending.
 
 The child-binding candidate reaches101 migrations. The same fixture now binds its existing attachment and vaccination child runs to the saved scopes; binding rows participate in the exact restore comparison. No provider calls or child claims occur inside a binding.
+
+The scan-progress candidate reaches102 migrations. The rehearsal also saves the actual owned manifest and binding recovery responses before backup, then compares them after restoration. This explicitly verifies the versioned resolved-scope digest, rather than inferring API recovery from table parity alone.

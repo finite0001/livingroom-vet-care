@@ -64,6 +64,12 @@ select is(bind_ezyvet_migration_child(binding,scope,child,'Explicit resource att
 select is(read_ezyvet_migration_binding(binding)#>>'{child_context,parent_evidence}',
  case when resource in ('contact','animal') then 'selected_identity_filter' when resource in ('attachment','vaccination','prescriptionitem') then 'exact_parent_version' else 'mapping_identity_only' end,
  resource||' declares its actual source fidelity') from adapters;
+select is(read_ezyvet_migration_binding_progress(binding)#>>'{observations,occurrences}',
+ case when resource='attachment' then '2' when resource in ('animal','contact','consult','prescription') then '1' else '0' end,
+ resource||' reports observed records from its canonical ledger') from adapters;
+select is(read_ezyvet_migration_binding_progress(binding)#>>'{observations,currentness_available}',
+ case when resource in ('animal','contact','healthstatus') then 'false' else 'true' end,
+ resource||' does not invent missing observed head versions') from adapters;
 reset role;
 select is((select count(*)::integer from ezyvet_migration_bindings),9,'All supported resource families have a binding');
 select is((select jsonb_agg(to_jsonb(r) order by id) from ezyvet_import_runs r),(select v from data where k='adapter-children'),'All resource bindings leave child state unchanged');

@@ -109,7 +109,7 @@ try:
     for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
         sql('begin;'+migration.read_text()+'commit;')
     regressions=0
-    targeted=['ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    targeted=['ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
@@ -168,6 +168,10 @@ try:
     finally:
         sql(f"update profiles set is_active=true where id='{actor}';")
     check(scalar('select jsonb_agg(to_jsonb(r) order by id)::text from ezyvet_import_runs r;')==children_before,'Binding contention does not mutate child runs')
+    try:
+        contended('lock table ezyvet_attachment_page_observations in access exclusive mode;',staff+f"select read_ezyvet_migration_binding_progress('{binding_id}');",lambda code,out,err:code!=0 and 'Active administrator required' in err,during_wait=lambda:sql(f"update profiles set is_active=false where id='{actor}';"))
+    finally:
+        sql(f"update profiles set is_active=true where id='{actor}';")
     def prepare(rid):
         return f"select prepare_ezyvet_attachment_capture('{rid}','{fx['mapping']}','{fx['run']}',1,1,'{fx['attachment-snapshot']}',1,repeat('b',64));"
     def fresh():

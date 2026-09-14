@@ -38,13 +38,13 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,15)]
+new_versions = [f'20260914{v:02d}0000' for v in range(1,16)]
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 101
+    assert len(migration_files) == 102
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==101 and len(initial_files)==51
+    assert len(migration_files)==102 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -190,6 +190,17 @@ def vaccination_snapshot(project):
               'release_email_requests','release_email_payloads','document_link_grants','document_link_payloads','document_link_events','document_link_access_budget','sms_consent','conversations']
     parts = [f"select '{table}' name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) rows from public.{table} t" for table in tables]
     return json.loads(sql(project, 'select jsonb_object_agg(name,rows) from (' + ' union all '.join(parts) + ') records;'))
+
+def migration_recovery_snapshot(project):
+    actor=str(uuid.UUID(json.loads((run/'synthetic-fixture.json').read_text())['user']))
+    # Temporary fixture role is rolled back with the reads; no restored audit rows change.
+    return json.loads(sql(project,f"""begin;
+      insert into public.user_roles(user_id,role) values('{actor}','ADMIN') on conflict do nothing;
+      do $$begin perform set_config('request.jwt.claim.sub','{actor}',true);end $$;
+      select jsonb_build_object(
+        'manifests',(select jsonb_agg(public.read_ezyvet_migration_run(id) order by id) from public.ezyvet_migration_runs),
+        'bindings',(select jsonb_agg(public.read_ezyvet_migration_binding(id) order by id) from public.ezyvet_migration_bindings));
+      rollback;"""))
 
 def seed_vaccination_receipt(project):
     # This explicitly owned local fixture uses the same scoped RPCs as runtime acceptance.
@@ -352,6 +363,7 @@ try:
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-originals',str(source['path']/'status.json'),str(run)])
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-release-packages',str(source['path']/'status.json'),str(run)])
             (run/'vaccination-receipt-fixture.json').write_text(json.dumps(vaccination_snapshot(source),sort_keys=True))
+            (run/'migration-recovery-fixture.json').write_text(json.dumps(migration_recovery_snapshot(source),sort_keys=True))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
         command(['docker','stop',*services(source)])
@@ -422,6 +434,7 @@ try:
             time.sleep(1)
     if (run/'vaccination-receipt-fixture.json').exists():
         assert vaccination_snapshot(destination)==json.loads((run/'vaccination-receipt-fixture.json').read_text()), 'Restored source, decision and delivery rows must match before verification reads'
+        assert migration_recovery_snapshot(destination)==json.loads((run/'migration-recovery-fixture.json').read_text()), 'Restored manifest digest and owned binding recovery differ'
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
     if verify_canonical:
         assert functions_snapshot(destination)==canonical_inventory, 'Restored backfilled routines/grants/triggers differ from canonical order'

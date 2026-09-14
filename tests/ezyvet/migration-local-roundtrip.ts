@@ -64,6 +64,7 @@ const uncertain = createMigrationRunApi({ async rpc(name, args) {
 await assert.rejects(() => uncertain.prepare(manifestRequest), /Simulated reply loss/); checks++;
 const saved = await api.read(manifestRequest.id);
 check(saved?.run.actor_id === owner.id && saved.scopes[0].pet_id === pet, "Actual HTTP recovery binds owner and patient");
+check(saved.scope_manifest_version === 1 && /^[a-f0-9]{64}$/.test(saved.scope_manifest_hash), "Resolved scope has a versioned digest over HTTP");
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 check((await api.list()).runs.some(row => row.id === manifestRequest.id), "Server list restores lost browser pointer");
 check(await otherApi.read(manifestRequest.id) === null, "Other actual signed-in administrator cannot read manifest");
@@ -76,6 +77,10 @@ const bindingRequest: MigrationBindingRequest = { id: randomUUID(), scope_id: ma
 await assert.rejects(() => uncertain.bind(bindingRequest), /Simulated reply loss/); checks++;
 const bound = await api.readBinding(bindingRequest.id, bindingRequest.scope_id);
 check(bound?.child_run_id === child && bound.child_context.parent_evidence === "exact_parent_version", "Lost binding reply recovers exact child context");
+const initialProgress = await api.progress(saved, bound);
+check(initialProgress?.observations.occurrences === 0 && initialProgress.scan.status === "running" && !initialProgress.scan.traversal_ended, "Unfetched child is not completed coverage");
+check(initialProgress.scan.provider_total === null && !initialProgress.scan.complete_coverage_verified && initialProgress.clinical_review.approved_local_outcomes === null, "HTTP progress preserves unknown totals and review outcomes");
+check(initialProgress.parent_current && initialProgress.household_current, "Saved exact context is currently valid");
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
 check((await api.listBindings(bindingRequest.scope_id)).bindings[0].id === bindingRequest.id, "Binding discovery uses real owner API");
 check(await otherApi.readBinding(bindingRequest.id, bindingRequest.scope_id) === null, "Other administrator cannot recover binding");
@@ -100,6 +105,7 @@ for (const auth of [headers(local.ANON_KEY), service]) {
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
+check(!(await api.progress(saved, bound)).parent_current, "HTTP progress exposes source drift without changing saved digest");
 await assert.rejects(() => api.prepare({ ...manifestRequest, id: randomUUID(), scopes: manifestRequest.scopes.map(scope => ({ ...scope, id: randomUUID() })) })); checks++;
 assert.throws(() => parseMigrationManifest({ ...saved, run: { ...saved!.run, actor_id: other.id } }, owner.id, manifestRequest.id)); checks++;
 assert.throws(() => parseMigrationManifest({ ...saved, scopes: [] }, owner.id, manifestRequest.id)); checks++;
@@ -112,5 +118,6 @@ await assert.rejects(() => api.list()); checks++;
 await assert.rejects(() => api.bind(bindingRequest)); checks++;
 await assert.rejects(() => api.readBinding(bindingRequest.id, bindingRequest.scope_id)); checks++;
 await assert.rejects(() => api.listBindings(bindingRequest.scope_id)); checks++;
+await assert.rejects(() => api.progress(saved, bound)); checks++;
 check(effects() === beforeEffects, "Migration operations cause no clinical, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);
