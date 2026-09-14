@@ -1,3 +1,5 @@
+import { listCaptureMappings } from "./attachment-capture-api";
+import type { CaptureCursor } from "./attachment-capture-state";
 import { AttachmentOriginalCapture } from "./AttachmentOriginalCapture";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +29,15 @@ function AttachmentSelector({ actor, onDirtyChange }: Props) {
   const [search, setSearch] = useState("");
   const [mapping, setMapping] = useState<AttachmentMapping | null>(null);
   const [locked, setLocked] = useState(false);
+  const [historyOnly, setHistoryOnly] = useState(false);
+  const [historyCursor, setHistoryCursor] = useState<CaptureCursor | null>(
+    null,
+  );
+  const historical = useQuery({
+    queryKey: ["attachment-capture-mappings", actor, historyCursor],
+    queryFn: () => listCaptureMappings(historyCursor),
+    retry: false,
+  });
   useEffect(() => {
     onDirtyChange(locked);
   }, [locked, onDirtyChange]);
@@ -63,7 +74,8 @@ function AttachmentSelector({ actor, onDirtyChange }: Props) {
             key={m.link_id}
             variant="outline"
             disabled={locked}
-            onClick={() =>
+            onClick={() => {
+              setHistoryOnly(false);
               setMapping({
                 ...m,
                 link_id: m.link_id!,
@@ -74,14 +86,88 @@ function AttachmentSelector({ actor, onDirtyChange }: Props) {
                 source_site_uid: m.source_site_uid!,
                 external_id: m.external_id!,
                 patient_version: m.patient_version!,
-              })
-            }
+              });
+            }}
           >
             {m.patient_name} · {m.household_name} · {m.source_site_uid}
           </Button>
         ))}
       </div>
-      {mapping && (
+      <section
+        aria-label="Historical original capture patients"
+        className="space-y-2"
+      >
+        <h3 className="font-semibold">
+          Recover your earlier original captures
+        </h3>
+        <p>
+          Owned capture history remains available when a patient’s household
+          mapping changes.
+        </p>
+        {historical.isError && (
+          <p role="alert">Historical capture patients unavailable.</p>
+        )}
+        {historical.data?.mappings.map((m) => (
+          <Button
+            key={m.link_id}
+            variant="outline"
+            disabled={locked}
+            onClick={() => {
+              setHistoryOnly(true);
+              setMapping(m);
+            }}
+          >
+            Earlier captures: {m.patient_name} · {m.household_name} ·{" "}
+            {m.source_site_uid}
+          </Button>
+        ))}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            disabled={locked}
+            onClick={() => void historical.refetch()}
+          >
+            Refresh historical capture patients
+          </Button>
+          <Button
+            variant="outline"
+            disabled={locked || !historyCursor}
+            onClick={() => setHistoryCursor(null)}
+          >
+            Newest capture patients
+          </Button>
+          <Button
+            variant="outline"
+            disabled={locked || !historical.data?.next_cursor}
+            onClick={() => setHistoryCursor(historical.data!.next_cursor)}
+          >
+            Older capture patients
+          </Button>
+        </div>
+      </section>
+      {mapping && historyOnly && (
+        <div
+          key={`historical:${actor}:${mapping.link_id}`}
+          className="space-y-2"
+        >
+          <p>
+            Historical capture patient: {mapping.patient_name} ·{" "}
+            {mapping.household_name}
+          </p>
+          <p className="break-all text-sm">
+            {mapping.source_origin} · {mapping.source_site_uid} · source animal{" "}
+            {mapping.external_id}
+          </p>
+          <AttachmentOriginalCapture
+            actor={actor}
+            mapping={mapping}
+            observations={[]}
+            disabled={false}
+            onDirtyChange={setLocked}
+          />
+        </div>
+      )}
+      {mapping && !historyOnly && (
         <AttachmentPatient
           key={`${actor}:${mapping.link_id}:${mapping.source_origin}:${mapping.source_site_uid}`}
           actor={actor}

@@ -14,6 +14,7 @@ import type {
 } from "./attachment-capture-state";
 import {
   prepareCapture,
+  abandonCapturePreparation,
   recoverCapture,
   listCaptures,
   captureAction,
@@ -150,6 +151,22 @@ export function AttachmentOriginalCapture({
     );
     await history.refetch();
     return saved;
+  }
+  async function abandonUnsaved() {
+    const p = intentRef.current;
+    if (!p || !confirmDiscard || capture) return;
+    setUncertain(true);
+    const result = await abandonCapturePreparation(p, actor, mapping);
+    if (!alive.current) return;
+    setCapture(result);
+    setUncertain(false);
+    setConfirmDiscard(false);
+    setNotice(
+      result.status === "abandoned"
+        ? "Unsaved request abandoned on the server. A delayed preparation cannot restart it."
+        : "The original request was saved concurrently. Review its actual state; unfinished saved captures require explicit discard.",
+    );
+    await history.refetch();
   }
   async function advance() {
     let p = intentRef.current;
@@ -302,6 +319,27 @@ export function AttachmentOriginalCapture({
       </div>
       {intent && (
         <p className="break-all text-xs">Capture request: {intent.p_id}</p>
+      )}
+      {intent && uncertain && !capture && (
+        <div className="space-y-2 rounded border p-3">
+          <label className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              checked={confirmDiscard}
+              disabled={frozen}
+              onChange={(e) => setConfirmDiscard(e.target.checked)}
+            />
+            Abandon this unsaved request on the server before choosing another
+            original.
+          </label>
+          <Button
+            variant="outline"
+            disabled={frozen || !confirmDiscard}
+            onClick={() => void work(abandonUnsaved)}
+          >
+            Discard unsaved capture request
+          </Button>
+        </div>
       )}
       {capture && (
         <article className="space-y-2 rounded border p-3">

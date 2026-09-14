@@ -240,6 +240,10 @@ async function fixture(page: Page, mime = "application/pdf") {
     tamper: false,
     more: false,
     holdReserved: false,
+    rejectPrepare: false,
+    historicalOnly: false,
+    racePrepare: false,
+    loseAbandon: false,
   };
   function capture(id: unknown) {
     return {
@@ -307,6 +311,30 @@ async function fixture(page: Page, mime = "application/pdf") {
         route.request().method() === "POST"
           ? route.request().postDataJSON()
           : {};
+    if (path.endsWith("search_ezyvet_mapped_patients") && state.historicalOnly)
+      return route.fulfill({ json: [] });
+    if (path.endsWith("list_ezyvet_attachment_capture_mappings"))
+      return route.fulfill({
+        json: {
+          mappings: state.historicalOnly
+            ? [
+                {
+                  link_id: link,
+                  pet_id: pet,
+                  patient_name: "Synthetic Juniper",
+                  household_name: "Original household",
+                  source_origin: "https://api.trial.ezyvet.com",
+                  source_site_uid: "synthetic-site",
+                  external_id: "22",
+                  patient_version: 2,
+                  last_capture_at: at,
+                },
+              ]
+            : [],
+          has_more: false,
+          next_cursor: null,
+        },
+      });
     if (path.endsWith("list_ezyvet_attachment_captures")) {
       state.calls.push({ path, ...body });
       return route.fulfill({
@@ -329,8 +357,32 @@ async function fixture(page: Page, mime = "application/pdf") {
         json: c ? { ...c, requested_by: state.wrong ? client : actor } : null,
       });
     }
+    if (path.endsWith("abandon_ezyvet_attachment_capture_preparation")) {
+      state.calls.push({ path, ...body });
+      let c = state.captures.find((c) => c.id === body.p_id);
+      if (!c) {
+        c = {
+          ...capture(body.p_id),
+          run_id: body.p_run_id,
+          page: body.p_page,
+          ordinal: body.p_ordinal,
+          snapshot_id: body.p_snapshot_id,
+          observed_head_version: body.p_observed_head_version,
+          stable_metadata_sha256: body.p_stable_metadata_sha256,
+          status: state.racePrepare ? "prepared" : "abandoned",
+          retryable: state.racePrepare,
+        };
+        state.captures = [c];
+      }
+      if (state.loseAbandon) return route.abort();
+      return route.fulfill({ json: c });
+    }
     if (path.endsWith("prepare_ezyvet_attachment_capture")) {
       state.calls.push({ path, ...body });
+      if (state.rejectPrepare)
+        return route.fulfill({ status: 409, json: { message: "stale" } });
+      const existing = state.captures.find((c) => c.id === body.p_id);
+      if (existing) return route.fulfill({ json: existing });
       const c = {
         ...capture(body.p_id),
         run_id: body.p_run_id,
@@ -642,4 +694,112 @@ test("late original download after signout cannot create a download", async ({
   );
   await expect(page).toHaveURL(/login/);
   expect(downloads).toBe(0);
+});
+
+test("historical capture mapping survives household move without enabling new metadata scans", async ({
+  page,
+}) => {
+  const { state, capture, receipt } = await fixture(page);
+  state.historicalOnly = true;
+  state.captures = [
+    {
+      ...capture(savedId),
+      status: "ready",
+      retryable: false,
+      source_current: false,
+      capture: receipt(savedId),
+    },
+  ];
+  await page.goto("/hub/tools/ezyvet");
+  const metadata = page.getByRole("region", {
+    name: "Attachment metadata import",
+    exact: true,
+  });
+  await metadata.getByLabel("Find attachment patient").fill("Juniper");
+  await expect(
+    metadata.getByText("No approved patient mappings found."),
+  ).toBeVisible();
+  await metadata
+    .getByRole("button", {
+      name: "Earlier captures: Synthetic Juniper · Original household · synthetic-site",
+      exact: true,
+    })
+    .click();
+  const panel = metadata.getByRole("region", {
+    name: "Original attachment capture",
+    exact: true,
+  });
+  await panel
+    .getByRole("button", { name: "Recover original 66666666" })
+    .click();
+  await expect(
+    panel.getByRole("button", { name: "Download verified original" }),
+  ).toBeEnabled();
+  await expect(
+    metadata.getByRole("button", { name: "Start attachment metadata scan" }),
+  ).toHaveCount(0);
+});
+test("stale unsaved preparation can be tombstoned before local request is cleared", async ({
+  page,
+}) => {
+  const { state } = await fixture(page);
+  state.rejectPrepare = true;
+  state.loseAbandon = true;
+  const panel = await openCapture(page);
+  await panel
+    .getByRole("button", { name: "Capture selected original", exact: true })
+    .click();
+  await expect(panel.getByRole("alert")).toBeVisible();
+  await panel.getByRole("checkbox").check();
+  await panel
+    .getByRole("button", {
+      name: "Discard unsaved capture request",
+      exact: true,
+    })
+    .click();
+  await panel
+    .getByRole("button", { name: "Recheck original capture", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("heading", { name: "Unfinished capture discarded" }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Choose another original", exact: true })
+    .click();
+  await expect(panel.getByText(/Capture request:/)).toHaveCount(0);
+  expect(state.calls.filter((c) => c.action === "capture")).toHaveLength(0);
+  expect(state.captures[0].status).toBe("abandoned");
+});
+test("concurrent preparation during abandonment requires actual unfinished discard", async ({
+  page,
+}) => {
+  const { state } = await fixture(page);
+  state.rejectPrepare = true;
+  state.racePrepare = true;
+  const panel = await openCapture(page);
+  await panel
+    .getByRole("button", { name: "Capture selected original", exact: true })
+    .click();
+  await expect(panel.getByRole("alert")).toBeVisible();
+  await panel.getByRole("checkbox").check();
+  await panel
+    .getByRole("button", {
+      name: "Discard unsaved capture request",
+      exact: true,
+    })
+    .click();
+  await expect(
+    panel.getByRole("heading", { name: "Queued", exact: true }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "Choose another original", exact: true }),
+  ).toBeDisabled();
+  await panel.getByRole("checkbox").check();
+  await panel
+    .getByRole("button", { name: "Discard unfinished capture", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("heading", { name: "Unfinished capture discarded" }),
+  ).toBeVisible();
+  expect(state.calls.filter((c) => c.action === "discard")).toHaveLength(1);
 });

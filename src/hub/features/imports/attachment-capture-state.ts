@@ -219,3 +219,39 @@ export function capturePage(
     throw new Error("Capture cursor differs");
   return { ...page, captures };
 }
+const historicalMappingSchema = z
+  .object({
+    link_id: uuid,
+    pet_id: uuid,
+    patient_name: z.string(),
+    household_name: z.string(),
+    source_origin: z.string().url(),
+    source_site_uid: z.string(),
+    external_id: sourceId,
+    patient_version: z.number().int().positive(),
+    last_capture_at: date,
+  })
+  .strict();
+export interface HistoricalCaptureMapping extends Required<
+  z.infer<typeof historicalMappingSchema>
+> {}
+export function captureMappingPage(value: unknown) {
+  const page = z
+    .object({
+      mappings: z.array(historicalMappingSchema).max(20),
+      has_more: z.boolean(),
+      next_cursor: captureCursorSchema.nullable(),
+    })
+    .strict()
+    .parse(value);
+  const last = page.mappings.at(-1);
+  if (
+    page.has_more !== !!page.next_cursor ||
+    (page.next_cursor &&
+      (!last ||
+        last.link_id !== page.next_cursor.before_id ||
+        last.last_capture_at !== page.next_cursor.before_at))
+  )
+    throw new Error("Capture mapping pagination differs");
+  return { ...page, mappings: page.mappings as HistoricalCaptureMapping[] };
+}

@@ -6,6 +6,7 @@ import {
   intentOf,
   canAdvanceCapture,
   captureIntentSchema,
+  captureMappingPage,
 } from "../../src/hub/features/imports/attachment-capture-state.ts";
 const actor = "11111111-1111-4111-8111-111111111111",
   id = "22222222-2222-4222-8222-222222222222",
@@ -178,5 +179,36 @@ test("history cursor must identify final returned request", () => {
       actor,
       mapping,
     ),
+  );
+});
+
+test("historical mapping cursor binds last owned mapping and excludes capability fields", () => {
+  const m = {
+    ...mapping,
+    patient_name: "Synthetic",
+    household_name: "Original household",
+    patient_version: 2,
+    last_capture_at: "2026-09-13T12:00:00Z",
+  };
+  const page = {
+    mappings: [m],
+    has_more: true,
+    next_cursor: { before_at: m.last_capture_at, before_id: link },
+  };
+  assert.equal(
+    captureMappingPage(page).mappings[0].household_name,
+    "Original household",
+  );
+  assert.throws(() =>
+    captureMappingPage({
+      ...page,
+      next_cursor: { ...page.next_cursor, before_id: id },
+    }),
+  );
+  assert.throws(() =>
+    captureMappingPage({
+      ...page,
+      mappings: [{ ...m, object_path: "private" }],
+    }),
   );
 });

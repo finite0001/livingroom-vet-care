@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { matchesDocumentSignature } from "../documents/file-validation";
 import {
   captureIntentSchema,
+  captureMappingPage,
   capturePage,
   validateCapture,
 } from "./attachment-capture-state";
@@ -134,4 +135,27 @@ export async function retrieveCapture(c: OriginalCapture): Promise<Blob> {
   )
     throw new Error("Original file verification failed");
   return new Blob([bytes], { type: c.capture.mime_type });
+}
+export async function abandonCapturePreparation(
+  intent: CaptureIntent,
+  actor: string,
+  mapping: CaptureScope,
+) {
+  return validateCapture(
+    await rpc("abandon_ezyvet_attachment_capture_preparation", {
+      ...captureIntentSchema.parse(intent),
+    }),
+    actor,
+    mapping,
+    intent,
+  );
+}
+export async function listCaptureMappings(cursor: CaptureCursor | null) {
+  return captureMappingPage(
+    await rpc("list_ezyvet_attachment_capture_mappings", {
+      p_before_at: cursor?.before_at ?? null,
+      p_before_id: cursor?.before_id ?? null,
+      p_limit: 20,
+    }),
+  );
 }
