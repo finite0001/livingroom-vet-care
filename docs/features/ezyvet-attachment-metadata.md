@@ -1,6 +1,6 @@
 # ezyVet attachment metadata contract
 
-This pure parser is the first contract increment for Animal-scoped attachment discovery. It is not wired to the importer, introduces no database or Storage writes, and cannot fetch files. Metadata discovery is not migration completion or clinical approval.
+Animal-scoped attachment discovery now includes the bounded metadata parser, durable actor/mapping-bound runs and ordered observations, dedicated importer dispatch and an administrator recovery interface. These components are implemented in this increment, pending final integrated acceptance. The workflow cannot fetch files or create Storage objects. Metadata discovery is not migration completion or clinical approval.
 
 ## Primary contract verification
 
@@ -16,10 +16,12 @@ The raw-record digest hashes canonical JSON of the observed attachment record, i
 
 ## Remaining gates
 
-The generic `parsePage` and adapter `page` paths explicitly reject attachment resources. Even an accidental future type/allowlist expansion cannot feed these download capabilities into the generic snapshot ledger. Boundary tests verify rejection before OAuth/provider traffic; configuration still rejects `attachment` until durable scoped intake is implemented. CI checks this currently disconnected parser under both Node tests and the frozen Deno toolchain.
+The generic `parsePage` and adapter `page` paths explicitly reject attachment resources. Dedicated metadata dispatch requires explicit attachment configuration and an approved Animal mapping; it uses the bounded parser and narrow staging RPCs. Sanitized metadata, immutable raw-record digests and ordered observations remain separate from download capabilities. Generic claim/stage paths cannot bypass this contract. The default read resources remain `contact,animal`, and hosted configuration is unchanged.
 
-The runtime resource allowlist and dispatch remain unchanged. Durable actor/mapping-bound runs, leases, atomic staging/recovery and private ledgers are next. File download authentication, permitted destinations/redirects and byte limits still need a verified contract. Actual capture must compute a byte checksum and retain distinct API provenance; metadata hashes cannot stand in for originals. Staff review, release integration, source acceptance and commissioning remain separate gates.
+The official [ezyVet Postman collection](https://developers.ezyvet.com/ezyvet-api.postman_collection.json) documents GET `/v1/attachment/download/:id` with the attachment ID and bearer authorization. Original-byte transport remains subsequent work: permitted redirect behavior, bounded content handling and authorized source samples need acceptance before commissioning. Actual capture must compute a byte checksum and retain distinct API provenance; metadata hashes cannot stand in for originals. Staff review, release integration, source acceptance and commissioning remain separate gates.
 
 ## Validation
 
-The integrated branch passes481 unit tests, lint, application TypeScript checks and the production build. The22 attachment-specific cases cover parent substitution, unknown-field/URL exclusion, URL-only revision evidence, duplicate observations, effective pagination, Unicode and incremental byte bounds, independent digest verification, and generic-import refusal before provider traffic. All30 existing Edge entrypoints and the standalone parser pass frozen Deno checks; the final serializer change was rechecked with Deno, focused lint and the complete unit suite. No browser UI changed, no provider was called, and no hosted configuration was changed by this increment.
+The prior parser-only increment passed481 unit tests, lint, application TypeScript checks and the production build. The22 attachment-specific cases cover parent substitution, unknown-field/URL exclusion, URL-only revision evidence, duplicate observations, effective pagination, Unicode and incremental byte bounds, independent digest verification, and generic-import refusal before provider traffic. All30 existing Edge entrypoints and the standalone parser pass frozen Deno checks; the final serializer change was rechecked with Deno, focused lint and the complete unit suite. No browser UI changed, no provider was called, and no hosted configuration was changed by this increment.
+
+The metadata workflow increment is pending final integrated acceptance. Record its exact revision and unit, SQL/contention, browser, actual local Auth/PostgREST, frozen Edge and populated upgrade/restore results here after verification. The prior parser-only results above do not establish acceptance of the new database or operator workflow.
