@@ -1,3 +1,6 @@
+import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
+import { buildReleaseEmailPayload } from "../../supabase/functions/_shared/release-email-payload.ts";
+import { renderRecordRelease } from "../../supabase/functions/_shared/record-release-renderer.ts";
 /** Original capture through real local HTTP, Auth and private Storage; synthetic source only. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
@@ -133,7 +136,7 @@ try {
         p_first_name: "Synthetic",
         p_last_name: "Attachment source",
         p_primary_phone: null,
-        p_primary_email: null,
+        p_primary_email: "attachment-owner@example.test",
         p_preferred_channel: "EMAIL",
         p_mailing_address: null,
         p_housecall_address: null,
@@ -392,6 +395,59 @@ try {
   check(parseAttachmentDecisionOutcome(recoveredDecision,decision,parsedCapture)?.record?.record_hash===approved.record_hash,"Actual lost approval reply recovers exact immutable record");
   const corrected=await rpc("approve_ezyvet_attachment_record",approvalArgs(correctionId,reviewId),true);
   check(corrected.version===2&&corrected.previous_record_id===reviewId,"Actual correction preserves predecessor");
+  // Actual API-only release: no clinical sending, only owned fixture acceptance.
+  const releaseSelection={api_attachment_ids:[correctionId]};
+  const releasePreview=await rpc("preview_record_release_v9",{p_pet_id:pet,p_client_id:client,p_channel:"EMAIL",p_recipient:"attachment-owner@example.test",p_selection:releaseSelection},true);
+  check(renderRecordRelease({preview:releasePreview}).includes("Selected ezyVet API originals"),"Actual canonical SQL preview passes production shared renderer");
+  check(releasePreview.snapshot.attachments[0].content_sha256===ready.capture.content_sha256,"Actual preview binds physical capture checksum");
+  const releaseId=randomUUID(),conversationId=randomUUID(),emailRequestId=randomUUID();
+  const confirmArgs={p_id:releaseId,p_pet_id:pet,p_client_id:client,p_channel:"EMAIL",p_recipient:"attachment-owner@example.test",p_selection:releaseSelection,p_reviewed_snapshot:releasePreview.snapshot,p_reviewed_hash:releasePreview.source_hash,p_attest_review:true};
+  await assert.rejects(rpc("confirm_record_release",confirmArgs,true),(e:{code:string})=>e.code==="42501");assertions++;
+  sql("insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic local reviewer',now(),'LOCAL TEST ONLY',9);");
+  const confirmedRelease=await rpc("confirm_record_release",confirmArgs,true);
+  check(confirmedRelease.source_hash===releasePreview.source_hash,"Actual release confirms exact reviewed hash");
+  sql(`insert into conversations(id,client_id) values(${quote(conversationId)},${quote(client)});`);
+  const releaseEmailArgs={p_request_id:emailRequestId,p_release_id:releaseId,p_conversation_id:conversationId,p_subject:"Synthetic original release",p_body:"Local acceptance only",p_release_hash:releasePreview.source_hash};
+  let releaseReads=0,losePayloadReply=true;
+  const releaseDownload=async(bucket:string,path:string,expectedSize:number)=>{
+    releaseReads++;
+    const url=local.API_URL+"/storage/v1/object/authenticated/"+encodeURIComponent(bucket)+"/"+path.split('/').map(encodeURIComponent).join('/');
+    const response=await storageFetch(url,{headers:{...serviceHeaders,"Accept-Encoding":"identity"}});
+    assert.ok(response.ok,"Physical release Storage read succeeded");
+    const bytes=new Uint8Array(await response.arrayBuffer());assert.equal(bytes.length,expectedSize);return bytes;
+  };
+  const releaseDb=(staff:boolean)=>({rpc:async(name:string,args:Record<string,unknown>)=>{
+    try{const data=await rpc(name,args,staff);
+      if(!staff&&name==="capture_release_email_payload"&&losePayloadReply){losePayloadReply=false;return {data:null,error:new Error("Lost committed payload reply")};}
+      return {data,error:null};
+    }catch(error){return {data:null,error};}
+  }});
+  const emailHandler=createPrepareReleaseEmailHandler({authenticate:async(token)=>{
+    const response=await fetch(local.API_URL+"/auth/v1/user",{headers:{apikey:local.ANON_KEY,Authorization:`Bearer ${token}`}});
+    if(!response.ok)return null;const user=await response.json();return user.id===actor?{actorId:user.id,db:releaseDb(true)}:null;
+  },service:releaseDb(false),download:releaseDownload,sender:{from:"care@example.test",replyTo:"care@example.test"}});
+  const emailEndpoint=await serve(async(req,res)=>{
+    try{let body="";for await(const chunk of req)body+=chunk;
+      const response=await emailHandler(new Request("http://local.test/prepare-release-email",{method:req.method,headers:req.headers as Record<string,string>,body}));
+      res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
+    }catch(error){failures.push(error);res.statusCode=500;res.end('{}');}
+  });
+  const prepareEmail=()=>fetch(emailEndpoint,{method:"POST",headers:staffHeaders,body:JSON.stringify(releaseEmailArgs)});
+  // SQL verifier must reject swapped bytes before any successful capture exists.
+  const emailPrepared=await rpc("prepare_release_email",releaseEmailArgs,true);
+  const currentRelease=await rpc("read_record_release",{p_id:releaseId},true);
+  const frozen=await buildReleaseEmailPayload(emailPrepared.request,currentRelease,{from:"care@example.test",replyTo:"care@example.test"},releaseDownload);
+  const changedPayload=JSON.parse(frozen.payload_text),changedBytes=originalBytes.slice();changedBytes[changedBytes.length-1]^=1;
+  changedPayload.attachments[1].content=Buffer.from(changedBytes).toString('base64');
+  await assert.rejects(rpc("capture_release_email_payload",{p_request_id:emailRequestId,p_actor_id:actor,p_payload_text:JSON.stringify(changedPayload)}),(e:{code:string})=>e.code==="23514");assertions++;
+  check(sql(`select count(*) from release_email_payloads where request_id=${quote(emailRequestId)};`)==="0","Corrupted original cannot create a saved payload");
+  check(!(await prepareEmail()).ok&&!losePayloadReply,"Simulated lost reply happens after actual payload capture");
+  const readsAfterPayload=releaseReads;
+  const recoveredEmailResponse=await prepareEmail();check(recoveredEmailResponse.ok,"Same handler request recovers saved payload");
+  const recoveredEmail=await recoveredEmailResponse.json();
+  check(recoveredEmail.payload_hash===frozen.payload_hash&&releaseReads===readsAfterPayload,"Lost response recovery preserves bytes without downloading again");
+  check(recoveredEmail.manifest[1].sha256===ready.capture.content_sha256,"Actual SQL payload manifest binds captured original digest");
+  check(sql(`select count(*) from release_email_payloads where request_id=${quote(emailRequestId)};`)==="1","Unknown response produces exactly one immutable payload");
   const canceled=await rpc("cancel_ezyvet_attachment_approval",{p_id:cancelId,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash,p_confirmed:true},true);
   check(canceled.status==="canceled","Unconfirmed review obtains durable cancellation");
   await assert.rejects(rpc("approve_ezyvet_attachment_record",approvalArgs(cancelId,correctionId),true),(error:{code:string})=>error.code==="23514");assertions++;
@@ -486,6 +542,13 @@ try {
   check(historicalChart.records.every((row:{source_current:boolean})=>!row.source_current)&&(await reviewedDownload()).ok,"Source changes retain historical staff access with honest stale chart flags");
   const historical = await captureRecover(id);
   check(historical.status === "ready" && historical.source_current === false, "Historical capture remains ready with explicit stale source badge");
+  const staleRelease=await rpc("read_record_release",{p_id:releaseId},true);
+  check(!staleRelease.eligible&&staleRelease.events.some((e:{kind:string})=>e.kind==="source_changed"),"Actual source revision invalidates confirmed API release");
+  const historicalEmailResponse=await prepareEmail(),historicalEmail=await historicalEmailResponse.json();
+  check(historicalEmailResponse.ok&&historicalEmail.payload_hash===recoveredEmail.payload_hash&&releaseReads===readsAfterPayload,"Historical handler recovery returns saved artifact without source read or send");
+  check((await rpc("confirm_record_release",confirmArgs,true)).source_hash===confirmedRelease.source_hash,"Actual confirmation replay preserves immutable historical receipt");
+  sql("update record_release_policy set enabled=false;");
+
   check((await act(id, "retrieve")).ok, "Original historical bytes remain recoverable after parent changes");
   const history = await rpc("list_ezyvet_attachment_captures", { p_animal_link_id: mapping, p_limit: 2 }, true);
   check(history.captures.length === 2 && history.has_more && history.next_cursor !== null, "Server capture history supports bounded pointerless discovery");

@@ -39,7 +39,7 @@ checks = 0
 checks_by_fixture = {}
 harness_hashes = {}
 migration_hashes = {}
-source_paths = [Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
+source_paths = [*sorted((root / 'supabase/functions/_shared').glob('*.ts')), Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
 source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
 
 def command(argv, **kwargs):
