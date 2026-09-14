@@ -1,6 +1,6 @@
 import { buildDocumentLinkArtifacts } from "../../supabase/functions/_shared/document-link-artifacts.ts";
 import { documentLinkConfig, materializeDocumentLink } from "../../supabase/functions/_shared/document-link-capability.ts";
-import { createStaffDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
+import { createStaffDocumentLinkHandler, createRetrieveDocumentLinkHandler } from "../../supabase/functions/_shared/document-link-http.ts";
 import { createPrepareReleaseEmailHandler } from "../../supabase/functions/_shared/prepare-release-email.ts";
 import { buildReleaseEmailPayload } from "../../supabase/functions/_shared/release-email-payload.ts";
 import { renderRecordRelease } from "../../supabase/functions/_shared/record-release-renderer.ts";
@@ -483,14 +483,51 @@ try {
     }catch(error){failures.push(error);res.statusCode=500;res.end('{}');}
   });
   const {p_origin:_linkOrigin,p_key_version:_linkKey,...linkHttpArgs}=linkArgs;
-  const prepareLink=()=>fetch(linkEndpoint,{method:"POST",headers:{...staffHeaders,Origin:origin},body:JSON.stringify(linkHttpArgs)});
+  const prepareLink=(args=linkHttpArgs)=>fetch(linkEndpoint,{method:"POST",headers:{...staffHeaders,Origin:origin},body:JSON.stringify(args)});
   check(!(await prepareLink()).ok&&!loseLinkReply,"Link handler loses response after actual SQL artifact capture");
-  const readsAfterAllPrepared=releaseReads;
+  let readsAfterAllPrepared=releaseReads;
   const recoveredLinkResponse=await prepareLink();check(recoveredLinkResponse.ok,"Actual link handler recovers ambiguous capture");
   const recoveredLink=await recoveredLinkResponse.json();
   check(recoveredLink.artifact_hash===linkArtifact.artifact_hash&&releaseReads===readsAfterAllPrepared,"Link recovery preserves exact artifact without another Storage read");
   check(recoveredLink.manifest[1].sha256===ready.capture.content_sha256,"Actual link manifest binds physical API original digest");
   check(sql(`select count(*) from document_link_payloads where grant_id=${quote(linkId)};`)==="1","Lost link reply creates exactly one immutable artifact");
+  // Public retrieval uses actual HTTP without staff authentication.
+  const publicHandler=createRetrieveDocumentLinkHandler({config:linkConfig,service:releaseDb(false)});
+  const publicEndpoint=await serve(async(req,res)=>{
+    try{let body="";for await(const chunk of req)body+=chunk;
+      const response=await publicHandler(new Request("http://local.test/retrieve-document-link",{method:req.method,headers:req.headers as Record<string,string>,body}));
+      res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
+    }catch(error){failures.push(error);res.statusCode=500;res.end('{}');}
+  });
+  const publicRetrieve=(grant:string,token:string,index:number|null)=>fetch(publicEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({grant_id:grant,token,artifact_index:index})});
+  check(!(await publicRetrieve(linkId,linkCapability.token,1)).ok,"Valid token cannot expose an unreviewed captured package");
+  const publicReleaseId=randomUUID(),publicLinkId=randomUUID();
+  await rpc("confirm_record_release",{...confirmArgs,p_id:publicReleaseId,p_channel:"SMS",p_recipient:"+13035550481",p_reviewed_snapshot:smsPreview.snapshot,p_reviewed_hash:smsPreview.source_hash},true);
+  const publicLinkArgs={...linkHttpArgs,p_request_id:publicLinkId,p_source_id:publicReleaseId};
+  const publicPreparedResponse=await prepareLink(publicLinkArgs);check(publicPreparedResponse.ok,"Separate public retrieval fixture prepares through actual HTTP");
+  const publicPrepared=await publicPreparedResponse.json();
+  const publicContext=await rpc("document_link_capture_context",{p_id:publicLinkId,p_actor_id:actor});
+  const publicCapability=await materializeDocumentLink(publicContext.grant,linkConfig);
+  await rpc("attest_document_link",{p_request_id:publicLinkId,p_reviewed_artifact_hash:publicPrepared.artifact_hash,p_reviewed_message_hash:publicCapability.message_hash,p_attest:true},true);
+  readsAfterAllPrepared=releaseReads;
+  check(!(await publicRetrieve(publicLinkId,"v1."+"A".repeat(43),null)).ok,"Public handler rejects a well-formed wrong token");
+  check(!(await publicRetrieve(randomUUID(),publicCapability.token,null)).ok,"Public token cannot authorize another grant");
+  check(sql(`select used from document_link_access_budget where grant_id=${quote(publicLinkId)};`)==="0","Invalid public token attempts consume no valid-grant access budget");
+  const publicManifestResponse=await publicRetrieve(publicLinkId,publicCapability.token,null);
+  check(publicManifestResponse.ok&&publicManifestResponse.headers.get('cache-control')?.includes('no-store'),"Valid public token retrieves an uncached manifest without staff session");
+  const publicManifest=await publicManifestResponse.json();
+  check(publicManifest.manifest.length===2&&!JSON.stringify(publicManifest).includes(privateReady.intent.object_path),"Public manifest includes selected artifacts without private Storage path");
+  const publicOriginal=await publicRetrieve(publicLinkId,publicCapability.token,1);
+  check(publicOriginal.ok&&publicOriginal.headers.get('content-type')==='application/pdf'&&await hash(new Uint8Array(await publicOriginal.arrayBuffer()))===ready.capture.content_sha256,"Public HTTP delivers exact captured PDF bytes");
+  check(!(await publicRetrieve(publicLinkId,publicCapability.token,24)).ok,"Public retrieval rejects unselected artifact index");
+  const rolesBeforePublicCheck=JSON.parse(sql(`select json_agg(role::text) from user_roles where user_id=${quote(actor)};`));
+  try{
+    sql(`delete from user_roles where user_id=${quote(actor)};`);
+    check(!(await publicRetrieve(publicLinkId,publicCapability.token,1)).ok,"Public token cannot bypass approving-staff role loss");
+  }finally{
+    for(const role of rolesBeforePublicCheck)sql(`insert into user_roles(user_id,role) values(${quote(actor)},${quote(role)}) on conflict do nothing;`);
+  }
+  check(releaseReads===readsAfterAllPrepared,"Public retrieval serves captured artifacts without rereading original Storage");
   const canceled=await rpc("cancel_ezyvet_attachment_approval",{p_id:cancelId,p_request_id:id,p_pet_id:pet,p_capture_hash:ready.capture.capture_hash,p_confirmed:true},true);
   check(canceled.status==="canceled","Unconfirmed review obtains durable cancellation");
   await assert.rejects(rpc("approve_ezyvet_attachment_record",approvalArgs(cancelId,correctionId),true),(error:{code:string})=>error.code==="23514");assertions++;
@@ -591,6 +628,10 @@ try {
   check(historicalEmailResponse.ok&&historicalEmail.payload_hash===recoveredEmail.payload_hash&&releaseReads===readsAfterAllPrepared,"Historical handler recovery returns saved artifact without source read or send");
   check((await rpc("confirm_record_release",confirmArgs,true)).source_hash===confirmedRelease.source_hash,"Actual confirmation replay preserves immutable historical receipt");
   check(!(await rpc("read_record_release",{p_id:smsReleaseId},true)).eligible,"Actual source revision also invalidates document-link release");
+  const publicBudgetBeforeStale=sql(`select used from document_link_access_budget where grant_id=${quote(publicLinkId)};`);
+  check(!(await publicRetrieve(publicLinkId,publicCapability.token,1)).ok,"Actual source change denies public HTTP retrieval despite valid token");
+  check(sql(`select used from document_link_access_budget where grant_id=${quote(publicLinkId)};`)===publicBudgetBeforeStale,"Denied stale public retrieval does not consume access budget");
+
   const historicalLinkResponse=await prepareLink(),historicalLink=await historicalLinkResponse.json();
   check(historicalLinkResponse.ok&&historicalLink.artifact_hash===recoveredLink.artifact_hash&&releaseReads===readsAfterAllPrepared,"Stale-source link recovery preserves captured artifact without download or message");
   await assert.rejects(rpc("attest_document_link",{p_request_id:linkId,p_reviewed_artifact_hash:linkArtifact.artifact_hash,p_reviewed_message_hash:linkCapability.message_hash,p_attest:true},true),(e:{code:string})=>e.code==="42501");assertions++;
