@@ -1,3 +1,4 @@
+import { createMigrationResumeApi } from "../../src/hub/features/imports/migration-resume-api.ts";
 import { createClient } from "@supabase/supabase-js";
 import { createMigrationSelectionApi } from "../../src/hub/features/imports/migration-selection-api.ts";
 /** Actual local Auth/PostgREST acceptance; no provider or outbound delivery. */
@@ -103,8 +104,16 @@ check(await otherApi.readBinding(bindingRequest.id, bindingRequest.scope_id) ===
 await assert.rejects(() => otherApi.listBindings(bindingRequest.scope_id)); checks++;
 await assert.rejects(() => otherApi.bind(bindingRequest)); checks++;
 check(sql(`select to_jsonb(r) from ezyvet_import_runs r where id=${quote(child)};`) === childBefore, "HTTP binding leaves child lease, owner and cursor untouched");
+let resumeInvocations = 0;
+const resumeApi = createMigrationResumeApi({ ...ownerTransport, async readGenericRun() { throw new Error("Owned attachment recovery required"); }, async invoke() { resumeInvocations++; throw new Error("No importer invocation permitted in this blocked-runtime fixture"); } }, owner.id);
+const resumeIdentity = { manifest_id: saved.run.id, scope_id: bound.scope_id, binding_id: bound.id };
+const leasedResume = await resumeApi.recover(resumeIdentity);
+check(leasedResume.lease_active && leasedResume.blockers.length > 0, "Actual owned recovery exposes active lease and blocks migration resume");
+await assert.rejects(() => resumeApi.resume(leasedResume)); checks++;
 const firstLease = JSON.parse(childBefore).lease_id;
 await request("/rest/v1/rpc/fail_ezyvet_import_page", { p_id: child, p_actor: owner.id, p_lease_id: firstLease, p_code: "UPSTREAM_TIMEOUT", p_retry_seconds: 1 });
+sql(`update ezyvet_import_runs set retry_after=now()+interval '1 hour' where id=${quote(child)};`);
+check((await resumeApi.recover(resumeIdentity)).blockers.some(b => b.includes("cooling down")), "Actual cooldown blocks migration continuation");
 sql(`update ezyvet_import_runs set retry_after=null where id=${quote(child)};`);
 const retry = await request("/rest/v1/rpc/claim_ezyvet_attachment_import", { p_id: child, p_actor: owner.id, p_site_uid: site, p_source_origin: origin, p_animal_link_id: mapping });
 const attemptPage = await api.attempts(bound, null, 2);
@@ -122,6 +131,10 @@ const observation = { external_id: "701", file_id: "42", metadata: { id: "701", 
 await request("/rest/v1/rpc/stage_ezyvet_attachment_page", { p_run_id: child, p_actor: owner.id, p_lease_id: retry.lease_id, p_page: {
   contract_version: "ezyvet_animal_attachment_metadata_v1", parent: { record_type: "Animal", record_id: "77" }, page: 1, complete: true,
   pagination: { items_page: 1, items_page_total: 1, items_page_size: 10, items_total: 2 }, observations: [observation, { ...observation, raw_record_sha256: "c".repeat(64) }], page_sha256: "d".repeat(64) } });
+const completedResume = await resumeApi.recover(resumeIdentity);
+check(completedResume.status === "review_ready" && completedResume.blockers.some(b => b.includes("Traversal has ended")), "Actual completed run stays recoverable but cannot resume");
+await assert.rejects(() => resumeApi.resume(completedResume)); checks++;
+check(resumeInvocations === 0, "Blocked real runtime states never invoke the importer");
 const firstItems = await api.items(saved, bound, null, 1);
 const secondItems = await api.items(saved, bound, firstItems.next_cursor, 1);
 check(firstItems.has_more && !secondItems.has_more && firstItems.items[0].ordinal === 1 && secondItems.items[0].ordinal === 2, "HTTP item cursor retains distinct duplicate occurrences");

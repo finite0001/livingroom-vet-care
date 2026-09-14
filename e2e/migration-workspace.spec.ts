@@ -15,7 +15,7 @@ async function fixture(page: Page, admin = true) {
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
     child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource: "attachment", parent_evidence: "exact_parent_version", context: {} } };
   const savedPlans = new Map<string, typeof manifest>(), savedBindings = new Map<string, typeof binding>();
-  const state = { holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -30,9 +30,16 @@ async function fixture(page: Page, admin = true) {
     if (path === "/rest/v1/ezyvet_import_snapshots") return state.failParent ? route.fulfill({ status: 503, json: { message: "Unavailable" } }) : route.fulfill({ json: [{ id: new URL(route.request().url()).searchParams.get("resource") === "eq.consult" ? id(70) : snapshot, external_id: "77" }] });
     if (path === "/rest/v1/ezyvet_identity_heads") return route.fulfill({ json: [{ snapshot_id: new URL(route.request().url()).searchParams.get("resource") === "eq.consult" ? id(70) : snapshot, external_id: "77", version: 1 }] });
     if (path === "/rest/v1/ezyvet_import_runs") return route.fulfill({ json: [{ id: id(50), requested_by: actor, source_origin: origin, source_site_uid: site, resource: "attachment", status: "running", created_at: at }] });
+    if (path === "/functions/v1/ezyvet-import") {
+      state.resumeBodies.push(body);
+      if (state.holdResume) await new Promise<void>(resolve => { state.releaseResume = resolve; });
+      state.resumePage++;
+      return state.failResume ? route.fulfill({ status: 503, json: { error: "Synthetic lost reply" } }) : route.fulfill({ json: { run_id: child, status: "running", next_page: state.resumePage, review_only: true, complete: false } });
+    }
     const rpc = path.split("/").at(-1)!;
     if (path.includes("/rpc/")) state.calls.push(rpc);
     const unavailable = () => route.fulfill({ status: 503, json: { message: "Synthetic unavailable" } });
+    if (rpc === "recover_ezyvet_attachment_run") return route.fulfill({ json: { id: child, requested_by: actor, source_origin: origin, source_site_uid: site, resource: "attachment", status: state.resumeRunning ? "running" : "review_ready", next_page: state.resumePage, retry_after: state.resumeRetry, lease_active: state.resumeLease, parent_context: { animal_link_id: mapping, pet_id: pet, client_id: client, parent_snapshot_id: snapshot, parent_payload_hash: "a".repeat(64), parent_observed_head_version: 1 } } });
     if (rpc === "list_ezyvet_attachment_runs") return route.fulfill({ json: { runs: [{ id: id(50), requested_by: actor, source_origin: origin, source_site_uid: site, resource: "attachment", status: "running", created_at: at, parent_context: { animal_link_id: mapping, pet_id: pet, client_id: client, parent_snapshot_id: snapshot, parent_observed_head_version: 1 } }], has_more: false, next_cursor: null } });
     if (rpc === "prepare_ezyvet_migration_run") {
       state.requests.push({ name: rpc, body });
@@ -56,7 +63,7 @@ async function fixture(page: Page, admin = true) {
     if (rpc === "read_ezyvet_migration_binding_progress") return state.failProgress ? unavailable() : route.fulfill({ json: {
       version: 2, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource: "attachment", context_hash: binding.context_hash,
       superseded: false, parent_evidence: "exact_parent_version", parent_current: !state.stale, household_current: true,
-      scan: { status: "review_ready", next_page: 4, pages_observed: 3, traversal_ended: true, page_limit_reached: false, retry_after: null, latest_error_code: null, provider_total: null, complete_coverage_verified: false },
+      scan: { status: state.resumeRunning ? "running" : "review_ready", next_page: state.resumePage, pages_observed: 3, traversal_ended: !state.resumeRunning, page_limit_reached: false, retry_after: null, latest_error_code: null, provider_total: null, complete_coverage_verified: false },
       observations: { occurrences: 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: "page_ordinal", exact_current_occurrences: state.stale ? 0 : 21, currentness_available: true },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
@@ -69,13 +76,13 @@ async function fixture(page: Page, admin = true) {
     if (rpc === "list_ezyvet_migration_items") {
       if (state.holdItems) await new Promise<void>(resolve => { state.releaseItems = resolve; });
       if (state.failItems) return unavailable();
-      const start = body.p_after_page ? 20 : 0, count = start ? 1 : 20;
+      const start = body.p_after_page ? 20 : 0, count = Math.min(start ? 1 : 20, body.p_limit ?? 20);
       const items = Array.from({ length: count }, (_, index) => ({ page: Math.floor((start + index) / 10) + 1, ordinal: (start + index) % 10 + 1, snapshot_id: snapshot,
         observed_head_version: 1, external_id: "701", payload_hash: "a".repeat(64), file_id: "42", raw_record_sha256: "b".repeat(64), stable_metadata_sha256: "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
         current_snapshot_id: snapshot, current_head_version: state.stale ? 3 : 1, payload_current: true, exact_source_current: !state.stale }));
       return route.fulfill({ json: { version: 1, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource: "attachment", context_hash: binding.context_hash,
         superseded: false, mapping_matches_manifest: true, mapping_source_current: !state.stale, parent_current: !state.stale, household_current: true, occurrence_fidelity: "page_ordinal", review_reconciled: false, complete_coverage_verified: false,
-        observed_at: at, items, has_more: !start, next_cursor: start ? null : { page: 2, ordinal: 10, snapshot_id: snapshot } } });
+        observed_at: at, items, has_more: !start, next_cursor: start ? null : { page: items.at(-1)!.page, ordinal: items.at(-1)!.ordinal, snapshot_id: snapshot } } });
     }
     return route.fulfill({ json: [] });
   });
@@ -278,4 +285,69 @@ test("one saved scope includes two patients and an explicit exclusion", async ({
   await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
   await expect(page.getByRole("region", { name: "Saved migration scope" }).getByText("Second patient history awaits clinical scope approval", { exact: true })).toBeVisible();
   expect(state.requests[0].body.p_scopes).toMatchObject([{ mapping_id: mapping, resource: "attachment", disposition: "required" }, { mapping_id: id(61), resource: "history", disposition: "excluded" }]);
+});
+async function recoverResume(page: Page) {
+  await openEvidence(page);
+  const form = page.getByRole("region", { name: "Resume saved migration run" });
+  await form.getByRole("button", { name: "Recover run before resume", exact: true }).click();
+  await expect(form.getByText(/Saved run recovered/)).toBeVisible();
+  return form;
+}
+test("explicit migration resume uses the exact saved run once and requires recovery", async ({ page }) => {
+  const state = await fixture(page); state.resumeRunning = true; state.failResume = true;
+  const form = await recoverResume(page);
+  await form.getByLabel("I reviewed this saved source run and want to request one more page.").check();
+  await form.getByRole("button", { name: "Resume one page", exact: true }).click();
+  await expect(form.getByText(/Resume was not confirmed/)).toBeVisible();
+  await expect(form.getByRole("button", { name: "Resume one page", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Plan a migration", exact: true })).toBeDisabled();
+  await form.getByRole("button", { name: "Recover run before resume", exact: true }).click();
+  await expect(form.getByText(/next page 5/)).toBeVisible();
+  await expect(form.getByRole("button", { name: "Resume one page", exact: true })).toBeDisabled();
+  expect(state.resumeBodies).toEqual([{ run_id: child, resource: "attachment", animal_link_id: mapping }]);
+});
+test("completed runs and active cooldowns remain recoverable without sending requests", async ({ page }) => {
+  const state = await fixture(page), form = await recoverResume(page);
+  await expect(form.getByText(/Traversal has ended/)).toBeVisible();
+  await expect(form.getByRole("button", { name: "Resume one page", exact: true })).toBeDisabled();
+  state.resumeRunning = true; state.resumeRetry = "2099-01-01T00:00:00Z";
+  await form.getByRole("button", { name: "Recover run before resume", exact: true }).click();
+  await expect(form.getByText(/cooling down/)).toBeVisible();
+  expect(state.resumeBodies).toHaveLength(0);
+});
+test("source drift after resume review is caught before importer invocation", async ({ page }) => {
+  const state = await fixture(page); state.resumeRunning = true;
+  const form = await recoverResume(page);
+  await form.getByLabel("I reviewed this saved source run and want to request one more page.").check();
+  state.stale = true;
+  await form.getByRole("button", { name: "Resume one page", exact: true }).click();
+  await expect(form.getByText(/Resume was not confirmed or the run changed/)).toBeVisible();
+  expect(state.resumeBodies).toHaveLength(0);
+});
+test("late resume reply cannot restore private workspace after signout", async ({ page }) => {
+  const state = await fixture(page); state.resumeRunning = true; state.holdResume = true;
+  const form = await recoverResume(page);
+  await form.getByLabel("I reviewed this saved source run and want to request one more page.").check();
+  await form.getByRole("button", { name: "Resume one page", exact: true }).click();
+  await expect.poll(() => !!state.releaseResume).toBe(true);
+  await page.getByRole("button", { name: /Sign out/i }).click(); state.releaseResume!();
+  await expect(page).toHaveURL(/\/hub\/login/);
+  await expect(page.getByRole("region", { name: "Migration reconciliation" })).toHaveCount(0);
+  expect(state.resumeBodies).toHaveLength(1);
+});
+for (const width of [390, 1440]) test(`saved resume controls at ${width}px require explicit action and recovery`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1000 });
+  const state = await fixture(page); state.resumeRunning = true;
+  const form = await recoverResume(page);
+  await form.getByLabel("I reviewed this saved source run and want to request one more page.").check();
+  await form.scrollIntoViewIfNeeded();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: `/tmp/lrv-migration-resume-${width}.png` });
+  await form.getByRole("button", { name: "Resume one page", exact: true }).click();
+  await expect(form.getByText(/One importer request returned/)).toBeVisible();
+  await expect(form.getByRole("button", { name: "Resume one page", exact: true })).toBeDisabled();
+  expect(state.resumeBodies).toHaveLength(1);
+  await form.getByRole("button", { name: "Recover run before resume", exact: true }).click();
+  await expect(form.getByText(/next page 5/)).toBeVisible();
+  await expect(form.getByLabel("I reviewed this saved source run and want to request one more page.")).not.toBeChecked();
 });
