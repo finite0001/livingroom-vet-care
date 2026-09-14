@@ -64,7 +64,7 @@ export async function buildDocumentLinkArtifacts(
     )
       throw new Error("Reviewed SMS release unavailable");
     originals = b.release.snapshot.attachments;
-    sourceByteBound = [5, 6, 7, 8].includes(b.release.snapshot.schema_version);
+    sourceByteBound = [5, 6, 7, 8, 9].includes(b.release.snapshot.schema_version);
     report = renderRecordRelease({
       preview: b.release,
       confirmed: {
@@ -113,7 +113,7 @@ export async function buildDocumentLinkArtifacts(
   ];
   for (const [index, d] of originals.entries()) {
     if (
-      d.bucket !== "patient-documents" ||
+      (d.bucket !== "patient-documents" && d.bucket !== "ezyvet-attachment-originals") ||
       !d.file_path ||
       d.file_path.includes("..")
     )
