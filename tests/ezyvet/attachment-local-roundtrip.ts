@@ -1,3 +1,4 @@
+import { parseAttachmentFileHistory } from "../../src/hub/features/imports/attachment-file-state.ts";
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
 import type { RequestListener } from "node:http";
@@ -485,6 +486,13 @@ try {
   check((await rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true)).runs.length === 4, "Actual staff discovery includes terminal and pending runs");
   const privateRows = await fetch(local.API_URL + "/rest/v1/ezyvet_attachment_runs?select=run_id", { headers: staffHeaders });
   check(privateRows.status === 401 || privateRows.status === 403, "Private run table denies direct staff access");
+  if (includeCapture) {
+    const actualHistory = await rpc("list_ezyvet_attachment_downloads", { p_pet_id: pet, p_limit: 20 }, true);
+    const parsedHistory = parseAttachmentFileHistory(actualHistory, actor, { link_id: mapping, pet_id: pet, source_origin: discoveredParent.source_origin, source_site_uid: site, external_id: "77" });
+    check(parsedHistory.requests.some(item => item.status === "captured" && item.sameMapping), "Browser history parser accepts actual captured request projections");
+    check(parsedHistory.requests.some(item => item.status === "abandoned"), "Actual history retains abandoned requests alongside captured source evidence");
+    check(actualHistory.requests.every((item: { request: { source_context: Record<string, unknown> | null } }) => !item.request.source_context || !("attachment_metadata" in item.request.source_context)), "Actual discovery omits raw provider metadata");
+  }
   sql(`delete from user_roles where user_id=${quote(actor)} and role='ADMIN';`);
   check((await post({ run_id: randomUUID(), resource: "attachment" })).status === 403, "Role loss prevents HTTP import");
   await assert.rejects(rpc("list_ezyvet_attachment_runs", { p_animal_link_id: mapping }, true), (error: { code: string }) => error.code === "42501"); assertions++;

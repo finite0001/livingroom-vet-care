@@ -224,3 +224,14 @@ Capture first recovers the saved request and checks pending status, active lease
 Validation:586 unit tests and36 browser cases passed (26 attachment and10 neighboring prescription cases), including explicit prepare/capture separation, lost capture acknowledgment, disabled capture, unavailable recovery, unreadable local reference and reload recovery. Lint/TypeScript/build and frozen capture/cleanup entrypoint checks passed. These browser calls are mocked and do not establish hosted/provider acceptance. Prior93-migration runtime evidence remains separate. Evidence: `docs/evidence/attachment-file-capture-ui-local-20260913.json`.
 
 Still required: server request-history UI, abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore, broader races and actual source/provider/operator/clinical acceptance. Full commercial-readiness gates remain open. No hosted function/migration deployment or activation occurred.
+
+
+### Saved file-request discovery checkpoint
+
+The patient attachment section now lists owned pending, captured and abandoned file requests with bounded timestamp/UUID pagination. Source-less tombstones remain visible; requests belonging to another source mapping are labeled and cannot reopen under the current mapping. Discovery validates request/actor/patient, source pins, summary receipt ownership, terminal state and cursor consistency. Raw provider metadata and original links are not rendered.
+
+Reopening first recovers and validates the full file request, then the exact owned scan and parent context. It repairs the local reference and opens the original source page without creating/capturing another copy. Active file work prevents reopening; once a call finishes, server history can repair an unconfirmed or mismatched local pointer. Existing scan/patient navigation guards remain in place for other actions.
+
+Validation:590 unit tests,40 browser cases and a fresh93-migration runtime with164 HTTP/Auth/Storage and55 contention checks passed. The runtime passes actual captured/abandoned PostgREST history through the same frontend parser and confirms raw metadata omission. Browser cases prove local-reference loss, wrong-patient rejection, pagination and repair of a mismatched local hash. All owned disposable resources were removed. Evidence: `docs/evidence/attachment-file-history-ui-local-20260913.json`.
+
+Abandon/cleanup controls, original inspection, clinical review/corrections/release, current populated upgrade/restore and actual hosted/provider/operator acceptance remain unfinished. Full commercial-readiness gates remain open; no hosted deployment or activation occurred.

@@ -1,6 +1,8 @@
+import { parsePreparedAttachmentRun } from "./attachment-discovery-state";
+import type { AttachmentMapping, AttachmentHistoryCursor } from "./attachment-discovery-state";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseAttachmentFileRecovery, AttachmentFileActionError } from "./attachment-file-state";
+import { parseAttachmentFileRecovery, AttachmentFileActionError, parseAttachmentFileHistory } from "./attachment-file-state";
 import type { AttachmentFileIntent } from "./attachment-file-state";
 interface Database { public: { Tables: Record<never, never>; Views: Record<never, never>; Enums: Record<never, never>; CompositeTypes: Record<never, never>; Functions: { [key: string]: { Args: Record<string, unknown>; Returns: unknown } }; }; }
 const client = supabase as unknown as SupabaseClient<Database>;
@@ -26,4 +28,11 @@ export async function captureAttachmentFile(intent: AttachmentFileIntent) {
     throw new AttachmentFileActionError("Capture response was unconfirmed. Recover this file request before trying again.");
   }
   if (!data || data.request_id !== intent.id) throw new AttachmentFileActionError("Capture response was unconfirmed. Recover this file request before trying again.");
+}
+export async function listAttachmentFileHistory(actor: string, mapping: AttachmentMapping, cursor: AttachmentHistoryCursor | null) {
+  return parseAttachmentFileHistory(await rpc("list_ezyvet_attachment_downloads", { p_pet_id: mapping.pet_id, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), actor, mapping);
+}
+export async function recoverAttachmentFileScan(intent: AttachmentFileIntent, mapping: AttachmentMapping) {
+  const value = await rpc("recover_ezyvet_attachment_run", { p_id: intent.runId, p_animal_link_id: mapping.link_id });
+  return parsePreparedAttachmentRun(value, intent.runId, intent.actor, mapping, intent.parent);
 }

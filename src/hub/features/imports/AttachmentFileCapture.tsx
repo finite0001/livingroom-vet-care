@@ -1,11 +1,13 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { prepareAttachmentFile, recoverAttachmentFile, captureAttachmentFile } from "./attachment-file-api";
 import { parseAttachmentFileIntent, attachmentFileCanCapture, AttachmentFileActionError } from "./attachment-file-state";
 import type { AttachmentFileIntent, AttachmentFileRecovery } from "./attachment-file-state";
 import type { AttachmentMapping, AttachmentObservation, AttachmentParent } from "./attachment-discovery-state";
-interface Props { actor: string; mapping: AttachmentMapping; file: AttachmentObservation; parent: AttachmentParent; parentCurrent: boolean; disabled: boolean; onLocked: (id: string, locked: boolean) => void; }
+interface Props { actor: string; mapping: AttachmentMapping; file: AttachmentObservation; parent: AttachmentParent; parentCurrent: boolean; disabled: boolean; onLocked: (id: string, locked: boolean, busy?: boolean) => void; }
 export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurrent, disabled, onLocked }: Props) {
+  const queryClient = useQueryClient();
   const identity = `${file.run_id}:${file.page}:${file.snapshot_id}:${file.observed_head_version}`;
   const key = `lrv-attachment-file:${actor}:${mapping.pet_id}:${identity}`;
   const [intent, setIntent] = useState<AttachmentFileIntent | null>(null);
@@ -22,9 +24,9 @@ export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurr
       const value = sessionStorage.getItem(key);
       if (value) { const parsed = parseAttachmentFileIntent(JSON.parse(value), context.current.actor, context.current.mapping); if (`${parsed.runId}:${parsed.page}:${parsed.snapshotId}:${parsed.headVersion}` !== identity) throw new Error("Different source"); setIntent(parsed); setUncertain(true); setNotice("An earlier file request is retained. Recheck it before continuing."); }
     } catch { setNotice("The local file reference could not be read. Saved request history must be recovered before preparing another copy."); setInvalidPointer(true); }
-    return () => { alive.current = false; onLocked(identity, false); };
+    return () => { alive.current = false; onLocked(identity, false, false); };
   }, [identity, key, onLocked]);
-  useEffect(() => { onLocked(identity, busy || uncertain); }, [identity, busy, uncertain, onLocked]);
+  useEffect(() => { onLocked(identity, busy || uncertain, busy); }, [identity, busy, uncertain, onLocked]);
   async function act(action: "prepare" | "recover" | "capture") {
     if (lock.current || (action !== "recover" && disabled)) return;
     lock.current = true; setBusy(true); setNotice("");
@@ -49,6 +51,7 @@ export function AttachmentFileCapture({ actor, mapping, file, parent, parentCurr
         if (!state) throw new AttachmentFileActionError("Saved file request is unavailable. Retain its reference and recheck.");
       }
       setSaved(state); setUncertain(false);
+      void queryClient.invalidateQueries({ queryKey: ["attachment-file-history", actor, mapping.pet_id] });
       setNotice(state.captured ? "Private source copy captured. Clinical review is still required." : captureNotice || (state.status === "abandoned" ? "This file request was abandoned. It cannot be resumed." : "File request recovered. Capture uses the saved source context and private Storage."));
     } catch (error) {
       if (alive.current) { setUncertain(!!current); setNotice(error instanceof AttachmentFileActionError ? error.message : "File request is unconfirmed. Recheck it before continuing."); }
