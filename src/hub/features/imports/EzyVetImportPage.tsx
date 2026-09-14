@@ -67,9 +67,10 @@ export function EzyVetImportPage() {
   const [prescriptionDirty, setPrescriptionDirty] = useState(false);
   const [prescriptionItemDirty, setPrescriptionItemDirty] = useState(false);
   const [attachmentDirty, setAttachmentDirty] = useState(false);
+  const [migrationDirty, setMigrationDirty] = useState(false);
   const importDirty =
     enabled &&
-    (attachmentDirty ||
+    (migrationDirty || attachmentDirty ||
       clinicalDirty ||
       vaccinationDirty ||
       prescriptionDirty ||
@@ -385,9 +386,7 @@ export function EzyVetImportPage() {
                     : "Leave import recovery?"}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Original request references remain saved for recovery. Leaving
-                does not cancel an in-flight scan or approve source records.
-                Unsaved review fields may be lost.
+                {migrationDirty ? "Unsaved migration scope and binding fields may be lost. Leaving does not cancel a pending save. Confirmed migration records remain available in saved history." : "Original request references remain saved for recovery. Leaving does not cancel an in-flight scan or approve source records. Unsaved review fields may be lost."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -909,7 +908,7 @@ export function EzyVetImportPage() {
             </Card>
           )}
         </div>
-        <EzyVetMigrationRuns key={`migration:${session.user.id}`} actor={session.user.id} />
+        <EzyVetMigrationRuns key={`migration:${session.user.id}`} actor={session.user.id} onDirtyChange={setMigrationDirty} />
       </div>
     </section>
   );

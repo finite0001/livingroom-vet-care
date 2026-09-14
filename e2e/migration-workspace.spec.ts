@@ -14,7 +14,8 @@ async function fixture(page: Page, admin = true) {
     scopes: inputs.map(s => ({ ...s, migration_run_id: runId, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
     child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource: "attachment", parent_evidence: "exact_parent_version", context: {} } };
-  const state = { empty: false, failCaptures: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const savedPlans = new Map<string, typeof manifest>(), savedBindings = new Map<string, typeof binding>();
+  const state = { holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -23,13 +24,35 @@ async function fixture(page: Page, admin = true) {
     if (path === "/auth/v1/logout") return route.fulfill({ json: {} });
     if (path === "/rest/v1/profiles") return route.fulfill({ json: [{ id: actor, first_name: "Synthetic", last_name: "Admin", full_name: "Synthetic Admin", is_active: true, role: admin ? "ADMIN" : "STAFF" }] });
     if (path === "/rest/v1/user_roles") return route.fulfill({ json: [{ role: admin ? "ADMIN" : "STAFF" }] });
+    if (path === "/rest/v1/ezyvet_record_links") return state.failMapping ? route.fulfill({ status: 403, json: { message: "Unavailable" } }) : route.fulfill({ json: [{ id: mapping, resource: "animal", client_id: client, pet_id: pet, external_id: "77", snapshot_id: snapshot, head_version: 1, source_origin: origin, source_site_uid: site }] });
+    if (path === "/rest/v1/clients") return route.fulfill({ json: [{ id: client, full_name: "Synthetic household" }] });
+    if (path === "/rest/v1/pets") return route.fulfill({ json: [{ id: pet, name: "Synthetic patient", client_id: client }] });
+    if (path === "/rest/v1/ezyvet_import_snapshots") return state.failParent ? route.fulfill({ status: 503, json: { message: "Unavailable" } }) : route.fulfill({ json: [{ id: new URL(route.request().url()).searchParams.get("resource") === "eq.consult" ? id(70) : snapshot, external_id: "77" }] });
+    if (path === "/rest/v1/ezyvet_identity_heads") return route.fulfill({ json: [{ snapshot_id: new URL(route.request().url()).searchParams.get("resource") === "eq.consult" ? id(70) : snapshot, external_id: "77", version: 1 }] });
+    if (path === "/rest/v1/ezyvet_import_runs") return route.fulfill({ json: [{ id: id(50), requested_by: actor, source_origin: origin, source_site_uid: site, resource: "attachment", status: "running", created_at: at }] });
     const rpc = path.split("/").at(-1)!;
     if (path.includes("/rpc/")) state.calls.push(rpc);
     const unavailable = () => route.fulfill({ status: 503, json: { message: "Synthetic unavailable" } });
-    if (rpc === "list_ezyvet_migration_runs") return state.failRuns ? unavailable() : route.fulfill({ json: { runs: state.empty ? [] : [summary], has_more: false } });
-    if (rpc === "read_ezyvet_migration_run") return route.fulfill({ json: manifest });
-    if (rpc === "list_ezyvet_migration_bindings") return route.fulfill({ json: { bindings: body.p_scope_id === scopeId ? [binding] : [], has_more: false } });
-    if (rpc === "read_ezyvet_migration_binding") return route.fulfill({ json: binding });
+    if (rpc === "list_ezyvet_attachment_runs") return route.fulfill({ json: { runs: [{ id: id(50), requested_by: actor, source_origin: origin, source_site_uid: site, resource: "attachment", status: "running", created_at: at, parent_context: { animal_link_id: mapping, pet_id: pet, client_id: client, parent_snapshot_id: snapshot, parent_observed_head_version: 1 } }], has_more: false, next_cursor: null } });
+    if (rpc === "prepare_ezyvet_migration_run") {
+      state.requests.push({ name: rpc, body });
+      if (state.rejectPlan) return route.fulfill({ status: 409, json: { code: "40001", message: "Parent changed" } });
+      const scopes = body.p_scopes;
+      const saved = { run: { ...summary, id: body.p_id, actor_id: actor, intent: { version: 1, source_origin: body.p_source_origin, source_site_uid: body.p_source_site_uid, scopes } }, scopes: scopes.map(s => ({ ...s, migration_run_id: body.p_id, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
+      if (!state.omitPlanSave) savedPlans.set(body.p_id, saved);
+      if (state.holdPlan) await new Promise<void>(resolve => { state.releasePlan = resolve; });
+      return state.losePlanReply ? unavailable() : route.fulfill({ json: saved });
+    }
+    if (rpc === "bind_ezyvet_migration_child") {
+      state.requests.push({ name: rpc, body });
+      const saved = { ...binding, id: body.p_id, scope_id: body.p_scope_id, child_run_id: body.p_child_run_id, reason: body.p_reason, replaces_id: body.p_replaces_id, child_context: { ...binding.child_context, run_id: body.p_child_run_id } };
+      savedBindings.set(body.p_id, saved);
+      return state.loseBindingReply ? unavailable() : route.fulfill({ json: saved });
+    }
+    if (rpc === "list_ezyvet_migration_runs") return state.failRuns ? unavailable() : route.fulfill({ json: { runs: state.empty ? [] : [...savedPlans.values()].map(m => ({ id: m.run.id, source_origin: m.run.source_origin, source_site_uid: m.run.source_site_uid, intent_hash: m.run.intent_hash, created_at: m.run.created_at })).concat([summary]), has_more: false } });
+    if (rpc === "read_ezyvet_migration_run") return route.fulfill({ json: body.p_id === runId ? manifest : savedPlans.get(body.p_id) ?? null });
+    if (rpc === "list_ezyvet_migration_bindings") return route.fulfill({ json: { bindings: body.p_scope_id === scopeId ? (body.p_limit === 1 ? [...savedBindings.values()].concat([binding]).slice(0,1) : [...savedBindings.values()].concat([binding])) : [], has_more: body.p_limit === 1 && savedBindings.size > 0 } });
+    if (rpc === "read_ezyvet_migration_binding") return route.fulfill({ json: body.p_id === bindingId ? binding : savedBindings.get(body.p_id) ?? null });
     if (rpc === "read_ezyvet_migration_binding_progress") return state.failProgress ? unavailable() : route.fulfill({ json: {
       version: 2, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource: "attachment", context_hash: binding.context_hash,
       superseded: false, parent_evidence: "exact_parent_version", parent_current: !state.stale, household_current: true,
@@ -135,4 +158,124 @@ test("failed capture lookup never masquerades as missing originals", async ({ pa
   state.failCaptures = false;
   await workspace.getByRole("button", { name: "Refresh capture evidence" }).click();
   await expect(workspace.getByText("Original captured", { exact: true })).toBeVisible();
+});
+
+async function draftPlan(page: Page) {
+  const builder = page.getByRole("region", { name: "New migration scope" });
+  await builder.getByRole("button", { name: "Plan a migration", exact: true }).click();
+  await builder.getByRole("button", { name: /Synthetic patient · Synthetic household/ }).click();
+  await builder.getByLabel("Migration resource", { exact: true }).selectOption("attachment");
+  await builder.getByRole("button", { name: "Source parent #77 · version 1", exact: true }).click();
+  await builder.getByLabel("Scope reason", { exact: true }).fill("Review original files for this patient");
+  await builder.getByRole("button", { name: "Add resource to scope" }).click();
+  await builder.getByLabel("I reviewed the listed patients, source parents and coverage decisions.").check();
+  return builder;
+}
+for (const width of [390, 1440]) test(`scope creation recovers a lost reply at ${width}px without duplicating a request`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1000 }); const state = await fixture(page); state.losePlanReply = true;
+  const builder = await draftPlan(page);
+  await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
+  await expect(builder.getByText(/Save could not be confirmed/)).toBeVisible();
+  await expect(builder.getByLabel("Migration resource", { exact: true })).toBeDisabled();
+  await expect(builder.getByRole("button", { name: "Retry same plan" })).toBeDisabled();
+  await builder.getByRole("button", { name: "Check plan save status" }).click();
+  await expect(page.getByRole("region", { name: "Saved migration scope" }).getByText("Review original files for this patient", { exact: true })).toBeVisible();
+  expect(state.requests).toHaveLength(1);
+  expect(state.requests[0].body.p_scopes).toMatchObject([{ resource: "attachment", parent_type: "animal", parent_head_version: 1 }]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: `/tmp/lrv-migration-created-${width}.png` });
+});
+test("absent plan receipt allows only an identical retry", async ({ page }) => {
+  const state = await fixture(page); state.losePlanReply = true; state.omitPlanSave = true;
+  const builder = await draftPlan(page);
+  await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
+  await builder.getByRole("button", { name: "Check plan save status" }).click();
+  await expect(builder.getByRole("button", { name: "Retry same plan" })).toBeEnabled();
+  state.losePlanReply = false; state.omitPlanSave = false;
+  await builder.getByRole("button", { name: "Retry same plan" }).click();
+  await expect(page.getByRole("region", { name: "Saved migration scope" })).toBeVisible();
+  expect(state.requests[0].body).toEqual(state.requests[1].body);
+});
+test("scope draft protects navigation and confirmed rejection unlocks corrections", async ({ page }) => {
+  const state = await fixture(page); state.rejectPlan = true;
+  const builder = await draftPlan(page);
+  await page.getByRole("button", { name: "Clients", exact: true }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page.getByRole("button", { name: "Stay with this run" }).click();
+  await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
+  await expect(builder.getByText(/database rejected this scope/)).toBeVisible();
+  await expect(builder.getByLabel("Migration resource", { exact: true })).toBeEnabled();
+  await expect(builder.getByLabel("I reviewed the listed patients, source parents and coverage decisions.")).not.toBeChecked();
+});
+test("binding recovery retains exact predecessor and protects scope switching", async ({ page }) => {
+  const state = await fixture(page); state.loseBindingReply = true;
+  const workspace = await openEvidence(page);
+  const form = page.getByRole("region", { name: "Bind source run" });
+  await form.getByRole("button", { name: "Bind an existing source run" }).click();
+  await form.getByRole("button", { name: /Run 00000000/ }).click();
+  await form.getByLabel("Binding reason", { exact: true }).fill("Reviewed replacement source run");
+  await form.getByLabel("I reviewed this patient, household, source parent and any preceding binding.").check();
+  await expect(workspace.getByRole("button", { name: /Inspect history scope/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Plan a migration", exact: true })).toBeDisabled();
+  await form.getByRole("button", { name: "Save source binding", exact: true }).click();
+  await expect(form.getByText(/Binding could not be confirmed/)).toBeVisible();
+  await form.getByRole("button", { name: "Check binding save status" }).click();
+  await expect(workspace.getByText("Reviewed replacement source run", { exact: true })).toBeVisible();
+  expect(state.requests).toHaveLength(1);
+  expect(state.requests[0].body).toMatchObject({ p_scope_id: scopeId, p_child_run_id: id(50), p_replaces_id: bindingId });
+  expect(state.calls.some(n => n.startsWith("claim_") || n.startsWith("stage_"))).toBe(false);
+});
+test("mapping lookup failure is explicit and can recover", async ({ page }) => {
+  const state = await fixture(page); state.failMapping = true;
+  const builder = page.getByRole("region", { name: "New migration scope" });
+  await builder.getByRole("button", { name: "Plan a migration", exact: true }).click();
+  await expect(builder.getByText(/Approved mappings could not be loaded/)).toBeVisible();
+  await expect(builder.getByText("No approved mappings on this page.")).toHaveCount(0);
+  state.failMapping = false;
+  await builder.getByRole("button", { name: "Retry mappings" }).click();
+  await expect(builder.getByRole("button", { name: /Synthetic patient · Synthetic household/ })).toBeVisible();
+});
+test("a pending plan reply cannot restore private workspace after sign-out", async ({ page }) => {
+  const state = await fixture(page); state.holdPlan = true;
+  const builder = await draftPlan(page);
+  await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
+  await expect.poll(() => state.releasePlan !== null).toBe(true);
+  await page.getByRole("button", { name: /Sign out/i }).click(); state.releasePlan!();
+  await expect(page).toHaveURL(/\/hub\/login/);
+  await expect(page.getByRole("region", { name: "Migration reconciliation" })).toHaveCount(0);
+});
+test("unsupported consultation attachments remain explicit and cannot be required", async ({ page }) => {
+  await fixture(page);
+  const builder = await draftPlan(page);
+  await builder.getByLabel("Attachment source parent", { exact: true }).selectOption("consult");
+  await builder.getByRole("button", { name: "Source parent #77 · version 1", exact: true }).click();
+  await builder.getByLabel("Scope reason", { exact: true }).fill("Consultation attachment contract unavailable");
+  await expect(builder.getByRole("button", { name: "Add resource to scope" })).toBeDisabled();
+  await builder.getByLabel("Coverage decision", { exact: true }).selectOption("unsupported");
+  await builder.getByRole("button", { name: "Add resource to scope" }).click();
+  await expect(builder.getByText("Consultation attachment contract unavailable", { exact: true })).toBeVisible();
+});
+test("one saved scope includes two patients and an explicit exclusion", async ({ page }) => {
+  const state = await fixture(page);
+  await page.route("**/rest/v1/ezyvet_record_links?**", route => route.fulfill({ json: [
+    { id: mapping, resource: "animal", client_id: client, pet_id: pet, external_id: "77", snapshot_id: snapshot, head_version: 1, source_origin: origin, source_site_uid: site },
+    { id: id(61), resource: "animal", client_id: client, pet_id: id(62), external_id: "88", snapshot_id: id(63), head_version: 1, source_origin: origin, source_site_uid: site },
+  ] }));
+  await page.route("**/rest/v1/pets?**", route => route.fulfill({ json: [{ id: pet, name: "Synthetic patient", client_id: client }, { id: id(62), name: "Second patient", client_id: client }] }));
+  await page.route("**/rest/v1/ezyvet_import_snapshots?**", route => {
+    const second = new URL(route.request().url()).searchParams.get("external_id") === "eq.88";
+    return route.fulfill({ json: [{ id: second ? id(63) : snapshot, external_id: second ? "88" : "77" }] });
+  });
+  await page.route("**/rest/v1/ezyvet_identity_heads?**", route => route.fulfill({ json: [{ snapshot_id: snapshot, external_id: "77", version: 1 }, { snapshot_id: id(63), external_id: "88", version: 1 }] }));
+  const builder = await draftPlan(page);
+  await builder.getByRole("button", { name: /Second patient · Synthetic household/ }).click();
+  await builder.getByLabel("Migration resource", { exact: true }).selectOption("history");
+  await builder.getByRole("button", { name: "Source parent #88 · version 1" }).click();
+  await builder.getByLabel("Coverage decision", { exact: true }).selectOption("excluded");
+  await builder.getByLabel("Scope reason", { exact: true }).fill("Second patient history awaits clinical scope approval");
+  await builder.getByRole("button", { name: "Add resource to scope" }).click();
+  await builder.getByLabel("I reviewed the listed patients, source parents and coverage decisions.").check();
+  await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Saved migration scope" }).getByText("Second patient history awaits clinical scope approval", { exact: true })).toBeVisible();
+  expect(state.requests[0].body.p_scopes).toMatchObject([{ mapping_id: mapping, resource: "attachment", disposition: "required" }, { mapping_id: id(61), resource: "history", disposition: "excluded" }]);
 });

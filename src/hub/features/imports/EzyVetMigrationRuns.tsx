@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { MigrationScopeBuilder } from "./MigrationScopeBuilder";
+import { MigrationBindingForm } from "./MigrationBindingForm";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +13,7 @@ import { createMigrationCaptureApi } from "./migration-capture-api";
 import type { MigrationItem, MigrationItemCursor } from "./migration-items-api";
 
 interface Props { actor: string }
+interface WorkspaceProps extends Props { onDirtyChange: (dirty: boolean) => void }
 const resourceNames: Record<string, string> = { contact: "Contacts", animal: "Patients", healthstatus: "Weights", consult: "Consultations", history: "History", vaccination: "Vaccinations", prescription: "Prescriptions", prescriptionitem: "Prescription items", attachment: "Attachments" };
 const resourceName = (value: string) => resourceNames[value] ?? value;
 const recorded = (value: string) => new Date(value).toLocaleString();
@@ -27,10 +30,14 @@ function Failure({ message, retry }: FailureProps) {
 }
 function useApi(actor: string) { return useMemo(() => createMigrationRunApi(supabase as unknown as MigrationRpc, actor), [actor]); }
 
-export function EzyVetMigrationRuns({ actor }: Props) {
-  return <MigrationWorkspace key={actor} actor={actor} />;
+export function EzyVetMigrationRuns({ actor, onDirtyChange }: WorkspaceProps) {
+  return <MigrationWorkspace key={actor} actor={actor} onDirtyChange={onDirtyChange} />;
 }
-function MigrationWorkspace({ actor }: Props) {
+function MigrationWorkspace({ actor, onDirtyChange }: WorkspaceProps) {
+  const [planDirty, setPlanDirty] = useState(false), [bindingDirty, setBindingDirty] = useState(false);
+  const locked = planDirty || bindingDirty;
+  useEffect(() => { onDirtyChange(locked); }, [locked, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const api = useApi(actor);
   const [opened, setOpened] = useState(false);
   const [cursor, setCursor] = useState<MigrationCursor | null>(null);
@@ -40,26 +47,27 @@ function MigrationWorkspace({ actor }: Props) {
   return <Card role="region" aria-label="Migration reconciliation">
     <CardHeader><CardTitle>Migration reconciliation</CardTitle><p className="text-sm text-muted-foreground">Reopen saved migrations and inspect their source evidence. Clinical review and cutover acceptance remain separate.</p></CardHeader>
     <CardContent className="space-y-4">
+      <fieldset disabled={bindingDirty}><MigrationScopeBuilder actor={actor} onDirtyChange={setPlanDirty} onSaved={saved => { setOpened(true); setCursor(null); setPrevious([]); setSelected(saved.run.id); void runs.refetch(); }} /></fieldset>
       {!opened ? <Button type="button" variant="outline" onClick={() => setOpened(true)}>Browse saved migrations</Button> : <>
         <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">Your saved migrations</h3><Button type="button" variant="outline" size="sm" disabled={runs.isFetching} onClick={() => void runs.refetch()}>Refresh saved migrations</Button></div>
         {runs.isFetching ? <p role="status">Loading saved migrations…</p> : runs.isError ? <Failure message="Saved migrations could not be loaded." retry={() => void runs.refetch()} /> : runs.data && <>
           {runs.data.runs.length === 0 ? <p className="text-sm text-muted-foreground">No saved migrations on this page. This does not establish that the source migration is complete.</p> : <ul className="space-y-2">{runs.data.runs.map(run => <li key={run.id} className="flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0 text-sm"><p className="break-all font-medium">{run.source_site_uid}</p><p className="text-muted-foreground">{run.source_origin.includes("trial") ? "Trial source" : "Production source"} · Saved {recorded(run.created_at)}</p></div>
-            <Button type="button" variant={selected === run.id ? "secondary" : "outline"} onClick={() => setSelected(run.id)}>Open migration {run.id.slice(0, 8)}</Button>
+            <Button type="button" variant={selected === run.id ? "secondary" : "outline"} disabled={locked} onClick={() => setSelected(run.id)}>Open migration {run.id.slice(0, 8)}</Button>
           </li>)}</ul>}
           <Pagination label="migration" previous={previous.length > 0} next={runs.data.has_more} onPrevious={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setPrevious([...previous, cursor]); setCursor(runs.data.next_cursor); }} />
         </>}
-        {selected && <MigrationDetail key={`${actor}:${selected}`} actor={actor} id={selected} />}
+        <fieldset disabled={planDirty}>{selected && <MigrationDetail key={`${actor}:${selected}`} actor={actor} id={selected} locked={locked} onDirtyChange={setBindingDirty} />}</fieldset>
       </>}
     </CardContent>
   </Card>;
 }
-interface DetailProps extends Props { id: string }
-function MigrationDetail({ actor, id }: DetailProps) {
+interface DetailProps extends Props { id: string; locked: boolean; onDirtyChange: (dirty: boolean) => void }
+function MigrationDetail({ actor, id, locked, onDirtyChange }: DetailProps) {
   const api = useApi(actor);
   const [scopeId, setScopeId] = useState<string | null>(null);
-  const manifest = useQuery({ queryKey: ["migration-manifest", actor, id], retry: false, queryFn: () => api.read(id) });
-  if (manifest.isFetching) return <p role="status">Loading migration scope…</p>;
+  const manifest = useQuery({ queryKey: ["migration-manifest", actor, id], retry: false, refetchOnWindowFocus: false, refetchOnReconnect: false, queryFn: () => api.read(id) });
+  if (manifest.isFetching && !manifest.data) return <p role="status">Loading migration scope…</p>;
   if (manifest.isError) return <Failure message="Migration scope could not be loaded." retry={() => void manifest.refetch()} />;
   if (!manifest.data) return <p role="alert">This saved migration is unavailable to your account.</p>;
   const saved = manifest.data, selected = saved.scopes.find(scope => scope.id === scopeId);
@@ -74,13 +82,13 @@ function MigrationDetail({ actor, id }: DetailProps) {
         <Link className="text-primary underline" to={`/hub/client/${scope.client_id}`}>Open saved household</Link>
       </div>
       <p className="mt-1 break-words">{scope.reason}</p>
-      <Button type="button" variant={scopeId === scope.id ? "secondary" : "outline"} size="sm" className="mt-2 h-auto min-h-10 max-w-full whitespace-normal" onClick={() => setScopeId(scope.id)}>Inspect {resourceName(scope.resource).toLowerCase()} scope {scope.id.slice(0, 8)}</Button>
+      <Button type="button" variant={scopeId === scope.id ? "secondary" : "outline"} size="sm" className="mt-2 h-auto min-h-10 max-w-full whitespace-normal" disabled={locked} onClick={() => setScopeId(scope.id)}>Inspect {resourceName(scope.resource).toLowerCase()} scope {scope.id.slice(0, 8)}</Button>
     </li>)}</ul>
-    {selected && <ScopeBindings key={`${actor}:${selected.id}`} actor={actor} manifest={saved} scopeId={selected.id} />}
+    {selected && <ScopeBindings key={`${actor}:${selected.id}`} actor={actor} manifest={saved} scopeId={selected.id} onDirtyChange={onDirtyChange} />}
   </section>;
 }
-interface ScopeProps extends Props { manifest: MigrationManifest; scopeId: string }
-function ScopeBindings({ actor, manifest, scopeId }: ScopeProps) {
+interface ScopeProps extends Props { manifest: MigrationManifest; scopeId: string; onDirtyChange: (dirty: boolean) => void }
+function ScopeBindings({ actor, manifest, scopeId, onDirtyChange }: ScopeProps) {
   const api = useApi(actor);
   const [cursor, setCursor] = useState<MigrationCursor | null>(null);
   const [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]);
@@ -89,6 +97,7 @@ function ScopeBindings({ actor, manifest, scopeId }: ScopeProps) {
   const binding = useQuery({ queryKey: ["migration-binding", actor, scopeId, selected], enabled: Boolean(selected), retry: false, queryFn: () => api.readBinding(selected, scopeId) });
   return <section aria-label="Saved resource attempts" className="space-y-3 border-t pt-4">
     <h4 className="font-medium">Saved resource attempts</h4>
+    <MigrationBindingForm actor={actor} manifest={manifest} scopeId={scopeId} onDirtyChange={onDirtyChange} onSaved={saved => { setCursor(null); setPrevious([]); setSelected(saved.id); void bindings.refetch(); }} />
     {bindings.isFetching ? <p role="status">Loading saved attempts…</p> : bindings.isError ? <Failure message="Saved attempts could not be loaded." retry={() => void bindings.refetch()} /> : bindings.data && <>
       {bindings.data.bindings.length === 0 ? <p className="text-sm text-muted-foreground">No source run is bound on this page. Review the saved disposition before assessing coverage.</p> : <ul className="space-y-2">{bindings.data.bindings.map(row => <li key={row.id} className="rounded-md border p-3 text-sm">
         <p className="break-words">{row.reason}</p><p className="text-muted-foreground">Saved {recorded(row.created_at)}{row.replaces_id ? " · Replaces an earlier binding" : ""}</p>

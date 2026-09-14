@@ -1,3 +1,5 @@
+import { createClient } from "@supabase/supabase-js";
+import { createMigrationSelectionApi } from "../../src/hub/features/imports/migration-selection-api.ts";
 /** Actual local Auth/PostgREST acceptance; no provider or outbound delivery. */
 import assert from "node:assert/strict";
 import { createMigrationCaptureApi } from "../../src/hub/features/imports/migration-capture-api.ts";
@@ -57,6 +59,15 @@ sql(`insert into ezyvet_record_links(id,request_id,request_hash,source_origin,so
  values(${quote(mapping)},${quote(mapping)},'synthetic-review',${quote(origin)},${quote(site)},'animal','77',${quote(snapshot)},1,${quote(client)},${quote(pet)},1,'link','SYNTHETIC REVIEWED MAPPING',${quote(owner.id)});`);
 const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox),(select count(*) from storage.objects));");
 const beforeEffects = effects();
+const selector = createMigrationSelectionApi(createClient(local.API_URL, local.ANON_KEY, { global: { headers: owner.auth }, auth: { persistSession: false, autoRefreshToken: false } }), owner.id);
+let mappingPage = 0, mapped = await selector.mappings();
+while (!mapped.rows.some(m => m.id === mapping) && mapped.has_more && mappingPage < 20) mapped = await selector.mappings(++mappingPage);
+const selectedMapping = mapped.rows.find(m => m.id === mapping);
+check(selectedMapping?.patient_name === "Synthetic migration patient" && selectedMapping?.household_name === "Synthetic Migration", "Real RLS mapping selector resolves exact patient and household names");
+const selectedParents = await selector.parents(selectedMapping!, "attachment");
+check(selectedParents.rows.some(p => p.id === snapshot && p.version === 1 && p.external_id === "77"), "Real parent selector matches source head and exact mapped identity");
+await assert.rejects(() => selector.mappings(-1)); checks++;
+
 const manifestRequest: MigrationRequest = { id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "attachment", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Synthetic supervised selection" }] };
 const uncertain = createMigrationRunApi({ async rpc(name, args) {
   const result = await ownerTransport.rpc(name, args);
@@ -78,6 +89,9 @@ const childBefore = sql(`select to_jsonb(r) from ezyvet_import_runs r where id=$
 const bindingRequest: MigrationBindingRequest = { id: randomUUID(), scope_id: manifestRequest.scopes[0].id, child_run_id: child, reason: "Explicit existing attempt", replaces_id: null };
 await assert.rejects(() => uncertain.bind(bindingRequest), /Simulated reply loss/); checks++;
 const bound = await api.readBinding(bindingRequest.id, bindingRequest.scope_id);
+const selectedRuns = await selector.runs((await api.read(manifestRequest.id))!, (await api.read(manifestRequest.id))!.scopes[0]);
+check(selectedRuns.rows.some(r => r.id === child) && selectedRuns.rows.every(r => r.requested_by === owner.id && r.source_site_uid === site && r.resource === "attachment"), "Real run selector enforces owner, source and resource filters");
+
 check(bound?.child_run_id === child && bound.child_context.parent_evidence === "exact_parent_version", "Lost binding reply recovers exact child context");
 const initialProgress = await api.progress(saved, bound);
 check(initialProgress?.observations.occurrences === 0 && initialProgress.scan.status === "running" && !initialProgress.scan.traversal_ended, "Unfetched child is not completed coverage");

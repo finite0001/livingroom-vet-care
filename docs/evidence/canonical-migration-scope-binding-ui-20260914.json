@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-14",
+  "scope": "Operator migration scope creation and exact existing-run binding; no automatic scanning, clinical promotion or cutover acceptance",
+  "source_sha256": {
+    "src/hub/features/imports/MigrationScopeBuilder.tsx": "7d1200ab4f26859b0a100de91fcea46749316501da4f4be524ee0472f3ee48fe",
+    "src/hub/features/imports/MigrationBindingForm.tsx": "c2c808c1f76aa7a32c6ff6be740962a6068465c43eac45e78da624fb48946319",
+    "src/hub/features/imports/migration-selection-api.ts": "a666ac0c51c524ebe19499a064a837671265e1d7d845f73a4856ce0786f14162",
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "fd97874d0f3dfee9a8ecd2743f503c5df1160538cda6c1768798c3736faa2334",
+    "src/hub/features/imports/EzyVetImportPage.tsx": "88d9a9d1d4827a84ed0486e4d89694f88cfb1a49b05c261ff71ce0ecc164269f",
+    "tests/ezyvet/migration-selection-api.test.ts": "e65a402a80597b47c47c9a6f6a2134ddfc09d05888cf04c7115c8050088b6f25",
+    "tests/ezyvet/migration-local-roundtrip.ts": "bdbe5337f64d4b3aec8a905314ee3eb553ac73d9f28caeea0e132d2c540bcf42",
+    "tests/ezyvet/attachment-metadata-disposable.py": "bfca36ded40998c7449297e751945b841e34b25c7043d21663abb82726421e46",
+    "e2e/migration-workspace.spec.ts": "8c1d47610fd0c5c6acd6e56e5e70b519d09898bfd5c83e8d959ef9122d4d235b"
+  },
+  "unit_tests": 566,
+  "lint_typecheck_build_passed": true,
+  "browser_tests": 33,
+  "browser_transport": "Synthetic RPC/PostgREST fixtures; real Auth/PostgREST selector and save/recovery checks run separately",
+  "runtime_checks": 80,
+  "runtime_fixture": "migration",
+  "runtime_result_sha256": "a793d4f9700d540ffa73937577934a90ac1c151d05f29ce966f592a477a4a3de",
+  "runtime_cleanup_verified": true,
+  "provider_requests": 0,
+  "logs_sha256": {
+    "check": "ee13658723e4e23ca5c81d4de609a4d8fd3a9f1d01b8a961b04418e013446245",
+    "browser": "22596017365205e3971d5b00d5e3fa746b472ce7c6e277a033a1258808d10641",
+    "runtime": "783a8cb6add53c85590fe82a0b2054fa760ff48a0a3dafbc5b396f89a6110e7e"
+  },
+  "screenshots_sha256": {
+    "docs/evidence/migration-scope-created-mobile-20260914.png": "5eddaf2d73ad0efefcb736ff465d58379e524a7d5f62d917bb5e885ff826bfb1",
+    "docs/evidence/migration-scope-created-desktop-20260914.png": "60039325c223fadd8ad82fee46c192c74ac5b3e76aec012256f065ddaa77592b"
+  },
+  "verified_cases": [
+    "Bounded approved mapping selection resolves household and patient names; changed patient household fails closed",
+    "Current source-parent selection retains snapshot/head identity and supports resource-specific parent contracts",
+    "Multiple patient scopes and explicit exclusions form one immutable source-site request",
+    "Unsupported consultation attachments cannot be required",
+    "Lost plan reply recovers exact saved scope without a duplicate mutation",
+    "Null recovery permits only the same request and payload retry",
+    "Confirmed transactional rejection unlocks draft correction and resets attestation",
+    "Existing-run binding retains exact preceding binding and recovers a lost reply",
+    "Attachment run choices use owned discovery and filter exact parent snapshot/head",
+    "Scoped resource runs use their existing owned discovery APIs; legacy unscoped runs are not selectable",
+    "Run-choice owner/site/resource substitutions and cursor inconsistencies fail closed",
+    "Drafts participate in existing navigation guard; scope switches and competing forms are disabled while dirty",
+    "Late plan response after sign-out cannot restore private UI",
+    "Mapping lookup error stays distinct from an empty result and recovers",
+    "Existing clinical and attachment recovery/navigation suites pass",
+    "Mobile390 and desktop1440 saved-scope views inspected with no horizontal overflow"
+  ],
+  "validation_notes": [
+    "A real runtime check showed that direct table reads intentionally hide attachment runs. The selector was corrected to use existing owner-scoped discovery APIs; no RLS policy or permission was weakened.",
+    "Initial browser failures identified an ambiguous select label, an incorrect test navigation role and a synthetic consultation reusing an Animal snapshot identity. Explicit select labels and corrected fixtures passed the final suite."
+  ],
+  "database_changes": false,
+  "hosted_changes": false,
+  "backend_prerequisite": {
+    "migration_count": 107,
+    "restore_evidence": "canonical-migration-capture-evidence-20260914.json",
+    "restore_evidence_sha256": "ff5fece2adc0764693bec327687a59f7aacc59466648e5c6a015e7009ea919c1",
+    "all_runtime_migration_hashes_match_current": true
+  },
+  "remaining": [
+    "Explicit resume of exact resource transport from a saved binding",
+    "Other clinical outcome adapters, global reconciliation and operational resolutions",
+    "Frozen report generation and reviewed acceptance",
+    "Actual signed-in full staff workflow against matching hosted staging",
+    "Mail/provider/clinical commissioning, full launch gates and public cutover"
+  ]
+}
