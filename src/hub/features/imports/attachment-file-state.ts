@@ -18,7 +18,7 @@ export function parseAttachmentFileRecovery(value: unknown, expected: Attachment
   if (request.source_context === null) {
     if (request.id !== intent.id || request.actor_id !== intent.actor || request.pet_id !== intent.pet || request.status !== "abandoned" || request.request_payload !== null || request.request_hash !== null || intent.requestHash !== undefined || envelope.capture_intent !== null || envelope.capture !== null || envelope.worker !== null || envelope.download_available !== false) throw new Error("Abandonment receipt differs from the unprepared request.");
     date.parse(request.created_at); date.parse(request.resolved_at);
-    return { status: "abandoned" as const, requestHash: null, worker: null, captured: false, fileSize: null };
+    return { status: "abandoned" as const, requestHash: null, worker: null, captured: false, fileSize: null, cleanupIntentHash: null };
   }
   const requestHash = hash.parse(request.request_hash);
   if (intent.requestHash && intent.requestHash !== requestHash) throw new Error("Saved file request changed.");
@@ -28,7 +28,7 @@ export function parseAttachmentFileRecovery(value: unknown, expected: Attachment
   if (source.run_id !== intent.runId || source.page !== intent.page || source.attachment_snapshot_id !== intent.snapshotId || source.attachment_payload_hash !== intent.payloadHash || source.attachment_observed_head_version !== intent.headVersion || source.attachment_external_id !== intent.externalId || !same(source.parent, intent.parent)) throw new Error("Saved file source differs from the selected observation.");
   const worker = workerSchema.parse(envelope.worker);
   if (envelope.download_available !== false || (saved.status !== "pending" && worker?.lease_active)) throw new Error("File status is inconsistent.");
-  return { status: saved.status, requestHash, worker, captured: !!saved.capture, fileSize: saved.capture ? saved.intent!.file_size : null };
+  return { status: saved.status, requestHash, worker, captured: !!saved.capture, fileSize: saved.capture ? saved.intent!.file_size : null, cleanupIntentHash: saved.intent?.intent_hash ?? null };
 }
 export type AttachmentFileRecovery = ReturnType<typeof parseAttachmentFileRecovery>;
 export function attachmentFileCanCapture(state: AttachmentFileRecovery, now = Date.now()) {

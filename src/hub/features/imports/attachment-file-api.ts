@@ -1,3 +1,4 @@
+import { parseAttachmentCleanupRecovery, type AttachmentCleanupOperation } from "./attachment-cleanup-state";
 import { parseAttachmentCleanupHistory, type AttachmentCleanupCursor } from "./attachment-cleanup-state";
 import { parsePreparedAttachmentRun } from "./attachment-discovery-state";
 import type { AttachmentMapping, AttachmentHistoryCursor } from "./attachment-discovery-state";
@@ -44,4 +45,18 @@ export async function abandonAttachmentFile(intent: AttachmentFileIntent) {
 
 export async function listAttachmentCleanupHistory(intent: AttachmentFileIntent, cursor: AttachmentCleanupCursor | null) {
   return parseAttachmentCleanupHistory(await rpc("list_ezyvet_attachment_cleanups", { p_id: intent.id, p_pet_id: intent.pet, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 }), intent);
+}
+
+export async function recoverAttachmentCleanup(op: AttachmentCleanupOperation) {
+  return parseAttachmentCleanupRecovery(await rpc("recover_ezyvet_attachment_cleanup", { p_cleanup_id: op.id, p_id: op.request, p_pet_id: op.pet }), op);
+}
+export async function runAttachmentCleanup(op: AttachmentCleanupOperation) {
+  const { error } = await supabase.functions.invoke("ezyvet-attachment-cleanup", { body: { cleanup_id: op.id, request_id: op.request, pet_id: op.pet, request_hash: op.requestHash } });
+  if (error) {
+    let code: unknown;
+    if ("context" in error && error.context instanceof Response) { try { code = (await error.context.json())?.error; } catch { /* Do not display transport text. */ } }
+    if (code === "CLEANUP_DISABLED") throw new AttachmentFileActionError("Temporary file cleanup is not commissioned. An administrator must finish server setup.");
+    if (code === "CLEANUP_NOT_ELIGIBLE") throw new AttachmentFileActionError("Cleanup is not eligible yet. The server requires an abandoned reserved file and a grace period after capture workers finish.");
+    throw new AttachmentFileActionError("Cleanup response was unconfirmed. Recover the original attempt before continuing.");
+  }
 }

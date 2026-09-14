@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { listAttachmentCleanupHistory } from "./attachment-file-api";
 import type { AttachmentFileIntent } from "./attachment-file-state";
 import type { AttachmentCleanupCursor } from "./attachment-cleanup-state";
-interface Props { intent: AttachmentFileIntent; disabled: boolean; }
-export function AttachmentCleanupHistory({ intent, disabled }: Props) {
+interface Props { intent: AttachmentFileIntent; disabled: boolean; onRecover?: (id: string) => void; }
+export function AttachmentCleanupHistory({ intent, disabled, onRecover }: Props) {
   const [cursor, setCursor] = useState<AttachmentCleanupCursor | null>(null);
   const history = useQuery({ queryKey: ["attachment-cleanup-history", intent.actor, intent.pet, intent.id, intent.requestHash, cursor], queryFn: () => listAttachmentCleanupHistory(intent, cursor), retry: false });
   return <section aria-label="Temporary file cleanup history" className="space-y-2 border-t pt-3">
@@ -18,6 +18,7 @@ export function AttachmentCleanupHistory({ intent, disabled }: Props) {
       <ul className="space-y-2">{history.data.cleanups.map(row => <li key={row.attempt.id} className="text-sm">
         <p>{row.receipt ? `Storage absence verified at ${new Date(row.receipt.verified_absent_at).toLocaleString()}.` : row.lease_active ? "Cleanup worker is active. Recheck for a saved receipt." : "Cleanup attempt ended without an absence receipt."}</p>
         <p className="break-all text-xs text-muted-foreground">Cleanup reference: {row.attempt.id}</p>
+        {onRecover && <Button variant="secondary" disabled={disabled} onClick={() => onRecover(row.attempt.id)}>Recover cleanup {row.attempt.id.slice(0, 8)}</Button>}
       </li>)}</ul>
     </>}
     <div className="flex flex-wrap gap-2">

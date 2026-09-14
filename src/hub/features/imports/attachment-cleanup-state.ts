@@ -25,3 +25,19 @@ export function parseAttachmentCleanupHistory(value: unknown, expected: Pick<Att
   }
   return { ...page, next_cursor: page.next_cursor ? { before_at: page.next_cursor.before_at!, before_id: page.next_cursor.before_id! } : null };
 }
+
+export interface AttachmentCleanupOperation { id: string; actor: string; pet: string; request: string; requestHash: string; intentHash: string; }
+const operationSchema = z.object({ id: uuid, actor: uuid, pet: uuid, request: uuid, requestHash: hash, intentHash: hash }).strict();
+export function parseAttachmentCleanupOperation(value: unknown, expected: Pick<AttachmentFileIntent, "id" | "actor" | "pet" | "requestHash">, intentHash: string): AttachmentCleanupOperation {
+  const op = operationSchema.parse(value);
+  if (op.actor !== expected.actor || op.pet !== expected.pet || op.request !== expected.id || op.requestHash !== expected.requestHash || op.intentHash !== intentHash) throw new Error("Cleanup reference differs.");
+  return { id: op.id!, actor: op.actor!, pet: op.pet!, request: op.request!, requestHash: op.requestHash!, intentHash: op.intentHash! };
+}
+export function parseAttachmentCleanupRecovery(value: unknown, op: AttachmentCleanupOperation) {
+  if (value === null) return null;
+  const row = z.object({ attempt, receipt: receipt.nullable() }).strict().parse(value);
+  const page = parseAttachmentCleanupHistory({ request_id: op.request, pet_id: op.pet, cleanups: [{ ...row, lease_active: false }], has_more: false, next_cursor: null }, { id: op.request, actor: op.actor, pet: op.pet, requestHash: op.requestHash });
+  const saved = page.cleanups[0];
+  if (saved.attempt.id !== op.id || saved.attempt.intent_hash !== op.intentHash) throw new Error("Cleanup recovery differs from original operation.");
+  return saved;
+}

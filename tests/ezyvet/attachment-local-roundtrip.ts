@@ -1,4 +1,4 @@
-import { parseAttachmentCleanupHistory } from "../../src/hub/features/imports/attachment-cleanup-state.ts";
+import { parseAttachmentCleanupHistory, parseAttachmentCleanupRecovery } from "../../src/hub/features/imports/attachment-cleanup-state.ts";
 import { parseAttachmentFileHistory, parseAttachmentFileRecovery } from "../../src/hub/features/imports/attachment-file-state.ts";
 /** Attachment metadata through real local HTTP, Auth and PostgREST; synthetic upstream only. */
 import { createServer } from "node:http";
@@ -472,6 +472,7 @@ try {
       const cleanupResult = await cleanupResponse.json();
       check(Object.keys(cleanupResult).sort().join(",") === "cleanup_id,request_id,status,verified_absent_at" && cleanupResult.status === "cleanup_recorded", "Cleanup HTTP exposes only owned point-in-time receipt summary");
       const afterCleanup = await rpc("recover_ezyvet_attachment_cleanup", { p_cleanup_id: cleanupId, p_id: cleanupRequest, p_pet_id: pet }, true);
+      check(parseAttachmentCleanupRecovery(afterCleanup, { id: cleanupId, request: cleanupRequest, actor, pet, requestHash: cleanupBody.request_hash, intentHash: afterCleanup.attempt.intent_hash })?.receipt?.verified_absent_at === cleanupResult.verified_absent_at, "Frontend recovery validates actual cleanup completion after lost replies");
       check(afterCleanup.receipt.verified_absent_at === cleanupResult.verified_absent_at, "Lost cleanup completion recovers exact durable receipt");
       check(sql(`select count(*) from storage.objects where bucket_id='ezyvet-attachments' and name=${quote(expectedCleanupPath)};`) === "0", "Storage API deletion removes actual reserved object metadata");
       check(sql(`select status from ezyvet_attachment_download_requests where id=${quote(cleanupRequest)};`) === "abandoned", "Physical cleanup retains permanent abandonment tombstone");

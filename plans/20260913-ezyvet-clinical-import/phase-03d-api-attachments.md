@@ -260,3 +260,12 @@ Abandoned file requests now expose owned cleanup attempt history in the existing
 The panel hides previous results while refreshing and on verification errors; it offers newest/older pagination and recheck. It performs read-only discovery and does not initiate cleanup. Cleanup initiation and same-operation recovery/retry controls are the next implementation, followed by original inspection, clinical review/corrections/release, current populated upgrade/restore and all full commercial-readiness acceptance gates.
 
 Validation is recorded in `docs/evidence/attachment-cleanup-history-ui-local-20260913.json`. The abandonment parent bf168f5 is pushed to draft PR126; its parent5706f2e passed all three CI jobs in run34804078645. No hosted attachment deployment or activation occurred.
+
+
+### Explicit temporary-file cleanup controls
+
+Reserved abandoned files now have a confirmation-based cleanup action, exact-attempt recheck/retry, and an explicit new sweep after a recovered receipt or expired attempt. Cleanup identity pins the operator, patient, file request/hash and reserved intent hash. New identity is persisted before invoking the worker. A failed browser write sends no cleanup mutation. Full owned file recovery precedes every action, and full cleanup recovery validates receipts after successful or lost worker replies.
+
+The same operation survives reload. Verified saved cleanup history can repair a missing local pointer; a known unresolved attempt cannot be replaced by another history selection or new sweep. Busy/uncertain cleanup state participates in the existing file/patient/navigation guards. Unknown server outcomes keep the original reference. Disabled or not-yet-eligible workers return actionable bounded messages. Source-less/unreserved abandoned requests show history but no cleanup action; captured evidence cannot enter this workflow.
+
+Current validation and limits are recorded in `docs/evidence/attachment-cleanup-actions-ui-local-20260913.json`. Original inspection, clinical review/corrections/release, current populated upgrade/restore and actual hosted/provider/operator/clinical acceptance remain required. No hosted activation or real file deletion occurred during implementation; local tests use owned synthetic fixtures.

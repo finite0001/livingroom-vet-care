@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseAttachmentCleanupHistory } from '../../src/hub/features/imports/attachment-cleanup-state.ts';
+import { parseAttachmentCleanupHistory, parseAttachmentCleanupOperation, parseAttachmentCleanupRecovery } from '../../src/hub/features/imports/attachment-cleanup-state.ts';
 const id = (n: number) => `de700000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const expected = { id: id(1), actor: id(2), pet: id(3), requestHash: 'a'.repeat(64) };
 function fixture() {
@@ -12,3 +12,5 @@ test('cleanup history rejects another actor, patient, request or request hash', 
 test('cleanup rejects mismatched receipt, active completed worker and invalid lease', () => { const p = fixture(); p.cleanups[0].receipt.cleanup_id = id(99); assert.throws(() => parseAttachmentCleanupHistory(p, expected)); const q = fixture(); q.cleanups[0].lease_active = true; assert.throws(() => parseAttachmentCleanupHistory(q, expected)); const r = fixture(); r.cleanups[0].attempt.lease_until = r.cleanups[0].attempt.created_at; assert.throws(() => parseAttachmentCleanupHistory(r, expected)); });
 test('cleanup rejects worker secrets, duplicate attempts and cursor substitution', () => { const p = fixture(); Object.assign(p.cleanups[0].attempt, { lease_id: id(9) }); assert.throws(() => parseAttachmentCleanupHistory(p, expected)); const q = fixture(); q.cleanups.push(q.cleanups[0]); assert.throws(() => parseAttachmentCleanupHistory(q, expected)); const r = fixture(); r.has_more = true; r.next_cursor = { before_at: r.cleanups[0].attempt.created_at, before_id: id(99) }; assert.throws(() => parseAttachmentCleanupHistory(r, expected)); });
 test('source-less abandoned requests can have empty cleanup history only', () => { const p = fixture(); assert.throws(() => parseAttachmentCleanupHistory(p, { ...expected, requestHash: undefined })); p.cleanups = []; assert.equal(parseAttachmentCleanupHistory(p, { ...expected, requestHash: undefined }).cleanups.length, 0); });
+
+test('cleanup operation and recovery bind the original reserved intent and attempt', () => { const p=fixture(), op=parseAttachmentCleanupOperation({id:id(4),actor:expected.actor,pet:expected.pet,request:expected.id,requestHash:expected.requestHash,intentHash:'b'.repeat(64)},expected,'b'.repeat(64)); const row={attempt:p.cleanups[0].attempt,receipt:p.cleanups[0].receipt}; assert.ok(parseAttachmentCleanupRecovery(row,op)?.receipt); assert.equal(parseAttachmentCleanupRecovery(null,op),null); assert.throws(()=>parseAttachmentCleanupRecovery(row,{...op,id:id(99)})); assert.throws(()=>parseAttachmentCleanupRecovery(row,{...op,intentHash:'c'.repeat(64)})); assert.throws(()=>parseAttachmentCleanupOperation(op,expected,'c'.repeat(64))); });
