@@ -2,6 +2,9 @@
 
 No provider requests, physical file writes, hosted changes or foundation mutations.
 """
+import base64
+import hashlib
+import re
 import argparse
 import json
 from pathlib import Path
@@ -12,7 +15,7 @@ import uuid
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path)
 approval_scenarios = ['approval-request-role-loss', 'approval-source-role-loss', 'approval-object-role-loss', 'approval-chain-role-loss', 'approval-competing-corrections', 'approval-source-change-first', 'approval-before-source-change', 'cancel-before-approval', 'approval-before-cancel', 'cancel-role-loss']
-release_scenarios = ['release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
+release_scenarios = ['release-email-capture-source-first', 'release-email-capture-before-source', 'release-email-source-first', 'release-email-before-source', 'release-source-first', 'release-before-source', 'release-parent-first', 'release-before-parent', 'release-mapping-first', 'release-before-mapping', 'release-native-first', 'release-before-native', 'release-correction-first', 'release-before-correction', 'release-request-role-loss', 'release-chain-role-loss', 'release-replay-role-loss', 'release-read-role-loss']
 parser.add_argument('--scenario', choices=approval_scenarios + release_scenarios + ['prepare-request-role-loss', 'prepare-source-role-loss', 'abandon-request-role-loss', 'abandon-tombstone-role-loss', 'scan-request-role-loss', 'scan-source-role-loss'])
 parser.add_argument('--skip-authorization-fix', action='store_true', help='Reproduce the old authorization bug in the owned disposable clone only')
 parser.add_argument('--skip-release-access-fix', action='store_true', help='Reproduce pre8000 access waits in an owned clone when the source lacks8000; never revert an existing fix')
@@ -143,6 +146,11 @@ try:
         actor = prefix + '-0000-4000-8000-000000000001'
         current = fixture.replace('db560000', prefix).replace('prescriptionitem-test-site', scenario).replace('@example.test', '@' + scenario + '.example.test')
         current = current.replace("where s.resource='attachment' and s.external_id='701'", "where s.resource='attachment' and s.external_id='701' and s.source_site_uid='" + scenario + "'")
+        original_bytes = b'%PDF-1.7\n' + b'x' * 22 + b'\n%%EOF'
+        assert len(original_bytes) == 37
+        original_digest = hashlib.sha256(original_bytes).hexdigest() if scenario.startswith('release-') else 'a' * 64
+        if scenario.startswith('release-'):
+            current = current.replace("sha text default repeat('a',64)", "sha text default '" + original_digest + "'")
         setup = current + "update ezyvet_import_runs set retry_after=null,lease_until=null where id=(select id from fx where k='run');insert into data select 'lease',pg_temp.claim();"
         if scenario != 'reserve-source-expiry':
             setup += "insert into data select 'intent',pg_temp.reserve();"
@@ -157,7 +165,7 @@ try:
         source_lock = f"select 1 from ezyvet_identity_heads where source_site_uid='{scenario}' and resource='attachment' for update;"
         if scenario.startswith('release-'):
             intent = data['intent']
-            capture = json.loads(scalar(f"select to_jsonb(complete_ezyvet_attachment_capture({identity},'{intent['intent_hash']}',repeat('a',64),37,'application/pdf',{metadata}));"))
+            capture = json.loads(scalar(f"select to_jsonb(complete_ezyvet_attachment_capture({identity},'{intent['intent_hash']}','{original_digest}',37,'application/pdf',{metadata}));"))
             approval, correction, release_id = (str(uuid.uuid4()) for _ in range(3))
             staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
             def release_approve(operation_id, previous=None):
@@ -192,7 +200,28 @@ try:
                 if not existing:
                     sql(f"insert into conversations(id,client_id) values('{conversation}','{fx['client']}');")
                 prepare = staff + f"select prepare_release_email('{email_request}','{release_id}','{conversation}','Synthetic race','Synthetic reviewed API original','{preview['source_hash']}');"
-                if scenario.endswith('source-first'):
+                capture_operation = None
+                if 'capture-' in scenario:
+                    sql('begin;' + prepare + 'commit;')
+                    doc = preview['snapshot']['attachments'][0]
+                    stem = re.sub(r'[^A-Za-z0-9 _.-]', '_', re.sub(r'\.[^.]*$', '', doc['file_name'])).strip(' .')[:100] or 'record'
+                    payload = json.dumps({'from': 'care@example.test', 'reply_to': 'care@example.test', 'to': [recipient], 'subject': 'Synthetic race', 'text': 'Synthetic reviewed API original', 'attachments': [
+                        {'filename': 'medical-records-' + release_id + '.html', 'content_type': 'text/html', 'content': base64.b64encode(b'<html>Synthetic concurrency report</html>').decode()},
+                        {'filename': '1-' + stem + '.pdf', 'content_type': 'application/pdf', 'content': base64.b64encode(original_bytes).decode()}
+                    ]})
+                    service = "set local role service_role;select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
+                    capture_operation = service + f"select capture_release_email_payload('{email_request}','{actor}',{quote(payload)});"
+                if capture_operation:
+                    if scenario.endswith('source-first'):
+                        contend(change, capture_operation, 'Release, household or recipient is no longer eligible')
+                        check(scalar(f"select count(*) from release_email_payloads where request_id='{email_request}';") == '0', 'Earlier source revision prevents payload capture')
+                    else:
+                        contend(capture_operation, change, None)
+                        check(scalar(f"select count(*) from release_email_payloads where request_id='{email_request}';") == '1', 'Earlier valid payload capture remains immutable after source change')
+                        payload_hash = scalar(f"select payload_hash from release_email_payloads where request_id='{email_request}';")
+                        queue = sql('begin;' + staff + f"select enqueue_release_email('{email_request}','{payload_hash}',true);commit;", fail=False)
+                        check(queue.returncode != 0 and 'eligible' in queue.stderr, 'Changed source prevents queueing an earlier captured payload: ' + queue.stderr)
+                elif scenario.endswith('source-first'):
                     contend(change, prepare, 'Release is not eligible for this household recipient')
                     check(scalar(f"select count(*) from release_email_requests where id='{email_request}';") == '0', 'Earlier source revision prevents email preparation')
                 else:
