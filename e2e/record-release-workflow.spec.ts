@@ -44,6 +44,7 @@ async function fixture(
   vaccinationMode = false,
   prescriptionMode = false,
   apiMode = false,
+  apiCandidateCount = 1,
 ) {
   const currentArtifact = apiMode ? JSON.parse(JSON.stringify(apiAttachmentArtifact()).replaceAll("d9000000-0000-4000-8000-000000000001",petId).replaceAll("d9000000-0000-4000-8000-000000000002",clientId)) : prescriptionMode ? prescriptionArtifact() : vaccinationMode
     ? vaccinationArtifact()
@@ -356,6 +357,19 @@ async function fixture(
             key === "document_ids" && !offset,
           ]),
         );
+      }
+      if (apiMode && apiCandidateCount > 1) {
+        candidates.document_ids = [];
+        const template = candidates.api_attachment_ids[0];
+        candidates.api_attachment_ids = Array.from(
+          { length: Math.min(100, Math.max(0, apiCandidateCount - offset)) },
+          (_, index) => ({
+            ...template,
+            id: `d9000000-0000-4000-8000-${String(offset + index + 1).padStart(12, "0")}`,
+            label: `Paged original ${offset + index + 1}`,
+          }),
+        );
+        candidates.has_more.api_attachment_ids = offset + 100 < apiCandidateCount;
       }
       if (prescriptionMode) candidates.imported_prescription_ids = currentArtifact.preview.snapshot.imported_prescriptions!.map((p) => ({
         id: p.id, version: p.version, version_hash: p.version_hash,
@@ -1449,3 +1463,39 @@ test("schema9 reviews an API original and recovers exact confirmation without se
  expect(state.requests[0].p_selection.api_attachment_ids).toHaveLength(1);
  expect(state.requests[0].p_reviewed_snapshot.attachments).toHaveLength(1);
 });
+
+for (const mobile of [false, true]) {
+  test(`API original pagination preserves cross-page selection on ${mobile ? "mobile" : "desktop"}`, async ({ page }) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    const offsets: number[] = [];
+    page.on("request", request => {
+      if (request.url().endsWith("/rpc/list_record_release_sources_v9")) {
+        offsets.push(request.postDataJSON().p_offset);
+      }
+    });
+    const state = await fixture(page, true, true, true, false, false, false, true, 101);
+    const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+    const originals = panel.getByRole("checkbox", { name: /^Paged original / });
+    await expect(originals).toHaveCount(100);
+    const first = panel.getByRole("checkbox", { name: /^Paged original 1(?:\s|$)/ });
+    await first.check();
+    await panel.getByRole("button", { name: "Older source records", exact: true }).click();
+    await expect(panel.getByText("Source page 2 · up to 100 per family", { exact: true })).toBeVisible();
+    await expect(originals).toHaveCount(1);
+    const last = panel.getByRole("checkbox", { name: /^Paged original 101(?:\s|$)/ });
+    await last.check();
+    await expect(panel.getByRole("heading", { name: "Reviewed ezyVet API originals · 2 selected", exact: true })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Older source records", exact: true })).toBeDisabled();
+    await panel.getByRole("button", { name: "Newer source records", exact: true }).click();
+    await expect(originals).toHaveCount(100);
+    await expect(first).toBeChecked();
+    await expect(originals.and(page.locator(":checked"))).toHaveCount(1);
+    await expect(panel.getByRole("heading", { name: "Reviewed ezyVet API originals · 2 selected", exact: true })).toBeVisible();
+    await panel.getByRole("button", { name: "Older source records", exact: true }).click();
+    await expect(last).toBeChecked();
+    expect(offsets).toContain(0);
+    expect(offsets).toContain(100);
+    expect(offsets.every(offset => offset === 0 || offset === 100)).toBe(true);
+    expect(state.requests).toHaveLength(0);
+  });
+}

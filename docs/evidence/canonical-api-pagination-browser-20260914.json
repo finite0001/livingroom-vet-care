@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-14",
+  "base_revision": "fb8850e9af386b09e56b5ad6f5b7533d16d97dd3",
+  "fixture_sha256": "f0665a37565c0baad6d278173c2b15d1a331dc164df0aa273af664f87834b131",
+  "verification": {
+    "source_counts": [
+      100,
+      1
+    ],
+    "desktop_viewport": "Playwright Desktop Chrome default",
+    "mobile_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "cross_page_checked_ids_preserved": true,
+    "observed_offsets": [
+      0,
+      100
+    ],
+    "older_button_disabled_at_final_page": true,
+    "confirmation_requests": 0,
+    "focused_pagination_tests": 2,
+    "complete_release_workflow_tests": 21,
+    "lint": "passed; existing AuthContext Fast Refresh warning"
+  },
+  "limitations": [
+    "Synthetic source-list responses exercise the real UI; no hosted staff acceptance or provider data.",
+    "Fixture initially lacked legacy source fields; corrected source-aware setup passed both targeted and complete release file.",
+    "No production code changes, deployment, messages or provider requests."
+  ]
+}
