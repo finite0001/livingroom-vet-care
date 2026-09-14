@@ -1,8 +1,12 @@
 """Exercise additive6500 against populated canonical6300 in an owned scratch DB."""
 from pathlib import Path
+import argparse
 import subprocess
 import tempfile
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--project-config', type=Path, help='Use the explicitly selected local Supabase container')
+args = parser.parse_args()
 root = Path(__file__).resolve().parents[2]
 migrations = root / 'supabase/migrations'
 files = sorted(migrations.glob('*.sql'))
@@ -39,5 +43,8 @@ test = test.replace(boundary, capture + new + verify + boundary, 1)
 with tempfile.TemporaryDirectory(prefix='lrv-reference-upgrade-') as directory:
     fixture = Path(directory) / 'upgrade.sql'
     fixture.write_text(test)
-    subprocess.run(['python3',str(root/'supabase/tests/ezyvet_prescription_review_concurrency.py'),'--sql-only','--extra-sql-test',str(fixture)],cwd=root,check=True)
+    command = ['python3',str(root/'supabase/tests/ezyvet_prescription_review_concurrency.py'),'--sql-only','--extra-sql-test',str(fixture)]
+    if args.project_config:
+        command.extend(['--project-config',str(args.project_config.resolve())])
+    subprocess.run(command,cwd=root,check=True)
 print('PASS: populated canonical84-to85 additive upgrade, exact table rows and unrelated functions/grants preserved; owned scratch DB cleaned.')
