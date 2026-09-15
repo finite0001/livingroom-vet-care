@@ -104,3 +104,63 @@ test("missing verification keeps submission disabled", async ({ page }) => {
   ).toBeDisabled();
   expect(s.submitIds).toHaveLength(0);
 });
+
+test("blocked browser storage preserves the page and draft without sending", async ({ page }) => {
+  const s = await fixture(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "sessionStorage", {
+      get() { throw new DOMException("Storage blocked", "SecurityError"); },
+    });
+  });
+  await page.goto("/contact");
+  await fill(page);
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Nothing was sent" })).toBeVisible();
+  await expect(page.getByLabel("Name", { exact: false })).toHaveValue("Private Visitor");
+  await expect(page.getByLabel("Name", { exact: false })).toBeEnabled();
+  expect(s.submitIds).toHaveLength(0);
+  expect(s.receiptIds).toHaveLength(0);
+});
+
+test("failed receipt cleanup does not turn an accepted request into uncertainty", async ({ page }) => {
+  const s = await fixture(page);
+  s.lose = false;
+  await page.addInitScript(() => {
+    const remove = Storage.prototype.removeItem;
+    Storage.prototype.removeItem = function (key) {
+      if (key === "lrv-contact-request") throw new DOMException("Storage blocked", "SecurityError");
+      return remove.call(this, key);
+    };
+  });
+  await page.goto("/contact");
+  await fill(page);
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect(page.getByText("Request received. This is not a confirmed appointment.", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Name", { exact: false })).toHaveValue("");
+  await page.reload();
+  await expect(page.getByText("Your earlier request was received. This is not a confirmed appointment.", { exact: true })).toBeVisible();
+  expect(s.submitIds).toHaveLength(1);
+  expect(s.receiptIds).toContain(s.submitIds[0]);
+});
+
+test("storage failure on retry preserves uncertainty about the earlier request", async ({ page }) => {
+  const s = await fixture(page);
+  await page.goto("/contact");
+  await fill(page);
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect(page.getByRole("button", { name: "Check request receipt" })).toBeVisible();
+  await page.evaluate(() => {
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "lrv-contact-request") throw new DOMException("Quota exceeded", "QuotaExceededError");
+      return set.call(this, key, value);
+    };
+  });
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Your earlier request remains unconfirmed" })).toBeVisible();
+  await expect(page.getByLabel("Name", { exact: false })).toBeDisabled();
+  expect(s.submitIds).toHaveLength(1);
+  await page.getByRole("button", { name: "Check request receipt" }).click();
+  await expect(page.getByText("Request received. This is not a confirmed appointment.", { exact: true })).toBeVisible();
+  expect(s.submitIds).toHaveLength(1);
+});

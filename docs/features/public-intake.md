@@ -18,7 +18,13 @@ A browser generates one request UUID and a separate random 256-bit receipt capab
 
 After a lost response, the form says receipt is unconfirmed, retains the reference, and offers a receipt check. Reload checks the receipt without resending. A received receipt acknowledges the earlier request; unknown/unavailable preserves the reference and asks for the original details if re-entry is necessary. It never asserts a failed HTTP response means the write did not commit. The opaque receipt endpoint returns only `received`, never original content or a household identity. If the visitor clears session storage or uses another browser, automatic recovery cannot identify the earlier request; staff should review possible duplicates manually.
 
-## Operator setup / rollout gate (not performed)
+## Browser storage failures
+
+The form catches browsers that deny access to session storage. It refuses to send a new request unless its opaque recovery reference can be saved, preserves the draft, and states that nothing was sent. If storage fails on a retry, it preserves uncertainty about the earlier attempt and still offers receipt lookup. Failure to remove a confirmed reference does not turn an accepted request into an uncertain one; reload can safely recover the same receipt. Browser regression coverage simulates denied storage, failed cleanup, and a quota failure during retry.
+
+## Operator setup / rollout gate (partially complete)
+
+The primary database migrations and `public-contact` endpoint are deployed to `mgadheotkdnrsatfivjy`. Public hostnames and HTTPS are verified. Turnstile credentials, public widget configuration and controlled hosted intake acceptance are still pending; the production form remains unavailable.
 
 1. Create a production Turnstile widget restricted to the actual website hostnames. Record the public site key and secret privately. Test keys are for synthetic/non-production environments only. No provider account or DNS change was made here.
 2. Set Edge secrets: `CONTACT_TURNSTILE_SECRET`, a stable random `CONTACT_EMAIL_HASH_SECRET` of at least 32 characters, comma-separated exact `CONTACT_ALLOWED_ORIGINS` (e.g. `https://thelivingroom.vet`) and `CONTACT_ALLOWED_HOSTNAMES` (e.g. `thelivingroom.vet`). Add `www` or preview origins only when intentionally supported. Standard Supabase service URL/key remain server-side.

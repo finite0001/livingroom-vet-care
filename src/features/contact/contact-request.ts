@@ -17,10 +17,10 @@ export function newContactPointer(): ContactPointer {
   };
 }
 export function readContactPointer(
-  storage: Pick<Storage, "getItem">,
+  storage: () => Pick<Storage, "getItem"> = () => window.sessionStorage,
 ): ContactPointer | null {
   try {
-    const p = JSON.parse(storage.getItem("lrv-contact-request") ?? "null");
+    const p = JSON.parse(storage().getItem("lrv-contact-request") ?? "null");
     return p &&
       typeof p.request_id === "string" &&
       /^[0-9a-f-]{36}$/.test(p.request_id) &&
@@ -30,6 +30,22 @@ export function readContactPointer(
       : null;
   } catch {
     return null;
+  }
+}
+export function saveContactPointer(pointer: ContactPointer): boolean {
+  try {
+    window.sessionStorage.setItem("lrv-contact-request", JSON.stringify(pointer));
+    return true;
+  } catch {
+    return false;
+  }
+}
+export function clearContactPointer(): void {
+  try {
+    window.sessionStorage.removeItem("lrv-contact-request");
+  } catch {
+    // A confirmed receipt stays confirmed even if local cleanup is blocked.
+    // A later reload can safely recover the same already-received reference.
   }
 }
 export async function contactRequest(

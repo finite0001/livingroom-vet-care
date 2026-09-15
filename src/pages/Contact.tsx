@@ -11,6 +11,8 @@ import Footer from "@/components/layout/Footer";
 import { TurnstileChallenge } from "@/features/contact/TurnstileChallenge";
 import {
   contactRequest,
+  clearContactPointer,
+  saveContactPointer,
   newContactPointer,
   readContactPointer,
 } from "@/features/contact/contact-request";
@@ -77,21 +79,21 @@ const Contact = () => {
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pointer, setPointer] = useState(
-    () => readContactPointer(sessionStorage) ?? newContactPointer(),
+    () => readContactPointer() ?? newContactPointer(),
   );
   const [token, setToken] = useState("");
   const [challengeVersion, setChallengeVersion] = useState(0);
   const [hasPending, setHasPending] = useState(
-    () => !!readContactPointer(sessionStorage),
+    () => !!readContactPointer(),
   );
   const [locked, setLocked] = useState(false);
   const [receiptNotice, setReceiptNotice] = useState("");
   const endpoint = import.meta.env.VITE_CONTACT_INTAKE_URL ?? "";
   const [checking, setChecking] = useState(
-    () => !!readContactPointer(sessionStorage),
+    () => !!readContactPointer(),
   );
   const acknowledge = () => {
-    sessionStorage.removeItem("lrv-contact-request");
+    clearContactPointer();
     setPointer(newContactPointer());
     setToken("");
     setHasPending(false);
@@ -100,7 +102,7 @@ const Contact = () => {
     setReceiptNotice("Request received. This is not a confirmed appointment.");
   };
   useEffect(() => {
-    const saved = readContactPointer(sessionStorage);
+    const saved = readContactPointer();
     if (!saved) return;
     let alive = true;
     contactRequest(endpoint, saved)
@@ -108,7 +110,7 @@ const Contact = () => {
         if (!alive) return;
         if (received) {
           setHasPending(false);
-          sessionStorage.removeItem("lrv-contact-request");
+          clearContactPointer();
           setPointer(newContactPointer());
           setReceiptNotice(
             "Your earlier request was received. This is not a confirmed appointment.",
@@ -174,8 +176,17 @@ const Contact = () => {
       return;
     }
 
+    if (!saveContactPointer(pointer)) {
+      setReceiptNotice(
+        hasPending
+          ? "Your browser could not save the request reference. No retry was sent. Your earlier request remains unconfirmed; check its receipt."
+          : "Your browser could not save the request reference. Nothing was sent. Allow site storage or try another browser; your details are still here.",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      sessionStorage.setItem("lrv-contact-request", JSON.stringify(pointer));
       setHasPending(true);
       setLocked(true);
       if (

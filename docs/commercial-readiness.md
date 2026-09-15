@@ -1,5 +1,15 @@
 # Commercial-readiness evidence tracker
 
+## Current live status — September 14, 2026
+
+The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 110 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging remains at its last verified 99-migration checkpoint.
+
+Public contact intake still requires production Turnstile keys and controlled hosted acceptance. Cloudflare sign-in is pending. Stripe stays sandbox-only with payment gates disabled; outbound delivery is disabled. Mail/Auth SMTP, staff onboarding, clinical/provider acceptance, and complete migration reconciliation are separate unfinished work. Public publication is not full commercial readiness.
+
+The dated checkpoints below retain historical evidence. Statements that the candidate was local-only or the public site had not been cut over are superseded by the live rollout above.
+
+## Historical implementation checkpoints
+
 Local migration workspace checkpoint (2026-09-14): the 109-migration candidate now supports scope creation, existing-run binding, explicit saved-run resume and uncertain-response recovery alongside source/capture evidence. [History review receipts](evidence/canonical-migration-history-evidence-20260914.json) add exact-version matching, superseded approvals and preserved local-edit indicators. This read-only display does not resolve clinical discrepancies or count unique diagnoses. [Vaccination review evidence](evidence/canonical-migration-vaccination-evidence-20260914.json) now distinguishes outside interpretation, consultation-version changes and corrections without recording local administration or activating due plans. [Resume validation](evidence/canonical-migration-explicit-resume-20260914.json) records guarded continuation, blocked real-runtime states and mobile/desktop checks. This candidate is not deployed. Remaining clinical outcomes/global reconciliation, operational resolutions, frozen reports, supervised staff acceptance and external commissioning remain unfinished. The latest hosted backend remains the 99-migration checkpoint below.
 
 Latest staging backend checkpoint (2026-09-14): the canonical99-migration database and10 matching Edge Functions are now deployed and verified against the rehearsed target. [Deployment evidence](evidence/canonical-staging-backend-deployment-20260914.json) records exact source/permission checks and disabled delivery with no staff/patient/outbox data. The matching schema9 protected frontend is now READY at the stable staging alias; Auth reset-origin alignment is now saved and verified; custom Auth SMTP, staff onboarding, clinical/provider acceptance and public cutover remain pending. This supersedes the earlier84-migration backend checkpoint below.
@@ -39,7 +49,7 @@ The owner confirmed `thelivingroom.vet` as the intended domain and supplied `liv
 
 Goal: complete all requested practice software and website components, then perform one coordinated rollout. Stacked PRs are implementation increments; merging them is not evidence that a commercial launch is ready. The original scope is preserved below.
 
-## Current release checkpoint
+## Historical release checkpoint
 
 - PR106 (`e80cf62`) has all three GitHub CI jobs green (run34746522048), including the complete browser suite. Patient-scoped consult/history ingestion remains staging for explicit review; authorized ezyVet account/API access is confirmed by the owner; secure configuration and source validation remain pending.
 - PR104 (`c85b5f0`) has all three GitHub CI jobs green (run34745342987), as do its PR103/102 bases. Schema5 release-source implementation passed382 unit tests,41 focused browser cases, frozen Edge checks and24 disposable source-capture checks; the CI frontend job also passed the complete browser suite. See [integrated evidence](release-source-byte-binding.md).
