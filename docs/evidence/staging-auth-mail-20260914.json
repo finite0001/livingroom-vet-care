@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-14",
+  "project": "kothoqicubowyhwfsrte",
+  "operator": "Codex acting on owner authorization in this session",
+  "mailbox": {
+    "owner": "dave@thelivingroom.vet",
+    "alias": "admin@thelivingroom.vet",
+    "alias_status": "Active; delivers to owner mailbox",
+    "fastmail_domain_status": "MX, DKIM and SPF correct"
+  },
+  "smtp": {
+    "provider": "Resend",
+    "team": "finite01",
+    "key_name": "Living Room Vet staging Auth SMTP",
+    "key_scope": "Sending access; thelivingroom.vet only",
+    "host": "smtp.resend.com",
+    "port": 465,
+    "sender": "access@thelivingroom.vet",
+    "sender_name": "Living Room Vet — Staff Access",
+    "minimum_interval_seconds": 60,
+    "custom_smtp_enabled": true,
+    "secret_recorded": false
+  },
+  "acceptance": {
+    "invitation_sent_at_utc": "2026-09-15T02:45:25.97748Z",
+    "recipient": "admin@thelivingroom.vet",
+    "observed_in_fastmail_inbox": true,
+    "auth_user_id": "705e1425-832b-4121-bf26-633c0f7eed66",
+    "profile_role": "ADMIN",
+    "user_roles_role": "ADMIN",
+    "active": true,
+    "password_setup_form_verified": true,
+    "password_creation": "Owner handoff pending",
+    "redirect_note": "Dashboard invitation offered no redirect control. Opened its same Supabase verification link with redirect_to set to the existing allowlisted staging /hub/reset-password route; live form rendered successfully."
+  },
+  "remaining": [
+    "Owner password save and authenticated staff rehearsal",
+    "Separate password recovery acceptance",
+    "Client transport and reserved Auth webhook classification commissioning",
+    "Fastmail recovery/MFA and paid-plan owner review",
+    "No production release or client-message acceptance implied"
+  ]
+}
