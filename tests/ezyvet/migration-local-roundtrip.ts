@@ -26,8 +26,16 @@ const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 const headers = (token: string) => ({ apikey: local.ANON_KEY, Authorization: `Bearer ${token}`, "Content-Type": "application/json" });
 const service = headers(local.SERVICE_ROLE_KEY);
 let checks = 0;
+let operation = "setup";
+process.on("uncaughtExceptionMonitor", (error: unknown) => {
+  const code = error && typeof error === "object" && "code" in error ? String(error.code) : "none";
+  const sqlstate = /^[A-Z0-9]{5}$/.test(code) ? code : "none";
+  // Only fixed operation names, aggregate counts and SQLSTATE may reach CI output.
+  console.error(`LRV_MIGRATION_FAILURE checks=${checks} operation=${operation} sqlstate=${sqlstate}`);
+});
 const check = (value: unknown, message: string) => { assert.ok(value, message); checks++; };
 async function request(path: string, body: unknown, auth = service) {
+  operation = path.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/)?.[1] ?? "auth";
   const response = await fetch(local.API_URL + path, { method: "POST", headers: auth, body: JSON.stringify(body) });
   const text = await response.text();
   const value = text ? JSON.parse(text) : null;
@@ -65,11 +73,31 @@ sql(`insert into ezyvet_record_links(id,request_id,request_hash,source_origin,so
  values(${quote(mapping)},${quote(mapping)},'synthetic-review',${quote(origin)},${quote(site)},'animal','77',${quote(snapshot)},1,${quote(client)},${quote(pet)},1,'link','SYNTHETIC REVIEWED MAPPING',${quote(owner.id)});`);
 const effects = () => sql("select jsonb_build_array((select count(*) from patient_documents),(select count(*) from patient_treatments),(select count(*) from billing_invoices),(select count(*) from inventory_movements),(select count(*) from communication_outbox),(select count(*) from storage.objects),(select count(*) from vaccine_certificates),(select count(*) from patient_vaccine_due_plans),(select count(*) from care_reminder_jobs));");
 const beforeEffects = effects();
+// A different patient's historical mapping must not block valid new choices.
+// Keep the mapping immutable, matching the persisted drift in the originals fixture.
+const movedClient = (await staffRpc("save_client", { p_actor_id: owner.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Other household", p_primary_phone: null, p_primary_email: null, p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null })).id;
+const movedPet = (await staffRpc("save_patient", { p_id: null, p_client_id: client, p_expected_version: null, p_name: "Synthetic moved migration patient", p_species: "Dog", p_breed: null, p_dob: null, p_birth_date_precision: "unknown", p_color: null, p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: null, p_deceased_at: null })).id;
+const movedMapping = randomUUID(), movedSnapshot = randomUUID();
+sql(`insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by)
+ values(${quote(movedSnapshot)},${quote(origin)},${quote(site)},'animal','78','{"id":78}',encode(sha256(convert_to('{"id":78}','UTF8')),'hex'),${quote(owner.id)});
+ insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+ values(${quote(movedMapping)},${quote(movedMapping)},'synthetic-moved-review',${quote(origin)},${quote(site)},'animal','78',${quote(movedSnapshot)},1,${quote(client)},${quote(movedPet)},1,'link','SYNTHETIC HISTORICAL MAPPING',${quote(owner.id)});
+ begin; alter table pets disable trigger pets_version; update pets set client_id=${quote(movedClient)} where id=${quote(movedPet)}; alter table pets enable trigger pets_version; commit;`);
+operation = "mapping_selection";
 const selector = createMigrationSelectionApi(createClient(local.API_URL, local.ANON_KEY, { global: { headers: owner.auth }, auth: { persistSession: false, autoRefreshToken: false } }), owner.id);
 let mappingPage = 0, mapped = await selector.mappings();
 while (!mapped.rows.some(m => m.id === mapping) && mapped.has_more && mappingPage < 20) mapped = await selector.mappings(++mappingPage);
 const selectedMapping = mapped.rows.find(m => m.id === mapping);
 check(selectedMapping?.patient_name === "Synthetic migration patient" && selectedMapping?.household_name === "Synthetic Migration", "Real RLS mapping selector resolves exact patient and household names");
+let choicePage = await selector.mappings(), choicePageNumber = 0, unavailable = choicePage.unavailable_count;
+const visibleMappingIds = choicePage.rows.map(row => row.id);
+while (choicePage.has_more && choicePageNumber < 20) {
+  choicePage = await selector.mappings(++choicePageNumber);
+  unavailable += choicePage.unavailable_count;
+  visibleMappingIds.push(...choicePage.rows.map(row => row.id));
+}
+check(!choicePage.has_more && unavailable >= 1 && !visibleMappingIds.includes(movedMapping) && visibleMappingIds.includes(mapping), "Actual historical household drift is excluded without hiding unrelated valid choices across pages");
+check(sql(`select client_id=${quote(client)}::uuid and pet_id=${quote(movedPet)}::uuid from ezyvet_record_links where id=${quote(movedMapping)};`) === "t", "Mapping discovery preserves immutable historical household evidence");
 const selectedParents = await selector.parents(selectedMapping!, "attachment");
 check(selectedParents.rows.some(p => p.id === snapshot && p.version === 1 && p.external_id === "77"), "Real parent selector matches source head and exact mapped identity");
 await assert.rejects(() => selector.mappings(-1)); checks++;

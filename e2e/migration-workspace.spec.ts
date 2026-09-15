@@ -255,7 +255,7 @@ test("mapping lookup failure is explicit and can recover", async ({ page }) => {
   const builder = page.getByRole("region", { name: "New migration scope" });
   await builder.getByRole("button", { name: "Plan a migration", exact: true }).click();
   await expect(builder.getByText(/Approved mappings could not be loaded/)).toBeVisible();
-  await expect(builder.getByText("No approved mappings on this page.")).toHaveCount(0);
+  await expect(builder.getByText("No available mappings on this page.")).toHaveCount(0);
   state.failMapping = false;
   await builder.getByRole("button", { name: "Retry mappings" }).click();
   await expect(builder.getByRole("button", { name: /Synthetic patient · Synthetic household/ })).toBeVisible();
@@ -443,4 +443,21 @@ for (const width of [390, 1440]) test(`prescription evidence preserves partial h
   await expect(panel.getByRole("button", { name: "Next prescription evidence" })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await panel.screenshot({ path: `docs/evidence/migration-prescription-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
+});
+
+test("a historical household change leaves valid migration choices available", async ({ page }) => {
+  const state = await fixture(page);
+  await page.route("**/rest/v1/ezyvet_record_links?**", route => route.fulfill({ json: [
+    { id: id(61), resource: "animal", client_id: client, pet_id: id(62), external_id: "88", snapshot_id: id(63), head_version: 1, source_origin: origin, source_site_uid: site },
+    { id: mapping, resource: "animal", client_id: client, pet_id: pet, external_id: "77", snapshot_id: snapshot, head_version: 1, source_origin: origin, source_site_uid: site },
+  ] }));
+  await page.route("**/rest/v1/pets?**", route => route.fulfill({ json: [
+    { id: pet, name: "Synthetic patient", client_id: client },
+    { id: id(62), name: "Moved patient", client_id: id(64) },
+  ] }));
+  const builder = await draftPlan(page);
+  await expect(builder.getByRole("status")).toContainText("1 mapping(s) on this page are unavailable");
+  await expect(builder.getByRole("button", { name: /Moved patient/ })).toHaveCount(0);
+  await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
+  expect(state.requests.find(request => request.name === "prepare_ezyvet_migration_run")?.body.p_scopes).toMatchObject([{ mapping_id: mapping }]);
 });

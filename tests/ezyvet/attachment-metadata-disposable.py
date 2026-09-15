@@ -52,6 +52,9 @@ def command(argv, **kwargs):
     log.write('COMMAND ' + ' '.join(map(str, argv)) + '\n' + result.stdout + result.stderr + '\n')
     log.flush()
     if result.returncode:
+        diagnostic = re.search(r'^LRV_MIGRATION_FAILURE checks=[0-9]+ operation=[a-z_]+ sqlstate=(?:[A-Z0-9]{5}|none)$', result.stderr, re.MULTILINE)
+        if diagnostic:
+            print(diagnostic[0], flush=True)
         raise RuntimeError('Disposable local command failed; inspect protected log: ' + str(work / 'commands.log'))
     return result.stdout
 

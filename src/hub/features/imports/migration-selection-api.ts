@@ -17,12 +17,12 @@ export function createMigrationSelectionApi(client: SupabaseClient, actor: strin
   uuid.parse(actor);
   function offset(page: number) { z.number().int().min(0).max(10000).parse(page); return page * 20; }
   return {
-    async mappings(page = 0): Promise<{ rows: MigrationMapping[]; has_more: boolean }> {
+    async mappings(page = 0): Promise<{ rows: MigrationMapping[]; has_more: boolean; unavailable_count: number }> {
       const start = offset(page);
       const { data, error } = await client.from("ezyvet_record_links").select("id,resource,client_id,pet_id,external_id,snapshot_id,head_version,source_origin,source_site_uid").in("resource", ["contact", "animal"]).order("id").range(start, start + 20);
       if (error) throw error;
       const rows = z.array(mappingSchema).max(21).parse(data);
-      if (!rows.length) return { rows: [], has_more: false };
+      if (!rows.length) return { rows: [], has_more: false, unavailable_count: 0 };
       const [clients, pets] = await Promise.all([
         client.from("clients").select("id,full_name").in("id", [...new Set(rows.map(r => r.client_id))]),
         client.from("pets").select("id,name,client_id").in("id", rows.flatMap(r => r.pet_id ? [r.pet_id] : [])),
@@ -30,11 +30,17 @@ export function createMigrationSelectionApi(client: SupabaseClient, actor: strin
       if (clients.error) throw clients.error; if (pets.error) throw pets.error;
       const households = z.array(z.object({ id: uuid, full_name: z.string() })).parse(clients.data);
       const patients = z.array(z.object({ id: uuid, name: z.string(), client_id: uuid })).parse(pets.data);
-      return { has_more: rows.length > 20, rows: rows.slice(0, 20).map(row => {
+      let unavailableCount = 0;
+      const available = rows.slice(0, 20).flatMap(row => {
         const household = households.find(c => c.id === row.client_id), patient = patients.find(p => p.id === row.pet_id);
-        if (!household || (row.pet_id && (!patient || patient.client_id !== row.client_id))) throw new Error("Mapped household changed; refresh choices");
-        return { ...row, household_name: household.full_name, patient_name: patient?.name ?? null };
-      }) };
+        if (!household || (row.pet_id && (!patient || patient.client_id !== row.client_id))) {
+          unavailableCount++;
+          return [];
+        }
+        return [{ ...row, household_name: household.full_name, patient_name: patient?.name ?? null }];
+      });
+      // Page by retained mappings so a page of historical links cannot hide later choices.
+      return { has_more: rows.length > 20, rows: available, unavailable_count: unavailableCount };
     },
     async parents(mapping: MigrationMapping, resource: MigrationScopeInput["resource"], page = 0, parentType = migrationParentType(resource, mapping)) {
       const parent = parentType, start = offset(page);
