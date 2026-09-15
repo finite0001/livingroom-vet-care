@@ -24,4 +24,15 @@ Lovable syncs `codex/lovable-publication`. The Cloud panel still administers the
 
 If frontend rollback is necessary, restore the pre-cutover frontend environment from the preceding Git commit and republish in Lovable. Do not reset either database or remove migrated accounts. Reconcile any records written after cutover before routing writes back to the legacy backend. Private backups and credential-bearing verification artifacts remain outside the repository.
 
-Live publication verification is recorded after the deployment completes.
+## Live publication evidence
+
+Lovable published application commit `104bbbc` and displayed “Your website was updated.” Verified `https://livingroom-vet-care.lovable.app` renders the homepage, and `/hub` redirects to the working `/hub/login` screen without a session. Served `/assets/index-Cz0opQfS.js` contains the primary project reference, with neither the legacy nor separate staging reference. This validates the actual public artifact, not only a local build.
+
+The Lovable security panel reports two broad SECURITY DEFINER execution warnings and a dependency summary; these were not auto-fixed or dismissed. Its Cloud panel remains attached to legacy. Runtime primary checks above establish the specific tested authorization boundaries, not a complete security audit.
+
+## Custom domain checkpoint
+
+The custom domain previously served a GoDaddy parked page. Registered `thelivingroom.vet` and `www.thelivingroom.vet` in Lovable with the requested www-to-root redirect. Saved the root A record from Parked to Lovable-provided `185.158.133.1`, TTL 600; authoritative DNS confirms the new address. No root AAAA record existed. Existing www CNAME points to the root and was retained. Fastmail MX, DKIM and sending records are unchanged.
+
+Lovable requires TXT `_lovable` = `lovable_verify=69fd3dd2aa053fd7456850e222334ec22edb8ecba2d2a4f2049a6f4d3508448a`. This public verification record is prepared in GoDaddy, but its save awaits the owner's SMS identity verification. Custom-domain verification and HTTPS are not yet confirmed. The Lovable URL is the verified working public address until this finishes. The root DNS switch alone must not be reported as a working custom-domain launch.
+
