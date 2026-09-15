@@ -26,8 +26,16 @@ const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
 const headers = (token: string) => ({ apikey: local.ANON_KEY, Authorization: `Bearer ${token}`, "Content-Type": "application/json" });
 const service = headers(local.SERVICE_ROLE_KEY);
 let checks = 0;
+let operation = "setup";
+process.on("uncaughtExceptionMonitor", (error: unknown) => {
+  const code = error && typeof error === "object" && "code" in error ? String(error.code) : "none";
+  const sqlstate = /^[A-Z0-9]{5}$/.test(code) ? code : "none";
+  // Only fixed operation names, aggregate counts and SQLSTATE may reach CI output.
+  console.error(`LRV_MIGRATION_FAILURE checks=${checks} operation=${operation} sqlstate=${sqlstate}`);
+});
 const check = (value: unknown, message: string) => { assert.ok(value, message); checks++; };
 async function request(path: string, body: unknown, auth = service) {
+  operation = path.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/)?.[1] ?? "auth";
   const response = await fetch(local.API_URL + path, { method: "POST", headers: auth, body: JSON.stringify(body) });
   const text = await response.text();
   const value = text ? JSON.parse(text) : null;
