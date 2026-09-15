@@ -1,0 +1,136 @@
+{
+  "project": "kothoqicubowyhwfsrte",
+  "baseline_count": 99,
+  "target_count": 110,
+  "backup_sha256": "6ec81d576cd2dfdd1b13f23072c8485cefb2669e6cd1530fbf6f22ab0aab8464",
+  "migrations": [
+    {
+      "name": "20260914130000_ezyvet_migration_manifests.sql",
+      "sha256": "37c71f3b999dc364622e4fa0a522bbc6fd0bff4b69d4fc2d86e6be0c78f353de"
+    },
+    {
+      "name": "20260914140000_ezyvet_migration_bindings.sql",
+      "sha256": "163ee3c5cfd9d860ee1d73a3e646f4fee8f9bd08f56a9b785be29d9f6323f8a5"
+    },
+    {
+      "name": "20260914150000_ezyvet_migration_progress.sql",
+      "sha256": "586b74a7061ca47da6baf0419a7742b8fa13fcb5a292c94a28b6de9f97e85783"
+    },
+    {
+      "name": "20260914160000_ezyvet_migration_attempt_events.sql",
+      "sha256": "508bb76cdcfbfdc8c7c297f5668ea26b0a45ce0e6eb419f7a7024e5f01cbef0d"
+    },
+    {
+      "name": "20260914170000_ezyvet_claim_wait_authorization.sql",
+      "sha256": "8068210531712750907bc76b7c020529744a7451b59b2a24b61bdeaf370409b8"
+    },
+    {
+      "name": "20260914180000_ezyvet_stage_failure_wait_authorization.sql",
+      "sha256": "3bb76fd6f48d17e908ca24ece1f6db2ea2535c129e6bb1c31fe9d1ef67a70dbd"
+    },
+    {
+      "name": "20260914190000_ezyvet_migration_items.sql",
+      "sha256": "ae3fe406e5ec31ef87f8dd752e857526dadce49840961f75d4293ba366962cd5"
+    },
+    {
+      "name": "20260914200000_ezyvet_migration_capture_evidence.sql",
+      "sha256": "d77f381718e70a4b9bf4e5ac1bc44225621c30c52f1e40c9407d1461dd55a9dc"
+    },
+    {
+      "name": "20260914210000_ezyvet_migration_history_evidence.sql",
+      "sha256": "fd3ca27d247245fe1d6d4787de4da25145bdd79d26e07773b363aa2437669bdb"
+    },
+    {
+      "name": "20260914220000_ezyvet_migration_vaccination_evidence.sql",
+      "sha256": "4298f81466a19aa7553d28d5d323df243e39e01dc2e47be1bf2ebb57a8088e77"
+    },
+    {
+      "name": "20260914230000_ezyvet_migration_prescription_evidence.sql",
+      "sha256": "3743aa061f51443b12436aaf2310e0d8bc7cef4086805a6ff69d9b29317ae612"
+    }
+  ],
+  "rehearsal": {
+    "restored_backup": true,
+    "existing_tables_unchanged": 227,
+    "migration_files": 11,
+    "sql_suites": {
+      "ezyvet_migration_manifests": 42,
+      "ezyvet_migration_bindings": 37,
+      "ezyvet_migration_binding_adapters": 66,
+      "ezyvet_migration_progress": 31,
+      "ezyvet_migration_attempt_events": 30,
+      "ezyvet_migration_items": 26,
+      "ezyvet_migration_capture_evidence": 47,
+      "ezyvet_migration_history_evidence": 27,
+      "ezyvet_migration_vaccination_evidence": 28,
+      "ezyvet_migration_prescription_evidence": 37,
+      "public_access_defaults": 93,
+      "ezyvet_import": 35,
+      "ezyvet_review_import": 32,
+      "reviewed_weight_import": 35,
+      "ezyvet_clinical_runs": 59,
+      "ezyvet_vaccination_runs": 81,
+      "ezyvet_prescription_runs": 19,
+      "ezyvet_prescriptionitem_runs": 81,
+      "ezyvet_attachment_metadata": 74,
+      "ezyvet_attachment_originals": 182,
+      "ezyvet_release_discovery_boundaries": 33
+    },
+    "assertions": 1095
+  },
+  "status": "staging deployment and verification passed",
+  "local_platform_notes": [
+    "Restored into a separate database owned by postgres to match public-schema CREATE privileges.",
+    "Local extension schema and extensions supplied by PostgreSQL image.",
+    "No ownership/default-privilege parity claim beyond the SQL suites."
+  ],
+  "harness_regression": {
+    "commit": "8b07f3f",
+    "tests_passed": 2,
+    "original_deadline_reproduces_failure": true,
+    "timing": "8 seconds per holder/waiter observation; 10 second process completion timeout"
+  },
+  "contention": {
+    "sql_assertions": 1135,
+    "contention_checks": 318,
+    "exit_code": 0,
+    "owned_databases_remaining": 0,
+    "owned_sessions_remaining": 0,
+    "transport": "native psql and pg_dump against the same local Supabase PostgreSQL container",
+    "log_sha256": "1bc837c6a46419b730917adc61fcbe454683c4c715673daab80d761423081602",
+    "earlier_runs": "Two prior shared-deadline runs failed lock observation and are not passing evidence."
+  },
+  "hosted": {
+    "migration_count": 110,
+    "latest": "20260914230000",
+    "preserved_tables": [
+      "clients",
+      "pets",
+      "appointments",
+      "billing_invoices",
+      "billing_invoice_items",
+      "catalog_products",
+      "profiles",
+      "user_roles"
+    ],
+    "preserved_table_fingerprints_match": true,
+    "active_admin_history": "runs=[], has_more=false",
+    "unauthorized_history_sqlstate": "42501",
+    "new_tables_with_rls_and_no_direct_application_role_dml": 4,
+    "anonymous_history_execute": false,
+    "service_role_core_claim_execute": false,
+    "import_runs": 0,
+    "migration_runs": 0,
+    "attempt_events": 0,
+    "communication_outbox": 0,
+    "payment_provider_profiles": 0,
+    "browser": "Authenticated administrator opened Your saved migrations with expected empty result."
+  },
+  "edge_sources": {
+    "ezyvet-import": 7,
+    "capture-ezyvet-attachment": 2,
+    "retrieve-reviewed-ezyvet-original": 2,
+    "files_freshly_compared": 16,
+    "matches_merged_source": true
+  }
+}
