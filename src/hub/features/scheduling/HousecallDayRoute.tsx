@@ -15,7 +15,7 @@ export function HousecallDayRoute({ day, appointments, refreshing }: HousecallDa
   const housecalls = appointments.filter(row => isPlannedVisit(row) && row.visit_type === "housecall");
   if (!housecalls.length) return null;
   const staff = [...new Map(housecalls.filter(row => row.assigned_dvm_id).map(row => [row.assigned_dvm_id!,
-    { id: row.assigned_dvm_id!, name: row.profiles?.full_name || "Staff name unavailable" }])).values()];
+    { id: row.assigned_dvm_id!, name: row.profiles?.full_name?.trim() || `Staff ${row.assigned_dvm_id!.slice(0, 8)}` }])).values()];
   const selected = staff.some(person => person.id === staffId) ? staffId : "";
   const stops = dayRouteAppointments(appointments, day, selected);
   const legs = routeLegs(stops);

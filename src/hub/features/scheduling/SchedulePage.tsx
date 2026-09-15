@@ -142,7 +142,7 @@ export default function SchedulePage() {
                         {row.clients?.full_name} · {row.appointment_type}
                       </p>
                       <p className="text-sm">
-                        {row.profiles?.full_name ?? "Unassigned"}
+                        {row.profiles?.full_name?.trim() || (row.assigned_dvm_id ? `Staff ${row.assigned_dvm_id.slice(0, 8)}` : "Unassigned")}
                       </p>
                       <p className="text-sm">
                         {statusLabels[row.status]} · {row.duration_minutes}{" "}
@@ -445,7 +445,7 @@ function AppointmentEditor({ appointment, initialDay, close }: EditorProps) {
                       )}
                     {lookups.data.staff.map((staff) => (
                       <option key={staff.id} value={staff.id}>
-                        {staff.full_name}
+                        {staff.full_name?.trim() || `Staff ${staff.id.slice(0, 8)}`}
                       </option>
                     ))}
                   </select>
