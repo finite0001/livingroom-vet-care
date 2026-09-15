@@ -62,6 +62,8 @@ def contended(first_query, second_query, second_expected, hold_seconds=2, during
     second = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     second.stdin.write(f"set application_name='{tag}_waiter';begin;{second_query}commit;")
     second.stdin.close()
+    # Holder startup must not consume the waiter's observation window.
+    deadline = time.monotonic() + 8
     waiting = False
     while time.monotonic() < deadline:
         if sql(f"select count(*) from pg_stat_activity w join pg_stat_activity h on h.application_name='{tag}_holder' where w.application_name='{tag}_waiter' and w.wait_event_type='Lock' and h.pid=any(pg_blocking_pids(w.pid));").stdout.strip() == '1':
