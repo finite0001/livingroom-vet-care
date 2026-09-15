@@ -1,7 +1,7 @@
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
 import { mergeReleaseSelection } from "./selection";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { denverLocal } from "../scheduling/time";
+import { ApiOriginalPreviewDownloads } from "./ApiOriginalPreviewDownloads";
 import { RecordReleaseArtifact } from "./RecordReleaseArtifact";
 import {
   releases,
@@ -58,7 +59,13 @@ export function PatientRecordReleases({
   const [preview, setPreview] = useState<ReleasePreview | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [opened, setOpened] = useState<ReleaseBundle | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const [apiDownloadBusy, setApiDownloadBusy] = useState(false);
+  const busy = operationBusy || apiDownloadBusy;
+  const onApiDownloadBusy = useCallback((value: boolean) => {
+    setApiDownloadBusy(value);
+    if (value) setReviewed(false);
+  }, []);
   const [error, setError] = useState("");
   const [pending, setPending] = useState<ReleaseConfirmArgs | null>(null);
   const [withdrawReason, setWithdrawReason] = useState("");
@@ -825,8 +832,10 @@ export function PatientRecordReleases({
               )}
               <p className="text-sm">
                 Select all shown applies to this source page. A package supports
-                at most 100 records per family; use another package for
-                additional history. Body maps include every observation and
+                at most 20 API originals, 20 outside vaccinations and 20 outside
+                prescriptions, and 100 records per other family. Delivery also
+                limits the combined original files to 24; use another package
+                for additional history. Body maps include every observation and
                 correction, not a signed diagnosis.
               </p>
               {!preview ? (
@@ -845,7 +854,21 @@ export function PatientRecordReleases({
               ) : (
                 <>
                   <RecordReleaseArtifact artifact={{ preview }} />
-                  {preview.snapshot.attachments.map((a) => (
+                  {!!preview.snapshot.api_attachments?.length && (
+                    user && profile?.is_active ? (
+                      <ApiOriginalPreviewDownloads
+                        key={`${user.id}:${petId}:${preview.source_hash}`}
+                        originals={preview.snapshot.api_attachments}
+                        actor={user.id}
+                        petId={petId}
+                        disabled={operationBusy || !!pending}
+                        onBusyChange={onApiDownloadBusy}
+                      />
+                    ) : (
+                      <p role="status">Active staff access is required to download selected API originals. Review the exact files before attesting to this package.</p>
+                    )
+                  )}
+                  {preview.snapshot.attachments.filter(a => !a.api_attachment_ref && a.bucket !== "ezyvet-attachment-originals").map((a) => (
                     <Button
                       key={a.id}
                       variant="outline"

@@ -65,3 +65,17 @@ September14 Auth-origin alignment: authenticated dashboard saved Site URL to the
 ## September 14 — DNS recheck; account access unavailable
 
 A fresh public DNS query still returns Fastmail MX targets `us1-smtp.messagingengine.com` and `us2-smtp.messagingengine.com`, SPF `v=spf1 include:spf.messagingengine.com ?all`, and all three `fm1`–`fm3` DKIM CNAME targets under `thelivingroom.vet.dkim.fmhosted.com`. No DNS changes were made. Browser access timed out, so mailbox delivery, account security, Auth SMTP and staff onboarding were not reverified or completed in this checkpoint.
+
+## September 14 — staging Auth delivery verified
+
+The owner reauthenticated Fastmail and explicitly authorized the prepared Resend key, staging SMTP installation and administrator delivery test. `admin@thelivingroom.vet` is now an active alias delivered only to `dave@thelivingroom.vet`. Fastmail reports correct MX/DKIM/SPF. This supersedes the earlier named-mailbox-only administrator proposal.
+
+Created `Living Room Vet staging Auth SMTP` in the existing `finite01` Resend team with sending-only access restricted to `thelivingroom.vet`. Staging custom SMTP is enabled at `smtp.resend.com:465`, username `resend`, sender `access@thelivingroom.vet`, display name `Living Room Vet — Staff Access`, minimum interval60 seconds. The root sender replaces the proposed Auth subdomain and uses existing verification; no domain add-on, second team, subscription or DNS change was made. Reserve this exact sender exclusively for Auth when commissioning `RESEND_AUTH_FROM_ADDRESS` and client callbacks.
+
+The authorized invitation reached the Fastmail Inbox at19:45 Pacific. The exact invited Auth UUID and generated profile were verified, then the documented trusted-operator bootstrap set the profile and `user_roles` to active ADMIN. The dashboard invitation did not expose a redirect field; the same verification URL was opened with the existing allowlisted staging `/hub/reset-password` redirect. The live page rendered its password fields successfully. Password entry/save is handed to the owner; no password or credential is stored in this repository. Client transport/webhook classification and separate recovery acceptance remain pending. The Resend webhook list contains no Living Room Vet endpoint; this test does not establish client callback acceptance.
+
+[Redacted commissioning receipt](evidence/staging-auth-mail-20260914.json).
+
+## September 15 — first administrator access verified
+
+The owner completed password creation. A read-only Auth check confirmed an existing password and confirmed email without retrieving password material. The live authenticated staging hub opened Staff Management and displayed the exact owner account as active ADMIN. Initial invitation delivery, password setup and administrator page access are verified. Separate password-recovery acceptance, client transport commissioning and the hosted booking-to-payment rehearsal remain open.

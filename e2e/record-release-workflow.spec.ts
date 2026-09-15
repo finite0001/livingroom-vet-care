@@ -1,4 +1,5 @@
-import { apiAttachmentArtifact } from "../tests/record-releases/api-attachment-fixture";
+import { createHash } from "node:crypto";
+import { apiAttachmentArtifact, apiOriginalBytes } from "../tests/record-releases/api-attachment-fixture";
 import { prescriptionArtifact } from "../tests/record-releases/prescription-fixture";
 import { vaccinationArtifact } from "../tests/record-releases/vaccination-fixture";
 import { clinicalHistoryArtifact } from "../tests/record-releases/clinical-history-fixture";
@@ -84,6 +85,10 @@ async function fixture(
     session,
   );
   const state = {
+    apiBytes: Buffer.from(apiOriginalBytes),
+    apiDownloadRequests: [] as Array<Record<string, string>>,
+    tamperApiDownload: false,
+    selfConsistentWrongDownload: false,
     malformedSources: false,
     prescriptionCandidateCount: 0,
     malformedPrescription: false,
@@ -138,6 +143,19 @@ async function fixture(
   );
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path === "/functions/v1/retrieve-reviewed-ezyvet-original") {
+      state.apiDownloadRequests.push(route.request().postDataJSON());
+      const capture = apiAttachmentArtifact().preview.snapshot.api_attachments![0].capture;
+      const bytes = Buffer.from(state.apiBytes);
+      if (state.tamperApiDownload || state.selfConsistentWrongDownload) bytes[bytes.length - 1] ^= 1;
+      return route.fulfill({ body: bytes, headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "X-Capture-Hash, X-Content-SHA256",
+        "Content-Type": capture.mime_type,
+        "X-Capture-Hash": capture.capture_hash,
+        "X-Content-SHA256": state.selfConsistentWrongDownload ? createHash("sha256").update(bytes).digest("hex") : capture.content_sha256,
+      } });
+    }
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/rest/v1/profiles")
@@ -1497,5 +1515,105 @@ for (const mobile of [false, true]) {
     expect(offsets).toContain(100);
     expect(offsets.every(offset => offset === 0 || offset === 100)).toBe(true);
     expect(state.requests).toHaveLength(0);
+  });
+}
+
+
+async function openCanonicalOriginalPreview(page: Page) {
+  const state = await fixture(page, true, true, true, false, false, false, true);
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: "Select all shown: Reviewed ezyVet API originals", exact: true }).click();
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  await expect(panel.getByRole("button", { name: selectedOriginalButton, exact: true })).toBeVisible();
+  return { state, panel };
+}
+const selectedOriginalButton = "Download selected API original: Reviewed API source · version 1";
+const reviewedPackageLabel = "I reviewed the complete selected records, original attachments and household recipient.";
+
+async function holdCanonicalDownload(page: Page) {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-original", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  return { release, entered };
+}
+
+test("active staff verifies canonical preview bytes without document lookup or attestation", async ({ page }) => {
+  const { state, panel } = await openCanonicalOriginalPreview(page);
+  const forbidden: string[] = [];
+  page.on("request", request => {
+    if (/\/storage\/v1\/|\/rest\/v1\/patient_documents|\/capture-ezyvet-attachment|\/approve_ezyvet_attachment/.test(request.url())) forbidden.push(request.url());
+  });
+  await expect(panel.getByRole("button", { name: /^Review selected original:/ })).toHaveCount(0);
+  const hold = await holdCanonicalDownload(page);
+  await panel.getByLabel(reviewedPackageLabel).check();
+  const downloaded = page.waitForEvent("download");
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await hold.entered;
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  for (const name of ["Confirm reviewed package", "Edit selection and review again", "Clear package selection"]) {
+    await expect(panel.getByRole("button", { name, exact: true })).toBeDisabled();
+  }
+  hold.release();
+  const download = await downloaded;
+  expect(await readFile((await download.path())!)).toEqual(state.apiBytes);
+  const original = apiAttachmentArtifact().preview.snapshot.api_attachments![0];
+  expect(state.apiDownloadRequests).toEqual([{ record_id: original.record.id, pet_id: petId, capture_hash: original.capture.capture_hash }]);
+  await expect(panel.getByText("Original downloaded after checksum verification. Open and review the file before confirming the package.", { exact: true })).toBeVisible();
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  expect(state.requests).toEqual([]);
+  expect(forbidden).toEqual([]);
+});
+
+for (const selfConsistent of [false, true]) {
+  test(`canonical preview rejects ${selfConsistent ? "valid response checksum differing from preview" : "corrupt original bytes"}`, async ({ page }) => {
+    const { state, panel } = await openCanonicalOriginalPreview(page);
+    state.tamperApiDownload = !selfConsistent;
+    state.selfConsistentWrongDownload = selfConsistent;
+    let downloads = 0;
+    page.on("download", () => { downloads++; });
+    await panel.getByLabel(reviewedPackageLabel).check();
+    await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+    await expect(panel.getByText("Original download failed. The selected file could not be verified. Try again before confirming the package.", { exact: true })).toBeVisible();
+    expect(downloads).toBe(0);
+    await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+    await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
+    expect(state.requests).toEqual([]);
+  });
+}
+
+for (const change of ["signout", "pagehide", "replace preview"] as const) {
+  test(`canonical preview suppresses late bytes after ${change}`, async ({ page }) => {
+    const { panel } = await openCanonicalOriginalPreview(page);
+    const hold = await holdCanonicalDownload(page);
+    let downloads = 0;
+    page.on("download", () => { downloads++; });
+    await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+    await hold.entered;
+    if (change === "signout") {
+      await page.getByRole("button", { name: "Sign Out", exact: true }).click();
+      await expect(panel).toHaveCount(0);
+    } else {
+      await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+      if (change === "replace preview") {
+        await panel.getByRole("button", { name: "Edit selection and review again", exact: true }).click();
+        await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+        await expect(panel.getByRole("button", { name: selectedOriginalButton, exact: true })).toBeVisible();
+      }
+    }
+    const response = page.waitForResponse(r => r.url().endsWith("/retrieve-reviewed-ezyvet-original"));
+    hold.release();
+    await (await response).finished();
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    expect(downloads).toBe(0);
+    if (change !== "signout") {
+      await expect(panel.getByText("Original downloaded after checksum verification. Open and review the file before confirming the package.", { exact: true })).toHaveCount(0);
+      await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+    }
   });
 }
