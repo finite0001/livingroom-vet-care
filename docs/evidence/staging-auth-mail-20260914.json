@@ -16,7 +16,7 @@
     "host": "smtp.resend.com",
     "port": 465,
     "sender": "access@thelivingroom.vet",
-    "sender_name": "Living Room Vet — Staff Access",
+    "sender_name": "Living Room Vet \u2014 Staff Access",
     "minimum_interval_seconds": 60,
     "custom_smtp_enabled": true,
     "secret_recorded": false
@@ -30,11 +30,13 @@
     "user_roles_role": "ADMIN",
     "active": true,
     "password_setup_form_verified": true,
-    "password_creation": "Owner handoff pending",
-    "redirect_note": "Dashboard invitation offered no redirect control. Opened its same Supabase verification link with redirect_to set to the existing allowlisted staging /hub/reset-password route; live form rendered successfully."
+    "password_creation": "Owner completed; verified September 15, 2026",
+    "redirect_note": "Dashboard invitation offered no redirect control. Opened its same Supabase verification link with redirect_to set to the existing allowlisted staging /hub/reset-password route; live form rendered successfully.",
+    "authenticated_staff_management_verified": true,
+    "email_confirmed": true
   },
   "remaining": [
-    "Owner password save and authenticated staff rehearsal",
+    "Hosted booking-to-payment staff rehearsal",
     "Separate password recovery acceptance",
     "Client transport and reserved Auth webhook classification commissioning",
     "Fastmail recovery/MFA and paid-plan owner review",

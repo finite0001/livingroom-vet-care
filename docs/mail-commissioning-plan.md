@@ -75,3 +75,7 @@ Created `Living Room Vet staging Auth SMTP` in the existing `finite01` Resend te
 The authorized invitation reached the Fastmail Inbox at19:45 Pacific. The exact invited Auth UUID and generated profile were verified, then the documented trusted-operator bootstrap set the profile and `user_roles` to active ADMIN. The dashboard invitation did not expose a redirect field; the same verification URL was opened with the existing allowlisted staging `/hub/reset-password` redirect. The live page rendered its password fields successfully. Password entry/save is handed to the owner; no password or credential is stored in this repository. Client transport/webhook classification and separate recovery acceptance remain pending. The Resend webhook list contains no Living Room Vet endpoint; this test does not establish client callback acceptance.
 
 [Redacted commissioning receipt](evidence/staging-auth-mail-20260914.json).
+
+## September 15 — first administrator access verified
+
+The owner completed password creation. A read-only Auth check confirmed an existing password and confirmed email without retrieving password material. The live authenticated staging hub opened Staff Management and displayed the exact owner account as active ADMIN. Initial invitation delivery, password setup and administrator page access are verified. Separate password-recovery acceptance, client transport commissioning and the hosted booking-to-payment rehearsal remain open.
