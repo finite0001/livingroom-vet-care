@@ -16,11 +16,11 @@ function fixture(overrides: Record<string, unknown> = {}) {
   } } });
   return { calls, api: createMigrationSelectionApi(db, actor) };
 }
-test("mapping selection resolves names and rejects changed household membership", async () => {
+test("mapping selection resolves names and excludes changed household membership", async () => {
   const good = fixture();
   assert.deepEqual((await good.api.mappings()).rows, [{ ...mapping, household_name: "Test household", patient_name: "Test patient" }]);
   const drift = fixture({ pets: [{ id: pet, name: "Test patient", client_id: id(99) }] });
-  await assert.rejects(() => drift.api.mappings(), /household changed/);
+  assert.deepEqual(await drift.api.mappings(), { rows: [], has_more: false, unavailable_count: 1 });
 });
 test("mapping pages retain sentinel and invalid pages never query", async () => {
   const f = fixture({ ezyvet_record_links: Array.from({ length: 21 }, (_, n) => ({ ...mapping, id: id(100 + n) })) });
@@ -60,4 +60,25 @@ test("attachment choices use owned discovery and exclude different source parent
   assert.equal((await f.api.runs(manifest, { ...scope, parent_head_version: 3 })).rows.length, 0);
   const invalid = fixture({ list_ezyvet_attachment_runs: { runs: [{ ...row, parent_context: { ...row.parent_context, animal_link_id: id(99) } }], has_more: false, next_cursor: null } });
   await assert.rejects(() => invalid.api.runs(manifest, scope));
+});
+
+test("historical household changes do not block other valid mappings", async () => {
+  const moved = { ...mapping, id: id(31), pet_id: id(32) };
+  const f = fixture({ ezyvet_record_links: [moved, mapping], pets: [
+    { id: moved.pet_id, name: "Moved patient", client_id: id(99) },
+    { id: pet, name: "Test patient", client_id: clientId },
+  ] });
+  const page = await f.api.mappings();
+  assert.deepEqual(page.rows.map(row => row.id), [mapping.id]);
+  assert.equal(page.unavailable_count, 1);
+});
+test("unavailable mapping pages preserve next-page sentinel and count only displayed rows", async () => {
+  const f = fixture({ ezyvet_record_links: Array.from({ length: 21 }, (_, n) => ({ ...mapping, id: id(100 + n) })), pets: [] });
+  assert.deepEqual(await f.api.mappings(), { rows: [], has_more: true, unavailable_count: 20 });
+  await f.api.mappings(1);
+  assert.equal(f.calls[3].searchParams.get("offset"), "20");
+});
+test("missing households are unavailable but malformed responses still fail", async () => {
+  assert.deepEqual(await fixture({ clients: [] }).api.mappings(), { rows: [], has_more: false, unavailable_count: 1 });
+  await assert.rejects(() => fixture({ clients: [{ id: clientId, full_name: null }] }).api.mappings());
 });

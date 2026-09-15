@@ -72,7 +72,8 @@ export function MigrationScopeBuilder({ actor, onDirtyChange, onSaved }: Props) 
       <fieldset disabled={frozen} className="space-y-3">
         <legend className="text-sm font-medium">Approved patient and household mappings</legend>
         {maps.isFetching ? <p role="status">Loading approved mappings…</p> : maps.isError ? <p role="alert">Approved mappings could not be loaded. <Button variant="outline" type="button" onClick={() => void maps.refetch()}>Retry mappings</Button></p> : <>
-          {maps.data?.rows.length === 0 && <p>No approved mappings on this page.</p>}
+          {maps.data?.rows.length === 0 && <p>No available mappings on this page.</p>}
+          {!!maps.data?.unavailable_count && <p role="status" className="text-sm text-muted-foreground">{maps.data.unavailable_count} mapping(s) on this page are unavailable because the patient or household no longer matches. Review their current household before planning a new import. Saved history remains available.</p>}
           <div className="flex flex-wrap gap-2">{maps.data?.rows.map(m => <Button type="button" key={m.id} variant={mapping?.id === m.id ? "secondary" : "outline"} className="h-auto min-h-10 whitespace-normal text-left" disabled={!!draft.length && (m.source_origin !== draft[0].mapping.source_origin || m.source_site_uid !== draft[0].mapping.source_site_uid)} onClick={() => { setMapping(m); setAttachmentParent("animal"); setResource(m.resource); setParent(null); setParentPage(0); setDisposition("required"); setConfirmed(false); }}>{m.patient_name ?? "Household"} · {m.household_name} · {m.source_site_uid}</Button>)}</div>
           <div className="flex gap-2"><Button type="button" variant="outline" disabled={!page} onClick={() => setPage(page - 1)}>Previous mappings</Button><Button type="button" variant="outline" disabled={!maps.data?.has_more} onClick={() => setPage(page + 1)}>Next mappings</Button></div>
         </>}
