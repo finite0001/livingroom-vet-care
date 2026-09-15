@@ -13,3 +13,7 @@ On September 12, 2026, the user explicitly approved upgrading this repository to
 ## ezyVet read-only authentication
 
 The existing GreenTree clinic credentials were verified on September 13, 2026 to obtain read-contact/read-animal tokens and complete a bounded contact read **without a partner ID**. Keep `EZYVET_PARTNER_ID` optional; do not infer that a new private API registration is required merely because an exported credential file omits it. Preserve required site/client credentials, explicit production-source opt-in, read-only resource allowlists and source acceptance checks. Living Room Vet is primary; ezyVet write-back is not in scope.
+
+## Approved live backend rollout
+
+On September 14, 2026, the owner explicitly authorized completing the backend rollout and publishing the live Lovable site. The application backend is `mgadheotkdnrsatfivjy`; `ugpyjacqganaqtsiekay` is retained legacy Lovable Cloud, not the target for new application writes or generated migrations. The Lovable Cloud panel may still display the retained legacy database: verify the project reference before every deployment. Browser configuration contains only the selected project's public publishable key. Stripe stays sandbox-only and provider delivery gates remain disabled until separately commissioned.
