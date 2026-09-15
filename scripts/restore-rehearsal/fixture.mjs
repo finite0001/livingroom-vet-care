@@ -4,8 +4,10 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
+import { buildReleaseEmailPayload } from "../../supabase/functions/_shared/release-email-payload.ts";
+import { createReleaseApiOriginalReader } from "../../supabase/functions/_shared/release-api-original-download.ts";
 const [mode, statusPath, run] = process.argv.slice(2);
-assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals", "capture-api-review"].includes(mode));
+assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals", "capture-api-review", "capture-api-release"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
@@ -210,6 +212,50 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   assert.deepEqual(snapshot(),previous,'Review actions preserve existing clinical, Auth and Storage rows');
   writeFileSync(statePath,JSON.stringify(state),{mode:0o600});
   console.log('API original admission, replacement, DVM acknowledgment, withdrawal and tombstone created for restore.');
+} else if (mode === "capture-api-release") {
+  state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(project, `${state.projectRun}-source`);
+  const previous = snapshot();
+  const addedRoles = [];
+  for (const role of ['ADMIN','DVM']) if (sql(`select exists(select 1 from user_roles where user_id='${state.user}' and role='${role}')`) !== 't') {
+    sql(`insert into user_roles(user_id,role) values('${state.user}','${role}')`);addedRoles.push(role);
+  }
+  checked(await api.auth.signInWithPassword({email:state.email,password:state.password}));
+  try {
+    const record = state.apiReviewHistory.records.find(row => row.is_latest && !row.withdrawal).record;
+    const conversation = randomUUID(), releaseId = randomUUID(), requestId = randomUUID();
+    sql(`begin; select set_config('request.jwt.claims','{"sub":"${state.user}","role":"authenticated"}',true); update public.record_release_policy set accepted_schema_version=9,
+      acceptance_reference='Synthetic isolated schema9 restore only' where id; commit;`);
+    sql(`insert into public.conversations(id,client_id) values('${conversation}','${record.client_id}')`);
+    const args = {p_pet_id:record.pet_id,p_client_id:record.client_id,p_channel:'EMAIL',p_recipient:'restore@example.test',p_selection:{api_original_ids:[record.id]}};
+    const preview = checked(await api.rpc('preview_record_release_v9',args));
+    assert.equal(preview.snapshot.schema_version,9);
+    assert.equal(preview.snapshot.api_originals.length,1);
+    assert.equal(preview.snapshot.attachments.length,0);
+    assert.ok(!JSON.stringify(preview).includes('object_path'));
+    checked(await api.rpc('confirm_record_release',{...args,p_id:releaseId,p_reviewed_snapshot:preview.snapshot,p_reviewed_hash:preview.source_hash,p_attest_review:true}));
+    const bundle = checked(await api.rpc('read_record_release',{p_id:releaseId}));
+    const prepared = checked(await api.rpc('prepare_release_email',{p_request_id:requestId,p_release_id:releaseId,p_conversation_id:conversation,p_subject:'Synthetic restore API originals',p_body:'Synthetic restored evidence only',p_release_hash:preview.source_hash}));
+    const read = createReleaseApiOriginalReader({service:admin,url:config.API_URL,serviceKey:config.SERVICE_ROLE_KEY,apiKey:config.ANON_KEY});
+    const frozen = await buildReleaseEmailPayload(prepared.request,bundle,{from:'practice@example.test',replyTo:'practice@example.test'},async()=>{throw new Error('API-only restore must not read patient documents');},original=>read(original,'release_email',requestId,state.user));
+    const payload = JSON.parse(frozen.payload_text);
+    assert.equal(payload.attachments.length,2);
+    assert.equal(hash(Buffer.from(payload.attachments[1].content,'base64')),record.content_sha256);
+    checked(await admin.rpc('capture_release_email_payload',{p_request_id:requestId,p_actor_id:state.user,p_payload_text:frozen.payload_text}));
+    const recovery = checked(await api.rpc('recover_release_email',{p_release_id:releaseId,p_request_id:requestId}));
+    assert.equal(recovery.payload_hash,frozen.payload_hash);
+    state.apiRelease={releaseId,requestId,recordId:record.id,petId:record.pet_id,recordHash:record.record_hash,contentSha256:record.content_sha256,bundle,recovery};
+  } finally {
+    for (const role of addedRoles) sql(`delete from user_roles where user_id='${state.user}' and role='${role}'`);
+  }
+  const after = snapshot();
+  const oldAudit = new Set(previous.audit_logs.map(row=>row.id));
+  assert.deepEqual({...after,audit_logs:after.audit_logs.filter(row=>oldAudit.has(row.id))},previous,'API release adds only expected audit history to the prior core fixture');
+  const allowed = new Set(['record_release_policy','record_releases','record_release_sources','record_release_events','conversations','release_email_requests','release_email_payloads']);
+  for (const audit of after.audit_logs.filter(row=>!oldAudit.has(row.id))) assert.ok(allowed.has(audit.table_name),'Only owned release fixture audit families may be added');
+  state.snapshot=after;
+  writeFileSync(statePath,JSON.stringify(state),{mode:0o600});
+  console.log('Schema9 release and frozen email created through real RPC and bounded private Storage read for restore.');
 } else if (mode === "capture-review-audit") {
   state = JSON.parse(readFileSync(statePath, "utf8"));
   assert.equal(project, `${state.projectRun}-source`);
@@ -287,6 +333,23 @@ select jsonb_object_agg(k,id) from fx;commit;`);
         assert.equal(bytes.length, original.bytes);
         assert.ok((await api.storage.from(context.intent.bucket_id).download(context.intent.object_path)).error);
         assert.ok((await anonymous.storage.from(context.intent.bucket_id).download(context.intent.object_path)).error);
+      }
+      if (state.apiRelease) {
+        const saved = state.apiRelease;
+        assert.deepEqual(checked(await api.rpc('read_record_release',{p_id:saved.releaseId})),saved.bundle);
+        assert.deepEqual(checked(await api.rpc('recover_release_email',{p_release_id:saved.releaseId,p_request_id:saved.requestId})),saved.recovery);
+        const frozen = JSON.parse(sql(`select payload_text from public.release_email_payloads where request_id='${saved.requestId}'`));
+        assert.equal(frozen.attachments.length,2);
+        assert.equal(hash(Buffer.from(frozen.attachments[1].content,'base64')),saved.contentSha256,'Restored frozen email contains original captured bytes');
+        assert.equal(sql("select has_function_privilege('service_role','public.get_release_api_original_context(text,uuid,uuid,uuid)','execute')"),'t');
+        for (const role of ['anon','authenticated']) assert.equal(sql(`select has_function_privilege('${role}','public.get_release_api_original_context(text,uuid,uuid,uuid)','execute')`),'f');
+        for (const signature of ['public.preview_record_release_v9(uuid,uuid,text,text,jsonb)','public.list_record_release_sources_v9(uuid,integer)']) {
+          assert.equal(sql(`select has_function_privilege('authenticated','${signature}','execute')`),'t');
+          assert.equal(sql(`select has_function_privilege('anon','${signature}','execute')`),'f');
+        }
+        const contextArgs={p_family:'release_email',p_id:saved.requestId,p_actor_id:state.user,p_record_id:saved.recordId};
+        assert.ok((await api.rpc('get_release_api_original_context',contextArgs)).error,'Restored private context remains unavailable to staff RPC');
+        assert.ok((await anonymous.rpc('get_release_api_original_context',contextArgs)).error,'Restored private context remains unavailable anonymously');
       }
       if (state.apiReviewActions) {
         for (const action of state.apiReviewActions) assert.deepEqual(checked(await api.rpc('recover_ezyvet_attachment_review_action',{p_id:action.id,p_pet_id:action.pet_id})),action);
@@ -481,6 +544,8 @@ rollback;`);
         ready_original_and_signed_history_immutable: true,
         outbox_empty: true,
         cron_absent: true,
+        schema9_release_and_frozen_email_restored:Boolean(state.apiRelease),
+        schema9_private_context_acl_verified:Boolean(state.apiRelease),
         api_originals_restored: state.apiOriginals?.length ?? 0,
         api_review_actions_restored:state.apiReviewActions?.length ?? 0,
         api_review_records_restored:state.apiReviewHistory?.records.length ?? 0,

@@ -1,3 +1,4 @@
+import { validateReleaseApiOriginals, type ReleaseApiOriginal } from "./record-release-api-originals.ts";
 import {
   renderRecordRelease,
   type ReleaseBundle,
@@ -82,6 +83,7 @@ export async function buildReleaseEmailPayload(
     path: string,
     expectedSize: number,
   ) => Promise<Uint8Array>,
+  downloadApiOriginal?: (original: ReleaseApiOriginal) => Promise<Uint8Array>,
 ): Promise<{ payload_text: string; payload_hash: string }> {
   if (
     !bundle.eligible ||
@@ -104,8 +106,10 @@ export async function buildReleaseEmailPayload(
     sender.from.length > 500
   )
     throw new Error("Practice sender and reply mailbox must be configured.");
+  validateReleaseApiOriginals(bundle.release.snapshot);
+  const apiOriginals = bundle.release.snapshot.api_originals || [];
   const originals = bundle.release.snapshot.attachments;
-  if (originals.length + 1 > RELEASE_EMAIL_MAX_ATTACHMENTS)
+  if (originals.length + apiOriginals.length + 1 > RELEASE_EMAIL_MAX_ATTACHMENTS)
     throw new Error(
       "Email supports at most 24 original documents plus the rendered report. Split the reviewed package.",
     );
@@ -127,7 +131,7 @@ export async function buildReleaseEmailPayload(
       intent.subject + intent.body + sender.from + sender.replyTo,
     ).length +
     8192;
-  for (const d of originals) {
+  for (const d of [...originals, ...apiOriginals.map(v => v.record)]) {
     if (
       !Number.isSafeInteger(d.file_size) ||
       d.file_size < 1 ||
@@ -159,13 +163,19 @@ export async function buildReleaseEmailPayload(
       throw new Error(
         "Original document bytes differ from the reviewed type or size.",
       );
-    if ([5, 6, 7, 8].includes(bundle.release.snapshot.schema_version) && d.content_sha256 !== undefined && await sha256Hex(bytes) !== d.content_sha256)
+    if ([5, 6, 7, 8, 9].includes(bundle.release.snapshot.schema_version) && d.content_sha256 !== undefined && await sha256Hex(bytes) !== d.content_sha256)
       throw new Error("Original bytes differ from captured source provenance.");
     attachments.push({
       filename: releaseAttachmentFilename(index + 1, d.file_name, d.mime_type),
       content_type: d.mime_type,
       content: base64Bytes(bytes),
     });
+  }
+  for (const [index, original] of apiOriginals.entries()) {
+    if (!downloadApiOriginal) throw new Error("API original reader unavailable");
+    const r = original.record, bytes = await downloadApiOriginal(original);
+    if (bytes.length !== r.file_size || !matchesMime(bytes,r.mime_type) || await sha256Hex(bytes) !== r.content_sha256) throw new Error("API original bytes differ");
+    attachments.push({ filename: releaseAttachmentFilename(originals.length + index + 1, `ezyvet-original-${r.source_attachment_id}`, r.mime_type), content_type:r.mime_type, content:base64Bytes(bytes) });
   }
   const payload: ReleaseEmailPayload = {
     from: sender.from,

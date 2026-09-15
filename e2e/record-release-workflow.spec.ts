@@ -1,8 +1,10 @@
+import { record as apiRecord } from "../tests/ezyvet/attachment-review-fixture";
 import { prescriptionArtifact } from "../tests/record-releases/prescription-fixture";
 import { vaccinationArtifact } from "../tests/record-releases/vaccination-fixture";
 import { clinicalHistoryArtifact } from "../tests/record-releases/clinical-history-fixture";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { sourceProvenanceArtifact } from "../tests/record-releases/source-provenance-fixture";
 import { provenanceArtifact } from "../tests/record-releases/provenance-fixture";
 const chartArtifact = provenanceArtifact();
@@ -42,6 +44,7 @@ async function fixture(
   clinicalMode = false,
   vaccinationMode = false,
   prescriptionMode = false,
+  roles = ["STAFF"],
 ) {
   const currentArtifact = prescriptionMode ? prescriptionArtifact() : vaccinationMode
     ? vaccinationArtifact()
@@ -80,8 +83,20 @@ async function fixture(
     (value) => localStorage.setItem("sb-127-auth-token", JSON.stringify(value)),
     session,
   );
+  const apiBytes = Buffer.from("%PDF-1.4\nSynthetic review original\n%%EOF");
+  const apiOriginal = {
+    ...apiRecord(),
+    content_sha256: createHash("sha256").update(apiBytes).digest("hex"),
+    file_size: apiBytes.length,
+  };
   const state = {
+    apiOriginal,
+    apiBytes,
+    tamperApiDownload: false,
+    apiDownloadRequests: [] as Array<{ record_id: string; pet_id: string }>,
     malformedSources: false,
+    apiCandidateCount: 0,
+    malformedApi: false,
     prescriptionCandidateCount: 0,
     malformedPrescription: false,
     emails: [] as Array<{
@@ -137,6 +152,15 @@ async function fixture(
     const path = new URL(route.request().url()).pathname;
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
+    if (path === "/auth/v1/logout") return route.fulfill({ json: {} });
+    if (path === "/functions/v1/retrieve-reviewed-ezyvet-attachment") {
+      expect(route.request().method()).toBe("POST");
+      state.apiDownloadRequests.push(route.request().postDataJSON());
+      return route.fulfill({
+        contentType: "application/pdf",
+        body: state.tamperApiDownload ? Buffer.alloc(apiBytes.length, 65) : apiBytes,
+      });
+    }
     if (path === "/rest/v1/profiles")
       return route.fulfill({
         json: [
@@ -145,13 +169,13 @@ async function fixture(
             full_name: "Test staff",
             first_name: "Test",
             last_name: "Staff",
-            role: "STAFF",
+            role: roles[0],
             is_active: true,
           },
         ],
       });
     if (path === "/rest/v1/user_roles")
-      return route.fulfill({ json: [{ role: "STAFF" }] });
+      return route.fulfill({ json: roles.map((role) => ({ role })) });
     if (path === "/rest/v1/pets")
       return route.fulfill({
         json: [
@@ -271,7 +295,7 @@ async function fixture(
         "abandoned";
       return route.fulfill({ json: null });
     }
-    if (path === "/rest/v1/rpc/list_record_release_sources_v8") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v9") {
       state.sourceLoads++;
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
@@ -282,7 +306,8 @@ async function fixture(
         phone: "+13035550100",
         policy_accepted: accepted,
         policy_v4_accepted: v4Accepted,
-        policy_v8_accepted: v4Accepted,
+        policy_v9_accepted: v4Accepted,
+        api_original_ids: [],
         lab_report_ids: [],
         external_record_ids: [],
         has_more: Object.fromEntries(
@@ -372,9 +397,17 @@ async function fixture(
           partial_disclosure: state.malformedPrescription ? null : "One referenced item was unavailable; no current medication reconciliation.",
         }));
       }
+      candidates.api_original_ids = Array.from({ length: state.apiCandidateCount }, (_, index) => ({
+        id: index === 0 ? apiOriginal.id : `c9000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+        version: 1, version_hash: apiOriginal.record_hash,
+        recorded_at: apiOriginal.approved_at, label: `API original ${index + 1}`,
+        source_label: "ezyVet API original", capture_hash: apiOriginal.capture_hash,
+        content_sha256: apiOriginal.content_sha256, mime_type: apiOriginal.mime_type, file_size: apiOriginal.file_size,
+        acknowledgment_count: state.malformedApi ? 0 : 1, historical_source: true,
+      }));
       return route.fulfill({ json: candidates });
     }
-    if (path === "/rest/v1/rpc/select_all_record_release_sources_v8") {
+    if (path === "/rest/v1/rpc/select_all_record_release_sources_v9") {
       state.allCalls++;
       if (state.oversized)
         return route.fulfill({
@@ -388,6 +421,7 @@ async function fixture(
       return route.fulfill({
         json: {
           selection: {
+            api_original_ids: Array.from({ length: state.apiCandidateCount }, (_, index) => index === 0 ? apiOriginal.id : `c9000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
             lab_report_ids: [],
             external_record_ids: [],
             ...Object.fromEntries(
@@ -413,7 +447,7 @@ async function fixture(
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release_v8") {
+    if (path === "/rest/v1/rpc/preview_record_release_v9") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -428,8 +462,20 @@ async function fixture(
           },
         });
       const preview = structuredClone(currentArtifact.preview);
+      if (body.p_selection.api_original_ids?.length) {
+        preview.snapshot.patient.id = petId;
+        preview.snapshot.recipient.client_id = clientId;
+      }
       Object.assign(preview.snapshot, {
-        schema_version: 8,
+        schema_version: 9,
+        api_originals: body.p_selection.api_original_ids?.length ? [{
+          record: apiOriginal, acknowledgment: {
+            id: "99999999-9999-4999-8999-999999999999", action_id: "88888888-8888-4888-8888-888888888888",
+            record_id: apiOriginal.id, pet_id: petId, actor_id: staffId,
+            record_hash: apiOriginal.record_hash, capture_hash: apiOriginal.capture_hash,
+            created_at: "2026-09-14T13:00:00Z",
+          },
+        }] : [],
         imported_prescriptions: preview.snapshot.imported_prescriptions || [],
         imported_vaccinations: preview.snapshot.imported_vaccinations || [],
         imported_histories: preview.snapshot.imported_histories || [],
@@ -467,7 +513,7 @@ async function fixture(
             })),
           },
         }));
-      preview.snapshot.selection = { ...body.p_selection, imported_prescription_ids: body.p_selection.imported_prescription_ids || [], imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [] };
+      preview.snapshot.selection = { ...body.p_selection, api_original_ids: body.p_selection.api_original_ids || [], imported_prescription_ids: body.p_selection.imported_prescription_ids || [], imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [] };
       return route.fulfill({ json: preview });
     }
     if (path === "/rest/v1/rpc/confirm_record_release") {
@@ -991,7 +1037,7 @@ test("new package confirmation cannot replace an active release email draft", as
   );
 });
 
-test("legacy acceptance does not enable confirmation of the expanded version 8 form", async ({
+test("legacy acceptance does not enable confirmation of the expanded version 9 form", async ({
   page,
 }) => {
   await fixture(page, true, false);
@@ -1008,7 +1054,7 @@ test("legacy acceptance does not enable confirmation of the expanded version 8 f
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
   await expect(
-    panel.getByText("version 8, including reviewed outside prescriptions, vaccinations, imported clinical narratives", {
+    panel.getByText("version 9, including DVM-acknowledged API originals, reviewed outside prescriptions, vaccinations, imported clinical narratives", {
       exact: false,
     }),
   ).toBeVisible();
@@ -1202,7 +1248,7 @@ test("verified lab and imported versions retain explicit matching originals acro
   expect(state.requests[0].p_selection.lab_report_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.external_record_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.document_ids).toHaveLength(4);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
 });
 
 test("all-source selection includes reciprocal provenance and stale source rejection preserves review workflow", async ({
@@ -1254,7 +1300,7 @@ test("all-source selection includes reciprocal provenance and stale source rejec
   expect(state.rows).toHaveLength(0);
 });
 
-test("schema8 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
+test("schema9 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
   page,
 }) => {
   const state = await fixture(page, true, true, true, true);
@@ -1329,12 +1375,12 @@ test("schema8 explicitly selects outside narratives while retaining compact prob
     .click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
 
 
-test("schema8 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
+test("schema9 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1352,7 +1398,7 @@ test("schema8 shares explicitly selected outside vaccination and narrative with 
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
   expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
@@ -1387,7 +1433,7 @@ test("partial prescription candidate missing disclosure fails closed", async ({ 
 });
 
 
-test("schema8 includes explicitly selected prescription with vaccination and narrative through exact recovery", async ({ page }) => {
+test("schema9 includes explicitly selected prescription with vaccination and narrative through exact recovery", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1406,7 +1452,7 @@ test("schema8 includes explicitly selected prescription with vaccination and nar
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(8);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
   expect(state.requests[0].p_selection.imported_prescription_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
@@ -1424,4 +1470,175 @@ test("schema8 includes explicitly selected prescription with vaccination and nar
   expect(html).toContain("INVALIDATED RELEASE");
   expect(html).toContain("Outside prescription item changed");
   expect(html).toContain("Clinician-reviewed outside prescription history");
+});
+
+test("API originals require acknowledgment and enforce the 20-record cap without truncation", async ({ page }) => {
+  const state = await fixture(page);
+  state.apiCandidateCount = 21;
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: "Refresh source list", exact: true }).click();
+  await expect(panel.getByText("Historical provider source at admission.", { exact: false })).toHaveCount(21);
+  await panel.getByRole("button", { name: "Select all shown: DVM-acknowledged API originals", exact: true }).click();
+  await expect(panel.getByText("Selecting these records would exceed 20 in this family. Use a separate package; no selections were changed.", { exact: true })).toBeVisible();
+  await expect(panel.getByText("DVM-acknowledged API originals · 0 selected", { exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Select all eligible records across every page", exact: true }).click();
+  await expect(panel.getByText("All-record selection is incomplete or exceeds a family limit; selections were not changed.", { exact: true })).toBeVisible();
+  await expect(panel.getByText("DVM-acknowledged API originals · 0 selected", { exact: true })).toBeVisible();
+  for (let index = 1; index <= 20; index++) await panel.getByRole("checkbox", { name: new RegExp(`^API original ${index} ·`) }).check();
+  await panel.getByRole("checkbox", { name: /^API original 21 ·/ }).click();
+  await expect(panel.getByRole("checkbox", { name: /^API original 21 ·/ })).not.toBeChecked();
+  await expect(panel.getByText("DVM-acknowledged API originals · 20 selected", { exact: true })).toBeVisible();
+});
+
+test("API original without exact DVM acknowledgment fails closed", async ({ page }) => {
+  const state = await fixture(page);
+  state.apiCandidateCount = 1;
+  state.malformedApi = true;
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: "Refresh source list", exact: true }).click();
+  await expect(panel.getByText("Release data could not be loaded.", { exact: false })).toBeVisible({ timeout: 15000 });
+});
+
+test("schema9 supports API-original-only review and exact lost-confirmation recovery", async ({ page }) => {
+  const state = await fixture(page);
+  state.apiCandidateCount = 1;
+  state.ambiguous = true;
+  const storageRequests: string[] = [];
+  page.on("request", request => { if (request.url().includes("/storage/v1/")) storageRequests.push(request.url()); });
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: "Refresh source list", exact: true }).click();
+  await panel.getByRole("button", { name: "Select all shown: DVM-acknowledged API originals", exact: true }).click();
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  await expect(panel.frameLocator("iframe").getByText(state.apiOriginal.content_sha256, { exact: false })).toBeVisible();
+  await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
+  await panel.getByRole("button", { name: "Confirm reviewed package", exact: true }).click();
+  await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
+  expect(state.requests).toHaveLength(2);
+  expect(state.requests[0]).toEqual(state.requests[1]);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
+  expect(state.requests[0].p_selection.api_original_ids).toEqual([apiRecord().id]);
+  expect(state.requests[0].p_reviewed_snapshot.attachments).toEqual([]);
+  expect(storageRequests).toEqual([]);
+});
+
+
+async function openApiOriginalPreview(page: Page, roles = ["DVM"]) {
+  const state = await fixture(page, true, true, false, false, false, false, roles);
+  state.apiCandidateCount = 1;
+  const panel = page.getByRole("region", { name: "Patient medical-record releases" });
+  await panel.getByRole("button", { name: "Refresh source list", exact: true }).click();
+  await panel.getByRole("button", { name: "Select all shown: DVM-acknowledged API originals", exact: true }).click();
+  await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
+  await expect(panel.frameLocator("iframe").getByText(state.apiOriginal.content_sha256, { exact: false })).toBeVisible();
+  return { state, panel };
+}
+const selectedOriginalButton = "Download selected API original: Synthetic original.pdf · version 1";
+const reviewedPackageLabel = "I reviewed the complete selected records, original attachments and household recipient.";
+
+test("DVM downloads the selected API original from release preview without attesting", async ({ page }) => {
+  const forbiddenRequests: string[] = [];
+  page.on("request", request => {
+    if (/\/storage\/v1\/|\/capture-ezyvet-attachment|\/acknowledge_ezyvet_attachment_original/.test(request.url())) forbiddenRequests.push(request.url());
+  });
+  const { state, panel } = await openApiOriginalPreview(page);
+  const downloads = panel.getByRole("region", { name: "Selected API original downloads" });
+  await expect(downloads.getByRole("button", { name: selectedOriginalButton, exact: true })).toBeVisible();
+  expect(state.apiDownloadRequests).toEqual([]);
+  await panel.getByLabel(reviewedPackageLabel).check();
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-attachment", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  const downloaded = page.waitForEvent("download");
+  await downloads.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await entered;
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  for (const name of ["Confirm reviewed package", "Edit selection and review again", "Clear package selection"]) {
+    await expect(panel.getByRole("button", { name, exact: true })).toBeDisabled();
+  }
+  release();
+  const download = await downloaded;
+  expect(await readFile((await download.path())!)).toEqual(state.apiBytes);
+  expect(state.apiDownloadRequests).toEqual([{ record_id: state.apiOriginal.id, pet_id: petId }]);
+  await expect(panel.getByText("Original downloaded after checksum verification. Open and review the file before confirming the package.", { exact: true })).toBeVisible();
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
+  expect(state.requests).toEqual([]);
+  expect(forbiddenRequests).toEqual([]);
+});
+
+for (const role of ["STAFF", "ADMIN"]) {
+  test(`${role} release preview has no API original download control`, async ({ page }) => {
+    const { state, panel } = await openApiOriginalPreview(page, [role]);
+    await expect(panel.getByRole("button", { name: selectedOriginalButton, exact: true })).toHaveCount(0);
+    expect(state.apiDownloadRequests).toEqual([]);
+  });
+}
+
+test("corrupt API original bytes fail release-preview download without attesting", async ({ page }) => {
+  const { state, panel } = await openApiOriginalPreview(page);
+  state.tamperApiDownload = true;
+  let downloads = 0;
+  page.on("download", () => { downloads++; });
+  await panel.getByLabel(reviewedPackageLabel).check();
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await expect(panel.getByText("Original download failed. The selected file could not be verified. Try again before confirming the package.", { exact: true })).toBeVisible();
+  expect(downloads).toBe(0);
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
+  await expect(panel.getByRole("button", { name: "Confirm reviewed package", exact: true })).toBeDisabled();
+  expect(state.requests).toEqual([]);
+});
+
+test("late API original bytes after release-preview signout cannot download", async ({ page }) => {
+  const { panel } = await openApiOriginalPreview(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-attachment", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  let downloads = 0;
+  page.on("download", () => { downloads++; });
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await entered;
+  await page.getByRole("button", { name: "Sign Out", exact: true }).click();
+  await expect(panel).toHaveCount(0);
+  const response = page.waitForResponse(r => r.url().endsWith("/retrieve-reviewed-ezyvet-attachment"));
+  release();
+  await (await response).finished();
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+  expect(downloads).toBe(0);
+});
+
+test("late API original bytes after release-preview pagehide cannot download", async ({ page }) => {
+  const { panel } = await openApiOriginalPreview(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  await page.route("**/functions/v1/retrieve-reviewed-ezyvet-attachment", async route => {
+    started();
+    await gate;
+    await route.fallback();
+  });
+  let downloads = 0;
+  page.on("download", () => { downloads++; });
+  await panel.getByRole("button", { name: selectedOriginalButton, exact: true }).click();
+  await entered;
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  const response = page.waitForResponse(r => r.url().endsWith("/retrieve-reviewed-ezyvet-attachment"));
+  release();
+  await (await response).finished();
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+  expect(downloads).toBe(0);
+  await expect(panel.getByText("Original downloaded after checksum verification. Open and review the file before confirming the package.", { exact: true })).toHaveCount(0);
+  await expect(panel.getByLabel(reviewedPackageLabel)).not.toBeChecked();
 });

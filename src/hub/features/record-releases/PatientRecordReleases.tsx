@@ -1,7 +1,8 @@
+import { validateReleaseApiOriginals } from "../../../../supabase/functions/_shared/record-release-api-originals";
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
-import { mergeReleaseSelection } from "./selection";
-import { useEffect, useRef, useState } from "react";
+import { mergeReleaseSelection, releaseSelectionLimit } from "./selection";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { denverLocal } from "../scheduling/time";
 import { RecordReleaseArtifact } from "./RecordReleaseArtifact";
+import { ApiOriginalPreviewDownloads } from "./ApiOriginalPreviewDownloads";
 import {
   releases,
   readRelease,
@@ -43,7 +45,7 @@ export function PatientRecordReleases({
   petId,
   onDirtyChange,
 }: PatientRecordReleasesProps) {
-  const { user, profile } = useAuth();
+  const { user, profile, hasRole } = useAuth();
   const cache = useQueryClient();
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
@@ -58,7 +60,13 @@ export function PatientRecordReleases({
   const [preview, setPreview] = useState<ReleasePreview | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [opened, setOpened] = useState<ReleaseBundle | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const [apiDownloadBusy, setApiDownloadBusy] = useState(false);
+  const busy = operationBusy || apiDownloadBusy;
+  const onApiDownloadBusy = useCallback((value: boolean) => {
+    setApiDownloadBusy(value);
+    if (value) setReviewed(false);
+  }, []);
   const [error, setError] = useState("");
   const [pending, setPending] = useState<ReleaseConfirmArgs | null>(null);
   const [withdrawReason, setWithdrawReason] = useState("");
@@ -96,10 +104,10 @@ export function PatientRecordReleases({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates-v8", petId, sourcePage],
+    queryKey: ["release-candidates-v9", petId, sourcePage],
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources_v8",
+        "list_record_release_sources_v9",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -110,7 +118,7 @@ export function PatientRecordReleases({
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
-        typeof data.policy_v8_accepted !== "boolean" ||
+        typeof data.policy_v9_accepted !== "boolean" ||
         !data.has_more ||
         !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
@@ -146,6 +154,14 @@ export function PatientRecordReleases({
                     (item.completeness === "partial"
                       ? typeof item.partial_disclosure === "string" && item.partial_disclosure.trim().length > 0
                       : item.partial_disclosure === null))) &&
+                (kind !== "api_original_ids" ||
+                  (Number.isSafeInteger(item.version) && item.version > 0 &&
+                    typeof item.source_label === "string" &&
+                    [item.version_hash, item.capture_hash, item.content_sha256].every(hash => typeof hash === "string" && /^[a-f0-9]{64}$/.test(hash)) &&
+                    Number.isSafeInteger(item.file_size) && item.file_size! > 0 && item.file_size! <= 20971520 &&
+                    ["application/pdf", "image/jpeg", "image/png"].includes(item.mime_type || "") &&
+                    Number.isSafeInteger(item.acknowledgment_count) && item.acknowledgment_count! > 0 &&
+                    typeof item.historical_source === "boolean")) &&
                 (kind !== "document_ids" ||
                   (Array.isArray(item.required_lab_report_ids) &&
                     item.required_lab_report_ids.every(
@@ -257,7 +273,7 @@ export function PatientRecordReleases({
   };
   const setChosen = (kind: SourceKind, id: string, checked: boolean) => {
     const existing = selection[kind] || [];
-    const limit = (kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100;
+    const limit = releaseSelectionLimit(kind);
     if (checked && existing.length >= limit) {
       setError(
         `Use a separate package for more than ${limit} records in this source family.`,
@@ -277,7 +293,7 @@ export function PatientRecordReleases({
       const ids = mergeReleaseSelection(
         selection[kind] || [],
         (candidates.data?.[kind] || []).map((item) => item.id),
-        (kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100,
+        releaseSelectionLimit(kind),
       );
       edit();
       setSelection((current) => ({ ...current, [kind]: ids }));
@@ -288,7 +304,7 @@ export function PatientRecordReleases({
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources_v8",
+        "select_all_record_release_sources_v9",
         { p_pet_id: petId },
       );
       if (error) throw error;
@@ -298,7 +314,7 @@ export function PatientRecordReleases({
         !kinds.every(
           (kind) =>
             Array.isArray(data.selection[kind]) &&
-            data.selection[kind]!.length <= ((kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100) &&
+            data.selection[kind]!.length <= (releaseSelectionLimit(kind)) &&
             data.selection[kind]!.every((id) => typeof id === "string"),
         )
       )
@@ -327,14 +343,15 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v8",
+        "preview_record_release_v9",
         args,
       );
       if (error) throw error;
-      if (!data || data.snapshot.schema_version !== 8)
+      if (!data || data.snapshot.schema_version !== 9)
         throw new Error(
           "Current source-aware release preview is unavailable. Preserve selections and retry.",
         );
+      validateReleaseApiOriginals(data.snapshot);
       previewArgsRef.current = args;
       setPreview(data);
       setReviewed(false);
@@ -623,11 +640,11 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_v8_accepted && (
+              {!candidates.data.policy_v9_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 8, including reviewed outside prescriptions, vaccinations, imported clinical narratives,
+                  operator (version 9, including DVM-acknowledged API originals, reviewed outside prescriptions, vaccinations, imported clinical narratives,
                   locally reviewed source findings, verified laboratory and
                   imported-record provenance).
                 </p>
@@ -725,6 +742,14 @@ export function PatientRecordReleases({
                               </p>
                             </div>
                           )}
+                          {kind === "api_original_ids" && (
+                            <div className="space-y-1 break-words text-sm">
+                              <p>{item.source_label} · Staff-admitted API original · {item.acknowledgment_count} exact-version DVM acknowledgment(s).</p>
+                              <p>{item.historical_source ? "Historical provider source at admission" : "Provider source current at admission"}. Admission and acknowledgment do not add clinical interpretation. Select at most 20 API originals per package.</p>
+                              <p>{item.mime_type} · {item.file_size} bytes · SHA-256: <span className="break-all">{item.content_sha256}</span></p>
+                              <p>Original bytes are included through verified server delivery by email or secure document link.</p>
+                            </div>
+                          )}
                           {kind === "imported_prescription_ids" && (
                             <div className="space-y-1 text-sm">
                               <p>{item.source_label}. Reviewed outside prescription history; no local prescription, dispensing or medication reconciliation is inferred. Select at most 20 prescription versions per package.</p>
@@ -815,8 +840,10 @@ export function PatientRecordReleases({
               )}
               <p className="text-sm">
                 Select all shown applies to this source page. A package supports
-                at most 100 records per family; use another package for
-                additional history. Body maps include every observation and
+                at most 20 API originals, 20 outside vaccinations and 20 outside
+                prescriptions, and 100 records per other family. Delivery also
+                limits the combined original files to 24; use another package
+                for additional history. Body maps include every observation and
                 correction, not a signed diagnosis.
               </p>
               {!preview ? (
@@ -835,6 +862,27 @@ export function PatientRecordReleases({
               ) : (
                 <>
                   <RecordReleaseArtifact artifact={{ preview }} />
+                  {!!preview.snapshot.api_originals?.length && (
+                    user && profile?.is_active && hasRole("DVM") ? (
+                      <ApiOriginalPreviewDownloads
+                        key={`${user.id}:${petId}:${preview.source_hash}`}
+                        originals={preview.snapshot.api_originals!}
+                        actor={user.id}
+                        petId={petId}
+                        disabled={operationBusy || !!pending}
+                        onBusyChange={onApiDownloadBusy}
+                      />
+                    ) : (
+                      <p className="rounded-md bg-muted p-3 text-sm">
+                        This preview shows API-original provenance, not the file
+                        contents. An authorized DVM can download the selected
+                        originals from the package preview. Ask a DVM to complete
+                        the package review if you cannot inspect the files; do
+                        not attest to a review you have not performed. Email and
+                        secure-link delivery include the original files separately.
+                      </p>
+                    )
+                  )}
                   {preview.snapshot.attachments.map((a) => (
                     <Button
                       key={a.id}
@@ -870,7 +918,7 @@ export function PatientRecordReleases({
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !candidates.data.policy_v8_accepted ||
+                      !candidates.data.policy_v9_accepted ||
                       !reviewed
                     }
                     onClick={() => void confirm()}

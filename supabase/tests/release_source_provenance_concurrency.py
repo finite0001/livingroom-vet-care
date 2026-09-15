@@ -1,5 +1,6 @@
 """Actual local PostgreSQL contention; synthetic fixtures only, never provider calls."""
 import argparse
+from owned_database_cleanup import cleanup_owned_database
 from pathlib import Path
 import json
 import subprocess
@@ -169,13 +170,7 @@ try:
         contended(void,staff+confirm(review,str(uuid.uuid4())),lambda code,out,err:code!=0 and ('shareable' in err or 'original' in err or 'available' in err))
 finally:
     if created:
-        COMMAND=FOUNDATION_COMMAND.copy()
-        check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Owned disposable database marker verified before cleanup')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
-        sql(f'drop database "{database}";')
-        check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
-    COMMAND=FOUNDATION_COMMAND.copy()
-    check(sql("select coalesce(jsonb_agg(to_jsonb(p) order by id),'[]') from public.record_release_policy p;").stdout.strip()==policy_before,'Foundation clinical acceptance unchanged')
+        cleanup_owned_database(FOUNDATION_COMMAND, database, marker, check=check)
 print(f'Local release provenance concurrency: {checks} checks passed in disposable database; no provider requests.')
 
 if not args.reverse:

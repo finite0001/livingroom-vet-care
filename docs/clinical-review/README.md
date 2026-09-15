@@ -1,6 +1,8 @@
 # Dr. Susan Edler — clinical acceptance review pack
 
-**DRAFT v4 · NOT APPROVED · prepared 2026-09-13**
+**DRAFT v6 · NOT APPROVED · updated 2026-09-14**
+
+New: [ezyVet original-file chart and schema 9 package review](api-originals-and-release.md), with a [blank session worksheet](api-originals-session-worksheet.md), originally prepared against PR130 revision `69f509aa` and now extended for DVM downloads within the package preview. Record the actual deployed revision during review. This adds review cases, not approval or a completed staff rehearsal. The older generated HTML examples retain their original revision and schema coverage.
 
 Review baseline: use the exact code revision recorded in each generated example banner. The original v3 baseline `63414e8` covered schema-4 weight provenance; the expanded pack requires new review for selected source originals and imported API history. This is a review artifact, not an approval record or a statement that the practice is ready to launch. No reviewer approval has been recorded. Every decision below remains **pending**.
 
@@ -23,10 +25,11 @@ Record decisions per form and exact revision. Blank fields mean no approval. A c
 | C09 | Verified lab originals, correction history and per-version DVM acknowledgment | Pending; supplemental review required | | | |
 | C10 | Reviewed ezyVet manual-export originals and replacement history | Pending; supplemental review required | | | |
 | C11 | Imported API history, locally reviewed problems/reactions and source discrepancies | Pending; supplemental review required | | | |
+| C12 | API-captured originals, chart admission, replacement/withdrawal and exact-version DVM acknowledgment | Pending; [review script](api-originals-and-release.md) prepared | | | |
 | D01 | Invoice charges/credits/status/payment disclosure | Pending | | | |
-| D02 | Record-release selection, recipient, originals and confirmation | Pending; separate schema-4, schema-5 and schema-6 provenance examples included | | | |
+| D02 | Record-release selection, recipient, originals and confirmation | Pending; schema-4/5/6 examples and separate schema-9 review script included | | | |
 | D03 | Reminder wording, eligibility, consent and delivery labels | Pending | | | |
-| D04 | Frozen email report/originals and delivery attestation | Pending | | | |
+| D04 | Frozen email report/originals and delivery attestation | Pending; schema-9 email/document-link review script included | | | |
 
 For each accepted row, record: exact code revision; pack version; form/template version where available; decision (accept / accept after specified correction / reject); clinician or operational reviewer identity; date; evidence link; unresolved exclusions. “Accept after correction” remains pending until the correction is verified. Keep clinical acceptance separate from production configuration and operator sharing-policy acceptance.
 

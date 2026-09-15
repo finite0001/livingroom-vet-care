@@ -1,5 +1,6 @@
 """Actual local PostgreSQL contention; synthetic fixtures only, never provider calls."""
 import argparse
+from owned_database_cleanup import cleanup_owned_database
 from pathlib import Path
 import json
 import subprocess
@@ -206,9 +207,5 @@ try:
     check('review_ready' in run(stage(fresh,str(uuid.uuid4()),items,True)),'Exact committed page recovers after current membership changed')
 finally:
     if created:
-        COMMAND=FOUNDATION_COMMAND.copy()
-        check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
-        sql(f'drop database "{database}";')
-        check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
+        cleanup_owned_database(FOUNDATION_COMMAND, database, marker, check=check)
 print(f'Vaccination import concurrency: {checks} checks passed; no source requests or native chart writes.')

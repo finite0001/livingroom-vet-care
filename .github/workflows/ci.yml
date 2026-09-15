@@ -58,6 +58,8 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify guarded disposable cleanup with restricted database roles
+        run: python3 supabase/tests/owned_database_cleanup_regression.py --project-config supabase/config.toml
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks
@@ -98,6 +100,8 @@ jobs:
         run: python3 supabase/tests/ezyvet_attachment_originals_concurrency.py --project-config supabase/config.toml
       - name: Verify API-original chart review and correction concurrency
         run: python3 supabase/tests/ezyvet_attachment_original_reviews_concurrency.py --project-config supabase/config.toml
+      - name: Verify API-original release acknowledgment and correction races
+        run: python3 supabase/tests/ezyvet_api_original_release_concurrency.py --project-config supabase/config.toml
       - name: Verify populated additive prescription reference upgrade
         run: python3 supabase/tests/prescription_reference_upgrade.py --project-config supabase/config.toml
       - name: Verify reviewed history, local problem and release concurrency
@@ -183,3 +187,27 @@ jobs:
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture clinical-history
       - name: Verify attachment metadata and original capture through disposable Auth and Storage
         run: python3 tests/ezyvet/attachment-metadata-disposable.py --run-synthetic-local --fixture all
+
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.115.0
+      - name: Verify populated migration upgrade and private-original restore
+        run: python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-observed-hosted-gaps
+      - name: Preserve only the sanitized restore receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-restore-receipt
+          path: /tmp/lrv-restore-synthetic-*/result.json
+          if-no-files-found: ignore
+          retention-days: 7

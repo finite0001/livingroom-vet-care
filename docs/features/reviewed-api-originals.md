@@ -22,7 +22,7 @@ The DVM endpoint checks the admitted record and patient, validates its original 
 
 ## Boundaries
 
-This chart evidence does not create `patient_documents`, manual-export receipts, SOAP notes, diagnoses, treatments, billing, reminders or messages. Existing client release selection and delivery cannot select API-original chart records. API-original release support requires a subsequent provenance contract and matching email/document-link validation.
+Chart admission itself does not create `patient_documents`, manual-export receipts, SOAP notes, diagnoses, treatments, billing, reminders or messages. [Schema 9 release support](reviewed-api-original-releases.md) separately permits staff to select admitted, DVM-acknowledged originals for verified email and document-link packages, behind its own clinical policy gate.
 
 Live source acceptance, Dr. Susan Edler's clinical-form review, additional attachment parent types and whole-migration reconciliation remain separate work. No hosted deployment or provider operation is part of this local increment.
 

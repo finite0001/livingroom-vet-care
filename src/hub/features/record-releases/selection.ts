@@ -1,4 +1,5 @@
 export const sourceLabels = {
+  api_original_ids: "DVM-acknowledged API originals",
   problem_ids: "Problem and diagnosis history",
   patient_summary_ids: "Allergy and legacy profile summary",
   weight_ids: "Dated weights",
@@ -30,4 +31,8 @@ export function mergeReleaseSelection(
       `Selecting these records would exceed ${limit} in this family. Use a separate package; no selections were changed.`,
     );
   return result;
+}
+
+export function releaseSelectionLimit(kind: SourceKind): number {
+  return ["api_original_ids", "imported_vaccination_ids", "imported_prescription_ids"].includes(kind) ? 20 : 100;
 }
