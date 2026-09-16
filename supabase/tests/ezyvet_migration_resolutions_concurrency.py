@@ -125,6 +125,8 @@ try:
     # Actual binding writer holds the shared scope gate until commit.
     sql('begin;'+staff+f"select bind_ezyvet_migration_child('{fx['binding']}','{fx['scope']}','{fx['child']}','Initial synthetic binding');commit;")
     before_replacement=json.loads(scalar('begin;'+staff+f"select read_ezyvet_migration_resolution_context('{fx['scope']}',{quote(json.dumps(target))});commit;"))
+    # Expire only the completed synthetic fixture run's cooldown in this scratch DB.
+    sql(f"update ezyvet_import_runs set retry_after=null,lease_until=null where id='{fx['child']}';")
     next_child,next_binding=str(uuid.uuid4()),str(uuid.uuid4())
     next_run=json.loads(scalar(f"select to_jsonb(claim_ezyvet_import('{next_child}','{actor}','resolution-site','animal','https://api.trial.ezyvet.com'));"))
     sql(f"select stage_ezyvet_import_page('{next_child}','{actor}','{next_run['lease_id']}',1,false,'[{{\"external_id\":\"77\",\"payload\":{{\"id\":77}}}}]');")
