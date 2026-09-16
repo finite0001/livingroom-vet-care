@@ -57,6 +57,8 @@ tables = [
     'native_dispense_refund_links', 'billing_credits', 'payment_provider_profiles',
     'invoice_checkout_attempts', 'invoice_payment_evidence', 'invoice_payments',
     'invoice_refund_requests', 'invoice_refund_evidence', 'invoice_refunds',
+    'native_estimate_drafts', 'native_estimate_draft_revisions',
+    'native_estimate_draft_operations', 'native_estimate_draft_closures',
 ]
 
 
@@ -200,6 +202,34 @@ def finance_evidence_query():
     );"""
 
 
+def estimate_evidence_query():
+    # Historical verification must use each revision's frozen catalog even after
+    # the actual Auth fixture changes the live product price and version.
+    return """select jsonb_build_object(
+      'drafts',(select count(*) from public.native_estimate_drafts),
+      'revisions',(select count(*) from public.native_estimate_draft_revisions),
+      'operations',(select count(*) from public.native_estimate_draft_operations),
+      'closures',(select count(*) from public.native_estimate_draft_closures),
+      'revisions_verified',(select coalesce(bool_and(public.native_estimate_verified_revision(estimate_id,version) is not distinct from document),false) from public.native_estimate_draft_revisions),
+      'verified_revisions',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('estimate_id',estimate_id,'version',version,'document',public.native_estimate_verified_revision(estimate_id,version)) order by estimate_id,version),'[]') from public.native_estimate_draft_revisions)),
+      'verified_operations',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_estimate_verified_operation(id) order by id),'[]') from public.native_estimate_draft_operations)),
+      'verified_closures',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_estimate_verified_closure(id) order by id),'[]') from public.native_estimate_draft_closures)),
+      'changed_catalog_entries',(select count(*) from public.native_estimate_draft_revisions r cross join lateral jsonb_each(r.catalog) e join public.catalog_products p on p.id=(e.value->>'id')::uuid where e.value->'version' is distinct from to_jsonb(p.version) and e.value->>'unit_price_cents' is distinct from p.unit_price_cents::text),
+      'invalid_revision_hashes',(select count(*) from public.native_estimate_draft_revisions r join public.native_estimate_draft_operations o on o.id=r.operation_id where r.record_hash is distinct from public.native_fulfillment_hash(jsonb_build_object('document',r.document,'catalog',r.catalog,'previous_hash',r.previous_hash,'operation_id',r.operation_id,'request_hash',o.request_hash))),
+      'invalid_closure_hashes',(select count(*) from public.native_estimate_draft_closures c where c.record_hash is distinct from public.native_fulfillment_hash(jsonb_build_object('version',1,'id',c.id,'actor_id',c.actor_id,'request',c.request,'request_hash',c.request_hash,'closed_at',c.closed_at))),
+      'conflicting_closures',(select count(*) from public.native_estimate_draft_closures c where exists(select 1 from public.native_estimate_draft_operations o where o.id=c.id) or exists(select 1 from public.native_estimate_draft_revisions r where r.operation_id=c.id))
+    );"""
+
+
+def estimate_boundaries_query():
+    return """select jsonb_build_object(
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,
+        'policies',(select coalesce(jsonb_agg(jsonb_build_object('name',p.polname,'command',p.polcmd,'permissive',p.polpermissive,'roles',(select jsonb_agg(case when r=0 then 'public' else pg_get_userbyid(r) end order by r) from unnest(p.polroles) r),'using',pg_get_expr(p.polqual,p.polrelid),'check',pg_get_expr(p.polwithcheck,p.polrelid)) order by p.polname),'[]') from pg_policy p where p.polrelid=c.oid),
+        'triggers',(select coalesce(jsonb_agg(jsonb_build_object('definition',pg_get_triggerdef(t.oid,true),'enabled',t.tgenabled) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c where c.relnamespace='public'::regnamespace and c.relname in('native_estimate_drafts','native_estimate_draft_revisions','native_estimate_draft_operations','native_estimate_draft_closures')),
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'owner',pg_get_userbyid(p.proowner),'security_definer',p.prosecdef,'volatility',p.provolatile,'configuration',p.proconfig,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p where p.pronamespace='public'::regnamespace and (p.proname like 'native_estimate_%' or p.proname in('save_native_estimate_draft','recover_native_estimate_draft','close_native_estimate_draft','read_native_estimate_draft','list_native_estimate_drafts','read_native_estimate_draft_history')))
+    );"""
+
+
 try:
     verify_project()
     project_verified = True
@@ -225,6 +255,17 @@ try:
     before_returns = json.loads(snapshot_sql(return_evidence_query()))
     before_return_boundaries = json.loads(snapshot_sql(return_boundaries_query()))
     before_finance = json.loads(snapshot_sql(finance_evidence_query()))
+    before_estimates = json.loads(snapshot_sql(estimate_evidence_query()))
+    before_estimate_boundaries = json.loads(snapshot_sql(estimate_boundaries_query()))
+    check(before_estimates['drafts'] > 0 and before_estimates['revisions'] > before_estimates['drafts']
+          and before_estimates['operations'] == before_estimates['revisions'] and before_estimates['closures'] > 0,
+          'Populated estimate roots, edited revision chains, operation receipts and terminal closures required')
+    check(before_estimates['revisions_verified'] and before_estimates['changed_catalog_entries'] > 0,
+          'Historical draft revisions must verify against frozen catalog after current catalog price/version changes')
+    check(all(before_estimates[key] == 0 for key in ('invalid_revision_hashes', 'invalid_closure_hashes', 'conflicting_closures')),
+          'Estimate revision/closure hashes and exclusive terminal operation identity must verify')
+    check(len(before_estimate_boundaries['tables']) == 4 and all(row['rls'] and len(row['triggers']) >= 4 for row in before_estimate_boundaries['tables']),
+          'All four estimate tables require RLS and immutable, audit and deferred integrity triggers')
     check(before_finance['operations'] > 0 and before_finance['credits'] > 0 and before_finance['refunds'] > 0,
           'Populated native credits and refund reservations required for restore acceptance')
     check(before_finance['closures'] > 0, 'Populated terminal finance closure required for restore acceptance')
@@ -292,6 +333,8 @@ try:
         ('native_return_policy_decisions', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','configure_native_return_policy','request',request)"),
         ('native_dispense_correction_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','append_native_dispense_correction','request',request)"),
         ('native_dispense_finance_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_finance','request',request)"),
+        ('native_estimate_draft_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','save_estimate_draft','request',request)"),
+        ('native_estimate_draft_closures', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','save_estimate_draft','request',request)"),
         ('native_dispense_finance_closures', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_finance','request',request)"),
     ]:
         invalid = sql("select count(*) from public." + table + " where request_hash is distinct from encode(sha256(convert_to((" + basis + ")::text,'UTF8')),'hex');", restored)
@@ -315,6 +358,11 @@ try:
           'Correction RLS, immutability triggers and private/public function grants must survive restore')
     restored_returns = json.loads(sql(return_evidence_query(), restored))
     restored_finance = json.loads(sql(finance_evidence_query(), restored))
+    restored_estimates = json.loads(sql(estimate_evidence_query(), restored))
+    check(restored_estimates == before_estimates,
+          'Restored estimate revisions, frozen catalog totals, exact receipts and terminal closures must verify')
+    check(json.loads(sql(estimate_boundaries_query(), restored)) == before_estimate_boundaries,
+          'Estimate RLS policies, trigger enablement and definitions, function owners/configuration/ACLs must survive restore')
     check(restored_finance == before_finance,
           'Restored finance receipts, terminal closures, original ledger attribution, current cash/reservations and security boundaries must verify exactly')
     check(restored_returns == before_returns, 'Restored return chains, balances, policy, positive/negative stock links, lot holds, discrepancy decisions and schema12/13 evidence must verify exactly')
@@ -388,5 +436,6 @@ if success:
                'correction_boundaries_verified': True,
                'verified_return_evidence': restored_returns, 'return_boundaries_verified': True,
                'verified_finance_evidence': restored_finance, 'finance_boundaries_verified': True,
+               'verified_estimate_evidence': restored_estimates, 'estimate_boundaries_verified': True,
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     print(json.dumps(summary, sort_keys=True))
