@@ -8,6 +8,8 @@ A provider endpoint read finds one webhook, `we_1UFEiWGUaxUNX5OlbNtD6lHW`, statu
 
 The current Supabase CLI reports no access token; database MCP reads work. Connector access does not supply the application's Stripe secret key. The owner has been asked to save the sandbox key as STRIPE_SECRET_KEY directly in staging Edge Function secrets, never in chat. No key was generated, exposed or copied during this checkpoint.
 
+Fresh source retrieval also verified all four staging payment functions (`invoice-checkout`, `invoice-refund`, `stripe-webhook`, `process-stripe-events`) at version 8. All 36 returned file instances match the current merged source exactly. Checkout/refund have gateway JWT verification enabled; webhook/worker rely on their explicit signature/worker authentication and have gateway verification disabled. This verifies deployed code parity, not runtime secrets or provider acceptance.
+
 ### Remaining bounded acceptance procedure
 
 1. Provision staging-only runtime key and exact sandbox account/mode/return origin. Verify deployed handler source and disabled gates before activation. Do not repoint the primary webhook.
