@@ -1,3 +1,7 @@
+import { AttachmentEmailReviewDialog } from "@/hub/components/conversations/AttachmentEmailReviewDialog";
+import type { ConversationEmailReview } from "@/hub/features/communications/conversation-email-review";
+import type { ConversationEmailApproval } from "@/hub/features/communications/conversation-email-queue";
+import { readCapturedConversationFile } from "@/hub/features/communications/conversation-email-attachment";
 import type { MessageIntent } from "@/hub/features/communications/queue-intent";
 import { useMessageQueue } from "@/hub/hooks/use-message-queue";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -44,6 +48,47 @@ function ConversationDetailContent() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
   const sendingRef = useRef(false);
+  const [attachmentReview, setAttachmentReview] = useState<ConversationEmailReview | null>(null);
+  const reviewPending = useRef<{
+    resolve: (approval: ConversationEmailApproval) => void;
+    reject: (error: Error) => void;
+  } | null>(null);
+  const currentActor = useRef(session?.user.id ?? null);
+  currentActor.current = session?.user.id ?? null;
+  const currentConversation = useRef(id);
+  currentConversation.current = id;
+  useEffect(() => {
+    currentActor.current = session?.user.id ?? null;
+    return () => { currentActor.current = null; };
+  }, [session?.user.id]);
+  useEffect(() => {
+    setAttachmentReview(null);
+    return () => {
+      reviewPending.current?.reject(new Error("Review closed. The saved email is retained."));
+      reviewPending.current = null;
+    };
+  }, [id]);
+  const requestAttachmentReview = (review: ConversationEmailReview) => new Promise<ConversationEmailApproval>((resolve, reject) => {
+    if (reviewPending.current) { reject(new Error("An attachment review is already open.")); return; }
+    reviewPending.current = { resolve, reject };
+    setAttachmentReview(review);
+  });
+  const closeAttachmentReview = () => {
+    reviewPending.current?.reject(new Error("Review closed. The saved email is retained."));
+    reviewPending.current = null;
+    setAttachmentReview(null);
+  };
+  const inspectAttachment = async (uploadId: string) => {
+    if (!attachmentReview || !session?.user.id) throw new Error("Reopen the saved review.");
+    const blob = await readCapturedConversationFile(supabase, session.user.id, () => currentActor.current, attachmentReview, uploadId);
+    if (currentConversation.current !== attachmentReview.payload.conversation_id) throw new Error("Conversation changed. Reopen the saved review.");
+    const file = attachmentReview.files.find(file => file.uploadId === uploadId)!;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+
 
   const conversationNotFound = !convLoading && !conversation;
   usePageTitle(
@@ -139,7 +184,7 @@ function ConversationDetailContent() {
           restored.subject !== (subject ?? "")
         )
           throw new Error("Restore the exact saved draft before retrying.");
-        const result = await queue.send(restored);
+        const result = await queue.send(restored, restored.attachment_ids.length ? requestAttachmentReview : undefined);
         toast.success(`Message recorded: ${result.state}`);
         return true;
       }
@@ -369,6 +414,23 @@ function ConversationDetailContent() {
           </div>
         )}
       </div>
+
+      {attachmentReview && (
+        <AttachmentEmailReviewDialog
+          key={`${attachmentReview.requestId}:${attachmentReview.payloadHash}`}
+          review={attachmentReview}
+          open
+          onClose={closeAttachmentReview}
+          onInspect={inspectAttachment}
+          onQueue={async (requestId, payloadHash) => {
+            const pending = reviewPending.current;
+            if (!pending) throw new Error("Review is no longer active. Recover the saved draft.");
+            reviewPending.current = null;
+            pending.resolve({ requestId, payloadHash });
+            setAttachmentReview(null);
+          }}
+        />
+      )}
 
       {/* Composer */}
       {conversation && (

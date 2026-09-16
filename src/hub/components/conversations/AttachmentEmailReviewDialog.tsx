@@ -50,7 +50,7 @@ export function AttachmentEmailReviewDialog({ review, open, busy = false, onClos
             <li key={file.uploadId} className="flex items-center gap-3 rounded-md border p-3">
               <FileText aria-hidden="true" className="h-5 w-5 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{file.name}</p><p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB · {file.mimeType}</p></div>
-              <Button type="button" variant="outline" size="sm" disabled={disabled} aria-label={`Open ${file.name}`} onClick={() => void operate(() => onInspect(file.uploadId))}>Open file</Button>
+              <Button type="button" variant="outline" size="sm" disabled={disabled} aria-label={`Download ${file.name} for review`} onClick={() => void operate(() => onInspect(file.uploadId))}>Download file</Button>
             </li>
           ))}
         </ul>
