@@ -88,6 +88,12 @@ enabled = false
     started = True
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     verify_identity()
+    runtime_status_path = root / 'tests/estimates/owned-runtime-status.ts'
+    runtime_status_hash = hashlib.sha256(runtime_status_path.read_bytes()).hexdigest()
+    command(['node', '--experimental-strip-types', '--input-type=module', '-e',
+             "import { readOwnedRuntimeStatus } from './tests/estimates/owned-runtime-status.ts'; readOwnedRuntimeStatus(process.argv[1]); console.log('Owned runtime status validated; credentials withheld.');",
+             str(project)], cwd=root)
+    print('Owned runtime status preflight passed.', flush=True)
     publication_sql = root / 'supabase/tests/native_estimate_publications.test.sql'
     publication_sql_hash = hashlib.sha256(publication_sql.read_bytes()).hexdigest()
     command(['supabase', 'test', 'db', str(publication_sql), '--workdir', str(project)], cwd=root)
@@ -105,6 +111,7 @@ enabled = false
     assert hashlib.sha256(parity_path.read_bytes()).hexdigest() == parity_hash
     print('SQL/TypeScript quantity replay: ' + str(replay_parity['cases']) + ' matching cases.', flush=True)
     for harness_path in harnesses:
+        assert hashlib.sha256(runtime_status_path.read_bytes()).hexdigest() == runtime_status_hash, 'Runtime status helper changed during execution'
         harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
         output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'NATIVE_PRESCRIPTION_TEST_PROJECT': str(project)}, cwd=root)
         assert hashlib.sha256(harness_path.read_bytes()).hexdigest() == harness_hash, 'Harness changed during execution'
@@ -139,7 +146,8 @@ if success:
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hashes, 'restore_runner_sha256': restore_hash, 'restore': restore,
                'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash,
-               'publication_sql_sha256': publication_sql_hash, 'publication_races_sha256': publication_races_hash}
+               'publication_sql_sha256': publication_sql_hash, 'publication_races_sha256': publication_races_hash,
+               'runtime_status_sha256': runtime_status_hash}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)
