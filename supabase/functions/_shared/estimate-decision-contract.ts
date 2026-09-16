@@ -70,7 +70,7 @@ export function sameEstimateDecisionEvidence(a: unknown, b: unknown): boolean {
     Array.isArray(a) !== Array.isArray(b)) return false;
   const aa = a as Record<string, unknown>, bb = b as Record<string, unknown>;
   return Object.keys(aa).length === Object.keys(bb).length &&
-    Object.keys(aa).every((key) => Object.hasOwn(bb, key) && sameEstimateDecisionEvidence(aa[key], bb[key]));
+    Object.keys(aa).every((key) => Object.prototype.hasOwnProperty.call(bb, key) && sameEstimateDecisionEvidence(aa[key], bb[key]));
 }
 
 export const estimatePublicDecisionReceiptSchema = z.object({
