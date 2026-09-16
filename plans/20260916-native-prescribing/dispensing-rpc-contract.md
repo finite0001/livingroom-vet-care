@@ -1,6 +1,6 @@
 # Native dispensing RPC contract
 
-Status: **proposed design only**. No migration reserved and no dispensing implementation/clinical acceptance claimed. Implements the remaining fill-slot, partial dispensing, stock/billing and pickup portion of [implementation-contract.md](implementation-contract.md), using [dispensing-ledger-audit.md](dispensing-ledger-audit.md). Refill117 is packaged; the118 inventory prerequisite is locally verified. The119 dispensing backend remains unimplemented. The practice must review slot-remainder forfeiture and physical dispensing/pickup terminology before live commissioning.
+Status: **implemented in migration119 and the native staff workspace; local acceptance is being packaged**. `20260916072509_native_fulfillment.sql` implements the fill-slot, partial dispensing, stock/billing and pickup contract below. The practice must still review slot-remainder forfeiture and physical dispensing/pickup terminology before live commissioning. Native selected record releases, linked returns/corrections/credits and full operational/clinical acceptance remain separate outstanding work under [implementation-contract.md](implementation-contract.md).
 
 ## Authority, precision and bounds
 

@@ -85,8 +85,8 @@ try:
     assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
     assert '20260913700000' in versions, 'Canonical original capture migration required'
     assert {'20260914010000','20260914020000','20260914030000','20260914040000','20260914050000','20260914060000','20260914070000','20260914080000','20260914090000','20260914100000','20260914110000','20260914120000','20260914130000','20260914140000','20260914150000','20260914160000','20260914170000','20260914180000','20260914190000','20260914200000','20260914210000','20260914220000','20260914230000','20260916000000','20260916010000','20260916033310'} <= versions, 'Canonical approval, history, chart and verified retrieval migrations required'
-    assert {'20260916043949','20260916055043','20260916062136','20260916063857','20260916070108'} <= versions, 'Canonical resolution and native prescription migrations required'
-    assert len(versions) == 118 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    assert {'20260916043949','20260916055043','20260916062136','20260916063857','20260916070108','20260916072509'} <= versions, 'Canonical resolution and native prescription migrations required'
+    assert len(versions) == 119 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = {args.api_port}

@@ -1,4 +1,4 @@
-/** Proposed dispensing contract adapter. No UI enables these RPCs before backend acceptance. */
+/** Strict native dispensing adapter with exact request recovery and versioned history. */
 import { z } from "zod";
 import {
   nativePrescriptionArtifactSchema,
