@@ -1,3 +1,4 @@
+import { createAbandonedCleanupHandler } from "../../supabase/functions/_shared/cleanup-abandoned-handler.ts";
 import { runAbandonedUploadCleanup } from "../../supabase/functions/_shared/abandoned-cleanup-adapter.ts";
 import { createServer, type Server } from "node:http";
 import { createIncomingAttachmentReadHandler } from "../../supabase/functions/_shared/inbound/read-attachment.ts";
@@ -127,6 +128,8 @@ try {
     },
   });
   let reader: ReturnType<typeof createIncomingAttachmentReadHandler> | null = null;
+  let cleanupHandler: ReturnType<typeof createAbandonedCleanupHandler> | null = null;
+  let disabledCleanupHandler: ReturnType<typeof createAbandonedCleanupHandler> | null = null;
   server = createServer(async (req, res) => {
     try {
       const chunks: Buffer[] = []; let size = 0;
@@ -137,7 +140,7 @@ try {
       }
       const headers = new Headers();
       for (const [name, value] of Object.entries(req.headers)) if (value) headers.set(name, Array.isArray(value) ? value.join(",") : value);
-      const selected = req.url === "/capture" ? handler : req.url === "/read" ? reader : null;
+      const selected = req.url === "/capture" ? handler : req.url === "/read" ? reader : req.url === "/cleanup" ? cleanupHandler : req.url === "/cleanup-disabled" ? disabledCleanupHandler : null;
       if (!selected) { res.writeHead(404).end(); return; }
       const response = await selected(new Request(`http://127.0.0.1${req.url}`, { method: req.method, headers, ...(req.method === "GET" || req.method === "HEAD" ? {} : { body: Buffer.concat(chunks) }) }));
       res.writeHead(response.status, Object.fromEntries(response.headers));
@@ -209,13 +212,29 @@ try {
   const abandoned = await owner.client.rpc("abandon_conversation_attachment", { p_id: abandonedId });
   if (abandoned.error) throw abandoned.error;
   const cleanupBucket = service.storage.from("conversation-attachment-uploads");
-  const cleanup = await runAbandonedUploadCleanup({ rpc: (name, args) => service.rpc(name, args), storage: { from: name => {
+  const cleanupOperation = async (uploadId: string, graceHours: number, credential: string) => {
+    assert.equal(credential, local.SERVICE_ROLE_KEY);
+    return await runAbandonedUploadCleanup({ rpc: (name, args) => service.rpc(name, args), storage: { from: name => {
     assert.equal(name, "conversation-attachment-uploads");
     return { list: (prefix, options) => cleanupBucket.list(prefix, options), remove: async names => {
       const result = await cleanupBucket.remove(names); if (result.error) throw result.error;
       throw new Error("Synthetic lost successful deletion reply");
     } };
-  } } }, abandonedId, 168);
+  } } }, uploadId, graceHours);
+  };
+  const cleanupEnv = { SUPABASE_SERVICE_ROLE_KEY: local.SERVICE_ROLE_KEY, ATTACHMENT_CLEANUP_ENABLED: "true", ATTACHMENT_CLEANUP_GRACE_HOURS: "168" };
+  cleanupHandler = createAbandonedCleanupHandler(cleanupEnv, cleanupOperation);
+  disabledCleanupHandler = createAbandonedCleanupHandler({ ...cleanupEnv, ATTACHMENT_CLEANUP_ENABLED: "false" }, cleanupOperation);
+  const cleanupRequest = (route = "/cleanup", token = local.SERVICE_ROLE_KEY, body: unknown = { upload_id: abandonedId }) => fetch(`${endpoint}${route}`, {
+    method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  check((await cleanupRequest("/cleanup", owner.token)).status === 401, "HTTP cleanup rejects ordinary staff credentials");
+  check((await cleanupRequest("/cleanup-disabled")).status === 503, "Disabled HTTP cleanup refuses valid worker requests");
+  check((await cleanupRequest("/cleanup", local.SERVICE_ROLE_KEY, { upload_id: abandonedId, path: abandonedPath })).status === 400, "HTTP cleanup rejects caller-supplied object paths");
+  check(sql(`select count(*) from abandoned_attachment_cleanup where upload_id=${quote(abandonedId)}`) === "0", "Denied and disabled requests create no cleanup intent");
+  const cleanupResponse = await cleanupRequest();
+  check(cleanupResponse.status === 200, "Authorized synthetic cleanup completes over actual HTTP");
+  const cleanup = await cleanupResponse.json();
   check(cleanup.status === "complete", "Actual Storage deletion recovers a lost successful API response");
   check(sql(`select state from abandoned_attachment_cleanup where upload_id=${quote(abandonedId)}`) === "complete", "Cleanup persists durable completion receipt");
   check(sql(`select status from conversation_attachment_uploads where id=${quote(abandonedId)}`) === "abandoned", "Cleanup retains original abandoned upload evidence");
