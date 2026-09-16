@@ -319,7 +319,11 @@ finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
         check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
+        # End only workers created by this harness. Database background workers
+        # can use privileged roles and are not ours to signal (notably SQL-only runs).
+        if owned_sessions:
+            names = ','.join(quote(name) for name in owned_sessions)
+            sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and application_name in ({names}) and pid<>pg_backend_pid();")
         sql(f'drop database "{database}";')
         check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
 print(f'Prescription review concurrency: {checks} checks passed; owned scratch database removed.')
