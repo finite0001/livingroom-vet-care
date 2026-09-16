@@ -75,3 +75,10 @@ verify_jwt = true
 # Active-staff review identity is rechecked after the private byte read.
 [functions.retrieve-reviewed-ezyvet-original]
 verify_jwt = true
+
+[functions.prepare-estimate-publication]
+verify_jwt = true
+[functions.recover-estimate-publication-preparation]
+verify_jwt = true
+[functions.read-estimate-publication-artifact]
+verify_jwt = true
