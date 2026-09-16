@@ -1,5 +1,22 @@
 # Living Room Vet deployment runbook
 
+## Current rollout direction — September 16, 2026
+
+This section supersedes the September12 commissioning snapshot below. Verify external state again before deployment; these repository receipts describe past checks, not a fresh live audit.
+
+- **Primary application backend:** `livingroom-vet-care` / `mgadheotkdnrsatfivjy`, per the owner's approved rollout and `AGENTS.md`. Legacy `ugpyjacqganaqtsiekay` is retained, not a target for new application writes. Verify the project reference before every CLI/MCP operation; Lovable's retained Cloud panel is not proof of the selected application backend.
+- **Recorded public release:** [September15 live readiness release](live-readiness-release-20260915.md) published `codex/lovable-publication` revision `c5cd483` through Lovable. Its recorded served bundle used the primary backend; `/hub` redirected unauthenticated visitors to login. This supersedes the historical claim that website cutover had not occurred.
+- **Staging is separate:** the [pilot staging receipt](pilot-staging-deployment-20260915.md) identifies backend `kothoqicubowyhwfsrte` and the protected Vercel preview. That receipt's migration count is historical. Inspect the current migration ledger, take the required backup and rehearse the actual upgrade path; never infer staging/primary parity from a count in an older document.
+- **Standalone practice platform:** [September16 direction](standalone-platform-direction-20260916.md) stops further ezyVet synchronization, write-back, registration and migration-report development. Preserve source evidence and existing credentials; provider import/write gates remain disabled. Historical ezyVet commissioning below is not a standalone launch requirement.
+- **Provider gates:** Stripe remains sandbox-only. Email/SMS delivery and new attachment capture/cleanup remain separately commissioned capabilities, not automatically enabled by a frontend publication. Production contact verification is still an open gate in the last recorded public release; do not bypass it.
+- **Attachment release status:** PRs150→152→153→156 are dependent candidates. PRs152/153 are ready for review, not merged/deployed. PR156 has verified incoming-file milestones, but its latest cleanup/discovery/concurrency candidate requires its own completed CI and hosted acceptance. See [attachment cleanup operations](attachment-cleanup-operations.md) and the [feature matrix](standalone-feature-matrix-20260916.md).
+
+For the next publication, resolve the dependency stack into the intended Lovable-synced branch, verify the resulting revision, back up and rehearse the exact target database upgrade, deploy compatible reviewed Edge handlers with gates disabled, run hosted authenticated/unauthenticated checks, and then publish and inspect the served frontend. Do not treat a green child PR as evidence that its parent chain is already published. Keep legacy data intact and preserve the clinical/provider acceptance gates in the comprehensive readiness tracker.
+
+## Historical commissioning snapshot
+
+The following September12 notes explain the original setup. Their environment states, counts, provider prerequisites and outstanding-work statements are historical and may be superseded by the current direction and later dated receipts above.
+
 ## Confirmed environments (2026-09-12)
 
 - Source: `finite0001/livingroom-vet-care`; foundation branch `codex/practice-foundation`.

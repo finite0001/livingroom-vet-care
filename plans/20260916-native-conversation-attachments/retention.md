@@ -68,3 +68,9 @@ CI35097849305 at9b46cc6 has now passed the complete SQL stage, including the cor
 ## Bounded discovery and operator instructions
 
 Added service-only `list_abandoned_attachment_cleanup_candidates(grace,limit)` to candidate migration118. It returns upload identity/reason only, bounds batches1–100, excludes current leases, retained files, changed objects and completed absent removals, and offers expired exact intents for recovery. Claim still revalidates transactionally. Five added SQL assertions bring cleanup coverage to19; actual-service discovery assertion added. Targeted lint/syntax/diff pass; new SQL/runtime checks are pending. `docs/attachment-cleanup-operations.md` records gates, explicit grace, per-upload request semantics, receipt recovery and stopping behavior without selecting or enabling hosted settings.
+
+## Release-path verification and documentation correction
+
+CI35097849305 completed all jobs at9b46cc6, including32 actual localhost HTTP/Auth/RPC/Storage checks. Cleanup discovery/concurrency changes were pushed at843ca92; CI35107565034 is active. PRs152/153 were marked ready for review after their checks passed. The current ancestry remains open PR137→139→141→150→152→153→156, rooted in `codex/lovable-publication`; this is not a merged or deployed release claim.
+
+The deployment runbook still began with superseded September12 states (old backend active, no cutover, ezyVet commissioning required). Added a current-direction section grounded in AGENTS.md and the September15/16 release/direction receipts, and clearly marked the older notes historical. No new live infrastructure claim or deployment was made. Diff checks pass; docs-only change needs no runtime test.
