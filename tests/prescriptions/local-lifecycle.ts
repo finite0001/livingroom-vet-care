@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { createPrescriptionApi } from '../../src/hub/features/prescriptions/prescription-api.ts';
-import { renderNativePrescription } from '../../supabase/functions/_shared/native-prescription-renderer.ts';
+import { renderReviewedPrescriptionCopy } from '../../src/hub/features/prescriptions/prescription-print.ts';
 const project = process.env.NATIVE_PRESCRIPTION_TEST_PROJECT;
 assert.ok(project, 'Explicit owned disposable project required');
 const projectId = readFileSync(`${project}/supabase/config.toml`, 'utf8').match(/^project_id\s*=\s*"([a-zA-Z0-9_-]+)"/m)?.[1];
@@ -95,10 +95,57 @@ const listing = await doctorApi.listDrafts();
 check(listing.version === 1 && listing.pet_id === patient.id && listing.drafts.length === 1 && listing.drafts[0].authorization_id === signId && !listing.has_more && listing.next_cursor === null, 'Patient listing exposes signed draft without losing its history');
 const afterEffects = sql('select jsonb_build_object(\'stock\',(select count(*) from public.inventory_movements),\'charges\',(select count(*) from public.billing_invoice_items),\'treatments\',(select count(*) from public.patient_treatments),\'outbox\',(select count(*) from public.communication_outbox))::text');
 check(beforeEffects === afterEffects, 'Draft/sign/retry produce no stock, billing, treatment or delivery effects');
-// This pure-renderer assertion uses a synthetic status marker, not a live eligibility claim.
-const artifact = signed.result.artifact;
-const html = renderNativePrescription(artifact, { authorization_id: signId, authorization_hash: signed.result.authorization_hash, checked_at: new Date().toISOString(), state: 'active', reason: null, replacement_id: null });
-check(html.includes('Signed prescription order copy') && html.includes('External pharmacy — fulfillment not confirmed'), 'Real stored artifact renders without fabricating dispensing');
+// Real authorized printing reads a current status separately from the immutable order.
+const printTarget = { patientId: patient.id, authorizationId: signId, dispenseId: null };
+const originalBundle = await doctorApi.readPrint(signed.result);
+check(renderReviewedPrescriptionCopy(originalBundle, printTarget).includes('Signed prescription order copy'), 'Current authorized order copy renders');
+assert.deepEqual(originalBundle.prescription, signed.result.artifact); checks++;
+await denied('read_native_prescription_print', { p_authorization_id: signId, p_dispense_id: randomUUID() }, '23514');
+check(await rpc('read_native_prescription_status', { p_authorization_id: signId, p_pet_id: randomUUID() }) === null, 'Status cannot cross patient boundary');
+const nextDraftId = randomUUID();
+await rpc('save_native_prescription_draft', { p_id: randomUUID(), p_request: { ...saveRequest, draft_id: nextDraftId, fields: { ...fields, quantity_per_fill: '15', refills_authorized: 0 } } }, staff.headers);
+const nextDraft = await doctorApi.readDraft(nextDraftId);
+assert.ok(nextDraft);
+const replacementPreview = await doctorApi.previewReplacement(signed.result, nextDraft);
+check(replacementPreview.context.prior.usage.remaining_quantity === null && replacementPreview.context.prior.usage.external_fulfillment === 'unknown', 'Unavailable usage is never reported as unused allowance');
+const replaceId = randomUUID();
+const replacementRequest = {
+  authorization_id: signId, pet_id: patient.id,
+  expected_event_id: replacementPreview.context.prior.head.id,
+  expected_context_hash: replacementPreview.context_hash,
+  reason: 'Synthetic independently reviewed replacement.', attest_review: true,
+  draft_id: nextDraftId, expected_version: 1,
+  signature_name: replacementPreview.context.new_sign.prescriber.name,
+  reconciliation: { native_use_note: 'Synthetic review: native fill accounting unavailable.', external_use_status: 'reconciled', external_use_note: 'Synthetic manual reconciliation only; no pharmacy contacted.', remaining_allowance_note: 'Synthetic new allowance deliberately authored as 15 with no refills.', attest_review: true },
+};
+await denied('replace_native_prescription', { p_id: randomUUID(), p_request: { ...replacementRequest, reconciliation: { ...replacementRequest.reconciliation, external_use_status: 'unknown' } } }, '23514');
+await denied('replace_native_prescription', { p_id: randomUUID(), p_request: replacementRequest }, '42501', staff.headers);
+const replaced = await rpc('replace_native_prescription', { p_id: replaceId, p_request: replacementRequest });
+check(replaced.operation === 'replace' && replaced.result.authorization.id === replaceId && replaced.result.event.replacement_id === replaceId && replaced.result.event.authorization_id === signId, 'Replacement receipt atomically binds both authorizations');
+assert.deepEqual(await rpc('replace_native_prescription', { p_id: replaceId, p_request: replacementRequest }), replaced); checks++;
+assert.deepEqual(await doctorApi.readAuthorization(signId), signed.result); checks++;
+assert.deepEqual(await doctorApi.recover({ id: replaceId, kind: 'replace', payload: replacementRequest }), replaced); checks++;
+const oldStatus = await doctorApi.readStatus(signed.result);
+assert.ok(oldStatus);
+check(oldStatus.status.state === 'replaced' && oldStatus.status.replacement_id === replaceId && oldStatus.head_version === 1, 'Original order has one terminal replacement event');
+const oldBundle = await doctorApi.readPrint(signed.result);
+assert.deepEqual(oldBundle.prescription, originalBundle.prescription); checks++;
+check(oldBundle.status.state === 'replaced' && renderReviewedPrescriptionCopy(oldBundle, printTarget).includes('Synthetic independently reviewed replacement.'), 'Historical copy preserves instructions and includes current replacement reason');
+const cancelPreview = await doctorApi.previewCancel(replaced.result.authorization);
+const cancelId = randomUUID();
+const cancelRequest = { authorization_id: replaceId, pet_id: patient.id, expected_event_id: cancelPreview.context.head.id, expected_context_hash: cancelPreview.context_hash, reason: 'Synthetic cancellation after replacement.', attest_review: true };
+await denied('cancel_native_prescription', { p_id: randomUUID(), p_request: cancelRequest }, '42501', staff.headers);
+const cancelled = await rpc('cancel_native_prescription', { p_id: cancelId, p_request: cancelRequest });
+check(cancelled.operation === 'cancel' && cancelled.result.authorization_id === replaceId && cancelled.result.replacement_id === null, 'Cancellation targets the new order and creates no successor');
+assert.deepEqual(await rpc('cancel_native_prescription', { p_id: cancelId, p_request: cancelRequest }), cancelled); checks++;
+assert.deepEqual(await rpc('replace_native_prescription', { p_id: replaceId, p_request: replacementRequest }), replaced); checks++;
+await denied('cancel_native_prescription', { p_id: cancelId, p_request: { ...cancelRequest, reason: 'Changed reuse is forbidden.' } }, '23514');
+assert.deepEqual(await doctorApi.recover({ id: cancelId, kind: 'cancel', payload: cancelRequest }), cancelled); checks++;
+const cancelledBundle = await doctorApi.readPrint(replaced.result.authorization);
+check(cancelledBundle.status.state === 'cancelled' && renderReviewedPrescriptionCopy(cancelledBundle, { ...printTarget, authorizationId: replaceId }).includes(cancelRequest.reason), 'Fresh print discloses cancelled status');
+const events = await doctorApi.listEvents(replaced.result.authorization);
+check(events.events.length === 1 && events.events[0].id === cancelId && events.has_more === false && events.next_cursor === null, 'Event history preserves exact terminal receipt');
+check(beforeEffects === sql('select jsonb_build_object(\'stock\',(select count(*) from public.inventory_movements),\'charges\',(select count(*) from public.billing_invoice_items),\'treatments\',(select count(*) from public.patient_treatments),\'outbox\',(select count(*) from public.communication_outbox))::text'), 'Replacement/cancellation/printing have no stock, charge, treatment or sending effects');
 await denied('recover_native_prescription_operation', { p_id: signId }, '42501', anonymous);
 await denied('recover_native_prescription_operation', { p_id: signId }, '42501', service);
 console.log(JSON.stringify({ synthetic_only: true, suite: 'native-prescription-lifecycle-http', checks_passed: checks, provider_requests: 0, project_id: projectId, cleanup: 'Owned runtime must be removed by caller; signed fixtures intentionally retained until then.' }));

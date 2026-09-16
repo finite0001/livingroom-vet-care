@@ -15,10 +15,24 @@ Open the [signed order example](native-prescription-order-example.html), [partia
 | P05 | Are practice/client/patient identifiers, credential details, lot/expiry details and print dimensions suitable for the intended order and dispensing-label workflow? | Pending |
 | P06 | Are authorization, packaging/dispensing, pickup, returns and correction actions separated appropriately in the completed staff workflow? | Pending; requires implemented workflow |
 | P07 | Are prescriber verification, delegated staff permissions, manual renewal/expiry rules and partial-fill closure behavior appropriate for practice use? | Pending; requires configured workflow |
+| P08 | Does cancellation clearly stop future local authorization without claiming a pharmacy was notified, reversing prior dispensing, or refunding payment? | Pending; requires implemented workflow |
+| P09 | Does replacement require sufficient manual review of prior use and a deliberately authored new allowance, especially when external fulfillment is unknown? | Pending; requires implemented workflow |
 
 The current renderer produces a printable order/dispensing record, not a claim of fit on a particular label printer. Final label dimensions and required clinical/operational wording must be confirmed and verified in the actual print workflow. Controlled-medication and electronic pharmacy requirements remain separate outstanding parity/commissioning work.
 
 The full workflow review must include changing alerts before signing/dispensing, a canceled authorization, exhausted refill quantity, two partial fills in the same fill slot, a lost save response, stock/invoice rejection, reprinting without stock movement, and selected medical-record delivery. Do not approve those behaviors from these static examples.
+
+## Cancellation and replacement review scenarios
+
+Review the actual patient workspace with synthetic patients once this slice is verified. Record approval against the implementation revision, not this checklist alone.
+
+1. Cancel an order with a reason, then open its original signed instructions and a fresh printed copy. The instructions must remain unchanged; the current cancellation notice must be conspicuous.
+2. Replace an order using a separately authored draft. Compare old and new instructions, quantities and refills, and verify the new authorization points back to the old order's replacement event.
+3. Review an external-pharmacy order whose fulfillment is unknown. A replacement requires an explicit, attributed manual reconciliation; the software must not imply it contacted the pharmacy or verified fulfillment.
+4. Repeat a request after a lost response. Confirm the original receipt returns, without creating another authorization or event.
+5. Attempt cancellation for an archived/deceased patient. Stopping an existing order must remain possible; creating a replacement for an inactive patient must remain unavailable.
+
+Until native fill accounting is implemented and verified, unavailable use and remaining quantities must display as unknown rather than zero. Review the final dispensing workflow separately before approving live use.
 
 ## Reproduce the examples
 

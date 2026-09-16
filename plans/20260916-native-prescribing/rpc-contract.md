@@ -177,3 +177,101 @@ interface SignRequest {
 All public functions revoke PUBLIC/anon/service_role execution and grant authenticated execution only with server-side authority checks. Private helpers and direct ledger mutations stay revoked; tables use RLS and append-only history guards. No hosted call is needed to build this contract. Before generating actual additive migrations, compare available canonical versions and coordinate the reservation; remote metadata unavailability does not block local design.
 
 This file deliberately does not invent cancellation/replacement/fill RPC payloads before their shared allowance/locking contract is reviewed. Those phases remain required. The frontend may implement this exact lifecycle slice now and add later discriminated operations only by coordinated contract changes. Native print endpoint remains root's normalized artifact/status adapter contract, to be implemented once current lifecycle events exist.
+
+## Slice 2 — cancellation, atomic replacement, current status and order copies
+
+Implementation target; no dispensing is added. The following extends, rather than changes, the lifecycle receipt schema. `OperationReceipt.operation` additionally permits `cancel` and `replace`. Request/result discrimination is exact: cancel result is `AuthorizationEvent`; replace result is `{authorization:Authorization,event:AuthorizationEvent}`. The new authorization ID and event ID equal the outer operation UUID. A private shared materializer performs initial signing/replacement; replacement never calls the public signing RPC, creates a second operation UUID, or reuses a previously signed draft.
+
+```ts
+interface UsageContext {
+  version: 1;
+  native_fill_accounting: "not_implemented";
+  dispensed_quantity: null;
+  used_fill_slots: null;
+  remaining_quantity: null;
+  external_fulfillment: "unknown";
+}
+interface ChangeContext {
+  version: 1;
+  authorization: Authorization; // immutable complete prior authorization
+  head: {
+    id: UUID | null;
+    version: number; // 0 before any event
+    state: "active" | "expired" | "cancelled" | "replaced";
+    reason: string | null;
+    replacement_id: UUID | null;
+  };
+  patient_current: {
+    id: UUID; client_id: UUID; version: number;
+    archived_at: Instant | null; deceased_at: Day | null;
+  };
+  prescriber: SignContext["prescriber"];
+  alerts: SignContext["alerts"];
+  usage: UsageContext;
+}
+interface ReplacementContext {
+  version: 1;
+  prior: ChangeContext;
+  new_sign: SignContext;
+  new_sign_context_hash: Hash;
+}
+interface Reconciliation {
+  native_use_note: string; // trimmed 1..2000; explicitly review unavailable accounting
+  external_use_status: "unknown" | "reconciled";
+  external_use_note: string; // trimmed 1..2000
+  remaining_allowance_note: string; // trimmed 1..2000; deliberate NEW allowance, never copied balance
+  attest_review: true;
+}
+interface AuthorizationEvent {
+  version: 1; // envelope format
+  id: UUID;
+  authorization_id: UUID;
+  authorization_hash: Hash;
+  pet_id: UUID;
+  action: "cancel" | "replace";
+  prior_event_id: UUID | null;
+  event_version: number;
+  replacement_id: UUID | null; // null iff cancel
+  actor_id: UUID;
+  reason: string;
+  reviewed_context: ChangeContext | ReplacementContext;
+  reviewed_context_hash: Hash;
+  reconciliation: Reconciliation | null; // null iff cancel
+  record_hash: Hash;
+  created_at: Instant;
+}
+interface CancelRequest {
+  authorization_id: UUID;
+  pet_id: UUID;
+  expected_event_id: UUID | null;
+  expected_context_hash: Hash;
+  reason: string; // trimmed 1..2000
+  attest_review: true;
+}
+interface ReplaceRequest extends CancelRequest {
+  draft_id: UUID;
+  expected_version: number;
+  signature_name: string;
+  reconciliation: Reconciliation;
+}
+```
+
+`preview_native_prescription_cancel(p_authorization_id uuid,p_pet_id uuid)` returns `{version:1,actor_id:UUID,pet_id:UUID,context:ChangeContext,context_hash:Hash,observed_at:Instant}`.
+
+`preview_native_prescription_replacement(p_authorization_id uuid,p_pet_id uuid,p_draft_id uuid,p_expected_version integer)` returns the same envelope with `ReplacementContext`. Prior and replacement patient/household must match; replacement draft must be unsigned and pass all initial-sign checks. Preview may disclose an existing terminal event; mutation rejects a new cancellation/replacement of an already cancelled/replaced authorization. Expired orders can be cancelled or replaced with an independently reviewed valid new order.
+
+`cancel_native_prescription(p_id uuid,p_request jsonb:CancelRequest)` and `replace_native_prescription(p_id uuid,p_request jsonb:ReplaceRequest)` return immutable operation receipts. Current commissioned DVM authority is required for NEW operations and rechecked after waits. Exact committed recovery uses current active read authority and preserves original receipt even after later drift/credential deactivation. Cancellation intentionally permits archived/deceased patients, so historical orders can be stopped. Replacement still requires an active patient and valid new draft.
+
+The context digest is SHA-256 over explicit canonical JSONB `context`, excluding envelope `observed_at`. Compare exact current event head and recomputed context after serialization waits. New UUID plus stale predecessor/context fails `40001`; terminal already-cancelled/replaced state fails `23514`; wrong patient/authorization or malformed inputs fail `23514`/`42501` as appropriate. No event may migrate to another authorization. Root uniqueness/predecessor constraints prevent two initial terminal events. This slice has no reopen action: cancellations/replacements are terminal for the original authorization, and following a replacement means targeting its distinct new authorization.
+
+Every replacement requires explicit `Reconciliation`. If prior mode is `external_pharmacy`, `external_use_status` must be `reconciled`; unknown external use cannot produce fresh local OR external allowance. The note is a DVM-attributed manual review, **not** server verification of pharmacy fulfillment. A prior practice-stock order may carry `unknown` external status with explicit explanation. New quantity/refills come only from the independently reviewed new draft. Usage quantities remain `null`, never guessed as zero. A private usage-context helper is the future extension point: native dispensing must replace that helper and participate in the same authorization serialization before its quantities can be claimed or used for replacement.
+
+Lock order for changes: outer operation UUID → acting prescriber serialization → old authorization serialization → new draft serialization/row (replacement only) → existing patient SHARE/clinical evidence locks. All future cancellation/fill/slot writers must use the same old authorization gate. No request lock for a nested child operation. All effects (new authorization, new draft signed status, old authorization event, outer receipt) commit together. Initial signing keeps its existing exact receipt behavior. Signing an unrelated existing draft cannot be repurposed as a replacement.
+
+### Current status, history and printing
+
+`read_native_prescription_status(p_authorization_id uuid,p_pet_id uuid)` returns `{version:1,pet_id:UUID,status:NativePrescriptionPrintStatus,head_id:UUID|null,head_version:number,usage:UsageContext}` or null for absent/wrong-patient authorization. Active staff can read historical/archived patients. `head_version` is 0 if no event; `status.checked_at` is current server time. Explicit terminal events take precedence over expiry; otherwise expired means `expires_on < current Denver date`, and state is active (future start date stays explicit in artifact; this is not dispensing authority). `status.reason` and `replacement_id` come only from the terminal event, else null.
+
+`list_native_prescription_events(p_authorization_id uuid,p_pet_id uuid,p_before_at timestamptz default null,p_before_id uuid default null,p_limit integer default 20)` returns `{version:1,authorization_id:UUID,pet_id:UUID,events:AuthorizationEvent[],has_more:boolean,next_cursor:Cursor|null}`. Active staff; exact existing patient target, paired finite cursor, default20/max100, `(created_at,id)` descending with sentinel. This endpoint preserves history even though this slice permits only one terminal event on any single authorization.
+
+`read_native_prescription_print(p_authorization_id uuid,p_dispense_id uuid default null)` returns exactly `{prescription:NativePrescriptionArtifact,status:NativePrescriptionPrintStatus,dispense:null}`. Active staff, exact existing authorization, server-verified frozen artifact/authorization/hash consistency plus freshly read current status. In this slice any non-null dispense ID fails `23514` (dispensing unsupported), rather than fabricating a label. Never mutate/rebuild signed artifact from current catalog/patient/credentials; cancellation/replacement notices come from separate current status. Printing is read-only and never creates an event, allowance, stock, charge or communication.
