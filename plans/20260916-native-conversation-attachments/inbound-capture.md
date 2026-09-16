@@ -62,3 +62,11 @@ Parent run35092195032 completed successfully in all jobs atc04f45a, including ac
 Added authenticated `list_inbound_message_attachments(uuid[])`, bounded to100 requested messages and active staff. It joins current household/message/inbound identity and reports pending/capturing/ready/unsupported, exposing only verified capture IDs/hashes for matching ready evidence and never a Storage path. Malformed numeric metadata is guarded before casts. Five SQL assertions bring the suite to28; the real-service harness also checks the ready listing and absence of a Storage path. Targeted harness lint and diff checks pass; these new SQL/listing assertions are not yet runtime verified. Timeline parser/hook/UI remain to be implemented.
 
 Run35092794347 remains active at9856659, currently executing the final attachment metadata/original integration stages while browser tests continue. Follow-up commits are still local to preserve that run.
+
+## First incoming run passed; expanded acceptance submitted
+
+CI35092794347 completed all jobs successfully at9856659. This validates the original capture candidate and14 SQL checks, not the subsequent locally prepared reader/listing/lease-replacement integration additions.
+
+Added browser `incoming-attachments.ts` parser and download verification: pending metadata cannot fabricate ready evidence, wrong-message/duplicate identities fail, unsupported files remain visible, exact bytes/hash/type/size and current actor are required before browser file use. Four targeted tests and lint passed. Installed FunctionsClient treats PNG/JPEG responses as text by default, so timeline download transport must explicitly preserve binary bytes (PDF already handled as Blob). UI transport/hook/components remain pending; do not claim the new helpers are user-visible.
+
+The follow-up commits are now eligible for push because the earlier CI run is terminal. The next CI run must prove the expanded28 SQL cases and actual incoming Auth/RPC/Storage harness before deployment.
