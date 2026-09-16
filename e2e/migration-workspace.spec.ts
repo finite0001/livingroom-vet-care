@@ -2,14 +2,14 @@ import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const actor = id(1), runId = id(2), scopeId = id(3), bindingId = id(4), child = id(5), snapshot = id(6), mapping = id(7), pet = id(8), client = id(9), otherScope = id(10);
 const at = "2026-09-14T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic migration source";
-async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false) {
-  const resource = prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment", parentEvidence = history || prescription ? "mapping_identity_only" : "exact_parent_version";
-  const clinical = history || vaccination || prescription;
+async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false) {
+  const resource = prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment", parentEvidence = history || prescription ? "mapping_identity_only" : "exact_parent_version";
+  const clinical = history || vaccination || prescription || prescriptionItem;
   const user = { id: actor, aud: "authenticated", role: "authenticated", email: "synthetic@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: at };
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`, refresh_token: "synthetic", token_type: "bearer", expires_in: 3600, expires_at: exp, user };
   await page.addInitScript(s => localStorage.setItem("sb-127-auth-token", JSON.stringify(s)), session);
-  const inputs = [{ id: scopeId, mapping_id: mapping, resource, parent_type: vaccination ? "consult" : "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Saved original-file scope" },
+  const inputs = [{ id: scopeId, mapping_id: mapping, resource, parent_type: prescriptionItem ? "prescription" : vaccination ? "consult" : "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Saved original-file scope" },
     { id: otherScope, mapping_id: mapping, resource: history ? "consult" : "history", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "excluded", reason: "Awaiting clinician scope review" }];
   const summary = { id: runId, source_origin: origin, source_site_uid: site, intent_hash: "a".repeat(64), created_at: at };
   const manifest = { run: { ...summary, actor_id: actor, intent: { version: 1, source_origin: origin, source_site_uid: site, scopes: inputs } },
@@ -69,6 +69,13 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       observations: { occurrences: clinical ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: state.stale ? 0 : clinical ? 1 : 21, currentness_available: true },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
+    if (rpc === "list_ezyvet_migration_prescription_item_evidence") return state.failPrescriptions ? unavailable() : route.fulfill({ json: {
+      version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
+      visibility: "approved_patient_prescription_item", has_more: false, next_before_version: null, local_prescribing_verified: false, complete_coverage_verified: false, observed_at: at,
+      approvals: [
+        { id: id(56), version: 2, version_hash: "d".repeat(64), approved_at: at, replaces_id: id(57), parent_matches: true, exact_occurrence: true, identity_observations: 2, matching_source_observations: 2, disposition: "omitted", start_date_status: null, catalog_matched: null, source_current: false, superseded: false, completeness: "partial" },
+        { id: id(57), version: 1, version_hash: "e".repeat(64), approved_at: at, replaces_id: null, parent_matches: true, exact_occurrence: true, identity_observations: 2, matching_source_observations: 2, disposition: "selected", start_date_status: "unknown", catalog_matched: false, source_current: false, superseded: true, completeness: "partial" },
+      ] } });
     if (rpc === "list_ezyvet_migration_prescription_evidence") return state.failPrescriptions ? unavailable() : route.fulfill({ json: {
       version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
       visibility: "approved_patient_prescription", has_more: false, next_before_version: null, local_prescribing_verified: false, item_coverage_verified: false, complete_coverage_verified: false, observed_at: at,
@@ -460,4 +467,27 @@ test("a historical household change leaves valid migration choices available", a
   await expect(builder.getByRole("button", { name: /Moved patient/ })).toHaveCount(0);
   await builder.getByRole("button", { name: "Save migration scope", exact: true }).click();
   expect(state.requests.find(request => request.name === "prepare_ezyvet_migration_run")?.body.p_scopes).toMatchObject([{ mapping_id: mapping }]);
+});
+
+for (const width of [390, 1440]) test(`prescription item evidence distinguishes omissions at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1600 });
+  const state = await fixture(page, true, false, false, false, true);
+  const workspace = page.getByRole("region", { name: "Migration reconciliation" });
+  await workspace.getByRole("button", { name: "Browse saved migrations" }).click();
+  await workspace.getByRole("button", { name: /Open migration/ }).click();
+  await workspace.getByRole("button", { name: /Inspect prescription items scope/i }).click();
+  await workspace.getByRole("button", { name: /Inspect attempt/ }).click();
+  state.failPrescriptions = true;
+  await workspace.getByRole("button", { name: /Evidence references for source/ }).click();
+  const panel = workspace.getByRole("region", { name: "Prescription item review evidence" });
+  await expect(panel.getByRole("alert")).toContainText("could not be loaded");
+  await expect(panel.getByText(/No approved prescription/)).toHaveCount(0);
+  state.failPrescriptions = false;
+  await panel.getByRole("button", { name: "Refresh prescription item evidence" }).click();
+  await expect(panel.getByText("This item source version was omitted.")).toBeVisible();
+  await expect(panel.getByText("This item source version was selected.")).toBeVisible();
+  await expect(panel.getByText(/Repeated observations do not represent additional medications/)).toHaveCount(2);
+  await expect(panel.getByText("Start date: Unknown. Catalog match: Unmatched.")).toBeVisible();
+  await expect(panel.getByText(/do not prescribe or dispense medication here/)).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
