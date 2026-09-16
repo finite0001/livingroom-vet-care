@@ -1,4 +1,5 @@
 import { seedReleasePackages, verifyReleasePackages } from './release-packages.mjs';
+import { seedConversationAttachments, verifyConversationAttachments } from './conversation-attachments.mjs';
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -132,6 +133,9 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   );
   state.originalHash = hash(content);
   state.originalSize = content.length;
+  if (sql("select to_regclass('public.abandoned_attachment_cleanup') is not null") === 't') {
+    await seedConversationAttachments({ state, api, admin, sql });
+  }
   // Snapshot after durable fixture creation; never include ephemeral auth session rows in comparison.
   state.snapshot = snapshot();
   writeFileSync(statePath, JSON.stringify(state), { mode: 0o600 });
@@ -517,10 +521,14 @@ rollback;`);
     if (state.mixedReleasePackages) await verifyReleasePackages({state,api,admin,sql,packages:state.mixedReleasePackages});
     assert.deepEqual(snapshot(),state.snapshot,'Artifact verification and rolled-back source/policy probes preserve original records');
   }
+  const conversationAttachments = state.conversationAttachments
+    ? await verifyConversationAttachments({ state, api, admin, anonymous, sql })
+    : null;
   writeFileSync(
     join(run, "verification.json"),
     JSON.stringify(
       {
+        conversation_attachment_lifecycle_restore: conversationAttachments,
         mixed_prescription_api_release_packages_restored: Boolean(state.mixedReleasePackages),
         partial_prescription_disclosure_and_source_invalidation_verified: Boolean(state.mixedReleasePackages),
         saved_schema9_email_and_link_restored: Boolean(state.releasePackages),
