@@ -34,3 +34,9 @@ Actual cleanup implementation, runtime tests, chosen grace setting, hosted inven
 ## Storage adapter candidate
 
 Added `attachment-cleanup-storage.ts`: inspect via a bounded successful list of the exact UUID folder/name, return null only for confirmed absence, reject incomplete/truncated/ambiguous object identities, and remove only the validated exact path through the Storage API. Listing errors—including404/403-shaped errors—propagate rather than pretending absence. This follows the distinction in https://supabase.com/docs/guides/storage/debugging/error-codes and avoids the installed SDK's exists() ambiguity across400/404 cases. Object creation timestamps compare parsed instants rather than textual formatting. The five adapter tests plus seven cleanup-core tests all pass; targeted lint/diff pass. Database adapter/endpoint and actual Storage runtime acceptance remain pending, so no cleanup has been enabled.
+
+## Canonical runtime candidate
+
+Promoted the receipt draft and12 SQL cases to migration20260916130000 and `supabase/tests/abandoned_attachment_cleanup.test.sql`; canonical inventory118. The earlier draft-path references are historical. `abandoned-cleanup-adapter.ts` binds service RPCs and exact Storage adapters, checks matching upload/lease fields on every revalidation, and runs the bounded core. Deno frozen checking, targeted lint, syntax and12 shared-unit cases pass.
+
+The pending actual localhost integration now creates an authenticated temporary upload, abandons it with the real staff RPC, ages only its synthetic fixture timestamps, invokes cleanup with an explicit168-hour grace, simulates a lost successful Storage-delete reply, and checks durable completion plus retained reservation and actual object absence. Runtime SQL and Storage acceptance are still pending. There is no deployed cleanup endpoint/scheduler; no hosted deletion has occurred. Superseded incoming-path cleanup remains separate open work.

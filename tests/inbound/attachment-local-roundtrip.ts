@@ -1,3 +1,4 @@
+import { runAbandonedUploadCleanup } from "../../supabase/functions/_shared/abandoned-cleanup-adapter.ts";
 import { createServer, type Server } from "node:http";
 import { createIncomingAttachmentReadHandler } from "../../supabase/functions/_shared/inbound/read-attachment.ts";
 /** Actual localhost HTTP/Auth/RPC/Storage; Node-hosted shared handlers, provider bytes synthetic. */
@@ -86,6 +87,8 @@ async function staff() {
 
 const ids = { client: randomUUID(), conversation: randomUUID(), message: randomUUID(), inbound: randomUUID(), event: randomUUID(), email: randomUUID(), attachment: randomUUID() };
 const paths = new Set<string>();
+const abandonedPaths = new Set<string>();
+const extraFixtureIds: string[] = [];
 let actor = "";
 let server: Server | null = null;
 const failures: unknown[] = [];
@@ -194,6 +197,29 @@ try {
   check(inventory.includes("retain_verified_incoming") && inventory.includes("superseded_attempt_review") && inventory.includes("unknown_object_review"), "Retention inventory separates verified, superseded and unknown actual objects");
   check(![...paths].some(value => inventory.includes(value)) && !inventory.includes(actor), "Retention inventory exposes aggregate evidence without private paths or actors");
   check(sql(snapshotQuery) === beforeInventory, "Read-only retention report leaves stored object metadata unchanged");
+  const abandonedId = randomUUID(); extraFixtureIds.push(abandonedId);
+  const abandonedPath = `${actor}/${ids.conversation}/${abandonedId}/original`;
+  sql(`insert into conversation_attachment_uploads(id,actor_id,conversation_id,file_name,mime_type,byte_length,storage_path,created_at)
+    values(${quote(abandonedId)},${quote(actor)},${quote(ids.conversation)},'abandoned.pdf','application/pdf',${bytes.length},${quote(abandonedPath)},now()-interval '8 days');`);
+  abandonedPaths.add(abandonedPath);
+  const uploadedDraft = await owner.client.storage.from("conversation-attachment-uploads").upload(abandonedPath, bytes, { contentType: "application/pdf", upsert: false });
+  if (uploadedDraft.error) throw uploadedDraft.error;
+  // Only this synthetic object's creation timestamp is aged for grace acceptance.
+  sql(`update storage.objects set created_at=now()-interval '8 days' where bucket_id='conversation-attachment-uploads' and name=${quote(abandonedPath)};`);
+  const abandoned = await owner.client.rpc("abandon_conversation_attachment", { p_id: abandonedId });
+  if (abandoned.error) throw abandoned.error;
+  const cleanupBucket = service.storage.from("conversation-attachment-uploads");
+  const cleanup = await runAbandonedUploadCleanup({ rpc: (name, args) => service.rpc(name, args), storage: { from: name => {
+    assert.equal(name, "conversation-attachment-uploads");
+    return { list: (prefix, options) => cleanupBucket.list(prefix, options), remove: async names => {
+      const result = await cleanupBucket.remove(names); if (result.error) throw result.error;
+      throw new Error("Synthetic lost successful deletion reply");
+    } };
+  } } }, abandonedId, 168);
+  check(cleanup.status === "complete", "Actual Storage deletion recovers a lost successful API response");
+  check(sql(`select state from abandoned_attachment_cleanup where upload_id=${quote(abandonedId)}`) === "complete", "Cleanup persists durable completion receipt");
+  check(sql(`select status from conversation_attachment_uploads where id=${quote(abandonedId)}`) === "abandoned", "Cleanup retains original abandoned upload evidence");
+  check((await cleanupBucket.list(`${actor}/${ids.conversation}/${abandonedId}`)).data?.length === 0, "Cleaned original is absent from actual Storage listing");
   sql(`update profiles set is_active=false where id=${quote(actor)}`);
   check((await request()).status === 503 && downloads === 1, "Revoked staff cannot recover captured receipt");
   check((await read()).status === 404, "Revoked staff cannot read private original");
@@ -203,12 +229,13 @@ try {
   if (server) await new Promise<void>((resolve, reject) => server!.close(error => error ? reject(error) : resolve()));
 } catch (error) { failures.push(error); }
 try {
+  if (abandonedPaths.size) { const { error } = await service.storage.from("conversation-attachment-uploads").remove([...abandonedPaths]); if (error) throw error; }
   if (paths.size) {
     const { error } = await service.storage.from("inbound-attachment-originals").remove([...paths]);
     if (error) throw error;
   }
   // Disposable fixture cleanup only, scoped to generated IDs; no hosted fallback.
-  const patterns = [...Object.values(ids), actor].filter(Boolean).map(value => quote(`%${value}%`)).join(",");
+  const patterns = [...Object.values(ids), ...extraFixtureIds, actor].filter(Boolean).map(value => quote(`%${value}%`)).join(",");
   sql(`begin; set local session_replication_role=replica;
     do $cleanup$ declare t record; begin
       for t in select schemaname,tablename from pg_tables where schemaname='public' loop

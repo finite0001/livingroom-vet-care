@@ -1,4 +1,4 @@
--- Draft: pair with Storage adapter and disposable acceptance before promoting.
+-- Durable cleanup receipts for terminal abandoned uploads; no cleanup scheduler is enabled.
 create table public.abandoned_attachment_cleanup (
  id uuid primary key default gen_random_uuid(),
  upload_id uuid not null references public.conversation_attachment_uploads(id),

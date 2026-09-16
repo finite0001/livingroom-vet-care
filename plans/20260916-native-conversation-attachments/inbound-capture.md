@@ -112,3 +112,7 @@ CI35095400693 ate0c4753 is still active; incoming concurrency passed and later S
 ## Abandoned-upload cleanup core
 
 Implemented the bounded shared cleanup routine and7 passing unit cases covering successful/uncertain deletion, already-absent recovery, changed object identity/path, expired/replaced eligibility, inspection failure and mismatched completion receipts. Targeted lint/diff pass. No database/Storage adapters or endpoint are wired, so runtime cleanup remains unimplemented and disabled. CI35095400693 is still active at the prior pushed commit; this new core and retention inventory work remain local pending its completion.
+
+## Incoming HTTP/concurrency candidate passed; cleanup submitted next
+
+CI35095400693 completed all jobs successfully ate0c4753, validating incoming timeline/error behavior, real localhost HTTP/Auth/Storage and observed-lock concurrency. Cleanup/retention follow-ups were not in that commit. The cleanup receipt migration is now canonical20260916130000 (inventory118), with database/Storage adapters and expanded local integration acceptance ready for a separate run. Shared adapter type/lint/syntax and12 unit cases pass; cleanup SQL/Storage runtime results remain pending.
