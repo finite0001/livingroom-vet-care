@@ -48,3 +48,11 @@ Five additional SQL assertions now exercise an expired lease, stable capture ide
 Added `tests/inbound/attachment-local-roundtrip.ts` and a database CI step. It requires an explicit disposable project, matching Docker project label and localhost API. It uses real Auth/RPC/Storage with synthetic provider bytes and an in-process handler: invalid identity/stale version/privileged RPC denial, lost committed receipt recovery without repeated read/write, exact private bytes, direct staff read/overwrite denial, and revoked staff denial. Cleanup is scoped to generated fixture IDs and combines assertion/cleanup failures. Targeted ESLint, Node syntax and diff checks pass. Runtime execution is pending; this is not a deployed Edge HTTP or provider acceptance claim.
 
 CI35092794347 passed Edge checking and the full SQL stage for9856659; frontend/browser and remaining database integration stages are still active. Follow-up commits remain local until that run is terminal to avoid canceling it. Parent CI35092195032 also remains active, with its capture/queue race stage passed.
+
+## Private reader implemented, runtime acceptance pending
+
+Added service-only `authorize_inbound_attachment_read`: active staff, ready capture, exact message/version/provider identity, current household/message association and saved metadata are required before exposing a Storage path to the server. New `read-inbound-attachment` Edge adapter authenticates the token, verifies actual downloaded bytes, repeats authorization and compares all saved context fields before returning a no-store attachment response. No signed URL escapes; read access uses the same default-off capture gate. Six reader unit tests pass; targeted ESLint and frozen Edge entry-point checking pass.
+
+Four SQL reader assertions bring the suite to23. The actual-service harness now also exercises authorized reading, wrong-message rejection and revoked-staff rejection. These SQL/integration changes have not yet run. Staff listing/UI and race acceptance remain outstanding.
+
+Parent run35092195032 completed successfully in all jobs atc04f45a, including actual outbound capture/queue concurrency. Incoming run35092794347 at9856659 remains active (Edge/SQL passed; later database and browser stages running). Do not push this follow-up until it is terminal.

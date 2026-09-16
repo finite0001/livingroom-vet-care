@@ -111,3 +111,28 @@ revoke all on function public.inbound_capture_receipt(public.inbound_attachment_
 revoke all on function public.claim_inbound_attachment(uuid,uuid,integer,uuid) from public,anon,authenticated,service_role;
 revoke all on function public.finalize_inbound_attachment(uuid,uuid,uuid,text,bigint,text) from public,anon,authenticated,service_role;
 grant execute on function public.claim_inbound_attachment(uuid,uuid,integer,uuid),public.finalize_inbound_attachment(uuid,uuid,uuid,text,bigint,text) to service_role;
+
+-- Service-only read context: callers supply identity, never an arbitrary object path.
+create function public.authorize_inbound_attachment_read(p_actor_id uuid,p_capture_id uuid,p_message_id uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare capture public.inbound_attachment_captures;incoming public.communication_inbound;
+begin
+ perform public.communication_require_service();
+ if public.is_active_staff(p_actor_id) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into capture from public.inbound_attachment_captures where id=p_capture_id and message_id=p_message_id and status='ready';
+ if not found then raise exception 'Incoming original unavailable' using errcode='42501';end if;
+ select * into incoming from public.communication_inbound where id=capture.inbound_id;
+ if not found or incoming.provider<>'resend' or incoming.channel<>'EMAIL'
+  or row(incoming.message_id,incoming.version,incoming.resource_id) is distinct from row(capture.message_id,capture.inbound_version,capture.email_id::text)
+  or not exists(select 1 from public.messages m join public.conversations c on c.id=m.conversation_id
+    where m.id=p_message_id and m.conversation_id=incoming.conversation_id and c.client_id=incoming.client_id
+      and m.sender_type='CLIENT' and m.type='EMAIL' and not m.is_internal)
+  or not exists(select 1 from jsonb_array_elements(incoming.attachment_metadata) item where
+    jsonb_build_object('id',item->>'id','filename',item->'filename','content_type',item->>'content_type','size',item->'size')=capture.metadata)
+  or public.is_active_staff(p_actor_id) is not true then
+  raise exception 'Incoming original association changed' using errcode='42501';end if;
+ return jsonb_build_object('id',capture.id,'message_id',capture.message_id,'storage_path',capture.storage_path,
+  'sha256',capture.sha256,'byte_length',(capture.metadata->>'size')::bigint,'mime_type',capture.metadata->>'content_type','filename',capture.metadata->'filename');
+end $$;
+revoke all on function public.authorize_inbound_attachment_read(uuid,uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.authorize_inbound_attachment_read(uuid,uuid,uuid) to service_role;

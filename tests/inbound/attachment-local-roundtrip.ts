@@ -1,3 +1,4 @@
+import { createIncomingAttachmentReadHandler } from "../../supabase/functions/_shared/inbound/read-attachment.ts";
 /** Actual disposable Auth/RPC/Storage; handler in-process and provider bytes synthetic. */
 import { createInboundAttachmentCaptureHandler } from "../../supabase/functions/_shared/inbound/capture-attachment.ts";
 import { storeIncomingOriginal } from "../../supabase/functions/_shared/inbound/store-attachment.ts";
@@ -134,12 +135,25 @@ try {
   const path = [...paths][0]; assert.ok(path);
   const stored = await bucket.download(path); if (stored.error) throw stored.error;
   check(Buffer.from(await stored.data.arrayBuffer()).equals(Buffer.from(bytes)), "Actual private Storage contains exact original bytes");
+  const reader = createIncomingAttachmentReadHandler({
+    authenticate: async token => { const { data, error } = await service.auth.getUser(token); if (error) return null; return data.user?.id ?? null; },
+    authorize: async (actorId, captureId, messageId) => {
+      const { data, error } = await service.rpc("authorize_inbound_attachment_read", { p_actor_id: actorId, p_capture_id: captureId, p_message_id: messageId });
+      if (error) throw error; return data;
+    },
+    download: async name => { const { data, error } = await bucket.download(name); if (error) throw error; return data; },
+  });
+  const read = (messageId = ids.message) => reader(new Request("http://127.0.0.1/read", { method: "POST", headers: { Authorization: `Bearer ${owner.token}` }, body: JSON.stringify({ capture_id: receipt.id, message_id: messageId }) }));
+  const privateRead = await read();
+  check(privateRead.status === 200 && Buffer.from(await privateRead.arrayBuffer()).equals(Buffer.from(bytes)), "Authorized reader returns exact private bytes through actual RPC and Storage");
+  check((await read(randomUUID())).status === 404, "Wrong message cannot retrieve original");
   const hidden = await owner.client.storage.from("inbound-attachment-originals").download(path);
   check(!!hidden.error, "Staff cannot bypass authorized retrieval through Storage");
   const overwritten = await owner.client.storage.from("inbound-attachment-originals").upload(path, bytes, { contentType: metadata.content_type, upsert: true });
   check(!!overwritten.error, "Staff cannot overwrite incoming original");
   sql(`update profiles set is_active=false where id=${quote(actor)}`);
   check((await request()).status === 503 && downloads === 1, "Revoked staff cannot recover captured receipt");
+  check((await read()).status === 404, "Revoked staff cannot read private original");
   console.log(`Incoming attachment actual Auth/RPC/Storage checks passed: ${checks}`);
 } catch (error) { failures.push(error); }
 try {

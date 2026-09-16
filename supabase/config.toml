@@ -83,3 +83,6 @@ verify_jwt = true
 # Staff JWT, active matched-inbound claim and current lease checks. Capture defaults off.
 [functions.capture-inbound-attachment]
 verify_jwt = true
+
+[functions.read-inbound-attachment]
+verify_jwt = true
