@@ -324,7 +324,7 @@ const untouched = sql(
 );
 // Explicitly synthetic acceptance in the owned disposable database only.
 sql(`insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version)
-  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',10)
+  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',11)
   on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_at=excluded.accepted_at,
   acceptance_reference=excluded.acceptance_reference,accepted_schema_version=excluded.accepted_schema_version;`);
 const privateDir = mkdtempSync(resolve(tmpdir(), "lrv-native-browser-"));
@@ -595,7 +595,7 @@ try {
   const previewResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/preview_record_release_v10` &&
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v11` &&
       response.request().method() === "POST",
   );
   await releasePanel
@@ -605,7 +605,7 @@ try {
   check(reviewedResponse.ok(), "Actual browser release preview succeeds");
   const reviewed = await reviewedResponse.json();
   check(
-    reviewed.snapshot.schema_version === 10 &&
+    reviewed.snapshot.schema_version === 11 &&
       reviewed.snapshot.native_prescriptions.length === 1 &&
       reviewed.snapshot.native_dispenses.length === 1,
     "Actual browser preview explicitly selects both native families",
@@ -642,7 +642,7 @@ try {
   const confirmedResponse = await confirmResponse;
   check(
     confirmedResponse.ok(),
-    "Actual browser confirms reviewed schema10 package",
+    "Actual browser confirms reviewed schema11 package",
   );
   const confirmed = await confirmedResponse.json();
   await expect(
