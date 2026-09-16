@@ -124,3 +124,41 @@ revoke all on function public.conversation_email_capture_context(uuid,uuid) from
 revoke all on function public.capture_conversation_email(uuid,uuid,text) from public,anon,authenticated,service_role;
 grant execute on function public.read_conversation_email_review(uuid),public.prepare_conversation_email(uuid,text,uuid,text,text,text,uuid[]) to authenticated;
 grant execute on function public.conversation_email_capture_context(uuid,uuid),public.capture_conversation_email(uuid,uuid,text) to service_role;
+
+-- Queue only the immutable payload the owner explicitly reviewed. This draft must
+-- ship together with the frozen reader and provider-attempt guard, never alone.
+create function public.enqueue_conversation_email(p_request_id uuid,p_reviewed_payload_hash text,p_attest boolean)
+returns public.communication_outbox language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();r public.communication_prepared_requests;
+ a public.conversation_email_artifacts;l public.conversation_email_outbox_links;o public.communication_outbox;
+begin
+ if p_request_id is null or p_attest is distinct from true then
+  raise exception 'Review the exact attachment email before queueing' using errcode='23514';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_request_id::text,914));
+ if public.is_active_staff(actor) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=actor;
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id;
+ if r.request_id is null or r.state='abandoned' or a.payload_text is null or a.payload_hash is null
+  or a.payload_hash is distinct from p_reviewed_payload_hash
+  or a.payload_hash is distinct from encode(sha256(convert_to(a.payload_text,'UTF8')),'hex') then
+  raise exception 'Prepared email or reviewed payload does not match' using errcode='42501';end if;
+ select * into l from public.conversation_email_outbox_links where request_id=p_request_id;
+ if found then
+  select * into o from public.communication_outbox where id=l.outbox_id and request_id=p_request_id and created_by=actor;
+  if o.id is null or l.queued_by is distinct from actor or l.reviewed_payload_hash is distinct from a.payload_hash then
+   raise exception 'Attachment email queue receipt does not match' using errcode='23514';end if;
+  return o;
+ end if;
+ if r.state<>'prepared' then raise exception 'Only a prepared email can be queued' using errcode='23514';end if;
+ if exists(select 1 from public.communication_outbox where request_id=p_request_id) then
+  raise exception 'Request ID already belongs to another queue workflow' using errcode='23505';end if;
+ -- The private core retains current recipient/suppression checks. Attachment bytes
+ -- are bound atomically through the immutable link, not its legacy empty array.
+ o:=public.enqueue_prepared_communication_internal(actor,p_request_id,(r.payload->>'conversation_id')::uuid,
+  'EMAIL',r.payload->>'to',r.payload->>'subject',r.payload->>'body','{}');
+ insert into public.conversation_email_outbox_links(outbox_id,request_id,reviewed_payload_hash,queued_by)
+ values(o.id,p_request_id,a.payload_hash,actor);
+ return o;
+end $$;
+revoke all on function public.enqueue_conversation_email(uuid,text,boolean) from public,anon,authenticated,service_role;
+grant execute on function public.enqueue_conversation_email(uuid,text,boolean) to authenticated;
