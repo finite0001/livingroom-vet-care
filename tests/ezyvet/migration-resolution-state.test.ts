@@ -67,3 +67,15 @@ test("duplicate submission and repeated recovery clicks preserve one pending ope
   assert.equal(beginResolutionRecovery(recovering), recovering);
   assert.equal(resolutionConfirmed(recovering, reply).request, null);
 });
+
+test("retry rejection cannot discard an original write that may commit after an absent recovery", () => {
+  for (const code of ["42501", "40001", "23514"]) {
+    let state = resolutionSaveFailed(beginResolutionSave(initial(), request()), reply, new Error("Timeout"));
+    state = resolutionRecoveryAbsent(beginResolutionRecovery(state), reply);
+    state = beginResolutionSave(state, request());
+    state = resolutionSaveFailed(state, reply, { code });
+    assert.equal(state.phase, "uncertain");
+    assert.deepEqual(state.request, request());
+    assert.equal(resolutionConfirmed(beginResolutionRecovery(state), reply).phase, "editable");
+  }
+});

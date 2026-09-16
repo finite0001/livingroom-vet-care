@@ -17,6 +17,7 @@ export interface MigrationResolutionState {
   actor: string;
   targetKey: string;
   phase: "editable" | "saving" | "uncertain" | "recovering" | "retryable";
+  priorSaveUncertain: boolean;
   request: Readonly<MigrationResolutionRequest> | null;
 }
 
@@ -27,7 +28,7 @@ export interface MigrationResolutionReply {
 }
 
 export function emptyResolutionState(actor: string, targetKey: string): MigrationResolutionState {
-  return { actor, targetKey, phase: "editable", request: null };
+  return { actor, targetKey, phase: "editable", priorSaveUncertain: false, request: null };
 }
 
 // The API validates request/receipt identities; this layer controls when a
@@ -50,8 +51,10 @@ export function resolutionSaveFailed(state: MigrationResolutionState, reply: Mig
   const code = error && typeof error === "object" && "code" in error ? String(error.code) : null;
   // These database errors abort the transaction. Unknown errors, including
   // response validation failures, cannot prove that the write did not commit.
-  if (code && ["23514", "40001", "42501"].includes(code)) return emptyResolutionState(state.actor, state.targetKey);
-  return { ...state, phase: "uncertain" };
+  if (!state.priorSaveUncertain && code && ["23514", "40001", "42501"].includes(code)) return emptyResolutionState(state.actor, state.targetKey);
+  // An absent recovery can race an original write still in flight. Rejection
+  // of a later retry does not prove that the original transaction rolled back.
+  return { ...state, phase: "uncertain", priorSaveUncertain: true };
 }
 
 export function beginResolutionRecovery(state: MigrationResolutionState): MigrationResolutionState {
