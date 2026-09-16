@@ -96,3 +96,9 @@ Python compile and diff checks pass; concurrency cases have not yet executed. CI
 The pending incoming integration harness now mounts the shared capture/read handlers in an ephemeral Node HTTP server bound to127.0.0.1 and issues real fetch requests, while retaining actual disposable Auth/RPC/Storage dependencies and synthetic provider bytes. It covers HTTP method and bearer boundaries and no-store/attachment response headers in addition to exact downloaded bytes and access checks. Request bodies are bounded; the owned server is closed before fixture cleanup. Targeted ESLint, Node syntax and diff checks pass. Runtime is not yet executed; Node-hosted handler acceptance still does not prove deployed Supabase Edge routing or actual provider access.
 
 CI35094146408 remains live at53c0337, most recently in source-bound release integration; its incoming harness is the previous in-process version. Local UI, concurrency and HTTP changes wait for that run to finish before push.
+
+## Retention design and current verification
+
+CI35094146408 completed all jobs at53c0337, including16 actual Auth/RPC/Storage checks for incoming capture/list/read. Timeline/error/concurrency/localhost-HTTP changes were pushed ate0c4753 and CI35095400693 is active. Its incoming claim/finalization/revocation concurrency step has now passed; full HTTP/integration/browser outcome remains pending.
+
+Added `retention.md` with schema-derived retention distinctions and implementation/acceptance requirements, plus read-only `scripts/attachment-retention/inventory.sql`. The inventory uses a read-only transaction, returns aggregate sizes/counts only, retains verified/current/pending categories and separates abandoned/superseded/unknown review categories. It performs no deletion; SQL runtime validation, cleanup receipts/worker/tests and hosted acceptance remain outstanding. Diff checks pass.
