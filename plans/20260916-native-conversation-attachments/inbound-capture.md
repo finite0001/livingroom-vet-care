@@ -70,3 +70,11 @@ CI35092794347 completed all jobs successfully at9856659. This validates the orig
 Added browser `incoming-attachments.ts` parser and download verification: pending metadata cannot fabricate ready evidence, wrong-message/duplicate identities fail, unsupported files remain visible, exact bytes/hash/type/size and current actor are required before browser file use. Four targeted tests and lint passed. Installed FunctionsClient treats PNG/JPEG responses as text by default, so timeline download transport must explicitly preserve binary bytes (PDF already handled as Blob). UI transport/hook/components remain pending; do not claim the new helpers are user-visible.
 
 The follow-up commits are now eligible for push because the earlier CI run is terminal. The next CI run must prove the expanded28 SQL cases and actual incoming Auth/RPC/Storage harness before deployment.
+
+## Incoming timeline controls implemented locally
+
+Added actor-scoped/batched incoming listing hook, typed RPC signature and incoming attachments beneath client email messages without relocating existing controls. Pending files offer Retrieve file, active captures Check status, ready files Download; unsupported files remain visible. Capture responses trigger database-list refresh instead of fabricating ready UI. Downloads use explicit fetch/blob because installed FunctionsClient treats image MIME responses as text; browser verifies size/type/hash/current actor before constructing the download URL. Errors are visible and listing failures offer Retry.
+
+Targeted lint and application TypeScript check pass. Two Playwright flows (desktop/mobile) pass, including pending-to-ready retrieval and byte-for-byte PNG download plus horizontal overflow check. First desktop attempt hit the default5-second attachment expectation while the conversation was still loading; the fixture now waits explicitly for its message content (15-second bound), and both cases passed in14 seconds. No production deployment.
+
+CI35094146408 at53c0337 is still active and does not contain these timeline changes. Its Edge and SQL stages passed; subsequent database integration/browser stages remain active. Keep local UI commit until that run finishes, then submit it without canceling the prior acceptance run.

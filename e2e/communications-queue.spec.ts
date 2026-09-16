@@ -903,3 +903,46 @@ test('queued attachment appears in conversation history and downloads captured b
   await files.getByRole('button', { name: /history.pdf/ }).click();
   expect((await download).suggestedFilename()).toBe('history.pdf');
 });
+
+for (const mobile of [false, true]) {
+  test(`incoming image retrieval preserves binary download (${mobile ? 'mobile' : 'desktop'})`, async ({ page }) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    await fixture(page, 'lost');
+    const bytes = Buffer.from('89504e470d0a1a0a00ff80fe010203', 'hex');
+    const { createHash } = await import('node:crypto');
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    let ready = false;
+    await page.route(`${backend}/rest/v1/messages*`, route => route.fulfill({ json: [{ id: message,
+      conversation_id: conversation, type: 'EMAIL', sender_type: 'CLIENT', sender_id: null,
+      content: 'Here is the photo', is_internal: false, created_at: '2026-09-16T12:00:00Z',
+      audio_url: null, transcription: null, ivr_path: null }] }));
+    await page.route(`${backend}/rest/v1/rpc/list_inbound_message_attachments`, route => route.fulfill({ json: [{
+      inbound_id: conversation, inbound_version: 1, message_id: message, attachment_id: client,
+      filename: 'pet.png', byte_length: bytes.length, mime_type: 'image/png',
+      status: ready ? 'ready' : 'pending', capture_id: ready ? staff : null, sha256: ready ? hash : null,
+    }] }));
+    await page.route(`${backend}/functions/v1/capture-inbound-attachment`, async route => {
+      expect(route.request().postDataJSON()).toEqual({ inbound_id: conversation, attachment_id: client, version: 1 });
+      ready = true; await route.fulfill({ json: { status: 'ready' } });
+    });
+    await page.route(`${backend}/functions/v1/read-inbound-attachment`, async route => {
+      expect(route.request().postDataJSON()).toEqual({ capture_id: staff, message_id: message });
+      await route.fulfill({ contentType: 'image/png', body: bytes });
+    });
+    await page.goto(`/hub/conversation/${conversation}`);
+    await expect(page.getByText('Here is the photo', { exact: true })).toBeVisible({ timeout: 15000 });
+    const files = page.getByRole('list', { name: 'Incoming attachments' });
+    await expect(files).toContainText('Not yet retrieved');
+    await expect(files.getByRole('button', { name: 'Download', exact: true })).toHaveCount(0);
+    await files.getByRole('button', { name: 'Retrieve file', exact: true }).click();
+    await expect(files).toContainText('Verified file');
+    const downloadEvent = page.waitForEvent('download');
+    await files.getByRole('button', { name: 'Download', exact: true }).click();
+    const download = await downloadEvent;
+    expect(download.suggestedFilename()).toBe('pet.png');
+    const path = await download.path(); expect(path).toBeTruthy();
+    const { readFile } = await import('node:fs/promises');
+    expect(await readFile(path!)).toEqual(bytes);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}

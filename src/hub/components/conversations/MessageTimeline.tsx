@@ -1,3 +1,5 @@
+import { useIncomingAttachments } from "@/hub/hooks/use-incoming-attachments";
+import { IncomingAttachments } from "./IncomingAttachments";
 import { useMessageAttachments } from "@/hub/hooks/use-message-attachments";
 import { MessageAttachments } from "./MessageAttachments";
 import { useOutboxStatus, outboxStateLabel } from "@/hub/hooks/use-outbox-status";
@@ -71,6 +73,7 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
   const outgoingIds = messages.filter((message) => message.sender_type === "STAFF" && !message.is_internal && ["SMS", "EMAIL"].includes(message.type)).map((message) => message.id);
   const outbox = useOutboxStatus(outgoingIds);
   const attachments = useMessageAttachments(messages.filter(message => message.sender_type === "STAFF" && !message.is_internal && message.type === "EMAIL").map(message => message.id));
+  const incoming = useIncomingAttachments(messages.filter(message => message.sender_type === "CLIENT" && !message.is_internal && message.type === "EMAIL").map(message => message.id));
   const dividerInfo = useMemo(() => {
     const boundaryConvIds = new Set<string>();
     const boundaryDateMap = new Map<string, string>();
@@ -127,6 +130,8 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
               )}
               {attachments.data?.[msg.id] && <MessageAttachments key={`${msg.id}:${attachments.data[msg.id].payloadHash}`} history={attachments.data[msg.id]} />}
               {msg.type === "EMAIL" && msg.sender_type === "STAFF" && !msg.is_internal && attachments.isError && <p className="mt-1 text-xs text-muted-foreground">Attachment history unavailable. Reload to retry.</p>}
+              {incoming.data?.[msg.id] && <IncomingAttachments key={msg.id} files={incoming.data[msg.id]} />}
+              {msg.type === "EMAIL" && isClient && !msg.is_internal && incoming.isError && <p className="mt-1 text-xs text-muted-foreground">Incoming files unavailable. <button type="button" className="underline" onClick={() => void incoming.refetch()}>Retry</button></p>}
               {msg.triage_priority && (
                 <div className={cn("mt-1.5 flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 w-fit", msg.triage_priority === "URGENT" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
                   <span className="font-medium">AI: {msg.triage_priority}</span>
