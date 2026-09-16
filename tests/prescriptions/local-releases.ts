@@ -7,6 +7,9 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { createFulfillmentApi } from '../../src/hub/features/prescriptions/fulfillment-api.ts';
 import { createPrescriptionApi } from '../../src/hub/features/prescriptions/prescription-api.ts';
+import { buildReleaseEmailPayload } from '../../supabase/functions/_shared/release-email-payload.ts';
+import { buildDocumentLinkArtifacts } from '../../supabase/functions/_shared/document-link-artifacts.ts';
+import { documentLinkConfig, materializeDocumentLink } from '../../supabase/functions/_shared/document-link-capability.ts';
 import { renderRecordRelease } from '../../supabase/functions/_shared/record-release-renderer.ts';
 const project = process.env.NATIVE_PRESCRIPTION_TEST_PROJECT;
 assert.ok(project, 'Explicit owned disposable project required');
@@ -151,10 +154,65 @@ for (const headers of [anonymous, service, staff.headers]) {
   }
 }
 check(effects() === baseline, 'Preview/confirmation/discovery/rendering have no stock, billing or sending effects');
+// Actual provider-free preparation and worker capture use both separate transports.
+const conversation = randomUUID();
+sql(`insert into conversations(id,client_id) values(${quote(conversation)},${quote(client.id)});`);
+await rpc('record_sms_consent', { p_actor_id: doctor.id, p_client_id: client.id, p_phone: client.primary_phone, p_opted_in: true, p_method: 'WRITTEN', p_details: 'Synthetic local consent only', p_expected_updated_at: null });
+const noDownload = async (): Promise<Uint8Array> => { throw new Error('Native-only fixture must not download any original'); };
+async function prepareTransports(version: 9 | 10) {
+  const selected = version === 10 ? selection : oldSelection;
+  const packages = [];
+  for (const channel of ['EMAIL', 'SMS']) {
+    const p = await rpc(`preview_record_release_v${version}`, { p_pet_id: patient.id, p_client_id: client.id, p_channel: channel, p_recipient: channel === 'EMAIL' ? client.primary_email : client.primary_phone, p_selection: selected });
+    const record = await rpc('confirm_record_release', confirmArgs(p, selected, channel));
+    packages.push(await rpc('read_record_release', { p_id: record.id }));
+  }
+  const [emailBundle, smsBundle] = packages;
+  const emailId = randomUUID(), linkId = randomUUID();
+  await rpc('prepare_release_email', { p_request_id: emailId, p_release_id: emailBundle.release.id, p_conversation_id: conversation, p_subject: 'Synthetic reviewed native records', p_body: 'Synthetic local capture only', p_release_hash: emailBundle.release.source_hash });
+  const emailContextArgs = { p_request_id: emailId, p_actor_id: doctor.id };
+  const emailContext = await rpc('release_email_capture_context', emailContextArgs, service);
+  const frozenEmail = await buildReleaseEmailPayload(emailContext.request, emailContext.bundle, { from: 'Synthetic <records@example.test>', replyTo: 'records@example.test' }, noDownload);
+  const linkPreview = await rpc('preview_document_link', { p_family: 'record_release', p_source_id: smsBundle.release.id, p_client_id: client.id });
+  await rpc('prepare_document_link', { p_request_id: linkId, p_family: 'record_release', p_source_id: smsBundle.release.id, p_client_id: client.id, p_conversation_id: conversation, p_recipient: client.primary_phone, p_source_hash: linkPreview.source_hash, p_expires_at: new Date(Date.now() + 86400000).toISOString(), p_message_template: 'Synthetic records: {{document_link}}', p_origin: 'https://thelivingroom.vet', p_key_version: 'synthetic' });
+  const linkContextArgs = { p_id: linkId, p_actor_id: doctor.id };
+  const linkContext = await rpc('document_link_capture_context', linkContextArgs, service);
+  const capability = await materializeDocumentLink(linkContext.grant, documentLinkConfig({ origin: 'https://thelivingroom.vet', activeKeyVersion: 'synthetic', keys: JSON.stringify({ synthetic: Buffer.from('synthetic-local-secret-00000000000').toString('base64') }), publicEnabled: 'true' }));
+  const frozenLink = await buildDocumentLinkArtifacts(linkContext.grant, { name: 'Synthetic', address: 'Synthetic', domain: null }, noDownload);
+  return { emailId, linkId, emailContextArgs, linkContextArgs, emailCapture: { ...emailContextArgs, p_payload_text: frozenEmail.payload_text }, linkCapture: { ...linkContextArgs, p_payload_text: frozenLink.payload_text, p_token_hash: capability.token_hash, p_message_hash: capability.message_hash } };
+}
+async function captureTransports(t: Awaited<ReturnType<typeof prepareTransports>>) {
+  await rpc('capture_release_email_payload', t.emailCapture, service);
+  await rpc('capture_document_link', t.linkCapture, service);
+  check(sql(`select count(*) from release_email_payloads where request_id=${quote(t.emailId)}`) === '1', 'Actual reviewed HTML email captured exactly once without sending');
+  check(sql(`select count(*) from document_link_payloads where grant_id=${quote(t.linkId)}`) === '1', 'Actual reviewed HTML document link captured exactly once without delivering');
+}
+const transports = await prepareTransports(10);
+policy(9);
+await denied('release_email_capture_context', transports.emailContextArgs, '42501', service);
+await denied('document_link_capture_context', transports.linkContextArgs, '42501', service);
+await denied('capture_release_email_payload', transports.emailCapture, '42501', service);
+await denied('capture_document_link', transports.linkCapture, '42501', service);
+const legacyTransports = await prepareTransports(9);
+await captureTransports(legacyTransports);
+policy(10);
+await captureTransports(transports);
+const staleTransports = await prepareTransports(10);
+sql(`update profiles set is_active=false where id=${quote(doctor.id)};`);
+try {
+  await denied('release_email_capture_context', staleTransports.emailContextArgs, '42501', service);
+  await denied('document_link_capture_context', staleTransports.linkContextArgs, '42501', service);
+  await denied('capture_release_email_payload', staleTransports.emailCapture, '42501', service);
+  await denied('capture_document_link', staleTransports.linkCapture, '42501', service);
+} finally { sql(`update profiles set is_active=true where id=${quote(doctor.id)};`); }
+
 const stalePickup = confirmArgs(reviewed, selection);
 const handoff = await api.previewPickup(dispenseId, null);
 await api.execute({ id: randomUUID(), kind: 'pickup', payload: { authorization_id: authorization.id, pet_id: patient.id, dispense_id: dispenseId, expected_context_hash: handoff.context_hash, recipient_name: 'Synthetic recipient', recipient_relationship: 'Synthetic household', reason: 'Synthetic handoff', attest_handoff: true, refill_close: null } });
 await denied('confirm_record_release', stalePickup, '40001');
+await denied('capture_release_email_payload', staleTransports.emailCapture, '42501', service);
+await denied('capture_document_link', staleTransports.linkCapture, '42501', service);
+check(sql(`select count(*) from release_email_payloads where request_id=${quote(staleTransports.emailId)}`) === '0' && sql(`select count(*) from document_link_payloads where grant_id=${quote(staleTransports.linkId)}`) === '0', 'Source change before capture saves no stale email or link artifacts');
 const invalidated = await rpc('read_record_release', { p_id: saved.id });
 check(invalidated.eligible === false && invalidated.events.length > 0, 'Selected pickup invalidates prior package eligibility');
 assert.deepEqual(invalidated.release.snapshot, reviewed.snapshot); checks++;
@@ -170,4 +228,4 @@ await denied('confirm_record_release', { ...cancelArgs, p_id: randomUUID() }, '4
 const cancelled = await preview(selection);
 check(cancelled.snapshot.native_prescriptions[0].status.state === 'cancelled' && renderRecordRelease({ preview: cancelled }).includes('cancelled'), 'Fresh historical package clearly discloses cancellation');
 check(effects() === baseline, 'Pickup/cancellation and release workflows do not debit stock, bill or send again');
-console.log(JSON.stringify({ suite: 'native-release-local-auth', checks, providers_contacted: false, cleanup: 'Owned runtime must be destroyed by parent harness' }));
+console.log(JSON.stringify({ synthetic_only: true, suite: 'native-release-local-auth', checks_passed: checks, provider_requests: 0, project_id: projectId, cleanup: 'Owned runtime must be destroyed by parent harness' }));
