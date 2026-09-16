@@ -255,3 +255,33 @@ test("reviewed immutable document hash cannot be substituted in saved correction
   });
   await assert.rejects(f.api.execute(f.op));
 });
+test("request identity and amendment references require canonical lowercase UUIDs without normalization", () => {
+  const f = fixture(),
+    upper = "A0000000-0000-4000-8000-000000000001";
+  for (const key of [
+    "authorization_id",
+    "pet_id",
+    "dispense_id",
+    "amends_event_id",
+  ])
+    assert.throws(() =>
+      correctionRequestSchema.parse({ ...f.request, [key]: upper }),
+    );
+  assert.throws(() =>
+    correctionRequestSchema.parse({
+      ...f.request,
+      expected_head: { version: 1, event_id: upper, record_hash: h },
+    }),
+  );
+  assert.throws(() =>
+    correctionRequestSchema.parse({
+      ...f.request,
+      kind: "pickup_amendment",
+      pickup_amendment: {
+        original_pickup_id: upper,
+        disposition: "recorded_in_error",
+        handoff: null,
+      },
+    }),
+  );
+});

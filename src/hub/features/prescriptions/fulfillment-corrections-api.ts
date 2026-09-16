@@ -95,6 +95,16 @@ export const correctionRequestSchema = correctionTargetSchema
     r.kind === "pickup_amendment"
       ? r.pickup_amendment !== null
       : r.pickup_amendment === null,
+  )
+  .refine((r) =>
+    [
+      r.authorization_id,
+      r.pet_id,
+      r.dispense_id,
+      r.amends_event_id,
+      r.expected_head.event_id,
+      r.pickup_amendment?.original_pickup_id,
+    ].every((value) => value == null || value === value.toLowerCase()),
   );
 export const correctionEventSchema = z
   .object({

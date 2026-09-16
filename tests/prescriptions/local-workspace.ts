@@ -702,6 +702,252 @@ try {
   await expect(releaseHtml).toContainText("Selected recorded dispense");
   await expect(releaseHtml).toContainText("Synthetic recipient");
   checks += 2;
+  const originalDispense = sql(
+    `select document::text from native_dispenses where id=${quote(saved.id)}`,
+  );
+  const originalPickup = sql(
+    `select document::text from native_pickups where id=${quote(pickups[0].id)}`,
+  );
+  await page
+    .getByRole("button", {
+      name: "Review annotations and pickup amendments",
+      exact: true,
+    })
+    .click();
+  const corrections = page.getByRole("region", {
+    name: "Dispense record corrections",
+    exact: true,
+  });
+  await expect(
+    corrections.getByText("No annotations recorded.", { exact: true }),
+  ).toBeVisible();
+  checks++;
+  await corrections
+    .getByLabel("Reason for annotation", { exact: true })
+    .fill("Synthetic browser record clarification");
+  await corrections
+    .getByLabel("Correction note", { exact: true })
+    .fill(
+      "Synthetic client-shareable clarification; original dispensing preserved.",
+    );
+  await corrections
+    .getByRole("button", { name: "Review record correction", exact: true })
+    .click();
+  await expect(
+    corrections.getByRole("button", {
+      name: "Save reviewed correction",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  checks++;
+  await corrections
+    .getByRole("checkbox", { name: /I reviewed the original record/ })
+    .check();
+  const annotationResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/append_native_dispense_correction` &&
+      response.request().method() === "POST",
+  );
+  await corrections
+    .getByRole("button", { name: "Save reviewed correction", exact: true })
+    .click();
+  const annotationHttp = await annotationResponse;
+  check(
+    annotationHttp.ok(),
+    "Actual browser appends a reviewed operational annotation",
+  );
+  const annotation = await annotationHttp.json();
+  await expect(
+    corrections.getByText(
+      "Synthetic client-shareable clarification; original dispensing preserved.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  checks++;
+  await corrections
+    .getByLabel("Annotation type", { exact: true })
+    .selectOption("pickup_amendment");
+  await corrections
+    .getByLabel("Pickup amendment meaning", { exact: true })
+    .selectOption("recorded_in_error");
+  await corrections
+    .getByLabel("Reason for annotation", { exact: true })
+    .fill("Synthetic original acknowledgment disputed");
+  await corrections
+    .getByLabel("Correction note", { exact: true })
+    .fill("Synthetic amendment does not establish a replacement handoff.");
+  await corrections
+    .getByRole("button", { name: "Review record correction", exact: true })
+    .click();
+  await corrections
+    .getByRole("checkbox", { name: /I reviewed the original record/ })
+    .check();
+  const amendmentResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/append_native_dispense_correction` &&
+      response.request().method() === "POST",
+  );
+  await corrections
+    .getByRole("button", { name: "Save reviewed correction", exact: true })
+    .click();
+  const amendmentHttp = await amendmentResponse;
+  check(
+    amendmentHttp.ok(),
+    "Actual browser records a disputed pickup acknowledgment separately",
+  );
+  const amendment = await amendmentHttp.json();
+  await expect(
+    corrections.getByText(
+      /Latest pickup assertion: Original acknowledgment disputed/,
+    ),
+  ).toBeVisible();
+  checks++;
+  const correctionPage = await rpc(
+    "list_native_dispense_corrections",
+    {
+      p_authorization_id: authorization.id,
+      p_pet_id: patient.id,
+      p_dispense_id: saved.id,
+      p_before_version: null,
+      p_limit: 25,
+    },
+    staff.headers,
+  );
+  check(
+    correctionPage.events.length === 2 &&
+      correctionPage.events[0].id === amendment.id &&
+      correctionPage.events[1].id === annotation.id &&
+      correctionPage.events[0].prior_event_id === annotation.id &&
+      correctionPage.events[0].actor.id === staff.id,
+    "Actual browser writes an attributed two-entry immutable predecessor chain",
+  );
+  check(
+    amendment.request.pickup_amendment.original_pickup_id === pickups[0].id &&
+      amendment.request.pickup_amendment.handoff === null,
+    "Actual disputed acknowledgment names original pickup without invented handoff",
+  );
+  check(
+    originalDispense ===
+      sql(
+        `select document::text from native_dispenses where id=${quote(saved.id)}`,
+      ) &&
+      originalPickup ===
+        sql(
+          `select document::text from native_pickups where id=${quote(pickups[0].id)}`,
+        ),
+    "Correction and amendment preserve exact original dispense and pickup documents",
+  );
+  check(
+    sql(
+      `select count(*) from billing_invoice_items where invoice_id=${quote(invoiceId)}`,
+    ) === "1" &&
+      sql(
+        `select sum(quantity)::text from inventory_movements where lot_id in (${lotIds.map(quote).join(",")})`,
+      ) === "18.000" &&
+      (await api.read())?.usage.fulfillment_head.version === 1,
+    "Actual corrections do not debit stock, create charges or restore allowance",
+  );
+  const priorRelease = await rpc(
+    "read_record_release",
+    { p_id: confirmed.id },
+    staff.headers,
+  );
+  check(
+    priorRelease.eligible === false,
+    "Actual correction invalidates the previously confirmed release",
+  );
+  assert.deepEqual(priorRelease.release.snapshot, frozen);
+  checks++;
+  await corrections
+    .getByRole("button", { name: "Close annotation panel", exact: true })
+    .click();
+  await releasePanel
+    .getByRole("button", {
+      name: "Select all shown: Signed practice prescriptions",
+      exact: true,
+    })
+    .click();
+  await releasePanel
+    .getByRole("button", {
+      name: "Select all shown: Recorded practice dispensing",
+      exact: true,
+    })
+    .click();
+  const correctedPreviewResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v11` &&
+      response.request().method() === "POST",
+  );
+  await releasePanel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  const correctedPreviewHttp = await correctedPreviewResponse;
+  check(
+    correctedPreviewHttp.ok(),
+    "Actual browser re-reviews a schema11 package after corrections",
+  );
+  const correctedPreview = await correctedPreviewHttp.json();
+  check(
+    correctedPreview.snapshot.native_prescriptions[0].corrections
+      .event_count === 2 &&
+      correctedPreview.snapshot.native_dispenses[0].corrections.events
+        .length === 2 &&
+      correctedPreview.snapshot.native_dispenses[0].corrections.head
+        .event_id === amendment.id,
+    "New preview binds exact authorization summary and complete selected dispense amendments",
+  );
+  const correctedHtml = releasePanel
+    .frameLocator('iframe[title="Medical-record release artifact"]')
+    .last()
+    .locator("body");
+  await expect(correctedHtml).toContainText(
+    "Synthetic client-shareable clarification; original dispensing preserved.",
+  );
+  await expect(correctedHtml).toContainText(
+    "Synthetic amendment does not establish a replacement handoff.",
+  );
+  await expect(correctedHtml).toContainText("Synthetic recipient");
+  checks += 3;
+  await releasePanel
+    .getByRole("checkbox", { name: /I reviewed the complete selected records/ })
+    .check();
+  const correctedConfirmResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/confirm_record_release` &&
+      response.request().method() === "POST",
+  );
+  await releasePanel
+    .getByRole("button", { name: "Confirm reviewed package", exact: true })
+    .click();
+  const correctedConfirmHttp = await correctedConfirmResponse;
+  check(
+    correctedConfirmHttp.ok(),
+    "Actual browser confirms the newly reviewed correction disclosure",
+  );
+  const correctedSaved = await correctedConfirmHttp.json();
+  assert.deepEqual(
+    JSON.parse(
+      sql(
+        `select snapshot::text from record_releases where id=${quote(correctedSaved.id)}`,
+      ),
+    ),
+    correctedPreview.snapshot,
+  );
+  checks++;
+  check(
+    (
+      await rpc(
+        "read_record_release",
+        { p_id: correctedSaved.id },
+        staff.headers,
+      )
+    ).eligible === true,
+    "New correction-aware release is eligible while its exact context remains current",
+  );
   check(
     untouched ===
       sql(
