@@ -1,7 +1,7 @@
 """Rehearse the observed hosted attachment upgrade in a fresh local project.
 
 Uses metadata captured read-only from the hosted database. Never connects to it.
-This is a schema/SQL regression rehearsal, not a populated backup restore.
+This is a populated upgrade regression rehearsal, not a backup restore.
 """
 import argparse
 import hashlib
@@ -43,7 +43,7 @@ assert missing == ['20260916033310', '20260916043949', '20260916100000',
                    '20260916110000', '20260916120000', '20260916130000']
 run = Path(tempfile.mkdtemp(prefix='lrv-hosted-upgrade-')).resolve()
 os.chmod(run, 0o700)
-project = 'lrv-hosted-upgrade-' + uuid.uuid4().hex[:12]
+project = 'lrv-restore-' + uuid.uuid4().hex[:10] + '-source'
 container = 'supabase_db_' + project
 config = run / 'supabase/config.toml'
 migrations = config.parent / 'migrations'
@@ -112,6 +112,14 @@ try:
         command(['python3', str(root / f'scripts/restore-rehearsal/compare-{kind}-inventories.py'),
                  str(source), str(observed)])
     print('Observed hosted baseline matches local routine and access inventories.', flush=True)
+    status = json.loads(command(['supabase', 'status', '--workdir', str(run), '--output', 'json']))
+    assert status['API_URL'] == f'http://127.0.0.1:{args.port}'
+    status_path = run / 'status.json'
+    status_path.write_text(json.dumps(status))
+    os.chmod(status_path, 0o600)
+    fixture = str(root / 'scripts/restore-rehearsal/fixture.mjs')
+    command(['node', fixture, 'create', str(status_path), str(run)])
+    print('Synthetic clinical, billing, inventory and private Storage fixture created.', flush=True)
     for version in missing:
         shutil.copy2(by_version[version], migrations / by_version[version].name)
     verify_identity()
@@ -119,6 +127,8 @@ try:
     observed_versions = json.loads(sql('select json_agg(version order by version) from supabase_migrations.schema_migrations;'))
     assert observed_versions == sorted(set(versions) | set(by_version))
     assert len(observed_versions) == 119, 'Legacy receipt must remain intact'
+    command(['node', fixture, 'verify-upgrade', str(status_path), str(run)])
+    print('Populated upgrade preserved fixture records and private original bytes.', flush=True)
     sql('create extension if not exists pgtap with schema extensions;')
     assertions = {}
     for name in ['conversation_attachment_uploads', 'conversation_email_preparation',
@@ -134,7 +144,8 @@ try:
               'baseline_inventory_match': True, 'baseline_versions': versions,
               'applied_versions': missing, 'final_versions': observed_versions,
               'sql_assertions': assertions, 'legacy_sql_sha256': hashlib.sha256(legacy.read_bytes()).hexdigest(),
-              'limitations': ['No populated backup, real Storage bytes, hosted deployment, or provider acceptance.']}
+              'populated_upgrade': json.loads((run / 'upgrade-verification.json').read_text()),
+              'limitations': ['Synthetic populated upgrade only; no backup restoration, hosted deployment, or provider acceptance.']}
     success = True
 finally:
     probe = subprocess.run(['docker', 'inspect', container], capture_output=True)
