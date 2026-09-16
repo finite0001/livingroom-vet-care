@@ -55,3 +55,9 @@ Repository root: `/Users/davidedler/livingroom-vet-native-prescribing`.
 - Corrected unsafe custody cannot enable restock through a metadata edit. Current safeguards apply to every fresh stock addition.
 - Saved releases invalidate under the same authorization gate, historical bytes stay verifiable, pagination and disclosure bounds remain explicit.
 - No prescription allowance, invoice, credit, refund or provider effect. Financial association remains the following native phase.
+
+## PostgreSQL replay checkpoint and performance constraint
+
+Migration123 adds private immutable JSON replay and allocation validation only. All browser/service roles are denied direct execution. The current ordinary-event balance readers from122 remain unchanged. SQL/TypeScript differential vectors cover matching outputs and matching rejection, including long histories and gross quantities above a single allocation’s numeric limit.
+
+An attempted adapter replacement exposed repeated full replay inside each historical verification prefix; the 100/101-event operational regression exceeded its120-second harness budget. That implementation was removed before commit. New correction-aware verification must compute required historical states in one pass (or an equivalently measured approach), not call full replay once per prior event. Retain the existing long-history regression and measure actual staff read/write paths before accepting the new verifier. This is a demonstrated implementation constraint, not a request to reduce the supported history.

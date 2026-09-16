@@ -60,7 +60,7 @@ try:
         versions.add(version)
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
-    assert len(versions) == 122 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 123 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521
@@ -86,6 +86,12 @@ enabled = false
     started = True
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
+    parity_path = root / 'tests/prescriptions/return-replay-parity.py'
+    parity_hash = hashlib.sha256(parity_path.read_bytes()).hexdigest()
+    replay_parity = json.loads(command(['python3', '-B', str(parity_path), '--run-synthetic-local', '--project-config', str(project / 'supabase/config.toml')], cwd=root))
+    assert replay_parity['synthetic_only'] and replay_parity['provider_requests'] == 0 and not replay_parity['persistent_writes'] and replay_parity['project_id'] == identity
+    assert hashlib.sha256(parity_path.read_bytes()).hexdigest() == parity_hash
+    print('SQL/TypeScript quantity replay: ' + str(replay_parity['cases']) + ' matching cases.', flush=True)
     for harness_path in harnesses:
         harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
         output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'NATIVE_PRESCRIPTION_TEST_PROJECT': str(project)}, cwd=root)
@@ -120,7 +126,7 @@ if success:
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hashes, 'restore_runner_sha256': restore_hash, 'restore': restore,
-               'migration_sha256': migration_hashes, 'provider_requests': 0}
+               'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)
