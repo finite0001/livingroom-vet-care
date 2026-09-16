@@ -8,7 +8,11 @@ Read-only audit of the schema9 baseline; native schema10 implementation remains 
 - `20260914090000_canonical_api_release_confirmation.sql`: extend policy/schema/source-kind constraints, confirmation and read dispatch, source registry mapping and final staff rechecks. Preserve inherited provenance/weight invalidation functions currently gated through9; add native authorization/event/fill invalidation. New policy acceptance10 is explicit, never inferred from acceptance9.
 - `20260914080000_canonical_release_original_verification.sql`: schema10 must retain API-original and inherited provenance-byte verification. A schema9-only branch must not send10 down an incompatible legacy fallback.
 - `20260914100000_canonical_api_release_discovery.sql`: add native family discovery, bounded pagination/select-all and new policy reporting.
-- Remaining SQL email/link wrappers require a separate exact-function audit before implementing v10. The above list is not exhaustive.
+- `20260913220000_release_email_delivery.sql`: `release_email_context(uuid)` compares acceptance dynamically with the saved snapshot version; preserve this rather than forcing all historical releases to10.
+- `20260913280000_document_links.sql`: `document_link_source(text,uuid,uuid)` makes the same dynamic policy comparison and calls `release_read_internal`; `document_link_current(uuid)` checks the frozen source hash/recipient. Preserve post-lock actor/expiry checks patched by `20260914090000`.
+- `20260913480000_release_source_byte_binding.sql`: `capture_release_email_payload` and `capture_document_link` invoke **`verify_release_source_original_v5(jsonb,jsonb,bytea)`**. Despite the name, its current definition is in `20260914080000`; extend that actual schema9 branch to10, retaining frozen grant source bundles and legacy1–9 behavior. Do not modify an assumed unsuffixed function.
+- `authorize_record_release` in `20260913130000` checks enabled policy and delegates to read; it does not alone enforce schema acceptance. Keep downstream acceptance checks.
+- Bounded follow-up audit found no additional hardcoded9 gates in the inspected email/link migrations. Prove behavior with both email and SMS-link runtime tests: policy9 rejects10, accepted10 permits eligible10, older9 remains usable, and mixed-package byte tampering fails.
 
 ## Shared TypeScript consumers
 
