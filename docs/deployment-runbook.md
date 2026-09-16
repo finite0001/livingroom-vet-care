@@ -19,6 +19,8 @@ Latest staging update: the [September16 attachment rollout](evidence/staging-att
 
 Latest authenticated staging check: [September16 access evidence](evidence/staging-attachment-authenticated-gates-20260916.json) records seven passing hosted checks and removal of the temporary test account. Email/password login was found disabled and restored; public signup and anonymous sign-in remain disabled, and email confirmation remains enabled. Managed worker authentication reaches the disabled cleanup response. No client sends or provider calls occurred. This establishes access checks only, not completed attachment upload/capture/send acceptance. CI run35112894055 passed frontend, database and Edge jobs at2dd8ae6.
 
+September16 hosted upload acceptance: [17-step synthetic workflow](evidence/staging-attachment-upload-acceptance-20260916.json) exercised staff login, household/conversation creation, private PDF upload, deployed byte verification, exact owner download, anonymous denial, attachment manifest preparation and identical-request recovery. Email payload capture returned503 with `RESEND_FROM` and `RESEND_REPLY_TO` absent; the request remains uncaptured. Independent database checks show zero conversation messages and zero outbox links. Retained synthetic evidence uses an inactive, Auth-banned actor. Sender/reply mailbox commissioning, complete payload capture, provider delivery and hosted UI acceptance remain unfinished.
+
 ## Historical commissioning snapshot
 
 The following September12 notes explain the original setup. Their environment states, counts, provider prerequisites and outstanding-work statements are historical and may be superseded by the current direction and later dated receipts above.
