@@ -10,6 +10,8 @@ The merged frontend at `f6e1db7` is published in Lovable, including prescription
 
 Prescription-item evidence is now deployed and published; the earlier local-only checkpoint is superseded by the [verified rollout](prescription-item-rollout-20260915.md). This does not complete whole-migration reconciliation, discrepancy resolution, frozen reports, or supervised staff acceptance.
 
+Local candidate: identity approval evidence for contacts and patients distinguishes snapshot agreement (unknown observed head), approved-source currentness, local record version changes, and household association. Validation passed30 SQL assertions,133 migration HTTP/Auth checks including the animal identity adapter,599 unit tests,35 workspace browser tests (with four identity cases rerun against the canonical binding descriptor), and a populated upgrade/private-Storage restore. The112-migration candidate remains local; hosted backends stay at111. [Database/API evidence](evidence/migration-identity-local-20260915.json) and [restore evidence](evidence/migration-identity-restore-20260915.json) do not establish hosted or supervised staff acceptance. Weight evidence, global outcomes, resolutions and frozen reports remain required.
+
 The dated checkpoints below retain historical evidence. Statements that the candidate was local-only or the public site had not been cut over are superseded by the live rollout above.
 
 ## Provider acceptance and owner direction — September 15, 2026
