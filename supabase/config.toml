@@ -82,3 +82,7 @@ verify_jwt = true
 verify_jwt = true
 [functions.read-estimate-publication-artifact]
 verify_jwt = true
+
+# Dedicated link capability is verified explicitly; it is not a Supabase JWT.
+[functions.estimate-decision]
+verify_jwt = false
