@@ -44,3 +44,7 @@ The pending actual localhost integration now creates an authenticated temporary 
 ## Completion-reply recovery follow-up
 
 Finalization now locks upload then receipt and permits exact-token completed-receipt replay only while the Storage path remains absent. Different tokens and unexpected reappearing objects are rejected; no second deletion is performed. Added two SQL cases (14 total) and an actual service-RPC replay assertion to the pending local harness. Targeted lint, Node syntax and diff checks pass; these runtime additions are not yet executed. CI35096847299 remains active at3280907 and excludes this follow-up, so it must finish before the next push.
+
+## First cleanup runtime failure and fixture correction
+
+CI35096847299 applied migration118 successfully, then its SQL job failed at the synthetic Storage-metadata deletion in `abandoned_attachment_cleanup.test.sql`. The first9 cleanup assertions passed. Supabase's storage.protect_delete rejected direct metadata deletion; this was a fixture setup failure, not a successful complete suite or actual Storage cleanup result. The fixture now uses the repository's existing transaction-local `storage.allow_delete_query` override around only its exact synthetic metadata row deletion and restores false immediately. The production adapter still removes through Storage API. Diff checks pass; corrected SQL and the local completion-replay changes await rerun. The frontend job remains active, so do not cancel it with a new push.

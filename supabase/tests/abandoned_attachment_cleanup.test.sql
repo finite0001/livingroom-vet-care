@@ -32,7 +32,9 @@ select throws_ok($$select revalidate_abandoned_attachment_cleanup((select (v->>'
 select throws_ok($$select finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),(select (v->>'token')::uuid from evidence))$$,'23514',null,'Existing object prevents completion');
 reset role;
 -- Synthetic metadata-only absence. Production adapter must remove through Storage API.
+set local storage.allow_delete_query='true';
 delete from storage.objects where bucket_id='conversation-attachment-uploads' and name=(select v->>'path' from evidence);
+set local storage.allow_delete_query='false';
 set local role service_role;
 select is(finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),(select (v->>'token')::uuid from evidence))->>'status','complete','Confirmed absence permits completion receipt');
 select is(finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),(select (v->>'token')::uuid from evidence))->>'status','complete','Lost completion response recovers the same receipt');
