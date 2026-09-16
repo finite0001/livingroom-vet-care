@@ -20,7 +20,12 @@ interface Row {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
-async function fixture(page: Page, existing = false, additionalRefills = 0) {
+async function fixture(
+  page: Page,
+  existing = false,
+  additionalRefills = 0,
+  dvm = false,
+) {
   const authorization = signed(),
     draft = {
       ...authorization.context.draft,
@@ -35,6 +40,7 @@ async function fixture(page: Page, existing = false, additionalRefills = 0) {
     closures: [] as Row[],
     pickups: [] as Row[],
     receipts: new Map<string, Row>(),
+    events: [] as Row[],
     calls: [] as Row[],
     lost: false,
     absent: false,
@@ -159,7 +165,9 @@ async function fixture(page: Page, existing = false, additionalRefills = 0) {
         ],
       });
     if (path === "/rest/v1/user_roles")
-      return r.fulfill({ json: [{ role: "STAFF" }] });
+      return r.fulfill({
+        json: dvm ? [{ role: "STAFF" }, { role: "DVM" }] : [{ role: "STAFF" }],
+      });
     if (path === "/rest/v1/pets")
       return r.fulfill({
         json: {
@@ -226,7 +234,7 @@ async function fixture(page: Page, existing = false, additionalRefills = 0) {
           version: 1,
           pet_id: pet,
           authorization_id: authorization.id,
-          events: [],
+          events: state.events,
           has_more: false,
           next_cursor: null,
         },
@@ -284,6 +292,93 @@ async function fixture(page: Page, existing = false, additionalRefills = 0) {
           balance: 10,
         })),
       });
+    if (name === "preview_native_prescription_cancel")
+      return r.fulfill({
+        json: {
+          version: 1,
+          actor_id: actor,
+          pet_id: pet,
+          context: {
+            version: 1,
+            authorization,
+            head: {
+              id: null,
+              version: 0,
+              state: "active",
+              reason: null,
+              replacement_id: null,
+            },
+            patient_current: {
+              id: pet,
+              client_id: client,
+              version: 1,
+              archived_at: null,
+              deceased_at: null,
+            },
+            prescriber: authorization.context.prescriber,
+            alerts: authorization.context.alerts,
+            usage: usage(),
+          },
+          context_hash: hash,
+          observed_at: time,
+        },
+      });
+    if (name === "cancel_native_prescription") {
+      const event = {
+        version: 1,
+        id: input.p_id,
+        authorization_id: authorization.id,
+        authorization_hash: hash,
+        pet_id: pet,
+        action: "cancel",
+        prior_event_id: null,
+        event_version: 1,
+        replacement_id: null,
+        actor_id: actor,
+        reason: input.p_request.reason,
+        reviewed_context: {
+          version: 1,
+          authorization,
+          head: {
+            id: null,
+            version: 0,
+            state: "active",
+            reason: null,
+            replacement_id: null,
+          },
+          patient_current: {
+            id: pet,
+            client_id: client,
+            version: 1,
+            archived_at: null,
+            deceased_at: null,
+          },
+          prescriber: authorization.context.prescriber,
+          alerts: authorization.context.alerts,
+          usage: usage(),
+        },
+        reviewed_context_hash: hash,
+        reconciliation: null,
+        record_hash: hash,
+        created_at: time,
+      };
+      state.status = "cancelled";
+      state.events = [event];
+      state.calls.push({ name, ...input });
+      return r.fulfill({
+        json: {
+          version: 1,
+          id: input.p_id,
+          actor_id: actor,
+          operation: "cancel",
+          pet_id: pet,
+          request: input.p_request,
+          request_hash: hash,
+          result: event,
+          created_at: time,
+        },
+      });
+    }
     if (name === "preview_native_dispense")
       return r.fulfill({
         json: {
@@ -757,4 +852,91 @@ test("unfinished fulfillment participates in patient route and browser unload gu
   await expect(
     page.getByLabel("Total quantity to dispense", { exact: true }),
   ).toHaveValue("1");
+});
+test("same-screen cancellation invalidates dispensing status without a manual refresh", async ({
+  page,
+}) => {
+  await fixture(page, false, 0, true);
+  await expect(
+    page.getByRole("button", { name: "Record a dispense", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Cancel this authorization", exact: true })
+    .click();
+  await page
+    .getByLabel("Clinical reason for cancellation", { exact: true })
+    .fill("DVM cancellation");
+  await page
+    .getByRole("button", { name: "Load current evidence for review" })
+    .click();
+  await page
+    .getByRole("checkbox", { name: /I reviewed the exact order, reason/ })
+    .check();
+  await page
+    .getByRole("button", { name: "Confirm authorization cancellation" })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Prescription fulfillment" }),
+  ).toContainText("CANCELLED");
+  await expect(
+    page.getByRole("button", { name: "Record a dispense", exact: true }),
+  ).toBeDisabled();
+});
+test("confirmed dispense refreshes sibling authorization quantities automatically", async ({
+  page,
+}) => {
+  await fixture(page);
+  const lifecycle = page.getByRole("region", {
+    name: "Prescription lifecycle",
+  });
+  await expect(lifecycle).toContainText("Native dispensed quantity: 0.000");
+  await prepare(page);
+  await page
+    .getByRole("checkbox", {
+      name: /I reviewed patient identity, signed directions/,
+    })
+    .check();
+  await page.getByRole("button", { name: "Confirm reviewed dispense" }).click();
+  await expect(lifecycle).toContainText("Native dispensed quantity: 1.000");
+  await expect(lifecycle).toContainText(
+    "remaining mathematical allowance: 1.500",
+  );
+});
+test("re-review gets a concurrent partial slot version without discarding entered values", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await page
+    .getByRole("button", { name: "Record a dispense", exact: true })
+    .click();
+  await page
+    .getByLabel("Draft household invoice", { exact: true })
+    .selectOption(id(2));
+  await page
+    .getByLabel("Total quantity to dispense", { exact: true })
+    .fill("0.5");
+  await page.getByLabel("Lot 1", { exact: true }).selectOption(id(3));
+  await page.getByLabel("Quantity from lot 1", { exact: true }).fill("0.5");
+  await page
+    .getByLabel("Reason for this fulfillment record", { exact: true })
+    .fill("Retain my entered reason");
+  state.records = [dispense()];
+  state.slots = [slot()];
+  await page
+    .getByRole("button", { name: "Review fulfillment evidence" })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Frozen fulfillment review" }),
+  ).toContainText("Retain my entered reason");
+  await page
+    .getByRole("checkbox", {
+      name: /I reviewed patient identity, signed directions/,
+    })
+    .check();
+  await page.getByRole("button", { name: "Confirm reviewed dispense" }).click();
+  await expect(
+    page.getByRole("region", { name: "Prescription fulfillment" }),
+  ).toContainText("Open fill 1: 1.000");
+  expect(state.calls[0].p_request.expected_slot_version).toBe(1);
+  expect(state.calls[0].p_request.quantity).toBe("0.5");
 });

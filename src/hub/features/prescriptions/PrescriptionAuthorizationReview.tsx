@@ -7,23 +7,26 @@ import type { PrescriptionApi, PrescriptionAuthorization, PrescriptionChangePrev
 import { usePrescriptionOperation } from "./usePrescriptionOperation";
 import { PrescriptionOperationControls } from "./PrescriptionOperationControls";
 import { renderReviewedPrescriptionCopy } from "./prescription-print";
-interface Props { api: PrescriptionApi; actor: string; petId: string; authorization: PrescriptionAuthorization; drafts: PrescriptionDraft[]; isDvm: boolean; inactive: boolean; disabled: boolean; onDirtyChange: (dirty: boolean) => void; onReplacement: (authorization: PrescriptionAuthorization) => void }
+interface Props { evidenceRevision: number; onEvidenceChanged: () => void; api: PrescriptionApi; actor: string; petId: string; authorization: PrescriptionAuthorization; drafts: PrescriptionDraft[]; isDvm: boolean; inactive: boolean; disabled: boolean; onDirtyChange: (dirty: boolean) => void; onReplacement: (authorization: PrescriptionAuthorization) => void }
 const emptyReconciliation = (): PrescriptionReconciliation => ({ native_use_note: "", external_use_status: "unknown", external_use_note: "", remaining_allowance_note: "", attest_review: true });
 function UsageEvidence({ usage }: { usage: PrescriptionCurrentStatus["usage"] }) {
   if (usage.version === 1) return <p className="text-sm">Native fill accounting is unavailable. Prior dispensed quantity, used fill slots and remaining allowance: unavailable. External fulfillment: unknown.</p>;
   return <div className="space-y-1 text-sm"><p>Native dispensed quantity: {usage.dispensed_quantity} · used fill slots: {usage.used_fill_slots} · forfeited quantity: {usage.forfeited_quantity}</p>{usage.allowance_basis === "external_unknown" ? <p>External use and remaining allowance are unknown; native ledger counts do not describe outside pharmacy activity.</p> : <p>Unopened fill slots: {usage.unopened_fill_slots} · remaining mathematical allowance: {usage.remaining_quantity}{usage.open_slot ? ` · open fill remainder: ${usage.open_slot.remaining_quantity}` : ""}. Current order status controls whether allowance can be used.</p>}<p>External fulfillment: unknown.</p></div>;
 }
-export function PrescriptionAuthorizationReview({ api, actor, petId, authorization, drafts, isDvm, inactive, disabled, onDirtyChange, onReplacement }: Props) {
+export function PrescriptionAuthorizationReview({ evidenceRevision, onEvidenceChanged, api, actor, petId, authorization, drafts, isDvm, inactive, disabled, onDirtyChange, onReplacement }: Props) {
   const alive = useRef(true), loading = useRef(false), popup = useRef<Window | null>(null);
+  const attemptedRevision = useRef(-1);
+  const [observedRevision, setObservedRevision] = useState(-1);
   const [status, setStatus] = useState<PrescriptionCurrentStatus | null>(null), [events, setEvents] = useState<PrescriptionEvent[]>([]), [cursor, setCursor] = useState<PrescriptionCursor | null>(null), [loaded, setLoaded] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [mode, setMode] = useState<"cancel" | "replace" | null>(null), [reason, setReason] = useState(""), [draftId, setDraftId] = useState(""), [reconciliation, setReconciliation] = useState(emptyReconciliation), [manualAttest, setManualAttest] = useState(false), [ack, setAck] = useState(false);
   const [cancelPreview, setCancelPreview] = useState<PrescriptionChangePreview | null>(null), [replacePreview, setReplacePreview] = useState<PrescriptionReplacementPreview | null>(null), [printHtml, setPrintHtml] = useState("");
   useEffect(() => { alive.current = true; return () => { alive.current = false; popup.current?.close(); }; }, []);
   const operation = usePrescriptionOperation({ actor, patientId: petId, execute: api.execute, recover: api.recover, onConfirmed: receipt => {
     if (receipt.operation !== "cancel" && receipt.operation !== "replace") throw new Error("Wrong authorization change receipt");
+    onEvidenceChanged();
     setMode(null); setAck(false); setManualAttest(false); setCancelPreview(null); setReplacePreview(null); setPrintHtml(""); setStatus(null);
     if (receipt.operation === "replace") onReplacement(receipt.result.authorization);
-    else { setEvents(previous => [receipt.result, ...previous.filter(e => e.id !== receipt.result.id)]); void refresh(); }
+    else { setEvents(previous => [receipt.result, ...previous.filter(e => e.id !== receipt.result.id)]); }
   } });
   const dirty = mode !== null || operation.dirty;
   useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
@@ -33,8 +36,16 @@ export function PrescriptionAuthorizationReview({ api, actor, petId, authorizati
     try { await action(); } catch { if (alive.current) setError("Current authorization evidence could not be confirmed. Existing reviewed requests and signed history are retained; refresh and review again."); }
     finally { loading.current = false; if (alive.current) setBusy(false); }
   }
-  async function refresh() { await read(async () => { const [nextStatus, page] = await Promise.all([api.readStatus(authorization), api.listEvents(authorization)]); if (!alive.current) return; if (!nextStatus) throw new Error("Authorization unavailable"); setStatus(nextStatus); setEvents(page.events); setCursor(page.next_cursor); setLoaded(true); setPrintHtml(""); }); }
-  useEffect(() => { void read(async () => { const [nextStatus, page] = await Promise.all([api.readStatus(authorization), api.listEvents(authorization)]); if (!alive.current) return; if (!nextStatus) throw new Error("Authorization unavailable"); setStatus(nextStatus); setEvents(page.events); setCursor(page.next_cursor); setLoaded(true); }); }, [api, authorization]);
+  async function refresh() { await read(async () => { const [nextStatus, page] = await Promise.all([api.readStatus(authorization), api.listEvents(authorization)]); if (!alive.current) return; if (!nextStatus) throw new Error("Authorization unavailable"); setStatus(nextStatus); setEvents(page.events); setCursor(page.next_cursor); setLoaded(true); setObservedRevision(evidenceRevision); setPrintHtml(""); }); }
+  const evidenceStale = observedRevision !== evidenceRevision;
+  useEffect(() => {
+    if (!dirty && !busy && evidenceStale && attemptedRevision.current !== evidenceRevision) {
+      attemptedRevision.current = evidenceRevision; void refresh();
+    }
+    // Retry failed reads explicitly; preserve uncertain operations across evidence invalidation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, busy, evidenceRevision, observedRevision]);
+
   const locked = disabled || busy || operation.dirty;
   const terminal = status?.status.state === "cancelled" || status?.status.state === "replaced";
   function begin(next: "cancel" | "replace") { operation.discard(); setMode(next); setReason(""); setDraftId(""); setReconciliation(emptyReconciliation()); setManualAttest(false); setAck(false); setCancelPreview(null); setReplacePreview(null); setPrintHtml(""); setError(""); }
@@ -70,12 +81,12 @@ export function PrescriptionAuthorizationReview({ api, actor, petId, authorizati
     });
   }
   const preview = cancelPreview?.context ?? replacePreview?.context.prior;
-  return <section className="space-y-4 rounded-md border p-4" aria-label="Prescription lifecycle">
+  return <section className="space-y-4 rounded-md border p-4" aria-label="Prescription lifecycle">{evidenceStale && <p role="status">Authorization evidence needs refresh after a saved change. Displayed status and quantities may be stale; pending requests are retained.</p>}
     <h3 className="font-semibold">Current authorization status</h3><p className="text-sm">Current status is separate from the immutable signed instructions above. It is not permission to dispense medication.</p>
     {status && <><p className="font-medium">{status.status.state.toUpperCase()} · checked {status.status.checked_at}</p>{status.status.reason && <p className="whitespace-pre-wrap">Recorded reason: {status.status.reason}</p>}{status.status.replacement_id && <p className="break-all text-sm">Replacement authorization: {status.status.replacement_id}</p>}<UsageEvidence usage={status.usage} /></>}
     {busy && <p role="status">Loading current authorization evidence…</p>}{error && <p role="alert">{error}</p>}
-    <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={dirty || disabled || busy} onClick={() => void refresh()}>Refresh authorization status</Button><Button variant="outline" disabled={!loaded || dirty || disabled || busy} onClick={() => void print(false)}>Preview fresh order copy</Button><Button variant="outline" disabled={!loaded || dirty || disabled || busy} onClick={() => void print(true)}>Print fresh order copy</Button></div>
-    {!mode && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={!loaded || terminal || !isDvm || disabled || busy || operation.dirty} onClick={() => begin("cancel")}>Cancel this authorization</Button><Button variant="outline" disabled={!loaded || terminal || !isDvm || inactive || disabled || busy || operation.dirty} onClick={() => begin("replace")}>Replace with an unsigned draft</Button></div>}
+    <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={dirty || disabled || busy} onClick={() => void refresh()}>Refresh authorization status</Button><Button variant="outline" disabled={!loaded || evidenceStale || dirty || disabled || busy} onClick={() => void print(false)}>Preview fresh order copy</Button><Button variant="outline" disabled={!loaded || evidenceStale || dirty || disabled || busy} onClick={() => void print(true)}>Print fresh order copy</Button></div>
+    {!mode && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={!loaded || evidenceStale || terminal || !isDvm || disabled || busy || operation.dirty} onClick={() => begin("cancel")}>Cancel this authorization</Button><Button variant="outline" disabled={!loaded || evidenceStale || terminal || !isDvm || inactive || disabled || busy || operation.dirty} onClick={() => begin("replace")}>Replace with an unsigned draft</Button></div>}
     {!isDvm && <p className="text-sm">An eligible DVM must review cancellation or replacement.</p>}
     {mode && <section className="space-y-3" aria-label="Authorization change review"><h4 className="font-medium">{mode === "cancel" ? "Cancel this exact authorization" : "Replace this authorization"}</h4><p className="break-all text-xs text-muted-foreground">Target: {authorization.id}</p><p className="text-sm">This action updates the practice record. No pharmacy or client message is sent.</p><fieldset disabled={locked || !isDvm} className="space-y-3"><Label htmlFor="prescription-change-reason">Clinical reason for {mode === "cancel" ? "cancellation" : "replacement"}</Label><Textarea id="prescription-change-reason" value={reason} onChange={e => { setReason(e.target.value); setAck(false); }} />
       {mode === "replace" && <><p className="text-sm">Prepare and save an independently authored draft before replacing. New quantity and refills come from that draft, never from an assumed remaining balance. The new signature and retirement of the old order commit together.</p><Label htmlFor="prescription-replacement-draft">Unsigned replacement draft</Label><select id="prescription-replacement-draft" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={draftId} onChange={e => { setDraftId(e.target.value); setAck(false); }}><option value="">Select a saved unsigned draft</option>{drafts.filter(d => d.status === "draft").map(d => <option key={d.id} value={d.id}>{d.fields.medication.name} · {d.fields.medication.strength} · revision {d.version}</option>)}</select><p className="text-xs text-muted-foreground">Only currently loaded drafts appear; close this review to load more history if needed.</p>

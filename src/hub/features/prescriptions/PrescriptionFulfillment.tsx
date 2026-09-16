@@ -30,6 +30,8 @@ import { usePrescriptionOperation } from "./usePrescriptionOperation";
 import { PrescriptionOperationControls } from "./PrescriptionOperationControls";
 import { renderReviewedPrescriptionCopy } from "./prescription-print";
 interface Props {
+  evidenceRevision: number;
+  onEvidenceChanged: () => void;
   actor: string;
   authorization: PrescriptionAuthorization;
   disabled: boolean;
@@ -74,6 +76,8 @@ export function PrescriptionFulfillment(props: Props) {
   );
 }
 function FulfillmentWorkspace({
+  evidenceRevision,
+  onEvidenceChanged,
   actor,
   authorization,
   disabled,
@@ -97,6 +101,8 @@ function FulfillmentWorkspace({
   const alive = useRef(true),
     reading = useRef(false),
     popup = useRef<Window | null>(null);
+  const attemptedRevision = useRef(-1);
+  const [observedRevision, setObservedRevision] = useState(-1);
   const [current, setCurrent] =
       useState<Awaited<ReturnType<FulfillmentApi["read"]>>>(null),
     [history, setHistory] = useState(emptyHistory),
@@ -143,13 +149,13 @@ function FulfillmentWorkspace({
     execute: api.execute,
     recover: api.recover,
     onConfirmed: () => {
+      onEvidenceChanged();
       setMode(null);
       setPreview(null);
       setAck(false);
       setPrintHtml("");
       setCurrent(null);
       setLoaded(false);
-      void refresh();
     },
   });
   const dirty = mode !== null || operation.dirty;
@@ -202,13 +208,23 @@ function FulfillmentWorkspace({
         pickups: p.next_cursor as FulfillmentCursor | null,
       });
       setLoaded(true);
+      setObservedRevision(evidenceRevision);
     });
   }
+  const evidenceStale = observedRevision !== evidenceRevision;
   useEffect(() => {
-    void refresh();
-    // This workspace is keyed by actor/patient/authorization; refreshing on renders would erase reviews.
+    if (
+      !dirty &&
+      !busy &&
+      evidenceStale &&
+      attemptedRevision.current !== evidenceRevision
+    ) {
+      attemptedRevision.current = evidenceRevision;
+      void refresh();
+    }
+    // Refresh only idle evidence; never remount or replace an uncertain operation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api]);
+  }, [dirty, busy, evidenceRevision, observedRevision]);
   async function loadChoices(page = 0) {
     const [stock, draftInvoices] = await Promise.all([
       lots(search, authorization.context.draft.fields.product_id ?? undefined),
@@ -253,7 +269,12 @@ function FulfillmentWorkspace({
   const locked = disabled || busy || operation.dirty;
   async function review() {
     await read(async () => {
-      if (!current || !mode) throw new Error("Refresh required");
+      if (!mode) throw new Error("Choose fulfillment action");
+      const freshCurrent = await api.read();
+      if (!freshCurrent) throw new Error("Refresh required");
+      if (!alive.current) return;
+      setCurrent(freshCurrent);
+      setObservedRevision(evidenceRevision);
       const base = { authorization_id: authorization.id, pet_id: petId };
       let evidence: Preview;
       let payload: Record<string, unknown>;
@@ -264,8 +285,9 @@ function FulfillmentWorkspace({
         if (refillId.trim() && !refill) throw new Error("Refill unavailable");
         const target = dispenseTargetSchema.parse({
           ...base,
-          slot_index: current.open_slot?.index ?? current.usage.used_fill_slots,
-          expected_slot_version: current.open_slot?.version ?? null,
+          slot_index:
+            freshCurrent.open_slot?.index ?? freshCurrent.usage.used_fill_slots,
+          expected_slot_version: freshCurrent.open_slot?.version ?? null,
           invoice_id: invoiceId,
           quantity,
           allocations: allocations
@@ -284,12 +306,12 @@ function FulfillmentWorkspace({
           attest_dispense_review: true,
         });
       } else if (mode === "close_slot") {
-        if (!current.open_slot) throw new Error("No open slot");
-        evidence = await api.previewClose(current.open_slot.index);
+        if (!freshCurrent.open_slot) throw new Error("No open slot");
+        evidence = await api.previewClose(freshCurrent.open_slot.index);
         payload = closeSlotRequestSchema.parse({
           ...base,
-          slot_index: current.open_slot.index,
-          expected_slot_version: current.open_slot.version,
+          slot_index: freshCurrent.open_slot.index,
+          expected_slot_version: freshCurrent.open_slot.version,
           expected_context_hash: evidence.context_hash,
           reason,
           attest_forfeit: true,
@@ -409,6 +431,7 @@ function FulfillmentWorkspace({
   const status = current?.authorization.state;
   const eligible =
     loaded &&
+    !evidenceStale &&
     status === "active" &&
     !inactive &&
     authorization.artifact.fulfillment_mode === "practice_stock" &&
@@ -421,6 +444,12 @@ function FulfillmentWorkspace({
       aria-label="Prescription fulfillment"
     >
       <h3 className="font-semibold">Dispensing and pickup</h3>
+      {evidenceStale && (
+        <p role="status">
+          Fulfillment evidence needs refresh after a saved change. Displayed
+          status and quantities may be stale; pending requests are retained.
+        </p>
+      )}
       <p className="text-sm text-muted-foreground">
         Each recorded dispense uses stock and adds one draft invoice charge.
         Pickup records physical handoff only. Signed directions and allowance
@@ -484,7 +513,9 @@ function FulfillmentWorkspace({
         </Button>
         <Button
           variant="outline"
-          disabled={dirty || disabled || busy || !current?.open_slot}
+          disabled={
+            dirty || disabled || busy || !current?.open_slot || evidenceStale
+          }
           onClick={() => void begin("close_slot")}
         >
           Forfeit open fill remainder
