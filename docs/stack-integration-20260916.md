@@ -1,6 +1,6 @@
 # Standalone stack integration — September 16, 2026
 
-This integration candidate combines the frozen clinical, communications and estimate-publication sources below and is ready for its integration merge commit. It is not deployment or combined-runtime acceptance. No source branch was modified, no migration was applied to either hosted project, and no provider calls were made.
+This integration candidate combines the frozen clinical, communications and estimate-publication sources below at merge commit `4e9bdfd`. Local frontend checks and the native populated workflow/restore run passed on that tree; full combined CI and communications-specific restore acceptance remain pending. It is not deployment acceptance. No source branch was modified, no migration was applied to either hosted project, and no provider calls were made.
 
 ## Exact source freeze
 
@@ -8,7 +8,7 @@ This integration candidate combines the frozen clinical, communications and esti
 - Communications / attachments: PR156, `9b46cc67837dac66d330921a5604b46133c1fa4a` (118 migrations on its own base).
 - Integration branch: `codex/standalone-stack-integration`, worktree `/Users/davidedler/livingroom-vet-standalone-integration`.
 - Prior integration merge: `8ecac402e6eb02abc120566139d3fd0317a03091`. Publication source: `9ebfdd8ea7d0d4479ebd33e0ceccc23843f62b31` (128 migrations on its clinical base).
-- Publication integration began with `--no-commit --no-ff`; the five conflicts are resolved and the candidate awaits review and a merge commit. Further commits on either source branch require an explicit follow-up integration review.
+- Publication integration resolved five conflicts and was committed as `4e9bdfd`. Further commits on either source branch require an explicit follow-up integration review.
 - Estimate publication is now included: migration `20260916123017_native_estimate_publications.sql`, renderer, staff HTTP handlers/UI, lifecycle and closure workflows, contention tests and populated restore coverage. Publication delivery adapters, client decisions and accepted-line execution remain separate unfinished work; inclusion does not imply combined acceptance.
 
 ## Migration reconciliation
@@ -52,3 +52,9 @@ CI run `35108875484` targets the prior `8ecac40` integration only. It does not a
 Run the combined CI frontend/typecheck/unit/build, Edge frozen dependency/typecheck, database migration/SQL and all retained observed-contention jobs against this exact integrated tree. Run the communications browser/actual Auth/Storage upload, reviewed queue/history, inbound claim/capture/read/revoke and abandoned-cleanup replay checks together with clinical/dispense/return/finance/draft and publication prepare/capture/read/review/publish/replace/withdraw/recovery acceptance. Rehearse populated native and communications schema/data restore, retained attachment and publication byte recovery, frozen publication histories after live source changes, and exact security boundaries against the combined inventory. Standalone prior-branch CI is evidence for those sources, not a substitute for this combined run.
 
 Fresh-hosted-baseline reconciliation must distinguish the observed 113-migration hosted inventory from the older 84/51 rehearsal baselines. A deployment decision requires a reviewed ordered migration diff and explicit provider/launch gates; none is claimed here. No test servers, hosted mutations, pushes or deployments were run during this conflict-resolution checkpoint. Recording the integration merge commit does not change the pending combined acceptance above.
+
+## Combined local evidence at4e9bdfd
+
+[Native runtime evidence](evidence/combined-native-publication-20260916.json) records132 migrations,660 actual local Auth/native workflow checks,50 publication SQL assertions,67 observed publication contention checks,78 quantity replay cases and128 selected populated-restore checks. Owned runtime/container/volume cleanup was verified. Local `npm run check` passed lint, TypeScript,1012 unit tests and build. Existing fast-refresh/chunk-size warnings remain.
+
+These native restore results do not cover populated communications original-byte restore. The broader backup script copies the full database and Storage, but previously did not seed the new conversation/inbound families. Separate communications fixture/restore work must verify original bytes, immutable delivery links and post-restore authorization before commercial backup readiness is claimed. Final combined CI and hosted review remain required.
