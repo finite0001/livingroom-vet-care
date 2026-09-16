@@ -12,6 +12,7 @@ import tempfile
 import time
 import uuid
 import tomllib
+from security_evidence import security_mismatch
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local-rehearsal', action='store_true')
@@ -33,6 +34,14 @@ if upgrade_mode and args.resume_backup:
 if not args.run_synthetic_local_rehearsal:
     parser.error('Explicit --run-synthetic-local-rehearsal is required')
 root = Path(__file__).resolve().parents[2]
+# Pin all fixture modules and their shared-handler dependencies for this run and
+# resumed backups. Evidence must name the exact code that created and read bytes.
+def fixture_source_hashes():
+    paths = sorted(set((root/'scripts/restore-rehearsal').glob('*')) | set((root/'supabase/functions/_shared').rglob('*.ts'))
+                   | set((root/'supabase/migrations').glob('*.sql')) | set((root/'tests/restore').glob('*'))
+                   | {root/'package.json',root/'package-lock.json'})
+    return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file()}
+source_hashes = fixture_source_hashes()
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 versions = [p.name.split('_')[0] for p in migration_files]
 assert len(versions) == len(set(versions)) == 132, 'Review canonical restore migration inventory'
@@ -340,6 +349,21 @@ def seed_vaccination_receipt(project):
     (run/'vaccination-receipt-fixture.json').write_text(json.dumps(captured, sort_keys=True))
 
 
+def storage_metadata(project, restore=None):
+    # Executed inside the owned Storage image so its exact fs-xattr dependency
+    # reads Linux user attributes; the host may not support the same namespace.
+    verify_identity(project)
+    script=(root/'scripts/restore-rehearsal/storage-metadata.mjs').read_text()+"""
+const { createRequire } = await import('node:module');
+const require = createRequire('/app/package.json');
+const xattr = await import(require.resolve('fs-xattr'));
+const chunks=[]; for await (const chunk of process.stdin) chunks.push(chunk);
+const restore=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+process.stdout.write(JSON.stringify(await storageMetadata('/mnt',xattr,restore)));
+"""
+    return json.loads(command(['docker','exec','-i',docker_name(project,'storage'),'node','--input-type=module','-e',script],input=json.dumps(restore)))
+
+
 def services(project):
     return [docker_name(project,kind) for kind in ['kong','auth','rest','storage','inbucket']]
 
@@ -398,9 +422,26 @@ try:
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-release-packages',str(source['path']/'status.json'),str(run)])
             (run/'vaccination-receipt-fixture.json').write_text(json.dumps(vaccination_snapshot(source),sort_keys=True))
             (run/'migration-recovery-fixture.json').write_text(json.dumps(migration_recovery_snapshot(source),sort_keys=True))
+        command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-communications',str(source['path']/'status.json'),str(run)])
+        # Refresh the existing full conversation snapshot only after checking all
+        # prior rows are unchanged; the communications fixture adds a household.
+        if (run/'vaccination-receipt-fixture.json').exists():
+            before_communications=json.loads((run/'vaccination-receipt-fixture.json').read_text())
+            after_communications=vaccination_snapshot(source)
+            for table, rows in before_communications.items():
+                assert all(row in after_communications[table] for row in rows), 'Communications changed prior source/decision/delivery evidence'
+            (run/'vaccination-receipt-fixture.json').write_text(json.dumps(after_communications,sort_keys=True))
+        source_security=functions_snapshot(source)
+        (run/'source-security.json').write_text(json.dumps(source_security,sort_keys=True))
+        assert fixture_source_hashes()==source_hashes, 'Restore fixture sources changed before backup'
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
         verify_identity(source)
-        command(['docker','stop',*services(source)])
+        # Stop ingress and every other API first; Storage remains alive only for
+        # an offline xattr read, then is stopped before the DB/file backup pair.
+        command(['docker','stop',*[name for name in services(source) if name!=docker_name(source,'storage')]])
+        metadata=storage_metadata(source)
+        (run/'storage-metadata.json').write_text(json.dumps(metadata,sort_keys=True))
+        command(['docker','stop',docker_name(source,'storage')])
         backup_started=time.monotonic()
         dump=command(['docker','exec',docker_name(source),'pg_dump','-U','supabase_admin','--format=custom','postgres'],binary=True)
         (run/'database.dump').write_bytes(dump)
@@ -409,16 +450,22 @@ try:
         for file in sorted((run/'storage').rglob('*')):
             if file.is_file(): manifest.append({'path':str(file.relative_to(run/'storage')),'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
         assert manifest, 'Actual private Storage backup must contain physical files'
+        assert manifest==[{key:row[key] for key in ['path','bytes','sha256']} for row in metadata], 'Storage changed during backup metadata capture'
+        assert any('user.supabase.content-type' in row['attributes'] for row in metadata), 'Original Storage MIME attributes must be captured'
         command(['supabase','stop','--workdir',str(source['path']),'--no-backup'])
         backup_seconds=time.monotonic()-backup_started
-        (run/'backup-manifest.json').write_text(json.dumps({'run_id':run_id,'database_sha256':hashlib.sha256(dump).hexdigest(),'files':manifest,'backup_seconds':backup_seconds}))
+        (run/'backup-manifest.json').write_text(json.dumps({'run_id':run_id,'source_hashes':source_hashes,'database_sha256':hashlib.sha256(dump).hexdigest(),'files':manifest,'storage_metadata_sha256':hashlib.sha256((run/'storage-metadata.json').read_bytes()).hexdigest(),'backup_seconds':backup_seconds}))
     else:
         source={'id':'lrv-restore-'+run_id+'-source','path':run/'source','port':tomllib.loads((run/'source/supabase/config.toml').read_text())['api']['port']}
         saved=json.loads((run/'backup-manifest.json').read_text())
+        assert saved.get('source_hashes')==source_hashes, 'Resumed backup requires its exact fixture and shared-handler sources'
         assert saved['run_id']==run_id
         dump=(run/'database.dump').read_bytes()
         assert hashlib.sha256(dump).hexdigest()==saved['database_sha256']
         manifest=saved['files'];backup_seconds=saved['backup_seconds']
+        assert hashlib.sha256((run/'storage-metadata.json').read_bytes()).hexdigest()==saved['storage_metadata_sha256']
+        metadata=json.loads((run/'storage-metadata.json').read_text())
+        assert manifest==[{key:row[key] for key in ['path','bytes','sha256']} for row in metadata]
         for file in manifest:
             path=(run/'storage'/file['path']).resolve()
             assert path.is_relative_to((run/'storage').resolve())
@@ -444,15 +491,24 @@ try:
     # drop their inherited constraints individually; remove only this destination
     # schema first, then restore its full archived definition/data without filtering.
     sql(destination, 'drop schema if exists realtime cascade;')
-    # Neutralize only this destination restore-account's creation defaults.
+    # Neutralize both destination creators' schema-local application defaults.
+    # pg_restore creates some owned sequences as postgres; preexisting postgres
+    # defaults otherwise survive differential archive ACLs and leak UPDATE.
     # Archive ACL/default-ACL records restore the source policy; no post-restore
     # object grant rewriting is permitted. Exact canonical comparison follows.
     sql(destination, '''alter default privileges for role supabase_admin in schema public revoke all on functions from anon,authenticated,service_role;
       alter default privileges for role supabase_admin in schema public revoke all on tables from anon,authenticated,service_role;
-      alter default privileges for role supabase_admin in schema public revoke all on sequences from anon,authenticated,service_role;''')
+      alter default privileges for role supabase_admin in schema public revoke all on sequences from anon,authenticated,service_role;
+      alter default privileges for role postgres in schema public revoke all on functions from public,anon,authenticated,service_role;
+      alter default privileges for role postgres in schema public revoke all on tables from public,anon,authenticated,service_role;
+      alter default privileges for role postgres in schema public revoke all on sequences from public,anon,authenticated,service_role;''')
     command(['docker','exec','-i',docker_name(destination),'pg_restore','-U','supabase_admin','-d','postgres','--clean','--if-exists','--exit-on-error','--single-transaction'],input=dump,binary=True)
     command(['docker','cp',str(run/'storage')+'/.',docker_name(destination,'storage')+':/mnt'])
-    command(['docker','start',*services(destination)])
+    # Restore exact captured backend metadata before exposing Auth/REST/ingress.
+    command(['docker','start',docker_name(destination,'storage')])
+    assert storage_metadata(destination,metadata)==metadata
+    (run/'storage-metadata-comparison.json').write_text(json.dumps({'equal':True,'files':len(metadata),'sha256':hashlib.sha256((run/'storage-metadata.json').read_bytes()).hexdigest()}))
+    command(['docker','start',*[name for name in services(destination) if name!=docker_name(destination,'storage')]])
     # All three APIs must be ready after restart; Auth alone can become healthy
     # while PostgREST is still loading restored schema metadata.
     status=json.loads((destination['path']/'status.json').read_text())
@@ -469,6 +525,12 @@ try:
     if (run/'vaccination-receipt-fixture.json').exists():
         assert vaccination_snapshot(destination)==json.loads((run/'vaccination-receipt-fixture.json').read_text()), 'Restored source, decision and delivery rows must match before verification reads'
         assert migration_recovery_snapshot(destination)==json.loads((run/'migration-recovery-fixture.json').read_text()), 'Restored manifest digest and owned binding recovery differ'
+    expected_security=json.loads((run/'source-security.json').read_text())
+    restored_security=functions_snapshot(destination)
+    # Persist only section/count/digest metadata before the strict assertion;
+    # diagnostics must never serialize routine bodies or configuration secrets.
+    (run/'security-comparison.json').write_text(json.dumps(security_mismatch(expected_security,restored_security),sort_keys=True,indent=2))
+    assert restored_security==expected_security, 'Restored public security differs from backup; inspect sanitized security-comparison.json'
     resolution_actor=str(uuid.UUID(json.loads((run/'synthetic-fixture.json').read_text())['user']))
     sql(destination,(root/'scripts/restore-rehearsal/resolutions-verify.sql').read_text().replace('__ACTOR__',resolution_actor))
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
@@ -525,7 +587,9 @@ try:
     for file in sorted((run/'restored-storage').rglob('*')):
         if file.is_file(): restored.append({'path':str(file.relative_to(run/'restored-storage')),'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
     assert manifest==restored, 'Physical Storage inventory/hash mismatch'
-    results={'synthetic_only':True,'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
+    assert storage_metadata(destination)==metadata, 'Storage attributes changed during authorized verification'
+    assert fixture_source_hashes()==source_hashes, 'Restore fixture sources changed during verification'
+    results={'source_hashes':source_hashes,'communications_restore':json.loads((run/'communications-verification.json').read_text()),'synthetic_only':True,'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
 finally:
     cleanup_errors=[]
     for item in projects:
