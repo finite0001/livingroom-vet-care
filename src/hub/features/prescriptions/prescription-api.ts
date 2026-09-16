@@ -17,14 +17,35 @@ const authorizationSchema = z.object({ id: uuid, pet_id: uuid, client_id: uuid, 
 const configureRequestSchema = z.object({ user_id: uuid, expected_version: revision.nullable(), fields: prescriberFieldsSchema, attest_review: z.literal(true) }).strict();
 const saveRequestSchema = z.object({ draft_id: uuid, pet_id: uuid, client_id: uuid, expected_version: revision.nullable(), fields: prescriptionFieldsSchema }).strict();
 const signRequestSchema = z.object({ draft_id: uuid, pet_id: uuid, expected_version: revision, expected_context_hash: hash, signature_name: text(200), attest_review: z.literal(true) }).strict();
+const usageSchema = z.object({ version: z.literal(1), native_fill_accounting: z.literal("not_implemented"), dispensed_quantity: z.null(), used_fill_slots: z.null(), remaining_quantity: z.null(), external_fulfillment: z.literal("unknown") }).strict();
+const printStatusSchema = z.object({ authorization_id: uuid, authorization_hash: hash, checked_at: instant, state: z.enum(["active", "expired", "cancelled", "replaced"]), reason: text(2000).nullable(), replacement_id: uuid.nullable() }).strict().refine(v => (v.state === "replaced") === (v.replacement_id !== null) && (["cancelled", "replaced"].includes(v.state) === (v.reason !== null)));
+const headSchema = z.object({ id: uuid.nullable(), version: z.number().int().min(0).max(2147483647), state: z.enum(["active", "expired", "cancelled", "replaced"]), reason: text(2000).nullable(), replacement_id: uuid.nullable() }).strict().refine(v => (v.id === null) === (v.version === 0) && (v.state === "replaced") === (v.replacement_id !== null) && (["cancelled", "replaced"].includes(v.state) === (v.reason !== null)) && (["active", "expired"].includes(v.state) === (v.id === null)));
+const changeContextSchema = z.object({ version: z.literal(1), authorization: authorizationSchema, head: headSchema, patient_current: z.object({ id: uuid, client_id: uuid, version: revision, archived_at: instant.nullable(), deceased_at: day.nullable() }).strict(), prescriber: signContextSchema.shape.prescriber, alerts: alertSchema, usage: usageSchema }).strict();
+const replacementContextSchema = z.object({ version: z.literal(1), prior: changeContextSchema, new_sign: signContextSchema, new_sign_context_hash: hash }).strict();
+export const prescriptionChangeReasonSchema = text(2000);
+export const reconciliationSchema = z.object({ native_use_note: text(2000), external_use_status: z.enum(["unknown", "reconciled"]), external_use_note: text(2000), remaining_allowance_note: text(2000), attest_review: z.literal(true) }).strict();
+const cancelRequestSchema = z.object({ authorization_id: uuid, pet_id: uuid, expected_event_id: uuid.nullable(), expected_context_hash: hash, reason: text(2000), attest_review: z.literal(true) }).strict();
+const replaceRequestSchema = cancelRequestSchema.extend({ draft_id: uuid, expected_version: revision, signature_name: text(200), reconciliation: reconciliationSchema }).strict();
+const eventCommon = { version: z.literal(1), id: uuid, authorization_id: uuid, authorization_hash: hash, pet_id: uuid, prior_event_id: uuid.nullable(), event_version: revision, actor_id: uuid, reason: text(2000), reviewed_context_hash: hash, record_hash: hash, created_at: instant };
+const eventSchema = z.discriminatedUnion("action", [z.object({ ...eventCommon, action: z.literal("cancel"), replacement_id: z.null(), reviewed_context: changeContextSchema, reconciliation: z.null() }).strict(), z.object({ ...eventCommon, action: z.literal("replace"), replacement_id: uuid, reviewed_context: replacementContextSchema, reconciliation: reconciliationSchema }).strict()]);
+const changePreviewSchema = z.object({ version: z.literal(1), actor_id: uuid, pet_id: uuid, context: changeContextSchema, context_hash: hash, observed_at: instant }).strict();
+const replacementPreviewSchema = changePreviewSchema.extend({ context: replacementContextSchema }).strict();
+const currentStatusSchema = z.object({ version: z.literal(1), pet_id: uuid, status: printStatusSchema, head_id: uuid.nullable(), head_version: z.number().int().min(0).max(2147483647), usage: usageSchema }).strict();
 const commonReceipt = { version: z.literal(1), id: uuid, actor_id: uuid, request_hash: hash, created_at: instant };
 const receiptSchema = z.discriminatedUnion("operation", [
   z.object({ ...commonReceipt, operation: z.literal("configure_prescriber"), pet_id: z.null(), request: configureRequestSchema, result: configurationSchema }).strict(),
   z.object({ ...commonReceipt, operation: z.literal("save_draft"), pet_id: uuid, request: saveRequestSchema, result: draftSchema }).strict(),
   z.object({ ...commonReceipt, operation: z.literal("sign"), pet_id: uuid, request: signRequestSchema, result: authorizationSchema }).strict(),
+  z.object({ ...commonReceipt, operation: z.literal("cancel"), pet_id: uuid, request: cancelRequestSchema, result: eventSchema }).strict(),
+  z.object({ ...commonReceipt, operation: z.literal("replace"), pet_id: uuid, request: replaceRequestSchema, result: z.object({ authorization: authorizationSchema, event: eventSchema }).strict() }).strict(),
 ]);
 const cursorSchema = z.object({ before_at: instant, before_id: uuid }).strict();
 const entrySchema = z.object({ user_id: uuid, name: z.string(), active_staff: z.boolean(), has_dvm_role: z.boolean(), configuration: configurationSchema.nullable(), eligible: z.boolean() }).strict();
+export interface PrescriptionCurrentStatus extends z.infer<typeof currentStatusSchema> {}
+export interface PrescriptionChangePreview extends z.infer<typeof changePreviewSchema> {}
+export interface PrescriptionReplacementPreview extends z.infer<typeof replacementPreviewSchema> {}
+export interface PrescriptionReconciliation extends z.infer<typeof reconciliationSchema> {}
+export type PrescriptionEvent = z.infer<typeof eventSchema>;
 export interface PrescriptionFields extends z.infer<typeof prescriptionFieldsSchema> {}
 export interface PrescriberFields extends z.infer<typeof prescriberFieldsSchema> {}
 export interface PrescriptionDraft extends z.infer<typeof draftSchema> {}
@@ -52,6 +73,19 @@ function authorization(value: unknown, patientId: string, authorizationId: strin
     !same(a.medication, fields.medication) || a.quantity_per_fill !== normalizedPrescriptionQuantity(fields.quantity_per_fill) || a.unit !== fields.unit || a.refills_authorized !== fields.refills_authorized || a.fulfillment_mode !== fields.fulfillment_mode || a.starts_on !== fields.starts_on || a.expires_on !== fields.expires_on) throw new Error("Signed authorization snapshot differs");
   return r;
 }
+function changeIdentity(context: z.infer<typeof changeContextSchema>, patientId: string, authorizationId: string) {
+  authorization(context.authorization, patientId, authorizationId);
+  if (context.patient_current.id !== patientId || context.alerts.snapshot.pet_id !== patientId || context.alerts.snapshot.patient_version !== context.patient_current.version || context.prescriber.user_id !== context.prescriber.configuration.user_id || !context.prescriber.configuration.fields.active) throw new Error("Change context identity differs");
+}
+function replacementIdentity(context: z.infer<typeof replacementContextSchema>, patientId: string, authorizationId: string) {
+  changeIdentity(context.prior, patientId, authorizationId); contextIdentity(context.new_sign);
+  if (context.new_sign.patient.id !== patientId || context.new_sign.household.id !== context.prior.authorization.client_id || context.new_sign.household.id !== context.prior.patient_current.client_id || context.new_sign.patient.version !== context.prior.patient_current.version || !same(context.new_sign.prescriber, context.prior.prescriber) || !same(context.new_sign.alerts, context.prior.alerts)) throw new Error("Replacement context identity differs");
+}
+function eventIdentity(event: PrescriptionEvent, patientId: string, authorizationId: string) {
+  const context = event.action === "cancel" ? event.reviewed_context : event.reviewed_context.prior;
+  if (event.action === "cancel") changeIdentity(context, patientId, authorizationId); else replacementIdentity(event.reviewed_context, patientId, authorizationId);
+  if (event.authorization_id !== authorizationId || event.pet_id !== patientId || event.authorization_hash !== context.authorization.authorization_hash || event.actor_id !== context.prescriber.user_id || event.prior_event_id !== context.head.id || event.event_version !== context.head.version + 1 || !["active", "expired"].includes(context.head.state) || (event.action === "replace" && (event.replacement_id !== event.id || (context.authorization.artifact.fulfillment_mode === "external_pharmacy" && event.reconciliation.external_use_status !== "reconciled")))) throw new Error("Authorization event identity differs");
+}
 function micros(value: string): bigint { const fraction = /\.(\d+)(?:Z|[+-]\d{2}:?\d{2})$/.exec(value)?.[1] ?? ""; return BigInt(Date.parse(value)) * 1000n + BigInt(fraction.padEnd(6, "0").slice(3)); }
 export function createPrescriptionApi(client: PrescriptionRpc, actor: string, patientId: string) {
   uuid.parse(actor); uuid.parse(patientId);
@@ -59,7 +93,7 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
   function parseOperation(operation: Readonly<PrescriptionOperation>) {
     uuid.parse(operation.id);
     if (operation.kind === "configure_prescriber") return configureRequestSchema.parse(operation.payload);
-    const request = operation.kind === "save_draft" ? saveRequestSchema.parse(operation.payload) : operation.kind === "sign" ? signRequestSchema.parse(operation.payload) : null;
+    const request = operation.kind === "save_draft" ? saveRequestSchema.parse(operation.payload) : operation.kind === "sign" ? signRequestSchema.parse(operation.payload) : operation.kind === "cancel" ? cancelRequestSchema.parse(operation.payload) : operation.kind === "replace" ? replaceRequestSchema.parse(operation.payload) : null;
     if (!request || request.pet_id !== patientId) throw new Error("Prescription operation target differs");
     return request;
   }
@@ -70,18 +104,58 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
       if (r.result.user_id !== r.request.user_id || r.result.configured_by !== actor || r.result.version !== (r.request.expected_version ?? 0) + 1 || !same(r.result.fields, r.request.fields)) throw new Error("Prescriber configuration receipt differs");
     } else if (r.operation === "save_draft") {
       if (r.result.id !== r.request.draft_id || r.result.pet_id !== patientId || r.result.client_id !== r.request.client_id || r.result.status !== "draft" || r.result.updated_by !== actor || r.result.version !== (r.request.expected_version ?? 0) + 1 || (r.request.expected_version === null && r.result.created_by !== actor) || !same(r.result.fields, { ...r.request.fields, quantity_per_fill: normalizedPrescriptionQuantity(r.request.fields.quantity_per_fill) })) throw new Error("Saved draft receipt differs");
-    } else {
+    } else if (r.operation === "sign") {
       authorization(r.result, patientId, r.id);
       if (r.result.signed_by !== actor || r.result.context_hash !== r.request.expected_context_hash || r.result.draft_id !== r.request.draft_id || r.result.draft_version !== r.request.expected_version || r.result.artifact.signature_name !== r.request.signature_name) throw new Error("Signed operation receipt differs");
+    } else {
+      const event = r.operation === "cancel" ? r.result : r.result.event;
+      eventIdentity(event, patientId, r.request.authorization_id);
+      if (event.id !== r.id || event.actor_id !== actor || event.action !== r.operation || event.prior_event_id !== r.request.expected_event_id || event.reviewed_context_hash !== r.request.expected_context_hash || event.reason !== r.request.reason) throw new Error("Changed authorization receipt differs");
+      if (r.operation === "replace") {
+        if (r.result.event.action !== "replace") throw new Error("Replacement event required");
+        const replacement = authorization(r.result.authorization, patientId, r.id);
+        if (replacement.draft_id !== r.request.draft_id || replacement.draft_version !== r.request.expected_version || replacement.signed_by !== actor || replacement.artifact.signature_name !== r.request.signature_name || replacement.context_hash !== r.result.event.reviewed_context.new_sign_context_hash || !same(replacement.context, r.result.event.reviewed_context.new_sign) || !same(r.result.event.reconciliation, r.request.reconciliation)) throw new Error("Atomic replacement receipt differs");
+      }
     }
     return r;
   }
   return {
-    async execute(operation: Readonly<PrescriptionOperation>) { const request = parseOperation(operation); const names = { configure_prescriber: "configure_native_prescriber", save_draft: "save_native_prescription_draft", sign: "sign_native_prescription" }; return receipt(await rpc(names[operation.kind as keyof typeof names], { p_id: operation.id, p_request: request }), operation); },
+    async execute(operation: Readonly<PrescriptionOperation>) { const request = parseOperation(operation); const names = { configure_prescriber: "configure_native_prescriber", save_draft: "save_native_prescription_draft", sign: "sign_native_prescription", cancel: "cancel_native_prescription", replace: "replace_native_prescription" }; return receipt(await rpc(names[operation.kind as keyof typeof names], { p_id: operation.id, p_request: request }), operation); },
     async recover(operation: Readonly<PrescriptionOperation>) { parseOperation(operation); const result = await rpc("recover_native_prescription_operation", { p_id: operation.id }); return result === null ? null : receipt(result, operation); },
     async readDraft(id: string) { uuid.parse(id); const result = await rpc("read_native_prescription_draft", { p_id: id, p_pet_id: patientId }); if (result === null) return null; const d = draftSchema.parse(result); if (d.id !== id || d.pet_id !== patientId) throw new Error("Draft identity differs"); return d; },
     async readAuthorization(id: string) { uuid.parse(id); const result = await rpc("read_native_prescription_authorization", { p_id: id, p_pet_id: patientId }); return result === null ? null : authorization(result, patientId, id); },
     async preview(draft: PrescriptionDraft) { if (draft.pet_id !== patientId || draft.status !== "draft") throw new Error("Unsigned patient draft required"); const result = signPreviewSchema.parse(await rpc("preview_native_prescription_sign", { p_draft_id: draft.id, p_expected_version: draft.version })); contextIdentity(result.context); if (result.actor_id !== actor || result.pet_id !== patientId || result.draft_id !== draft.id || result.context.prescriber.user_id !== actor || !same(result.context.draft, draft)) throw new Error("Signing preview differs from saved draft"); return result; },
+    async previewCancel(prior: PrescriptionAuthorization) {
+      authorization(prior, patientId, prior.id);
+      const result = changePreviewSchema.parse(await rpc("preview_native_prescription_cancel", { p_authorization_id: prior.id, p_pet_id: patientId }));
+      changeIdentity(result.context, patientId, prior.id);
+      if (result.actor_id !== actor || result.pet_id !== patientId || result.context.prescriber.user_id !== actor || !same(result.context.authorization, prior)) throw new Error("Cancellation preview differs"); return result;
+    },
+    async previewReplacement(prior: PrescriptionAuthorization, draft: PrescriptionDraft) {
+      authorization(prior, patientId, prior.id); if (draft.pet_id !== patientId || draft.status !== "draft") throw new Error("Unsigned patient draft required");
+      const result = replacementPreviewSchema.parse(await rpc("preview_native_prescription_replacement", { p_authorization_id: prior.id, p_pet_id: patientId, p_draft_id: draft.id, p_expected_version: draft.version }));
+      replacementIdentity(result.context, patientId, prior.id);
+      if (result.actor_id !== actor || result.pet_id !== patientId || result.context.prior.prescriber.user_id !== actor || !same(result.context.prior.authorization, prior) || !same(result.context.new_sign.draft, draft)) throw new Error("Replacement preview differs"); return result;
+    },
+    async readStatus(prior: PrescriptionAuthorization) {
+      authorization(prior, patientId, prior.id);
+      const result = await rpc("read_native_prescription_status", { p_authorization_id: prior.id, p_pet_id: patientId }); if (result === null) return null;
+      const parsed = currentStatusSchema.parse(result), status = parsed.status;
+      if (parsed.pet_id !== patientId || status.authorization_id !== prior.id || status.authorization_hash !== prior.authorization_hash || (parsed.head_id === null) !== (parsed.head_version === 0) || (["active", "expired"].includes(status.state) !== (parsed.head_id === null))) throw new Error("Current prescription status differs"); return parsed;
+    },
+    async readPrint(prior: PrescriptionAuthorization) {
+      authorization(prior, patientId, prior.id);
+      const result = z.object({ prescription: artifactSchema, status: printStatusSchema, dispense: z.null() }).strict().parse(await rpc("read_native_prescription_print", { p_authorization_id: prior.id, p_dispense_id: null }));
+      if (!same(result.prescription, prior.artifact) || result.status.authorization_id !== prior.id || result.status.authorization_hash !== prior.authorization_hash) throw new Error("Print copy differs from signed authorization"); return result;
+    },
+    async listEvents(prior: PrescriptionAuthorization, cursor: PrescriptionCursor | null = null, limit = 20) {
+      authorization(prior, patientId, prior.id); if (cursor) cursorSchema.parse(cursor); z.number().int().min(1).max(100).parse(limit);
+      const page = z.object({ version: z.literal(1), pet_id: uuid, authorization_id: uuid, events: z.array(eventSchema).max(100), has_more: z.boolean(), next_cursor: cursorSchema.nullable() }).strict().parse(await rpc("list_native_prescription_events", { p_authorization_id: prior.id, p_pet_id: patientId, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: limit }));
+      if (page.pet_id !== patientId || page.authorization_id !== prior.id || page.events.length > limit) throw new Error("Event history target differs");
+      let previous = cursor; const ids = new Set<string>();
+      for (const event of page.events) { eventIdentity(event, patientId, prior.id); if (event.authorization_hash !== prior.authorization_hash || ids.has(event.id) || (previous && !(micros(event.created_at) < micros(previous.before_at) || (micros(event.created_at) === micros(previous.before_at) && event.id < previous.before_id)))) throw new Error("Event history order differs"); previous = { before_at: event.created_at, before_id: event.id }; ids.add(event.id); }
+      if (page.has_more !== !!page.next_cursor || (page.has_more && (page.events.length !== limit || !same(page.next_cursor, previous)))) throw new Error("Event continuation differs"); return page;
+    },
     async listDrafts(cursor: PrescriptionCursor | null = null, limit = 20) {
       if (cursor) cursorSchema.parse(cursor); z.number().int().min(1).max(100).parse(limit);
       const page = z.object({ version: z.literal(1), pet_id: uuid, drafts: z.array(draftSchema).max(100), has_more: z.boolean(), next_cursor: cursorSchema.nullable() }).strict().parse(await rpc("list_native_prescription_drafts", { p_pet_id: patientId, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: limit }));
