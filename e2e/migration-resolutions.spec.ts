@@ -2,26 +2,27 @@ import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const actor = id(1), run = id(2), scope = id(3), snapshot = id(4), mapping = id(5), client = id(6);
 const at = "2026-09-15T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic decision source";
-async function fixture(page: Page, observation = false) {
+interface NameOptions { patient?: boolean; missing?: boolean; fail?: boolean; drift?: boolean; hold?: boolean }
+async function fixture(page: Page, observation = false, names: NameOptions = {}) {
   const user = { id: actor, aud: "authenticated", role: "authenticated", email: "synthetic@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: at };
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`, refresh_token: "synthetic", token_type: "bearer", expires_in: 3600, expires_at: exp, user };
   await page.addInitScript(s => localStorage.setItem("sb-127-auth-token", JSON.stringify(s)), session);
   const input = { id: scope, mapping_id: mapping, resource: "contact", parent_type: "contact", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Required source contact" };
   const summary = { id: run, source_origin: origin, source_site_uid: site, intent_hash: "a".repeat(64), created_at: at };
-  const savedScope = { ...input, migration_run_id: run, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: null, parent_external_id: "77", parent_payload_hash: "a".repeat(64) };
+  const savedScope = { ...input, migration_run_id: run, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: names.patient ? id(12) : null, parent_external_id: "77", parent_payload_hash: "a".repeat(64) };
   const manifest = { run: { ...summary, actor_id: actor, intent: { version: 1, source_origin: origin, source_site_uid: site, scopes: [input] } }, scopes: [savedScope], scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
   const { reason: _reason, parent_external_id: _external, parent_payload_hash: _payload, ...contextScope } = savedScope;
   const context = { version: 1, manifest_hash: "b".repeat(64), source_origin: origin, source_site_uid: site, scope: contextScope,
     binding: { selected_id: null, selected_context_hash: null, current_id: null, current_context_hash: null, child_run_id: null, superseded: false },
     mapping: { current_snapshot_id: snapshot, current_head_version: 1 }, parent: { current_snapshot_id: snapshot, current_head_version: 1 },
-    local: { client_exists: true, client_version: 1, pet_exists: null, pet_version: null, household_current: true }, scan: null, observation: null };
+    local: { client_exists: true, client_version: 1, pet_exists: names.patient ? true : null, pet_version: names.patient ? 1 : null, household_current: !names.drift }, scan: null, observation: null };
   const binding = { id: id(10), scope_id: scope, child_run_id: id(11), actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "1".repeat(64), created_at: at,
     child_context: { version: 1, run_id: id(11), owner: actor, source_origin: origin, source_site_uid: site, resource: "contact", parent_evidence: "selected_identity_filter", context: {} } };
   const item = { page: 1, ordinal: 0, snapshot_id: snapshot, observed_head_version: null, external_id: "77", payload_hash: "a".repeat(64), file_id: null, raw_record_sha256: null, stable_metadata_sha256: null, evidence_hash: "2".repeat(64), current_snapshot_id: snapshot, current_head_version: 1, payload_current: true, exact_source_current: null };
   const selectedContext = (t: { kind: string }) => observation ? { ...context, binding: { selected_id: binding.id, selected_context_hash: binding.context_hash, current_id: binding.id, current_context_hash: binding.context_hash, child_run_id: binding.child_run_id, superseded: false }, scan: { status: "running", next_page: 2, retry_after: null, error_code: null, attempt_sequence: 1 }, observation: t.kind === "observation" ? Object.fromEntries(Object.entries(item).filter(([key]) => !["payload_current", "exact_source_current"].includes(key))) : null } : context;
   const flags = { clinical_approval_performed: false, complete_coverage_verified: false };
-  const state = { loseReply: false, omitSave: false, reject: false, failContext: false, failRecovery: false, holdSave: false, release: null as (() => void) | null, requests: [] as Record<string, unknown>[], receipts: [] as Record<string, unknown>[] };
+  const state = { loseReply: false, omitSave: false, reject: false, failContext: false, failRecovery: false, holdSave: false, release: null as (() => void) | null, releaseNames: null as (() => void) | null, requests: [] as Record<string, unknown>[], receipts: [] as Record<string, unknown>[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -30,6 +31,11 @@ async function fixture(page: Page, observation = false) {
     if (path === "/auth/v1/logout") return route.fulfill({ json: {} });
     if (path === "/rest/v1/profiles") return route.fulfill({ json: [{ id: actor, first_name: "Synthetic", last_name: "Admin", full_name: "Synthetic Admin", is_active: true, role: "ADMIN" }] });
     if (path === "/rest/v1/user_roles") return route.fulfill({ json: [{ role: "ADMIN" }] });
+    if (["/rest/v1/clients", "/rest/v1/pets"].includes(path)) {
+      if (names.hold) await new Promise<void>(resolve => { state.releaseNames = resolve; });
+      if (names.fail) return route.fulfill({ status: 503, json: { message: "Synthetic name unavailable" } });
+      return route.fulfill({ json: names.missing ? [] : path.endsWith("clients") ? [{ id: client, full_name: "Synthetic saved household" }] : [{ id: id(12), name: "Synthetic patient", client_id: names.drift ? id(99) : client }] });
+    }
     const rpc = path.split("/").at(-1);
     if (rpc === "list_ezyvet_migration_runs") return route.fulfill({ json: { runs: [summary], has_more: false } });
     if (rpc === "read_ezyvet_migration_run") return route.fulfill({ json: manifest });
@@ -166,4 +172,37 @@ for (const width of [390, 1440]) test(`exact observation uncertainty locks compe
   await expect(page.getByRole("button", { name: "Refresh source evidence" })).toBeEnabled();
   expect(state.requests).toHaveLength(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+for (const width of [390, 1440]) test(`current names retain saved references and disclose household drift at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1000 });
+  await fixture(page, false, { patient: true, drift: true });
+  const form = page.getByRole("region", { name: "Scope operational decision", exact: true });
+  await expect(form.getByText("Current local household name: Synthetic saved household")).toBeVisible();
+  await expect(form.getByText("Current local patient name: Synthetic patient")).toBeVisible();
+  await expect(form.getByText(/patient currently belongs to a different household/)).toBeVisible();
+  await expect(form.getByText(`Saved household ID: ${client}`)).toBeVisible();
+  await expect(form.getByText(`Saved patient ID: ${id(12)}`)).toBeVisible();
+  await expect(form.getByText("Saved source parent: contact #77")).toBeVisible();
+  await expect(form.getByText(/not frozen receipt evidence/)).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+for (const condition of ["missing", "fail"] as const) test(`unavailable names retain stable references (${condition})`, async ({ page }) => {
+  await fixture(page, false, { patient: true, [condition]: true });
+  const form = page.getByRole("region", { name: "Scope operational decision", exact: true });
+  await expect(form.getByText("Current household name unavailable; use the saved reference below.")).toBeVisible();
+  await expect(form.getByText("Current patient name unavailable; use the saved reference below.")).toBeVisible();
+  await expect(form.getByText(`Saved household ID: ${client}`)).toBeVisible();
+  await expect(form.getByText(`Saved patient ID: ${id(12)}`)).toBeVisible();
+  await expect(form.getByText("Saved source parent: contact #77")).toBeVisible();
+  await prepare(page);
+  await expect(form.getByRole("button", { name: "Save operational decision" })).toBeEnabled();
+});
+test("late current-name reply does not restore names after signout", async ({ page }) => {
+  const state = await fixture(page, false, { hold: true });
+  await expect.poll(() => !!state.releaseNames).toBe(true);
+  await page.getByRole("button", { name: /Sign out/i }).click();
+  state.releaseNames!();
+  await expect(page).toHaveURL(/\/hub\/login/);
+  await expect(page.getByText("Current local household name: Synthetic saved household")).toHaveCount(0);
 });

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,35 @@ interface Props {
 }
 export function MigrationResolutionForm(props: Props) {
   return <ResolutionForm key={`${props.actor}:${props.manifest.run.id}:${props.scopeId}:${JSON.stringify(props.target)}`} {...props} />;
+}
+interface TargetNamesProps { actor: string; clientId: string; petId: string | null }
+function CurrentTargetNames({ actor, clientId, petId }: TargetNamesProps) {
+  const household = useQuery({ queryKey: ["migration-resolution-household", actor, clientId], retry: false,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from("clients").select("id,full_name").eq("id", clientId).limit(1).retry(false).abortSignal(signal);
+      if (error) throw error;
+      const row = data?.[0];
+      if (row && row.id !== clientId) throw new Error("Household identity differs");
+      return row ?? null;
+    } });
+  const patient = useQuery({ queryKey: ["migration-resolution-patient", actor, clientId, petId], enabled: Boolean(petId), retry: false,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from("pets").select("id,name,client_id").eq("id", petId!).limit(1).retry(false).abortSignal(signal);
+      if (error) throw error;
+      const row = data?.[0];
+      if (row && row.id !== petId) throw new Error("Patient identity differs");
+      return row ?? null;
+    } });
+  return <div className="space-y-1 text-sm">
+    <p>{household.isFetching ? "Loading current household name…" : household.isError || !household.data ? "Current household name unavailable; use the saved reference below." : `Current local household name: ${household.data.full_name}`}</p>
+    <p className="break-all text-xs text-muted-foreground">Saved household ID: {clientId}</p>
+    {petId && <>
+      <p>{patient.isFetching ? "Loading current patient name…" : patient.isError || !patient.data ? "Current patient name unavailable; use the saved reference below." : `Current local patient name: ${patient.data.name}`}</p>
+      {!patient.isFetching && !patient.isError && patient.data && patient.data.client_id !== clientId && <p>The patient currently belongs to a different household. The household shown above is the saved migration household.</p>}
+      <p className="break-all text-xs text-muted-foreground">Saved patient ID: {petId}</p>
+    </>}
+    <p className="text-xs text-muted-foreground">These current display names are fetched separately. They are not frozen receipt evidence or proof of migration coverage.</p>
+  </div>;
 }
 function ResolutionForm({ actor, manifest, scopeId, target, onDirtyChange }: Props) {
   const api = useMemo(() => createMigrationResolutionApi(supabase as unknown as MigrationRpc, actor, manifest), [actor, manifest]);
@@ -84,6 +114,8 @@ function ResolutionForm({ actor, manifest, scopeId, target, onDirtyChange }: Pro
     <p className="text-sm">{target.kind === "scope" ? "Applies to the declared scope, including unknown or unfetched records. It does not review each observation." : `Applies only to this occurrence on page ${target.page}, ordinal ${target.ordinal}. Other occurrences and replacement bindings remain separate.`}</p>
     <p className="break-all text-sm">Source: {manifest.run.source_origin} · Site: {manifest.run.source_site_uid}</p>
     {scope && <><p className="text-sm">Original disposition: <strong>{scope.disposition}</strong> · {scope.resource}</p><p className="break-words text-sm">{scope.reason}</p>
+      <p className="break-all text-sm">Saved source parent: {scope.parent_type} #{scope.parent_external_id}</p>
+      <CurrentTargetNames actor={actor} clientId={scope.client_id} petId={scope.pet_id} />
       <div className="flex flex-wrap gap-3 text-sm"><Link className="text-primary underline" to={`/hub/client/${scope.client_id}`}>Open saved household</Link>{scope.pet_id && <Link className="text-primary underline" to={`/hub/patient/${scope.pet_id}`}>Open saved patient</Link>}</div>
       {scope.disposition !== "required" && <p className="text-sm">Reopening operational review does not change the original exclusion or unsupported contract. A new supported manifest is required to change that contract.</p>}</>}
     <p className="text-sm text-muted-foreground">Excluding a required scope leaves a coverage exception. Unseen records remain unknown. Neither action approves clinical records, resumes imports or verifies complete coverage.</p>
