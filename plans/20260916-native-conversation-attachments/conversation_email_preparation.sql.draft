@@ -162,3 +162,85 @@ begin
 end $$;
 revoke all on function public.enqueue_conversation_email(uuid,text,boolean) from public,anon,authenticated,service_role;
 grant execute on function public.enqueue_conversation_email(uuid,text,boolean) to authenticated;
+
+create function public.conversation_email_delivery_context(p_outbox_id uuid,p_lease_token uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare o public.communication_outbox;l public.conversation_email_outbox_links;
+ a public.conversation_email_artifacts;r public.communication_prepared_requests;
+begin
+ perform public.communication_require_service();
+ select * into o from public.communication_outbox where id=p_outbox_id for update;
+ if not found or o.state<>'claimed' or o.lease_token is distinct from p_lease_token
+  or o.lease_expires_at is null or o.lease_expires_at<=now() or o.attempt_started_at is not null then
+  raise exception 'Outbox lease unavailable' using errcode='40001';end if;
+ select * into l from public.conversation_email_outbox_links where outbox_id=o.id;
+ if not found then
+  if exists(select 1 from public.conversation_email_artifacts where request_id=o.request_id) then
+   raise exception 'Attachment email is missing its reviewed queue association' using errcode='23514';end if;
+  return null;
+ end if;
+ if exists(select 1 from public.invoice_email_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.release_email_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.payment_delivery_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.document_link_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.reminder_outbox_links where outbox_id=o.id) then
+  raise exception 'Ambiguous attachment email association' using errcode='23514';end if;
+ select * into a from public.conversation_email_artifacts where request_id=l.request_id;
+ select * into r from public.communication_prepared_requests where request_id=l.request_id;
+ if a.payload_text is null or a.payload_hash is null or r.request_id is null or r.state='abandoned'
+  or l.reviewed_payload_hash is distinct from a.payload_hash
+  or a.payload_hash is distinct from encode(sha256(convert_to(a.payload_text,'UTF8')),'hex')
+  or l.queued_by is distinct from r.actor_id
+  or row(o.request_id,o.created_by,o.conversation_id,o.channel,o.recipient,o.subject,o.body) is distinct from
+     row(r.request_id,r.actor_id,(r.payload->>'conversation_id')::uuid,'EMAIL'::text,
+         public.communication_recipient('EMAIL',r.payload->>'to'),r.payload->>'subject',r.payload->>'body') then
+  raise exception 'Reviewed attachment payload unavailable or changed' using errcode='23514';end if;
+ return jsonb_build_object('payload_text',a.payload_text,'payload_hash',a.payload_hash,'artifact_kind','conversation');
+end $$;
+revoke all on function public.conversation_email_delivery_context(uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.conversation_email_delivery_context(uuid,uuid) to service_role;
+
+alter function public.read_frozen_email_payload(uuid,uuid) rename to read_frozen_email_payload_without_conversation;
+revoke all on function public.read_frozen_email_payload_without_conversation(uuid,uuid) from public,anon,authenticated,service_role;
+create function public.read_frozen_email_payload(p_outbox_id uuid,p_lease_token uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare payload jsonb;
+begin
+ perform public.communication_require_service();
+ payload:=public.conversation_email_delivery_context(p_outbox_id,p_lease_token);
+ if payload is not null then return payload;end if;
+ return public.read_frozen_email_payload_without_conversation(p_outbox_id,p_lease_token);
+end $$;
+revoke all on function public.read_frozen_email_payload(uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.read_frozen_email_payload(uuid,uuid) to service_role;
+
+-- Preserve the complete current wrapper chain, including payment delivery guards.
+alter function public.start_communication_attempt(uuid,uuid,jsonb) rename to start_communication_attempt_without_conversation;
+revoke all on function public.start_communication_attempt_without_conversation(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
+create function public.start_communication_attempt(p_id uuid,p_lease_token uuid,p_provider_config jsonb)
+returns public.communication_outbox language plpgsql security definer set search_path=public as $$
+declare o public.communication_outbox;context jsonb;payload jsonb;valid boolean:=true;
+begin
+ perform public.communication_require_service();
+ select * into o from public.communication_outbox where id=p_id for update;
+ if not found or o.state<>'claimed' or o.lease_token is distinct from p_lease_token
+  or o.lease_expires_at is null or o.lease_expires_at<=now() or o.attempt_started_at is not null then
+  raise exception 'Outbox lease unavailable' using errcode='40001';end if;
+ begin
+  context:=public.conversation_email_delivery_context(p_id,p_lease_token);
+  if context is not null then
+   payload:=(context->>'payload_text')::jsonb;
+   valid:=p_provider_config->>'conversation_payload_hash'=context->>'payload_hash'
+    and payload->>'from'=p_provider_config->>'from' and payload->>'reply_to'=p_provider_config->>'reply_to';
+  elsif p_provider_config ? 'conversation_payload_hash' then valid:=false;
+  end if;
+ exception when sqlstate '23514' or sqlstate '42501' then valid:=false;
+ end;
+ if valid is distinct from true then
+  update public.communication_outbox set state='failed',last_error='conversation_payload_ineligible',lease_token=null,
+   lease_expires_at=null,updated_at=now() where id=o.id returning * into o;return o;
+ end if;
+ return public.start_communication_attempt_without_conversation(p_id,p_lease_token,p_provider_config-'conversation_payload_hash');
+end $$;
+revoke all on function public.start_communication_attempt(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
+grant execute on function public.start_communication_attempt(uuid,uuid,jsonb) to service_role;

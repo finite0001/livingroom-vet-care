@@ -216,6 +216,8 @@ export async function dispatchOne(
       });
       if (frozen.artifact_kind === "invoice") {
         metadata.invoice_payload_hash = frozen.payload_hash;
+      } else if (frozen.artifact_kind === "conversation") {
+        metadata.conversation_payload_hash = frozen.payload_hash;
       }
     }
   } catch {
