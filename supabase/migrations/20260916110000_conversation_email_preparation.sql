@@ -125,8 +125,8 @@ revoke all on function public.capture_conversation_email(uuid,uuid,text) from pu
 grant execute on function public.read_conversation_email_review(uuid),public.prepare_conversation_email(uuid,text,uuid,text,text,text,uuid[]) to authenticated;
 grant execute on function public.conversation_email_capture_context(uuid,uuid),public.capture_conversation_email(uuid,uuid,text) to service_role;
 
--- Queue only the immutable payload the owner explicitly reviewed. This draft must
--- ship together with the frozen reader and provider-attempt guard, never alone.
+-- Queue only the immutable payload the owner explicitly reviewed. The frozen
+-- reader and provider-attempt guard below are part of this same migration.
 create function public.enqueue_conversation_email(p_request_id uuid,p_reviewed_payload_hash text,p_attest boolean)
 returns public.communication_outbox language plpgsql security definer set search_path=public as $$
 declare actor uuid:=public.clinical_require_staff();r public.communication_prepared_requests;
