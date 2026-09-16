@@ -2,22 +2,22 @@ import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const actor = id(1), runId = id(2), scopeId = id(3), bindingId = id(4), child = id(5), snapshot = id(6), mapping = id(7), pet = id(8), client = id(9), otherScope = id(10);
 const at = "2026-09-14T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic migration source";
-async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false) {
-  const resource = prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment", parentEvidence = history || prescription ? "mapping_identity_only" : "exact_parent_version";
-  const clinical = history || vaccination || prescription || prescriptionItem;
+async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false, identity: "contact" | "animal" | null = null) {
+  const resource = identity ?? (prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment"), parentEvidence = identity ? "selected_identity_filter" : history || prescription ? "mapping_identity_only" : "exact_parent_version";
+  const clinical = history || vaccination || prescription || prescriptionItem || Boolean(identity);
   const user = { id: actor, aud: "authenticated", role: "authenticated", email: "synthetic@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: at };
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`, refresh_token: "synthetic", token_type: "bearer", expires_in: 3600, expires_at: exp, user };
   await page.addInitScript(s => localStorage.setItem("sb-127-auth-token", JSON.stringify(s)), session);
-  const inputs = [{ id: scopeId, mapping_id: mapping, resource, parent_type: prescriptionItem ? "prescription" : vaccination ? "consult" : "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Saved original-file scope" },
+  const inputs = [{ id: scopeId, mapping_id: mapping, resource, parent_type: identity === "contact" ? "contact" : prescriptionItem ? "prescription" : vaccination ? "consult" : "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Saved original-file scope" },
     { id: otherScope, mapping_id: mapping, resource: history ? "consult" : "history", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "excluded", reason: "Awaiting clinician scope review" }];
   const summary = { id: runId, source_origin: origin, source_site_uid: site, intent_hash: "a".repeat(64), created_at: at };
   const manifest = { run: { ...summary, actor_id: actor, intent: { version: 1, source_origin: origin, source_site_uid: site, scopes: inputs } },
-    scopes: inputs.map(s => ({ ...s, migration_run_id: runId, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
+    scopes: inputs.map(s => ({ ...s, migration_run_id: runId, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: identity === "contact" && s.resource === "contact" ? null : pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
     child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource, parent_evidence: parentEvidence, context: {} } };
   const savedPlans = new Map<string, typeof manifest>(), savedBindings = new Map<string, typeof binding>();
-  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failVaccinations: false, failPrescriptions: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failVaccinations: false, failPrescriptions: false, failIdentity: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -47,7 +47,7 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       state.requests.push({ name: rpc, body });
       if (state.rejectPlan) return route.fulfill({ status: 409, json: { code: "40001", message: "Parent changed" } });
       const scopes = body.p_scopes;
-      const saved = { run: { ...summary, id: body.p_id, actor_id: actor, intent: { version: 1, source_origin: body.p_source_origin, source_site_uid: body.p_source_site_uid, scopes } }, scopes: scopes.map(s => ({ ...s, migration_run_id: body.p_id, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
+      const saved = { run: { ...summary, id: body.p_id, actor_id: actor, intent: { version: 1, source_origin: body.p_source_origin, source_site_uid: body.p_source_site_uid, scopes } }, scopes: scopes.map(s => ({ ...s, migration_run_id: body.p_id, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: identity === "contact" && s.resource === "contact" ? null : pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
       if (!state.omitPlanSave) savedPlans.set(body.p_id, saved);
       if (state.holdPlan) await new Promise<void>(resolve => { state.releasePlan = resolve; });
       return state.losePlanReply ? unavailable() : route.fulfill({ json: saved });
@@ -66,9 +66,13 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       version: 2, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource, context_hash: binding.context_hash,
       superseded: false, parent_evidence: parentEvidence, parent_current: !state.stale, household_current: true,
       scan: { status: state.resumeRunning ? "running" : "review_ready", next_page: state.resumePage, pages_observed: 3, traversal_ended: !state.resumeRunning, page_limit_reached: false, retry_after: null, latest_error_code: null, provider_total: null, complete_coverage_verified: false },
-      observations: { occurrences: clinical ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: state.stale ? 0 : clinical ? 1 : 21, currentness_available: true },
+      observations: { occurrences: clinical ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: identity ? null : state.stale ? 0 : clinical ? 1 : 21, currentness_available: !identity },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
+    if (rpc === "read_ezyvet_migration_identity_evidence") return state.failIdentity ? unavailable() : route.fulfill({ json: {
+      version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, resource, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
+      visibility: "approved_identity_mapping", observation_head_available: false, exact_source_version_verified: false, complete_coverage_verified: false, observed_at: at,
+      approval: { id: mapping, approved_at: at, action: "link", relationship: "same_snapshot_unknown_observed_head", source_current: false, local_record_unchanged: false, household_current: false } } });
     if (rpc === "list_ezyvet_migration_prescription_item_evidence") return state.failPrescriptions ? unavailable() : route.fulfill({ json: {
       version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
       visibility: "approved_patient_prescription_item", has_more: false, next_before_version: null, local_prescribing_verified: false, complete_coverage_verified: false, observed_at: at,
@@ -103,8 +107,8 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       if (state.failItems) return unavailable();
       const start = body.p_after_page ? 20 : 0, count = clinical ? 1 : Math.min(start ? 1 : 20, body.p_limit ?? 20);
       const items = Array.from({ length: count }, (_, index) => ({ page: Math.floor((start + index) / 10) + 1, ordinal: clinical ? 0 : (start + index) % 10 + 1, snapshot_id: snapshot,
-        observed_head_version: 1, external_id: "701", payload_hash: "a".repeat(64), file_id: clinical ? null : "42", raw_record_sha256: clinical ? null : "b".repeat(64), stable_metadata_sha256: clinical ? null : "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
-        current_snapshot_id: snapshot, current_head_version: state.stale ? 3 : 1, payload_current: true, exact_source_current: !state.stale }));
+        observed_head_version: identity ? null : 1, external_id: "701", payload_hash: "a".repeat(64), file_id: clinical ? null : "42", raw_record_sha256: clinical ? null : "b".repeat(64), stable_metadata_sha256: clinical ? null : "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
+        current_snapshot_id: snapshot, current_head_version: state.stale ? 3 : 1, payload_current: true, exact_source_current: identity ? null : !state.stale }));
       return route.fulfill({ json: { version: 1, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource, context_hash: binding.context_hash,
         superseded: false, mapping_matches_manifest: true, mapping_source_current: !state.stale, parent_current: !state.stale, household_current: true, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", review_reconciled: false, complete_coverage_verified: false,
         observed_at: at, items, has_more: !clinical && !start, next_cursor: clinical || start ? null : { page: items.at(-1)!.page, ordinal: items.at(-1)!.ordinal, snapshot_id: snapshot } } });
@@ -489,5 +493,26 @@ for (const width of [390, 1440]) test(`prescription item evidence distinguishes 
   await expect(panel.getByText(/Repeated observations do not represent additional medications/)).toHaveCount(2);
   await expect(panel.getByText("Start date: Unknown. Catalog match: Unmatched.")).toBeVisible();
   await expect(panel.getByText(/do not prescribe or dispense medication here/)).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+for (const resource of ["contact", "animal"] as const) for (const width of [390, 1440]) test(`identity evidence preserves unknown versions for ${resource} at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1600 });
+  const state = await fixture(page, true, false, false, false, false, resource);
+  const workspace = page.getByRole("region", { name: "Migration reconciliation" });
+  await workspace.getByRole("button", { name: "Browse saved migrations" }).click();
+  await workspace.getByRole("button", { name: /Open migration/ }).click();
+  await workspace.getByRole("button", { name: resource === "contact" ? /Inspect contacts scope/i : /Inspect patients scope/i }).click();
+  await workspace.getByRole("button", { name: /Inspect attempt/ }).click();
+  state.failIdentity = true;
+  await workspace.getByRole("button", { name: /Evidence references for source/ }).click();
+  const panel = workspace.getByRole("region", { name: "Identity approval evidence" });
+  await expect(panel.getByRole("alert")).toContainText("could not be loaded");
+  state.failIdentity = false;
+  await panel.getByRole("button", { name: "Refresh identity evidence" }).click();
+  await expect(panel.getByText("Approval uses the same source snapshot; the observed version is unknown.")).toBeVisible();
+  await expect(panel.getByText("Approved source version is no longer current.")).toBeVisible();
+  await expect(panel.getByText("Local record has changed since approval.")).toBeVisible();
+  await expect(panel.getByText("Household association no longer matches the approval.")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

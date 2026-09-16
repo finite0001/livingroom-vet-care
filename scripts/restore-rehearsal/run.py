@@ -45,13 +45,13 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,24)] + ['20260916000000']
+new_versions = [f'20260914{v:02d}0000' for v in range(1,24)] + ['20260916000000','20260916010000']
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 111
+    assert len(migration_files) == 112
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==111 and len(initial_files)==51
+    assert len(migration_files)==112 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
