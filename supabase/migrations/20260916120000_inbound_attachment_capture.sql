@@ -1,4 +1,4 @@
--- Draft: do not deploy before SQL/Storage acceptance and authenticated adapters.
+-- Incoming original capture, fenced by the reviewed inbound identity and attempt token.
 create table public.inbound_attachment_captures (
  id uuid primary key default gen_random_uuid(),
  inbound_id uuid not null references public.communication_inbound(id),

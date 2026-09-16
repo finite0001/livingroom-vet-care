@@ -79,3 +79,7 @@ verify_jwt = true
 # Staff JWT plus active-owner checks before capture and the final review receipt.
 [functions.capture-conversation-email]
 verify_jwt = true
+
+# Staff JWT, active matched-inbound claim and current lease checks. Capture defaults off.
+[functions.capture-inbound-attachment]
+verify_jwt = true

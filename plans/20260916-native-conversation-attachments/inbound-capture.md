@@ -30,3 +30,9 @@ Six handler tests plus six provider-download tests pass, including committed cap
 `inbound_capture.test.sql.draft` adds14 pgTAP cases for privilege boundaries, version/identity checks, competing leases, missing objects, receipt recovery, changed hashes, immutable evidence and inactive staff. Both files remain outside canonical migrations/tests until the backend adapters and runtime acceptance are ready. Diff checks pass; these SQL cases have not been executed and must not be reported as passing.
 
 Outbound run35090906569 completed all jobs successfully atd70691a, including shared-history SQL and actual-service acceptance. The parent branch's pending concurrency harness was then submitted for a separate run; this incoming branch retains that ancestry without mixing untested incoming SQL into the outbound candidate.
+
+## Candidate submitted for runtime verification
+
+The database draft and14 pgTAP cases are now canonical migration20260916120000 and `supabase/tests/inbound_attachment_capture.test.sql`; candidate inventory117. The new authenticated `capture-inbound-attachment` Edge entry point validates JWTs with Auth, invokes service-only claim/finalize, fetches the provider-bound file, and writes through `storeIncomingOriginal`. The Storage writer uses upsert:false and always reads back the object to verify actual size/MIME/container/hash before finalization, including after an uncertain upload acknowledgment. Four new storage tests join the twelve handler/provider tests: all16 pass. Targeted ESLint and frozen entry-point Deno checking pass. Real PostgreSQL/Storage acceptance remains pending.
+
+The entry point defaults off unless INBOUND_ATTACHMENT_CAPTURE_ENABLED=true. No such gate was enabled and no hosted deployment/provider request occurred. Staff listing/retrieval, inbound timeline UI, actual local service integration, capture concurrency and retention remain outstanding. The prior draft-path references above are historical.
