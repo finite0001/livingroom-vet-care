@@ -44,11 +44,19 @@
     }
   },
   "file_sha256": {
-    "supabase/migrations/20260916094500_native_return_reconciliation.sql": "6a3f1e3b034cd3e9c3b3a60ceb4a4f23eb041f0593ab5bffced8175d7a2bff9c",
+    "supabase/migrations/20260916094500_native_return_reconciliation.sql": "a56473590408844016f41cd2ede597a30b247fa3636af5968a566a2831ca3f80",
     "supabase/migrations/20260916100000_native_return_reconciliation_releases.sql": "7886c3873ebf467d8fb9b621448fbd4ff7900d78f629deec36d5bb12050f1d47",
     "supabase/functions/_shared/native-return-reconciliation.ts": "0a6debfc02dd31773076186f1535a06fa72a706e1cef1ea6bd8245e08edeaf08",
     "supabase/functions/_shared/native-return-reconciliation-contract.ts": "86dc4cfa7668c27756182249b72f8adc17923d7f9091206615279cb6d7960587",
     "tests/prescriptions/local-reconciliation.ts": "6843fe29e05a1684fd2916bcf06c585c3e0a96525b0675ad2238ee66f3dad8b3",
     "tests/prescriptions/native_reconciliation_concurrency.py": "db6932b502882a84213d74b3a38dd1c59a8235ee6e580e68f81f6c4eee31db2c"
+  },
+  "initial_ci": {
+    "run": 35085477764,
+    "migration_apply": "passed",
+    "edge": "passed",
+    "database": "failed: local variable and JSON row aliases collided; qualified row aliases in follow-up",
+    "sql_assertions_executed": 3945,
+    "sql_files": 100
   }
 }
