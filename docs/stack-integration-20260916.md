@@ -1,6 +1,6 @@
 # Standalone stack integration — September 16, 2026
 
-This integration candidate combines the frozen clinical, communications and estimate-publication sources below at merge commit `4e9bdfd`. Local frontend checks and the native populated workflow/restore run passed on that tree; full combined CI and communications-specific restore acceptance remain pending. It is not deployment acceptance. No source branch was modified, no migration was applied to either hosted project, and no provider calls were made.
+This integration candidate combines the frozen clinical, communications and estimate-publication sources below at merge commit `4e9bdfd`. Local frontend checks and the native populated workflow/restore run passed on that tree; full combined CI passed; communications-specific restore acceptance remains pending. It is not deployment acceptance. No source branch was modified, no migration was applied to either hosted project, and no provider calls were made.
 
 ## Exact source freeze
 
@@ -57,4 +57,4 @@ Fresh-hosted-baseline reconciliation must distinguish the observed 113-migration
 
 [Native runtime evidence](evidence/combined-native-publication-20260916.json) records132 migrations,660 actual local Auth/native workflow checks,50 publication SQL assertions,67 observed publication contention checks,78 quantity replay cases and128 selected populated-restore checks. Owned runtime/container/volume cleanup was verified. Local `npm run check` passed lint, TypeScript,1012 unit tests and build. Existing fast-refresh/chunk-size warnings remain.
 
-These native restore results do not cover populated communications original-byte restore. The broader backup script copies the full database and Storage, but previously did not seed the new conversation/inbound families. Separate communications fixture/restore work must verify original bytes, immutable delivery links and post-restore authorization before commercial backup readiness is claimed. Final combined CI and hosted review remain required.
+These native restore results do not cover populated communications original-byte restore. The broader backup script copies the full database and Storage, but previously did not seed the new conversation/inbound families. Separate communications fixture/restore work must verify original bytes, immutable delivery links and post-restore authorization before commercial backup readiness is claimed. Combined CI run [35109775246](https://github.com/finite0001/livingroom-vet-care/actions/runs/35109775246) passed frontend, Edge and database jobs at4e9bdfd. Communications populated restore and hosted review remain required.
