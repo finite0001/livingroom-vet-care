@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { createNativeRefillApi } from '../../src/hub/features/refills/refill-api.ts';
 import { createPrescriptionApi } from '../../src/hub/features/prescriptions/prescription-api.ts';
 import { renderReviewedPrescriptionCopy } from '../../src/hub/features/prescriptions/prescription-print.ts';
 const project = process.env.NATIVE_PRESCRIPTION_TEST_PROJECT;
@@ -148,4 +149,69 @@ check(events.events.length === 1 && events.events[0].id === cancelId && events.h
 check(beforeEffects === sql('select jsonb_build_object(\'stock\',(select count(*) from public.inventory_movements),\'charges\',(select count(*) from public.billing_invoice_items),\'treatments\',(select count(*) from public.patient_treatments),\'outbox\',(select count(*) from public.communication_outbox))::text'), 'Replacement/cancellation/printing have no stock, charge, treatment or sending effects');
 await denied('recover_native_prescription_operation', { p_id: signId }, '42501', anonymous);
 await denied('recover_native_prescription_operation', { p_id: signId }, '42501', service);
+// Native refill intake is operational only, with its own immutable receipts.
+const refillApi = createNativeRefillApi(adapter(staff.headers), staff.id);
+const refillId = randomUUID(), refillCreateId = randomUUID();
+const refillCreate = { refill_id: refillId, pet_id: patient.id, client_id: client.id, medication_requested: 'Synthetic refill request', requester_note: 'Synthetic intake, not clinical authorization.', channel: 'phone', reason: 'Synthetic staff intake.' };
+const refillCreated = await refillApi.execute({ id: refillCreateId, kind: 'create_refill', payload: refillCreate });
+check(refillCreated.actor_id === staff.id && refillCreated.result.action === 'create' && refillCreated.result.after.state === 'open' && refillCreated.result.after.authorization_id === null, 'Staff intake creates unlinked operational request only');
+assert.deepEqual(await rpc('create_native_refill', { p_id: refillCreateId, p_request: refillCreate }, staff.headers), refillCreated); checks++;
+assert.deepEqual(await refillApi.recover({ id: refillCreateId, kind: 'create_refill', payload: refillCreate }), refillCreated); checks++;
+check(await rpc('recover_native_refill_operation', { p_id: refillCreateId }) === null, 'Other actor cannot recover refill receipt');
+await denied('create_native_refill', { p_id: refillCreateId, p_request: { ...refillCreate, medication_requested: 'Changed UUID reuse' } }, '23514', staff.headers);
+check(await rpc('read_native_refill', { p_refill_id: refillId, p_pet_id: randomUUID() }) === null, 'Refill read enforces exact patient');
+const refillAssign = { refill_id: refillId, pet_id: patient.id, expected_version: 1, action: 'assign', reason: 'Synthetic staff assignment.', assigned_to: doctor.id, authorization_id: null, expected_link_context_hash: null };
+const refillAssignId = randomUUID();
+const refillAssigned = await refillApi.execute({ id: refillAssignId, kind: 'transition_refill', payload: refillAssign });
+check(refillAssigned.result.after.version === 2 && refillAssigned.result.after.assigned_to === doctor.id && refillAssigned.result.before.version === 1, 'Assignment records exact before/after revision');
+await denied('transition_native_refill', { p_id: randomUUID(), p_request: refillAssign }, '40001', staff.headers);
+// New exact order: linking cannot reuse or silently follow the replaced/cancelled orders above.
+const refillDraftId = randomUUID(), refillSignId = randomUUID();
+await rpc('save_native_prescription_draft', { p_id: randomUUID(), p_request: { ...saveRequest, draft_id: refillDraftId } }, staff.headers);
+const refillSignPreview = await rpc('preview_native_prescription_sign', { p_draft_id: refillDraftId, p_expected_version: 1 });
+await rpc('sign_native_prescription', { p_id: refillSignId, p_request: { ...signRequest, draft_id: refillDraftId, expected_context_hash: refillSignPreview.context_hash } });
+const refillLinkPreview = await refillApi.previewLink(refillAssigned.result.after, refillSignId);
+const refillLink = { ...refillAssign, expected_version: 2, action: 'link', reason: 'Synthetic exact order link; not dispensing approval.', assigned_to: null, authorization_id: refillSignId, expected_link_context_hash: refillLinkPreview.context_hash };
+const refillLinkId = randomUUID();
+const refillLinked = await refillApi.execute({ id: refillLinkId, kind: 'transition_refill', payload: refillLink });
+check(refillLinked.result.after.authorization_id === refillSignId && refillLinked.result.after.version === 3 && refillLinked.result.link_context.authorization_id === refillSignId, 'Link receipt binds reviewed exact authorization and request revision');
+const linkedRead = await refillApi.read(refillId, patient.id);
+assert.ok(linkedRead);
+check(linkedRead.operational_only === true && linkedRead.authorization_status.state === 'active' && linkedRead.household_matches === true, 'Queue separately discloses current linked status');
+const linkedCancelPreview = await rpc('preview_native_prescription_cancel', { p_authorization_id: refillSignId, p_pet_id: patient.id });
+await rpc('cancel_native_prescription', { p_id: randomUUID(), p_request: { ...cancelRequest, authorization_id: refillSignId, expected_event_id: linkedCancelPreview.context.head.id, expected_context_hash: linkedCancelPreview.context_hash } });
+const terminalLinkedRead = await refillApi.read(refillId, patient.id);
+assert.ok(terminalLinkedRead);
+check(terminalLinkedRead.refill.authorization_id === refillSignId && terminalLinkedRead.authorization_status.state === 'cancelled' && terminalLinkedRead.refill.state === 'open', 'Cancellation is disclosed without changing or replacing linked intake');
+assert.deepEqual(await refillApi.recover({ id: refillLinkId, kind: 'transition_refill', payload: refillLink }), refillLinked); checks++;
+const refillClose = { ...refillAssign, expected_version: 3, action: 'close', reason: 'Synthetic operational closure.', assigned_to: null };
+const refillCloseId = randomUUID();
+const refillClosed = await refillApi.execute({ id: refillCloseId, kind: 'transition_refill', payload: refillClose });
+check(refillClosed.result.after.state === 'closed' && refillClosed.result.after.version === 4, 'Operational closure retains linked historical order');
+assert.deepEqual(await rpc('transition_native_refill', { p_id: refillCloseId, p_request: refillClose }, staff.headers), refillClosed); checks++;
+const refillHistory = await refillApi.history(refillClosed.result.after, null, 2);
+check(refillHistory.events.length === 2 && refillHistory.has_more && refillHistory.next_cursor !== null, 'Refill event history advertises additional pages');
+const refillHistoryNext = await refillApi.history(refillClosed.result.after, refillHistory.next_cursor, 2);
+check(refillHistoryNext.events.length === 2 && !refillHistoryNext.has_more && !refillHistoryNext.events.some((event: { id: string }) => refillHistory.events.some((prior: { id: string }) => prior.id === event.id)), 'Exact event cursor avoids omissions and duplicates');
+const refillQueue = await refillApi.list(null, patient.id);
+check(refillQueue.refills.length === 1 && refillQueue.refills[0].refill.id === refillId, 'Native queue can be scoped to exact patient');
+for (const headers of [staff.headers, service]) {
+  const rawInsert = await post('/rest/v1/refill_requests', { client_id: client.id, pet_id: patient.id, medication_name: 'Forbidden legacy write' }, headers);
+  check(!rawInsert.ok && rawInsert.value.code === '42501', 'Legacy direct insert denied to staff/service through real PostgREST');
+}
+const legacyPage = await refillApi.legacy();
+check(legacyPage.records.every(row => row.read_only === true && row.clinical_authority === 'unverified'), 'Strict legacy API labels every preserved row non-authorizing');
+const legacyTarget = legacyPage.records[0]?.record;
+if (legacyTarget) {
+  for (const headers of [staff.headers, service]) {
+    for (const method of ['PATCH', 'DELETE']) {
+      const response = await fetch(`${local.API_URL}/rest/v1/refill_requests?id=eq.${legacyTarget.id}`, { method, headers, ...(method === 'PATCH' ? { body: JSON.stringify({ status: 'APPROVED' }) } : {}), signal: AbortSignal.timeout(15000) });
+      const value = await response.json();
+      check(!response.ok && value.code === '42501', `Legacy ${method} rejected for authenticated/service role`);
+    }
+  }
+}
+await denied('create_native_refill', { p_id: randomUUID(), p_request: refillCreate }, '42501', anonymous);
+await denied('create_native_refill', { p_id: randomUUID(), p_request: refillCreate }, '42501', service);
+check(beforeEffects === sql('select jsonb_build_object(\'stock\',(select count(*) from public.inventory_movements),\'charges\',(select count(*) from public.billing_invoice_items),\'treatments\',(select count(*) from public.patient_treatments),\'outbox\',(select count(*) from public.communication_outbox))::text'), 'Native intake/link/close have no inventory, billing, treatment or outbound effects');
 console.log(JSON.stringify({ synthetic_only: true, suite: 'native-prescription-lifecycle-http', checks_passed: checks, provider_requests: 0, project_id: projectId, cleanup: 'Owned runtime must be removed by caller; signed fixtures intentionally retained until then.' }));

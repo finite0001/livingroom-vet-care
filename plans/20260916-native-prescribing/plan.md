@@ -1,6 +1,6 @@
 # Native prescribing, refills and dispensing
 
-Status: implementation in progress; contract independently reviewed. Configuration, draft revisions, DVM signing, cancellation/replacement, current status and order-copy UI are implemented. Local SQL, Auth/API, browser and observed cancellation/replacement contention checks pass. Refill dispensing, record-release integration, populated restore and clinical approval remain outstanding.
+Status: implementation in progress; contract independently reviewed. Configuration, draft revisions, DVM signing, cancellation/replacement, current status and order-copy UI are implemented. Local SQL, Auth/API, browser and observed cancellation/replacement contention checks pass. Native refill intake and exact authorization linking are now locally verified. Dispensing, record-release integration, populated restore and clinical approval remain outstanding.
 
 Base: `50a27d7`, stacked after PR143. Working root: `/Users/davidedler/livingroom-vet-native-prescribing`. Scope follows [standalone direction](../../docs/standalone-platform-direction-20260916.md) and the [feature matrix](../../docs/standalone-feature-matrix-20260916.md). This is one component of full practice parity, not a replacement for the remaining roadmap.
 
@@ -32,11 +32,11 @@ Implement phases 1–4 as a coherent local workflow before claiming feature comp
 
 Database owner: new native migration, SQL/concurrency fixtures and runtime contract. Frontend owner: strict API/state and patient/refill UI once RPC contract is fixed. Artifact owner: label renderer and release version integration after signed/fill snapshots are fixed. Root: contract reconciliation, full-path acceptance and PR integration. Use isolated worktrees; no shared migration-version allocation without coordination.
 
-## Next bounded slice: native refill intake and authorization links
+## Native refill intake and authorization links — implemented
 
-The existing refill queue directly writes `APPROVED`, `READY` and `PICKED_UP` with browser timestamps and no authorization/dispense receipt. There is no `FILLED` status. Both the dropdown and direct authenticated/service-role table grants must be addressed; UI-only restrictions would leave the bypass open.
+The prior refill queue directly wrote `APPROVED`, `READY` and `PICKED_UP` with browser timestamps and no authorization/dispense receipt. There is no `FILLED` status. The new workflow removes that dropdown and closes direct authenticated/service-role writes plus indirect legacy mutation paths.
 
-Preserve old requests as explicitly unverified legacy history. Add server-attributed versioned intake, assignment, exact patient/household/authorization links and operational close/deny transitions with recoverable immutable receipts. Replace direct writes in `use-refills.ts` and status-based clinical message defaults in `RefillsPage.tsx`. Keep durable message delivery through the existing reviewed send dialog. Queue reads need explicit errors, pagination and actor scoping. No legacy status becomes native prescribing or dispensing authority.
+Old requests remain explicitly unverified, read-only history. Server-attributed intake, assignment, exact patient/household/authorization links and operational close/deny transitions now have recoverable immutable receipts. Validated RPCs replace direct writes in `use-refills.ts`; neutral drafts replace status-based clinical message defaults in `RefillsPage.tsx`. Keep durable message delivery through the existing reviewed send dialog. Queue reads need explicit errors, pagination and actor scoping. No legacy status becomes native prescribing or dispensing authority.
 
 After intake, add separately reviewed fulfillment: exact authorization/head, initial/refill slot, partial remainder, current alerts, product/unit, lots, draft invoice and price. One transaction must consume allowance, record the dispense, debit stock, add invoice charges and update the linked request. Slot closure and pickup acknowledgment remain separate actions; neither recreates allowance. The current usage projection stays unknown until this accounting exists.
 
@@ -55,3 +55,7 @@ Dr. Susan Edler must review prescription fields, prescriber eligibility, partial
 ## Verified cancellation and replacement checkpoint
 
 [Evidence](../../docs/evidence/native-prescribing-events-20260916.json): 116 migrations; upgrade preserved an existing synthetic signed authorization exactly; 111 SQL assertions, 52 real Auth/API checks, 24 observed two-DVM contention checks, 652 unit tests and 20 browser cases passed. Owned scratch database, runtime containers/volumes and private files removed. These results do not establish dispensing, native release integration, populated restore, provider acceptance or clinical approval.
+
+## Verified refill intake checkpoint
+
+[Evidence](../../docs/evidence/native-refill-intake-20260916.json): 117 migrations, unchanged legacy READY record after upgrade, 162 SQL assertions, 79 real Auth/API checks, 26 observed concurrency checks, 662 unit tests and 18 browser cases. Queue reads use verified snapshots without accumulating authorization write locks. Owned runtime cleanup verified. Next: implement dispensing from the [proposed contract](dispensing-rpc-contract.md), resolving its queued-price-update/product/lot locking gate before claiming acceptance.

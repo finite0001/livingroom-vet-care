@@ -34,6 +34,17 @@ Review the actual patient workspace with synthetic patients once this slice is v
 
 Until native fill accounting is implemented and verified, unavailable use and remaining quantities must display as unknown rather than zero. Review the final dispensing workflow separately before approving live use.
 
+## Refill intake review scenarios
+
+These checks concern staff request tracking, not prescribing or dispensing approval. Clinical sign-off remains pending.
+
+1. Select a household and explicitly select the correct patient; record the requested medication and source without creating a prescription or stock charge.
+2. Link a request to the exact signed order after reviewing patient, household and current order status. Medication-name similarity alone must never choose the authorization.
+3. Cancel the linked order. The request must retain the original link and disclose cancellation; it must not silently follow a replacement or imply medication is ready.
+4. Close or deny the operational request with a reason. These actions must not fabricate clinical refusal, dispensing, pickup or client notification.
+5. Open a legacy request marked approved/ready/picked up. Its original information must remain available and visibly unverified, without an editable status or a generated clinical approval message.
+6. Confirm a lost response can be recovered without duplicate intake or transitions and that request/event pagination preserves all history.
+
 ## Reproduce the examples
 
 Run `node --experimental-strip-types docs/clinical-review/generate-native-prescribing.ts`. The script uses the actual shared renderer and synthetic test fixture; each artifact includes SHA-256 hashes of both. It makes no network request. Regenerate after renderer or fixture changes. Record the exact implementation revision and source hashes with any review decision; renderer changes require re-review of affected content.
