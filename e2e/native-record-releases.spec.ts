@@ -31,6 +31,7 @@ async function fixture(page: Page) {
       replacement_id: null,
     },
     usage: usedUsage(),
+    returns: {"version":1,"event_count":0,"affected_dispense_count":0,"heads_hash":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
     corrections: {"version":1,"event_count":0,"affected_dispense_count":0,"heads_hash":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
   };
   const { invoice_id: _invoice, ...publicDispense } = dispense().artifact;
@@ -40,6 +41,7 @@ async function fixture(page: Page) {
     artifact: publicDispense,
     prescription,
     pickup: null,
+    returns: {version:1,head:{event_id:null,version:0,record_hash:null},events:[],allocations:publicDispense.lots.map((l,i)=>({allocation_id:id(800+i),lot_id:l.id,lot_number:l.number,expires_on:l.expires_on,dispensed_quantity:l.quantity,returned_quantity:"0.000",remaining_returnable_quantity:l.quantity,held_quantity:"0.000",disposed_quantity:"0.000",restocked_quantity:"0.000"}))},
     corrections: {"version":1,"head":{"event_id":null,"version":0,"record_hash":null},"events":[],"latest_pickup_amendment":null},
   };
   const state = {
@@ -92,7 +94,7 @@ async function fixture(page: Page) {
     policy_v8_accepted: true,
     policy_v9_accepted: true,
     policy_v10_accepted: true,
-    policy_v11_accepted: state.accepted,
+    policy_v12_accepted: state.accepted,
     ...emptySelection(),
     has_more: Object.fromEntries(
       Object.keys(sourceLabels).map((k) => [k, false]),
@@ -183,9 +185,9 @@ async function fixture(page: Page) {
       });
     if (path === "/rest/v1/record_releases")
       return route.fulfill({ json: state.rows.map((r) => r.release) });
-    if (name === "list_record_release_sources_v11")
+    if (name === "list_record_release_sources_v12")
       return route.fulfill({ json: sources() });
-    if (name === "select_all_record_release_sources_v11") {
+    if (name === "select_all_record_release_sources_v12") {
       if (state.oversized || state.count > 20)
         return route.fulfill({
           status: 400,
@@ -208,14 +210,14 @@ async function fixture(page: Page) {
         },
       });
     }
-    if (name === "preview_record_release_v11") {
+    if (name === "preview_record_release_v12") {
       state.previews.push(input);
       const snapshot: Row = structuredClone(
         apiAttachmentArtifact().preview.snapshot,
       );
       for (const [key, value] of Object.entries(snapshot))
         if (Array.isArray(value)) snapshot[key] = [];
-      snapshot.schema_version = 11;
+      snapshot.schema_version = 12;
       snapshot.patient.id = pet;
       snapshot.recipient = {
         ...snapshot.recipient,
@@ -377,7 +379,7 @@ test("explicit native parent and dispense selection retains exact lost-confirmat
   expect(state.requests[2]).toEqual(state.requests[0]);
   expect(state.rows).toHaveLength(1);
 });
-test("policy10 does not authorize schema11 confirmation and selected cancelled order is historical", async ({
+test("policy10 does not authorize schema12 confirmation and selected cancelled order is historical", async ({
   page,
 }) => {
   const state = await fixture(page);

@@ -1,3 +1,4 @@
+import { NativeReturnPolicySettings } from "@/hub/features/prescriptions/NativeReturnPolicySettings";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Pen, Database, Clock } from "lucide-react";
@@ -28,6 +29,7 @@ export default function SettingsPage() {
       </header>
       <div className="mx-auto w-full max-w-2xl space-y-4 p-4">
         <SignatureSection />
+        <NativeReturnPolicySettings />
         {isAdmin ? (
           <ClinicSettings />
         ) : (
