@@ -58,7 +58,8 @@ export function createMigrationResolutionApi(client: MigrationRpc, actor: string
     const b = ctx.binding, local = ctx.local, o = ctx.observation;
     if ((b.selected_id === null) !== (b.selected_context_hash === null) || (b.selected_id === null) !== (b.child_run_id === null) ||
       (b.current_id === null) !== (b.current_context_hash === null) || (b.selected_id === null) !== (ctx.scan === null) ||
-      b.superseded !== (b.selected_id !== null && b.selected_id !== b.current_id) || local.client_exists !== (local.client_version !== null) ||
+      b.superseded !== (b.selected_id !== null && b.selected_id !== b.current_id) || (b.selected_id === b.current_id && b.selected_context_hash !== b.current_context_hash) ||
+      (local.household_current && (!local.client_exists || (scope.pet_id !== null && local.pet_exists !== true))) || local.client_exists !== (local.client_version !== null) ||
       (scope.pet_id === null ? local.pet_exists !== null || local.pet_version !== null : local.pet_exists !== (local.pet_version !== null))) throw new Error("Resolution context state differs");
     if (target.kind === "scope") {
       if (o !== null || b.selected_id !== b.current_id) throw new Error("Scope resolution extent differs");
@@ -66,7 +67,8 @@ export function createMigrationResolutionApi(client: MigrationRpc, actor: string
       throw new Error("Resolution occurrence differs");
     }
     if (o && ((o.current_snapshot_id === null) !== (o.current_head_version === null) ||
-      (["contact", "animal", "healthstatus"].includes(scope.resource) && o.observed_head_version !== null) ||
+      (["contact", "animal", "healthstatus"].includes(scope.resource) !== (o.observed_head_version === null)) ||
+      (scope.resource === "attachment" && (o.ordinal < 1 || !o.file_id || o.raw_record_sha256 === null || o.stable_metadata_sha256 === null)) ||
       (scope.resource !== "attachment" && (o.ordinal !== 0 || o.file_id !== null || o.raw_record_sha256 !== null || o.stable_metadata_sha256 !== null)))) throw new Error("Resolution observation fidelity differs");
   }
   function verifyReceipt(value: unknown, scopeId: string, expectedTarget?: MigrationResolutionTarget) {

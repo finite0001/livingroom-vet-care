@@ -43,6 +43,8 @@ test("context rejects another owner, source, patient, extent or unsupported comp
     { ...f.envelope, context: { ...f.context, source_site_uid: "different" } },
     { ...f.envelope, context: { ...f.context, scope: { ...f.context.scope, pet_id: randomUUID() } } },
     { ...f.envelope, context: { ...f.context, binding: { ...f.context.binding, current_id: randomUUID() } } },
+    { ...f.envelope, context: { ...f.context, local: { ...f.context.local, client_exists: false, client_version: null } } },
+    { ...f.envelope, context: { ...f.context, local: { ...f.context.local, pet_exists: false, pet_version: null } } },
     { ...f.envelope, private_payload: "unexpected" },
   ];
   for (const data of substitutions) {
@@ -93,8 +95,23 @@ test("observation decision pins its exact occurrence while preserving unknown le
   let data: unknown = { ...f.envelope, target, context };
   const api = createMigrationResolutionApi({ async rpc() { return { data, error: null }; } }, f.actor, f.manifest);
   assert.equal((await api.context(f.scope.id, target)).context.observation?.observed_head_version, null);
+  data = { ...f.envelope, target, context: { ...context, binding: { ...context.binding, current_context_hash: "f".repeat(64) } } };
+  await assert.rejects(() => api.context(f.scope.id, target));
   for (const patch of [{ page: 3 }, { snapshot_id: randomUUID() }, { evidence_hash: "d".repeat(64) }, { observed_head_version: 4 }, { ordinal: 1 }]) {
     data = { ...f.envelope, target, context: { ...context, observation: { ...context.observation, ...patch } } };
     await assert.rejects(() => api.context(f.scope.id, target));
+  }
+  for (const resource of ["history", "attachment"] as const) {
+    const manifest = { ...f.manifest, scopes: f.manifest.scopes.map(s => ({ ...s, resource })) };
+    const knownTarget = { ...target, ordinal: resource === "attachment" ? 1 : 0 };
+    const observation = { ...context.observation, ordinal: knownTarget.ordinal, observed_head_version: 4, file_id: resource === "attachment" ? "1" : null, raw_record_sha256: resource === "attachment" ? "a".repeat(64) : null, stable_metadata_sha256: resource === "attachment" ? "b".repeat(64) : null };
+    const knownContext = { ...context, scope: { ...context.scope, resource }, observation };
+    const knownApi = createMigrationResolutionApi({ async rpc() { return { data, error: null }; } }, f.actor, manifest);
+    data = { ...f.envelope, target: knownTarget, context: knownContext };
+    await knownApi.context(f.scope.id, knownTarget);
+    for (const patch of [{ observed_head_version: null }, ...(resource === "attachment" ? [{ file_id: null }, { raw_record_sha256: null }, { stable_metadata_sha256: null }] : [])]) {
+      data = { ...f.envelope, target: knownTarget, context: { ...knownContext, observation: { ...observation, ...patch } } };
+      await assert.rejects(() => knownApi.context(f.scope.id, knownTarget));
+    }
   }
 });
