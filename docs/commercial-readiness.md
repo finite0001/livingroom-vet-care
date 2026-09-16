@@ -1,5 +1,17 @@
 # Commercial-readiness evidence tracker
 
+## Current acceptance checkpoint — September 15, 2026
+
+PR136 is merged into `codex/lovable-publication` as `c5cd48337990205291fcc23bd29c5d4018ab8d38`; frontend, Edge and database CI all passed (run35009266341). It prevents a changed historical patient household from blocking unrelated valid migration selections. Local disposable acceptance passed 423 checks. The protected frontend's last verified deployment remains PR134; merging136 does not establish hosted frontend parity.
+
+Fresh staging database read confirms 110 migrations through `20260914230000`, one synthetic client/pet, 50 staged ezyVet contact snapshots and zero outgoing messages. See [the verified database upgrade](staging-database-upgrade-20260915.md) and [current provider checkpoint](provider-acceptance-20260915.md). Staging Auth SMTP and administrator sign-in were verified in the preceding staff rehearsal; broader client mail delivery remains uncommissioned.
+
+The Stripe connector now successfully exposes the correct practice sandbox. Staging has no payment-provider profile; the existing disabled Stripe webhook targets the primary backend. Hosted payment/refund acceptance requires staging runtime provisioning, not another connector reconnect. The current CLI has no Supabase access token; the database MCP remains functional.
+
+The owner prefers dedicated two-way ezyVet access, with fee terms pending clarification, while preserving the existing setup and temporary bounded read-only testing. No source writes or registration changes are authorized by this checkpoint. Weight/identity/prescription-item reconciliation, operational resolutions and frozen migration reports remain incomplete. Clinical approval, lab/anesthesia onboarding, provider delivery, real stock/pricing, public intake commissioning and full staff rehearsal remain required for commercial readiness.
+
+The dated sections below are historical; current facts above supersede older statements about staging migration counts, authentication commissioning and Stripe connector availability.
+
 ## Current live status — September 14, 2026
 
 The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 110 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging remains at its last verified 99-migration checkpoint.

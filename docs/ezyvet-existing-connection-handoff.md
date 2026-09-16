@@ -1,6 +1,16 @@
 # Existing Vet Connect Hub connection handoff
 
-Current status: existing GreenTree credentials successfully authenticated and completed a minimal read-only API request without a partner ID. Earlier missing-partner/private-registration assumptions below are historical and superseded by the live evidence section. No new registration is required to resolve this technical authentication issue.
+Current status — September 15, 2026: the ezyVet representative confirmed that the additional application requires a **new API registration and credentials**. The owner subsequently directed us to continue using the current credentials temporarily while they work with the vendor, without changing the current setup. Preserve the existing registration, credentials and permissions. Bounded read-only testing remains authorized; keep imports disabled between checks. Historical successful authentication proves technical connectivity, not provider approval to reuse that registration.
+
+## Provider response and next steps
+
+The owner supplied the representative’s response: the quoted $500 setup includes two-way read/write access, and the setup fee is one-time for approval/access. We are responsible for building and maintaining the integration. No fee or agreement has been accepted. The [published private-integration guidance](https://developers.ezyvet.com/apply/private.html), checked September 15, additionally lists $50/location/month for write-back. Reconcile that with the representative’s quote in the written agreement. The [endpoint/scope reference](https://developers.ezyvet.com/guides/faq.html#api-endpoints) documents many create/update operations but does not make every clinical resource writable.
+
+The owner will coordinate the registration requirement with the vendor. Do not create or purchase a registration or replace the existing credentials without a later instruction. Keep the existing Vet Connect Hub integration unchanged. Preserve current read-only scopes. The owner now prefers dedicated two-way access and is comfortable with the $500 setup. Plan selective write-back, but do not activate it or change the current registration while terms are being clarified. Living Room Vet remains primary; resource ownership, conflict handling and allowed writes require an explicit design. The representative is unsure where the partner ID is found. Prior authentication without it succeeded, so keep the field optional rather than requesting or inventing one as a blocker.
+
+Before this response arrived, the September 15 staging acceptance check successfully persisted one contact page (50 snapshots). No mappings, clients or pets were created, and no messages were queued. The run has next_page=2 because remaining pages were deliberately not requested; this is not a completed whole-source migration. EZYVET_IMPORT_MODE was restored to disabled. Retain this evidence as historical; repeat bounded acceptance if credentials change before commissioning.
+
+The chronological notes below describe earlier decisions and are superseded by this provider clarification wherever they imply credential reuse is sufficient.
 
 Owner direction, September 13, 2026: use the same ezyVet setup as Vet Connect Hub. The owner reports login credentials and previously confirmed account/API access are available. Do not request credentials in chat.
 
