@@ -121,4 +121,5 @@ select is(native_rx_usage_context((select id from fx where k='sign')),(select v-
 select is((select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i where invoice_id=(select id from fx where k='invoice')),(select v->'items' from data where k='original'),'Invoice line items unchanged');
 select ok(not has_function_privilege('authenticated','native_reconciliation_verified(uuid,uuid,uuid)','execute'),'Verifier private');
 select ok(not has_function_privilege('service_role','record_native_dispense_return_v2(uuid,jsonb)','execute'),'Service role cannot impersonate staff writes');
+select ok(exists(select 1 from audit_logs a join native_return_discrepancy_correction_links l on l.id=a.record_id where a.table_name='native_return_discrepancy_correction_links' and a.action='INSERT' and a.user_id='a5510000-0000-4000-8000-000000000001'),'Correction-to-resolution links have actor-attributed audit identities');
 select * from finish();rollback;
