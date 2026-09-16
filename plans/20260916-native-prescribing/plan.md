@@ -1,6 +1,6 @@
 # Native prescribing, refills and dispensing
 
-Status: implementation in progress; contract independently reviewed. Recoverable frontend operation state/editor and versioned print components exist; database/API/workflow integration and clinical approval remain outstanding.
+Status: implementation in progress; contract independently reviewed. Configuration, draft revisions, DVM signing, strict API and patient UI are locally verified. Cancellation/replacement, refill dispensing, print/release integration and clinical approval remain outstanding.
 
 Base: `50a27d7`, stacked after PR143. Working root: `/Users/davidedler/livingroom-vet-native-prescribing`. Scope follows [standalone direction](../../docs/standalone-platform-direction-20260916.md) and the [feature matrix](../../docs/standalone-feature-matrix-20260916.md). This is one component of full practice parity, not a replacement for the remaining roadmap.
 
@@ -20,7 +20,7 @@ A veterinarian can authorize a prescription for a native patient. Staff can proc
 
 | Phase | State | Deliverable |
 |---|---|---|
-| [1. Authority and data lifecycle](implementation-contract.md#authority-and-records) | Planned | Draft/sign/cancel/replacement, strict requests and recoverable receipts; close legacy direct status bypass |
+| [1. Authority and data lifecycle](implementation-contract.md#authority-and-records) | In progress | Draft/sign/cancel/replacement, strict requests and recoverable receipts; close legacy direct status bypass |
 | [2. Fill and stock/billing transaction](implementation-contract.md#fill-allowances-and-atomic-dispensing) | Planned | Partial-fill allocation, exact retry, deterministic locking, stock/charge links |
 | [3. Patient and refill workspace](implementation-contract.md#staff-workflows) | In progress | Reachable guarded editors, DVM signing, staff fulfillment, current history |
 | [4. Labels and record release](implementation-contract.md#labels-and-record-release) | In progress | Frozen print artifacts and explicit selection in record packages |
@@ -39,3 +39,7 @@ Estimates/client acceptance, conversation attachments, send-later/follow-up sequ
 ## Unresolved clinical/operational inputs
 
 Dr. Susan Edler must review prescription fields, prescriber eligibility, partial-fill workflow, required label content, expiry/renewal policy and delegated dispensing permissions. These are configurable/manual decisions, not inferred drug rules. Controlled-medication and external-pharmacy electronic workflows require their own verified requirements and acceptance; this plan does not claim those are implemented or remove them from the parity audit. Synthetic implementation can proceed with explicit test configuration while live authorization remains uncommissioned.
+
+## Verified lifecycle checkpoint
+
+[Evidence](../../docs/evidence/native-prescribing-lifecycle-20260916.json): exact115 migrations,64 SQL assertions,30 real Auth/PostgREST checks through strict frontend API,646 unit tests and17 relevant browser tests. Owned containers/volumes/private runtime removed. These are local lifecycle results; observed contention, populated native restore and the remaining full-workflow phases are not claimed complete.

@@ -410,3 +410,9 @@ Combined canonical receipt integration: commit `82d4a54` preserves identity migr
 The current package passed 616 unit tests, 51 browser tests and the full 756-check disposable sequence. A separate 465-check test-only run extends observed contention coverage to 47 checks; these overlapping totals are not additive. Populated restore verification passed, with its original cleanup failure and successful recovery recorded explicitly. See [acceptance evidence](evidence/canonical-migration-resolutions-20260916.json). No hosted rollout or provider requests occurred.
 
 The owner has retired further ezyVet integration/report development. The [initial standalone feature matrix](standalone-feature-matrix-20260916.md) records native capabilities, missing prescription/estimate/communication workflows and broader unassessed parity requirements. Existing historical records and configuration remain preserved. Provider, clinical and operational launch acceptance is still outstanding.
+
+## Native prescription lifecycle — September 16, 2026
+
+The standalone native workflow now supports separately reviewed prescriber configuration, staff-prepared drafts/revisions, DVM signing and immutable recovery/history on the patient page. [Local evidence](evidence/native-prescribing-lifecycle-20260916.json) records115 canonical migrations,64 SQL assertions,30 real Auth/PostgREST checks,646 unit tests and17 relevant browser tests. Owned runtime cleanup was verified. No hosted deployment, provider call or clinical approval occurred.
+
+Cancellation/replacement, linked refill fulfillment, partial-fill stock/billing transactions, current-status print wiring, native record-release integration, observed contention and populated native restore remain outstanding. Draft PR144 remains incomplete and is not ready to merge. Historical external prescriptions remain separate from native prescribing authority.
