@@ -87,8 +87,18 @@ language plpgsql security definer set search_path=public as $$
 declare receipt public.abandoned_attachment_cleanup;
 begin
  perform public.communication_require_service();
- perform public.revalidate_abandoned_attachment_cleanup(p_id,p_token);
  select * into receipt from public.abandoned_attachment_cleanup where id=p_id;
+ if not found then raise exception 'Cleanup unavailable' using errcode='42501';end if;
+ -- Preserve claim's upload-before-receipt lock order, including completion replay.
+ perform 1 from public.conversation_attachment_uploads where id=receipt.upload_id for update;
+ select * into receipt from public.abandoned_attachment_cleanup where id=p_id for update;
+ if receipt.token is distinct from p_token then raise exception 'Cleanup lease changed' using errcode='42501';end if;
+ if receipt.state='complete' then
+  if exists(select 1 from storage.objects where bucket_id='conversation-attachment-uploads' and name=receipt.storage_path) then
+   raise exception 'Completed cleanup object unexpectedly exists' using errcode='23514';end if;
+  return jsonb_build_object('id',p_id,'status','complete');
+ end if;
+ perform public.revalidate_abandoned_attachment_cleanup(p_id,p_token);
  if exists(select 1 from storage.objects where bucket_id='conversation-attachment-uploads' and name=receipt.storage_path) then
   raise exception 'Cleanup object absence is unconfirmed' using errcode='23514';end if;
  update public.abandoned_attachment_cleanup set state='complete',expires_at=null,completed_at=clock_timestamp() where id=p_id;

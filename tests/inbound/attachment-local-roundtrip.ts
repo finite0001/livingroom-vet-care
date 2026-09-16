@@ -220,6 +220,10 @@ try {
   check(sql(`select state from abandoned_attachment_cleanup where upload_id=${quote(abandonedId)}`) === "complete", "Cleanup persists durable completion receipt");
   check(sql(`select status from conversation_attachment_uploads where id=${quote(abandonedId)}`) === "abandoned", "Cleanup retains original abandoned upload evidence");
   check((await cleanupBucket.list(`${actor}/${ids.conversation}/${abandonedId}`)).data?.length === 0, "Cleaned original is absent from actual Storage listing");
+  const cleanupIdentity = JSON.parse(sql(`select jsonb_build_object('id',id,'token',token) from abandoned_attachment_cleanup where upload_id=${quote(abandonedId)}`));
+  const replay = await service.rpc("finalize_abandoned_attachment_cleanup", { p_id: cleanupIdentity.id, p_token: cleanupIdentity.token });
+  if (replay.error) throw replay.error;
+  check(replay.data.id === cleanupIdentity.id && replay.data.status === "complete", "Actual RPC recovers the same committed cleanup completion receipt");
   sql(`update profiles set is_active=false where id=${quote(actor)}`);
   check((await request()).status === 503 && downloads === 1, "Revoked staff cannot recover captured receipt");
   check((await read()).status === 404, "Revoked staff cannot read private original");

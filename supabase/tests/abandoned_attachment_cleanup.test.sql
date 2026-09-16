@@ -35,6 +35,8 @@ reset role;
 delete from storage.objects where bucket_id='conversation-attachment-uploads' and name=(select v->>'path' from evidence);
 set local role service_role;
 select is(finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),(select (v->>'token')::uuid from evidence))->>'status','complete','Confirmed absence permits completion receipt');
+select is(finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),(select (v->>'token')::uuid from evidence))->>'status','complete','Lost completion response recovers the same receipt');
+select throws_ok($$select finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),gen_random_uuid())$$,'42501',null,'Different token cannot replay completion');
 reset role;
 select throws_ok($$delete from abandoned_attachment_cleanup$$,'23514',null,'Completed cleanup evidence remains immutable');
 select is((select count(*) from conversation_attachment_uploads where actor_id='ee400000-0000-4000-8000-000000000001'),3::bigint,'Cleanup preserves all reservation evidence');
