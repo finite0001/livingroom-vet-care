@@ -29,3 +29,11 @@ Use the existing verified frozen-email transport; do not add arbitrary remote at
 - Rendered desktop/mobile review and recovery, account switch, cancellation and existing draft-navigation behavior. No visible attachment send control before this path works end to end.
 - Explicit retention/purge policy and independent retrieval authorization for queued/sent files. Abandoned upload cleanup is still open; no automatic deletion of verified evidence.
 - Controlled authorized provider delivery and staff acceptance remain separate from synthetic tests.
+
+## Implementation checkpoint
+
+The payload builder now validates the ordered manifest, actor/conversation storage paths, bounded file counts and sizes, configured sender, actual file type/length and SHA-256 before freezing provider JSON. Five focused tests cover repeatability, equal-size altered bytes, invalid references and channels, missing bytes, MIME mismatch, sender injection and aggregate overflow. Targeted ESLint and frozen Deno type checking pass.
+
+`conversation_email_preparation.sql.draft` is intentionally outside deployable migrations. It sketches shared request preparation and immutable capture with explicit function privileges, but is not database-tested. The reviewed queue RPC, frozen reader/dispatch guard extensions, authenticated capture handler, UI review, retention and end-to-end acceptance remain unfinished. Do not deploy this draft or expose an attachment send button yet.
+
+Upload foundation CI run 35085949803 passed all frontend, Edge and database jobs at ddf0ff3. The follow-up API/recovery adapter commit 9d464ae was pushed to PR152 for a separate complete CI run; the earlier result does not prove that follow-up commit.
