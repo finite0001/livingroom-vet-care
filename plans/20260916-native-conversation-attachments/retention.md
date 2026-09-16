@@ -48,3 +48,9 @@ Finalization now locks upload then receipt and permits exact-token completed-rec
 ## First cleanup runtime failure and fixture correction
 
 CI35096847299 applied migration118 successfully, then its SQL job failed at the synthetic Storage-metadata deletion in `abandoned_attachment_cleanup.test.sql`. The first9 cleanup assertions passed. Supabase's storage.protect_delete rejected direct metadata deletion; this was a fixture setup failure, not a successful complete suite or actual Storage cleanup result. The fixture now uses the repository's existing transaction-local `storage.allow_delete_query` override around only its exact synthetic metadata row deletion and restores false immediately. The production adapter still removes through Storage API. Diff checks pass; corrected SQL and the local completion-replay changes await rerun. The frontend job remains active, so do not cancel it with a new push.
+
+## Default-off server endpoint
+
+Added `cleanup-abandoned-attachment` Edge entry with the repository's authenticateWorker boundary. It accepts only POST with one upload_id, configured server-worker credentials, ATTACHMENT_CLEANUP_ENABLED=true and an explicit24–720 ATTACHMENT_CLEANUP_GRACE_HOURS. Callers cannot pass object paths or override grace. Gateway JWT checking is disabled for this server-only route because secret API keys are not JWTs; the handler explicitly verifies configured server credentials before its gate or operations. Errors omit private details. No schedule, deployment or enabled flag exists.
+
+Five handler tests, frozen Deno entry-point checking, targeted lint and diff checks pass. Actual endpoint HTTP/auth acceptance remains pending. CI35096847299 still has its frontend job running after the documented SQL-fixture failure, so corrected tests, completion replay and this endpoint remain local until terminal evidence permits the next push.

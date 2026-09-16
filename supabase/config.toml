@@ -86,3 +86,7 @@ verify_jwt = true
 
 [functions.read-inbound-attachment]
 verify_jwt = true
+
+# Server-only worker credentials are checked explicitly; secret API keys are not JWTs.
+[functions.cleanup-abandoned-attachment]
+verify_jwt = false
