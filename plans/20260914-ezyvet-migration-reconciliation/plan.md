@@ -42,6 +42,8 @@ Supported Consult/Contact attachment contracts and practice entitlement; source 
 
 ## Next concrete increment
 
+Planned operational workflow: [exclusions, reopen decisions, exact recovery and history](phase-02-operational-resolutions.md).
+
 Extend phase2 with exact review/capture receipt adapters over the bounded source-item view, followed by operational resolutions and frozen reports. The core source-gate authorization gap was reproduced and corrected locally by migration `20260914170000`, together with terminal recovery checks in all six patient-scoped claim functions. Migration `20260914180000` extends the local candidate to staging replay/final returns and failure updates; observed contention verifies role revocation and transaction rollback. Broader reconciliation and operator acceptance remain separate from this authorization correction. The manifest candidate is local only; do not infer a hosted deployment from passing local SQL checks. Before reserving another version, inspect local files and hosted ledger again. Update exact migration-count/hash fixtures deliberately; never relax their canonical-stack checks to accept arbitrary versions. No scope backfill from unreviewed historical runs.
 
 Planning environment: optional codebase-summary/development-rules/code-standards/design-guidelines files and active-plan helper scripts are absent. Existing AGENTS.md, source contracts and current ledgers are authoritative. No new vendor API contract is asserted by this plan.
