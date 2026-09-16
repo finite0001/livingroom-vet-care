@@ -134,6 +134,9 @@ try:
     binding_loser=str(uuid.uuid4())
     contended(binding_change,save(binding_loser,'Reviewed old binding',second,ctx=before_replacement),lambda code,out,err:code!=0 and 'Operational evidence changed' in err)
     check(receipt(binding_loser) is None,'Binding replacement invalidates waiting decision')
+    # Each staged page releases its lease; reacquire page 2 before reviewing its context.
+    sql(f"update ezyvet_import_runs set retry_after=null where id='{next_child}';")
+    next_run=json.loads(scalar(f"select to_jsonb(claim_ezyvet_import('{next_child}','{actor}','resolution-site','animal','https://api.trial.ezyvet.com'));"))
     after_replacement=json.loads(scalar('begin;'+staff+f"select read_ezyvet_migration_resolution_context('{fx['scope']}',{quote(json.dumps(target))});commit;"))
     check(after_replacement['context']['binding']['current_id']==next_binding,'Real replacement is current')
     check(after_replacement['context']['scan']['next_page']==2,'Incomplete child next page is pinned')
