@@ -62,6 +62,7 @@ function SignatureSection() {
           Appended to your outgoing emails (used once email sending is enabled).
         </p>
         <Textarea
+          aria-label="Email signature"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={"e.g.\nDr. Jane Smith, DVM\nLiving Room Vet Care"}
