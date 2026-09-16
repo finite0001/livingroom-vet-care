@@ -634,3 +634,123 @@ test("multi-lot fractional billing rounds once for the event, preserving immutab
     }).api.previewDispense(c.target),
   );
 });
+
+test("dispense chronology rejects coherent forged dates and respects Denver calendar boundaries", async () => {
+  for (const at of [
+    "2020-09-16T10:00:00.123456Z",
+    "2026-09-16T10:00:00.123455Z",
+    "2026-09-17T06:00:00.000000Z",
+  ]) {
+    const r = receipt();
+    r.result.dispense.dispensed_at = at;
+    r.result.dispense.artifact.dispensed_at = at;
+    r.result.slot.opened_at = at;
+    r.created_at = at;
+    await assert.rejects(setup(r).api.execute(operation()), /chronology/);
+  }
+  // UTC midnight is still the reviewed Denver day; equal/subsequent microseconds remain valid.
+  for (const at of [
+    "2026-09-16T10:00:00.123456Z",
+    "2026-09-16T04:00:00.123457-06:00",
+    "2026-09-17T05:59:59.999999Z",
+  ]) {
+    const r = receipt();
+    r.result.dispense.dispensed_at = at;
+    r.result.dispense.artifact.dispensed_at = at;
+    r.result.slot.opened_at = at;
+    r.created_at = at;
+    await setup(r).api.recover(operation());
+  }
+});
+
+test("pickup, forfeiture and outer receipt reject one-microsecond reversed chronology", async () => {
+  const earlier = "2026-09-16T10:00:00.123455Z";
+  const pOp = pickupOperation(),
+    p = pickup();
+  p.picked_up_at = earlier;
+  const pReceipt = {
+    version: 1,
+    id: pOp.id,
+    actor_id: actor,
+    operation: "pickup",
+    request: pOp.payload,
+    request_hash: hash,
+    result: p,
+    created_at: time,
+  };
+  await assert.rejects(setup(pReceipt).api.recover(pOp), /Pickup predates/);
+  const cOp = closeOperation(),
+    c = closure();
+  c.created_at = earlier;
+  c.after.closed_at = earlier;
+  const cReceipt = {
+    version: 1,
+    id: cOp.id,
+    actor_id: actor,
+    operation: "close_slot",
+    request: cOp.payload,
+    request_hash: hash,
+    result: c,
+    created_at: time,
+  };
+  await assert.rejects(setup(cReceipt).api.recover(cOp), /Closure predates/);
+  for (const [op, r] of [
+    [operation(), receipt()],
+    [pOp, { ...pReceipt, result: pickup() }],
+    [cOp, { ...cReceipt, result: closure() }],
+  ] as const) {
+    await assert.rejects(
+      setup({ ...r, created_at: earlier }).api.recover(op),
+      /Receipt predates/,
+    );
+  }
+});
+
+test("usage rejects oversized or untouched open slot remainder and phantom empty fulfillment heads", async () => {
+  const prior = signed();
+  prior.artifact.refills_authorized = 1;
+  prior.context.draft.fields.refills_authorized = 1;
+  const usage = {
+    ...usedUsage(),
+    used_fill_slots: 2,
+    remaining_quantity: "3.000",
+    forfeited_quantity: "1.000",
+    open_slot: {
+      ...usedUsage().open_slot,
+      index: 1,
+      remaining_quantity: "3.000",
+    },
+    fulfillment_head: { event_id: id(1), version: 2 },
+  };
+  const status = {
+    version: 1,
+    pet_id: pet,
+    status: {
+      authorization_id: prior.id,
+      authorization_hash: hash,
+      checked_at: time,
+      state: "active",
+      reason: null,
+      replacement_id: null,
+    },
+    head_id: null,
+    head_version: 0,
+    usage,
+  };
+  const api = createPrescriptionApi(
+    { rpc: async () => ({ data: status, error: null }) },
+    actor,
+    pet,
+  );
+  await assert.rejects(api.readStatus(prior as never), /allowance accounting/);
+  status.usage.remaining_quantity = "2.500";
+  status.usage.forfeited_quantity = "1.500";
+  status.usage.open_slot.remaining_quantity = "2.500";
+  await assert.rejects(api.readStatus(prior as never), /allowance accounting/);
+  assert.throws(() =>
+    prescriptionUsageSchema.parse({
+      ...initialUsage(),
+      fulfillment_head: { event_id: id(1), version: 1 },
+    }),
+  );
+});

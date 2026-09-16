@@ -585,7 +585,26 @@ function checkContext(
   )
     throw new Error("Reviewed monetary amounts differ");
 }
+const denverDayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Denver",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+function denverDay(value: string): string {
+  const parts = denverDayFormatter.formatToParts(new Date(value));
+  const get = (kind: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === kind)?.value;
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
 function checkDispense(d: NativeDispense, prior: PrescriptionAuthorization) {
+  if (
+    micros(d.dispensed_at) < micros(prior.signed_at) ||
+    denverDay(d.dispensed_at) !== d.reviewed_context.denver_date ||
+    (d.reviewed_context.slot &&
+      micros(d.dispensed_at) < micros(d.reviewed_context.slot.opened_at))
+  )
+    throw new Error("Dispense chronology differs from reviewed authorization");
   const c = d.reviewed_context,
     t = c.target,
     a = d.artifact;
@@ -641,6 +660,8 @@ function checkDispense(d: NativeDispense, prior: PrescriptionAuthorization) {
     throw new Error("Dispense artifact differs");
 }
 function checkClosure(c: NativeSlotClosure, prior: PrescriptionAuthorization) {
+  if (micros(c.created_at) < micros(c.before.opened_at))
+    throw new Error("Closure predates slot opening");
   checkHead(c.reviewed_context.authorization, prior);
   checkUsage(c.reviewed_context.usage, prior);
   checkSlot(c.before, prior);
@@ -673,6 +694,8 @@ function checkClosure(c: NativeSlotClosure, prior: PrescriptionAuthorization) {
     throw new Error("Slot forfeiture differs");
 }
 function checkPickup(p: NativePickup, prior: PrescriptionAuthorization) {
+  if (micros(p.picked_up_at) < micros(p.reviewed_context.dispense.dispensed_at))
+    throw new Error("Pickup predates dispensing");
   const c = p.reviewed_context;
   checkHead(c.authorization, prior);
   checkDispense(c.dispense, prior);
@@ -834,6 +857,14 @@ export function createFulfillmentApi(
       )
         throw new Error("Pickup request differs");
     }
+    const resultAt =
+      r.operation === "dispense"
+        ? r.result.dispense.dispensed_at
+        : r.operation === "close_slot"
+          ? r.result.created_at
+          : r.result.picked_up_at;
+    if (micros(r.created_at) < micros(resultAt))
+      throw new Error("Receipt predates fulfillment result");
     return r;
   }
   return {
