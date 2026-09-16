@@ -78,3 +78,9 @@ Added actor-scoped/batched incoming listing hook, typed RPC signature and incomi
 Targeted lint and application TypeScript check pass. Two Playwright flows (desktop/mobile) pass, including pending-to-ready retrieval and byte-for-byte PNG download plus horizontal overflow check. First desktop attempt hit the default5-second attachment expectation while the conversation was still loading; the fixture now waits explicitly for its message content (15-second bound), and both cases passed in14 seconds. No production deployment.
 
 CI35094146408 at53c0337 is still active and does not contain these timeline changes. Its Edge and SQL stages passed; subsequent database integration/browser stages remain active. Keep local UI commit until that run finishes, then submit it without canceling the prior acceptance run.
+
+## Timeline error/retry acceptance
+
+Added an explicit Refresh file status action after capture/read errors and removed duplicate refresh on the capturing-status action. Unsupported state now says File retrieval unavailable rather than implying a preview is the missing feature. Two targeted browser tests pass: capture503 never fabricates a ready/download action, and same-length altered PDF bytes never trigger a browser download. Both keep a working status-refresh action. Targeted UI/test lint and diff checks pass.
+
+Updated the standalone feature matrix's stale empty-attachment assessment to distinguish candidate PR work from deployed capability, preserving incoming concurrency, retention and hosted/provider acceptance gaps. Expanded backend CI35094146408 remains active, most recently in original-capture race regressions; the local UI follow-ups are not part of that run.

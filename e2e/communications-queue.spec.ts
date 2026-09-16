@@ -946,3 +946,40 @@ for (const mobile of [false, true]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+for (const scenario of ['capture-unavailable', 'changed-bytes']) {
+  test(`incoming file failure stays actionable without downloading (${scenario})`, async ({ page }) => {
+    await fixture(page, 'lost');
+    const bytes = Buffer.from('%PDF-original');
+    const { createHash } = await import('node:crypto');
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    const ready = scenario === 'changed-bytes';
+    let lists = 0, downloads = 0;
+    page.on('download', () => downloads++);
+    await page.route(`${backend}/rest/v1/messages*`, route => route.fulfill({ json: [{ id: message,
+      conversation_id: conversation, type: 'EMAIL', sender_type: 'CLIENT', sender_id: null,
+      content: 'Incoming failure fixture', is_internal: false, created_at: '2026-09-16T12:00:00Z',
+      audio_url: null, transcription: null, ivr_path: null }] }));
+    await page.route(`${backend}/rest/v1/rpc/list_inbound_message_attachments`, async route => {
+      lists++;
+      await route.fulfill({ json: [{ inbound_id: conversation, inbound_version: 1, message_id: message,
+        attachment_id: client, filename: 'original.pdf', byte_length: bytes.length, mime_type: 'application/pdf',
+        status: ready ? 'ready' : 'pending', capture_id: ready ? staff : null, sha256: ready ? hash : null }] });
+    });
+    await page.route(`${backend}/functions/v1/capture-inbound-attachment`, route => route.fulfill({ status: 503, json: { error: 'Unavailable' } }));
+    await page.route(`${backend}/functions/v1/read-inbound-attachment`, route => route.fulfill({ contentType: 'application/pdf', body: Buffer.from('%PDF-modified') }));
+    await page.goto(`/hub/conversation/${conversation}`);
+    await expect(page.getByText('Incoming failure fixture', { exact: true })).toBeVisible({ timeout: 15000 });
+    const files = page.getByRole('list', { name: 'Incoming attachments' });
+    await files.getByRole('button', { name: ready ? 'Download' : 'Retrieve file', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText(ready ? 'download is unconfirmed' : 'retrieval is unconfirmed');
+    expect(downloads).toBe(0);
+    if (!ready) await expect(files.getByRole('button', { name: 'Download', exact: true })).toHaveCount(0);
+    const refresh = page.getByRole('button', { name: 'Refresh file status', exact: true });
+    await expect(refresh).toBeEnabled();
+    const previousLists = lists;
+    await refresh.click();
+    await expect.poll(() => lists).toBeGreaterThan(previousLists);
+    expect(downloads).toBe(0);
+  });
+}

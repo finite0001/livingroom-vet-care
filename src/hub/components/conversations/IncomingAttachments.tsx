@@ -19,10 +19,7 @@ export function IncomingAttachments({ files }: IncomingAttachmentsProps) {
     if (!actor || working.current || file.status === "unsupported") return;
     working.current = true; setBusy(true); setError(null);
     try {
-      if (file.status === "capturing") {
-        await queryClient.invalidateQueries({ queryKey: ["incoming-attachments", actor] });
-        return;
-      }
+      if (file.status === "capturing") return;
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       if (current.current !== actor || data.session?.user.id !== actor) throw new Error("Staff session changed.");
@@ -59,13 +56,16 @@ export function IncomingAttachments({ files }: IncomingAttachmentsProps) {
         <div className="flex items-start gap-1"><Paperclip aria-hidden="true" className="mt-0.5 h-3 w-3 shrink-0" /><span className="break-all">{file.name}</span></div>
         <div className="flex flex-wrap items-center gap-x-2 pl-4 text-xs text-muted-foreground">
           {file.size !== null && <span>{(file.size / 1024).toFixed(1)} KB</span>}
-          <span>{file.status === "ready" ? "Verified file" : file.status === "capturing" ? "Retrieval in progress" : file.status === "unsupported" ? "Preview unavailable for this file" : "Not yet retrieved"}</span>
+          <span>{file.status === "ready" ? "Verified file" : file.status === "capturing" ? "Retrieval in progress" : file.status === "unsupported" ? "File retrieval unavailable" : "Not yet retrieved"}</span>
           {file.status !== "unsupported" && <Button variant="link" size="sm" className="h-auto p-0 text-xs" disabled={busy} onClick={() => void act(file)}>
             {file.status === "ready" ? "Download" : file.status === "capturing" ? "Check status" : "Retrieve file"}
           </Button>}
         </div>
       </li>)}
     </ul>
-    {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+    {error && <div className="text-xs">
+      <p role="alert" className="text-destructive">{error}</p>
+      <Button variant="link" size="sm" className="h-auto p-0 text-xs" disabled={busy} onClick={() => void queryClient.invalidateQueries({ queryKey: ["incoming-attachments", actor] })}>Refresh file status</Button>
+    </div>}
   </div>;
 }
