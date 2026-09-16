@@ -2,6 +2,9 @@
 create table public.native_dispense_finance_operations (
  id uuid primary key,actor_id uuid not null references public.profiles(id),request jsonb not null,request_hash text not null,result jsonb not null,created_at timestamptz not null
 );
+create table public.native_dispense_finance_closures (
+ id uuid primary key,actor_id uuid not null references public.profiles(id),request jsonb not null,request_hash text not null,closed_at timestamptz not null,record_hash text not null
+);
 create table public.native_dispense_credit_links (
  id uuid primary key references public.billing_credits(id),authorization_id uuid not null references public.native_prescription_authorizations(id),pet_id uuid not null references public.pets(id),dispense_id uuid not null references public.native_dispenses(id),invoice_id uuid not null references public.billing_invoices(id),invoice_item_id uuid not null references public.billing_invoice_items(id),foreign key(id) references public.native_dispense_finance_operations(id) deferrable initially deferred
 );
@@ -11,7 +14,7 @@ create table public.native_dispense_refund_links (
 create index native_finance_credit_invoice on public.native_dispense_credit_links(invoice_id,dispense_id);
 create index native_finance_refund_invoice on public.native_dispense_refund_links(invoice_id,dispense_id,credit_id);
 do $$declare table_name text;begin
- foreach table_name in array array['native_dispense_finance_operations','native_dispense_credit_links','native_dispense_refund_links'] loop
+ foreach table_name in array array['native_dispense_finance_operations','native_dispense_finance_closures','native_dispense_credit_links','native_dispense_refund_links'] loop
   execute format('alter table public.%I enable row level security',table_name);execute format('revoke all on public.%I from public,anon,authenticated,service_role',table_name);
   execute format('create trigger native_finance_immutable before update or delete on public.%I for each row execute function public.native_correction_immutable()',table_name);
   execute format('create trigger native_finance_no_truncate before truncate on public.%I for each statement execute function public.native_correction_immutable()',table_name);
@@ -97,6 +100,7 @@ end $$;
 create function public.native_finance_verified_operation(p_id uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$
 declare operation_row public.native_dispense_finance_operations;credit_link public.native_dispense_credit_links;refund_link public.native_dispense_refund_links;credit_row public.billing_credits;refund_row public.invoice_refund_requests;dispense jsonb;document jsonb;intent jsonb;context jsonb;credit_receipt jsonb;begin
  select * into operation_row from public.native_dispense_finance_operations where id=p_id;if not found then return null;end if;
+ if exists(select 1 from public.native_dispense_finance_closures c where c.id=p_id) then raise exception 'Closed operation has native financial effects' using errcode='23514';end if;
  document:=operation_row.result;intent:=operation_row.request->'intent';context:=document->'reviewed_context';perform public.native_finance_validate_intent(intent);
  perform public.native_rx_keys(operation_row.request,array['intent','expected_context_hash','attest_review']);
  perform public.native_rx_keys(document,array['id','target','action','actor_id','created_at','invoice_id','invoice_item_id','credit_id','refund_request_id','payment_id','amount_cents','currency','reason','reviewed_context','reviewed_context_hash','record_hash']);
@@ -204,6 +208,11 @@ declare actor uuid:=public.clinical_require_staff();existing public.native_dispe
   if existing.request is distinct from p_request then raise exception 'Financial operation identifier already used' using errcode='23514';end if;
   return public.native_finance_verified_operation(p_id);
  end if;
+ document:=public.native_finance_verified_closure(p_id);
+ if document is not null then
+  if document->>'actor_id'<>actor::text then raise exception 'Financial closure unavailable' using errcode='42501';end if;
+  raise exception 'Financial operation permanently closed without native record' using errcode='23514';
+ end if;
  if exists(select 1 from public.billing_credits cr where cr.id=p_id) or exists(select 1 from public.invoice_refund_requests rr where rr.id=p_id) then raise exception 'Existing generic financial history cannot be adopted' using errcode='23514';end if;
  preview:=public.native_finance_review(intent);context:=preview->'context';snapshot:=context->'snapshot';
  if p_request->>'expected_context_hash' is distinct from preview->>'context_hash' then raise exception 'Financial or clinical review changed; review again' using errcode='40001';end if;
@@ -228,9 +237,52 @@ create function public.read_native_dispense_finance(p_authorization_id uuid,p_pe
  for operation_row in select op.id from public.native_dispense_finance_operations op where op.result#>>'{target,dispense_id}'=p_dispense_id::text order by op.created_at,op.id loop results:=results||jsonb_build_array(public.native_finance_verified_operation(operation_row.id)->'result');end loop;
  perform public.clinical_require_staff();return jsonb_build_object('version',1,'actor_id',actor,'snapshot',snapshot,'results',results);
 end $$;
+-- A closure prevents any delayed native write from committing this exact operation ID.
+create function public.native_finance_verified_closure(p_id uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$
+declare row_value public.native_dispense_finance_closures;document jsonb;dispense jsonb;begin
+ select * into row_value from public.native_dispense_finance_closures c where c.id=p_id;if not found then return null;end if;
+ perform public.native_rx_keys(row_value.request,array['intent','expected_context_hash','attest_review']);perform public.native_finance_validate_intent(row_value.request->'intent');
+ if row_value.request->'attest_review' is distinct from 'true'::jsonb or jsonb_typeof(row_value.request->'expected_context_hash') is distinct from 'string' or row_value.request->>'expected_context_hash' !~ '^[0-9a-f]{64}$' or not isfinite(row_value.closed_at) then raise exception 'Invalid native financial closure request' using errcode='23514';end if;
+ if exists(select 1 from public.native_dispense_finance_operations op where op.id=p_id) or exists(select 1 from public.native_dispense_credit_links cl where cl.id=p_id) or exists(select 1 from public.native_dispense_refund_links rl where rl.id=p_id) then raise exception 'Closed operation has native financial effects' using errcode='23514';end if;
+ dispense:=public.native_fulfillment_verified_dispense((row_value.request#>>'{intent,target,dispense_id}')::uuid);
+ if dispense is null or dispense->'authorization_id' is distinct from row_value.request#>'{intent,target,authorization_id}' or dispense->'pet_id' is distinct from row_value.request#>'{intent,target,pet_id}' then raise exception 'Financial closure target mismatch' using errcode='23514';end if;
+ if row_value.request_hash is distinct from public.native_fulfillment_hash(jsonb_build_object('version',1,'actor_id',row_value.actor_id,'operation','record_native_dispense_finance','request',row_value.request)) then raise exception 'Financial closure request hash mismatch' using errcode='23514';end if;
+ document:=jsonb_build_object('version',1,'id',row_value.id,'actor_id',row_value.actor_id,'request',row_value.request,'request_hash',row_value.request_hash,'closed_at',row_value.closed_at);
+ if row_value.record_hash is distinct from public.native_fulfillment_hash(document) then raise exception 'Financial closure hash mismatch' using errcode='23514';end if;
+ return document||jsonb_build_object('record_hash',row_value.record_hash);
+end $$;
+create function public.native_finance_closure_required() returns trigger language plpgsql security definer set search_path=public as $$begin
+ if public.native_finance_verified_closure(NEW.id) is null then raise exception 'Verified financial closure required' using errcode='23514';end if;return NEW;
+end $$;
+create constraint trigger native_finance_closure_valid after insert on public.native_dispense_finance_closures deferrable initially deferred for each row execute function public.native_finance_closure_required();
+create function public.close_native_dispense_finance(p_id uuid,p_request jsonb) returns jsonb language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();document jsonb;receipt jsonb;stamp timestamptz;request_digest text;begin
+ if p_id is null then raise exception 'Stable financial operation id required' using errcode='23514';end if;
+ perform public.native_rx_keys(p_request,array['intent','expected_context_hash','attest_review']);perform public.native_finance_validate_intent(p_request->'intent');
+ if p_request->'attest_review' is distinct from 'true'::jsonb or jsonb_typeof(p_request->'expected_context_hash') is distinct from 'string' or p_request->>'expected_context_hash' !~ '^[0-9a-f]{64}$' then raise exception 'Exact original reviewed request required' using errcode='23514';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_id::text,0));perform pg_advisory_xact_lock(hashtextextended(p_id::text,3003));perform public.clinical_require_staff();
+ receipt:=public.native_finance_verified_operation(p_id);
+ if receipt is not null then
+  if receipt->>'actor_id'<>actor::text then raise exception 'Financial receipt unavailable' using errcode='42501';end if;
+  if receipt->'request' is distinct from p_request then raise exception 'Financial operation identifier already used' using errcode='23514';end if;
+  return jsonb_build_object('version',1,'status','recorded','receipt',receipt);
+ end if;
+ document:=public.native_finance_verified_closure(p_id);
+ if document is not null then
+  if document->>'actor_id'<>actor::text then raise exception 'Financial closure unavailable' using errcode='42501';end if;
+  if document->'request' is distinct from p_request then raise exception 'Financial operation identifier already closed' using errcode='23514';end if;
+ else
+  stamp:=clock_timestamp();
+  request_digest:=public.native_fulfillment_hash(jsonb_build_object('version',1,'actor_id',actor,'operation','record_native_dispense_finance','request',p_request));
+  document:=jsonb_build_object('version',1,'id',p_id,'actor_id',actor,'request',p_request,'request_hash',request_digest,'closed_at',stamp);
+  insert into public.native_dispense_finance_closures(id,actor_id,request,request_hash,closed_at,record_hash) values(p_id,actor,p_request,request_digest,stamp,public.native_fulfillment_hash(document));
+  document:=public.native_finance_verified_closure(p_id);
+ end if;
+ perform public.clinical_require_staff();return jsonb_build_object('version',1,'status','closed_unrecorded','closure',document);
+end $$;
 do $$declare fn record;begin
- for fn in select oid::regprocedure signature,proname from pg_proc where pronamespace='public'::regnamespace and(proname like 'native_finance_%' or proname in('preview_native_dispense_finance','record_native_dispense_finance','recover_native_dispense_finance','read_native_dispense_finance')) loop
+ for fn in select oid::regprocedure signature,proname from pg_proc where pronamespace='public'::regnamespace and(proname like 'native_finance_%' or proname in('preview_native_dispense_finance','record_native_dispense_finance','recover_native_dispense_finance','read_native_dispense_finance','close_native_dispense_finance')) loop
   execute format('revoke all on function %s from public,anon,authenticated,service_role',fn.signature);
-  if fn.proname in('preview_native_dispense_finance','record_native_dispense_finance','recover_native_dispense_finance','read_native_dispense_finance') then execute format('grant execute on function %s to authenticated',fn.signature);end if;
+  if fn.proname in('preview_native_dispense_finance','record_native_dispense_finance','recover_native_dispense_finance','read_native_dispense_finance','close_native_dispense_finance') then execute format('grant execute on function %s to authenticated',fn.signature);end if;
  end loop;
 end $$;

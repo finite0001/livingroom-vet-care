@@ -23,7 +23,16 @@ async function workspace(page: Page) {
   const results: FinanceResult[] = [],
     receipts = new Map<string, FinanceReceipt>(),
     calls: { id: string; request: FinanceRequest }[] = [];
-  const control = { lose: false, reject: false };
+  const control = {
+    lose: false,
+    reject: false,
+    neverSent: false,
+    loseClose: false,
+    malformedClose: false,
+    invoiceVersion: 1,
+  };
+  const closures = new Map<string, unknown>();
+  const closeCalls: { id: string; request: FinanceRequest }[] = [];
   function snapshot(): FinanceSnapshot {
     const credited = results
         .filter((r) => r.action === "credit")
@@ -40,7 +49,7 @@ async function workspace(page: Page) {
         id: fill.invoice_id,
         client_id: id(91),
         item_id: fill.invoice_item_id,
-        version: 1,
+        version: control.invoiceVersion,
         status: "issued",
         currency: "usd",
         total_cents: "1000",
@@ -152,6 +161,10 @@ async function workspace(page: Page) {
       };
     } else if (name === "record_native_dispense_finance") {
       calls.push({ id: args.p_id, request: args.p_request });
+      if (control.neverSent) {
+        await route.abort("failed");
+        return;
+      }
       if (control.reject) {
         await route.fulfill({
           status: 409,
@@ -199,6 +212,49 @@ async function workspace(page: Page) {
         return;
       }
       value = receipts.get(args.p_id);
+    } else if (name === "close_native_dispense_finance") {
+      closeCalls.push({ id: args.p_id, request: args.p_request });
+      if (receipts.has(args.p_id))
+        value = {
+          version: 1,
+          status: "recorded",
+          receipt: receipts.get(args.p_id),
+        };
+      else {
+        if (!closures.has(args.p_id))
+          closures.set(args.p_id, {
+            version: 1,
+            status: "closed_unrecorded",
+            closure: {
+              version: 1,
+              id: args.p_id,
+              actor_id: actor,
+              request: args.p_request,
+              request_hash: hash,
+              closed_at: time,
+              record_hash: hash,
+            },
+          });
+        value = closures.get(args.p_id);
+      }
+      if (control.loseClose) {
+        await route.abort("failed");
+        return;
+      }
+      if (control.malformedClose)
+        value = {
+          version: 1,
+          status: "closed_unrecorded",
+          closure: {
+            version: 1,
+            id: args.p_id,
+            actor_id: id(999),
+            request: args.p_request,
+            request_hash: hash,
+            closed_at: time,
+            record_hash: hash,
+          },
+        };
     } else if (name === "recover_native_dispense_finance")
       value = receipts.get(args.p_id) ?? null;
     else {
@@ -232,7 +288,7 @@ async function workspace(page: Page) {
     ).toBeEnabled();
   }
   await mount();
-  return { control, calls, results, mount };
+  return { control, calls, results, mount, closeCalls };
 }
 async function review(page: Page) {
   await page.getByLabel("Amount in dollars").fill("2.50");
@@ -352,4 +408,113 @@ test("sibling invoice invalidation preserves a locked review and requires new ev
     return h.financeInvoiceInvalidated(invoiceId);
   }, dispense().invoice_id);
   expect(invalidated).toBe(true);
+});
+
+const closedNotice =
+  "The original request was closed without recording a financial operation. Review current evidence before starting again.";
+test("never-sent request survives stale retry and closes without a financial write", async ({
+  page,
+}) => {
+  const w = await workspace(page);
+  w.control.neverSent = true;
+  await review(page);
+  await page
+    .getByRole("button", { name: "Recover original financial request" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Retry identical financial request" }),
+  ).toBeVisible();
+  w.control.neverSent = false;
+  w.control.reject = true;
+  w.control.invoiceVersion++;
+  await page
+    .getByRole("button", { name: "Retry identical financial request" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Resolve or close original request" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Resolve or close original request" })
+    .click();
+  await expect(page.getByText(closedNotice)).toBeVisible();
+  await expect(page.getByLabel("Amount in dollars")).toHaveValue("2.50");
+  await expect(page.getByLabel("Financial reason")).toHaveValue(
+    "Duplicate charge",
+  );
+  await expect(
+    page.getByRole("button", { name: "Lock reviewed request" }),
+  ).toHaveCount(0);
+  expect(w.calls).toHaveLength(2);
+  expect(w.calls[1]).toEqual(w.calls[0]);
+  expect(w.closeCalls).toEqual([w.calls[0]]);
+  expect(w.results).toHaveLength(0);
+});
+test("lost closure reply reloads and repeats the same close identity", async ({
+  page,
+}) => {
+  const w = await workspace(page);
+  w.control.neverSent = true;
+  await review(page);
+  w.control.loseClose = true;
+  await page
+    .getByRole("button", { name: "Resolve or close original request" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Resolve or close original request" }),
+  ).toBeEnabled();
+  await w.mount(true);
+  w.control.loseClose = false;
+  await page
+    .getByRole("button", { name: "Resolve or close original request" })
+    .click();
+  await expect(page.getByText(closedNotice)).toBeVisible();
+  expect(w.closeCalls).toHaveLength(2);
+  expect(w.closeCalls[1]).toEqual(w.closeCalls[0]);
+  expect(w.closeCalls[0]).toEqual(w.calls[0]);
+  expect(w.calls).toHaveLength(1);
+  expect(w.results).toHaveLength(0);
+});
+test("close resolves an already recorded result through the original receipt", async ({
+  page,
+}) => {
+  const w = await workspace(page);
+  w.control.lose = true;
+  await review(page);
+  await page
+    .getByRole("button", { name: "Resolve or close original request" })
+    .click();
+  await expect(
+    page.getByText(
+      "The exact financial operation was confirmed in the ledger.",
+    ),
+  ).toBeVisible();
+  expect(w.closeCalls).toEqual([w.calls[0]]);
+  expect(w.calls).toHaveLength(1);
+  expect(w.results).toHaveLength(1);
+});
+test("malformed closure leaves original request locked and recoverable", async ({
+  page,
+}) => {
+  const w = await workspace(page);
+  w.control.neverSent = true;
+  await review(page);
+  w.control.malformedClose = true;
+  await page
+    .getByRole("button", { name: "Resolve or close original request" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Resolve or close original request" }),
+  ).toBeEnabled();
+  await expect(page.getByText(closedNotice)).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Review financial evidence" }),
+  ).toHaveCount(0);
+  await w.mount(true);
+  w.control.malformedClose = false;
+  await page
+    .getByRole("button", { name: "Resolve or close original request" })
+    .click();
+  await expect(page.getByText(closedNotice)).toBeVisible();
+  expect(w.closeCalls[1]).toEqual(w.closeCalls[0]);
+  expect(w.results).toHaveLength(0);
 });

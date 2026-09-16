@@ -126,7 +126,19 @@ set local role authenticated;
 select ok(preview_native_dispense_finance(pg_temp.finance_intent('credit','1'))->'blockers' ? 'payment_reconciliation','Open payment reconciliation blocks new accounting changes');
 select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','0','Uncertain failed refund is not treated as spendable capacity');
 select is(recover_native_dispense_finance((select id from fx where k='native-refund')),(select v from data where k='refund'),'Existing receipt remains recoverable during reconciliation');
+-- Resolve a lost-before-commit operation whose original review has since changed.
+insert into fx values('closed-operation',gen_random_uuid());
+select is(recover_native_dispense_finance((select id from fx where k='closed-operation')),null::jsonb,'Unrecorded original has no receipt');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'40001',null,'Original uncertain review is stale');
+insert into data select 'closure',close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'));
+select is((select v->>'status' from data where k='closure'),'closed_unrecorded','Stale uncertain operation can be durably closed');
+select is(close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return')),(select v from data where k='closure'),'Lost closure reply recovers exact durable closure');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'23514',null,'Delayed original write cannot commit after closure');
+select throws_ok($$select close_native_dispense_finance((select id from fx where k='closed-operation'),jsonb_set((select v from data where k='before-return'),'{intent,reason}','"Changed request"'))$$,'23514',null,'Closure binds exact original request');
+select is(close_native_dispense_finance((select id from fx where k='native-credit'),(select v from data where k='credit-request'))->'receipt',(select v from data where k='credit'),'Close recovers committed receipt rather than closing recorded effect');
+select is(close_native_dispense_finance((select id from fx where k='native-credit'),(select v from data where k='credit-request'))->>'status','recorded','Committed operation is explicitly distinguished');
 select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'42501',null,'Another actor cannot recover closure');
 select throws_ok($$select recover_native_dispense_finance((select id from fx where k='native-credit'))$$,'42501',null,'Other active staff cannot recover creator receipt');
 select lives_ok($$select pg_temp.finance_read()$$,'Active staff may read shared financial history');
 reset role;
@@ -165,4 +177,17 @@ select throws_ok(format('select pg_temp.corrupt_finance_context(ARRAY[''eligible
 select throws_ok($$select pg_temp.corrupt_finance_context(ARRAY['snapshot','extra'],'true')$$,'23514',null,'Restored snapshot rejects extra fields even after rehash');
 select throws_ok($$select pg_temp.corrupt_finance_context(ARRAY['snapshot','source_heads','returns'],'{"event_id":null,"version":1,"record_hash":null}')$$,'23514',null,'Restored nonempty head requires exact identity and hash');
 select is(native_finance_verified_operation((select id from fx where k='native-credit')),(select v from data where k='credit'),'Rejected restore corruption leaves original receipt exact');
+select ok(not has_function_privilege('service_role','close_native_dispense_finance(uuid,jsonb)','execute'),'Service role cannot close staff operations');
+select ok(not has_function_privilege('authenticated','native_finance_verified_closure(uuid)','execute'),'Closure verifier remains private');
+select ok(not has_table_privilege('authenticated','native_dispense_finance_closures','insert'),'Direct closure writes denied');
+select throws_ok($$update native_dispense_finance_closures set record_hash=repeat('0',64)$$,'23514',null,'Closure immutable');
+create function pg_temp.corrupt_finance_closure() returns void language plpgsql as $$begin
+ alter table native_dispense_finance_closures disable trigger native_finance_immutable;
+ update native_dispense_finance_closures set record_hash=repeat('0',64) where id=(select id from fx where k='closed-operation');
+ alter table native_dispense_finance_closures enable trigger native_finance_immutable;
+ perform native_finance_verified_closure((select id from fx where k='closed-operation'));
+ raise exception 'Malformed closure accepted' using errcode='P0001';
+end $$;
+select throws_ok($$select pg_temp.corrupt_finance_closure()$$,'23514',null,'Restored corrupt closure fails verification');
+select is(native_finance_verified_closure((select id from fx where k='closed-operation')),(select v->'closure' from data where k='closure'),'Rejected corruption leaves exact closure intact');
 select * from finish();rollback;

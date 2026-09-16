@@ -154,12 +154,23 @@ const record = async (request: Awaited<ReturnType<typeof review>>, id = randomUU
 const initial = await readFinance();
 check(initial.snapshot.capacity.credit_capacity_cents === '125', 'Native item initially has exact original charge capacity');
 const staleCredit = await review(creditIntent());
+const abandonedOperation = { id: randomUUID(), kind: 'record_native_dispense_finance', payload: staleCredit };
 const genericCreditId = randomUUID();
 await rpc('credit_billing_invoice', { p_id: genericCreditId, p_invoice_id: invoiceId, p_amount_cents: 10, p_reason: '  Synthetic unallocated invoice credit  ' }, staff.headers);
 await denied('record_native_dispense_finance', { p_id: randomUUID(), p_request: staleCredit }, '40001', staff.headers);
+check(await finance.recover(abandonedOperation) === null, 'Lost-before-write request has no recorded receipt');
+const closed = await finance.close(abandonedOperation);
+check(closed.status === 'closed_unrecorded' && closed.closure.id === abandonedOperation.id, 'Stale request closes through actual Auth with exact immutable evidence');
+assert.deepEqual(await finance.close(abandonedOperation), closed); checks++;
+await denied('record_native_dispense_finance', { p_id: abandonedOperation.id, p_request: staleCredit }, '23514', staff.headers);
+await denied('close_native_dispense_finance', { p_id: abandonedOperation.id, p_request: staleCredit }, '42501', doctor.headers);
+await denied('close_native_dispense_finance', { p_id: abandonedOperation.id, p_request: { ...staleCredit, intent: { ...staleCredit.intent, amount_cents: '61' } } }, '23514', staff.headers);
 const afterGeneric = await readFinance();
 check(afterGeneric.snapshot.capacity.credit_capacity_cents === '115' && afterGeneric.snapshot.capacity.unallocated_credit_cents === '10', 'Unallocated invoice credit conservatively consumes potential item capacity');
 const nativeCredit = await record(await review(creditIntent()));
+const recordedResolution = await finance.close({ id: nativeCredit.id, kind: 'record_native_dispense_finance', payload: nativeCredit.request });
+check(recordedResolution.status === 'recorded', 'Resolution finds an already committed operation instead of closing it');
+if (recordedResolution.status === 'recorded') { assert.deepEqual(recordedResolution.receipt, nativeCredit); checks++; }
 check(nativeCredit.result.credit_id === nativeCredit.id && nativeCredit.result.refund_request_id === null, 'Accounting credit has exact native attribution and creates no refund');
 const afterCredit = await readFinance();
 check(afterCredit.snapshot.capacity.credit_capacity_cents === '55', 'Partial native credit leaves exact remaining item capacity');
@@ -198,4 +209,5 @@ assert.deepEqual(await rpc('recover_native_dispense_finance', { p_id: nativeCred
 assert.deepEqual(await rpc('recover_native_dispense_finance', { p_id: successfulRequest.id }, staff.headers), successfulRequest); checks++;
 check(immutable() === original, 'Financial adjustments preserve original dispense, item, stock and allowance');
 for (const headers of [anonymous, service]) await denied('record_native_dispense_finance', { p_id: randomUUID(), p_request: nativeCredit.request }, '42501', headers);
+for (const headers of [anonymous, service]) await denied('close_native_dispense_finance', { p_id: abandonedOperation.id, p_request: staleCredit }, '42501', headers);
 console.log(JSON.stringify({ synthetic_only: true, suite: 'native-finance-local-auth', checks_passed: checks, provider_requests: 0, project_id: projectId, cleanup: 'Owned runtime must be destroyed by parent harness' }));

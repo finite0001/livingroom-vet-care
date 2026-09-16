@@ -416,3 +416,84 @@ test("uniqueness rejection releases first attempt but never replaces an earlier 
     "uncertain",
   );
 });
+
+function closure() {
+  return {
+    version: 1 as const,
+    status: "closed_unrecorded" as const,
+    closure: {
+      version: 1 as const,
+      id: operation.id,
+      actor_id: actor,
+      request: structuredClone(operation.payload),
+      request_hash: hash,
+      closed_at: stamp,
+      record_hash: hash,
+    },
+  };
+}
+test("close binds exact RPC identity and validates an unrecorded closure", async () => {
+  const calls: { name: string; args: Record<string, unknown> }[] = [];
+  const client = createNativeDispenseFinanceApi(
+    {
+      rpc: async (name, args) => {
+        calls.push({ name, args });
+        return { data: closure(), error: null };
+      },
+    },
+    actor,
+    target,
+  );
+  assert.deepEqual(await client.close(operation), closure());
+  assert.deepEqual(calls, [
+    {
+      name: "close_native_dispense_finance",
+      args: { p_id: operation.id, p_request: operation.payload },
+    },
+  ]);
+});
+test("close accepts the exact historical recorded receipt", async () => {
+  const response = { version: 1, status: "recorded", receipt: receipt() };
+  assert.deepEqual(await api(response).close(operation), response);
+  const changed = receipt();
+  changed.actor_id = id(99);
+  await assert.rejects(api({ ...response, receipt: changed }).close(operation));
+});
+test("close rejects foreign actor, ID, changed raw intent, hash, timestamp and extra keys", async () => {
+  const mutations: ((r: ReturnType<typeof closure>) => void)[] = [
+    (r) => {
+      r.closure.actor_id = id(99);
+    },
+    (r) => {
+      r.closure.id = id(99);
+    },
+    (r) => {
+      r.closure.request.intent.reason = "Changed reason";
+    },
+    (r) => {
+      r.closure.request.intent.target = { ...target, dispense_id: id(99) };
+    },
+    (r) => {
+      r.closure.request_hash = "bad";
+    },
+    (r) => {
+      r.closure.record_hash = "bad";
+    },
+    (r) => {
+      r.closure.closed_at = "invalid";
+    },
+    (r) => {
+      Object.assign(r.closure, { extra: true });
+    },
+    (r) => {
+      Object.assign(r, { extra: true });
+    },
+  ];
+  for (const mutate of mutations) {
+    const response = closure();
+    mutate(response);
+    await assert.rejects(api(response).close(operation));
+  }
+  await assert.rejects(api(null).close(operation));
+  await assert.rejects(api({ version: 1, status: "unknown" }).close(operation));
+});

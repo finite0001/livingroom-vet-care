@@ -1,6 +1,6 @@
 # Native dispense financial adjustments
 
-Status: implemented candidate, acceptance in progress. Reconciliation PR151 has passed synthetic acceptance; its small browser-selector follow-up is in CI. This is independent practice software; no ezyVet connection, provider activation or credential change is required.
+Status: implemented candidate, acceptance in progress. Reconciliation PR151 passed all CI jobs at ce82da6 (run35088142107). This is independent practice software; no ezyVet connection, provider activation or credential change is required.
 
 ## Outcome
 
@@ -72,3 +72,5 @@ This closes one native medication lifecycle gap. Estimates/client acceptance, cl
 Migration126 implements attributed credits and separate refund preparation, with exact reviewed context and recovery. The staff panel and strict adapter preserve uncertain requests across reloads and refresh sibling invoice evidence. Actual finance database acceptance is still pending: the first execution caught a PL/pgSQL local-reference error, fixed before a fresh run. See [draft evidence](../../docs/evidence/native-dispense-finance-draft-20260916.json). Do not claim hosted readiness or provider execution from these changes.
 
 Candidate [PR154](https://github.com/finite0001/livingroom-vet-care/pull/154) is stacked on PR151. Final local frontend acceptance passed869 unit tests, app/node TypeScript, lint, build and30 focused browser cases, including4 finance workflows. SQL fixture corrections and full database/concurrency/Auth/restore CI remain pending; the failed local runs were cleaned up.
+
+Recovery review identified a permanent lock after a lost-before-commit request and later invoice change. The follow-up adds serialized server closure, preserving recorded results and permanently rejecting delayed writes for closed IDs. Local frontend acceptance now passes872 unit tests,14 focused finance tests and8 finance browser scenarios. New SQL/contention/actual Auth/restore acceptance remains pending. Existing run35090225400 covers the pre-closure candidate and passed SQL and finance contention steps; it does not prove the new closure behavior.

@@ -108,6 +108,12 @@ function Workspace({
     parseOperation: api.parseOperation,
     execute: api.execute,
     recover: api.recover,
+    close: api.close,
+    onClosed: () => {
+      setAttest(false);
+      setPreview(null);
+      void load();
+    },
     onConfirmed: (receipt) => {
       setAmount("");
       setReason("");
@@ -447,6 +453,9 @@ function Workspace({
           <Button onClick={() => void op.recoverOriginal()}>
             Recover original financial request
           </Button>
+          <Button variant="outline" onClick={() => void op.closeOriginal()}>
+            Resolve or close original request
+          </Button>
           {op.state.phase === "retryable" && (
             <Button
               variant="outline"
@@ -457,6 +466,13 @@ function Workspace({
             </Button>
           )}
         </div>
+      )}
+      {["uncertain", "retryable"].includes(op.state.phase) && (
+        <p className="text-sm text-muted-foreground">
+          Resolve returns the recorded result if this request completed. Otherwise,
+          it permanently closes this request so you can review current evidence
+          and start again. It does not reverse a recorded credit or refund.
+        </p>
       )}
       {["committing", "recovering"].includes(op.state.phase) && (
         <p role="status">Checking the original financial request…</p>

@@ -138,6 +138,26 @@ export interface FinanceRead {
   snapshot: FinanceSnapshot;
   results: FinanceResult[];
 }
+export interface FinanceClosure {
+  version: 1;
+  id: string;
+  actor_id: string;
+  request: FinanceRequest;
+  request_hash: string;
+  closed_at: string;
+  record_hash: string;
+}
+export interface FinanceRecordedResolution {
+  version: 1;
+  status: "recorded";
+  receipt: FinanceReceipt;
+}
+export interface FinanceClosedResolution {
+  version: 1;
+  status: "closed_unrecorded";
+  closure: FinanceClosure;
+}
+export type FinanceCloseResult = FinanceRecordedResolution | FinanceClosedResolution;
 const uuid = z
     .string()
     .uuid()
@@ -336,6 +356,19 @@ const receipt = z
     created_at: timestamp,
   })
   .strict();
+const closure = z.object({
+  version: z.literal(1),
+  id: uuid,
+  actor_id: uuid,
+  request,
+  request_hash: hash,
+  closed_at: timestamp,
+  record_hash: hash,
+}).strict();
+const resolution = z.discriminatedUnion("status", [
+  z.object({ version: z.literal(1), status: z.literal("recorded"), receipt }).strict(),
+  z.object({ version: z.literal(1), status: z.literal("closed_unrecorded"), closure }).strict(),
+]);
 const read = z
   .object({
     version: z.literal(1),
@@ -644,6 +677,18 @@ export function createNativeDispenseFinanceApi(
       const parsed = parseOperation(op),
         raw = await rpc("recover_native_dispense_finance", { p_id: parsed.id });
       return raw === null ? null : parseReceipt(raw, parsed);
+    },
+    async close(op: Readonly<PrescriptionOperation>): Promise<FinanceCloseResult> {
+      const parsed = parseOperation(op);
+      const r = resolution.parse(await rpc("close_native_dispense_finance", {
+        p_id: parsed.id,
+        p_request: parsed.payload,
+      }));
+      if (r.status === "recorded")
+        return { version: 1, status: "recorded", receipt: parseReceipt(r.receipt, parsed) };
+      check(r.closure.id === parsed.id && r.closure.actor_id === actorId &&
+        correctionEqual(r.closure.request, parsed.payload));
+      return r as FinanceClosedResolution;
     },
   };
 }

@@ -53,7 +53,7 @@ tables = [
     'native_return_operations', 'native_return_stock_links',
     'native_return_compensation_links', 'native_return_discrepancy_events',
     'native_return_discrepancy_operations', 'native_return_discrepancy_correction_links',
-    'native_dispense_finance_operations', 'native_dispense_credit_links',
+    'native_dispense_finance_operations', 'native_dispense_finance_closures', 'native_dispense_credit_links',
     'native_dispense_refund_links', 'billing_credits', 'payment_provider_profiles',
     'invoice_checkout_attempts', 'invoice_payment_evidence', 'invoice_payments',
     'invoice_refund_requests', 'invoice_refund_evidence', 'invoice_refunds',
@@ -188,13 +188,15 @@ def return_boundaries_query():
 def finance_evidence_query():
     return """select jsonb_build_object(
       'operations',(select count(*) from public.native_dispense_finance_operations),
+      'closures',(select count(*) from public.native_dispense_finance_closures),
       'credits',(select count(*) from public.native_dispense_credit_links),
       'refunds',(select count(*) from public.native_dispense_refund_links),
       'verified_receipts',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_finance_verified_operation(id) order by id),'[]') from public.native_dispense_finance_operations)),
+      'verified_closures',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_finance_verified_closure(id) order by id),'[]') from public.native_dispense_finance_closures)),
       'states',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('id',id,'state',public.refund_state_internal(id),'settled',exists(select 1 from public.invoice_refunds f where f.request_id=r.id)) order by id),'[]') from public.invoice_refund_requests r)),
       'balances',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('id',id,'balance',public.payment_balance_internal(id)) order by id),'[]') from public.billing_invoices where status='issued')),
-      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'triggers',(select coalesce(jsonb_agg(pg_get_triggerdef(t.oid,true) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c where c.relnamespace='public'::regnamespace and c.relname in ('native_dispense_finance_operations','native_dispense_credit_links','native_dispense_refund_links')),
-      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'security_definer',p.prosecdef,'volatility',p.provolatile,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p where p.pronamespace='public'::regnamespace and (p.proname like 'native_finance_%' or p.proname in ('preview_native_dispense_finance','record_native_dispense_finance','recover_native_dispense_finance','read_native_dispense_finance')))
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'triggers',(select coalesce(jsonb_agg(pg_get_triggerdef(t.oid,true) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c where c.relnamespace='public'::regnamespace and c.relname in ('native_dispense_finance_operations','native_dispense_finance_closures','native_dispense_credit_links','native_dispense_refund_links')),
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'security_definer',p.prosecdef,'volatility',p.provolatile,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p where p.pronamespace='public'::regnamespace and (p.proname like 'native_finance_%' or p.proname in ('preview_native_dispense_finance','record_native_dispense_finance','recover_native_dispense_finance','read_native_dispense_finance','close_native_dispense_finance')))
     );"""
 
 
@@ -225,6 +227,7 @@ try:
     before_finance = json.loads(snapshot_sql(finance_evidence_query()))
     check(before_finance['operations'] > 0 and before_finance['credits'] > 0 and before_finance['refunds'] > 0,
           'Populated native credits and refund reservations required for restore acceptance')
+    check(before_finance['closures'] > 0, 'Populated terminal finance closure required for restore acceptance')
     check(before_returns['chains'] > 0 and before_returns['verified'], 'Populated verified return chains required')
     check(before_returns['schema12_releases'] > 0, 'Populated schema12 return release evidence required')
     check(before_returns['schema13_releases'] > 0, 'Populated schema13 reconciliation release evidence required')
@@ -289,9 +292,14 @@ try:
         ('native_return_policy_decisions', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','configure_native_return_policy','request',request)"),
         ('native_dispense_correction_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','append_native_dispense_correction','request',request)"),
         ('native_dispense_finance_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_finance','request',request)"),
+        ('native_dispense_finance_closures', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_finance','request',request)"),
     ]:
         invalid = sql("select count(*) from public." + table + " where request_hash is distinct from encode(sha256(convert_to((" + basis + ")::text,'UTF8')),'hex');", restored)
         check(invalid == '0', 'Restored operation request hash differs for ' + table)
+    check(sql("select count(*) from public.native_dispense_finance_closures c where c.record_hash is distinct from public.native_fulfillment_hash(jsonb_build_object('version',1,'id',c.id,'actor_id',c.actor_id,'request',c.request,'request_hash',c.request_hash,'closed_at',c.closed_at));", restored) == '0',
+          'Restored terminal closure record hashes must bind exact request, actor and close timestamp')
+    check(sql("select count(*) from public.native_dispense_finance_closures c join public.native_dispense_finance_operations o using(id);", restored) == '0',
+          'Restored terminal unrecorded closures cannot coexist with recorded native operations')
     verified = json.loads(sql("select jsonb_build_object('count',count(*),'all_equal',coalesce(bool_and(public.native_fulfillment_verified_dispense(id)=document),false)) from public.native_dispenses;", restored))
     check(verified['count'] == before['native_dispenses']['rows'] and verified['all_equal'],
           'Restored saved dispense snapshots, allocation/movement links and invoice item links must verify')
@@ -306,8 +314,9 @@ try:
     check(json.loads(sql(correction_boundaries_query(), restored)) == before_correction_boundaries,
           'Correction RLS, immutability triggers and private/public function grants must survive restore')
     restored_returns = json.loads(sql(return_evidence_query(), restored))
-    check(json.loads(sql(finance_evidence_query(), restored)) == before_finance,
-          'Restored finance receipts, original ledger attribution, current cash/reservations and security boundaries must verify exactly')
+    restored_finance = json.loads(sql(finance_evidence_query(), restored))
+    check(restored_finance == before_finance,
+          'Restored finance receipts, terminal closures, original ledger attribution, current cash/reservations and security boundaries must verify exactly')
     check(restored_returns == before_returns, 'Restored return chains, balances, policy, positive/negative stock links, lot holds, discrepancy decisions and schema12/13 evidence must verify exactly')
     check(json.loads(sql(return_boundaries_query(), restored)) == before_return_boundaries,
           'Return RLS, immutable/deferred stock-link triggers and private/public function grants must survive restore')
@@ -378,5 +387,6 @@ if success:
                'verified_correction_evidence': restored_corrections,
                'correction_boundaries_verified': True,
                'verified_return_evidence': restored_returns, 'return_boundaries_verified': True,
+               'verified_finance_evidence': restored_finance, 'finance_boundaries_verified': True,
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     print(json.dumps(summary, sort_keys=True))

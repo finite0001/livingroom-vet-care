@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { FinanceCloseResult, FinanceReceipt } from "./dispense-finance-api";
 import {
   clearFinanceIntent,
   financeOperationFailed,
@@ -20,23 +21,27 @@ import {
   type PrescriptionOperation,
   type PrescriptionOperationState,
 } from "./prescription-state";
-interface Options<Receipt> {
+interface Options {
   actor: string;
   target: DispenseFinanceTarget;
   parseOperation: (value: unknown) => Readonly<PrescriptionOperation>;
-  execute: (op: Readonly<PrescriptionOperation>) => Promise<Receipt>;
-  recover: (op: Readonly<PrescriptionOperation>) => Promise<Receipt | null>;
-  onConfirmed: (receipt: Receipt) => void;
+  execute: (op: Readonly<PrescriptionOperation>) => Promise<FinanceReceipt>;
+  recover: (op: Readonly<PrescriptionOperation>) => Promise<FinanceReceipt | null>;
+  close: (op: Readonly<PrescriptionOperation>) => Promise<FinanceCloseResult>;
+  onConfirmed: (receipt: FinanceReceipt) => void;
+  onClosed: () => void;
 }
 /** Parent mounts a new keyed workspace for actor/target changes; late replies never clear stored intent. */
-export function useDispenseFinanceOperation<Receipt>({
+export function useDispenseFinanceOperation({
   actor,
   target,
   parseOperation,
   execute,
   recover,
+  close,
   onConfirmed,
-}: Options<Receipt>) {
+  onClosed,
+}: Options) {
   const identity = `${actor}:${target.authorization_id}:${target.pet_id}:${target.dispense_id}`;
   const identityRef = useRef(identity);
   identityRef.current = identity;
@@ -107,7 +112,7 @@ export function useDispenseFinanceOperation<Receipt>({
     setError("");
     setNotice("");
   }
-  function confirm(pending: PrescriptionOperationState, receipt: Receipt) {
+  function confirm(pending: PrescriptionOperationState, receipt: FinanceReceipt) {
     const op = pending.operation!;
     try {
       clearFinanceIntent(sessionStorage, actor, target, op, parseOperation);
@@ -218,6 +223,38 @@ export function useDispenseFinanceOperation<Receipt>({
       lock.current = false;
     }
   }
+  async function closeOriginal() {
+    if (!valid() || lock.current || storageBlocked) return;
+    const pending = recoverPrescriptionOperation(current.current);
+    if (pending.phase !== "recovering" || !pending.operation) return;
+    lock.current = true;
+    update(pending);
+    setError("");
+    setNotice("");
+    try {
+      const resolution = await close(pending.operation);
+      if (!valid()) return;
+      if (resolution.status === "recorded") {
+        confirm(pending, resolution.receipt);
+      } else {
+        // Only the validated durable server closure makes abandoning this UUID safe.
+        // If storage cleanup fails, retain the original recovery state for retry.
+        clearFinanceIntent(sessionStorage, actor, target, pending.operation, parseOperation);
+        update(emptyPrescriptionOperation(actor, target.pet_id));
+        setNotice("The original request was closed without recording a financial operation. Review current evidence before starting again.");
+        onClosed();
+      }
+    } catch {
+      if (valid()) {
+        update(prescriptionRecoveryFailed(pending, {
+          actor, patientId: target.pet_id, operationId: pending.operation.id,
+        }));
+        setError("The resolution could not be verified or its browser record could not be cleared. Resolve this same request again before starting another.");
+      }
+    } finally {
+      lock.current = false;
+    }
+  }
   return {
     state,
     error,
@@ -227,6 +264,7 @@ export function useDispenseFinanceOperation<Receipt>({
     discard,
     commit,
     recoverOriginal,
+    closeOriginal,
     locked: storageBlocked || prescriptionOperationLocked(state),
     dirty:
       storageBlocked ||

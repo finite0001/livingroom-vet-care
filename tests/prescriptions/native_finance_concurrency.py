@@ -43,7 +43,7 @@ def check(condition, message):
 
 staff = "set local role authenticated;select set_config('request.jwt.claims'," + quote(json.dumps({'sub': actor, 'role': 'authenticated'})) + ",true);"
 
-def contended(first_query, second_query, second_expected, first_tail=""):
+def contended(first_query, second_query, second_expected, first_tail="", first_end="commit"):
     """Wait for an observed lock holder and then an observed lock waiter."""
     tag = 'lrv_finance_' + uuid.uuid4().hex
     owned_sessions.extend([tag + '_holder', tag + '_waiter'])
@@ -73,7 +73,9 @@ def contended(first_query, second_query, second_expected, first_tail=""):
             raise AssertionError('Waiter exited before observed contention: ' + second.stderr.read())
         time.sleep(.03)
     check(waiting, 'Second operation actually waits on the first transaction lock')
-    first.stdin.write(first_tail + 'commit;\n')
+    if first_end not in ('commit', 'rollback'):
+        raise AssertionError('Only explicit transaction completion supported')
+    first.stdin.write(first_tail + first_end + ';\n')
     first.stdin.close()
     first.wait(timeout=10)
     second.wait(timeout=10)
@@ -309,6 +311,88 @@ try:
     contended(generic_refund(op,t['invoice_id'],payment,'50'),finance_write(op,request),rejected('23514'))
     check(finance_recover(op) is None,'Native credit refuses same UUID already used by generic refund')
     check(credit_count(t['invoice_id'])=='1','Cross-kind ID collision does not append another credit')
+
+    def close_finance(op,request,other=False):
+        return invoke('close_native_dispense_finance',quote(op),jsonsql(request),other=other)
+    def closing(op,request,expected):
+        # Validate the response inside the waiting transaction: psql output is
+        # suppressed to keep fixture documents out of concurrency logs.
+        return staff+"do $closure_test$ declare response jsonb; begin response:=public.close_native_dispense_finance("+quote(op)+','+jsonsql(request)+"); if response->>'status' is distinct from "+quote(expected)+" then raise exception 'Unexpected finance closure outcome'; end if; end $closure_test$;"
+    def assert_closed(op,request):
+        response=close_finance(op,request)
+        check(response['version']==1 and response['status']=='closed_unrecorded','Closure returns terminal unrecorded outcome')
+        closure=response['closure']
+        check(closure['version']==1 and closure['id']==op and closure['actor_id']==actor and closure['request']==request,
+              'Terminal closure binds exact operation, request and actor')
+        check(close_finance(op,request)==response,'Exact repeated closure returns immutable evidence')
+        check(finance_recover(op) is None,'Closed unrecorded attempt has no recorded financial receipt')
+        check(scalar('select count(*) from native_dispense_finance_closures where id='+quote(op)+';')=='1','One immutable closure row exists')
+        return response
+
+    # Closure wins while a delayed original submission is observably waiting.
+    # The writer must reject after the closure commits; read-null alone would
+    # not establish that terminal guarantee.
+    a,d,t=ready();before=original(a,d,t);request=finance_review(finance_intent(a,d));op=str(uuid.uuid4())
+    contended(closing(op,request,'closed_unrecorded'),finance_write(op,request),rejected('23514'))
+    frozen_closure=assert_closed(op,request)
+    check(credit_count(t['invoice_id'])=='0','Closed delayed credit never reaches billing ledger')
+    check(finance_read(a,d)['snapshot']['capacity']['credit_capacity_cents']=='200','Closure does not reserve or consume credit capacity')
+    delayed=sql(transaction(finance_write(op,request)),fail=False)
+    check(delayed.returncode!=0 and '23514' in delayed.stderr,
+          'Original request remains rejected after closure response is lost and recovered')
+    altered={**request,'intent':{**request['intent'],'reason':'Different closure request'}}
+    mismatch=sql(transaction(operation('close_native_dispense_finance',op,altered)),fail=False)
+    check(mismatch.returncode!=0 and '23514' in mismatch.stderr,'Changed request cannot reuse a closure identity')
+    denied=sql('begin;'+operation('close_native_dispense_finance',op,request,other=True)+'commit;',fail=False)
+    check(denied.returncode!=0 and '42501' in denied.stderr,'Different actor cannot recover or claim a closure')
+    denied=sql('begin;'+operation('record_native_dispense_finance',op,request,other=True)+'commit;',fail=False)
+    check(denied.returncode!=0 and '42501' in denied.stderr,'Different actor cannot submit a closed original request')
+    check(close_finance(op,request)==frozen_closure,'Rejected closure mutations leave original evidence unchanged')
+    untouched(a,d,t,before)
+
+    # Writer wins: close waits and returns its exact recorded receipt, rather
+    # than falsely declaring that a committed credit never happened.
+    a,d,t=ready();request=finance_review(finance_intent(a,d));op=str(uuid.uuid4())
+    contended(finance_write(op,request),closing(op,request,'recorded'),success)
+    recorded=finance_recover(op)
+    check(close_finance(op,request)==dict(version=1,status='recorded',receipt=recorded),
+          'Close after committed write returns exact original receipt')
+    check(credit_count(t['invoice_id'])=='1','Write-first closure does not duplicate or undo credit')
+    check(scalar('select count(*) from native_dispense_finance_closures where id='+quote(op)+';')=='0','Recorded operation has no unrecorded closure row')
+    mismatch=sql(transaction(operation('close_native_dispense_finance',op,{**request,'intent':{**request['intent'],'amount_cents':'99'}})),fail=False)
+    check(mismatch.returncode!=0 and '23514' in mismatch.stderr,'Close cannot recover a recorded operation with changed request')
+    denied=sql('begin;'+operation('close_native_dispense_finance',op,request,other=True)+'commit;',fail=False)
+    check(denied.returncode!=0 and '42501' in denied.stderr,'Write-first closure still enforces creator identity')
+
+    # A transaction containing a real ledger write can roll back while closure
+    # waits. Closure then establishes absence under the same operation locks.
+    a,d,t=ready();request=finance_review(finance_intent(a,d));op=str(uuid.uuid4())
+    contended(finance_write(op,request),closing(op,request,'closed_unrecorded'),success,first_end='rollback')
+    assert_closed(op,request)
+    check(credit_count(t['invoice_id'])=='0','Rolled-back writer leaves no credit beneath terminal closure')
+    delayed=sql(transaction(finance_write(op,request)),fail=False)
+    check(delayed.returncode!=0 and '23514' in delayed.stderr,'Retry of rolled-back write cannot resurrect closed attempt')
+
+    # A rolled-back closure must not poison an original writer waiting behind
+    # it. Only committed closure is terminal evidence.
+    a,d,t=ready();request=finance_review(finance_intent(a,d));op=str(uuid.uuid4())
+    contended(closing(op,request,'closed_unrecorded'),finance_write(op,request),success,first_end='rollback')
+    check(finance_recover(op) is not None and credit_count(t['invoice_id'])=='1','Rolled-back closure permits waiting exact write')
+    check(scalar('select count(*) from native_dispense_finance_closures where id='+quote(op)+';')=='0','Rolled-back closure leaves no terminal row')
+
+    # Both outcomes also preserve refund reservation capacity, never cash.
+    a,d,t,payment,provider_payment=paid();c=credit(a,d,'150')
+    request=refund_review(a,d,c,payment,'100');op=str(uuid.uuid4())
+    contended(closing(op,request,'closed_unrecorded'),finance_write(op,request),rejected('23514'))
+    assert_closed(op,request)
+    check(refund_capacity(a,d,c,payment)=='150','Closed refund attempt consumes no linked reservation capacity')
+    check(scalar('select count(*) from invoice_refund_requests where id='+quote(op)+';')=='0','Closed refund creates no generic reservation')
+    op=str(uuid.uuid4());request=refund_review(a,d,c,payment,'100')
+    contended(finance_write(op,request),closing(op,request,'recorded'),success)
+    check(close_finance(op,request)==dict(version=1,status='recorded',receipt=finance_recover(op)),
+          'Write-first refund closure recovers exact reservation receipt')
+    check(refund_capacity(a,d,c,payment)=='50','Write-first refund closure preserves one reservation')
+    check(finance_read(a,d)['snapshot']['balance']['refunded_cents']=='0','Neither closure outcome establishes returned cash')
 
     # Recheck staff after an observed authorization wait; statement-start auth
     # alone is insufficient when deactivation commits while the writer blocks.

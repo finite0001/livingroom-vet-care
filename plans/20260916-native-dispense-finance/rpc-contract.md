@@ -164,4 +164,14 @@ Result created_at/actor/amount/reason must match its existing financial ledger r
 
 ## Required acceptance cases
 
+### Terminal resolution of an uncertain request
+
+`close_native_dispense_finance(p_id,p_request)` accepts the exact original saved request, with the same bare0 → seed3003 operation locks as record. Under those locks it rechecks staff and either returns `{version:1,status:'recorded',receipt}` or `{version:1,status:'closed_unrecorded',closure}`. Closure contains version1, ID, actor, original request, original request hash, post-lock closed_at and record_hash over the other closure fields. It is immutable, audited and independently verified against the original dispense target; it deliberately does not require the old financial review to remain current.
+
+The record path checks for a durable closure before any ledger effect and permanently refuses a closed UUID. A write that wins the lock is recovered, not cancelled; a write that rolls back can be closed. A closure that rolls back cannot block a later write. Closure attests absence of a **native** financial operation with that ID, not absence of unrelated generic ledger history.
+
+Only a strictly validated recorded/closed response permits browser intent cleanup. A null recovery, malformed response or uncertain close preserves the original request. Lost closure responses recover through the identical close call; existing receipt-or-null recovery stays backward compatible. Closing does not reverse a credit, issue a refund, reserve capacity or change clinical/stock records. Require fresh preview/attestation after closure while retaining the local draft.
+
+Required additional cases: stale-review permanent-loop escape, close/write races in both orders, rollback in both orders, delayed write rejection, exact retry, changed actor/request denial, malformed/lost close browser responses and populated closure restore.
+
 Exact source tampering; stale clinical/financial hash; generic/native credit races; same-ID generic/native and return/native lock contention; two dispenses sharing invoice; refund reservation competition; failed/uncertain/reconciliation/settled transitions; unallocated credit conservatism; staff revocation while waiting; creator-only recovery; immutable historical receipts; lost-response reload recovery; unchanged original dispense/item/stock/allowance; current financial status separate from frozen receipt. No provider action is required for these tests.
