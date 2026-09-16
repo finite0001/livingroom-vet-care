@@ -4,7 +4,7 @@ Candidate implementation; not deployed or enabled. Target backend remains `mgadh
 
 ## Preconditions
 
-Require migration20260916130000, successful SQL/concurrency/actual Storage acceptance, the reviewed read-only inventory, an explicit grace setting and deployed worker endpoint verification. The current cleanup SQL suite passed in CI35097849305 at9b46cc6; the rest of that run is still active. Later discovery/concurrency changes are not covered by that result. Do not infer hosted readiness from local tests.
+Require migration20260916130000, successful SQL/concurrency/actual Storage acceptance, the reviewed read-only inventory, an explicit grace setting and deployed worker endpoint verification. CI35107565034 passed all jobs at843ca92, including bounded discovery, 19 cleanup SQL assertions, observed cleanup races and the 33-check incoming HTTP/Auth/RPC/Storage sequence. Later release-harness commits require their own verification. Do not infer hosted readiness from local tests.
 
 ## Server settings
 
