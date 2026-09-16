@@ -322,6 +322,11 @@ const api = createFulfillmentApi(
 const untouched = sql(
   "select jsonb_build_object('treatments',(select count(*) from patient_treatments),'outbox',(select count(*) from communication_outbox))::text",
 );
+// Explicitly synthetic acceptance in the owned disposable database only.
+sql(`insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version)
+  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',10)
+  on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_at=excluded.accepted_at,
+  acceptance_reference=excluded.acceptance_reference,accepted_schema_version=excluded.accepted_schema_version;`);
 const privateDir = mkdtempSync(resolve(tmpdir(), "lrv-native-browser-"));
 chmodSync(privateDir, 0o700);
 let server: ChildProcess | undefined,
@@ -571,6 +576,132 @@ try {
     (await api.read())?.usage.fulfillment_head.version === 1,
     "Pickup does not consume another fill allowance",
   );
+  const releasePanel = page.getByRole("region", {
+    name: "Patient medical-record releases",
+    exact: true,
+  });
+  await releasePanel
+    .getByRole("button", {
+      name: "Select all shown: Signed practice prescriptions",
+      exact: true,
+    })
+    .click();
+  await releasePanel
+    .getByRole("button", {
+      name: "Select all shown: Recorded practice dispensing",
+      exact: true,
+    })
+    .click();
+  const previewResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v10` &&
+      response.request().method() === "POST",
+  );
+  await releasePanel
+    .getByRole("button", { name: "Review selected package", exact: true })
+    .click();
+  const reviewedResponse = await previewResponse;
+  check(reviewedResponse.ok(), "Actual browser release preview succeeds");
+  const reviewed = await reviewedResponse.json();
+  check(
+    reviewed.snapshot.schema_version === 10 &&
+      reviewed.snapshot.native_prescriptions.length === 1 &&
+      reviewed.snapshot.native_dispenses.length === 1,
+    "Actual browser preview explicitly selects both native families",
+  );
+  const releaseHtml = releasePanel
+    .frameLocator('iframe[title="Medical-record release artifact"]')
+    .locator("body");
+  await expect(releaseHtml).toContainText("Selected signed prescription");
+  await expect(releaseHtml).toContainText("Selected recorded dispense");
+  await expect(releaseHtml).toContainText("SYNTHETIC-BROWSER-1");
+  await expect(releaseHtml).toContainText("SYNTHETIC-BROWSER-2");
+  await expect(releaseHtml).toContainText("Synthetic recipient");
+  await expect(releaseHtml).not.toContainText(invoiceId);
+  checks += 6;
+  await expect(
+    releasePanel.getByRole("button", {
+      name: "Confirm reviewed package",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  checks++;
+  await releasePanel
+    .getByRole("checkbox", { name: /I reviewed the complete selected records/ })
+    .check();
+  const confirmResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/confirm_record_release` &&
+      response.request().method() === "POST",
+  );
+  await releasePanel
+    .getByRole("button", { name: "Confirm reviewed package", exact: true })
+    .click();
+  const confirmedResponse = await confirmResponse;
+  check(
+    confirmedResponse.ok(),
+    "Actual browser confirms reviewed schema10 package",
+  );
+  const confirmed = await confirmedResponse.json();
+  await expect(
+    releasePanel.getByRole("button", {
+      name: "Confirm reviewed package",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  checks++;
+  const releaseRead = await rpc(
+    "read_record_release",
+    { p_id: confirmed.id },
+    staff.headers,
+  );
+  check(
+    releaseRead.eligible === true &&
+      releaseRead.release.created_by === staff.id &&
+      releaseRead.release.pet_id === patient.id &&
+      releaseRead.release.client_id === household.id &&
+      releaseRead.release.source_hash === reviewed.source_hash,
+    "Actual release read binds actor, patient, household and reviewed fingerprint",
+  );
+  assert.deepEqual(releaseRead.release.snapshot, reviewed.snapshot);
+  checks++;
+  assert.deepEqual(releaseRead.release.selection.native_prescription_ids, [
+    authorization.id,
+  ]);
+  checks++;
+  assert.deepEqual(releaseRead.release.selection.native_dispense_ids, [
+    saved.id,
+  ]);
+  checks++;
+  const frozen = JSON.parse(
+    sql(
+      `select snapshot::text from record_releases where id=${quote(confirmed.id)}`,
+    ),
+  );
+  assert.deepEqual(frozen, reviewed.snapshot);
+  checks++;
+  check(
+    frozen.native_prescriptions[0].id === authorization.id &&
+      frozen.native_dispenses[0].id === saved.id &&
+      frozen.native_dispenses[0].pickup.id === pickups[0].id &&
+      frozen.native_dispenses[0].prescription.id === authorization.id &&
+      !Object.hasOwn(frozen.native_dispenses[0].artifact, "invoice_id"),
+    "Database frozen artifact binds exact order, dispense and pickup without financial internals",
+  );
+  check(
+    sql(
+      `select count(*) from record_release_sources where release_id=${quote(confirmed.id)} and source_kind in ('native_prescription','native_dispense')`,
+    ) === "2",
+    "Actual release registers both explicit native source dependencies",
+  );
+  await releasePanel
+    .getByRole("button", { name: "Open release package", exact: true })
+    .click();
+  await expect(releaseHtml).toContainText("Selected recorded dispense");
+  await expect(releaseHtml).toContainText("Synthetic recipient");
+  checks += 2;
   check(
     untouched ===
       sql(
@@ -604,7 +735,7 @@ try {
 console.log(
   JSON.stringify({
     synthetic_only: true,
-    suite: "native-fulfillment-browser",
+    suite: "native-fulfillment-and-release-browser",
     checks_passed: checks,
     provider_requests: 0,
     blocked_external_requests: blockedExternal,
