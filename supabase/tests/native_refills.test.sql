@@ -45,6 +45,11 @@ insert into data select 'link-request',jsonb_build_object('refill_id',(select id
 select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v||jsonb_build_object('expected_link_context_hash',repeat('0',64)) from data where k='link-request'))$$,'40001','Refill authorization context changed','Stale link evidence denied');
 insert into data select 'link-receipt',transition_native_refill((select id from fx where k='link'),(select v from data where k='link-request'));
 select is(read_native_refill((select id from fx where k='refill'),(select id from fx where k='pet'))#>>'{authorization_status,state}','active','Linked authorization current state disclosed');
+reset role;
+select is((select provolatile::text from pg_proc where oid='public.native_refill_authorization_observation(uuid,text,uuid)'::regprocedure),'s','Authorization observation uses one stable MVCC snapshot');
+select ok(not has_function_privilege('authenticated','native_refill_authorization_observation(uuid,text,uuid)','execute'),'Private lock-free observation is not a public authority bypass');
+set local role authenticated;
+
 select is(read_native_refill((select id from fx where k='refill'),(select id from fx where k='pet'))->>'head_id',(select id::text from fx where k='link'),'Read head bound to exact refill revision');
 select cancel_native_prescription(gen_random_uuid(),jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'expected_event_id',null,'expected_context_hash',preview_native_prescription_cancel((select id from fx where k='sign'),(select id from fx where k='pet'))->>'context_hash','reason','Synthetic later cancellation','attest_review',true));
 select is(read_native_refill((select id from fx where k='refill'),(select id from fx where k='pet'))#>>'{authorization_status,state}','cancelled','Later cancellation immediately disclosed');

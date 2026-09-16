@@ -108,11 +108,21 @@ begin
  update public.native_refills set version=version+1,state=f.state,assigned_to=f.assigned_to,authorization_id=f.authorization_id,authorization_hash=f.authorization_hash,updated_by=a,updated_at=clock_timestamp() where id=ri returning * into f;
  return public.native_refill_finish(p_id,'transition',p_request,before_doc,f,action,link);
 end $$;
+-- Queue observations must not accumulate write-side authorization gates in refill order.
+-- STABLE keeps the verified document, latest terminal event and usage on one MVCC snapshot.
+create function public.native_refill_authorization_observation(p_id uuid,p_hash text,p_pet_id uuid) returns jsonb language sql stable security definer set search_path=public as $$
+ with verified as materialized(select public.native_rx_verified_authorization(p_id) document), matching as (
+ select document from verified where document->>'id'=p_id::text and document->>'pet_id'=p_pet_id::text and document->>'authorization_hash'=p_hash)
+ select jsonb_build_object('status',jsonb_build_object('authorization_id',p_id,'authorization_hash',p_hash,'checked_at',clock_timestamp(),
+ 'state',case when e.action='cancel' then 'cancelled' when e.action='replace' then 'replaced' when (m.document#>>'{artifact,expires_on}')::date<(clock_timestamp() at time zone 'America/Denver')::date then 'expired' else 'active' end,
+ 'reason',e.reason,'replacement_id',e.replacement_id),'usage',public.native_rx_usage_context(p_id))
+ from matching m left join lateral(select action,reason,replacement_id from public.native_prescription_authorization_events where authorization_id=p_id order by event_version desc limit 1) e on true;
+$$;
 create function public.native_refill_read_projection(f public.native_refills) returns jsonb language plpgsql security definer set search_path=public as $$
 declare household uuid;head uuid;s jsonb;
 begin
  select client_id into household from public.pets where id=f.pet_id;select id into head from public.native_refill_events where refill_id=f.id and revision=f.version;
- if f.authorization_id is not null then s:=public.read_native_prescription_status(f.authorization_id,f.pet_id);end if;
+ if f.authorization_id is not null then s:=public.native_refill_authorization_observation(f.authorization_id,f.authorization_hash,f.pet_id);if s is null then raise exception 'Refill authorization identity mismatch' using errcode='23514';end if;end if;
  return jsonb_build_object('version',1,'refill',to_jsonb(f),'head_id',head,'current_household_id',household,'household_matches',household=f.client_id,'authorization_status',s->'status','authorization_usage',s->'usage','operational_only',true);
 end $$;
 create function public.read_native_refill(p_refill_id uuid,p_pet_id uuid) returns jsonb language plpgsql security definer set search_path=public as $$declare f public.native_refills;begin perform public.clinical_require_staff();select * into f from public.native_refills where id=p_refill_id and pet_id=p_pet_id;if not found then return null;end if;return public.native_refill_read_projection(f);end $$;

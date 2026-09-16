@@ -146,6 +146,27 @@ try:
     contended(operation('cancel_native_prescription',str(uuid.uuid4()),cancel_request(a)),operation('transition_native_refill',op,req,other=True),lambda code,out,err:code!=0 and 'Refill authorization context changed' in err)
     check(refill_receipt(op,other=True) is None,'Stale reviewed link creates no receipt')
     check(invoke('read_native_refill',quote(i),quote(fx['pet']))['refill']['authorization_id'] is None,'Stale link leaves intake unlinked')
+    # Read-only queue observations must finish while a writer holds the authorization gate.
+    a=signed();i=create_refill();p=invoke('preview_native_refill_link',quote(i),quote(fx['pet']),quote(a))
+    req=transition(i,'link');req.update(authorization_id=a,expected_link_context_hash=p['context_hash'])
+    invoke('transition_native_refill',quote(str(uuid.uuid4())),jsonsql(req))
+    tag='lrv_refill_read_gate_'+uuid.uuid4().hex
+    holder=subprocess.Popen(COMMAND,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+    holder.stdin.write("set application_name="+quote(tag)+";begin;select pg_advisory_xact_lock(hashtextextended('native-prescription-authorization:"+a+"',0));\n");holder.stdin.flush()
+    try:
+        deadline=time.monotonic()+30
+        while time.monotonic()<deadline:
+            if scalar("select count(*) from pg_stat_activity where application_name="+quote(tag)+" and state='idle in transaction';")=='1':break
+            if holder.poll() is not None:raise AssertionError('Read gate holder exited: '+holder.stderr.read())
+            time.sleep(.03)
+        else:raise AssertionError('Read gate holder not observed')
+        check(True,'Observed writer authorization gate before read')
+        read=sql('begin;'+other_staff+"set local statement_timeout='5s';select list_native_refills(null,null,null,100);select count(*) from pg_locks where pid=pg_backend_pid() and locktype='advisory';commit;")
+        check(read.stdout.strip().splitlines()[-1]=='0','Queue finishes under held writer gate and acquires zero advisory locks')
+    finally:
+        if holder.poll() is None:
+            holder.stdin.write('rollback;\n');holder.stdin.close();holder.wait(timeout=10)
+    check(holder.returncode==0,'Owned gate holder released cleanly')
     # Actor revocation commits while operation gate is held, then must be rechecked.
     i=create_refill();op=str(uuid.uuid4())
     holder="select pg_advisory_xact_lock(hashtextextended('native-refill-operation:"+op+"',0));update profiles set is_active=false where id="+quote(other_actor)+';'
