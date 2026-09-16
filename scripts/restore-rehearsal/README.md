@@ -1,5 +1,17 @@
 # Synthetic local database and Storage restore rehearsal
 
+## September 16 hosted attachment schema upgrade
+
+`hosted-attachment-upgrade.py` rehearses the observed 113-receipt hosted baseline in a fresh local Supabase project. Supply a private directory containing the read-only `routine-inventory.json`, `access-inventory.json`, and the captured `20260916020000_ezyvet_migration_weight_evidence.sql`. The historical hosted migration is a distinct function, not a timestamp alias of canonical `20260916033310`.
+
+```sh
+python3 scripts/restore-rehearsal/hosted-attachment-upgrade.py --baseline-directory /private/observed-baseline --run-synthetic-local-rehearsal
+```
+
+The script requires exact baseline routine/access inventory equality before applying the six missing canonical migrations. It preserves the historical receipt, yielding 119 receipts, and runs the four attachment SQL suites. Random owned project labels and workdir checks constrain cleanup. It captures private diagnostics and emits a success receipt only after cleanup verification. This is schema/SQL acceptance only: populated upgrade, backup restoration, physical Storage bytes, hosted Edge Functions and provider acceptance remain separate requirements. It neither changes hosted migration history nor expands retained import functionality.
+
+## Full synthetic restore
+
 Requirements: Docker, the repository-pinned Supabase CLI (2.115.0), Node22+, Python3, and `npm ci --ignore-scripts` in this worktree. No hosted credentials are needed. Ports58320/58321/58322/58324 and59320/59321/59322/59324 must be unused.
 
 Run from this repository:
