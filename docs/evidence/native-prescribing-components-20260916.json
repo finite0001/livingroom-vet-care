@@ -1,0 +1,32 @@
+{
+  "scope": "Native prescribing component checkpoint; full workflow incomplete",
+  "revision": "2088191e1d8f9237c64e77c0df41d3f43c255320",
+  "command": "npm run check",
+  "exit_code": 0,
+  "unit_tests": 631,
+  "focused_renderer_tests": 8,
+  "focused_operation_state_tests": 7,
+  "rendered_checks": {
+    "widths": [
+      390,
+      900
+    ],
+    "horizontal_overflow": false,
+    "artifact": "docs/clinical-review/native-prescription-partial-fill-example.html"
+  },
+  "source_sha256": {
+    "supabase/functions/_shared/native-prescription-renderer.ts": "e2332b4c84efb29e9f427f24245872c2c794d3eee21d0ad44ac0cbef28090da9",
+    "tests/prescriptions/renderer.test.ts": "8f79b81f42b58a685ed7be04d811d3ed4f9b2c639d48f035fe04494f9b116ca3",
+    "tests/prescriptions/renderer-fixture.ts": "2c9be243fb053528ed13452c52280b3ad6edf5e57f7e4a4db8bb2cc3f5d8a44b",
+    "src/hub/features/prescriptions/prescription-state.ts": "4741859dc96ac3bfeb9683e3faae8873c060901b11c7f3ada1b3a7aa04e6ccf2"
+  },
+  "limitations": [
+    "Database/native API and routed staff workflow not implemented at this checkpoint.",
+    "Component tests do not establish end-to-end, clinical or hosted acceptance.",
+    "No hosted deployment or provider requests."
+  ],
+  "warnings": [
+    "Existing AuthContext fast-refresh warning",
+    "Existing Vite chunk-size warning"
+  ]
+}
