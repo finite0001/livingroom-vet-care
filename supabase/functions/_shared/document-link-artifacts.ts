@@ -64,7 +64,7 @@ export async function buildDocumentLinkArtifacts(
     )
       throw new Error("Reviewed SMS release unavailable");
     originals = b.release.snapshot.attachments;
-    sourceByteBound = [5, 6, 7, 8, 9, 10, 11].includes(b.release.snapshot.schema_version);
+    sourceByteBound = [5, 6, 7, 8, 9, 10, 11, 12].includes(b.release.snapshot.schema_version);
     report = renderRecordRelease({
       preview: b.release,
       confirmed: {

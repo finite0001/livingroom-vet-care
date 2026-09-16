@@ -77,3 +77,11 @@ See [native fulfillment evidence](../../docs/evidence/native-fulfillment-2026091
 Schema10 now explicitly selects immutable signed orders and actual dispenses, preserving signed context, frozen status/usage and separate pickup. Invoice references and operational context are excluded from the clinical projection. Historical schemas1–9, original-byte verification and dynamic policy acceptance remain intact. Source changes invalidate later delivery; uncertain confirmations retain their exact request.
 
 See [native release evidence](../../docs/evidence/native-record-releases-20260916.json) for local verification. Next: explicit correction/return/credit linkage, followed by remaining native practice/communications features and hosted/clinical/provider acceptance. No live policy or provider gate was enabled.
+
+## Native correction121 and physical return122 checkpoints
+
+Immutable correction annotations and pickup amendments are implemented with printV2/schema11 evidence; PR146 and its preceding PR145 have green frontend, database and Edge CI. Physical returns now support exact-lot intake, held quantities, partial disposal and DVM-reviewed eligible restocking, with immutable receipts, printV3 and schema12 selected record releases. Return stock links commit atomically and never recreate prescription allowance or automatically credit an invoice. Restocking defaults to disabled.
+
+See [return evidence](../../docs/evidence/native-dispense-returns-20260916.json) and [clinical review](returns-review.md). Local verification passed: 793 unit tests; 404 fresh Auth/browser workflow checks; 73 populated restore checks; 72 observed contention checks; 896 assertions across 23 SQL suites followed by an expanded return suite (907 distinct assertions). These are synthetic local results, not hosted or clinical acceptance.
+
+Next: explicit return claim/quantity correction and reconciliation, then dispense-linked credit/refund association using the existing financial ledgers. Estimates/client acceptance, communications attachments and follow-ups, remaining native parity assessment, hosted rollout, Dr. Edler review and provider commissioning remain open. The platform remains independent of ezyVet; source integration gates remain disabled.
