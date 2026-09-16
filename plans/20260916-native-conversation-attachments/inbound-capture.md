@@ -42,3 +42,9 @@ The entry point defaults off unless INBOUND_ATTACHMENT_CAPTURE_ENABLED=true. No 
 Draft PR156 is open at https://github.com/finite0001/livingroom-vet-care/pull/156. CI35092794347 is running against9856659 (14 incoming SQL assertions); results are not yet established. Parent CI35092195032 has passed its actual conversation capture/queue concurrency step; remaining jobs were still running when checked.
 
 Five additional SQL assertions now exercise an expired lease, stable capture identity on reclaim, replacement token and Storage path, and rejection of the replaced worker's finalization. These bring the incoming SQL suite to19 assertions. They are locally prepared and diff-checked, not yet executed or included in the running CI commit. Wait for the current run to finish before pushing this follow-up so the workflow does not cancel existing evidence collection.
+
+## Actual-service capture acceptance prepared
+
+Added `tests/inbound/attachment-local-roundtrip.ts` and a database CI step. It requires an explicit disposable project, matching Docker project label and localhost API. It uses real Auth/RPC/Storage with synthetic provider bytes and an in-process handler: invalid identity/stale version/privileged RPC denial, lost committed receipt recovery without repeated read/write, exact private bytes, direct staff read/overwrite denial, and revoked staff denial. Cleanup is scoped to generated fixture IDs and combines assertion/cleanup failures. Targeted ESLint, Node syntax and diff checks pass. Runtime execution is pending; this is not a deployed Edge HTTP or provider acceptance claim.
+
+CI35092794347 passed Edge checking and the full SQL stage for9856659; frontend/browser and remaining database integration stages are still active. Follow-up commits remain local until that run is terminal to avoid canceling it. Parent CI35092195032 also remains active, with its capture/queue race stage passed.
