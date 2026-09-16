@@ -1,3 +1,4 @@
+import { MigrationIdentityEvidence } from "./MigrationIdentityEvidence";
 import { MigrationPrescriptionItemEvidence } from "./MigrationPrescriptionItemEvidence";
 import { MigrationResolutionForm } from "./MigrationResolutionForm";
 import { MigrationResume } from "./MigrationResume";
@@ -158,6 +159,7 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, onDecisionDir
         {expanded === item.evidence_hash && <><dl className="mt-2 space-y-1 break-all text-xs"><dt className="text-muted-foreground">Snapshot reference</dt><dd>{item.snapshot_id}</dd><dt className="text-muted-foreground">Occurrence evidence hash</dt><dd>{item.evidence_hash}</dd></dl>
           <fieldset disabled={bindingDirty || resumeDirty}><MigrationResolutionForm actor={actor} manifest={manifest} scopeId={binding.scope_id} target={{ kind: "observation", binding_id: binding.id, page: item.page, ordinal: item.ordinal, snapshot_id: item.snapshot_id, evidence_hash: item.evidence_hash }} onDirtyChange={setDecisionDirty} /></fieldset>
           {items.data.resource === "healthstatus" && <MigrationWeightEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
+          {["contact", "animal"].includes(items.data.resource) && <MigrationIdentityEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "prescription" && <MigrationPrescriptionEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "prescriptionitem" && <MigrationPrescriptionItemEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "vaccination" && <MigrationVaccinationEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
