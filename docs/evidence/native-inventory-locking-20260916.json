@@ -130,7 +130,8 @@
     "src/hub/features/prescriptions/prescription-api.ts": "8c7e9ba665f8d6633b61c52812369f37eab0a895b034f63c7e96a313e9b58ea8",
     "src/hub/features/refills/refill-api.ts": "dcbfd786bbae257f4506ac26f5edd5bb0bb2b6673ad2a082e0a719356df2716f",
     "tests/prescriptions/fulfillment-api.test.ts": "500e7de5bb865454491137795b21883b44ba324f912758336292dfe8e07c06d0",
-    "tests/prescriptions/fulfillment-fixture.ts": "0ce78d8a3473fba0fa260ef219b8706521d21a59012a175812881274905cff8d"
+    "tests/prescriptions/fulfillment-fixture.ts": "0ce78d8a3473fba0fa260ef219b8706521d21a59012a175812881274905cff8d",
+    "e2e/communications-queue.spec.ts": "470eb640fd8bec8d87823fba1b2d6a2da28ce6d02c0cfe209046a802096ae456"
   },
   "implementation_revision": "20631fddff969a35a4cbf78c05e5a470c67697e0",
   "upgrade_preserved": [
@@ -162,17 +163,18 @@
   "negative_control": "Reconstructed only prior treatment lock order in an owned schema clone; failed precise product SHARE ownership assertion as expected. This does not reproduce or claim an old deadlock.",
   "frontend": {
     "unit_tests": 680,
-    "browser_tests": 24,
+    "browser_tests": 38,
     "browser_breakdown": {
       "refill_operation_inventory": 16,
-      "native_prescribing": 8
+      "native_prescribing": 8,
+      "communication_recovery": 14
     },
     "lint_typecheck_build": "passed",
     "warnings": [
       "Existing AuthContext fast-refresh warning",
       "Existing Vite chunk-size warning"
     ],
-    "browser_revision": "3d773eb (24 cases); subsequent20631fd parser changes verified by680 unit tests and82 actual API checks"
+    "browser_revision": "3d773eb (24 cases); subsequent20631fd parser changes verified by680 unit tests and82 actual API checks;14 communications recovery cases passed after native-refill fixture update"
   },
   "guardrail_unit_tests": 10,
   "provider_requests": 0,
@@ -186,5 +188,6 @@
     "CI status is separate from local verification.",
     "Current ezyVet integration is not a launch dependency; access remains read-only reference only."
   ],
-  "independent_review": "Two preparatory parser defects fixed in20631fd; reviewer reran original invalid chronology and oversized remainder examples and confirmed rejection."
+  "independent_review": "Two preparatory parser defects fixed in20631fd; reviewer reran original invalid chronology and oversized remainder examples and confirmed rejection.",
+  "ci_regression": "Prior9ad8ad5 frontend run passed358 browser cases and failed one stale legacy-refill notification fixture. Updated that fixture to native list_native_refills and Compose neutral client update; all14 communication-recovery cases pass without changing saved subject/body or exact-request assertions. New CI remains separate."
 }
