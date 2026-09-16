@@ -111,7 +111,7 @@ select is((select v#>>'{snapshot,attachments,0,api_attachment_ref,record_id}' fr
 select is(jsonb_array_length((select v#>'{snapshot,attachments}' from data where k='api-preview')),1,'API-only preview selects exactly one original');
 select is(jsonb_array_length((select v#>'{snapshot,imported_prescriptions}' from data where k='api-preview')),0,'API-only preview does not invent prescriptions');
 select is((select v->>'source_hash' from data where k='api-preview'),(select encode(sha256(convert_to((v->'snapshot')::text,'UTF8')),'hex') from data where k='api-preview'),'Preview digest binds the entire reviewed snapshot');
-insert into fx select 'release-weight',id from record_patient_weight((select id from fx where k='pet'),12.3,'kg',current_date);
+insert into fx select 'release-weight',id from record_patient_weight((select id from fx where k='pet'),12.3,'kg',(now() at time zone 'America/Denver')::date);
 insert into data select 'mixed-api-preview',pg_temp.api_preview(jsonb_build_object('api_attachment_ids',jsonb_build_array((select id from fx where k='correction')),'weight_ids',jsonb_build_array((select id from fx where k='release-weight'))));
 insert into data select 'legacy-weight-preview',release_preview_v8_internal((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',jsonb_build_object('weight_ids',jsonb_build_array((select id from fx where k='release-weight'))));
 select is(jsonb_array_length((select v#>'{snapshot,weights}' from data where k='mixed-api-preview')),1,'Mixed API preview retains explicitly selected native weight');
