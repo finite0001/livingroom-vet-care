@@ -1,0 +1,33 @@
+{
+  "status": "draft-under-verification",
+  "date": "2026-09-16",
+  "scope": "Native dispense accounting credit and separately reviewed refund reservation attribution",
+  "synthetic_only": true,
+  "hosted_deployed": false,
+  "provider_requests": 0,
+  "passed": {
+    "prior_full_check_unit_tests": 865,
+    "focused_latest_adapter_tests": 11,
+    "initial_browser_after_fixture_fix": 2,
+    "static_sql_statements": 22,
+    "static_plpgsql_definitions": 12
+  },
+  "pending": [
+    "Final frontend/build checks and four finance plus inherited payment/billing/fulfillment browser cases",
+    "Fresh final-source actual Auth, SQL, concurrency and populated restore acceptance",
+    "Hosted rollout, clinical/operational review and owner-deferred payment provider acceptance"
+  ],
+  "first_runtime": {
+    "identity": "lrv-prescription-5b771258c01b",
+    "native_inherited_auth_browser_checks": 461,
+    "finance_sql": "Failed: function-qualified local variable was parsed as missing table; source now uses unambiguous target_dispense_id",
+    "finance_concurrency": "Failed at same initial snapshot SQL reference, before race checks",
+    "cleanup_verified": true
+  },
+  "file_sha256": {
+    "supabase/migrations/20260916110000_native_dispense_finance.sql": "90a42ae2880f9017652c912ea6f1829d678809d7a780242e87e7040cf1cb018a",
+    "tests/prescriptions/local-finance.ts": "5230caf441c4a715b1dca858e07758244c361c60e51a0bf11f299552dcd787cd",
+    "tests/prescriptions/native_finance_concurrency.py": "7252741a2956253dba5d69045dc21e992c24b0b06530d8b7fab7918879b5e0ae",
+    "tests/prescriptions/restore-native.py": "39d0e430518954d1e4bddc4ba9f8c70b61d39581a9162080d687556176af8ba1"
+  }
+}

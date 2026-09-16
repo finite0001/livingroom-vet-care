@@ -1,6 +1,6 @@
 # Native dispense financial adjustments
 
-Status: planned, not implemented. Depends on reconciliation PR151 acceptance. This is independent practice software; no ezyVet connection, provider activation or credential change is required.
+Status: implemented candidate, acceptance in progress. Reconciliation PR151 has passed synthetic acceptance; its small browser-selector follow-up is in CI. This is independent practice software; no ezyVet connection, provider activation or credential change is required.
 
 ## Outcome
 
@@ -66,3 +66,7 @@ Confirm existing financial-role policy rather than implicitly broadening it; cur
 ## Wider roadmap retained
 
 This closes one native medication lifecycle gap. Estimates/client acceptance, client portal and consent workflows, inventory purchasing/transfers, practice reporting and the unassessed ezyVet feature inventory remain in scope. Vet Connect Hub communication parity remains tracked separately in `docs/standalone-feature-matrix-20260916.md`, using Fastmail and Resend. No endpoint inventory alone establishes full feature parity.
+
+## Implementation checkpoint
+
+Migration126 implements attributed credits and separate refund preparation, with exact reviewed context and recovery. The staff panel and strict adapter preserve uncertain requests across reloads and refresh sibling invoice evidence. Actual finance database acceptance is still pending: the first execution caught a PL/pgSQL local-reference error, fixed before a fresh run. See [draft evidence](../../docs/evidence/native-dispense-finance-draft-20260916.json). Do not claim hosted readiness or provider execution from these changes.
