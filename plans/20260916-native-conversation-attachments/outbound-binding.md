@@ -1,0 +1,31 @@
+# Reviewed conversation email binding
+
+Design checkpoint, not implemented acceptance. Based on inspected communication preparation/recovery, invoice/release frozen payloads and dispatch guard chain. Keep existing text-only message behavior intact.
+
+## Request and review lifecycle
+
+Reuse `communication_prepared_requests` and the existing composer scope/request UUID. Extend preparation only for EMAIL with a bounded unique ordered set of ready uploads owned by the actor and belonging to that conversation. Save the immutable file manifest with upload IDs, filename, MIME, byte length and SHA-256. Preserve at most one unresolved prepared request per actor/scope, unchanged request recovery and explicit abandonment; do not introduce a parallel composer state that bypasses those rules.
+
+The proposed limits are five files, ten MiB per file and twenty MiB raw total, with the existing32MiB frozen-payload limit enforced after encoding. These are application limits, below the currently documented Resend40MB total encoded email cap. Exact supported PDF/PNG/JPEG bytes remain explicit, not a claim of malware scanning.
+
+An authenticated preparation handler loads the owned request and verified files, rechecks hashes against actual bytes, and constructs the exact provider payload using configured sender/Reply-To. A service-only capture RPC independently binds recipient, subject/body, ordered files and decoded length/hash to the saved manifest. Capture is immutable and idempotent. Metadata alone cannot stand in for captured bytes.
+
+A review dialog must show the exact recipient, subject, text and files before queueing. Queue via a dedicated authenticated RPC requiring the saved payload hash and explicit attestation. The existing ordinary enqueue path must continue rejecting attachments until that proof is supplied; do not enable attachment arrays on the private text core or silently send an email with its files omitted. Use the private text core only after proof validation, then bind the resulting outbox/message to the captured payload in the same transaction. Existing common recovery/acknowledgment can identify the one outbox receipt by the same request UUID.
+
+## Dispatch boundary
+
+Extend `read_frozen_email_payload` with a third unambiguous artifact kind. Preserve existing invoice and record-release readers. Detect multiple artifact associations rather than choosing one by precedence. The new reader must check the exact active outbox lease, immutable payload hash and reviewed link before returning bytes.
+
+Extend the current `start_communication_attempt` wrapper chain without bypassing reminder, invoice, record-release, payment or document-link guards. Require the dispatcher-supplied conversation payload hash and configured sender/Reply-To to match the captured artifact. A missing, purged, malformed or changed artifact must prevent provider execution. Direct queueing of a draft or direct service invocation without the exact delivery proof must fail closed.
+
+Use the existing verified frozen-email transport; do not add arbitrary remote attachment URLs. Preserve disabled delivery gates, consent/suppression, actual provider-attempt recording and uncertain-send reconciliation. Never rebuild a different payload under the same provider idempotency key.
+
+## Required continuation checks
+
+- Canonical SQL request ownership, exact/repeated preparation, competing composer request, abandonment, recipient drift and duplicate file rejection.
+- Actual Auth/Storage capture using verified bytes; interrupted preparation/capture/queue/acknowledgment retries retain one request and one outbox message.
+- Wrong hash, wrong actor/conversation, missing bytes, changed same-size bytes, reordered files, overflow after encoding and unsupported SMS/NOTE paths.
+- Direct authenticated/service bypass attempts and collision with invoice/release/payment associations; full existing dispatch regression suite.
+- Rendered desktop/mobile review and recovery, account switch, cancellation and existing draft-navigation behavior. No visible attachment send control before this path works end to end.
+- Explicit retention/purge policy and independent retrieval authorization for queued/sent files. Abandoned upload cleanup is still open; no automatic deletion of verified evidence.
+- Controlled authorized provider delivery and staff acceptance remain separate from synthetic tests.

@@ -1,3 +1,5 @@
+import { uploadConversationAttachment } from "../../src/hub/features/communications/attachment-upload.ts";
+import { createAttachmentUploadTransport } from "../../src/hub/features/communications/attachment-upload-api.ts";
 /** Owned local Auth/Storage integration; no provider calls and no hosted fallback. */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -179,6 +181,41 @@ try {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id }),
     });
+  const transport = createAttachmentUploadTransport(
+    {
+      rpc: (name, args) => owner.client.rpc(name, args),
+      storage: owner.client.storage,
+      functions: {
+        invoke: async (_name, options) => {
+          const response = await handler(
+            new Request("http://127.0.0.1/verify-conversation-attachment", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${owner.token}` },
+              body: JSON.stringify(options.body),
+            }),
+          );
+          return {
+            data: response.ok ? await response.json() : null,
+            error: response.ok
+              ? null
+              : new Error("Local verification rejected"),
+          };
+        },
+      },
+    },
+    owner.id,
+    () => owner.id,
+  );
+  const recovered = await uploadConversationAttachment({
+    id,
+    actorId: owner.id,
+    conversationId: conversation.data.id,
+    file: new File([content], "fixture.pdf", { type: content.type }),
+  }, transport);
+  check(
+    recovered.status === "ready" && recovered.id === id,
+    "Client adapter recovers existing immutable Storage bytes with the same upload ID",
+  );
   const response = await handler(request(owner.token));
   check(response.status === 200, "Handler verifies actual stored bytes");
   const verified = await response.json();
@@ -228,7 +265,7 @@ try {
   );
 } catch {
   console.error(
-    "Conversation attachment local integration failed; no credential-bearing response emitted.",
+    `Conversation attachment local integration failed after ${checks} checks; no credential-bearing response emitted.`,
   );
   process.exitCode = 1;
 }
