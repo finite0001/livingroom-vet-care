@@ -47,13 +47,14 @@ async function fixture(
   apiMode = false,
   apiCandidateCount = 1,
 ) {
-  const currentArtifact = apiMode ? JSON.parse(JSON.stringify(apiAttachmentArtifact()).replaceAll("d9000000-0000-4000-8000-000000000001",petId).replaceAll("d9000000-0000-4000-8000-000000000002",clientId)) : prescriptionMode ? prescriptionArtifact() : vaccinationMode
+  let currentArtifact = apiMode ? JSON.parse(JSON.stringify(apiAttachmentArtifact()).replaceAll("d9000000-0000-4000-8000-000000000001",petId).replaceAll("d9000000-0000-4000-8000-000000000002",clientId)) : prescriptionMode ? prescriptionArtifact() : vaccinationMode
     ? vaccinationArtifact()
     : clinicalMode
     ? clinicalHistoryArtifact()
     : sourceMode
       ? sourceProvenanceArtifact()
       : chartArtifact;
+  currentArtifact = JSON.parse(JSON.stringify(currentArtifact).replaceAll('"pet"', JSON.stringify(petId)).replaceAll('"household"', JSON.stringify(clientId)));
   const user = {
     id: staffId,
     aud: "authenticated",
@@ -292,7 +293,7 @@ async function fixture(
         "abandoned";
       return route.fulfill({ json: null });
     }
-    if (path === "/rest/v1/rpc/list_record_release_sources_v9") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v10") {
       state.sourceLoads++;
       if (state.malformedSources) return route.fulfill({ json: [] });
       const candidates: Record<string, unknown> = {
@@ -305,6 +306,8 @@ async function fixture(
         policy_v4_accepted: v4Accepted,
         policy_v8_accepted: v4Accepted,
         policy_v9_accepted: v4Accepted,
+        policy_v10_accepted: v4Accepted,
+        native_prescription_ids: [], native_dispense_ids: [],
         api_attachment_ids: apiMode ? currentArtifact.preview.snapshot.api_attachments.map(({record:r,capture:c})=>({id:r.id,version:r.version,recorded_at:r.created_at,label:r.title,record_hash:r.record_hash,capture_hash:r.capture_hash,source_label:"ezyVet synthetic source",mime_type:c.mime_type,file_size:c.file_size})) : [],
         lab_report_ids: [],
         external_record_ids: [],
@@ -410,7 +413,7 @@ async function fixture(
       }
       return route.fulfill({ json: candidates });
     }
-    if (path === "/rest/v1/rpc/select_all_record_release_sources_v9") {
+    if (path === "/rest/v1/rpc/select_all_record_release_sources_v10") {
       state.allCalls++;
       if (state.oversized)
         return route.fulfill({
@@ -424,6 +427,7 @@ async function fixture(
       return route.fulfill({
         json: {
           selection: {
+            native_prescription_ids: [], native_dispense_ids: [],
             api_attachment_ids: apiMode ? currentArtifact.preview.snapshot.api_attachments.map(x=>x.record.id) : [],
             lab_report_ids: [],
             external_record_ids: [],
@@ -450,7 +454,7 @@ async function fixture(
           (v) => v.release.id === route.request().postDataJSON().p_id,
         ),
       });
-    if (path === "/rest/v1/rpc/preview_record_release_v9") {
+    if (path === "/rest/v1/rpc/preview_record_release_v10") {
       const body = route.request().postDataJSON();
       if (
         body.p_selection.lab_order_ids?.length &&
@@ -466,7 +470,8 @@ async function fixture(
         });
       const preview = structuredClone(currentArtifact.preview);
       Object.assign(preview.snapshot, {
-        schema_version: 9,
+        schema_version: 10,
+        native_prescriptions: [], native_dispenses: [],
         api_attachments: (preview.snapshot.api_attachments || []).filter(x=>body.p_selection.api_attachment_ids?.includes(x.record.id)),
         imported_prescriptions: preview.snapshot.imported_prescriptions || [],
         imported_vaccinations: preview.snapshot.imported_vaccinations || [],
@@ -506,7 +511,7 @@ async function fixture(
             })),
           },
         }));
-      preview.snapshot.selection = { ...body.p_selection, api_attachment_ids: body.p_selection.api_attachment_ids || [], imported_prescription_ids: body.p_selection.imported_prescription_ids || [], imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [] };
+      preview.snapshot.selection = { ...body.p_selection, native_prescription_ids: [], native_dispense_ids: [], api_attachment_ids: body.p_selection.api_attachment_ids || [], imported_prescription_ids: body.p_selection.imported_prescription_ids || [], imported_vaccination_ids: body.p_selection.imported_vaccination_ids || [] };
       return route.fulfill({ json: preview });
     }
     if (path === "/rest/v1/rpc/confirm_record_release") {
@@ -1030,7 +1035,7 @@ test("new package confirmation cannot replace an active release email draft", as
   );
 });
 
-test("legacy acceptance does not enable confirmation of the expanded version 9 form", async ({
+test("legacy acceptance does not enable confirmation of the expanded version 10 form", async ({
   page,
 }) => {
   await fixture(page, true, false);
@@ -1047,7 +1052,7 @@ test("legacy acceptance does not enable confirmation of the expanded version 9 f
     .getByRole("button", { name: "Review selected package", exact: true })
     .click();
   await expect(
-    panel.getByText("version 9, including reviewed API originals, outside prescriptions, vaccinations, imported clinical narratives", {
+    panel.getByText("version 10, including signed practice prescriptions, recorded dispensing, reviewed API originals, outside prescriptions, vaccinations, imported clinical narratives", {
       exact: false,
     }),
   ).toBeVisible();
@@ -1241,7 +1246,7 @@ test("verified lab and imported versions retain explicit matching originals acro
   expect(state.requests[0].p_selection.lab_report_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.external_record_ids).toHaveLength(2);
   expect(state.requests[0].p_selection.document_ids).toHaveLength(4);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(10);
 });
 
 test("all-source selection includes reciprocal provenance and stale source rejection preserves review workflow", async ({
@@ -1293,7 +1298,7 @@ test("all-source selection includes reciprocal provenance and stale source rejec
   expect(state.rows).toHaveLength(0);
 });
 
-test("schema9 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
+test("schema10 explicitly selects outside narratives while retaining compact problem provenance and exact confirmation recovery", async ({
   page,
 }) => {
   const state = await fixture(page, true, true, true, true);
@@ -1368,12 +1373,12 @@ test("schema9 explicitly selects outside narratives while retaining compact prob
     .click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(10);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
 
 
-test("schema9 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
+test("schema10 shares explicitly selected outside vaccination and narrative with exact recovery", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1391,7 +1396,7 @@ test("schema9 shares explicitly selected outside vaccination and narrative with 
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(10);
   expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
 });
@@ -1426,7 +1431,7 @@ test("partial prescription candidate missing disclosure fails closed", async ({ 
 });
 
 
-test("schema9 includes explicitly selected prescription with vaccination and narrative through exact recovery", async ({ page }) => {
+test("schema10 includes explicitly selected prescription with vaccination and narrative through exact recovery", async ({ page }) => {
   const state = await fixture(page, true, true, true, true, true, true);
   state.ambiguous = true;
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
@@ -1445,7 +1450,7 @@ test("schema9 includes explicitly selected prescription with vaccination and nar
   await panel.getByRole("button", { name: "Retry same package confirmation", exact: true }).click();
   expect(state.requests).toHaveLength(2);
   expect(state.requests[0]).toEqual(state.requests[1]);
-  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(9);
+  expect(state.requests[0].p_reviewed_snapshot.schema_version).toBe(10);
   expect(state.requests[0].p_selection.imported_prescription_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_vaccination_ids).toHaveLength(1);
   expect(state.requests[0].p_selection.imported_history_ids).toHaveLength(1);
@@ -1466,7 +1471,7 @@ test("schema9 includes explicitly selected prescription with vaccination and nar
 });
 
 
-test("schema9 reviews an API original and recovers exact confirmation without sending", async ({page})=>{
+test("schema10 reviews an API original and recovers exact confirmation without sending", async ({page})=>{
  const state=await fixture(page,true,true,true,false,false,false,true);
  state.ambiguous=true;
  const panel=page.getByRole("region",{name:"Patient medical-record releases"});
@@ -1487,7 +1492,7 @@ for (const mobile of [false, true]) {
     if (mobile) await page.setViewportSize({ width: 390, height: 844 });
     const offsets: number[] = [];
     page.on("request", request => {
-      if (request.url().endsWith("/rpc/list_record_release_sources_v9")) {
+      if (request.url().endsWith("/rpc/list_record_release_sources_v10")) {
         offsets.push(request.postDataJSON().p_offset);
       }
     });

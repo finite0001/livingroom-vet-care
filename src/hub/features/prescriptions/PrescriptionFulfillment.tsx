@@ -1,3 +1,5 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -85,6 +87,7 @@ function FulfillmentWorkspace({
   onDirtyChange,
 }: Props) {
   const petId = authorization.pet_id;
+  const releaseCache = useQueryClient();
   const api = useMemo(
     () =>
       createFulfillmentApi(
@@ -149,6 +152,7 @@ function FulfillmentWorkspace({
     execute: api.execute,
     recover: api.recover,
     onConfirmed: () => {
+      void refreshPatientReleases(releaseCache, petId);
       onEvidenceChanged();
       setMode(null);
       setPreview(null);
