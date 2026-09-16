@@ -16,3 +16,9 @@ Checked2026-09-16: https://resend.com/docs/api-reference/emails/retrieve-receive
 4. Test actual local Auth/Storage/HTTP paths, cross-message denial, response-loss recovery, concurrent capture/review changes and byte integrity. Add rendered inbound timeline acceptance.
 5. Design incoming SMS media separately using its authenticated provider identifiers; do not interpret the current media-count placeholder as attachment identity.
 6. Retain provider delivery gates and capture commissioning boundaries. Complete retention and controlled provider/staff acceptance before readiness claims.
+
+## Capture orchestration checkpoint
+
+`capture-attachment.ts` defines the authenticated incoming capture boundary. The browser supplies exactly inbound ID, attachment ID and expected version. The privileged claim must authorize current staff/message association and return either a durable ready receipt or a lease with actor, message, provider email, metadata and an exact inbound/attachment/token object path. The handler rejects mismatched lease identity before provider access, verifies retrieved facts, stores through the injected immutable writer, and accepts finalization only when the receipt matches capture ID, message, version, type, length and hash. Ready retries do not download/store again. Returned receipts omit Storage paths and provider URLs.
+
+Six handler tests plus six provider-download tests pass, including committed capture with lost final response, mismatched acknowledgments, cross-identity leases and browser-supplied extra properties. Targeted ESLint and frozen Deno checks pass. Claim/finalize SQL, private Storage wiring, deployed HTTP and staff retrieval are not implemented by this checkpoint; simulated dependencies do not establish those guarantees. No new endpoint is exposed.
