@@ -177,7 +177,7 @@ async function fixture(page: Page, role = "ADMIN") {
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
-    if (path === "/rest/v1/rpc/list_record_release_sources_v11") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v10" || path === "/rest/v1/rpc/list_record_release_sources_v11") {
       state.sourceLoads++;
       return route.fulfill({
         json: {
