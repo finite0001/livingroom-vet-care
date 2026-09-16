@@ -183,3 +183,7 @@ jobs:
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture clinical-history
       - name: Verify attachment metadata and original capture through disposable Auth and Storage
         run: python3 tests/ezyvet/attachment-metadata-disposable.py --run-synthetic-local --fixture all
+      - name: Verify conversation upload ownership and actual private bytes
+        run: node --experimental-strip-types tests/communications/upload-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
