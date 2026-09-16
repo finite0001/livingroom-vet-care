@@ -136,3 +136,43 @@ begin
 end $$;
 revoke all on function public.authorize_inbound_attachment_read(uuid,uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function public.authorize_inbound_attachment_read(uuid,uuid,uuid) to service_role;
+
+create function public.list_inbound_message_attachments(p_message_ids uuid[]) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare result jsonb;
+begin
+ if auth.uid() is null or public.is_active_staff(auth.uid()) is not true then
+  raise exception 'Active staff required' using errcode='42501';end if;
+ if p_message_ids is null or cardinality(p_message_ids)>100 then
+  raise exception 'At most 100 message identities required' using errcode='23514';end if;
+ select coalesce(jsonb_agg(row_data order by message_id,position),'[]'::jsonb) into result from (
+  select i.message_id,item.ordinality as position,jsonb_build_object(
+   'inbound_id',i.id,'inbound_version',i.version,'message_id',i.message_id,
+   'attachment_id',item.value->>'id','filename',item.value->'filename',
+   'mime_type',item.value->'content_type','byte_length',item.value->'size',
+   'capture_id',case when cap.status='ready' then cap.id end,
+   'sha256',case when cap.status='ready' then cap.sha256 end,
+   'status',case when cap.status='ready' then 'ready'
+     when cap.status='capturing' and cap.lease_expires_at>clock_timestamp() then 'capturing'
+     when item.value->>'content_type' in ('application/pdf','image/png','image/jpeg')
+       and case when jsonb_typeof(item.value->'size')='number' then
+         (item.value->>'size')::numeric between 1 and 10485760
+         and (item.value->>'size')::numeric=trunc((item.value->>'size')::numeric) else false end
+       and item.value->>'id' ~* '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+       and (jsonb_typeof(item.value->'filename')='null' or
+         (jsonb_typeof(item.value->'filename')='string' and length(trim(item.value->>'filename')) between 1 and 255 and item.value->>'filename' !~ '[[:cntrl:]]'))
+       then 'pending' else 'unsupported' end) as row_data
+  from public.communication_inbound i
+  join public.messages m on m.id=i.message_id and m.conversation_id=i.conversation_id
+  join public.conversations c on c.id=m.conversation_id and c.client_id=i.client_id
+  cross join lateral jsonb_array_elements(i.attachment_metadata) with ordinality item(value,ordinality)
+  left join public.inbound_attachment_captures cap on cap.inbound_id=i.id and cap.attachment_id::text=item.value->>'id'
+    and cap.message_id=i.message_id and cap.inbound_version=i.version and cap.email_id::text=i.resource_id
+    and cap.metadata=jsonb_build_object('id',item.value->>'id','filename',item.value->'filename','content_type',item.value->>'content_type','size',item.value->'size')
+  where i.message_id=any(p_message_ids) and i.provider='resend' and i.channel='EMAIL'
+    and m.type='EMAIL' and m.sender_type='CLIENT' and not m.is_internal
+ ) attachment_rows;
+ return result;
+end $$;
+revoke all on function public.list_inbound_message_attachments(uuid[]) from public,anon,authenticated,service_role;
+grant execute on function public.list_inbound_message_attachments(uuid[]) to authenticated;

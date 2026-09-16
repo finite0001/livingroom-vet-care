@@ -56,3 +56,9 @@ Added service-only `authorize_inbound_attachment_read`: active staff, ready capt
 Four SQL reader assertions bring the suite to23. The actual-service harness now also exercises authorized reading, wrong-message rejection and revoked-staff rejection. These SQL/integration changes have not yet run. Staff listing/UI and race acceptance remain outstanding.
 
 Parent run35092195032 completed successfully in all jobs atc04f45a, including actual outbound capture/queue concurrency. Incoming run35092794347 at9856659 remains active (Edge/SQL passed; later database and browser stages running). Do not push this follow-up until it is terminal.
+
+## Staff listing prepared for timeline integration
+
+Added authenticated `list_inbound_message_attachments(uuid[])`, bounded to100 requested messages and active staff. It joins current household/message/inbound identity and reports pending/capturing/ready/unsupported, exposing only verified capture IDs/hashes for matching ready evidence and never a Storage path. Malformed numeric metadata is guarded before casts. Five SQL assertions bring the suite to28; the real-service harness also checks the ready listing and absence of a Storage path. Targeted harness lint and diff checks pass; these new SQL/listing assertions are not yet runtime verified. Timeline parser/hook/UI remain to be implemented.
+
+Run35092794347 remains active at9856659, currently executing the final attachment metadata/original integration stages while browser tests continue. Follow-up commits are still local to preserve that run.

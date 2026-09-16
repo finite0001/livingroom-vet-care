@@ -52,6 +52,13 @@ select throws_ok($$select authorize_inbound_attachment_read('ee300000-0000-4000-
 reset role;
 select ok(not has_function_privilege('authenticated','authorize_inbound_attachment_read(uuid,uuid,uuid)','execute'),'Staff cannot obtain privileged original path directly');
 select throws_ok($$update inbound_attachment_captures set sha256=repeat('d',64)$$,'23514',null,'Ready evidence is immutable');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"ee300000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select is(list_inbound_message_attachments(array[(select id from fx where k='message')])->0->>'status','ready','Staff listing distinguishes verified originals');
+select ok(not (list_inbound_message_attachments(array[(select id from fx where k='message')])->0 ? 'storage_path'),'Staff listing never exposes private Storage path');
+select is(list_inbound_message_attachments(array[gen_random_uuid()]),'[]'::jsonb,'Unrelated message returns no attachment');
+select throws_ok($$select list_inbound_message_attachments(array_fill(gen_random_uuid(),array[101]))$$,'23514',null,'Staff listing is bounded to 100 messages');
+reset role;
 update profiles set is_active=false where id='ee300000-0000-4000-8000-000000000001';
 set local role service_role;
 select throws_ok($$select claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001')$$,'42501',null,'Inactive staff cannot recover original');
@@ -59,4 +66,7 @@ select throws_ok($$select authorize_inbound_attachment_read('ee300000-0000-4000-
 reset role;
 select is((select public from storage.buckets where id='inbound-attachment-originals'),false,'Incoming originals bucket is private');
 select ok(not has_function_privilege('authenticated','finalize_inbound_attachment(uuid,uuid,uuid,text,bigint,text)','execute'),'Staff cannot fabricate finalization');
+set local role authenticated;
+select throws_ok($$select list_inbound_message_attachments(array[(select id from fx where k='message')])$$,'42501',null,'Inactive staff cannot list incoming files');
+reset role;
 select * from finish();rollback;

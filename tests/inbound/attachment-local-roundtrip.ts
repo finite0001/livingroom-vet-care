@@ -135,6 +135,9 @@ try {
   const path = [...paths][0]; assert.ok(path);
   const stored = await bucket.download(path); if (stored.error) throw stored.error;
   check(Buffer.from(await stored.data.arrayBuffer()).equals(Buffer.from(bytes)), "Actual private Storage contains exact original bytes");
+  const listed = await owner.client.rpc("list_inbound_message_attachments", { p_message_ids: [ids.message] });
+  if (listed.error) throw listed.error;
+  check(listed.data.length === 1 && listed.data[0].capture_id === receipt.id && listed.data[0].status === "ready" && !("storage_path" in listed.data[0]), "Staff list returns verified identity without private path");
   const reader = createIncomingAttachmentReadHandler({
     authenticate: async token => { const { data, error } = await service.auth.getUser(token); if (error) return null; return data.user?.id ?? null; },
     authorize: async (actorId, captureId, messageId) => {
