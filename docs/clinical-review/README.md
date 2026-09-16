@@ -58,3 +58,17 @@ The schema6 examples compare [full imported narratives](imported-history-example
 ## Native prescribing review in progress
 
 The independent native prescription workflow has a [separate pending review checklist and synthetic print examples](native-prescribing.md). Signed authorization, partial dispensing and canceled history are shown separately. These component examples do not establish a completed prescribing workflow or clinical acceptance.
+
+## Native dispensing corrections and returns — supplemental review
+
+The [physical-return review packet](../../plans/20260916-native-prescribing/returns-review.md) and [synthetic return example](native-dispense-returns-example.html) cover held custody, disposal and reviewed restocking in the locally verified native implementation. The [correction example](native-dispense-corrections-example.html) preserves original dispensing and separately attributed amendments. Review against the exact revisions recorded by the examples/evidence; neither example records clinical approval.
+
+| Review ID | Scope | Decision | Reviewer and role | Review date | Evidence / requested change |
+|---|---|---|---|---|---|
+| C12 | Native prescribing authority, partial fills, labels and pickup | Pending | | | |
+| C13 | Attributed dispense annotations and pickup amendments | Pending | | | |
+| C14 | Physical return custody, disposal and eligible restocking policy | Pending | | | |
+
+The [return reconciliation contract](../../plans/20260916-native-prescribing/return-reconciliation-contract.md) is engineering preparation for correcting mistaken quantity claims. It does not add an available correction control or authorize reversal of actual physical disposal. Its future clinical review must include physically held evidence and unresolved discrepancies when stock has already been used.
+
+The current platform direction is independent of ezyVet. Retained historical-import examples document existing evidence; they do not add an ongoing integration requirement or authorize source synchronization.

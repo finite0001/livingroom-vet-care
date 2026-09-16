@@ -1,5 +1,6 @@
 /** Native return evidence contracts. PostgreSQL owns canonical hashes and stock mutations. */
 import type { CorrectionHead, CorrectionTarget, OriginalPickupRef } from "./native-dispense-corrections.ts";
+import { replayNativeReturnQuantities } from "./native-return-quantity-replay.ts";
 export interface ReturnPolicy {
   version: number; enabled: boolean; review_reference: string | null;
   actor_id: string | null; actor_name: string | null; reviewed_at: string | null; record_hash: string | null;
@@ -96,15 +97,13 @@ export function validateReturnDisclosure(v: ReturnDisclosure, target: Correction
   require(uuid(target.authorization_id) && uuid(target.pet_id) && uuid(target.dispense_id) && hash(authorizationHash) && fill.id === target.dispense_id && fill.authorization_id === target.authorization_id && fill.authorization_hash === authorizationHash);
   validateCorrectionHead(v.head);
   require(v.version === 1 && Array.isArray(v.events) && v.events.length <= 100 && v.events.length === v.head.version && Array.isArray(v.allocations) && v.allocations.length === fill.lots.length);
-  interface Totals { returned: bigint; disposed: bigint; restocked: bigint }
-  interface Intake { event: ReturnEvent; remaining: Map<string, bigint> }
-  const totals = new Map<string, Totals>(), balances = new Map<string, ReturnBalance>(), lots = new Set<string>(), intakes = new Map<string, Intake>(), ids = new Set<string>(), movementIds = new Set<string>();
+  const balances = new Map<string, ReturnBalance>(), lots = new Set<string>(), intakes = new Map<string, ReturnEvent>(), ids = new Set<string>(), movementIds = new Set<string>();
   let previousAllocation: string | null = null;
   for (const b of v.allocations) {
     validateReturnBalance(b); require(previousAllocation === null || b.allocation_id > previousAllocation); previousAllocation = b.allocation_id;
     const source = fill.lots.find(l => l.id === b.lot_id);
     require(source && !lots.has(b.lot_id) && source.number === b.lot_number && source.expires_on === b.expires_on && quantity(source.quantity, false) === quantity(b.dispensed_quantity));
-    lots.add(b.lot_id); balances.set(b.allocation_id, b); totals.set(b.allocation_id, { returned: 0n, disposed: 0n, restocked: 0n });
+    lots.add(b.lot_id); balances.set(b.allocation_id, b);
   }
   let prior: ReturnEvent | undefined;
   for (const e of v.events) {
@@ -116,16 +115,16 @@ export function validateReturnDisclosure(v: ReturnDisclosure, target: Correction
     const at = nativePrescriptionInstantMicros(e.created_at);
     require(at >= nativePrescriptionInstantMicros(fill.dispensed_at) && (!prior || at >= nativePrescriptionInstantMicros(prior.created_at)) && (observedAt === undefined || at <= nativePrescriptionInstantMicros(observedAt)));
     require(["intake", "dispose", "restock"].includes(e.action) && e.actor.authority === (e.action === "restock" ? "active_dvm" : "active_staff"));
-    let intake: Intake | undefined;
+    let intake: ReturnEvent | undefined;
     if (e.action === "intake") {
       require(e.intake_id === null && e.policy === null && ["clinic_retained", "client_returned", "unknown"].includes(e.custody!) && ["sealed_intact", "opened", "damaged", "unknown"].includes(e.package_condition!) && ["controlled", "compromised", "unknown"].includes(e.storage_history!));
-      intake = { event: e, remaining: new Map() }; intakes.set(e.id, intake);
+      intakes.set(e.id, e);
     } else {
       require(uuid(e.intake_id) && e.custody === null && e.package_condition === null && e.storage_history === null);
-      intake = intakes.get(e.intake_id!); require(intake && nativePrescriptionInstantMicros(intake.event.created_at) <= at);
+      intake = intakes.get(e.intake_id!); require(intake && nativePrescriptionInstantMicros(intake.created_at) <= at);
       if (e.action === "restock") {
         require(e.policy !== null); validateReturnPolicy(e.policy);
-        require(e.policy.enabled && e.policy.version > 0 && nativePrescriptionInstantMicros(e.policy.reviewed_at!) <= at && pickup === null && intake.event.custody === "clinic_retained" && intake.event.package_condition === "sealed_intact" && intake.event.storage_history === "controlled");
+        require(e.policy.enabled && e.policy.version > 0 && nativePrescriptionInstantMicros(e.policy.reviewed_at!) <= at && pickup === null && intake.custody === "clinic_retained" && intake.package_condition === "sealed_intact" && intake.storage_history === "controlled");
       } else require(e.policy === null);
     }
     require(Array.isArray(e.allocations) && e.allocations.length > 0 && e.allocations.length <= 100);
@@ -133,22 +132,23 @@ export function validateReturnDisclosure(v: ReturnDisclosure, target: Correction
     for (const a of e.allocations) {
       keys(a, "allocation_id lot_id quantity movement_id");
       require(uuid(a.allocation_id) && uuid(a.lot_id) && (previousAllocation === null || a.allocation_id > previousAllocation)); previousAllocation = a.allocation_id;
-      const b = balances.get(a.allocation_id), total = totals.get(a.allocation_id), n = quantity(a.quantity);
-      require(b && total && b.lot_id === a.lot_id && n > 0n);
-      if (e.action === "intake") { require(a.movement_id === null); total.returned += n; intake.remaining.set(a.allocation_id, n); require(total.returned <= quantity(b.dispensed_quantity)); }
-      else {
-        const held = intake.remaining.get(a.allocation_id); require(held !== undefined && held >= n); intake.remaining.set(a.allocation_id, held - n);
-        if (e.action === "dispose") { require(a.movement_id === null); total.disposed += n; }
-        else { require(uuid(a.movement_id) && !movementIds.has(a.movement_id!)); movementIds.add(a.movement_id!); total.restocked += n; }
-      }
+      const b = balances.get(a.allocation_id);
+      require(b && b.lot_id === a.lot_id && quantity(a.quantity) > 0n);
+      if (e.action === "restock") {
+        require(uuid(a.movement_id) && !movementIds.has(a.movement_id!)); movementIds.add(a.movement_id!);
+      } else require(a.movement_id === null);
     }
     ids.add(e.id); prior = e;
   }
   require(v.head.event_id === (prior?.id ?? null) && v.head.record_hash === (prior?.record_hash ?? null));
-  for (const b of v.allocations) {
-    const total = totals.get(b.allocation_id)!;
-    require(quantity(b.returned_quantity) === total.returned && quantity(b.disposed_quantity) === total.disposed && quantity(b.restocked_quantity) === total.restocked && quantity(b.held_quantity) === total.returned - total.disposed - total.restocked);
-  }
+  const replay = replayNativeReturnQuantities(
+    v.allocations.map(a => ({ allocation_id: a.allocation_id, lot_id: a.lot_id, quantity: a.dispensed_quantity })),
+    v.events.map(e => ({
+      id: e.id, sequence: e.sequence, action: e.action, intake_id: e.intake_id, correction_target_id: null,
+      allocations: e.allocations.map(a => ({ allocation_id: a.allocation_id, lot_id: a.lot_id, quantity: a.quantity })),
+    })),
+  );
+  require(correctionEvidenceEqual(replay.allocations, v.allocations.map(({ lot_number: _lotNumber, expires_on: _expiresOn, ...balance }) => balance)));
 }
 const escape = (v: unknown) => String(v ?? "Not recorded").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const field = (label: string, v: unknown) => `<div><dt>${escape(label)}</dt><dd>${escape(v)}</dd></div>`;

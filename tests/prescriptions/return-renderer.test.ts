@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { returnFixture } from "./return-fixture.ts";
 import { renderNativePrescriptionV3 } from "../../supabase/functions/_shared/native-dispense-returns.ts";
 
@@ -41,3 +42,18 @@ const mutations: Record<string, (a: ReturnType<typeof returnFixture>) => void> =
   "version downgrade": a => { Object.assign(a, { version: 2 }); },
 };
 for (const [name, mutate] of Object.entries(mutations)) test(`return print rejects ${name}`, () => { const a = returnFixture(); mutate(a); assert.throws(() => renderNativePrescriptionV3(a)); });
+
+// Frozen from the pre-reconciliation renderer at 8945cce. Existing artifact bytes must not change.
+test("quantity replay preserves historical full and order-only return artifact bytes", () => {
+  const a = returnFixture();
+  const digest = () => createHash("sha256").update(renderNativePrescriptionV3(a)).digest("hex");
+  assert.equal(digest(), "43375a444c79d7469e9862688b3c3345e047cb2a564f81590a7c5b5b31397f75");
+  a.dispense = null; a.dispense_returns = null; a.dispense_corrections = null;
+  assert.equal(digest(), "0995ab9cf5ec55b6cf0f5628c2f25b947cd7dd3aa05f5d7b719fc6c8785736e2");
+});
+
+test("historical v1 disclosure cannot opt into future correction arithmetic", () => {
+  const a = returnFixture();
+  Object.assign(a.dispense_returns!.events[1], { action: "retract_intake", correction_target_id: a.dispense_returns!.events[0].id });
+  assert.throws(() => renderNativePrescriptionV3(a));
+});
