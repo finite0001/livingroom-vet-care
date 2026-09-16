@@ -104,7 +104,7 @@ try:
     fx=saved['fx'];target=saved['data']['target'];context=saved['data']['context']
     def save(request_id,reason='Concurrent exclusion',previous=None,action='exclude',ctx=None):
         return staff+f"select save_ezyvet_migration_resolution('{request_id}','{fx['scope']}',{quote(json.dumps(target))}::jsonb,{quote(action)},{quote(reason)},{quote((ctx or context)['context_hash'])},{quote(previous)+'::uuid' if previous else 'null'});"
-    def receipt(request_id):return json.loads(scalar('begin;'+staff+f"select read_ezyvet_migration_resolution('{request_id}');commit;"))
+    def receipt(request_id):return json.loads(scalar('begin;'+staff+f"select coalesce(read_ezyvet_migration_resolution('{request_id}'),'null'::jsonb);commit;"))
     first=str(uuid.uuid4())
     contended(save(first),save(first),lambda code,out,err:code==0)
     original=receipt(first)
