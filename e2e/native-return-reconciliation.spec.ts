@@ -409,7 +409,10 @@ test("physical correction uses exact source, explicit facts and recover-first lo
   ).toBeVisible();
   await f.panel.getByRole("button", { name: /Recover original/ }).click();
   await expect(
-    f.panel.getByText("Disposal did not occur", { exact: true }),
+    f.panel
+      .getByRole("article")
+      .filter({ hasText: "Disposal did not occur" })
+      .getByText("Disposal did not occur", { exact: true }),
   ).toBeVisible();
   expect(f.calls).toHaveLength(1);
   expect(f.events).toHaveLength(3);

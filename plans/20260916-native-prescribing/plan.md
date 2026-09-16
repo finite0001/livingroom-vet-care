@@ -99,8 +99,10 @@ Two private immutable helpers now reproduce the TypeScript correction arithmetic
 [Evidence](../../docs/evidence/native-return-database-replay-20260916.json): 78 matching cross-language cases (48 valid,30 rejected); 965 assertions across24 SQL suites; exact preservation of101 existing return events;404 fresh actual Auth/browser checks and73 populated restore checks;821 unit tests, lint, TypeScript and build. All provider requests were zero. The separate Settings selector CI fix is propagated to147/148; PR147, PR148 and PR149 now have passing CI at1faf791,fb2e2f4 andbee4444 respectively.
 
 
-## Current reconciliation workflow124/125 — in verification
+## Reconciliation workflow124/125 — synthetic acceptance passed
 
 The local working branch adds actual correction commands, discrepancy decisions and lot holds; the staff review/recovery interface; current print4/schema13 composition; and provider-free acceptance fixtures. Preserve the immutable originals and older saved artifact formats. See [clinical review](reconciliation-review.md).
 
-Do not treat this phase as complete until SQL, actual Auth/browser, contention, populated restore and inherited artifact checks pass. Initial renderer and strict transport tests pass; database runtime and broader browser verification are ongoing. Hosted deployment, clinical acceptance and external payment acceptance remain separate.
+CI35086396244 at1393a84 passed:100 SQL suites/4078 assertions;83 observed reconciliation contention checks;461 actual native Auth/browser checks including57 reconciliation checks;84 populated restore checks;858 unit tests and all Edge checks. The385-case browser run had384 first-pass successes and one retry success caused by a selector matching review and saved-history text. The selector now targets the saved article; both scenarios passed three fresh repetitions (6/6). Follow-up CI remains required for that test-only adjustment. Hosted deployment, clinical acceptance and external payment acceptance remain separate.
+
+Next: implement the [native financial adjustment plan](../20260916-native-dispense-finance/plan.md), then the wider standalone practice and communication roadmap. No ezyVet integration or provider activation is required for this software phase.

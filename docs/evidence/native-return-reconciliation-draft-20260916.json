@@ -1,5 +1,5 @@
 {
-  "status": "draft-under-verification",
+  "status": "synthetic-acceptance-passed-awaiting-rollout",
   "date": "2026-09-16",
   "scope": "Native medication return corrections, discrepancies, inventory holds and current record output",
   "synthetic_only": true,
@@ -20,11 +20,27 @@
       "125": 12
     },
     "focused_browser_tests": 67,
-    "focused_browser_execution": "60 passed in second batch, 4 further passed in bounded retry, final 3 passed after Vite fixture and reload-readiness fixes"
+    "focused_browser_execution": "60 passed in second batch, 4 further passed in bounded retry, final 3 passed after Vite fixture and reload-readiness fixes",
+    "sql_files": 100,
+    "sql_assertions": 4078,
+    "reconciliation_contention_checks": 83,
+    "actual_auth_and_browser_checks": 461,
+    "actual_reconciliation_auth_checks": 57,
+    "populated_restore_checks": 84,
+    "full_browser_ci": {
+      "passed_without_retry": 384,
+      "passed_on_retry": 1,
+      "total": 385
+    },
+    "browser_selector_followup": {
+      "tests": 2,
+      "repetitions": 3,
+      "passed": 6,
+      "change": "Assert recovered reason inside saved history article rather than transient review and history text"
+    }
   },
   "pending": [
-    "Actual database, Auth, SQL, contention and populated restore acceptance; owned local database startup encountered infrastructure delays",
-    "CI for this branch",
+    "CI for the subsequent test-selector/documentation commit",
     "Hosted rollout and Dr. Susan Edler clinical review"
   ],
   "prior_stack_ci": {
@@ -66,5 +82,13 @@
     "sql_assertions_executed": 4056,
     "database": "One reconciliation suite aborted because correction-resolution links lacked the id required by the audit trigger; added stable link IDs and an actor audit assertion",
     "other_sql_suites": "No reported failure in other 99 files"
+  },
+  "ci": {
+    "run": 35086396244,
+    "head": "1393a84f8f3708f786b4987b1fbede648531fe4b",
+    "conclusion": "success",
+    "frontend": "success",
+    "edge": "success",
+    "database": "success"
   }
 }
