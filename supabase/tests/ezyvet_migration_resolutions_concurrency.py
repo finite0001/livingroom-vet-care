@@ -45,11 +45,11 @@ def contended(first_query, second_query, second_expected):
     tag = 'lrv_resolution_' + uuid.uuid4().hex
     owned_sessions.extend([tag + '_holder', tag + '_waiter'])
     first = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    first.stdin.write(f"set application_name='{tag}_holder';begin;{first_query}select pg_sleep(2);commit;")
-    first.stdin.close()
-    deadline = time.monotonic() + 8
+    first.stdin.write(f"set application_name='{tag}_holder';begin;{first_query}\n")
+    first.stdin.flush()
+    deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
-        if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_holder' and wait_event='PgSleep';").stdout.strip() == '1':
+        if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_holder' and state='idle in transaction';").stdout.strip() == '1':
             break
         if first.poll() is not None:
             raise AssertionError('Holder exited before acquiring locks: ' + first.stderr.read())
@@ -66,6 +66,8 @@ def contended(first_query, second_query, second_expected):
             break
         time.sleep(.03)
     check(waiting, 'Second operation actually waits on the first transaction lock')
+    first.stdin.write('commit;\n')
+    first.stdin.close()
     first.wait(timeout=10)
     second.wait(timeout=10)
     first_error = first.stderr.read()
