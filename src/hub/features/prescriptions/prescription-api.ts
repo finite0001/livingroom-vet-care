@@ -17,7 +17,26 @@ const authorizationSchema = z.object({ id: uuid, pet_id: uuid, client_id: uuid, 
 const configureRequestSchema = z.object({ user_id: uuid, expected_version: revision.nullable(), fields: prescriberFieldsSchema, attest_review: z.literal(true) }).strict();
 const saveRequestSchema = z.object({ draft_id: uuid, pet_id: uuid, client_id: uuid, expected_version: revision.nullable(), fields: prescriptionFieldsSchema }).strict();
 const signRequestSchema = z.object({ draft_id: uuid, pet_id: uuid, expected_version: revision, expected_context_hash: hash, signature_name: text(200), attest_review: z.literal(true) }).strict();
-const usageSchema = z.object({ version: z.literal(1), native_fill_accounting: z.literal("not_implemented"), dispensed_quantity: z.null(), used_fill_slots: z.null(), remaining_quantity: z.null(), external_fulfillment: z.literal("unknown") }).strict();
+const usageV1Schema = z.object({ version: z.literal(1), native_fill_accounting: z.literal("not_implemented"), dispensed_quantity: z.null(), used_fill_slots: z.null(), remaining_quantity: z.null(), external_fulfillment: z.literal("unknown") }).strict();
+const aggregateQuantitySchema = z.string().regex(/^(?:0|[1-9]\d{0,14})\.\d{3}$/);
+const slotQuantitySchema = z.string().regex(/^(?:0|[1-9]\d{0,10})\.\d{3}$/);
+function quantityMilli(value: string): bigint { return BigInt(value.replace(".", "")); }
+export const prescriptionUsageV2Schema = z.object({ version: z.literal(2), native_fill_accounting: z.literal("implemented"), dispensed_quantity: aggregateQuantitySchema, used_fill_slots: z.number().int().min(0).max(1001), remaining_quantity: aggregateQuantitySchema.nullable(), forfeited_quantity: aggregateQuantitySchema, unopened_fill_slots: z.number().int().min(0).max(1001).nullable(), allowance_basis: z.enum(["native_practice_stock", "external_unknown"]), open_slot: z.object({ id: uuid, index: z.number().int().min(0).max(1000), version: revision, remaining_quantity: slotQuantitySchema.refine(v => quantityMilli(v) > 0n) }).strict().nullable(), fulfillment_head: z.object({ event_id: uuid.nullable(), version: z.number().int().min(0).max(2147483647) }).strict(), external_fulfillment: z.literal("unknown") }).strict().refine(v => {
+  if ((v.fulfillment_head.event_id === null) !== (v.fulfillment_head.version === 0)) return false;
+  if (!v.used_fill_slots && (quantityMilli(v.dispensed_quantity) !== 0n || quantityMilli(v.forfeited_quantity) !== 0n || v.open_slot !== null)) return false;
+  if (v.used_fill_slots && (v.fulfillment_head.version < v.used_fill_slots || quantityMilli(v.dispensed_quantity) === 0n)) return false;
+  if (v.allowance_basis === "external_unknown") return v.remaining_quantity === null && v.unopened_fill_slots === null && v.open_slot === null;
+  return v.remaining_quantity !== null && v.unopened_fill_slots !== null && v.used_fill_slots + v.unopened_fill_slots <= 1001 && (!v.open_slot || (v.open_slot.index === v.used_fill_slots - 1 && quantityMilli(v.remaining_quantity) >= quantityMilli(v.open_slot.remaining_quantity)));
+});
+export const prescriptionUsageSchema = z.union([usageV1Schema, prescriptionUsageV2Schema]);
+export function validatePrescriptionUsage(usage: z.infer<typeof prescriptionUsageSchema>, prior: PrescriptionAuthorization): void {
+  if (usage.version === 1) return; // Immutable pre-ledger receipts retain their unknown accounting.
+  const a = prior.artifact;
+  if (a.fulfillment_mode === "external_pharmacy") { if (usage.allowance_basis !== "external_unknown") throw new Error("External allowance is unknown"); return; }
+  const slots = a.refills_authorized + 1, maximum = quantityMilli(normalizedPrescriptionQuantity(a.quantity_per_fill));
+  if (usage.allowance_basis !== "native_practice_stock" || usage.unopened_fill_slots === null || usage.remaining_quantity === null || usage.used_fill_slots + usage.unopened_fill_slots !== slots || quantityMilli(usage.remaining_quantity) !== maximum * BigInt(usage.unopened_fill_slots) + (usage.open_slot ? quantityMilli(usage.open_slot.remaining_quantity) : 0n) || quantityMilli(usage.dispensed_quantity) + quantityMilli(usage.forfeited_quantity) + quantityMilli(usage.remaining_quantity) !== maximum * BigInt(slots)) throw new Error("Native allowance accounting differs");
+}
+const usageSchema = prescriptionUsageSchema;
 const printStatusSchema = z.object({ authorization_id: uuid, authorization_hash: hash, checked_at: instant, state: z.enum(["active", "expired", "cancelled", "replaced"]), reason: text(2000).nullable(), replacement_id: uuid.nullable() }).strict().refine(v => (v.state === "replaced") === (v.replacement_id !== null) && (["cancelled", "replaced"].includes(v.state) === (v.reason !== null)));
 const headSchema = z.object({ id: uuid.nullable(), version: z.number().int().min(0).max(2147483647), state: z.enum(["active", "expired", "cancelled", "replaced"]), reason: text(2000).nullable(), replacement_id: uuid.nullable() }).strict().refine(v => (v.id === null) === (v.version === 0) && (v.state === "replaced") === (v.replacement_id !== null) && (["cancelled", "replaced"].includes(v.state) === (v.reason !== null)) && (["active", "expired"].includes(v.state) === (v.id === null)));
 const changeContextSchema = z.object({ version: z.literal(1), authorization: authorizationSchema, head: headSchema, patient_current: z.object({ id: uuid, client_id: uuid, version: revision, archived_at: instant.nullable(), deceased_at: day.nullable() }).strict(), prescriber: signContextSchema.shape.prescriber, alerts: alertSchema, usage: usageSchema }).strict();
@@ -75,6 +94,7 @@ function authorization(value: unknown, patientId: string, authorizationId: strin
 }
 function changeIdentity(context: z.infer<typeof changeContextSchema>, patientId: string, authorizationId: string) {
   authorization(context.authorization, patientId, authorizationId);
+  validatePrescriptionUsage(context.usage, context.authorization);
   if (context.patient_current.id !== patientId || context.alerts.snapshot.pet_id !== patientId || context.alerts.snapshot.patient_version !== context.patient_current.version || context.prescriber.user_id !== context.prescriber.configuration.user_id || !context.prescriber.configuration.fields.active) throw new Error("Change context identity differs");
 }
 function replacementIdentity(context: z.infer<typeof replacementContextSchema>, patientId: string, authorizationId: string) {
@@ -141,6 +161,7 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
       authorization(prior, patientId, prior.id);
       const result = await rpc("read_native_prescription_status", { p_authorization_id: prior.id, p_pet_id: patientId }); if (result === null) return null;
       const parsed = currentStatusSchema.parse(result), status = parsed.status;
+      validatePrescriptionUsage(parsed.usage, prior);
       if (parsed.pet_id !== patientId || status.authorization_id !== prior.id || status.authorization_hash !== prior.authorization_hash || (parsed.head_id === null) !== (parsed.head_version === 0) || (["active", "expired"].includes(status.state) !== (parsed.head_id === null))) throw new Error("Current prescription status differs"); return parsed;
     },
     async readPrint(prior: PrescriptionAuthorization) {
@@ -174,3 +195,5 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
   };
 }
 export interface PrescriptionApi extends ReturnType<typeof createPrescriptionApi> {}
+
+export { authorization as parsePrescriptionAuthorization, artifactSchema as nativePrescriptionArtifactSchema, alertSchema as prescriptionAlertSchema, printStatusSchema as nativePrescriptionStatusSchema };

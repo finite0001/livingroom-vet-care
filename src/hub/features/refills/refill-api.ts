@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PrescriptionOperation } from "../prescriptions/prescription-state.ts";
+import { prescriptionUsageSchema } from "../prescriptions/prescription-api.ts";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
 const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
 const instant = z.string().datetime({ offset: true }).refine(v => Number.isFinite(Date.parse(v)) && !/\.\d{7}/.test(v));
@@ -7,14 +8,17 @@ const text = (max: number) => z.string().min(1).refine(v => Array.from(v).length
 const channel = z.enum(["phone", "email", "text", "in_person", "other"]);
 const refillSchema = z.object({ id: uuid, pet_id: uuid, client_id: uuid, version: revision, state: z.enum(["open", "closed", "denied"]), medication_requested: text(500), requester_note: text(4000).nullable(), channel, assigned_to: uuid.nullable(), authorization_id: uuid.nullable(), authorization_hash: hash.nullable(), created_by: uuid, created_at: instant, updated_by: uuid, updated_at: instant }).strict().refine(v => (v.authorization_id === null) === (v.authorization_hash === null));
 const statusSchema = z.object({ authorization_id: uuid, authorization_hash: hash, checked_at: instant, state: z.enum(["active", "expired", "cancelled", "replaced"]), reason: text(2000).nullable(), replacement_id: uuid.nullable() }).strict().refine(v => (v.state === "replaced") === (v.replacement_id !== null) && (["cancelled", "replaced"].includes(v.state) === (v.reason !== null)));
-const usageSchema = z.object({ version: z.literal(1), native_fill_accounting: z.literal("not_implemented"), dispensed_quantity: z.null(), used_fill_slots: z.null(), remaining_quantity: z.null(), external_fulfillment: z.literal("unknown") }).strict();
+const usageSchema = prescriptionUsageSchema;
 const readSchema = z.object({ version: z.literal(1), refill: refillSchema, head_id: uuid, current_household_id: uuid, household_matches: z.boolean(), authorization_status: statusSchema.nullable(), authorization_usage: usageSchema.nullable(), operational_only: z.literal(true) }).strict();
 const linkSchema = z.object({ version: z.literal(1), refill_id: uuid, refill_version: revision, pet_id: uuid, client_id: uuid, patient_version: revision, authorization_id: uuid, authorization_hash: hash, authorization_head_id: uuid.nullable(), authorization_head_version: z.number().int().min(0).max(2147483647), authorization_state: z.enum(["active", "expired", "cancelled", "replaced"]) }).strict().refine(v => (v.authorization_head_id === null) === (v.authorization_head_version === 0));
 export const refillReasonSchema = text(2000);
 export const refillAuthorizationIdSchema = uuid;
 export const refillCreateSchema = z.object({ refill_id: uuid, pet_id: uuid, client_id: uuid, medication_requested: text(500), requester_note: text(4000).nullable(), channel, reason: text(2000) }).strict();
 export const refillTransitionSchema = z.object({ refill_id: uuid, pet_id: uuid, expected_version: revision, action: z.enum(["assign", "link", "close", "deny"]), reason: text(2000), assigned_to: uuid.nullable(), authorization_id: uuid.nullable(), expected_link_context_hash: hash.nullable() }).strict().refine(v => (v.action === "link" ? v.authorization_id !== null && v.expected_link_context_hash !== null : v.authorization_id === null && v.expected_link_context_hash === null) && (v.action === "assign" || v.assigned_to === null));
-const eventSchema = z.object({ version: z.literal(1), id: uuid, refill_id: uuid, revision, action: z.enum(["create", "assign", "link", "close", "deny"]), actor_id: uuid, reason: text(2000), prior_event_id: uuid.nullable(), before: refillSchema.nullable(), after: refillSchema, link_context: linkSchema.nullable(), created_at: instant }).strict();
+const eventV1Schema = z.object({ version: z.literal(1), id: uuid, refill_id: uuid, revision, action: z.enum(["create", "assign", "link", "close", "deny"]), actor_id: uuid, reason: text(2000), prior_event_id: uuid.nullable(), before: refillSchema.nullable(), after: refillSchema, link_context: linkSchema.nullable(), created_at: instant }).strict();
+const fulfillmentReferenceSchema = z.object({ kind: z.enum(["dispense", "pickup"]), id: uuid, dispense_id: uuid, authorization_id: uuid }).strict();
+const eventV2Schema = eventV1Schema.extend({ version: z.literal(2), action: z.enum(["dispense", "pickup"]), fulfillment_reference: fulfillmentReferenceSchema }).strict();
+const eventSchema = z.discriminatedUnion("version", [eventV1Schema, eventV2Schema]);
 const receiptSchema = z.object({ version: z.literal(1), id: uuid, actor_id: uuid, request: z.union([refillCreateSchema, refillTransitionSchema]), request_hash: hash, result: eventSchema, created_at: instant }).strict();
 const cursorSchema = z.object({ before_at: instant, before_id: uuid }).strict();
 const previewSchema = z.object({ version: z.literal(1), actor_id: uuid, context: linkSchema, context_hash: hash, observed_at: instant }).strict();
@@ -22,7 +26,7 @@ const legacySchema = z.object({ record: z.object({ id: uuid, client_id: uuid, pe
 export interface LegacyRefillRead extends z.infer<typeof legacySchema> {}
 export interface NativeRefill extends z.infer<typeof refillSchema> {}
 export interface NativeRefillRead extends z.infer<typeof readSchema> {}
-export interface NativeRefillEvent extends z.infer<typeof eventSchema> {}
+export type NativeRefillEvent = z.infer<typeof eventSchema>;
 export interface NativeRefillReceipt extends z.infer<typeof receiptSchema> {}
 export interface NativeRefillCursor extends z.infer<typeof cursorSchema> {}
 export interface NativeRefillLinkPreview extends z.infer<typeof previewSchema> {}
@@ -41,11 +45,13 @@ function checkEvent(value: unknown): NativeRefillEvent {
   else {
     if (!b || !e.prior_event_id || b.state !== "open" || a.version !== b.version + 1) throw new Error("Refill predecessor differs");
     for (const key of ["id", "pet_id", "client_id", "medication_requested", "requester_note", "channel", "created_by", "created_at"] as const) if (a[key] !== b[key]) throw new Error("Immutable refill input changed");
-    if (a.state !== (e.action === "close" ? "closed" : e.action === "deny" ? "denied" : "open") || (e.action !== "assign" && a.assigned_to !== b.assigned_to) || (e.action !== "link" && (a.authorization_id !== b.authorization_id || a.authorization_hash !== b.authorization_hash))) throw new Error("Refill transition differs");
+    if (a.state !== ((e.action === "close" || e.action === "pickup") ? "closed" : e.action === "deny" ? "denied" : "open") || (e.action !== "assign" && a.assigned_to !== b.assigned_to) || (e.action !== "link" && (a.authorization_id !== b.authorization_id || a.authorization_hash !== b.authorization_hash))) throw new Error("Refill transition differs");
     if (e.link_context) { const c = e.link_context; if (c.refill_id !== a.id || c.refill_version !== b.version || c.pet_id !== a.pet_id || c.client_id !== a.client_id || c.authorization_id !== a.authorization_id || c.authorization_hash !== a.authorization_hash || c.authorization_state !== "active") throw new Error("Reviewed authorization link differs"); }
   }
+  if (e.version === 2) { const f = e.fulfillment_reference; if (f.kind !== e.action || !a.authorization_id || f.authorization_id !== a.authorization_id || (e.action === "dispense" && f.dispense_id !== f.id)) throw new Error("Refill fulfillment reference differs"); }
   return e;
 }
+export { refillSchema as nativeRefillSchema, eventV2Schema as nativeRefillFulfillmentEventSchema, checkEvent as parseNativeRefillEvent };
 export function createNativeRefillApi(client: PrescriptionRpc, actor: string) {
   uuid.parse(actor);
   async function rpc(name: string, args: Record<string, unknown>) { const { data, error } = await client.rpc(name, args); if (error) throw error; return data; }
