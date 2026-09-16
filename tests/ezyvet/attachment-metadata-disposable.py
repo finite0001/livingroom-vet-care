@@ -45,7 +45,7 @@ checks = 0
 checks_by_fixture = {}
 harness_hashes = {}
 migration_hashes = {}
-source_paths = [root / 'supabase/tests/ezyvet_migration_identity_evidence.test.sql', root / 'src/hub/features/imports/migration-identity-api.ts', root / 'supabase/tests/ezyvet_migration_weight_evidence.test.sql', root / 'src/hub/features/imports/migration-weight-api.ts', *(p.resolve() for p in args.extra_sql_test), root / 'src/hub/features/imports/migration-prescription-item-api.ts', root / 'src/hub/features/imports/migration-prescription-api.ts', root / 'src/hub/features/imports/migration-vaccination-api.ts', root / 'src/hub/features/imports/migration-history-api.ts', root / 'src/hub/features/imports/migration-resume-api.ts', root / 'src/hub/features/imports/migration-selection-api.ts', root / 'src/hub/features/imports/migration-capture-api.ts', root / 'src/hub/features/imports/migration-items-api.ts', root / 'src/hub/features/imports/migration-run-api.ts', root / 'src/hub/features/imports/attachment-review-history.ts', *sorted((root / 'supabase/functions/_shared').glob('*.ts')), Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
+source_paths = [root / 'supabase/tests/ezyvet_migration_resolutions.test.sql', root / 'supabase/tests/ezyvet_migration_resolutions_concurrency.py', root / 'src/hub/features/imports/migration-resolution-api.ts', root / 'src/hub/features/imports/migration-resolution-state.ts', root / 'supabase/tests/ezyvet_migration_identity_evidence.test.sql', root / 'src/hub/features/imports/migration-identity-api.ts', root / 'supabase/tests/ezyvet_migration_weight_evidence.test.sql', root / 'src/hub/features/imports/migration-weight-api.ts', *(p.resolve() for p in args.extra_sql_test), root / 'src/hub/features/imports/migration-prescription-item-api.ts', root / 'src/hub/features/imports/migration-prescription-api.ts', root / 'src/hub/features/imports/migration-vaccination-api.ts', root / 'src/hub/features/imports/migration-history-api.ts', root / 'src/hub/features/imports/migration-resume-api.ts', root / 'src/hub/features/imports/migration-selection-api.ts', root / 'src/hub/features/imports/migration-capture-api.ts', root / 'src/hub/features/imports/migration-items-api.ts', root / 'src/hub/features/imports/migration-run-api.ts', root / 'src/hub/features/imports/attachment-review-history.ts', *sorted((root / 'supabase/functions/_shared').glob('*.ts')), Path(__file__).resolve(), *harness_paths, *sorted((root / 'supabase/functions/ezyvet-import').glob('*.ts')), *sorted((root / 'supabase/functions/capture-ezyvet-attachment').glob('*.ts')), *sorted((root / 'supabase/functions/retrieve-reviewed-ezyvet-original').glob('*.ts')), root / 'src/hub/features/imports/attachment-capture-state.ts', root / 'src/hub/features/imports/attachment-decision-state.ts', root / 'src/hub/features/imports/attachment-review-history.ts']
 source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in source_paths}
 
 def command(argv, **kwargs):
@@ -85,7 +85,7 @@ try:
     assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
     assert '20260913700000' in versions, 'Canonical original capture migration required'
     assert {'20260914010000','20260914020000','20260914030000','20260914040000','20260914050000','20260914060000','20260914070000','20260914080000','20260914090000','20260914100000','20260914110000','20260914120000','20260914130000','20260914140000','20260914150000','20260914160000','20260914170000','20260914180000','20260914190000','20260914200000','20260914210000','20260914220000','20260914230000','20260916000000','20260916010000','20260916033310'} <= versions, 'Canonical approval, history, chart and verified retrieval migrations required'
-    assert len(versions) == 113 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    assert len(versions) == 114 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = {args.api_port}
@@ -130,6 +130,14 @@ enabled = false
         checks_by_fixture[test_path.name] = int(plans[-1])
         checks += int(plans[-1])
         print(f'{test_path.name}: {plans[-1]} SQL assertions passed.', flush=True)
+    if 'migration' in selected:
+        output = command(['python3', str(root / 'supabase/tests/ezyvet_migration_resolutions_concurrency.py'), '--project-config', str(project / 'supabase/config.toml')], cwd=root)
+        matched = re.fullmatch(r'Operational resolution SQL: ([0-9]+) assertions passed\.\nOperational resolution concurrency: ([0-9]+) checks passed; no provider calls\.', output.strip())
+        assert matched, 'Refuse unexpected operational resolution gate output'
+        for key, count in [('resolution-sql', int(matched[1])), ('resolution-concurrency', int(matched[2]))]:
+            checks_by_fixture[key] = count
+            checks += count
+        print(output.strip(), flush=True)
     for name in selected:
         harness_path = root / 'tests/ezyvet' / fixtures[name][0]
         harness_hashes[name] = hashlib.sha256(harness_path.read_bytes()).hexdigest()

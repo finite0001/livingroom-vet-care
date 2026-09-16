@@ -1,5 +1,7 @@
 # Supervised ezyVet migration reconciliation
 
+Owner direction superseded the remaining integration roadmap on September 16, 2026: finish the current local operational-decision package, then build the standalone native platform. Do not proceed with frozen migration reports or ongoing ezyVet integration. The older requirements below remain historical context, not standalone launch gates. See [the new direction](../../docs/standalone-platform-direction-20260916.md).
+
 Status: phase1 recovery and the per-resource evidence workspace are deployed; phase2 whole-migration reconciliation remains in progress. Staging and primary have111 canonical migrations, with prescription-item evidence published at `f6e1db7`. See [rollout evidence](../../docs/prescription-item-rollout-20260915.md). Earlier local-only/99–110 migration statements below are historical checkpoints. This plan still requires identity/weight adapters, global outcomes, resolutions, frozen reports and supervised acceptance.
 
 ## Required result
@@ -41,6 +43,8 @@ Detailed data/API/security/count contracts and executable acceptance cases: [imp
 Supported Consult/Contact attachment contracts and practice entitlement; source timezone/status/category semantics; catalog/prescriber mappings; source freeze/overlap strategy; supervised subset and cutover window. These block source commissioning, not the independent ledger/recovery implementation. Fastmail/Auth SMTP, Stripe, Antech/anesthesia, inventory balances, monitoring, branding and public cutover remain separate commercial requirements.
 
 ## Next concrete increment
+
+The operational-resolution workflow is implemented locally on the combined 114-migration candidate. [Local acceptance](../../docs/evidence/canonical-migration-resolutions-20260916.json) and [restore with separately recorded cleanup recovery](../../docs/evidence/migration-resolutions-restore-20260916.json) cover scope/occurrence exclusions, reopening, recovery and guarded history. All additional planned contention scenarios passed in the separate 465-check supplemental run. After this package, continue the standalone feature-parity audit rather than the former migration-report roadmap. No hosted or cutover acceptance is implied.
 
 Planned operational workflow: [exclusions, reopen decisions, exact recovery and history](phase-02-operational-resolutions.md).
 
