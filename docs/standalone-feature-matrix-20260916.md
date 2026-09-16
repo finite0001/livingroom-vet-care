@@ -40,6 +40,20 @@ The published catalog adds these parity areas to the original practice requireme
 | Business reporting | Financial and activity filters, staff/product breakdowns, scheduled reports and underlying totals. Do not infer parity from a dashboard. [Official reporting overview](https://www.ezyvet.com/features/business-reporting) |
 | Inventory and prescriptions | Catalogs, balances, purchasing, batches and prescription entities appear in the API reference. Use these as discovery prompts; endpoint availability does not prove an equivalent staff workflow. [Official API reference](https://developers.ezyvet.com/) |
 
+## Client-facing workflow audit
+
+Read-only native route/server inspection at `19e044a` established these additional gaps. No hosted access or provider calls were made.
+
+| Capability | Evidence and status |
+|---|---|
+| Client portal | **Gap:** `/hub/client/:id` and `/hub/patient/:id` require active staff through `src/App.tsx` and `ProtectedRoute.tsx`. No client authentication, household membership, portal dashboard or client-managed patient workflow found. |
+| Appointment self check-in | **Gap:** `/contact`, `public-contact` and `accept_contact_intake` collect inquiries. They do not identify an appointment, confirm a patient, record arrival or populate a staff check-in queue. |
+| Client e-signatures | **Gap:** legacy consent tables, token lookup and a ticket checkbox exist, but no reachable consent route, signature UI, signing RPC or immutable signed snapshot/version was found. Existing schema does not prove a signing workflow. |
+| Shared documents | Native scoped `/shared/:grant` access via `SharedDocumentsPage.tsx` and `document-link-http.ts`, with browser isolation/revocation coverage. This is a specific capability grant, not general client access. |
+| Public payments | Native `/pay/:grant` and payment-return capability workflows, with `e2e/client-payment.spec.ts`. Provider acceptance remains pending; these grants do not establish household portal membership. |
+
+Portal authentication/household delegation, appointment-bound arrival and versioned consent signing remain explicit future native work. Preserve the narrower public capability boundaries when adding them; possession of a document/payment link must not implicitly grant wider patient access.
+
 ## Communications comparison
 
 Read-only comparison: Vet Connect Hub `1dc05ea` and Living Room Vet `430cc8a`. Source inspection is not provider acceptance. Fastmail and Resend remain the approved mail direction. Hub already uses Resend for outbound email; its Gmail synchronization path is not needed in the native product.
