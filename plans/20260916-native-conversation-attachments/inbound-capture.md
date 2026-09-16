@@ -1,0 +1,18 @@
+# Incoming attachment capture
+
+This work is on codex/native-inbound-file-capture, a child of the outbound attachment branch. It does not replace the pending outbound CI/concurrency checks or declare incoming retrieval complete.
+
+## Provider contract and download boundary
+
+Checked2026-09-16: https://resend.com/docs/api-reference/emails/retrieve-received-email-attachment documents GET/emails/receiving/{email_id}/attachments/{attachment_id}, response identity/name/type/size, an expiring download URL and an example URL on inbound-cdn.resend.com under /{email_id}/attachments/{attachment_id}. The implementation deliberately accepts only that exact HTTPS host/path shape. This is a supported-contract assumption to verify during authorized provider acceptance, not evidence from live clinic traffic. A provider change fails closed rather than widening allowed destinations automatically.
+
+`resend-attachment.ts` accepts metadata from an authorized saved inbound record, looks up the attachment with the server API key, requires exact metadata equality and a nonexpired URL, and downloads without forwarding the key or following redirects. It bounds metadata to64KiB and file bytes to the saved size/ten MiB, cancels overflow, rejects truncation/type mismatch, checks supported PDF/PNG/JPEG signatures and hashes actual bytes. A container signature is not malware scanning. Six injected-transport tests, targeted ESLint and frozen Deno checks pass. No actual provider request was made.
+
+## Next implementation
+
+1. Reserve capture against the saved communication_inbound row and exact attachment metadata, keyed by inbound ID/attachment ID. Require active staff and a currently matched message/conversation. Unknown/unresolved senders must complete the existing review workflow first.
+2. Use fenced durable capture with immutable bytes, metadata/hash and provider provenance. Capture retries recover the same artifact; stale leases, changed review association and revoked access must prevent publication. Do not persist signed URLs or provider API keys.
+3. Store bytes privately. Staff listing/retrieval must recheck current authorized inbound message association, and display unsupported/oversized/pending/failed states honestly without pretending the file was retrieved.
+4. Test actual local Auth/Storage/HTTP paths, cross-message denial, response-loss recovery, concurrent capture/review changes and byte integrity. Add rendered inbound timeline acceptance.
+5. Design incoming SMS media separately using its authenticated provider identifiers; do not interpret the current media-count placeholder as attachment identity.
+6. Retain provider delivery gates and capture commissioning boundaries. Complete retention and controlled provider/staff acceptance before readiness claims.
