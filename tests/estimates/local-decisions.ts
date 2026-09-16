@@ -3,6 +3,7 @@ import { readOwnedRuntimeStatus } from "./owned-runtime-status.ts";
  * Does not start/reset/stop databases, contact providers, or erase signed history.
  * The owning harness must destroy its disposable runtime after this script exits. */
 import assert from 'node:assert/strict';
+import { createEstimateDecisionGrantHandler, estimateGrantPreparationResultSchema } from '../../supabase/functions/_shared/estimate-decision-grant-http.ts';
 import { createEstimateDecisionHandler } from '../../supabase/functions/_shared/estimate-decision-http.ts';
 import { estimateDecisionConfig, materializeEstimateDecision } from '../../supabase/functions/_shared/estimate-decision-capability.ts';
 import { estimateWitnessedDecisionRequestSchema } from '../../supabase/functions/_shared/estimate-decision-contract.ts';
@@ -105,6 +106,12 @@ const effects = () => {
 const originalEffects = effects();
 const config=estimateDecisionConfig({origin:'http://127.0.0.1:8080',activeKeyVersion:'synthetic-v1',keys:JSON.stringify({'synthetic-v1':Buffer.alloc(32,81).toString('base64')}),publicEnabled:'true',issuanceEnabled:'true'});
 const publicHandler=createEstimateDecisionHandler({db:transport(service),config,rateLimit:async()=>true});
+const staffGrantHandlers={prepare:createEstimateDecisionGrantHandler({...deps,config},'prepare'),recover:createEstimateDecisionGrantHandler({...deps,config},'recover')};
+const disabledGrantHandlers={prepare:createEstimateDecisionGrantHandler({...deps,config:{...config,issuanceEnabled:false}},'prepare'),recover:createEstimateDecisionGrantHandler({...deps,config:{...config,issuanceEnabled:false}},'recover')};
+async function staffGrantHttp(mode:'prepare'|'recover',body:unknown,headers=staff.headers,disabled=false){
+ return (disabled?disabledGrantHandlers:staffGrantHandlers)[mode](new Request(`http://127.0.0.1/estimate-grant/${mode}`,{method:'POST',headers:{...headers,Origin:config.origin},body:JSON.stringify(body)}));
+}
+let staffGrantLifecycleChecks=false;
 async function publication(label:string){
  const estimateId=randomUUID();
  const draft=await createEstimateDraftApi(transport(staff.headers),staff.id,client.id).save({id:randomUUID(),kind:'save_estimate_draft',payload:{estimate_id:estimateId,client_id:client.id,pet_id:patient.id,expected_version:null,fields:{title:`Synthetic decision ${label}`,notes:'Synthetic acceptance only',terms:'Entire exact proposal. Not clinical consent or payment.',accept_by:'2099-12-31',lines:[{id:randomUUID(),product_id:product.id,product_version:product.version,description:'Reviewed visit',kind:'service',unit:product.unit,quantity:'1.5',pricing:{kind:'unit',unit_price_cents:'125'},pricing_reason:null}]}}});
@@ -118,13 +125,51 @@ async function publication(label:string){
 }
 async function grantFor(p:Awaited<ReturnType<typeof publication>>,expiresAt='2099-12-30T00:00:00.000000Z'){
  const id=randomUUID();
- const issue=await rpc('record_native_estimate_decision_grant',{p_id:id,p_mutation:{kind:'issue',request:{binding:p.preview.binding,expected_publication_head:p.preview.publication_head,expires_at:expiresAt,recipient_label:'Synthetic owner',purpose:'Review exact published estimate',attest_recipient_authority:true}}});
+ const request={binding:p.preview.binding,expected_publication_head:p.preview.publication_head,expires_at:expiresAt,recipient_label:'Synthetic owner',purpose:'Review exact published estimate',attest_recipient_authority:true};
+ const intent={id,request};
+ if(!staffGrantLifecycleChecks){
+  const blockedId=randomUUID();
+  check(!(await staffGrantHttp('prepare',{id:blockedId,request},staff.headers,true)).ok,'Default-off issuance rejects staff prepare');
+  check(sql(`select count(*) from native_estimate_decision_grants where id=${quote(blockedId)}`)==='0','Disabled preparation creates no grant');
+ }
+ const preparedResponse=await staffGrantHttp('prepare',intent);
+ check(preparedResponse.ok,'Actual Auth staff Edge issues and captures exact grant');
+ check(preparedResponse.headers.get('Cache-Control')?.includes('no-store'),'Staff grant response is not cacheable');
+ const prepared=estimateGrantPreparationResultSchema.parse(await preparedResponse.clone().json());
+ check(prepared.grant?.state==='captured'&&prepared.link===null,'Preparing/captured grant never exposes a usable URL');
+ check(prepared.receipt?.result.state==='preparing','Original immutable issue receipt remains preparing after capture');
+ // Simulate loss to the caller by discarding the successful body. Recovery below
+ // invokes the actual handler/Auth/PostgREST, without replacing any RPC result.
+ await preparedResponse.body?.cancel();
+ const recoveredResponse=await staffGrantHttp('recover',intent);
+ check(recoveredResponse.ok,'Discarded prepare response recovers original exact operation');
+ const recovered=estimateGrantPreparationResultSchema.parse(await recoveredResponse.json());
+ assert.deepEqual(recovered,prepared);checks++;
+ check(sql(`select count(*) from native_estimate_decision_grants where id=${quote(id)}`)==='1','Recovery does not issue a replacement grant');
+ check(sql(`select count(*) from native_estimate_decision_grant_captures where grant_id=${quote(id)}`)==='1','Exact capture is retained once');
+ assert.ok(recovered.receipt&&recovered.grant?.capability);
+ const issue=recovered.receipt;
  const context=await rpc('native_estimate_decision_grant_capture_context',{p_grant_id:id,p_actor_id:staff.id,p_origin:config.origin,p_key_version:config.activeKeyVersion},service);
  const flat={id,actor_id:staff.id,binding:issue.result.request.binding,expires_at:issue.result.request.expires_at,origin:config.origin,key_version:config.activeKeyVersion,capability_context:context.capability_context,context_hash:context.context_hash};
  const capability=await materializeEstimateDecision(flat,config);
- await rpc('capture_native_estimate_decision_grant',{p_grant_id:id,p_actor_id:staff.id,p_origin:config.origin,p_key_version:config.activeKeyVersion,p_context_hash:context.context_hash,p_token_hash:capability.token_hash},service);
- const active=await rpc('record_native_estimate_decision_grant',{p_id:randomUUID(),p_mutation:{kind:'activate',request:{grant_id:id,expected_grant_head:issue.result.head,expected_publication_head:p.preview.publication_head,expected_context_hash:context.context_hash,attest_review:true}}});
- check(active.result.state==='active','Captured grant explicitly activated');
+ const active=await rpc('record_native_estimate_decision_grant',{p_id:randomUUID(),p_mutation:{kind:'activate',request:{grant_id:id,expected_grant_head:recovered.grant.head,expected_publication_head:p.preview.publication_head,expected_context_hash:context.context_hash,attest_review:true}}});
+ check(active.result.state==='active','Captured grant explicitly activated through separate staff SQL operation');
+ const activeResponse=await staffGrantHttp('recover',intent);
+ check(activeResponse.ok,'Active grant materializes after actual final SQL authorization');
+ const activeRecovery=estimateGrantPreparationResultSchema.parse(await activeResponse.json());
+ check(activeRecovery.link?.url===capability.url&&activeRecovery.link?.expires_at===expiresAt,'Staff recovery returns exact frozen capability URL and expiry');
+ assert.deepEqual(activeRecovery.receipt,issue);checks++;
+ check(!JSON.stringify(activeRecovery).includes('token_hash')&&!JSON.stringify(activeRecovery).includes('capability_context'),'Staff HTTP omits private token hash and capability context');
+ if(!staffGrantLifecycleChecks){
+  check(!(await staffGrantHttp('recover',intent,other.headers)).ok,'Actual other Auth actor cannot materialize creator grant');
+  check(!(await staffGrantHttp('recover',{id,request:{...request,purpose:'Changed uncertain request'}})).ok,'Recovery rejects changed original request');
+  const disabledResponse=await staffGrantHttp('recover',intent,staff.headers,true);
+  check(disabledResponse.ok,'Issuance disabled still permits creator metadata recovery');
+  const disabled=estimateGrantPreparationResultSchema.parse(await disabledResponse.json());
+  check(disabled.grant?.state==='active'&&disabled.link===null,'Disabled issuance never materializes active URL');
+  assert.deepEqual(disabled.receipt,issue);checks++;
+  staffGrantLifecycleChecks=true;
+ }
  return {id,capability,active};
 }
 function decisionRequest(p:Awaited<ReturnType<typeof publication>>,grantId:string|null,choice:'accept'|'decline'='accept'){
