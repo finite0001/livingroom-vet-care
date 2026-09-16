@@ -1,15 +1,16 @@
 {
   "synthetic_only": true,
   "fixture": "attachment-migration",
-  "project_id": "lrv-attachment-419eb26b30fb",
-  "checks_passed": 163,
+  "project_id": "lrv-attachment-f52a173d8aa3",
+  "checks_passed": 345,
   "cleanup_verified": true,
-  "git_revision": "4e5a9b7fef1db6ef6d656e027b434e42605325b8",
+  "git_revision": "3d1d586a7fdc794cc85a7f7e89bde4980d7b8a4a",
   "runner_sha256": "ab8e44f20d6ef109a95376f3f5e7703ed4231092b792b7f50e067c3693e5b4be",
   "harness_sha256": {
     "migration": "d9b6b0657ff42e791feab161357c2506b53767c30f1176820e0647e47e0d5363"
   },
   "checks_by_fixture": {
+    "ezyvet_attachment_originals.test.sql": 182,
     "ezyvet_migration_prescription_item_evidence.test.sql": 37,
     "migration": 126
   },
@@ -127,6 +128,7 @@
     "20260916000000_ezyvet_migration_prescription_item_evidence.sql": "a5f2538bd30054f9b703a3b6b955a351bed1d4ee0fdbf8740b4a5e157a54a80e"
   },
   "source_sha256": {
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "2bf4fdf1e602e568e5dae7375f132cd8c80735c8fc88a25f8672d70f9b77a1e1",
     "supabase/tests/ezyvet_migration_prescription_item_evidence.test.sql": "c78e558c00c34cf2b1a11dd9f9edda5ffc95897852651b9f29ac524f9f8696f7",
     "src/hub/features/imports/migration-prescription-item-api.ts": "ecb3070f174f7f9af3ae8799fc4c1256b49fcf467db04ea2f16e4fe6795b7613",
     "src/hub/features/imports/migration-prescription-api.ts": "21b91a5ffe4cd4572eb21625fef4f3651a43459ce7b14b65c052625efbd85029",
