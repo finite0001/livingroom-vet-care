@@ -1,24 +1,22 @@
 # Commercial-readiness evidence tracker
 
-## Current acceptance checkpoint — September 15, 2026
+## Current live status — September 15, 2026
 
-PR136 is merged into `codex/lovable-publication` as `c5cd48337990205291fcc23bd29c5d4018ab8d38`; frontend, Edge and database CI all passed (run35009266341). It prevents a changed historical patient household from blocking unrelated valid migration selections. Local disposable acceptance passed 423 checks. The protected frontend's last verified deployment remains PR134; merging136 does not establish hosted frontend parity.
+The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 111 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging is also at 111 migrations after the [prescription-item rollout](prescription-item-rollout-20260915.md).
 
-Fresh staging database read confirms 110 migrations through `20260914230000`, one synthetic client/pet, 50 staged ezyVet contact snapshots and zero outgoing messages. See [the verified database upgrade](staging-database-upgrade-20260915.md) and [current provider checkpoint](provider-acceptance-20260915.md). Staging Auth SMTP and administrator sign-in were verified in the preceding staff rehearsal; broader client mail delivery remains uncommissioned.
+Public contact intake still requires production Turnstile keys and controlled hosted acceptance. The owner has not elected to create a Cloudflare account; Turnstile setup remains on hold after clarification that its free service would not require moving GoDaddy DNS. Stripe stays sandbox-only with payment gates disabled; outbound delivery is disabled. Staging Auth SMTP, invitation delivery and first-administrator sign-in are verified in [mail commissioning](mail-commissioning-plan.md); primary Auth SMTP and onboarding are not established by that staging evidence. Client messaging, sandbox payment/refund acceptance, clinical/provider acceptance, and complete migration reconciliation remain unfinished. Public publication is not full commercial readiness.
 
-The Stripe connector now successfully exposes the correct practice sandbox. Staging now has the verified sandbox payment-provider profile and stable staging return origin; the existing disabled Stripe webhook still targets the primary backend. Hosted payment/refund acceptance requires staging runtime provisioning, not another connector reconnect. The current CLI has no Supabase access token; the database MCP remains functional.
+The merged frontend at `f6e1db7` is published in Lovable, including prescription-item evidence alongside contact storage recovery, canonical-original downloads, housecall routes and migration selection fixes. [Current rollout evidence](prescription-item-rollout-20260915.md) verifies both backends and the public artifact. [Hosted pilot evidence](hosted-pilot-rehearsal-20260915.md) covers synthetic household/patient/booking/invoice creation only, not a complete clinical visit or payment.
 
-The owner prefers dedicated two-way ezyVet access, with fee terms pending clarification, while preserving the existing setup and temporary bounded read-only testing. No source writes or registration changes are authorized by this checkpoint. Weight/identity/prescription-item reconciliation, operational resolutions and frozen migration reports remain incomplete. Clinical approval, lab/anesthesia onboarding, provider delivery, real stock/pricing, public intake commissioning and full staff rehearsal remain required for commercial readiness.
-
-The dated sections below are historical; current facts above supersede older statements about staging migration counts, authentication commissioning and Stripe connector availability.
-
-## Current live status — September 14, 2026
-
-The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 110 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging remains at its last verified 99-migration checkpoint.
-
-Public contact intake still requires production Turnstile keys and controlled hosted acceptance. Cloudflare sign-in is pending. Stripe stays sandbox-only with payment gates disabled; outbound delivery is disabled. Mail/Auth SMTP, staff onboarding, clinical/provider acceptance, and complete migration reconciliation are separate unfinished work. Public publication is not full commercial readiness.
+Prescription-item evidence is now deployed and published; the earlier local-only checkpoint is superseded by the [verified rollout](prescription-item-rollout-20260915.md). This does not complete whole-migration reconciliation, discrepancy resolution, frozen reports, or supervised staff acceptance.
 
 The dated checkpoints below retain historical evidence. Statements that the candidate was local-only or the public site had not been cut over are superseded by the live rollout above.
+
+## Provider acceptance and owner direction — September 15, 2026
+
+The Stripe connector now successfully exposes the correct practice sandbox. Staging has its verified sandbox payment-provider profile and stable staging return origin; the existing disabled Stripe webhook still targets the primary backend. The owner deferred staging key setup while software work continues. Hosted payment/refund acceptance requires staging runtime provisioning, not another connector reconnect. See [the provider checkpoint](provider-acceptance-20260915.md).
+
+The owner prefers dedicated two-way ezyVet access, with fee terms pending clarification, while preserving the existing setup and temporary bounded read-only testing. One page of 50 contacts was staged with no native record promotion or outgoing messages; that is not complete source migration acceptance. No source writes or registration changes are authorized by this checkpoint. Weight/identity reconciliation, operational resolutions and frozen migration reports remain incomplete. Clinical approval, lab/anesthesia onboarding, provider delivery, real stock/pricing, public intake commissioning and full staff rehearsal remain required for commercial readiness.
 
 ## Historical implementation checkpoints
 
