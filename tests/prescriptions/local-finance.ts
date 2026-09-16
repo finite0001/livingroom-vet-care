@@ -1,3 +1,4 @@
+import { readOwnedRuntimeStatus } from "../estimates/owned-runtime-status.ts";
 /** Real Auth/PostgREST acceptance. Requires an explicitly owned disposable runtime.
  * Does not start/reset/stop databases, contact providers, or erase signed history.
  * The owning harness must destroy its disposable runtime after this script exits. */
@@ -15,10 +16,7 @@ assert.ok(projectId?.startsWith('lrv-prescription-'), 'Only a named lrv-prescrip
 const labels = JSON.parse(execFileSync('docker', ['inspect', `supabase_db_${projectId}`], { encoding: 'utf8', stdio: ['ignore','pipe','pipe'], timeout: 30000 }))[0]?.Config?.Labels;
 assert.equal(labels?.['com.supabase.cli.project'], projectId);
 assert.equal(realpathSync(labels?.['com.supabase.cli.workdir']), realpathSync(project));
-const local = (() => {
-  try { return JSON.parse(execFileSync('supabase', ['status', '--workdir', project, '--output', 'json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 })); }
-  catch { throw new Error('Could not read the owned local Supabase runtime status.'); }
-})();
+const local = readOwnedRuntimeStatus(project);
 assert.match(local.API_URL, /^http:\/\/127\.0\.0\.1:\d+$/);
 const sql = (query: string) => execFileSync('docker', ['exec', '-i', `supabase_db_${projectId}`, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1'], { input: query, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 }).trim();
 const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;

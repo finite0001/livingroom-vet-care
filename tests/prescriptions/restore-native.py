@@ -59,6 +59,8 @@ tables = [
     'invoice_refund_requests', 'invoice_refund_evidence', 'invoice_refunds',
     'native_estimate_drafts', 'native_estimate_draft_revisions',
     'native_estimate_draft_operations', 'native_estimate_draft_closures',
+    'native_estimate_publication_preparations', 'native_estimate_publication_artifacts',
+    'native_estimate_publication_events', 'native_estimate_publication_closures',
 ]
 
 
@@ -230,6 +232,38 @@ def estimate_boundaries_query():
     );"""
 
 
+def publication_evidence_query():
+    # Verify retained bytes directly, never regenerate HTML with today's renderer.
+    return """select jsonb_build_object(
+      'preparations',(select count(*) from public.native_estimate_publication_preparations),
+      'artifacts',(select count(*) from public.native_estimate_publication_artifacts),
+      'published',(select count(*) from public.native_estimate_publication_events where document->>'kind'='published'),
+      'replacements',(select count(*) from public.native_estimate_publication_events where document#>>'{publication,replaces_publication_id}' is not null),
+      'withdrawals',(select count(*) from public.native_estimate_publication_events where document->>'kind'='withdrawn'),
+      'closures',(select count(*) from public.native_estimate_publication_closures),
+      'verified_preparations',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_estpub_preparation(id) order by id),'[]') from public.native_estimate_publication_preparations)),
+      'verified_lifecycles',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_estpub_lifecycle(estimate_id) order by estimate_id),'[]') from (select distinct estimate_id from public.native_estimate_publication_events) roots)),
+      'verified_receipts',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_estpub_receipt(id) order by id),'[]') from public.native_estimate_publication_events)),
+      'verified_closures',public.native_fulfillment_hash((select coalesce(jsonb_agg(public.native_estpub_closure(id) order by id),'[]') from public.native_estimate_publication_closures)),
+      'stored_byte_evidence',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('id',a.id,'byte_length',octet_length(a.bytes),'sha256',encode(sha256(a.bytes),'hex'),'metadata',a.metadata) order by a.id),'[]') from public.native_estimate_publication_artifacts a)),
+      'invalid_artifacts',(select count(*) from public.native_estimate_publication_artifacts a join public.native_estimate_publication_preparations p using(id) where a.metadata is distinct from public.native_estpub_artifact(a.id,p.snapshot,a.bytes) or a.metadata->>'sha256' is distinct from encode(sha256(a.bytes),'hex') or a.metadata->>'byte_length' is distinct from octet_length(a.bytes)::text),
+      'invalid_source_hashes',(select count(*) from public.native_estimate_publication_preparations where source_hash is distinct from public.native_fulfillment_hash(context) or content_hash is distinct from public.native_fulfillment_hash(snapshot)),
+      'invalid_event_hashes',(select count(*) from public.native_estimate_publication_events where document->>'record_hash' is distinct from public.native_fulfillment_hash(document-'record_hash')),
+      'conflicting_closures',(select count(*) from public.native_estimate_publication_closures c join public.native_estimate_publication_events e using(id)),
+      'changed_client_evidence',(select count(*) from public.native_estimate_publication_preparations p join public.clients c on c.id=(p.snapshot#>>'{client,id}')::uuid where p.snapshot#>'{client,version}' is distinct from to_jsonb(c.version) and p.snapshot#>>'{client,name}' is distinct from c.full_name),
+      'changed_catalog_evidence',(select count(*) from public.native_estimate_publication_preparations p join public.native_estimate_draft_revisions r on r.estimate_id=(p.snapshot#>>'{target,estimate_id}')::uuid and r.version=(p.snapshot->>'draft_version')::integer cross join lateral jsonb_each(r.catalog) e join public.catalog_products c on c.id=(e.value->>'id')::uuid where e.value->'version' is distinct from to_jsonb(c.version) and e.value->>'unit_price_cents' is distinct from c.unit_price_cents::text)
+    );"""
+
+
+def publication_boundaries_query():
+    return """select jsonb_build_object(
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,
+        'policies',(select coalesce(jsonb_agg(jsonb_build_object('name',p.polname,'command',p.polcmd,'permissive',p.polpermissive,'roles',(select jsonb_agg(case when r=0 then 'public' else pg_get_userbyid(r) end order by r) from unnest(p.polroles) r),'using',pg_get_expr(p.polqual,p.polrelid),'check',pg_get_expr(p.polwithcheck,p.polrelid)) order by p.polname),'[]') from pg_policy p where p.polrelid=c.oid),
+        'triggers',(select coalesce(jsonb_agg(jsonb_build_object('definition',pg_get_triggerdef(t.oid,true),'enabled',t.tgenabled) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c where c.relnamespace='public'::regnamespace and c.relname in('native_estimate_publication_preparations','native_estimate_publication_artifacts','native_estimate_publication_events','native_estimate_publication_closures')),
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'owner',pg_get_userbyid(p.proowner),'security_definer',p.prosecdef,'volatility',p.provolatile,'configuration',p.proconfig,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p where p.pronamespace='public'::regnamespace and (p.proname like 'native_estpub_%' or p.proname in('preview_native_estimate_publication','prepare_native_estimate_publication','recover_native_estimate_preparation','native_estimate_capture_context','capture_native_estimate_publication_artifact','publish_native_estimate','withdraw_native_estimate','recover_native_estimate_publication_operation','close_native_estimate_publication_operation','read_native_estimate_publication','read_native_estimate_publication_history','read_native_estimate_published_revision','read_native_estimate_publication_artifact')))
+    );"""
+
+
 try:
     verify_project()
     project_verified = True
@@ -255,6 +289,18 @@ try:
     before_returns = json.loads(snapshot_sql(return_evidence_query()))
     before_return_boundaries = json.loads(snapshot_sql(return_boundaries_query()))
     before_finance = json.loads(snapshot_sql(finance_evidence_query()))
+    before_publications = json.loads(snapshot_sql(publication_evidence_query()))
+    before_publication_boundaries = json.loads(snapshot_sql(publication_boundaries_query()))
+    check(before_publications['preparations'] > 0 and before_publications['artifacts'] > 0
+          and before_publications['published'] >= 2 and before_publications['replacements'] > 0
+          and before_publications['withdrawals'] > 0 and before_publications['closures'] > 0,
+          'Populated published/replaced/withdrawn estimates, original artifacts and terminal closures required')
+    check(before_publications['changed_client_evidence'] > 0 and before_publications['changed_catalog_evidence'] > 0,
+          'Publication history must remain verifiable after live client display and catalog price/version changes')
+    check(all(before_publications[key] == 0 for key in ('invalid_artifacts', 'invalid_source_hashes', 'invalid_event_hashes', 'conflicting_closures')),
+          'Publication source/content/event hashes, retained byte digests and exclusive closures must verify')
+    check(len(before_publication_boundaries['tables']) == 4 and all(row['rls'] and len(row['triggers']) >= 4 for row in before_publication_boundaries['tables']),
+          'All publication tables require RLS and immutable, audit and deferred integrity triggers')
     before_estimates = json.loads(snapshot_sql(estimate_evidence_query()))
     before_estimate_boundaries = json.loads(snapshot_sql(estimate_boundaries_query()))
     check(before_estimates['drafts'] > 0 and before_estimates['revisions'] > before_estimates['drafts']
@@ -333,6 +379,9 @@ try:
         ('native_return_policy_decisions', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','configure_native_return_policy','request',request)"),
         ('native_dispense_correction_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','append_native_dispense_correction','request',request)"),
         ('native_dispense_finance_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_finance','request',request)"),
+        ('native_estimate_publication_preparations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','prepare_estimate_publication','request',request)"),
+        ('native_estimate_publication_events', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_estimate_publication','mutation',mutation)"),
+        ('native_estimate_publication_closures', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_estimate_publication','mutation',mutation)"),
         ('native_estimate_draft_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','save_estimate_draft','request',request)"),
         ('native_estimate_draft_closures', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','save_estimate_draft','request',request)"),
         ('native_dispense_finance_closures', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_finance','request',request)"),
@@ -358,6 +407,11 @@ try:
           'Correction RLS, immutability triggers and private/public function grants must survive restore')
     restored_returns = json.loads(sql(return_evidence_query(), restored))
     restored_finance = json.loads(sql(finance_evidence_query(), restored))
+    restored_publications = json.loads(sql(publication_evidence_query(), restored))
+    check(restored_publications == before_publications,
+          'Publication frozen preparations, lifecycle/receipt/closure chains and original artifact byte digests must survive restore')
+    check(json.loads(sql(publication_boundaries_query(), restored)) == before_publication_boundaries,
+          'Publication RLS policies, trigger definitions/enablement and private/staff/service function ACLs must survive restore')
     restored_estimates = json.loads(sql(estimate_evidence_query(), restored))
     check(restored_estimates == before_estimates,
           'Restored estimate revisions, frozen catalog totals, exact receipts and terminal closures must verify')
@@ -437,5 +491,6 @@ if success:
                'verified_return_evidence': restored_returns, 'return_boundaries_verified': True,
                'verified_finance_evidence': restored_finance, 'finance_boundaries_verified': True,
                'verified_estimate_evidence': restored_estimates, 'estimate_boundaries_verified': True,
+               'verified_publication_evidence': restored_publications, 'publication_boundaries_verified': True,
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     print(json.dumps(summary, sort_keys=True))

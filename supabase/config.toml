@@ -90,3 +90,9 @@ verify_jwt = true
 # Server-only worker credentials are checked explicitly; secret API keys are not JWTs.
 [functions.cleanup-abandoned-attachment]
 verify_jwt = false
+[functions.prepare-estimate-publication]
+verify_jwt = true
+[functions.recover-estimate-publication-preparation]
+verify_jwt = true
+[functions.read-estimate-publication-artifact]
+verify_jwt = true

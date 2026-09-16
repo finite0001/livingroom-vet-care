@@ -84,6 +84,8 @@ jobs:
         run: python3 supabase/tests/inbound_attachment_concurrency.py --project-config supabase/config.toml --run-synthetic-local
       - name: Verify conversation attachment capture and queue races
         run: python3 supabase/tests/conversation_email_concurrency.py --project-config supabase/config.toml --run-synthetic-local
+      - name: Verify native estimate publication capture, lifecycle and uncertain-save resolution
+        run: python3 -B tests/estimates/publication-concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks
