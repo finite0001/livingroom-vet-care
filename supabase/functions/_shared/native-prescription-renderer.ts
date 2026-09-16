@@ -50,7 +50,7 @@ function object(value: unknown, keys: string[]): Record<string, unknown> {
   return record;
 }
 function text(value: unknown, max = 200): asserts value is string {
-  if (typeof value !== "string" || !value.trim() || value.length > max || Array.from(value).some(char => char.charCodeAt(0) < 32 && ![9, 10, 13].includes(char.charCodeAt(0)))) fail();
+  if (typeof value !== "string" || !value.trim() || Array.from(value).length > max || Array.from(value).some(char => char.charCodeAt(0) < 32 && ![9, 10, 13].includes(char.charCodeAt(0)))) fail();
 }
 function id(value: unknown) { if (typeof value !== "string" || !uuid.test(value)) fail(); }
 function digest(value: unknown) { if (typeof value !== "string" || !hash.test(value)) fail(); }

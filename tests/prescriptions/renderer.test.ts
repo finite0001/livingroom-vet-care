@@ -80,3 +80,9 @@ test('external pharmacy orders never fabricate a local dispensing receipt', () =
 test("a dispense copy requires a status read at least as recent as that event", () => {
   assert.throws(() => renderNativePrescription(prescription, { ...status, checked_at: prescription.signed_at }, dispense));
 });
+
+test('text limits count Unicode code points consistently with PostgreSQL', () => {
+  const allowed = { ...prescription, medication: { ...prescription.medication, name: '🐾'.repeat(200) } };
+  assert.ok(renderNativePrescription(allowed, status).includes('🐾'.repeat(200)));
+  assert.throws(() => renderNativePrescription({ ...allowed, medication: { ...allowed.medication, name: '🐾'.repeat(201) } }, status));
+});

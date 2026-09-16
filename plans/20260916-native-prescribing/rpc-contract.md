@@ -2,7 +2,7 @@
 
 Status: agreed implementation target for coordination, **not implemented or accepted**. This slice fixes authority configuration, draft/save/read/list, initial signing, and exact operation recovery. Cancellation, replacement, refill intake, fill slots, dispensing and print projections remain required later slices under [the full contract](implementation-contract.md); they are not represented as completed here. No hosted changes or provider calls.
 
-All objects below are closed: every listed key is required, nullable values use explicit JSON `null`, unknown keys fail. UUIDs are UUID strings; Hash is lowercase SHA-256 hex64; Instant is finite ISO timestamp with timezone and at most six fractional digits; Day is a real `YYYY-MM-DD` date. Positive integer revisions are bounded PostgreSQL integers. Quantities are decimal **strings** with 1–11 integer digits, no leading zeros except `0`, and zero to three decimals; positive, maximum `99999999999.999`. Keep request strings exactly as submitted for retry identity; output numeric quantities use fixed three decimals. All written text must equal its trimmed value, contain no control characters other than tab/newline, and meet stated bounds.
+All objects below are closed: every listed key is required, nullable values use explicit JSON `null`, unknown keys fail. UUIDs are UUID strings; Hash is lowercase SHA-256 hex64; Instant is finite ISO timestamp with timezone and at most six fractional digits; Day is a real `YYYY-MM-DD` date. Positive integer revisions are bounded PostgreSQL integers. Quantities are decimal **strings** with 1–11 integer digits, no leading zeros except `0`, and zero to three decimals; positive, maximum `99999999999.999`. Keep request strings exactly as submitted for retry identity; output numeric quantities use fixed three decimals. Text bounds count Unicode code points, matching PostgreSQL `length(text)`. All written text must equal its JavaScript-compatible Unicode-trimmed value, contain no control characters other than tab/newline, and meet stated bounds.
 
 ## Shared objects
 
@@ -134,7 +134,7 @@ interface SaveDraftRequest {
 }
 ```
 
-Active staff can prepare/update an unsigned practice draft, with attributed revision history. Existing draft patient and household cannot change. Require patient belongs to given client and is active/not deceased, optional encounter belongs to same patient, and stocked catalog product is active medication with exact unit. Never infer a product by name. Signed drafts cannot be edited. Version mismatch is `40001`; separate concurrent create on an existing draft is conflict, not silent replay. Save has no clinical authority, stock, billing or delivery effects.
+Active staff can prepare/update an unsigned practice draft, with attributed revision history. Existing draft patient and household cannot change. Require patient belongs to given client and is active/not deceased, optional encounter belongs to same patient, and stocked catalog product is active medication with exact unit. Never infer a product by name. Signed drafts cannot be edited (`23514`); this is distinct from a stale unsigned revision. Version mismatch is `40001`; separate concurrent create on an existing draft is conflict, not silent replay. Save has no clinical authority, stock, billing or delivery effects.
 
 `read_native_prescription_draft(p_id uuid, p_pet_id uuid) -> Draft | null`: active staff; exact patient match, absent/mismatched returns null.
 
