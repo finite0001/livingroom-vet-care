@@ -4,7 +4,7 @@
 
 A fresh connector call returns `The Living Room Vet sandbox`, account `acct_1UF1ewGUaxUNX5Ol`, `livemode=false`. This supersedes the expired-authorization blocker in earlier rehearsal notes. No payment or refund was performed.
 
-A provider endpoint read finds one webhook, `we_1UFEiWGUaxUNX5OlbNtD6lHW`, status disabled, API version `2026-08-26.dahlia`, targeting the primary project `mgadheotkdnrsatfivjy`. It is not a staging webhook and was not changed. Fresh staging SQL confirms zero payment-provider profiles.
+A provider endpoint read finds one webhook, `we_1UFEiWGUaxUNX5OlbNtD6lHW`, status disabled, API version `2026-08-26.dahlia`, targeting the primary project `mgadheotkdnrsatfivjy`. It is not a staging webhook and was not changed. The initial staging read found zero payment-provider profiles. The existing configure_payment_provider RPC subsequently configured the verified sandbox account with livemode=false and the stable staging return origin. A separate read verified the profile; checkout attempts, payments, refunds and outbox rows remained zero.
 
 The current Supabase CLI reports no access token; database MCP reads work. Connector access does not supply the application's Stripe secret key. The owner has been asked to save the sandbox key as STRIPE_SECRET_KEY directly in staging Edge Function secrets, never in chat. No key was generated, exposed or copied during this checkpoint.
 
@@ -13,7 +13,7 @@ Fresh source retrieval also verified all four staging payment functions (`invoic
 ### Remaining bounded acceptance procedure
 
 1. Provision staging-only runtime key and exact sandbox account/mode/return origin. Verify deployed handler source and disabled gates before activation. Do not repoint the primary webhook.
-2. Configure the existing service-only payment-provider RPC for the stable staging origin and the verified sandbox account. Register a separate matching staging webhook and securely save its signing secret, with only supported event types.
+2. The staging ledger profile is configured. Register a separate matching staging webhook and securely save its signing secret, with only supported event types.
 3. Enable the required payment/webhook/worker gates only for the controlled sandbox rehearsal. Use the retained USD1.00 PILOT TEST invoice and authenticated staff workflow; do not synthesize ledger payment evidence.
 4. Create and complete hosted Checkout using Stripe test payment data. Verify signed webhook receipt, provider reconciliation, one captured payment and zero duplicate ledger effects on replay/recovery.
 5. Record the reviewed accounting credit before preparing a refund. Verify the application refund request against the actual provider refund and resulting invoice balance; pending status is not settled cash.
