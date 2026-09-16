@@ -84,3 +84,9 @@ CI35094146408 at53c0337 is still active and does not contain these timeline chan
 Added an explicit Refresh file status action after capture/read errors and removed duplicate refresh on the capturing-status action. Unsupported state now says File retrieval unavailable rather than implying a preview is the missing feature. Two targeted browser tests pass: capture503 never fabricates a ready/download action, and same-length altered PDF bytes never trigger a browser download. Both keep a working status-refresh action. Targeted UI/test lint and diff checks pass.
 
 Updated the standalone feature matrix's stale empty-attachment assessment to distinguish candidate PR work from deployed capability, preserving incoming concurrency, retention and hosted/provider acceptance gaps. Expanded backend CI35094146408 remains active, most recently in original-capture race regressions; the local UI follow-ups are not part of that run.
+
+## Incoming concurrency harness prepared
+
+Added `supabase/tests/inbound_attachment_concurrency.py` and its CI database step. It requires explicit synthetic-local opt-in, project configuration and matching Docker project label. Transactions hold the incoming row and wait until pg_blocking_pids proves the exact holder/waiter dependency. Cases cover competing claims, matching duplicate finalization, staff revocation during claim/finalization waits, changed inbound version and a replacement lease invalidating the waiting original token. Cleanup targets generated fixture IDs, owned session tags and exact synthetic Storage metadata paths. These are SQL/object-metadata tests, not actual provider or Storage-byte acceptance; the separate Auth/RPC/Storage harness covers bytes.
+
+Python compile and diff checks pass; concurrency cases have not yet executed. CI35094146408 at53c0337 remains live in later database integration stages/browser tests, so this harness and local UI commits remain unpushed until it finishes.
