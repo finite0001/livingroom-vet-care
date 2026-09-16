@@ -23,6 +23,8 @@ September16 hosted upload acceptance: [17-step synthetic workflow](evidence/stag
 
 September16 worker alignment: [deployment receipt](evidence/staging-attachment-workers-20260916.json) records `process-inbound` version9 and `dispatch-outbox` version12 in staging. All24 bundled source files match the reviewed candidate. Anonymous POST requests return401, outbound delivery remains disabled, and attachment capture/cleanup gates remain absent/default-off. No authenticated worker invocation or provider processing was performed.
 
+September16 preview frontend: [deployment evidence](evidence/staging-attachment-frontend-20260916.json) records READY preview `dpl_6YwbA24U21GZ4Fs5yXj1ZRtH6wG1` frome629419. Its served entry bundle contains only the staging backend reference. Homepage and staff login render in Chrome. Stable staging alias remains unchanged pending CI35114824602; authenticated UI acceptance and public Lovable publication remain outstanding.
+
 ## Historical commissioning snapshot
 
 The following September12 notes explain the original setup. Their environment states, counts, provider prerequisites and outstanding-work statements are historical and may be superseded by the current direction and later dated receipts above.
