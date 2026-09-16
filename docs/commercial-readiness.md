@@ -4,6 +4,12 @@
 
 The owner and Dr. Edler no longer want ongoing ezyVet integration. After packaging the current local phase, the next step is native ezyVet feature parity plus Vet Connect Hub communications in an independent Living Room Vet platform. [The recorded direction](standalone-platform-direction-20260916.md) supersedes historical integration commissioning and migration-report launch gates below. Existing ezyVet access may inform a read-only feature/workflow audit; the current source setup remains unchanged. Clinical review, other provider commissioning and complete native hosted staff acceptance are still required.
 
+## Current native candidate — September 16, 2026
+
+PR147–149 have passing CI for physical returns and shared quantity replay. [Draft PR151](https://github.com/finite0001/livingroom-vet-care/pull/151) adds attributed return corrections, discrepancy decisions, lot holds and current print4/schema13 records. Local lint, TypeScript,858 unit tests, production build, Edge checks and67 focused browser cases pass; actual database/Auth/contention/restore acceptance is still being verified after SQL fixes. [Draft evidence](evidence/native-return-reconciliation-draft-20260916.json) and [Dr. Edler review checklist](../plans/20260916-native-prescribing/reconciliation-review.md) distinguish these checks from hosted and clinical acceptance. This candidate has not been deployed.
+
+The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves outstanding native estimates, dispense-linked credits/refunds, communications, reporting and unassessed parity workflows. Completion of the medication phase does not establish complete practice-software parity.
+
 ## Current live status — September 15, 2026
 
 The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 111 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging is also at 111 migrations after the [prescription-item rollout](prescription-item-rollout-20260915.md).
@@ -97,7 +103,7 @@ The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/pl
 | Standard and per-patient vaccine/lab reminders | PR19 lab interval templates and PR24 standard/patient vaccine due plans with immutable unsent jobs | PR29 disabled-by-default scheduler/outbox bridge and PR34 versioned administrator policy UI implemented; reviewed wording/policies, deployment configuration and controlled provider acceptance remain |
 | Vaccine certificates with due dates | PR20 immutable vaccine history and Current certificate integration adds reviewed patient due-plan snapshots; print/correction tests pass | Veterinarian acceptance and hosted issuance |
 | Rabies certificates with complete vaccine information | PR20 separate required-metadata template, verified issuer registry and immutable issuance | Verified practice issuer setup and Dr. Edler review |
-| Invoices and payment by text/email | Invoice/item/credit ledgers and reviewed invoice email; PR52/54/57 add payment/refund ledger, verified event inbox and provider handlers; PR59 adds staff controls; PR60/61 add reviewed collection grants and isolated client pages | PR65/68 actual capability/staff roundtrips; PR72–78 reviewed delivery database/transport/preparation and administrator reconciliation implemented. Staff payment-message composer now integrated; hosted acceptance and real Stripe payment/refund/webhook tests remain; Stripe connector needs reauthentication |
+| Invoices and payment by text/email | Invoice/item/credit ledgers and reviewed invoice email; PR52/54/57 add payment/refund ledger, verified event inbox and provider handlers; PR59 adds staff controls; PR60/61 add reviewed collection grants and isolated client pages | PR65/68 actual capability/staff roundtrips; PR72–78 reviewed delivery database/transport/preparation and administrator reconciliation implemented. Staff payment-message composer now integrated; hosted acceptance and real Stripe payment/refund/webhook tests remain; staging Stripe key setup is owner-deferred |
 | Select all/some medical records/certificates for email | PR26/31 selected-record snapshots/history, PR35 exact frozen email report/originals and PR38 schema-4 imported-weight provenance; private originals remain protected | Dr. Edler/operator disclosure acceptance, hosted privacy checks and controlled recipient/provider delivery |
 | Medication inventory, expiration/lot/billing | Product/lot/location stock ledger and atomic treatment-plus-charge workflow implemented | Hosted stock acceptance, invoice/payment reconciliation and real opening balances |
 | Vaccine inventory and billing | Frozen vaccine lot/expiry metadata and atomic stock decrement/billing implemented | Certificate acceptance, inventory import/opening balances and hosted workflow |
@@ -108,7 +114,7 @@ The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/pl
 | QOL charting | PR14 versioned qualitative observations, sign/addenda and reopen/conflict tests | PR26 selected history export implemented; Dr. Edler instrument/longitudinal presentation acceptance remains |
 | Reopen/update mass body maps | PR14 stable lesions, keyboard schematic, dated observations and patient-photo validation | PR26 selected body-map history export implemented; clinician acceptance of schematic and measurements remains |
 | Unified inbox without Gmail dependence | Signed Resend/Twilio ingestion, reviewed sender-assignment UI/RPC, provider-processing review and audited retry UI, durable outbox, consent UI, personal read state and paginated inbox implemented | Controlled inbound/provider callbacks and hosted acceptance remain |
-| ezyVet API connection | PR11 reviewed household/patient promotion; PR36 reviewed historical weight create/link and discrepancy history; PR38 release provenance | Authorized ezyVet account and actual API/mapping acceptance; clinical resources beyond household/patient identity and reviewed historical weights need a separate implementation and acceptance |
+| Standalone ezyVet feature parity and retained source evidence | Existing source records and reviewed provenance remain preserved; authorized access is read-only workflow reference | Complete native workflow gap assessment and dependency retirement; ezyVet integration commissioning is no longer a launch gate |
 | Logo/new visuals | PR12 approved armchair/dog/cat direction; PR33 medical-cross PNG with live descriptor integrated into public header/footer, responsive previews checked | Final owner acceptance and optimized/vector master; raster texture/fringe and print/monochrome reproduction review remain |
 | Supabase/Vercel + owned domain | Dedicated Supabase provisioned; Vercel config; domain known | Frontend environment parity, staff/Auth SMTP, DNS/HTTPS, backups/restore, monitoring and cutover |
 
@@ -123,13 +129,13 @@ The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/pl
 
 ## Completion gates
 
-Completion requires a real authorized staff workflow on the chosen hosted backend: household/patient creation → housecall or clinic booking → reminder → SOAP and alerts → stock-backed vaccine/medication administration → invoice and certificates → exact selected-record delivery → inbound client reply → verified payment reconciliation → next due reminders. Dental, anesthesia, QOL and body-map histories must reopen intact, and actual ezyVet/lab/anesthesia integrations require their real sample/account evidence.
+Completion requires a real authorized staff workflow on the chosen hosted backend: household/patient creation → housecall or clinic booking → reminder → SOAP and alerts → stock-backed vaccine/medication administration → invoice and certificates → exact selected-record delivery → inbound client reply → verified payment reconciliation → next due reminders. Dental, anesthesia, QOL and body-map histories must reopen intact. Native prescribing, refills, dispensing and return reconciliation require their own complete staff workflows. Antech and any selected anesthesia automation require real account/sample evidence. ezyVet integration is excluded from the launch gate; the independent native feature-parity requirements remain in scope.
 
 No test count, branch label, disabled endpoint, mock vendor adapter or populated checklist alone proves that gate. Staff/clinician acceptance, production settings, domain sender verification, SMS consent/opt-out, monitoring, backup restoration and content/brand review are separate evidence items. Preserve all patient records and existing staff/account settings during cutover; no unreviewed destructive reconciliation.
 
 ## External inputs still pending
 
-Practice phone, emergency referral contact, staff identities/credentials, QOL/consent instrument approval, anesthesia vendor, ezyVet clinical-resource samples and migration acceptance, mail/Auth SMTP/SMS accounts and Stripe sandbox/production configuration. The three owner-approved sending DNS records are saved and authoritative values confirmed; Resend sending-domain verification is complete. The owner has now explicitly supplied a named first-administrator mailbox privately, superseding the earlier inferred `admin@` address; no mailbox or Auth account has been created. Secrets must be entered in provider/project secret stores rather than chat or Git.
+Practice phone, emergency referral contact, final staff access, clinical/QOL/consent approvals, anesthesia provider selection, Antech onboarding, production client-mail/SMS commissioning and Stripe sandbox/production acceptance remain pending. The owner has deferred staging Stripe secret setup while software work continues. Resend sending-domain verification is complete; staging Auth mail and initial administrator sign-in are verified in [mail commissioning](mail-commissioning-plan.md). Those staging results do not establish primary Auth SMTP or client communications acceptance. No ezyVet credentials, integration registration or migration acceptance is required for the standalone launch. Secrets belong in provider/project secret stores, not chat or Git.
 
 ## Current stack strategy
 
@@ -139,7 +145,7 @@ Build and test focused dependent branches, with each subsequent PR based on its 
 
 The user selected Antech (entered as “Antec”) as the lab provider and Dr. Susan Edler as the reviewer for clinical forms. Anesthesia recording vendor remains undecided. Clinical forms and certificate samples must be reviewed with Dr. Edler; provider selection alone does not supply API credentials, a supported integration contract or an acceptance result. The [Antech commissioning checklist](antech-commissioning.md) records the official public evidence, required approved contract/sample account, and patient/result/acknowledgment acceptance cases before an adapter.
 
-Living Room Vet is the primary record system. ezyVet imports are staged and reviewed; matching must preserve local edits and must never delete local records absent from a later import. No outbound clinical synchronization into ezyVet is planned.
+Living Room Vet is an independent primary record system. Preserve retained source evidence and local edits; do not expand imports, enable synchronization or change the existing ezyVet setup. Authorized read-only inspection may inform native workflow design. API endpoint coverage alone does not prove feature parity.
 
 ## Historical implementation evidence — 2026-09-12
 
@@ -174,7 +180,7 @@ Synthetic message tests verify lost-response recovery, unchanged UUID retry, cha
 
 ## Payment account decision
 
-The owner selected a new Stripe account dedicated to Living Room Vet. Do not configure payments against an existing unrelated account. Stripe connector reauthentication and practice business onboarding are still required; no account has been created or payment processed in this workflow.
+The owner selected a new Stripe account dedicated to Living Room Vet. The practice sandbox is available through the reconnected connector; staging secret setup and real payment/refund acceptance remain owner-deferred. Do not configure payments against an unrelated account. See the dated [provider checkpoint](provider-acceptance-20260915.md); earlier connector failures below are historical.
 
 ## Historical integration checkpoint through PR43
 
