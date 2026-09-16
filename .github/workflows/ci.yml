@@ -64,6 +64,8 @@ jobs:
         run: python3 -B supabase/tests/native_prescriptions_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify native refill operational transitions and linked-order concurrency
         run: python3 -B supabase/tests/native_refills_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify product and lot ordering with queued catalog updates
+        run: python3 -B supabase/tests/inventory_product_locking_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks

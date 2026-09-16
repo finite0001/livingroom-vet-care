@@ -69,6 +69,27 @@ check(directory.version === 1 && directory.entries.some((entry: { user_id: strin
 const fields = { encounter_id: null, medication: { name: 'Synthetic medication', strength: 'Synthetic strength', form: 'Synthetic form', directions: 'Synthetic directions only; not clinical instructions.', route: 'Synthetic route' }, quantity_per_fill: '30', unit: 'synthetic units', refills_authorized: 2, fulfillment_mode: 'external_pharmacy', product_id: null, starts_on: start, expires_on: end };
 const draftId = randomUUID(), saveId = randomUUID();
 const saveRequest = { draft_id: draftId, pet_id: patient.id, client_id: client.id, expected_version: null, fields };
+// Existing administration/stock/billing RPCs retain behavior after lock-order changes.
+// These synthetic administration effects precede the native-prescription zero-effect baseline.
+const stockProduct = await rpc('save_catalog_product', { p_id: null, p_expected_version: null, p_name: 'Synthetic administration product', p_kind: 'medication', p_manufacturer: '', p_unit: 'tablet', p_unit_price_cents: 125, p_active: true }, staff.headers);
+const stockLotId = randomUUID(), receiveId = randomUUID();
+const receiveRequest = { p_id: receiveId, p_lot_id: stockLotId, p_product_id: stockProduct.id, p_lot_number: 'SYNTHETIC-LOT', p_expires_on: end, p_location: 'Synthetic test shelf', p_quantity: 10, p_reason: 'Synthetic receiving acceptance' };
+const received = await rpc('receive_inventory', receiveRequest, staff.headers);
+assert.deepEqual(await rpc('receive_inventory', receiveRequest, staff.headers), received); checks++;
+const adjustId = randomUUID(), adjustRequest = { p_id: adjustId, p_lot_id: stockLotId, p_quantity: -1, p_reason: 'Synthetic adjustment acceptance' };
+const adjusted = await rpc('adjust_inventory', adjustRequest, staff.headers);
+assert.deepEqual(await rpc('adjust_inventory', adjustRequest, staff.headers), adjusted); checks++;
+const treatmentInvoiceId = randomUUID();
+const treatmentInvoice = await rpc('create_billing_invoice', { p_id: treatmentInvoiceId, p_client_id: client.id }, staff.headers);
+const treatmentAlerts = await rpc('read_patient_treatment_alerts', { p_pet_id: patient.id }, staff.headers);
+const treatmentId = randomUUID();
+const treatmentRequest = { pet_id: patient.id, lot_id: stockLotId, invoice_id: treatmentInvoiceId, quantity: '1.000', dose: 'Synthetic administration only', route: 'Synthetic route', site: '', veterinarian: 'Synthetic veterinarian', veterinarian_license: '', administered_at: new Date().toISOString(), next_due_on: null, historical: false, source: 'Synthetic existing administration acceptance', alert_review: { source_hash: treatmentAlerts.source_hash, acknowledged: true } };
+const treatment = await rpc('record_patient_treatment', { p_id: treatmentId, p_request: treatmentRequest }, staff.headers);
+assert.deepEqual(await rpc('record_patient_treatment', { p_id: treatmentId, p_request: treatmentRequest }, staff.headers), treatment); checks++;
+check(sql(`select coalesce(sum(quantity),0)::text from public.inventory_movements where lot_id=${quote(stockLotId)}`) === '8.000', 'Receiving, adjustment and one exact treatment debit preserve expected balance');
+check(sql(`select amount_cents::text from public.billing_invoice_items where id=${quote(treatmentId)}`) === '125', 'Existing treatment still produces one exact invoice charge');
+check(sql(`select version::text from public.billing_invoices where id=${quote(treatmentInvoiceId)}`) === String(treatmentInvoice.version + 1), 'Treatment advances invoice revision once despite retry');
+check(sql(`select count(*)::text from public.treatment_alert_reviews where treatment_id=${quote(treatmentId)}`) === '1', 'Treatment retains one immutable alert review');
 const beforeEffects = sql('select jsonb_build_object(\'stock\',(select count(*) from public.inventory_movements),\'charges\',(select count(*) from public.billing_invoice_items),\'treatments\',(select count(*) from public.patient_treatments),\'outbox\',(select count(*) from public.communication_outbox))::text');
 const saved = await rpc('save_native_prescription_draft', { p_id: saveId, p_request: saveRequest }, staff.headers);
 check(saved.actor_id === staff.id && saved.pet_id === patient.id && saved.result.id === draftId && saved.result.version === 1 && saved.result.status === 'draft', 'Staff draft has no clinical authorization');

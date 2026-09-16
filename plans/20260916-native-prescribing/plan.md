@@ -59,3 +59,9 @@ Dr. Susan Edler must review prescription fields, prescriber eligibility, partial
 ## Verified refill intake checkpoint
 
 [Evidence](../../docs/evidence/native-refill-intake-20260916.json): 117 migrations, unchanged legacy READY record after upgrade, 162 SQL assertions, 79 real Auth/API checks, 26 observed concurrency checks, 662 unit tests and 18 browser cases. Queue reads use verified snapshots without accumulating authorization write locks. Owned runtime cleanup verified. Next: implement dispensing from the [proposed contract](dispensing-rpc-contract.md), resolving its queued-price-update/product/lot locking gate before claiming acceptance.
+
+## Inventory prerequisite118 and fulfillment adapter checkpoint
+
+The additive inventory patch preserves clinical alerts and invoice locking while acquiring product SHARE before lot UPDATE; receive/adjust/treatment also recheck active staff after request waits. Real three-writer tests verify exact product ownership and both arrival schedules. PostgreSQL allows compatible SHARE acquisition while a catalog UPDATE queues, so the original direct-blocker assumption was removed; no old deadlock is claimed. A prior-order negative control fails the exact ownership check.
+
+The strict fulfillment adapter and V2 usage/refill parsers are preparation for119, with historical V1 compatibility retained. They do not enable dispensing in the UI or establish backend fulfillment. See [checkpoint evidence](../../docs/evidence/native-inventory-locking-20260916.json) for final counts, source hashes and limitations. Next: implement the atomic dispensing backend against the reviewed contract, then staff workflow, selected releases and populated restore.

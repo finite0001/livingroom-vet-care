@@ -34,3 +34,9 @@ The treatment row above includes the effective `20260913260000_treatment_alert_r
 `20260913300000_payment_ledger.sql` adds invoice collection guards: credits/voids lock invoices; unresolved checkout blocks corrections, and payment history blocks void. `20260913330000_payment_reconciliation_observations.sql` adds reconciliation guards for credits. Clinical correction, physical stock adjustment, financial credit and refund remain separate linked actions; none automatically restores prescription allowance.
 
 `20260913150000_invoice_documents.sql` preserves quantity/cents as strings. New receipts must retain that precision convention. This audit prepares the full dispensing phase after native refill intake; it does not reduce the remaining workflow or acceptance requirements.
+
+## Additive118 verification
+
+`20260916070108_inventory_product_before_lot_locking.sql` changes current-care treatment to product SHARE before lot UPDATE, preserving patient/alert and invoice locking. Receive, adjust and treatment also recheck active staff after their request gate, including exact retries. Existing clinical/stock/charge data remain unchanged by this function-definition migration.
+
+The original queued-update blocking assumption was not observed: PostgreSQL permits compatible product SHARE acquisition while catalog UPDATE waits. The real three-writer test now checks exact product-row ownership before the treatment's lot wait using `pgrowlocks` in an owned schema clone. Both arrival schedules complete with exact stock, protected prices and alert history; three role-revoked retries are rejected. All32 checks pass. A negative control reconstructing only the prior treatment lock order fails the exact product-ownership assertion. This establishes the tested ordering, not a reproduced deadlock in the old code or acceptance of the future dispensing implementation.
