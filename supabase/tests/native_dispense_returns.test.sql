@@ -151,4 +151,28 @@ select ok(not has_table_privilege('authenticated','native_return_events','INSERT
 select ok(not has_table_privilege('service_role','native_return_events','UPDATE'),'Service role cannot rewrite return history');
 select ok(not has_table_privilege('service_role','native_return_stock_links','TRUNCATE'),'Service role cannot truncate stock linkage');
 select throws_ok($$update native_return_events set action='dispose' where id=(select id from fx where k='intake')$$,'23514',null,'Original custody history immutable even to privileged fixture');
+-- Deferred positive movement linkage is enforced even for privileged synthetic inserts.
+select throws_ok($test$do $body$begin
+ insert into inventory_movements(id,lot_id,quantity,kind,reason,created_by,created_at)
+ values(gen_random_uuid(),(select id from fx where k='lot'),0.001,'native_return','Synthetic unlinked movement',auth.uid(),clock_timestamp());
+ set constraints native_return_link_required immediate;
+end$body$$test$,'23514','Native return stock linkage mismatch','Unlinked positive return movement cannot commit');
+select is((select count(*)::int from inventory_movements where lot_id=(select id from fx where k='lot') and reason='Synthetic unlinked movement'),0,'Rejected deferred movement rolls back completely');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+-- Actual RPC history, not fabricated rows: 96 tiny dispositions bring the four-event chain to100.
+do $body$begin for n in 1..96 loop
+ perform record_native_dispense_return(gen_random_uuid(),pg_temp.return_request(pg_temp.return_intent('dispose',(select id from fx where k='intake2'),'0.001',null)));
+end loop;end$body$;
+select is(pg_temp.return_read()#>>'{head,version}','100','Actual immutable return chain reaches100');
+select is(jsonb_array_length(read_native_prescription_print_v3((select id from fx where k='sign'),(select id from fx where k='dispense'))#>'{dispense_returns,events}'),100,'Print includes complete100-event disclosure');
+select lives_ok($$select pg_temp.release12()$$,'Release supports complete100-event return disclosure');
+select record_native_dispense_return(gen_random_uuid(),pg_temp.return_request(pg_temp.return_intent('dispose',(select id from fx where k='intake2'),'0.001',null)));
+select is(pg_temp.return_read()#>>'{head,version}','101','Operational ledger continues beyond package boundary');
+select throws_ok($$select read_native_prescription_print_v3((select id from fx where k='sign'),(select id from fx where k='dispense'))$$,'23514','More than100 return events; use complete paginated history instead of this package','Print refuses silently truncated101-event history');
+select throws_ok($$select pg_temp.release12()$$,'23514','More than100 return events; use complete paginated history instead of this package','Release refuses silently truncated101-event history');
+insert into data select 'boundary-page',list_native_dispense_returns((select id from fx where k='sign'),(select id from fx where k='pet'),(select id from fx where k='dispense'),null,100);
+select is(jsonb_array_length((select v->'events' from data where k='boundary-page')),100,'First history page remains bounded100');
+select is((select v->>'next_before_version' from data where k='boundary-page'),'2','History sentinel cursor preserves remaining event');
+select is(jsonb_array_length(list_native_dispense_returns((select id from fx where k='sign'),(select id from fx where k='pet'),(select id from fx where k='dispense'),2,100)->'events'),1,'Second page retrieves final original event');
 select * from finish();rollback;
