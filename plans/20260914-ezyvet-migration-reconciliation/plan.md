@@ -79,3 +79,12 @@ Prescription-header evidence: the local adapter preserves approval/correction ve
 Prescription-item evidence: migration `20260916000000` and its strict API/panel distinguish exact item versions, parent versions and run/page observations, selected/omitted outcomes, source changes, superseded approvals and repeated observations. Both hosted backends and the live Lovable release are verified in the rollout evidence above. It does not imply local prescribing or complete migration coverage.
 
 Identity approval evidence candidate: migration `20260916010000` reads the exact owned contact/animal observation and its manifest-selected approved mapping. Legacy observations have no retained head version, so even equal snapshots report unknown observed-version fidelity. Approved-source currentness, local edits and household reassignment are distinct facts. SQL/real API/browser and112-migration populated restore checks pass locally; CI and rollout remain pending. Weight evidence, global reconciliation, operational resolutions and frozen reports are still required.
+
+
+## Weight evidence worktree checkpoint — September 15, 2026
+
+Branch `codex/migration-weight-evidence` now includes publication commit `f5eca3b`; identity PR140 is deployed and published with both hosted backends at112 migrations.
+
+The113-migration weight candidate adds an owned, exact-observation read with one nullable approval and bounded source-change acknowledgment history. It preserves unknown observed head versions, distinguishes create/link and local measurement matches from patient/household drift, and never treats acknowledgment as weight promotion. The panel stays inside existing expanded item evidence. Response validation rejects duplicate/out-of-order acknowledgments, cursor drift, foreign scope, private prose and false exact-version claims.
+
+Local validation passed58 SQL assertions (35 canonical weight assertions plus23 adapter assertions),141 actual migration HTTP/Auth checks including eight weight cases,603 unit tests and37 workspace browser tests. Full lint/typecheck/build passed; the existing AuthContext fast-refresh warning remains. Disposable cleanup verified. Populated upgrade/database/private-Storage restore passed with cleanup verified; hosted weight deployment, CI and supervised acceptance remain pending. No hosted writes or provider requests were made by the weight candidate.
