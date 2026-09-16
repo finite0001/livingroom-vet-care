@@ -53,7 +53,7 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
   const [sourceEvidenceStale, setSourceEvidenceStale] = useState(false);
   useEffect(() => cache.getQueryCache().subscribe(event => {
     const key = event.query.queryKey;
-    if (key[0] === "release-candidates-v12" && key[1] === petId && key[2] === user?.id && event.query.state.isInvalidated) { setSourceEvidenceStale(true); if (!pendingRef.current) setReviewed(false); }
+    if (key[0] === "release-candidates-v13" && key[1] === petId && key[2] === user?.id && event.query.state.isInvalidated) { setSourceEvidenceStale(true); if (!pendingRef.current) setReviewed(false); }
   }), [cache, petId, user?.id]);
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
@@ -113,14 +113,14 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates-v12", petId, user?.id, sourcePage],
+    queryKey: ["release-candidates-v13", petId, user?.id, sourcePage],
     enabled: !!user && !!profile?.is_active && !preview && !pending,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: false,
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources_v12",
+        "list_record_release_sources_v13",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -131,7 +131,7 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
-        typeof data.policy_v12_accepted !== "boolean" ||
+        typeof data.policy_v13_accepted !== "boolean" ||
         !data.has_more ||
         !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
@@ -320,7 +320,7 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources_v12",
+        "select_all_record_release_sources_v13",
         { p_pet_id: petId },
       );
       if (error) throw error;
@@ -359,11 +359,11 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v12",
+        "preview_record_release_v13",
         args,
       );
       if (error) throw error;
-      if (!data || data.snapshot.schema_version !== 12)
+      if (!data || data.snapshot.schema_version !== 13)
         throw new Error(
           "Current source-aware release preview is unavailable. Preserve selections and retry.",
         );
@@ -664,11 +664,11 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_v12_accepted && (
+              {!candidates.data.policy_v13_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 12, including physical returns and disposition, dispensing annotations and pickup amendments, signed practice prescriptions, recorded dispensing, reviewed API originals, outside prescriptions, vaccinations, imported clinical narratives,
+                  operator (version 13, including return corrections and unresolved discrepancies, physical returns and disposition, dispensing annotations and pickup amendments, signed practice prescriptions, recorded dispensing, reviewed API originals, outside prescriptions, vaccinations, imported clinical narratives,
                   locally reviewed source findings, verified laboratory and
                   imported-record provenance).
                 </p>
@@ -933,7 +933,7 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !candidates.data.policy_v12_accepted ||
+                      !candidates.data.policy_v13_accepted ||
                       (sourceEvidenceStale && !pending) ||
                       !reviewed
                     }

@@ -1,0 +1,107 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN
+insert into auth.users(id,email,raw_user_meta_data) values
+ ('a5510000-0000-4000-8000-000000000001','native-rx-dvm@example.test','{}'),
+ ('a5510000-0000-4000-8000-000000000002','native-rx-staff@example.test','{}'),
+ ('a5510000-0000-4000-8000-000000000003','native-rx-uncommissioned@example.test','{}'),
+ ('a5510000-0000-4000-8000-000000000004','native-rx-admin@example.test','{}');
+update profiles set full_name='Synthetic prescriber' where id='a5510000-0000-4000-8000-000000000001';
+insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000001','DVM'),('a5510000-0000-4000-8000-000000000001','ADMIN'),('a5510000-0000-4000-8000-000000000003','DVM'),('a5510000-0000-4000-8000-000000000004','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Native','Household','+13035550123','native-release@example.test','EMAIL','2619 Synthetic Street',null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Native Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic medication','medication','','tablet',100,true);
+insert into fx select k,gen_random_uuid() from unnest(array['config','save','draft','sign','save2','draft2']) k;
+insert into data values('config-request',jsonb_build_object('user_id',auth.uid(),'expected_version',null,'attest_review',true,'fields',jsonb_build_object('active',true,'license_number','SYNTHETIC','license_state','CO','license_expires_on','2099-12-31','practice_name','Synthetic practice','practice_address','2619 Synthetic Street','practice_phone',null,'clinical_review_note','Synthetic fixture only')));
+insert into data select 'fields',jsonb_build_object('encounter_id',null,'medication',jsonb_build_object('name','Synthetic medication','strength','Synthetic strength','form','Synthetic form','directions','Synthetic directions only','route','Synthetic route'),'quantity_per_fill','30','unit','tablet','refills_authorized',2,'fulfillment_mode','practice_stock','product_id',(select id from fx where k='product'),'starts_on',(now() at time zone 'America/Denver')::date,'expires_on','2099-12-31');
+insert into data select 'save-request',jsonb_build_object('draft_id',(select id from fx where k='draft'),'pet_id',(select id from fx where k='pet'),'client_id',(select id from fx where k='client'),'expected_version',null,'fields',v) from data where k='fields';
+-- FIXTURE_END
+select configure_native_prescriber((select id from fx where k='config'),(select v from data where k='config-request'));
+select save_native_prescription_draft((select id from fx where k='save'),(select v from data where k='save-request'));
+insert into data select 'sign-request',jsonb_build_object('draft_id',(select id from fx where k='draft'),'pet_id',(select id from fx where k='pet'),'expected_version',1,'expected_context_hash',preview_native_prescription_sign((select id from fx where k='draft'),1)->>'context_hash','signature_name','Synthetic prescriber','attest_review',true);
+insert into data select 'sign-receipt',sign_native_prescription((select id from fx where k='sign'),(select v from data where k='sign-request'));
+insert into fx select k,gen_random_uuid() from unnest(array['release','release-fill','release-pickup','release-cancel','stale','invoice','lot','dispense','pickup','cancel']) k;
+create function pg_temp.preview_native_release(selection jsonb) returns jsonb language sql as $$select preview_record_release_v10((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',selection)$$;
+create function pg_temp.confirm_native_release(id uuid,selection jsonb,preview jsonb) returns public.record_releases language sql as $$select confirm_record_release(id,(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',selection,preview->'snapshot',preview->>'source_hash',true)$$;
+insert into data select 'selection',jsonb_build_object('native_prescription_ids',jsonb_build_array(id)) from fx where k='sign';
+insert into data select 'preview',pg_temp.preview_native_release(v) from data where k='selection';
+select receive_inventory(gen_random_uuid(),(select id from fx where k='lot'),(select id from fx where k='product'),'CORRECTION-TEST',current_date+365,'Synthetic clinic',100,'Synthetic opening stock');
+insert into fx values('lot2',gen_random_uuid());
+select receive_inventory(gen_random_uuid(),(select id from fx where k='lot2'),(select id from fx where k='product'),'RETURN-SECOND',current_date+365,'Synthetic clinic',100,'Synthetic stock');
+select create_billing_invoice((select id from fx where k='invoice'),(select id from fx where k='client'));
+insert into data select 'target',jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'slot_index',0,'expected_slot_version',null,'invoice_id',(select id from fx where k='invoice'),'quantity','10','allocations',(select jsonb_agg(jsonb_build_object('lot_id',id,'quantity','5') order by id) from fx where k in('lot','lot2')),'refill',null);
+insert into data select 'dispense',record_native_dispense((select id from fx where k='dispense'),v||jsonb_build_object('expected_context_hash',preview_native_dispense(v)->>'context_hash','reason','Synthetic dispensing','attest_alert_review',true,'attest_dispense_review',true)) from data where k='target';
+reset role;
+insert into fx select 'allocation1',id from native_dispense_allocations where dispense_id=(select id from fx where k='dispense') and lot_id=(select id from fx where k='lot');
+insert into fx select 'allocation2',id from native_dispense_allocations where dispense_id=(select id from fx where k='dispense') and lot_id=(select id from fx where k='lot2');
+insert into data select 'original',jsonb_build_object('dispense',(select document from native_dispenses where id=(select id from fx where k='dispense')),'usage',native_rx_usage_context((select id from fx where k='sign')),'items',(select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i where invoice_id=(select id from fx where k='invoice')),'invoice',(select to_jsonb(i) from billing_invoices i where id=(select id from fx where k='invoice')));
+insert into record_release_policy(id,enabled,accepted_schema_version,accepted_by,accepted_at,acceptance_reference) values(true,true,11,'Synthetic reviewer',now(),'TEST ONLY') on conflict(id) do update set enabled=true,accepted_schema_version=11,accepted_by=excluded.accepted_by,accepted_at=excluded.accepted_at,acceptance_reference=excluded.acceptance_reference;
+set local role authenticated;
+insert into data select 'fill-selection',jsonb_build_object('native_dispense_ids',jsonb_build_array(id)) from fx where k='dispense';
+insert into data select 'preview11',preview_record_release_v11((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',v) from data where k='fill-selection';
+insert into data select 'release11',to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release'),(select v from data where k='fill-selection'),(select v from data where k='preview11')));
+insert into fx select k,gen_random_uuid() from unnest(array['intake','dispose','restock','policy','release12','intake2'])k;
+create function pg_temp.return_intent(action text,intake_id uuid,qty1 text,qty2 text) returns jsonb language sql as $$select jsonb_build_object('target',jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'dispense_id',(select id from fx where k='dispense')),'action',action,'intake_id',intake_id,'allocations',(select jsonb_agg(jsonb_build_object('allocation_id',id,'quantity',q) order by id) from(select id,case k when 'allocation1' then qty1 else qty2 end q from fx where k in('allocation1','allocation2')) a where q is not null),'custody',case when action='intake' then 'clinic_retained' else null end,'package_condition',case when action='intake' then 'sealed_intact' else null end,'storage_history',case when action='intake' then 'controlled' else null end,'reason','Synthetic return custody review','note','Synthetic client-shareable return evidence')$$;
+create function pg_temp.return_request(intent jsonb) returns jsonb language sql as $$select jsonb_build_object('intent',intent,'expected_context_hash',p->>'context_hash','expected_head',p#>'{context,head}','attest_review',true,'attest_restock',intent->>'action'='restock') from(select preview_native_dispense_return(intent)p)q$$;
+create function pg_temp.return_read() returns jsonb language sql as $$select read_native_dispense_returns((select id from fx where k='sign'),(select id from fx where k='pet'),(select id from fx where k='dispense'))$$;
+create function pg_temp.release12() returns jsonb language sql as $$select preview_record_release_v12((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',(select v from data where k='fill-selection'))$$;
+-- Version13 fixture retains actual signed dispense and original v1 return receipts.
+insert into data select 'intake-request',pg_temp.return_request(pg_temp.return_intent('intake',null,'2','3'));
+insert into data select 'intake',record_native_dispense_return((select id from fx where k='intake'),v) from data where k='intake-request';
+insert into data select 'print3',read_native_prescription_print_v3((select id from fx where k='sign'),(select id from fx where k='dispense'));
+insert into data select 'preview12',pg_temp.release12();
+reset role;update record_release_policy set accepted_schema_version=12 where id;set local role authenticated;
+insert into data select 'release12',to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release12'),(select v from data where k='fill-selection'),(select v from data where k='preview12')));
+create function pg_temp.release13() returns jsonb language sql as $$select preview_record_release_v13((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',(select v from data where k='fill-selection'))$$;
+insert into data select 'preview13',pg_temp.release13();
+select is((select v#>>'{snapshot,schema_version}' from data where k='preview13'),'13','Current preview uses schema13');
+select is((select v#>>'{snapshot,native_dispenses,0,returns,version}' from data where k='preview13'),'2','Selected dispense contains reconciliation disclosure');
+select is((select v#>>'{snapshot,native_dispenses,0,prescription,returns,version}' from data where k='preview13'),'2','Selected dispense parent has reconciliation summary');
+select is(read_native_prescription_print_v4((select id from fx where k='sign'),(select id from fx where k='dispense'))->>'version','4','Current clinical print4');
+select is(read_native_prescription_print_v4((select id from fx where k='sign'),null)->'dispense_returns','null'::jsonb,'Order-only copy does not add unselected dispense');
+select is(list_record_release_sources_v13((select id from fx where k='pet'),0)->>'policy_v13_accepted','false','Policy12 does not authorize13');
+select throws_ok($$select pg_temp.confirm_native_release(gen_random_uuid(),(select v from data where k='fill-selection'),(select v from data where k='preview13'))$$,'42501',null,'Policy12 cannot confirm13');
+reset role;update record_release_policy set accepted_schema_version=13 where id;set local role authenticated;
+insert into fx values('release13',gen_random_uuid());
+insert into data select 'release13',to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release13'),(select v from data where k='fill-selection'),(select v from data where k='preview13')));
+select is(list_record_release_sources_v13((select id from fx where k='pet'),0)->>'policy_v13_accepted','true','Explicit13 policy accepted');
+select is(read_record_release((select id from fx where k='release13'))->>'eligible','true','Fresh13 release eligible');
+select is(to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release13'),(select v from data where k='fill-selection'),(select v from data where k='preview13'))),(select v from data where k='release13'),'Exact schema13 confirmation retry');
+-- Reconciliation/discrepancy mutations and historical recovery assertions follow below.
+select is(read_native_prescription_print_v4((select id from fx where k='sign'),(select id from fx where k='dispense'))->'dispense',(select v->'dispense' from data where k='print3'),'New print preserves original dispensing artifact');
+select is(read_native_prescription_print_v4((select id from fx where k='sign'),(select id from fx where k='dispense'))->'prescription',(select v->'prescription' from data where k='print3'),'New print preserves original signed prescription');
+select is((select v#>'{snapshot,native_dispenses,0,artifact}' from data where k='preview13'),(select v#>'{snapshot,native_dispenses,0,artifact}' from data where k='preview12'),'Clinical dispensing projection remains unchanged');
+select ok(not ((select v#>'{snapshot,native_dispenses,0}' from data where k='preview13') ?| array['invoice_id','invoice_item_id','total_cents','stock_review']),'Clinical disclosure excludes invoice and live stock internals');
+reset role;
+select ok(not has_function_privilege('anon','public.read_native_prescription_print_v4(uuid,uuid)','EXECUTE'),'Anonymous cannot print');
+select ok(not has_function_privilege('service_role','public.read_native_prescription_print_v4(uuid,uuid)','EXECUTE'),'Service cannot invoke staff print');
+select ok(not has_function_privilege('authenticated','public.release_preview_v13_internal(uuid,uuid,text,text,jsonb)','EXECUTE'),'Staff cannot bypass public release boundary');
+select ok(not has_function_privilege('service_role','public.release_preview_v13_internal(uuid,uuid,text,text,jsonb)','EXECUTE'),'Service cannot call private composition directly');
+select ok(not has_function_privilege('authenticated','public.native_reconciliation_authorization_affected(uuid)','EXECUTE'),'Private authorization gate not directly exposed');
+set local role authenticated;
+-- Compensate one exact historical intake allocation; original v1 evidence remains.
+insert into fx values('retract',gen_random_uuid()),('discrepancy',gen_random_uuid()),('release13-corrected',gen_random_uuid());
+insert into data select 'retract-intent',pg_temp.return_intent('retract_intake',(select id from fx where k='intake'),'1',null)||jsonb_build_object('correction_target',jsonb_build_object('event_id',(select id from fx where k='intake'),'record_hash',(select v#>>'{result,record_hash}' from data where k='intake')),'discrepancy_id',null);
+insert into data select 'retract-preview',preview_native_dispense_return_v2(v) from data where k='retract-intent';
+insert into data select 'retract-request',jsonb_build_object('intent',(select v from data where k='retract-intent'),'expected_context_hash',v->>'context_hash','expected_head',v#>'{context,head}','expected_discrepancy_head',v#>'{context,discrepancy_head}','attest_review',true,'attest_restock',false,'physical_attestations',jsonb_build_object('reviewed_physical_facts',true,'intake_claim_incorrect',true,'remains_physically_held',false,'was_not_destroyed',false,'removed_from_available_stock',false)) from data where k='retract-preview';
+insert into data select 'retract',record_native_dispense_return_v2((select id from fx where k='retract'),v) from data where k='retract-request';
+select is(read_record_release((select id from fx where k='release12'))->>'eligible','false','Correction invalidates saved12');
+select is(read_record_release((select id from fx where k='release13'))->>'eligible','false','Correction invalidates saved13');
+select is(to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release12'),(select v from data where k='fill-selection'),(select v from data where k='preview12'))),(select v from data where k='release12'),'Historical12 exact recovery survives correction');
+select is(to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release13'),(select v from data where k='fill-selection'),(select v from data where k='preview13'))),(select v from data where k='release13'),'Historical13 exact recovery survives correction');
+select throws_ok($$select pg_temp.release12()$$,'23514',null,'Current12 cannot omit correction');
+select throws_ok($$select read_native_prescription_print_v3((select id from fx where k='sign'),(select id from fx where k='dispense'))$$,'23514',null,'Current print3 cannot omit correction');
+select is(read_native_prescription_print_v4((select id from fx where k='sign'),(select id from fx where k='dispense'))#>>'{dispense_returns,events,1,action}','retract_intake','Print4 discloses exact compensation');
+insert into data select 'preview13-corrected',pg_temp.release13();
+insert into data select 'release13-corrected',to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release13-corrected'),(select v from data where k='fill-selection'),(select v from data where k='preview13-corrected')));
+insert into data select 'discrepancy-intent',jsonb_build_object('target',v#>'{result,target}','action','report','case_id',null,'source',jsonb_build_object('event_id',v->>'id','record_hash',v#>>'{result,record_hash}'),'allocations',jsonb_build_array(jsonb_build_object('allocation_id',(select id from fx where k='allocation1'),'quantity','0.5')),'observation','Synthetic unresolved physical custody observation','correction_ids','[]'::jsonb) from data where k='intake';
+insert into data select 'discrepancy-preview',preview_native_return_discrepancy(v) from data where k='discrepancy-intent';
+insert into data select 'discrepancy-request',jsonb_build_object('intent',(select v from data where k='discrepancy-intent'),'expected_context_hash',v->>'context_hash','expected_return_head',v#>'{context,return_head}','expected_discrepancy_head',v#>'{context,discrepancy_head}','attest_physical_review',true,'attest_original_quantities_custody_and_stock_accurate',false) from data where k='discrepancy-preview';
+insert into data select 'discrepancy',record_native_return_discrepancy((select id from fx where k='discrepancy'),v) from data where k='discrepancy-request';
+select is(read_record_release((select id from fx where k='release13-corrected'))->>'eligible','false','New discrepancy invalidates saved corrected release');
+select is(to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release13-corrected'),(select v from data where k='fill-selection'),(select v from data where k='preview13-corrected'))),(select v from data where k='release13-corrected'),'Historical corrected release remains exactly recoverable');
+select is(read_native_prescription_print_v4((select id from fx where k='sign'),(select id from fx where k='dispense'))#>>'{return_summary,open_case_count}','1','Current print summarizes unresolved case');
+select is(pg_temp.release13()#>>'{snapshot,native_dispenses,0,returns,discrepancies,open_case_count}','1','Current clinical release includes unresolved case');
+select is(record_native_dispense_return((select id from fx where k='intake'),(select v from data where k='intake-request')),(select v from data where k='intake'),'Original v1 operation exact retry preserved');
+select * from finish();rollback;

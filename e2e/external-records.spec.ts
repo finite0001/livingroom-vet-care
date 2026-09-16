@@ -177,7 +177,7 @@ async function fixture(page: Page, role = "ADMIN") {
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
-    if (path === "/rest/v1/rpc/list_record_release_sources_v10" || path === "/rest/v1/rpc/list_record_release_sources_v11" || path === "/rest/v1/rpc/list_record_release_sources_v12") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v10" || path === "/rest/v1/rpc/list_record_release_sources_v11" || path === "/rest/v1/rpc/list_record_release_sources_v12" || path === "/rest/v1/rpc/list_record_release_sources_v13") {
       state.sourceLoads++;
       return route.fulfill({
         json: {
@@ -193,6 +193,7 @@ async function fixture(page: Page, role = "ADMIN") {
           policy_v10_accepted: true,
           policy_v11_accepted: true,
           policy_v12_accepted: true,
+          policy_v13_accepted: true,
           ...Object.fromEntries(Object.keys(sourceLabels).map((k) => [k, []])),
           has_more: Object.fromEntries(
             Object.keys(sourceLabels).map((k) => [k, false]),
@@ -424,7 +425,7 @@ async function open(page: Page) {
       name: "Recover historical record work",
       exact: true,
     }),
-  ).toBeEnabled();
+  ).toBeEnabled({ timeout: 30000 });
 }
 async function stage(page: Page) {
   await page

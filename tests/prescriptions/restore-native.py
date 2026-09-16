@@ -51,6 +51,8 @@ tables = [
     'native_dispense_correction_events', 'native_dispense_correction_operations',
     'native_return_policy_decisions', 'native_return_policy_state', 'native_return_events',
     'native_return_operations', 'native_return_stock_links',
+    'native_return_compensation_links', 'native_return_discrepancy_events',
+    'native_return_discrepancy_operations', 'native_return_discrepancy_correction_links',
 ]
 
 
@@ -140,15 +142,27 @@ def correction_boundaries_query():
 def return_evidence_query():
     return """with targets as (
       select distinct authorization_id,pet_id,dispense_id from public.native_return_events
+      union select distinct authorization_id,pet_id,dispense_id from public.native_return_discrepancy_events
     ), chains as (
-      select dispense_id,public.native_return_verified(authorization_id,pet_id,dispense_id) evidence from targets
+      select dispense_id,public.native_reconciliation_verified(authorization_id,pet_id,dispense_id) evidence from targets
     ), authors as (select distinct authorization_id from targets)
     select jsonb_build_object(
       'chains',(select count(*) from chains),
       'events',(select count(*) from public.native_return_events),
+      'v1_events',(select count(*) from public.native_return_events where document->>'version'='1'),
+      'v2_events',(select count(*) from public.native_return_events where document->>'version'='2'),
+      'discrepancy_events',(select count(*) from public.native_return_discrepancy_events),
+      'held_lots',(select count(*) from public.inventory_lots where public.native_reconciliation_lot_held(id)),
+      'hold_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(id order by id),'[]') from public.inventory_lots where public.native_reconciliation_lot_held(id))),
+      'negative_compensations',(select count(*) from public.inventory_movements where kind='native_return_compensation'),
+      'compensation_links',(select count(*) from public.native_return_compensation_links),
+      'invalid_compensation_links',(select count(*) from public.native_return_compensation_links l left join public.inventory_movements m on m.id=l.movement_id left join public.native_return_events e on e.id=l.event_id left join public.native_return_stock_links original on original.event_id=l.target_event_id and original.allocation_id=l.allocation_id left join public.inventory_movements positive on positive.id=l.original_movement_id where m.id is null or e.id is null or original.id is null or positive.id is null or m.kind is distinct from 'native_return_compensation' or m.quantity is distinct from -l.quantity or m.quantity>=0 or m.lot_id is distinct from l.lot_id or original.lot_id is distinct from l.lot_id or original.movement_id is distinct from positive.id or positive.kind is distinct from 'native_return' or e.action is distinct from 'retract_restock' or e.document#>>'{correction_target,event_id}' is distinct from l.target_event_id::text or m.created_by is distinct from e.actor_id or m.created_at is distinct from e.created_at),
+      'unlinked_negative_compensations',(select count(*) from public.inventory_movements m where m.kind='native_return_compensation' and not exists(select 1 from public.native_return_compensation_links l where l.movement_id=m.id)),
+      'schema13_releases',(select count(*) from public.record_releases where snapshot->>'schema_version'='13'),
+      'schema13_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('id',id,'snapshot',snapshot,'hash',source_hash) order by id),'[]') from public.record_releases where snapshot->>'schema_version'='13')),
       'verified',(select coalesce(bool_and(evidence is not null),false) from chains),
       'chain_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('dispense_id',dispense_id,'evidence',evidence) order by dispense_id),'[]') from chains)),
-      'summary_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('authorization_id',authorization_id,'summary',public.native_return_summary(authorization_id)) order by authorization_id),'[]') from authors)),
+      'summary_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('authorization_id',authorization_id,'summary',public.native_reconciliation_summary(authorization_id)) order by authorization_id),'[]') from authors)),
       'policies_verified',(select coalesce(bool_and(public.native_return_policy_verified(version)=document),false) from public.native_return_policy_decisions),
       'current_policy_sha256',public.native_fulfillment_hash(public.native_return_policy_verified()),
       'positive_movements',(select count(*) from public.inventory_movements where kind='native_return'),
@@ -162,8 +176,8 @@ def return_evidence_query():
 
 def return_boundaries_query():
     return """select jsonb_build_object(
-      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'triggers',(select coalesce(jsonb_agg(pg_get_triggerdef(t.oid,true) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and (c.relname in('native_return_policy_decisions','native_return_policy_state','native_return_events','native_return_operations','native_return_stock_links','inventory_movements'))),
-      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'security_definer',p.prosecdef,'volatility',p.provolatile,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'native_return_%' or p.proname in('read_native_return_policy','configure_native_return_policy','recover_native_return_policy','preview_native_dispense_return','record_native_dispense_return','recover_native_dispense_return','read_native_dispense_returns','list_native_dispense_returns','read_native_return_intake','read_native_prescription_print_v3','release_preview_v12_internal','preview_record_release_v12')))
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'triggers',(select coalesce(jsonb_agg(pg_get_triggerdef(t.oid,true) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and (c.relname in('native_return_policy_decisions','native_return_policy_state','native_return_events','native_return_operations','native_return_stock_links','native_return_compensation_links','native_return_discrepancy_events','native_return_discrepancy_operations','native_return_discrepancy_correction_links','inventory_movements'))),
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'security_definer',p.prosecdef,'volatility',p.provolatile,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'native_return_%' or p.proname like 'native_reconciliation_%' or p.proname in('read_native_return_policy','configure_native_return_policy','recover_native_return_policy','preview_native_dispense_return','record_native_dispense_return','recover_native_dispense_return','read_native_dispense_returns','list_native_dispense_returns','read_native_return_intake','read_native_prescription_print_v3','release_preview_v12_internal','preview_record_release_v12','preview_native_dispense_return_v2','record_native_dispense_return_v2','recover_native_dispense_return_v2','read_native_dispense_returns_v2','read_native_return_intake_v2','list_native_dispense_returns_v2','preview_native_return_discrepancy','record_native_return_discrepancy','recover_native_return_discrepancy','read_native_prescription_print_v4','release_preview_v13_internal','preview_record_release_v13','list_record_release_sources_v13','select_all_record_release_sources_v13')))
     );"""
 
 
@@ -193,6 +207,12 @@ try:
     before_return_boundaries = json.loads(snapshot_sql(return_boundaries_query()))
     check(before_returns['chains'] > 0 and before_returns['verified'], 'Populated verified return chains required')
     check(before_returns['schema12_releases'] > 0, 'Populated schema12 return release evidence required')
+    check(before_returns['schema13_releases'] > 0, 'Populated schema13 reconciliation release evidence required')
+    check(before_returns['v1_events'] > 0 and before_returns['v2_events'] > 0, 'Both historical v1 and current v2 return evidence required')
+    check(before_returns['discrepancy_events'] > 0 and before['native_return_discrepancy_operations']['rows'] == before_returns['discrepancy_events'], 'Each populated discrepancy decision requires an immutable operation')
+    check(before_returns['held_lots'] > 0, 'Populated unresolved physical lot hold required')
+    check(before['native_return_discrepancy_correction_links']['rows'] > 0, 'Populated discrepancy resolution must link actual compensation')
+    check(before_returns['negative_compensations'] > 0 and before_returns['negative_compensations'] == before_returns['compensation_links'] and before_returns['invalid_compensation_links'] == 0 and before_returns['unlinked_negative_compensations'] == 0, 'Each populated negative compensation requires exact source positive movement linkage')
     check(before_returns['policies_verified'], 'Historical return policy decisions must verify')
     check(before_returns['positive_movements'] > 0 and before_returns['positive_movements'] == before_returns['stock_links']
           and before_returns['invalid_stock_links'] == 0 and before_returns['unlinked_positive_movements'] == 0,
@@ -244,7 +264,8 @@ try:
         ('native_prescription_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation',operation,'request',request)"),
         ('native_fulfillment_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation',operation,'request',request)"),
         ('native_refill_operations', 'request'),
-        ('native_return_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_return','request',request)"),
+        ('native_return_operations', "case result->>'version' when '1' then jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_return','request',request) when '2' then jsonb_build_object('version',2,'actor_id',actor_id,'operation','record_native_dispense_return_v2','request',request) else null end"),
+        ('native_return_discrepancy_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_return_discrepancy','request',request)"),
         ('native_return_policy_decisions', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','configure_native_return_policy','request',request)"),
         ('native_dispense_correction_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','append_native_dispense_correction','request',request)"),
     ]:
@@ -264,7 +285,7 @@ try:
     check(json.loads(sql(correction_boundaries_query(), restored)) == before_correction_boundaries,
           'Correction RLS, immutability triggers and private/public function grants must survive restore')
     restored_returns = json.loads(sql(return_evidence_query(), restored))
-    check(restored_returns == before_returns, 'Restored return chains, balances, policy, stock links and schema12 evidence must verify exactly')
+    check(restored_returns == before_returns, 'Restored return chains, balances, policy, positive/negative stock links, lot holds, discrepancy decisions and schema12/13 evidence must verify exactly')
     check(json.loads(sql(return_boundaries_query(), restored)) == before_return_boundaries,
           'Return RLS, immutable/deferred stock-link triggers and private/public function grants must survive restore')
     success = True

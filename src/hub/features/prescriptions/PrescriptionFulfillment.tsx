@@ -391,7 +391,7 @@ function FulfillmentWorkspace({
       try {
         const { data, error } = await (
           supabase as unknown as PrescriptionRpc
-        ).rpc("read_native_prescription_print_v3", {
+        ).rpc("read_native_prescription_print_v4", {
           p_authorization_id: authorization.id,
           p_dispense_id: d.id,
         });

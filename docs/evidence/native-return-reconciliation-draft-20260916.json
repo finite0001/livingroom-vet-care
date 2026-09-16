@@ -1,0 +1,54 @@
+{
+  "status": "draft-under-verification",
+  "date": "2026-09-16",
+  "scope": "Native medication return corrections, discrepancies, inventory holds and current record output",
+  "synthetic_only": true,
+  "provider_requests": 0,
+  "hosted_deployed": false,
+  "clinical_accepted": false,
+  "passed": {
+    "unit_tests": 858,
+    "lint": "0 errors; existing AuthContext fast-refresh warning",
+    "typescript": "app and node configurations",
+    "production_build": true,
+    "edge_entrypoint_typecheck": true,
+    "reconciliation_renderer_tests": 21,
+    "native_release_tests_including_historical": 52,
+    "reconciliation_adapter_tests": 11,
+    "migration_static_parse": {
+      "124": 43,
+      "125": 12
+    }
+  },
+  "pending": [
+    "Complete focused browser acceptance; initial batch encountered cold page-load timeouts and test-only print/mount defects; fixes are being retested",
+    "Actual database, Auth, SQL, contention and populated restore acceptance; owned local database startup encountered infrastructure delays",
+    "CI for this branch",
+    "Hosted rollout and Dr. Susan Edler clinical review"
+  ],
+  "prior_stack_ci": {
+    "147": {
+      "head": "1faf7912cc60fdfa05f6bc22f90f65ed4ab8eb56",
+      "run": 35082063968,
+      "conclusion": "success"
+    },
+    "148": {
+      "head": "fb2e2f43a9f49649cdc91a2cd4cf95e970f83c8b",
+      "run": 35082065567,
+      "conclusion": "success"
+    },
+    "149": {
+      "head": "bee444432c6195c66734747d51832f7079965e11",
+      "run": 35082076507,
+      "conclusion": "success"
+    }
+  },
+  "file_sha256": {
+    "supabase/migrations/20260916094500_native_return_reconciliation.sql": "6a3f1e3b034cd3e9c3b3a60ceb4a4f23eb041f0593ab5bffced8175d7a2bff9c",
+    "supabase/migrations/20260916100000_native_return_reconciliation_releases.sql": "7886c3873ebf467d8fb9b621448fbd4ff7900d78f629deec36d5bb12050f1d47",
+    "supabase/functions/_shared/native-return-reconciliation.ts": "0a6debfc02dd31773076186f1535a06fa72a706e1cef1ea6bd8245e08edeaf08",
+    "supabase/functions/_shared/native-return-reconciliation-contract.ts": "86dc4cfa7668c27756182249b72f8adc17923d7f9091206615279cb6d7960587",
+    "tests/prescriptions/local-reconciliation.ts": "6843fe29e05a1684fd2916bcf06c585c3e0a96525b0675ad2238ee66f3dad8b3",
+    "tests/prescriptions/native_reconciliation_concurrency.py": "db6932b502882a84213d74b3a38dd1c59a8235ee6e580e68f81f6c4eee31db2c"
+  }
+}

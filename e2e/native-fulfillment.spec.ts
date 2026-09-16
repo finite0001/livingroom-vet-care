@@ -1,3 +1,6 @@
+import { upgradeReturnPrint } from "../tests/prescriptions/reconciliation-fixture";
+import type { NativePrescriptionPrintV3 } from "../supabase/functions/_shared/native-dispense-returns";
+import { replayNativeReturnQuantities } from "../supabase/functions/_shared/native-return-quantity-replay";
 import { test, expect, type Page } from "@playwright/test";
 import {
   actor,
@@ -582,11 +585,11 @@ async function fixture(
       }
       return r.fulfill({ json: saved });
     }
-    if (name === "read_native_prescription_print_v3") {
+    if (name === "read_native_prescription_print_v4") {
       state.printReads++;
       const d = state.records.find((d) => d.id === input.p_dispense_id);
       return r.fulfill({
-        json: {
+        json: upgradeReturnPrint({
           version: 3,
           return_summary: {
             version: 1,
@@ -642,7 +645,7 @@ async function fixture(
                 quantity: state.wrongPrint ? "99.000" : d.artifact.quantity,
               }
             : null,
-        },
+        } as NativePrescriptionPrintV3),
       });
     }
     return r.fulfill({ json: [] });
@@ -1377,43 +1380,76 @@ async function returnFixture(page: Page, eligible = false) {
         }
       : null;
   };
+  const discrepancies = {
+    version: 1,
+    head: { event_id: null, version: 0, record_hash: null },
+    open_case_count: 0,
+    held_lot_ids: [],
+    cases: [],
+  };
+  const replay = () =>
+    replayNativeReturnQuantities(
+      [
+        {
+          allocation_id: allocation,
+          lot_id: d.allocations[0].lot_id,
+          quantity: d.quantity,
+        },
+      ],
+      [...rows].reverse().map((e) => ({
+        id: e.id,
+        sequence: e.sequence,
+        action: e.action,
+        intake_id: e.intake_id,
+        correction_target_id: null,
+        allocations: e.allocations.map((a: Row) => ({
+          allocation_id: a.allocation_id,
+          lot_id: a.lot_id,
+          quantity: a.quantity,
+        })),
+      })),
+    );
   await page.route("**/rest/v1/rpc/*native*return*", async (r) => {
     const name = new URL(r.request().url()).pathname.split("/").at(-1),
       input = r.request().postDataJSON() ?? {};
-    if (name === "read_native_dispense_returns")
+    if (name === "read_native_dispense_returns_v2")
       return r.fulfill({
         json: {
-          version: 1,
+          version: 2,
           target,
           authorization_hash: hash,
           dispense_document_hash: hash,
           dispensed_at: d.dispensed_at,
           head: head(),
           allocations: [balance()],
+          replay: replay(),
+          discrepancies,
         },
       });
-    if (name === "list_native_dispense_returns")
+    if (name === "list_native_dispense_returns_v2")
       return r.fulfill({
         json: {
-          version: 1,
+          version: 2,
           target,
           head: head(),
+          discrepancy_head: discrepancies.head,
           events: rows,
           next_before_version: null,
         },
       });
-    if (name === "read_native_return_intake")
+    if (name === "read_native_return_intake_v2")
       return r.fulfill({
         json: {
-          version: 1,
+          version: 2,
           target,
           head: head(),
+          discrepancy_head: discrepancies.head,
           intake: intake(input.p_intake_id),
         },
       });
     if (name === "read_native_return_policy")
       return r.fulfill({ json: policy });
-    if (name === "preview_native_dispense_return") {
+    if (name === "preview_native_dispense_return_v2") {
       const intent = input.p_intent,
         restock = intent.action === "restock";
       const blockers =
@@ -1428,19 +1464,22 @@ async function returnFixture(page: Page, eligible = false) {
           : [];
       return r.fulfill({
         json: {
-          version: 1,
+          version: 2,
           actor_id: actor,
           observed_at: time,
           context: {
-            version: 1,
+            version: 2,
             target,
             authorization_hash: hash,
             dispense_document_hash: hash,
             dispensed_at: d.dispensed_at,
             head: head(),
+            discrepancy_head: discrepancies.head,
             original_pickup: null,
             correction_head: { event_id: null, version: 0, record_hash: null },
             allocations: [balance()],
+            replay: replay(),
+            discrepancies,
             intake:
               intent.action === "intake" ? null : intake(intent.intake_id),
             stock_review: restock
@@ -1450,7 +1489,7 @@ async function returnFixture(page: Page, eligible = false) {
                     name: "Synthetic product",
                     unit: d.unit,
                     active: true,
-                    version: 1,
+                    version: 2,
                   },
                   lots: [
                     { lot_id: d.allocations[0].lot_id, balance: "10.000" },
@@ -1467,17 +1506,17 @@ async function returnFixture(page: Page, eligible = false) {
         },
       });
     }
-    if (name === "recover_native_dispense_return")
+    if (name === "recover_native_dispense_return_v2")
       return r.fulfill({
         json: controls.absent ? null : (receipts.get(input.p_id) ?? null),
       });
-    if (name === "record_native_dispense_return") {
+    if (name === "record_native_dispense_return_v2") {
       calls.push(input);
       if (receipts.has(input.p_id))
         return r.fulfill({ json: receipts.get(input.p_id) });
       const i = input.p_request.intent,
         event = {
-          version: 1,
+          version: 2,
           id: input.p_id,
           target,
           authorization_hash: hash,
@@ -1492,6 +1531,9 @@ async function returnFixture(page: Page, eligible = false) {
           },
           action: i.action,
           intake_id: i.intake_id,
+          correction_target: null,
+          discrepancy_id: null,
+          physical_attestations: input.p_request.physical_attestations,
           allocations: i.allocations.map((a: Row) => ({
             ...a,
             quantity: q(Number(a.quantity)),
@@ -1510,7 +1552,7 @@ async function returnFixture(page: Page, eligible = false) {
         };
       rows.unshift(event);
       const receipt = {
-        version: 1,
+        version: 2,
         id: input.p_id,
         actor_id: actor,
         request: input.p_request,
@@ -1707,10 +1749,94 @@ test("eligible restock requires separate DVM acknowledgment and consumes held qu
   ).toBeVisible();
   expect(f.rows[0].allocations[0].movement_id).toBe(id(950));
 });
-test("return policy is reachable in settings, defaults disabled and requires explicit ADMIN+DVM review",async({page})=>{
- await fixture(page,true);
- await page.route("**/rest/v1/user_roles*",r=>r.fulfill({json:[{role:"STAFF"},{role:"ADMIN"},{role:"DVM"}]}));
- let policy:Row={version:0,enabled:false,review_reference:null,actor_id:null,actor_name:null,reviewed_at:null,record_hash:null};const requests:Row[]=[];
- await page.route("**/rest/v1/rpc/*native_return_policy",r=>{const name=new URL(r.request().url()).pathname.split("/").at(-1),input=r.request().postDataJSON()??{};if(name==="read_native_return_policy")return r.fulfill({json:policy});if(name==="configure_native_return_policy"){requests.push(input);policy={version:1,enabled:input.p_request.enabled,review_reference:input.p_request.review_reference,actor_id:actor,actor_name:"Synthetic reviewing DVM administrator",reviewed_at:time,record_hash:hash};return r.fulfill({json:{version:1,id:input.p_id,actor_id:actor,request:input.p_request,request_hash:hash,result:policy,created_at:time}});}return r.fulfill({json:null});});
- await page.goto("/hub/settings");const panel=page.getByRole("region",{name:"Native return policy",exact:true});await expect(panel).toContainText("Disabled · revision 0");await expect(panel.getByRole("checkbox",{name:"Enable guarded native restocking",exact:true})).not.toBeChecked();await panel.getByRole("checkbox",{name:"Enable guarded native restocking",exact:true}).check();await panel.getByLabel("Policy review reference",{exact:true}).fill("Synthetic explicit review; not clinical commissioning");await panel.getByRole("button",{name:"Review return policy decision",exact:true}).click();await expect(panel.getByRole("button",{name:"Save reviewed return policy",exact:true})).toBeDisabled();await panel.getByRole("checkbox",{name:/I reviewed the practice policy/}).check();await panel.getByRole("button",{name:"Save reviewed return policy",exact:true}).click();await expect(panel).toContainText("Enabled with restrictive checks · revision 1");expect(requests[0].p_request.expected_version).toBe(0);expect(requests[0].p_request.attest_review).toBe(true);
+test("return policy is reachable in settings, defaults disabled and requires explicit ADMIN+DVM review", async ({
+  page,
+}) => {
+  await fixture(page, true);
+  await page.route("**/rest/v1/user_roles*", (r) =>
+    r.fulfill({
+      json: [{ role: "STAFF" }, { role: "ADMIN" }, { role: "DVM" }],
+    }),
+  );
+  let policy: Row = {
+    version: 0,
+    enabled: false,
+    review_reference: null,
+    actor_id: null,
+    actor_name: null,
+    reviewed_at: null,
+    record_hash: null,
+  };
+  const requests: Row[] = [];
+  await page.route("**/rest/v1/rpc/*native_return_policy", (r) => {
+    const name = new URL(r.request().url()).pathname.split("/").at(-1),
+      input = r.request().postDataJSON() ?? {};
+    if (name === "read_native_return_policy")
+      return r.fulfill({ json: policy });
+    if (name === "configure_native_return_policy") {
+      requests.push(input);
+      policy = {
+        version: 1,
+        enabled: input.p_request.enabled,
+        review_reference: input.p_request.review_reference,
+        actor_id: actor,
+        actor_name: "Synthetic reviewing DVM administrator",
+        reviewed_at: time,
+        record_hash: hash,
+      };
+      return r.fulfill({
+        json: {
+          version: 1,
+          id: input.p_id,
+          actor_id: actor,
+          request: input.p_request,
+          request_hash: hash,
+          result: policy,
+          created_at: time,
+        },
+      });
+    }
+    return r.fulfill({ json: null });
+  });
+  await page.goto("/hub/settings");
+  const panel = page.getByRole("region", {
+    name: "Native return policy",
+    exact: true,
+  });
+  await expect(panel).toContainText("Disabled · revision 0", { timeout: 30000 });
+  await expect(
+    panel.getByRole("checkbox", {
+      name: "Enable guarded native restocking",
+      exact: true,
+    }),
+  ).not.toBeChecked();
+  await panel
+    .getByRole("checkbox", {
+      name: "Enable guarded native restocking",
+      exact: true,
+    })
+    .check();
+  await panel
+    .getByLabel("Policy review reference", { exact: true })
+    .fill("Synthetic explicit review; not clinical commissioning");
+  await panel
+    .getByRole("button", { name: "Review return policy decision", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("button", {
+      name: "Save reviewed return policy",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await panel
+    .getByRole("checkbox", { name: /I reviewed the practice policy/ })
+    .check();
+  await panel
+    .getByRole("button", { name: "Save reviewed return policy", exact: true })
+    .click();
+  await expect(panel).toContainText(
+    "Enabled with restrictive checks · revision 1",
+  );
+  expect(requests[0].p_request.expected_version).toBe(0);
+  expect(requests[0].p_request.attest_review).toBe(true);
 });

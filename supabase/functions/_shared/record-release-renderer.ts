@@ -36,7 +36,7 @@ export interface ReleaseAttachment {
   category: string;
 }
 export interface ReleaseSnapshot extends ChartSources, HistorySources {
-  schema_version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+  schema_version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
   native_prescriptions?: NativePrescriptionRelease[];
   native_dispenses?: NativeDispenseRelease[];
   api_attachments?: ReleaseApiAttachment[];
@@ -172,7 +172,7 @@ const instant = (value: string) => `${escape(value)} (ISO 8601 instant)`;
  */
 export function renderRecordRelease(artifact: ReleaseArtifact): string {
   const { snapshot: s, source_hash: hash } = artifact.preview;
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(s.schema_version) || !/^[a-f0-9]{64}$/.test(hash))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(s.schema_version) || !/^[a-f0-9]{64}$/.test(hash))
     throw new Error("Unsupported release snapshot or missing review hash.");
   if (
     s.schema_version >= 4 &&
@@ -209,7 +209,7 @@ export function renderRecordRelease(artifact: ReleaseArtifact): string {
       (s.schema_version >= 6 ? s.imported_histories?.length || 0 : 0) +
       (s.schema_version >= 7 ? s.imported_vaccinations?.length || 0 : 0) +
       (s.schema_version >= 8 ? s.imported_prescriptions?.length || 0 : 0) +
-      ((s.schema_version === 10 || s.schema_version === 11 || s.schema_version === 12) ? (s.native_prescriptions?.length || 0) + (s.native_dispenses?.length || 0) : 0) +
+      ((s.schema_version === 10 || s.schema_version === 11 || s.schema_version === 12 || s.schema_version === 13) ? (s.native_prescriptions?.length || 0) + (s.native_dispenses?.length || 0) : 0) +
       (s.weights?.length || 0) +
       (s.treatments?.length || 0) +
       (s.patient_summaries?.length || 0) ===

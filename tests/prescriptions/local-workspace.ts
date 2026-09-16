@@ -324,7 +324,7 @@ const untouched = sql(
 );
 // Explicitly synthetic acceptance in the owned disposable database only.
 sql(`insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version)
-  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',12)
+  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',13)
   on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_at=excluded.accepted_at,
   acceptance_reference=excluded.acceptance_reference,accepted_schema_version=excluded.accepted_schema_version;`);
 const privateDir = mkdtempSync(resolve(tmpdir(), "lrv-native-browser-"));
@@ -595,7 +595,7 @@ try {
   const previewResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/preview_record_release_v12` &&
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v13` &&
       response.request().method() === "POST",
   );
   await releasePanel
@@ -605,7 +605,7 @@ try {
   check(reviewedResponse.ok(), "Actual browser release preview succeeds");
   const reviewed = await reviewedResponse.json();
   check(
-    reviewed.snapshot.schema_version === 12 &&
+    reviewed.snapshot.schema_version === 13 &&
       reviewed.snapshot.native_prescriptions.length === 1 &&
       reviewed.snapshot.native_dispenses.length === 1,
     "Actual browser preview explicitly selects both native families",
@@ -642,7 +642,7 @@ try {
   const confirmedResponse = await confirmResponse;
   check(
     confirmedResponse.ok(),
-    "Actual browser confirms reviewed schema12 package",
+    "Actual browser confirms reviewed schema13 package",
   );
   const confirmed = await confirmedResponse.json();
   await expect(
@@ -878,7 +878,7 @@ try {
   const correctedPreviewResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/preview_record_release_v12` &&
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v13` &&
       response.request().method() === "POST",
   );
   await releasePanel
@@ -887,7 +887,7 @@ try {
   const correctedPreviewHttp = await correctedPreviewResponse;
   check(
     correctedPreviewHttp.ok(),
-    "Actual browser re-reviews a schema12 package after corrections",
+    "Actual browser re-reviews a schema13 package after corrections",
   );
   const correctedPreview = await correctedPreviewHttp.json();
   check(
@@ -997,7 +997,7 @@ try {
   const intakeResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/record_native_dispense_return` &&
+        `${local.API_URL}/rest/v1/rpc/record_native_dispense_return_v2` &&
       response.request().method() === "POST",
   );
   await returns
@@ -1043,7 +1043,7 @@ try {
   const disposalResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/record_native_dispense_return` &&
+        `${local.API_URL}/rest/v1/rpc/record_native_dispense_return_v2` &&
       response.request().method() === "POST",
   );
   await returns
@@ -1064,7 +1064,7 @@ try {
     p_dispense_id: saved.id,
   };
   const returnRead = await rpc(
-    "read_native_dispense_returns",
+    "read_native_dispense_returns_v2",
     returnArgs,
     staff.headers,
   );

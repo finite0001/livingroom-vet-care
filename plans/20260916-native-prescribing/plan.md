@@ -96,4 +96,11 @@ Foundation verification: 821 unit tests, lint, app TypeScript, production build 
 
 Two private immutable helpers now reproduce the TypeScript correction arithmetic. Current ordinary return readers and writes remain unchanged; the attempted full-replay adapter was removed after the long-history regression exposed repeated-prefix cost. Correction mutation and discrepancy workflows remain required, with single-pass historical verification as a measured design constraint.
 
-[Evidence](../../docs/evidence/native-return-database-replay-20260916.json): 78 matching cross-language cases (48 valid,30 rejected); 965 assertions across24 SQL suites; exact preservation of101 existing return events;404 fresh actual Auth/browser checks and73 populated restore checks;821 unit tests, lint, TypeScript and build. All provider requests were zero. The separate Settings selector CI fix is propagated to147/148; those CI runs are still pending.
+[Evidence](../../docs/evidence/native-return-database-replay-20260916.json): 78 matching cross-language cases (48 valid,30 rejected); 965 assertions across24 SQL suites; exact preservation of101 existing return events;404 fresh actual Auth/browser checks and73 populated restore checks;821 unit tests, lint, TypeScript and build. All provider requests were zero. The separate Settings selector CI fix is propagated to147/148; PR147, PR148 and PR149 now have passing CI at1faf791,fb2e2f4 andbee4444 respectively.
+
+
+## Current reconciliation workflow124/125 — in verification
+
+The local working branch adds actual correction commands, discrepancy decisions and lot holds; the staff review/recovery interface; current print4/schema13 composition; and provider-free acceptance fixtures. Preserve the immutable originals and older saved artifact formats. See [clinical review](reconciliation-review.md).
+
+Do not treat this phase as complete until SQL, actual Auth/browser, contention, populated restore and inherited artifact checks pass. Initial renderer and strict transport tests pass; database runtime and broader browser verification are ongoing. Hosted deployment, clinical acceptance and external payment acceptance remain separate.

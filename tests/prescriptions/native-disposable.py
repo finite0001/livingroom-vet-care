@@ -17,7 +17,7 @@ args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
-harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts', 'local-corrections.ts', 'local-returns.ts']]
+harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts', 'local-corrections.ts', 'local-returns.ts', 'local-reconciliation.ts']]
 harness_hashes = {}
 results = []
 identity = 'lrv-prescription-' + uuid.uuid4().hex[:12]
@@ -31,8 +31,8 @@ success = False
 checks = 0
 migration_hashes = {}
 
-def command(argv, **kwargs):
-    result = subprocess.run(argv, capture_output=True, text=True, timeout=240, **kwargs)
+def command(argv, timeout=240, **kwargs):
+    result = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, **kwargs)
     log.write('COMMAND ' + ' '.join(map(str, argv)) + '\n' + result.stdout + result.stderr + '\n')
     log.flush()
     if result.returncode:
@@ -60,7 +60,7 @@ try:
         versions.add(version)
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
-    assert len(versions) == 123 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 125 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521
@@ -84,7 +84,7 @@ enabled = false
 ''')
     print('Starting owned disposable prescription project; no hosted or provider operations.', flush=True)
     started = True
-    command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
+    command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     verify_identity()
     parity_path = root / 'tests/prescriptions/return-replay-parity.py'
     parity_hash = hashlib.sha256(parity_path.read_bytes()).hexdigest()

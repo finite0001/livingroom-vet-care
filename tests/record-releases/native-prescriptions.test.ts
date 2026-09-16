@@ -1,3 +1,5 @@
+import { upgradeReturnPrint } from "../prescriptions/reconciliation-fixture.ts";
+import type { NativePrescriptionReleaseV13, NativeDispenseReleaseV13 } from "../../supabase/functions/_shared/record-release-native-prescriptions.ts";
 import { returnFixture } from "../prescriptions/return-fixture.ts";
 import type { NativePrescriptionReleaseV12, NativeDispenseReleaseV12 } from "../../supabase/functions/_shared/record-release-native-prescriptions.ts";
 import test from "node:test";
@@ -192,6 +194,43 @@ for (const [name, mutate] of Object.entries({
 
 for (const channel of ["EMAIL", "SMS"] as const) test(`mixed schema12 ${channel} retains original-byte binding`, async () => {
   const a = returnedRelease(true), s = a.preview.snapshot;
+  s.recipient.channel = channel; s.recipient.address = channel === "EMAIL" ? "owner@example.test" : "+13035550123";
+  const b: ReleaseBundle = { release: { ...a.preview, id: "00000000-0000-4000-8000-000000000030", pet_id: s.patient.id, client_id: s.recipient.client_id, channel, recipient: s.recipient.address, selection: s.selection!, created_by: "00000000-0000-4000-8000-000000000031", created_at: "2026-09-16T12:00:00Z" }, events: [], eligible: true, ineligibility_reason: null };
+  const run = (tamper: boolean) => {
+    const download = async () => { const bytes = apiOriginalBytes.slice(); if (tamper) bytes[bytes.length - 1] ^= 1; return bytes; };
+    return channel === "EMAIL" ? buildReleaseEmailPayload({ id: "request", release_id: b.release.id, actor_id: b.release.created_by, recipient: b.release.recipient, subject: "Records", body: "Reviewed records", release_hash: b.release.source_hash }, b, { from: "care@example.test", replyTo: "care@example.test" }, download) : buildDocumentLinkArtifacts({ id: "grant", family: "record_release", source_id: b.release.id, client_id: b.release.client_id, actor_id: b.release.created_by, recipient: b.release.recipient, source_hash: b.release.source_hash, source_bundle: b, created_at: b.release.created_at, expires_at: "2026-09-17T00:00:00Z", origin: "https://example.test", key_version: "test", capability_context: "synthetic", message_template: "Records", state: "preparing" }, { name: "Synthetic", address: "Synthetic", domain: null }, download);
+  };
+  await run(false); await assert.rejects(run(true), /bytes.*(capture|provenance)|original.*capture/i);
+});
+
+function reconciledRelease(mixed = false) {
+  const a = nativeReleaseArtifact(mixed), s = a.preview.snapshot;
+  const p = s.native_prescriptions![0] as NativePrescriptionReleaseV13;
+  const d = s.native_dispenses![0] as NativeDispenseReleaseV13;
+  const r = upgradeReturnPrint(returnFixture(p.artifact, { ...d.artifact, invoice_id: null }));
+  s.schema_version = 13;
+  p.corrections = r.correction_summary; p.returns = r.return_summary;
+  d.prescription = structuredClone(p); d.corrections = r.dispense_corrections!; d.returns = r.dispense_returns!;
+  return a;
+}
+test("schema13 preserves clinical sources and explicit quantity replay", () => {
+  const a = reconciledRelease(), original = structuredClone(a), html = renderRecordRelease(a);
+  assert.deepEqual(a, original); assert.match(html, /Physical returns and reconciliation/); assert.match(html, /Total recorded intake \/ retracted/);
+});
+test("schema13 rejects legacy disclosure and summary substitution", () => {
+  const a = reconciledRelease(), old = returnedRelease();
+  Object.assign(a.preview.snapshot.native_dispenses![0], { returns: (old.preview.snapshot.native_dispenses![0] as NativeDispenseReleaseV12).returns });
+  assert.throws(() => renderRecordRelease(a));
+  const b = reconciledRelease(); Object.assign(b.preview.snapshot.native_prescriptions![0], { returns: (old.preview.snapshot.native_prescriptions![0] as NativePrescriptionReleaseV12).returns });
+  assert.throws(() => renderRecordRelease(b));
+});
+test("schema13 order-only package does not select hidden custody details", () => {
+  const a = reconciledRelease(); a.preview.snapshot.native_dispenses = []; a.preview.snapshot.selection!.native_dispense_ids = [];
+  const html = renderRecordRelease(a); assert.match(html, /4 quantity event/); assert.doesNotMatch(html, /Synthetic client-shareable custody note|TEST-LOT/);
+});
+
+for (const channel of ["EMAIL", "SMS"] as const) test(`mixed schema13 ${channel} retains original-byte binding`, async () => {
+  const a = reconciledRelease(true), s = a.preview.snapshot;
   s.recipient.channel = channel; s.recipient.address = channel === "EMAIL" ? "owner@example.test" : "+13035550123";
   const b: ReleaseBundle = { release: { ...a.preview, id: "00000000-0000-4000-8000-000000000030", pet_id: s.patient.id, client_id: s.recipient.client_id, channel, recipient: s.recipient.address, selection: s.selection!, created_by: "00000000-0000-4000-8000-000000000031", created_at: "2026-09-16T12:00:00Z" }, events: [], eligible: true, ineligibility_reason: null };
   const run = (tamper: boolean) => {
