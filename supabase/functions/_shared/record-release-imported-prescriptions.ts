@@ -131,7 +131,7 @@ function observation(v: PrescriptionObservation, item = false) {
   );
 }
 export function validateImportedPrescriptions(s: ReleaseSnapshot): void {
-  if (s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10) return;
+  if (s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11) return;
   require(
     Array.isArray(s.imported_prescriptions) &&
       s.imported_prescriptions.length <= 20 &&
@@ -424,7 +424,7 @@ const originals = (v: Record<string, unknown>) =>
 const provenance = (v: PrescriptionObservation) =>
   `<dl>${field("Source reference", v.external_id)}${field("Snapshot", v.snapshot_id)}${field("Payload fingerprint", v.payload_hash)}${field("Observation revision", v.observed_head_version)}</dl>`;
 export function renderImportedPrescriptions(s: ReleaseSnapshot): string {
-  if (s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10) return "";
+  if (s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11) return "";
   validateImportedPrescriptions(s);
   return s
     .imported_prescriptions!.map((v) => {
