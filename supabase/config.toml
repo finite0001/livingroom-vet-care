@@ -75,3 +75,7 @@ verify_jwt = true
 # Active-staff review identity is rechecked after the private byte read.
 [functions.retrieve-reviewed-ezyvet-original]
 verify_jwt = true
+
+# Staff JWT plus active-owner checks before capture and the final review receipt.
+[functions.capture-conversation-email]
+verify_jwt = true
