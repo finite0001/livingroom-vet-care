@@ -60,7 +60,7 @@ Integrate native prescriptions/fills as explicitly selected record-release group
 
 ## Files and ownership
 
-All paths below have root `/Users/davidedler/livingroom-vet-native-prescribing/`; no file deletions planned. Reserve actual migration versions using Supabase CLI only after checking canonical pending branches and hosted ledger.
+All paths below have root `/Users/davidedler/livingroom-vet-native-prescribing/`; no file deletions planned. Reserve local migration versions using Supabase CLI after checking canonical pending branches. A hosted metadata read stalled and was interrupted during this phase; local generation may proceed with a unique timestamp while that ledger check remains explicitly unverified. Re-read and reconcile the hosted ledger before any deployment; local generation is not permission to apply it.
 
 | Action | Full path | Responsibility |
 |---|---|---|
@@ -79,7 +79,7 @@ All paths below have root `/Users/davidedler/livingroom-vet-native-prescribing/`
 | Modify | `/Users/davidedler/livingroom-vet-native-prescribing/.github/workflows/ci.yml` | Native SQL/runtime/concurrency gate |
 | Create | `/Users/davidedler/livingroom-vet-native-prescribing/docs/clinical-review/native-prescribing.md` | Exact revision review cases; no inferred approval |
 
-Resolve exact release consumers and native runtime entry-point files before implementing those phases. Existing migration-named runtime harness may need a standalone entry point; preserve its regression coverage, rather than disguising native prescribing as ezyVet work.
+Use the [schema10 consumer audit](release-integration-map.md) and resolve remaining SQL email/link consumers and native runtime entry-point files before implementing those phases. Existing migration-named runtime harness may need a standalone entry point; preserve its regression coverage, rather than disguising native prescribing as ezyVet work.
 
 ## Verification and rollout
 
