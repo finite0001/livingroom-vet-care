@@ -108,3 +108,7 @@ Added `retention.md` with schema-derived retention distinctions and implementati
 Extended the pending localhost HTTP/Auth/Storage harness to create actual verified, same-identity superseded-path and unknown-path objects; execute the read-only inventory; assert all three categories, absence of private paths/actor identity, and unchanged Storage object metadata. Fixture object removal remains exact-path synthetic cleanup. Tightened inventory path matching to canonical UUID segment shapes before classifying a superseded path. Node syntax, targeted ESLint and diff checks pass; the inventory runtime assertions have not yet executed. Cleanup automation remains unimplemented.
 
 CI35095400693 ate0c4753 is still active; incoming concurrency passed and later SQL/service/browser regression stages continue. These inventory additions remain local until the existing run finishes.
+
+## Abandoned-upload cleanup core
+
+Implemented the bounded shared cleanup routine and7 passing unit cases covering successful/uncertain deletion, already-absent recovery, changed object identity/path, expired/replaced eligibility, inspection failure and mismatched completion receipts. Targeted lint/diff pass. No database/Storage adapters or endpoint are wired, so runtime cleanup remains unimplemented and disabled. CI35095400693 is still active at the prior pushed commit; this new core and retention inventory work remain local pending its completion.

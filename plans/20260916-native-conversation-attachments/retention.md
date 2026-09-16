@@ -22,3 +22,7 @@ This plan preserves message evidence and addresses temporary object accumulation
 ## Acceptance still required
 
 Actual cleanup implementation, runtime tests, chosen grace setting, hosted inventory review, monitoring and a bounded enabled-worker acceptance run remain open. This plan and inventory do not satisfy those gates. Broader medical-record retention remains outside temporary attachment cleanup and must not be inferred from it.
+
+## Shared cleanup routine candidate
+
+`supabase/functions/_shared/cleanup-abandoned-attachment.ts` now implements one bounded abandoned-upload cleanup attempt through injected adapters. It validates the exact lease/path/object identity, revalidates eligibility before removal, distinguishes inspection errors from confirmed absence, recovers uncertain deletion responses only through absence, and requires a matching durable completion receipt. Seven unit cases and targeted lint pass. This module has no deployed entry point and no connected database/Storage adapters; it cannot currently delete hosted files. The database receipt/lease implementation, configured grace interval, real Storage acceptance and superseded-incoming cleanup remain open.
