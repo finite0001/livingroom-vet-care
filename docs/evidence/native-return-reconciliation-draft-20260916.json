@@ -18,10 +18,11 @@
     "migration_static_parse": {
       "124": 43,
       "125": 12
-    }
+    },
+    "focused_browser_tests": 67,
+    "focused_browser_execution": "60 passed in second batch, 4 further passed in bounded retry, final 3 passed after Vite fixture and reload-readiness fixes"
   },
   "pending": [
-    "Complete focused browser acceptance; initial batch encountered cold page-load timeouts and test-only print/mount defects; fixes are being retested",
     "Actual database, Auth, SQL, contention and populated restore acceptance; owned local database startup encountered infrastructure delays",
     "CI for this branch",
     "Hosted rollout and Dr. Susan Edler clinical review"

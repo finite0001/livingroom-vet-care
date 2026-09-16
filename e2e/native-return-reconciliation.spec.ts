@@ -341,42 +341,10 @@ async function workspace(page: Page) {
   await page.evaluate(
     async ({ actor, fill }) => {
       const moduleAt = (path: string) => import(path);
-      const [
-        { default: React },
-        { default: ReactDOMClient },
-        { QueryClient, QueryClientProvider },
-        { MemoryRouter },
-        { NativeDispenseReturns },
-      ] = await Promise.all([
-        moduleAt("/node_modules/.vite/deps/react.js"),
-        moduleAt("/node_modules/.vite/deps/react-dom_client.js"),
-        moduleAt("/node_modules/.vite/deps/@tanstack_react-query.js"),
-        moduleAt("/node_modules/.vite/deps/react-router-dom.js"),
-        moduleAt("/src/hub/features/prescriptions/NativeDispenseReturns.tsx"),
-      ]);
-      const host = document.createElement("div");
-      host.id = "reconciliation-workspace";
-      document.body.replaceChildren(host);
-      ReactDOMClient.createRoot(host).render(
-        React.createElement(
-          QueryClientProvider,
-          { client: new QueryClient() },
-          React.createElement(
-            MemoryRouter,
-            null,
-            React.createElement(NativeDispenseReturns, {
-              actor,
-              dispense: fill,
-              medicationName: "Synthetic medication",
-              evidenceRevision: 0,
-              disabled: false,
-              onDirtyChange: () => {},
-              onConfirmed: () => {},
-              onClose: () => {},
-            }),
-          ),
-        ),
+      const { mountReconciliation } = await moduleAt(
+        "/tests/prescriptions/reconciliation-browser-harness.tsx",
       );
+      mountReconciliation({ actor, dispense: fill });
     },
     { actor, fill },
   );

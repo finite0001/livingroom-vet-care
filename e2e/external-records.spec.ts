@@ -626,6 +626,7 @@ test("DVM recovers an older-page acknowledgment without ADMIN receipts or carryi
     }),
   ).toBeEnabled();
   await page.reload();
+  await expect(page.getByRole("region", { name: "Patient workspace", exact: true })).toBeVisible({ timeout: 30000 });
   await expect(
     page.getByText("The original veterinarian acknowledgment is saved.", {
       exact: true,
