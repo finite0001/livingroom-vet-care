@@ -1,5 +1,6 @@
+import { createServer, type Server } from "node:http";
 import { createIncomingAttachmentReadHandler } from "../../supabase/functions/_shared/inbound/read-attachment.ts";
-/** Actual disposable Auth/RPC/Storage; handler in-process and provider bytes synthetic. */
+/** Actual localhost HTTP/Auth/RPC/Storage; Node-hosted shared handlers, provider bytes synthetic. */
 import { createInboundAttachmentCaptureHandler } from "../../supabase/functions/_shared/inbound/capture-attachment.ts";
 import { storeIncomingOriginal } from "../../supabase/functions/_shared/inbound/store-attachment.ts";
 import assert from "node:assert/strict";
@@ -86,6 +87,7 @@ async function staff() {
 const ids = { client: randomUUID(), conversation: randomUUID(), message: randomUUID(), inbound: randomUUID(), event: randomUUID(), email: randomUUID(), attachment: randomUUID() };
 const paths = new Set<string>();
 let actor = "";
+let server: Server | null = null;
 const failures: unknown[] = [];
 try {
   const owner = await staff(); actor = owner.id;
@@ -121,7 +123,30 @@ try {
       return data;
     },
   });
-  const request = (token = owner.token, version = 1) => handler(new Request("http://127.0.0.1/capture", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ inbound_id: ids.inbound, attachment_id: ids.attachment, version }) }));
+  let reader: ReturnType<typeof createIncomingAttachmentReadHandler> | null = null;
+  server = createServer(async (req, res) => {
+    try {
+      const chunks: Buffer[] = []; let size = 0;
+      for await (const chunk of req) {
+        size += chunk.length;
+        if (size > 2048) { res.writeHead(413).end(); return; }
+        chunks.push(Buffer.from(chunk));
+      }
+      const headers = new Headers();
+      for (const [name, value] of Object.entries(req.headers)) if (value) headers.set(name, Array.isArray(value) ? value.join(",") : value);
+      const selected = req.url === "/capture" ? handler : req.url === "/read" ? reader : null;
+      if (!selected) { res.writeHead(404).end(); return; }
+      const response = await selected(new Request(`http://127.0.0.1${req.url}`, { method: req.method, headers, ...(req.method === "GET" || req.method === "HEAD" ? {} : { body: Buffer.concat(chunks) }) }));
+      res.writeHead(response.status, Object.fromEntries(response.headers));
+      res.end(Buffer.from(await response.arrayBuffer()));
+    } catch { res.writeHead(500).end(); }
+  });
+  await new Promise<void>((resolve, reject) => { server!.once("error", reject); server!.listen(0, "127.0.0.1", resolve); });
+  const address = server.address(); assert.ok(address && typeof address !== "string");
+  const endpoint = `http://127.0.0.1:${address.port}`;
+  const request = (token = owner.token, version = 1) => fetch(`${endpoint}/capture`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ inbound_id: ids.inbound, attachment_id: ids.attachment, version }) });
+  check((await fetch(`${endpoint}/capture`)).status === 405, "HTTP method boundary rejects GET");
+  check((await fetch(`${endpoint}/capture`, { method: "POST", body: "{}" })).status === 401, "HTTP capture requires bearer authorization");
   check((await request("invalid-token")).status === 401, "Invalid Auth token rejected");
   check((await request(owner.token, 2)).status === 503 && downloads === 0, "Stale identity denied before provider read");
   const denied = await owner.client.rpc("claim_inbound_attachment", { p_inbound_id: ids.inbound, p_attachment_id: ids.attachment, p_version: 1, p_actor_id: actor });
@@ -138,7 +163,7 @@ try {
   const listed = await owner.client.rpc("list_inbound_message_attachments", { p_message_ids: [ids.message] });
   if (listed.error) throw listed.error;
   check(listed.data.length === 1 && listed.data[0].capture_id === receipt.id && listed.data[0].status === "ready" && !("storage_path" in listed.data[0]), "Staff list returns verified identity without private path");
-  const reader = createIncomingAttachmentReadHandler({
+  reader = createIncomingAttachmentReadHandler({
     authenticate: async token => { const { data, error } = await service.auth.getUser(token); if (error) return null; return data.user?.id ?? null; },
     authorize: async (actorId, captureId, messageId) => {
       const { data, error } = await service.rpc("authorize_inbound_attachment_read", { p_actor_id: actorId, p_capture_id: captureId, p_message_id: messageId });
@@ -146,8 +171,9 @@ try {
     },
     download: async name => { const { data, error } = await bucket.download(name); if (error) throw error; return data; },
   });
-  const read = (messageId = ids.message) => reader(new Request("http://127.0.0.1/read", { method: "POST", headers: { Authorization: `Bearer ${owner.token}` }, body: JSON.stringify({ capture_id: receipt.id, message_id: messageId }) }));
+  const read = (messageId = ids.message) => fetch(`${endpoint}/read`, { method: "POST", headers: { Authorization: `Bearer ${owner.token}` }, body: JSON.stringify({ capture_id: receipt.id, message_id: messageId }) });
   const privateRead = await read();
+  check(privateRead.headers.get("Cache-Control") === "no-store" && privateRead.headers.get("Content-Disposition")?.startsWith("attachment;") === true, "Private HTTP download cannot be cached and is served as attachment");
   check(privateRead.status === 200 && Buffer.from(await privateRead.arrayBuffer()).equals(Buffer.from(bytes)), "Authorized reader returns exact private bytes through actual RPC and Storage");
   check((await read(randomUUID())).status === 404, "Wrong message cannot retrieve original");
   const hidden = await owner.client.storage.from("inbound-attachment-originals").download(path);
@@ -157,7 +183,10 @@ try {
   sql(`update profiles set is_active=false where id=${quote(actor)}`);
   check((await request()).status === 503 && downloads === 1, "Revoked staff cannot recover captured receipt");
   check((await read()).status === 404, "Revoked staff cannot read private original");
-  console.log(`Incoming attachment actual Auth/RPC/Storage checks passed: ${checks}`);
+  console.log(`Incoming attachment actual HTTP/Auth/RPC/Storage checks passed: ${checks}`);
+} catch (error) { failures.push(error); }
+try {
+  if (server) await new Promise<void>((resolve, reject) => server!.close(error => error ? reject(error) : resolve()));
 } catch (error) { failures.push(error); }
 try {
   if (paths.size) {
