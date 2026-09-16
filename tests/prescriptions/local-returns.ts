@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { createNativeReturnsApi, createNativeReturnPolicyApi } from '../../src/hub/features/prescriptions/fulfillment-returns-api.ts';
 import { createFulfillmentApi } from '../../src/hub/features/prescriptions/fulfillment-api.ts';
 import { createPrescriptionApi } from '../../src/hub/features/prescriptions/prescription-api.ts';
 import { renderReviewedPrescriptionCopy } from '../../src/hub/features/prescriptions/prescription-print.ts';
@@ -100,8 +101,19 @@ const dispensePreview = await api.previewDispense(target);
 const dispenseId = randomUUID();
 await api.execute({ id: dispenseId, kind: 'dispense', payload: { ...target, expected_context_hash: dispensePreview.context_hash, reason: 'Synthetic release fixture partial', attest_alert_review: true, attest_dispense_review: true } });
 const returnTarget = { authorization_id: authorization.id, pet_id: patient.id, dispense_id: dispenseId };
-const targetArgs = { p_authorization_id: authorization.id, p_pet_id: patient.id, p_dispense_id: dispenseId };
-const source = await rpc('read_native_dispense_returns', targetArgs);
+// Keep each actor/target adapter alive so preview-to-receipt context checks run too.
+const returnAdapters = new Map<string, ReturnType<typeof createNativeReturnsApi>>();
+function returnsFor(t: ReturnIntent['target'] = returnTarget, headers = staff.headers) {
+  const actor = headers === doctor.headers ? doctor : staff;
+  assert.ok(headers === doctor.headers || headers === staff.headers);
+  const key = `${actor.id}:${t.authorization_id}:${t.pet_id}:${t.dispense_id}`;
+  let result = returnAdapters.get(key);
+  if (!result) { result = createNativeReturnsApi(adapter(headers), actor.id, t); returnAdapters.set(key, result); }
+  return result;
+}
+const returnsApi = returnsFor();
+const policyApi = createNativeReturnPolicyApi(adapter(doctor.headers), doctor.id);
+const source = await returnsApi.read(); assert.ok(source);
 check(source.head.version === 0 && source.allocations.length === 1, 'New dispense has zero return head and exact original allocations');
 const allocationId = source.allocations[0].allocation_id;
 const original = () => sql(`select jsonb_build_object('dispense',(select document from native_dispenses where id=${quote(dispenseId)}),'negative',(select jsonb_agg(to_jsonb(m) order by id) from inventory_movements m where kind='dispense'),'items',(select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i),'slots',(select jsonb_agg(to_jsonb(s) order by id) from native_fill_slots s),'refills',(select count(*) from native_refill_events),'outbox',(select count(*) from communication_outbox),'credits',(select count(*) from billing_credits),'payments',(select count(*) from invoice_payments))::text`);
@@ -117,7 +129,7 @@ function intent(action: ReturnIntent['action'], quantity: string, intakeId: stri
   return { target: returnTarget, action, intake_id: intakeId, allocations: [{ allocation_id: allocationId, quantity }], custody: action === 'intake' ? 'clinic_retained' : null, package_condition: action === 'intake' ? 'sealed_intact' : null, storage_history: action === 'intake' ? 'controlled' : null, reason: 'Synthetic explicitly reviewed physical disposition', note: 'Synthetic client-shareable return evidence' };
 }
 async function review(i: ReturnIntent, headers = staff.headers): Promise<ReturnPreview> {
-  return rpc('preview_native_dispense_return', { p_intent: i }, headers);
+  return returnsFor(i.target, headers).preview(i);
 }
 function request(p: ReturnPreview) {
   return { intent: p.context.intent, expected_context_hash: p.context_hash, expected_head: p.context.head, attest_review: true, attest_restock: p.context.intent.action === 'restock' };
@@ -125,11 +137,12 @@ function request(p: ReturnPreview) {
 async function append(i: ReturnIntent, headers = staff.headers) {
   const p = await review(i, headers); check(p.allowed, 'Reviewed return action is allowed');
   const args = { p_id: randomUUID(), p_request: request(p) };
-  return { args, receipt: await rpc('record_native_dispense_return', args, headers) };
+  const operation = { id: args.p_id, kind: 'record_return' as const, payload: args.p_request };
+  return { args, operation, receipt: await returnsFor(i.target, headers).execute(operation) };
 }
 const intake = await append(intent('intake', '0.750'));
-assert.deepEqual(await rpc('record_native_dispense_return', intake.args, staff.headers), intake.receipt); checks++;
-assert.deepEqual(await rpc('recover_native_dispense_return', { p_id: intake.args.p_id }, staff.headers), intake.receipt); checks++;
+assert.deepEqual(await returnsApi.execute(intake.operation), intake.receipt); checks++;
+assert.deepEqual(await returnsApi.recover(intake.operation), intake.receipt); checks++;
 await denied('record_native_dispense_return', { ...intake.args, p_request: { ...intake.args.p_request, intent: { ...intake.args.p_request.intent, note: 'Changed note' } } }, '23514', staff.headers);
 const wrongActor = await post('/rest/v1/rpc/recover_native_dispense_return', { p_id: intake.args.p_id }, doctor.headers);
 check(!wrongActor.ok || wrongActor.value === null, 'Other actor cannot disclose saved return request');
@@ -137,10 +150,10 @@ await denied('preview_native_dispense_return', { p_intent: intent('intake', '0.2
 const disposal = await append(intent('dispose', '0.250', intake.receipt.id));
 check(disposal.receipt.result.allocations.every((a: { movement_id: string | null }) => a.movement_id === null), 'Disposal creates no available inventory');
 const restockIntent = intent('restock', '0.500', intake.receipt.id);
-let policyBefore = await rpc('read_native_return_policy', {});
+let policyBefore = await policyApi.read();
 if (policyBefore.enabled) {
-  await rpc('configure_native_return_policy', { p_id: randomUUID(), p_request: { expected_version: policyBefore.version, enabled: false, review_reference: 'Synthetic local disabled-policy baseline', attest_review: true } });
-  policyBefore = await rpc('read_native_return_policy', {});
+  await policyApi.execute({ id: randomUUID(), kind: 'configure_return_policy', payload: { expected_version: policyBefore.version, enabled: false, review_reference: 'Synthetic local disabled-policy baseline', attest_review: true } });
+  policyBefore = await policyApi.read();
 }
 const policyRequest = { expected_version: policyBefore.version, enabled: true, review_reference: 'Synthetic local commissioning only; no live clinical approval', attest_review: true };
 await denied('configure_native_return_policy', { p_id: randomUUID(), p_request: policyRequest }, '42501', staff.headers);
@@ -152,9 +165,10 @@ if (!policyBefore.enabled) {
   check(!blocked.allowed && blocked.blockers.includes('policy_disabled') && blocked.blockers.includes('dvm_required'), 'Restock discloses disabled policy and missing DVM');
 }
 const policyId = randomUUID();
-const configuredPolicy = await rpc('configure_native_return_policy', { p_id: policyId, p_request: policyRequest });
-assert.deepEqual(await rpc('configure_native_return_policy', { p_id: policyId, p_request: policyRequest }), configuredPolicy); checks++;
-assert.deepEqual(await rpc('recover_native_return_policy', { p_id: policyId }), configuredPolicy); checks++;
+const policyOperation = { id: policyId, kind: 'configure_return_policy' as const, payload: policyRequest };
+const configuredPolicy = await policyApi.execute(policyOperation);
+assert.deepEqual(await policyApi.execute(policyOperation), configuredPolicy); checks++;
+assert.deepEqual(await policyApi.recover(policyOperation), configuredPolicy); checks++;
 const noDvm = await review(restockIntent);
 check(!noDvm.allowed && noDvm.blockers.includes('dvm_required'), 'Staff cannot restock under enabled policy');
 const restock = await append(restockIntent, doctor.headers);
@@ -166,7 +180,7 @@ check(movement.kind === 'native_return' && Number(movement.quantity) === 0.5 && 
 await denied('preview_native_dispense_return', { p_intent: restockIntent }, '23514');
 await denied('preview_native_dispense_return', { p_intent: intent('intake', '0.251') }, '23514', staff.headers);
 sql(`delete from user_roles where user_id=${quote(doctor.id)} and role='DVM';`);
-try { assert.deepEqual(await rpc('recover_native_dispense_return', { p_id: restock.args.p_id }), restock.receipt); checks++; }
+try { assert.deepEqual(await returnsFor(returnTarget, doctor.headers).recover(restock.operation), restock.receipt); checks++; }
 finally { sql(`insert into user_roles(user_id,role) values(${quote(doctor.id)},'DVM') on conflict do nothing;`); }
 const unsafe = await append({ ...intent('intake', '0.250'), custody: 'unknown', package_condition: 'opened', storage_history: 'unknown' });
 const unsafeIntent = intent('restock', '0.250', unsafe.receipt.id);
@@ -184,7 +198,7 @@ await api.execute({ id: secondDispense, kind: 'dispense', payload: { ...secondTa
 const handoff = await api.previewPickup(secondDispense, null);
 await api.execute({ id: randomUUID(), kind: 'pickup', payload: { authorization_id: authorization.id, pet_id: patient.id, dispense_id: secondDispense, expected_context_hash: handoff.context_hash, recipient_name: 'Synthetic pickup', recipient_relationship: 'Synthetic household', reason: 'Synthetic blocker fixture', attest_handoff: true, refill_close: null } });
 beforeOriginal = original(); // Explicit fixture creation above is not a return side effect.
-const secondRead = await rpc('read_native_dispense_returns', { ...targetArgs, p_dispense_id: secondDispense });
+const secondRead = await returnsFor({ ...returnTarget, dispense_id: secondDispense }).read(); assert.ok(secondRead);
 const secondIntakeIntent = { ...intent('intake', '0.250'), target: { ...returnTarget, dispense_id: secondDispense }, allocations: [{ allocation_id: secondRead.allocations[0].allocation_id, quantity: '0.250' }] };
 const secondIntake = await append(secondIntakeIntent);
 const secondRestockIntent = { ...secondIntakeIntent, action: 'restock' as const, intake_id: secondIntake.receipt.id, custody: null, package_condition: null, storage_history: null };
@@ -193,11 +207,13 @@ check(withPickup.blockers.includes('original_pickup_exists'), 'Original pickup b
 const inactiveProduct = await rpc('save_catalog_product', { p_id: product.id, p_expected_version: product.version, p_name: product.name, p_kind: product.kind, p_manufacturer: product.manufacturer, p_unit: product.unit, p_unit_price_cents: product.unit_price_cents, p_active: false });
 check((await review(unsafeIntent, doctor.headers)).blockers.includes('product_inactive'), 'Inactive product disclosed as independent blocker');
 await rpc('save_catalog_product', { p_id: product.id, p_expected_version: inactiveProduct.version, p_name: product.name, p_kind: product.kind, p_manufacturer: product.manufacturer, p_unit: product.unit, p_unit_price_cents: product.unit_price_cents, p_active: true });
-const balances = await rpc('read_native_dispense_returns', targetArgs);
+const balances = await returnsApi.read(); assert.ok(balances);
+const readIntake = await returnsApi.readIntake(intake.receipt.id);
+check(readIntake?.intake.id === intake.receipt.id && readIntake.head.version === balances.head.version, 'Strict intake adapter binds saved intake to current target and head');
 check(balances.allocations[0].returned_quantity === '1.000' && balances.allocations[0].remaining_returnable_quantity === '0.000' && balances.allocations[0].restocked_quantity === '0.500' && balances.allocations[0].disposed_quantity === '0.250' && balances.allocations[0].held_quantity === '0.250', 'Exact cumulative accounting never restores intake allowance after disposition');
-const page = await rpc('list_native_dispense_returns', { ...targetArgs, p_limit: 2, p_before_version: null });
+const page = await returnsApi.history(null, 2);
 check(page.events.length === 2 && page.next_before_version !== null, 'Return history is bounded and paginated');
-const older = await rpc('list_native_dispense_returns', { ...targetArgs, p_limit: 2, p_before_version: page.next_before_version });
+const older = await returnsApi.history(page.next_before_version, 2);
 check(older.events.length === 2 && older.next_before_version === null, 'Older return chain remains available');
 check((await rpc('read_record_release', { p_id: oldRelease.id })).eligible === false, 'Returns invalidate existing schema11 release');
 assert.deepEqual(await rpc('confirm_record_release', oldArgs), oldRelease); checks++;
