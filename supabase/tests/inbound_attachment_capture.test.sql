@@ -28,6 +28,18 @@ select is((select v#>>'{lease,message_id}' from data where k='claim'),(select id
 select throws_ok($$select claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001')$$,'40001',null,'Live lease prevents competing capture');
 select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',gen_random_uuid(),repeat('b',64),5,'application/pdf')$$,'42501',null,'Wrong lease cannot finalize');
 select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',(select (v#>>'{lease,token}')::uuid from data where k='claim'),repeat('b',64),5,'application/pdf')$$,'23514',null,'No artifact published without stored object');
+-- Reclaim a stalled attempt without allowing its old worker to publish.
+reset role;
+update inbound_attachment_captures set lease_expires_at=clock_timestamp()-interval '1 second'
+ where id=(select (v#>>'{lease,id}')::uuid from data where k='claim');
+set local role service_role;
+select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',(select (v#>>'{lease,token}')::uuid from data where k='claim'),repeat('b',64),5,'application/pdf')$$,'40001',null,'Expired worker cannot finalize');
+insert into data values('expired-claim',(select v from data where k='claim'));
+update data set v=claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001') where k='claim';
+select is((select v#>>'{lease,id}' from data where k='claim'),(select v#>>'{lease,id}' from data where k='expired-claim'),'Reclaim retains the capture identity');
+select isnt((select v#>>'{lease,token}' from data where k='claim'),(select v#>>'{lease,token}' from data where k='expired-claim'),'Reclaim issues a fresh attempt token');
+select isnt((select v#>>'{lease,storage_path}' from data where k='claim'),(select v#>>'{lease,storage_path}' from data where k='expired-claim'),'Reclaim isolates the replacement object path');
+select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='expired-claim'),'ee300000-0000-4000-8000-000000000001',(select (v#>>'{lease,token}')::uuid from data where k='expired-claim'),repeat('b',64),5,'application/pdf')$$,'42501',null,'Replaced worker cannot finalize under the old token');
 reset role;
 insert into storage.objects(bucket_id,name,metadata) select 'inbound-attachment-originals',v#>>'{lease,storage_path}','{"size":5,"mimetype":"application/pdf"}' from data where k='claim';
 set local role service_role;
