@@ -86,7 +86,7 @@ const instant = z.string().datetime({ offset: true }).refine(v => Number.isFinit
 const text = (min: number, max: number) => z.string().refine(v =>
   v === v.trim() && Array.from(v).length >= min && Array.from(v).length <= max &&
   !Array.from(v).some(c => { const n = c.charCodeAt(0); return n === 127 || (n < 32 && n !== 9 && n !== 10); }));
-const cents = z.string().regex(/^(0|[1-9]\d*)$/).refine(v => BigInt(v) <= maximumCents);
+const cents = z.string().refine(v => /^(0|[1-9]\d*)$/.test(v) && v.length <= 19 && BigInt(v) <= maximumCents);
 const quantity = z.string().regex(/^(?:0|[1-9]\d{0,10})(?:\.\d{0,2}[1-9])?$/).refine(v => v !== "0");
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => {
   const d = new Date(`${v}T00:00:00Z`);

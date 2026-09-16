@@ -54,6 +54,8 @@ test("fields reject invalid calendar dates, controls, duplicate line identities 
   assert.equal(estimateFieldsSchema.safeParse({ ...f, lines: [line(), line()] }).success, false);
   assert.equal(estimateFieldsSchema.safeParse({ ...f, lines: [line(), { ...line(), id: id(9) }] }).success, true);
   assert.equal(estimateFieldsSchema.safeParse({ ...f, approved: true }).success, false);
+  for (const value of ["NaN", "1e3", "", "-1", "9223372036854775808"])
+    assert.equal(estimateFieldsSchema.safeParse({ ...f, lines: [{ ...line(), pricing: { kind: "unit", unit_price_cents: value } }] }).success, false);
 });
 test("save and recovery bind exact actor, household, request, version and calculated amount", async () => {
   const op = operation(), r = receipt(op), a = api(r);

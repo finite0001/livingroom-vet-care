@@ -1,6 +1,6 @@
 # Native estimates, acceptance and actual charge capture
 
-Status: designed from repository audits; not implemented or accepted. This is the next dependent phase after native dispense finance. It does not replace remaining standalone feature parity or communications work.
+Status: draft foundation implemented as a candidate under verification; complete estimates are not yet implemented or accepted. This is the next dependent phase after native dispense finance. It does not replace remaining standalone feature parity or communications work.
 
 ## Outcome
 
@@ -14,7 +14,7 @@ Use immutable accepted line authorizations, consumed by actual work, with one at
 
 ## Phases and status
 
-1. **Pending — lifecycle and staff documents.** Versioned drafts, exact publication, replacement/withdrawal, immutable history and reviewed delivery.
+1. **In progress — lifecycle and staff documents.** Versioned drafts, exact publication, replacement/withdrawal, immutable history and reviewed delivery.
 2. **Pending — client and staff decisions.** Separate capability-bound public review/accept/decline; explicit staff-witnessed attribution and recovery.
 3. **Pending — accepted work and billing.** Services, medications and vaccines; exact quoted prices, partial work, rounding, unused balance and replacement.
 4. **Pending — integrated acceptance.** SQL, actual Auth/HTTP, observed contention, public/staff browser workflows, selected document delivery and populated restore. Provider and clinical acceptance remain separate.
@@ -39,3 +39,5 @@ The [standalone matrix](../../docs/standalone-feature-matrix-20260916.md) remain
 ## Open questions
 
 Clinical reviewer: Dr. Susan Edler. Business wording and production defaults remain unapproved. Provider delivery and Stripe acceptance cannot be inferred from synthetic tests. No question here authorizes charges, external messages or integration changes.
+
+Draft foundation candidate: [exact contract](draft-contract.md), the 127-migration inventory, household staff editor, closed API, immutable revisions, priced lines and saved-request resolution are implemented. Draft backend CI35094462715 passed SQL, actual Auth, observed contention and populated restore verification. Six local staff browser scenarios passed, including mobile history; billing/email regressions passed with two isolated timeout reruns. Final combined-source CI and hosted review remain pending. Publication, client decisions and actual-work pricing conversion remain required.
