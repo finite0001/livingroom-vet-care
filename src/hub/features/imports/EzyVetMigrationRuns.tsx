@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createMigrationRunApi } from "./migration-run-api";
 import type { MigrationBinding, MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
+import { MigrationWeightEvidence } from "./MigrationWeightEvidence";
 import { MigrationPrescriptionEvidence } from "./MigrationPrescriptionEvidence";
 import { MigrationVaccinationEvidence } from "./MigrationVaccinationEvidence";
 import { MigrationHistoryEvidence } from "./MigrationHistoryEvidence";
@@ -147,6 +148,7 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, bindingDirty 
         <p className="text-muted-foreground">Page {item.page}{item.ordinal > 0 ? ` · Occurrence ${item.ordinal}` : " · Deduplicated snapshot"}</p>
         <Button type="button" variant="ghost" size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-left" aria-expanded={expanded === item.evidence_hash} onClick={() => setExpanded(expanded === item.evidence_hash ? null : item.evidence_hash)}>Evidence references for source {item.external_id}, page {item.page}{item.ordinal > 0 ? `, occurrence ${item.ordinal}` : ""}</Button>
         {expanded === item.evidence_hash && <><dl className="mt-2 space-y-1 break-all text-xs"><dt className="text-muted-foreground">Snapshot reference</dt><dd>{item.snapshot_id}</dd><dt className="text-muted-foreground">Occurrence evidence hash</dt><dd>{item.evidence_hash}</dd></dl>
+          {items.data.resource === "healthstatus" && <MigrationWeightEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "prescription" && <MigrationPrescriptionEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "prescriptionitem" && <MigrationPrescriptionItemEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "vaccination" && <MigrationVaccinationEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}

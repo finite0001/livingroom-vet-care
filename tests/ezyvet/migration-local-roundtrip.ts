@@ -1,4 +1,5 @@
 import { createMigrationPrescriptionItemApi } from "../../src/hub/features/imports/migration-prescription-item-api.ts";
+import { createMigrationWeightApi } from "../../src/hub/features/imports/migration-weight-api.ts";
 import { createMigrationPrescriptionApi } from "../../src/hub/features/imports/migration-prescription-api.ts";
 import { createMigrationVaccinationApi } from "../../src/hub/features/imports/migration-vaccination-api.ts";
 import { createMigrationHistoryApi } from "../../src/hub/features/imports/migration-history-api.ts";
@@ -50,6 +51,8 @@ async function account() {
   sql(`insert into user_roles(user_id,role) values(${quote(user.id)},'ADMIN');`);
   return { id: user.id as string, auth: headers(login.access_token) };
 }
+const weightSqlResults = sql(readFileSync(new URL("../../supabase/tests/ezyvet_migration_weight_evidence.test.sql", import.meta.url), "utf8"));
+check(!/^not ok\b/m.test(weightSqlResults) && /^1\.\.[1-9][0-9]*$/m.test(weightSqlResults), "Weight receipt SQL assertions pass against the actual disposable database");
 const owner = await account(), other = await account();
 const transport = (auth: Record<string, string>) => ({
   async rpc(name: string, args: Record<string, unknown>) {
@@ -307,6 +310,37 @@ sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${
 check(!(await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])).approvals[0].source_current, "Omitted item source reversion invalidates prescription context over HTTP");
 check(!(await medicationApi.list(medicationBinding, medicationItem)).approvals[0].source_current, "Item source reversion invalidates item receipt context over HTTP");
 
+const weightRun = randomUUID(), weightApproval = randomUUID();
+const weightClaim = await request("/rest/v1/rpc/claim_ezyvet_weight_import", { p_id: weightRun, p_actor: owner.id, p_site_uid: site, p_source_origin: origin, p_animal_link_id: mapping });
+await request("/rest/v1/rpc/stage_ezyvet_import_page", { p_id: weightRun, p_actor: owner.id, p_lease_id: weightClaim.lease_id, p_page: 1, p_complete: true, p_items: [{ external_id: "991", payload: { id: 991, animal_id: 77, active: true, weight: "12.3", weight_unit: "kg", timestamp: "1788267600" } }] });
+const weightSnapshot = sql(`select id from ezyvet_import_snapshots where source_site_uid=${quote(site)} and resource='healthstatus' and external_id='991';`);
+const weightHash = sql(`select payload_hash from ezyvet_import_snapshots where id=${quote(weightSnapshot)};`);
+const weightManifest = await api.prepare({ id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "healthstatus", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Synthetic historical weight scope" }] });
+const weightBinding = await api.bind({ id: randomUUID(), scope_id: weightManifest.scopes[0].id, child_run_id: weightRun, reason: "Synthetic weight evidence", replaces_id: null });
+const weightItems = await api.items(weightManifest, weightBinding);
+const weightApi = createMigrationWeightApi(ownerTransport, owner.id);
+check((await weightApi.list(weightBinding, weightItems.items[0])).approval === null, "Observed weight is not approval over HTTP");
+const weightPayload = { snapshot_id: weightSnapshot, expected_hash: weightHash, head_version: 1, animal_link_id: mapping, patient_version: 1, action: "create", weight_id: null, weight: 12.3, unit: "kg", measured_at: "2026-09-01", reason: "Synthetic reviewed historical weight" };
+await staffRpc("prepare_ezyvet_weight_request", { p_request_id: weightApproval, p_snapshot_id: weightSnapshot, p_payload: weightPayload });
+check((await weightApi.list(weightBinding, weightItems.items[0])).approval === null, "Prepared weight is not approved over HTTP");
+await staffRpc("approve_ezyvet_weight", { p_request_id: weightApproval, p_actor_id: owner.id, p_snapshot_id: weightSnapshot, p_expected_hash: weightHash, p_head_version: 1, p_animal_link_id: mapping, p_patient_version: 1, p_action: "create", p_weight_id: null, p_weight: 12.3, p_unit: "kg", p_measured_at: "2026-09-01", p_confirmed: true, p_reason: weightPayload.reason });
+const weightBefore = sql(`select jsonb_agg(to_jsonb(w) order by w.id) from patient_weights w where pet_id=${quote(pet)};`);
+const weightEvidence = await weightApi.list(weightBinding, weightItems.items[0]);
+check(weightEvidence.approval?.id === weightApproval && weightEvidence.approval.relationship === "exact_snapshot" && weightEvidence.approval.source_current && weightEvidence.approval.local_weight_matches, "Weight receipt recovers approved snapshot and native weight over HTTP");
+check(weightEvidence.observation_head_version === null && weightEvidence.historical_head_fidelity === "unknown" && !weightEvidence.complete_coverage_verified, "Weight projection preserves missing historical head evidence over HTTP");
+sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${quote(site)} and resource='healthstatus' and external_id='991';`);
+const weightReviewA = randomUUID(), weightReviewB = randomUUID();
+await staffRpc("review_ezyvet_weight_change", { p_request_id: weightReviewA, p_approval_id: weightApproval, p_snapshot_id: weightSnapshot, p_head_version: 3, p_reason: "Synthetic source reversion acknowledged" });
+await staffRpc("review_ezyvet_weight_change", { p_request_id: weightReviewB, p_approval_id: weightApproval, p_snapshot_id: weightSnapshot, p_head_version: 3, p_reason: "Synthetic second source acknowledgment" });
+const weightPage = await weightApi.list(weightBinding, weightItems.items[0], null, 1);
+check(weightPage.approval?.relationship === "exact_snapshot" && !weightPage.approval.source_current && weightPage.reviews[0].source_current, "Source reversion leaves approval stale while acknowledgment is current");
+check(weightPage.has_more && weightPage.next_cursor !== null, "Weight acknowledgment history has independent cursor over HTTP");
+const weightNext = await weightApi.list(weightBinding, weightItems.items[0], weightPage.next_cursor, 1);
+check(weightNext.reviews.length === 1 && weightNext.reviews[0].id !== weightPage.reviews[0].id && !weightNext.has_more && weightNext.approval?.id === weightApproval, "Acknowledgment pagination retains approval without duplicate review");
+await assert.rejects(() => weightApi.list(weightBinding, { ...weightItems.items[0], evidence_hash: "f".repeat(64) })); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/list_ezyvet_migration_weight_evidence", { p_binding_id: weightBinding.id, p_page: 1, p_snapshot_id: weightSnapshot, p_evidence_hash: weightItems.items[0].evidence_hash }, other.auth)); checks++;
+check(weightBefore === sql(`select jsonb_agg(to_jsonb(w) order by w.id) from patient_weights w where pet_id=${quote(pet)};`), "Weight reconciliation and acknowledgments preserve native weights");
+
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
@@ -332,5 +366,6 @@ await assert.rejects(() => captureApi.list(bound, captureItem)); checks++;
 await assert.rejects(() => vaccineApi.list(vaccineBinding, vaccineItems.items[0])); checks++;
 await assert.rejects(() => prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])); checks++;
 await assert.rejects(() => medicationApi.list(medicationBinding, medicationItem)); checks++;
+await assert.rejects(() => weightApi.list(weightBinding, weightItems.items[0])); checks++;
 check(effects() === beforeEffects, "Migration operations cause no native treatment, vaccine certificate, due-plan, reminder, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);
