@@ -108,3 +108,33 @@ revoke all on function public.guard_abandoned_attachment_cleanup() from public,a
 revoke all on function public.abandoned_cleanup_lease(public.abandoned_attachment_cleanup,public.conversation_attachment_uploads) from public,anon,authenticated,service_role;
 revoke all on function public.claim_abandoned_attachment_cleanup(uuid,integer),public.revalidate_abandoned_attachment_cleanup(uuid,uuid),public.finalize_abandoned_attachment_cleanup(uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function public.claim_abandoned_attachment_cleanup(uuid,integer),public.revalidate_abandoned_attachment_cleanup(uuid,uuid),public.finalize_abandoned_attachment_cleanup(uuid,uuid) to service_role;
+
+-- Discovery is advisory. The claim transaction must recheck every candidate.
+create function public.list_abandoned_attachment_cleanup_candidates(p_grace_hours integer,p_limit integer)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare result jsonb;
+begin
+ perform public.communication_require_service();
+ if p_grace_hours is null or p_grace_hours not between 24 and 720 or p_limit is null or p_limit not between 1 and 100 then
+  raise exception 'Bounded cleanup discovery and explicit grace required' using errcode='23514';end if;
+ select coalesce(jsonb_agg(jsonb_build_object('upload_id',id,'reason',reason) order by created_at,id),'[]'::jsonb) into result from (
+  select u.id,u.created_at,case when pending.id is null then 'abandoned_object' else 'recover_cleanup' end as reason
+  from public.conversation_attachment_uploads u
+  left join storage.objects o on o.bucket_id='conversation-attachment-uploads' and o.name=u.storage_path
+  left join lateral (select r.* from public.abandoned_attachment_cleanup r where r.upload_id=u.id and r.state='claimed' order by r.created_at limit 1) pending on true
+  where u.status='abandoned'
+   and not exists(select 1 from public.conversation_email_artifacts a cross join lateral jsonb_array_elements(a.manifest) f where f->>'upload_id'=u.id::text)
+   and (
+    (pending.id is not null and pending.expires_at<=clock_timestamp() and pending.storage_path=u.storage_path
+      and (o.id is null or row(o.id,o.created_at)=row(pending.object_id,pending.object_created_at)))
+    or (pending.id is null and o.id is not null
+      and u.created_at<=clock_timestamp()-make_interval(hours=>p_grace_hours)
+      and o.created_at<=clock_timestamp()-make_interval(hours=>p_grace_hours)
+      and not exists(select 1 from public.abandoned_attachment_cleanup r where r.upload_id=u.id and r.object_id=o.id))
+   )
+  order by u.created_at,u.id limit p_limit
+ ) candidates;
+ return result;
+end $$;
+revoke all on function public.list_abandoned_attachment_cleanup_candidates(integer,integer) from public,anon,authenticated,service_role;
+grant execute on function public.list_abandoned_attachment_cleanup_candidates(integer,integer) to service_role;

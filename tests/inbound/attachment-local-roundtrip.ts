@@ -232,6 +232,9 @@ try {
   check((await cleanupRequest("/cleanup-disabled")).status === 503, "Disabled HTTP cleanup refuses valid worker requests");
   check((await cleanupRequest("/cleanup", local.SERVICE_ROLE_KEY, { upload_id: abandonedId, path: abandonedPath })).status === 400, "HTTP cleanup rejects caller-supplied object paths");
   check(sql(`select count(*) from abandoned_attachment_cleanup where upload_id=${quote(abandonedId)}`) === "0", "Denied and disabled requests create no cleanup intent");
+  const cleanupCandidates = await service.rpc("list_abandoned_attachment_cleanup_candidates", { p_grace_hours: 168, p_limit: 100 });
+  if (cleanupCandidates.error) throw cleanupCandidates.error;
+  check(cleanupCandidates.data.some((value: { upload_id: string; reason: string }) => value.upload_id === abandonedId && value.reason === "abandoned_object"), "Actual service discovery finds the abandoned object before cleanup");
   const cleanupResponse = await cleanupRequest();
   check(cleanupResponse.status === 200, "Authorized synthetic cleanup completes over actual HTTP");
   const cleanup = await cleanupResponse.json();

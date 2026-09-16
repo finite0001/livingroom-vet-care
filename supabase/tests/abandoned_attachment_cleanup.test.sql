@@ -25,7 +25,10 @@ select throws_ok($$select claim_abandoned_attachment_cleanup((select id from fx 
 select throws_ok($$select claim_abandoned_attachment_cleanup((select id from fx where k='uploading'),168)$$,'42501',null,'Unfinished uploads are retained');
 select throws_ok($$select claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),0)$$,'23514',null,'Grace setting must be explicit and bounded');
 select is(claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),720),null::jsonb,'Younger objects wait for configured grace');
+select is(list_abandoned_attachment_cleanup_candidates(168,100),jsonb_build_array(jsonb_build_object('upload_id',(select id from fx where k='abandoned'),'reason','abandoned_object')),'Discovery lists only aged abandoned object identity');
+select throws_ok($$select list_abandoned_attachment_cleanup_candidates(168,101)$$,'23514',null,'Discovery rejects unbounded batches');
 insert into evidence select claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),168);
+select is(list_abandoned_attachment_cleanup_candidates(168,100),'[]'::jsonb,'Discovery excludes active cleanup lease');
 select is((select v->>'uploadId' from evidence),(select id::text from fx where k='abandoned'),'Cleanup lease binds abandoned reservation');
 select throws_ok($$select claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),168)$$,'40001',null,'Competing cleanup claim cannot steal live lease');
 select throws_ok($$select revalidate_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),gen_random_uuid())$$,'42501',null,'Wrong cleanup token cannot revalidate');
@@ -42,4 +45,8 @@ select throws_ok($$select finalize_abandoned_attachment_cleanup((select (v->>'id
 reset role;
 select throws_ok($$delete from abandoned_attachment_cleanup$$,'23514',null,'Completed cleanup evidence remains immutable');
 select is((select count(*) from conversation_attachment_uploads where actor_id='ee400000-0000-4000-8000-000000000001'),3::bigint,'Cleanup preserves all reservation evidence');
+set local role service_role;
+select is(list_abandoned_attachment_cleanup_candidates(168,100),'[]'::jsonb,'Completed absent original is not offered for cleanup again');
+reset role;
+select ok(not has_function_privilege('authenticated','list_abandoned_attachment_cleanup_candidates(integer,integer)','execute'),'Staff cannot enumerate cleanup candidates');
 select * from finish();rollback;
