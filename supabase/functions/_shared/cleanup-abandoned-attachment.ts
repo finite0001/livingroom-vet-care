@@ -37,7 +37,7 @@ export async function cleanupAbandonedAttachment(deps: AbandonedAttachmentCleanu
   await deps.revalidate(lease);
   const object = await deps.inspect(lease.bucket, lease.path);
   if (object) {
-    if (object.id !== lease.objectId || object.createdAt !== lease.objectCreatedAt) throw new Error("Cleanup object identity changed");
+    if (object.id !== lease.objectId || Date.parse(object.createdAt) !== Date.parse(lease.objectCreatedAt)) throw new Error("Cleanup object identity changed");
     await deps.revalidate(lease);
     validate(lease, deps.now());
     try { await deps.remove(lease.bucket, lease.path); }
