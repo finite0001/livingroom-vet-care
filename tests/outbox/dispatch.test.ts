@@ -203,3 +203,51 @@ test("provider redirects cannot forward message data and remain uncertain", asyn
     "provider_transport_unknown",
   );
 });
+
+test("conversation attachments pass reviewed hash to the final guard and send exact frozen bytes", async () => {
+  const f = fixture();
+  const payload = JSON.stringify({ from: f.env.RESEND_FROM, reply_to: f.env.RESEND_REPLY_TO,
+    to: [f.row.recipient], subject: f.row.subject, text: f.row.body,
+    attachments: [{ filename: "report.pdf", content_type: "application/pdf", content: "JVBERi0=" }] });
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload)));
+  const hash = [...digest].map(v => v.toString(16).padStart(2, "0")).join("");
+  const db = { rpc: async (name: string, args?: Record<string, unknown>) => name === "read_frozen_email_payload"
+    ? { data: { payload_text: payload, payload_hash: hash, artifact_kind: "conversation" }, error: null }
+    : f.db.rpc(name, args) };
+  assert.equal((await dispatchOne(db, f.env, f.transport)).state, "accepted");
+  const start = f.calls.find(call => call.name === "start_communication_attempt");
+  assert.equal((start?.args?.p_provider_config as Record<string, unknown>).conversation_payload_hash, hash);
+  assert.equal(f.requests[0].body, payload);
+});
+
+test("conversation attachment tampering and changed sender prevent provider calls", async () => {
+  for (const changedSender of [false, true]) {
+    const f = fixture();
+    const payload = JSON.stringify({ from: changedSender ? "old@example.test" : f.env.RESEND_FROM,
+      reply_to: f.env.RESEND_REPLY_TO, to: [f.row.recipient], subject: f.row.subject, text: f.row.body,
+      attachments: [{ filename: "report.pdf", content_type: "application/pdf", content: "JVBERi0=" }] });
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload)));
+    const hash = [...digest].map(v => v.toString(16).padStart(2, "0")).join("");
+    const db = { rpc: async (name: string, args?: Record<string, unknown>) => name === "read_frozen_email_payload"
+      ? { data: { payload_text: payload, payload_hash: changedSender ? hash : "a".repeat(64), artifact_kind: "conversation" }, error: null }
+      : f.db.rpc(name, args) };
+    await dispatchOne(db, f.env, f.transport);
+    assert.equal(f.requests.length, 0);
+    assert.equal(f.calls.some(call => call.name === "start_communication_attempt"), false);
+  }
+});
+
+test("database rejection of reviewed conversation proof prevents provider execution", async () => {
+  const f = fixture();
+  const payload = JSON.stringify({ from: f.env.RESEND_FROM, reply_to: f.env.RESEND_REPLY_TO,
+    to: [f.row.recipient], subject: f.row.subject, text: f.row.body,
+    attachments: [{ filename: "report.pdf", content_type: "application/pdf", content: "JVBERi0=" }] });
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload)));
+  const hash = [...digest].map(v => v.toString(16).padStart(2, "0")).join("");
+  const db = { rpc: async (name: string, args?: Record<string, unknown>) => name === "read_frozen_email_payload"
+    ? { data: { payload_text: payload, payload_hash: hash, artifact_kind: "conversation" }, error: null }
+    : f.db.rpc(name, args) };
+  f.setStartState("failed");
+  assert.equal((await dispatchOne(db, f.env, f.transport)).state, "failed");
+  assert.equal(f.requests.length, 0);
+});

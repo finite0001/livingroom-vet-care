@@ -75,3 +75,18 @@ verify_jwt = true
 # Active-staff review identity is rechecked after the private byte read.
 [functions.retrieve-reviewed-ezyvet-original]
 verify_jwt = true
+
+# Staff JWT plus active-owner checks before capture and the final review receipt.
+[functions.capture-conversation-email]
+verify_jwt = true
+
+# Staff JWT, active matched-inbound claim and current lease checks. Capture defaults off.
+[functions.capture-inbound-attachment]
+verify_jwt = true
+
+[functions.read-inbound-attachment]
+verify_jwt = true
+
+# Server-only worker credentials are checked explicitly; secret API keys are not JWTs.
+[functions.cleanup-abandoned-attachment]
+verify_jwt = false

@@ -1,0 +1,24 @@
+{
+  "status": "partial_local_validation",
+  "unit_upload_verifier_tests_passed": 15,
+  "application_typecheck": "passed",
+  "targeted_eslint": "passed",
+  "frozen_deno_check": "passed",
+  "disposable_sql_validation": "not_reached_startup_failed",
+  "actual_auth_storage_integration": "pending_ci",
+  "disposable_cleanup_verified": true,
+  "disposable_project": "lrv-attachment-8f30bd073ee0",
+  "provider_requests": 0,
+  "hosted_deployed": false,
+  "complete_attachment_workflow": false,
+  "source_sha256": {
+    "src/hub/features/communications/attachment-upload.ts": "457a2823795f4b93bd3baedf47bfa18be7abadb77896fce77baf6159a328707c",
+    "supabase/functions/_shared/verify-conversation-attachment.ts": "b18dcb2d5f2b8dc9e48503221b85a1ce117f24823836ac9a9eaee1158477e17c",
+    "supabase/functions/verify-conversation-attachment/index.ts": "f87efed12232450230092685ffdc0be9afb023ce42afbc2e583df8e065985d8c",
+    "supabase/migrations/20260916100000_conversation_attachment_uploads.sql": "54501285475cb1de4e73d00a12085816feab9acd34760d8bd72fc2f34e8a33b4",
+    "supabase/tests/conversation_attachment_uploads.test.sql": "0d153e79066cba087d63d48057c501f478984f4b03d1f40acd0ae8b5dad5b57b",
+    "tests/communications/attachment-upload.test.ts": "77ec5adbcda517f8c3ff61e29f3b8879cae257188fe13c8f951e729ddf3909b7",
+    "tests/communications/verify-attachment.test.ts": "0a117eacc18410e6b5eb3dd855e0f90adc1cea1140de76a389cfe524698c161e",
+    "tests/communications/upload-local-roundtrip.ts": "0c182f2a3aedb3e7dd73bc0c404df09160a1a2e3b9bbe41f9347ab28bdabc5f3"
+  }
+}

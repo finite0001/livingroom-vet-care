@@ -80,6 +80,10 @@ jobs:
         run: python3 -B tests/prescriptions/native_finance_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify native estimate drafts, catalog review and uncertain-save resolution
         run: python3 -B tests/estimates/draft-concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify incoming attachment claim, finalization and revocation races
+        run: python3 supabase/tests/inbound_attachment_concurrency.py --project-config supabase/config.toml --run-synthetic-local
+      - name: Verify conversation attachment capture and queue races
+        run: python3 supabase/tests/conversation_email_concurrency.py --project-config supabase/config.toml --run-synthetic-local
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks
@@ -209,3 +213,11 @@ jobs:
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture clinical-history
       - name: Verify attachment metadata and original capture through disposable Auth and Storage
         run: python3 tests/ezyvet/attachment-metadata-disposable.py --run-synthetic-local --fixture all
+      - name: Verify conversation upload ownership and actual private bytes
+        run: node --experimental-strip-types tests/communications/upload-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify incoming attachment HTTP capture and reads through actual Auth and private Storage
+        run: node --experimental-strip-types tests/inbound/attachment-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}

@@ -1,3 +1,4 @@
+import { addConversationAttachments, type SelectedConversationAttachment } from "@/hub/features/communications/attachment-selection";
 import { MessageRecoveryPanel } from "./MessageRecoveryPanel";
 import type { MessageIntent } from "@/hub/features/communications/queue-intent";
 import type { useMessageQueue } from "@/hub/hooks/use-message-queue";
@@ -5,7 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, MessageSquare, StickyNote, Mail } from "lucide-react";
+import { Send, MessageSquare, StickyNote, Mail, Paperclip, X } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TemplateSelector } from "./TemplateSelector";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ interface ReplyComposerProps {
     channel: "SMS" | "EMAIL" | "NOTE",
     subject?: string,
     restored?: MessageIntent,
+    attachments?: SelectedConversationAttachment[],
   ) => Promise<boolean>;
   defaultChannel?: "SMS" | "EMAIL" | "NOTE";
   smsOptedOut?: boolean;
@@ -41,6 +43,9 @@ export function ReplyComposer({
   recipients,
 }: ReplyComposerProps) {
   const [content, setContent] = useState("");
+  const [attachments, setAttachments] = useState<SelectedConversationAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [restored, setRestored] = useState<MessageIntent | undefined>();
   const [pending, setPending] = useState(false);
   const pendingRef = useRef(false);
@@ -107,8 +112,10 @@ export function ReplyComposer({
         channel,
         channel === "EMAIL" ? subject : undefined,
         restored,
+        channel === "EMAIL" ? attachments : [],
       );
       if (completed) {
+        if (channel === "EMAIL") setAttachments([]);
         setContent("");
         setSubject("");
         setRestored(undefined);
@@ -132,7 +139,7 @@ export function ReplyComposer({
     <div className="border-t p-3 space-y-2 bg-muted/30">
       <MessageRecoveryPanel
         queue={queue}
-        hasDraft={!!content || !!subject}
+        hasDraft={!!content || !!subject || attachments.length > 0}
         onRestore={(saved) => {
           if (saved.conversation_id !== conversationId)
             throw new Error(
@@ -142,6 +149,8 @@ export function ReplyComposer({
           setSubject(saved.subject);
           setChannel(saved.channel);
           setRestored(saved);
+          setAttachments([]);
+          setAttachmentError(null);
         }}
         onAcknowledged={(saved) => {
           if (
@@ -155,6 +164,7 @@ export function ReplyComposer({
             setContent("");
             setSubject("");
             setRestored(undefined);
+            if (saved.channel === "EMAIL") setAttachments([]);
           }
         }}
       />
@@ -212,6 +222,29 @@ export function ReplyComposer({
           placeholder="Subject"
           className="h-8 bg-background/60 text-[13px]"
         />
+      )}
+      {channel === "EMAIL" && (
+        <div className="space-y-2">
+          <input ref={fileInput} type="file" multiple accept="application/pdf,image/png,image/jpeg" className="sr-only" aria-label="Choose email attachments" disabled={busy || !!queue.recovery} onChange={event => {
+            try {
+              setAttachments(addConversationAttachments(attachments, Array.from(event.target.files ?? [])));
+              setAttachmentError(null);
+            } catch (error) { setAttachmentError(error instanceof Error ? error.message : "Unable to select files."); }
+            event.target.value = "";
+          }} />
+          <Button type="button" variant="ghost" size="sm" disabled={busy || !!queue.recovery || attachments.length >= 5} onClick={() => fileInput.current?.click()}>
+            <Paperclip className="mr-1 h-4 w-4" aria-hidden="true" /> Attach files
+          </Button>
+          {attachments.length > 0 && <ul aria-label="Selected attachments" className="space-y-1">
+            {attachments.map(item => <li key={item.id} className="flex items-center gap-2 text-sm">
+              <span className="min-w-0 flex-1 break-words">{item.file.name}</span>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label={`Remove ${item.file.name}`} disabled={busy || !!queue.recovery} onClick={() => setAttachments(current => current.filter(file => file.id !== item.id))}><X className="h-3 w-3" aria-hidden="true" /></Button>
+            </li>)}
+          </ul>}
+          {restored?.attachment_ids.length ? <p className="text-xs text-muted-foreground">{restored.attachment_ids.length} saved attachment(s). Sending opens a review first.</p> : null}
+          {attachmentError && <p role="alert" className="text-sm text-destructive">{attachmentError}</p>}
+          {attachments.length > 0 && <p className="text-xs text-muted-foreground">You’ll review the email and files before queueing.</p>}
+        </div>
       )}
       <div className="flex gap-2">
         <Textarea
