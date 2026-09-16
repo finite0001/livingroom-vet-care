@@ -1,3 +1,4 @@
+import { createMigrationIdentityApi } from "../../src/hub/features/imports/migration-identity-api.ts";
 import { createMigrationPrescriptionItemApi } from "../../src/hub/features/imports/migration-prescription-item-api.ts";
 import { createMigrationPrescriptionApi } from "../../src/hub/features/imports/migration-prescription-api.ts";
 import { createMigrationVaccinationApi } from "../../src/hub/features/imports/migration-vaccination-api.ts";
@@ -307,7 +308,19 @@ sql(`update ezyvet_identity_heads set version=version+2 where source_site_uid=${
 check(!(await prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])).approvals[0].source_current, "Omitted item source reversion invalidates prescription context over HTTP");
 check(!(await medicationApi.list(medicationBinding, medicationItem)).approvals[0].source_current, "Item source reversion invalidates item receipt context over HTTP");
 
+const identityManifest = await api.prepare({ id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [{ id: randomUUID(), mapping_id: mapping, resource: "animal", parent_type: "animal", parent_snapshot_id: snapshot, parent_head_version: 1, disposition: "required", reason: "Synthetic identity scope" }] });
+const identityBinding = await api.bind({ id: randomUUID(), scope_id: identityManifest.scopes[0].id, child_run_id: animalRun, reason: "Selected identity in generic run", replaces_id: null });
+const identityItem = (await api.items(identityManifest, identityBinding)).items[0];
+const identityApi = createMigrationIdentityApi(ownerTransport, owner.id);
+const identityEvidence = await identityApi.read(identityBinding, identityItem);
+check(identityEvidence.approval.id === mapping && identityEvidence.approval.action === "link", "Exact approved identity mapping through HTTP");
+check(identityEvidence.approval.relationship === "same_snapshot_unknown_observed_head" && !identityEvidence.observation_head_available && !identityEvidence.exact_source_version_verified, "Actual legacy identity cannot claim observed head version");
+check(identityEvidence.approval.source_current && identityEvidence.approval.local_record_unchanged && identityEvidence.approval.household_current, "Initial identity currentness facts remain separate");
+await assert.rejects(() => identityApi.read(identityBinding, { ...identityItem, evidence_hash: "f".repeat(64) })); checks++;
+await assert.rejects(() => request("/rest/v1/rpc/read_ezyvet_migration_identity_evidence", { p_binding_id: identityBinding.id, p_page: 1, p_snapshot_id: identityItem.snapshot_id, p_evidence_hash: identityItem.evidence_hash }, other.auth)); checks++;
 sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
+const driftedIdentity = await identityApi.read(identityBinding, identityItem);
+check(!driftedIdentity.approval.source_current && driftedIdentity.approval.relationship === "same_snapshot_unknown_observed_head", "Source reversion does not manufacture exact identity observation credit");
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;
 assert.deepEqual(await api.bind(bindingRequest), bound); checks++;
 check(!(await api.progress(saved, bound)).parent_current, "HTTP progress exposes source drift without changing saved digest");
@@ -332,5 +345,6 @@ await assert.rejects(() => captureApi.list(bound, captureItem)); checks++;
 await assert.rejects(() => vaccineApi.list(vaccineBinding, vaccineItems.items[0])); checks++;
 await assert.rejects(() => prescriptionApi.list(prescriptionBinding, prescriptionItems.items[0])); checks++;
 await assert.rejects(() => medicationApi.list(medicationBinding, medicationItem)); checks++;
+await assert.rejects(() => identityApi.read(identityBinding, identityItem)); checks++;
 check(effects() === beforeEffects, "Migration operations cause no native treatment, vaccine certificate, due-plan, reminder, invoice, stock, Storage or delivery mutations");
 console.log(`Migration manifest HTTP/Auth/PostgREST: ${checks} checks passed. Synthetic upstream only; no ezyVet requests.`);
