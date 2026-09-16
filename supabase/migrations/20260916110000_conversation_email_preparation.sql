@@ -244,3 +244,20 @@ begin
 end $$;
 revoke all on function public.start_communication_attempt(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
 grant execute on function public.start_communication_attempt(uuid,uuid,jsonb) to service_role;
+
+-- Draft inspection returns the exact frozen attachment, never a mutable Storage URL.
+create function public.read_conversation_email_attachment(p_request_id uuid,p_upload_id uuid,p_payload_hash text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();a public.conversation_email_artifacts;r public.communication_prepared_requests;ordinal bigint;
+begin
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=actor and state<>'abandoned';
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id;
+ if r.request_id is null or a.payload_text is null or a.payload_hash is distinct from p_payload_hash then
+  raise exception 'Owned reviewed attachment unavailable' using errcode='42501';end if;
+ select ord into ordinal from jsonb_array_elements(a.manifest) with ordinality as files(file,ord) where file->>'upload_id'=p_upload_id::text;
+ if ordinal is null then raise exception 'Attachment does not belong to this email' using errcode='42501';end if;
+ return jsonb_build_object('request_id',r.request_id,'upload_id',p_upload_id,'payload_hash',a.payload_hash,
+  'attachment',(a.payload_text::jsonb->'attachments')->(ordinal::integer-1));
+end $$;
+revoke all on function public.read_conversation_email_attachment(uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.read_conversation_email_attachment(uuid,uuid,text) to authenticated;

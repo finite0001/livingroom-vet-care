@@ -49,6 +49,13 @@ reset role;set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"ee200000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 insert into data values('review',read_conversation_email_review((select id from fx where k='request')));
 select is((select v->>'captured' from data where k='review'),'true','Review reports captured bytes');
+select is(read_conversation_email_attachment((select id from fx where k='request'),(select id from fx where k='upload'),(select v->>'payload_hash' from data where k='review'))#>>'{attachment,content}','JVBERi0=','Owner inspects exact captured bytes');
+select throws_ok($$select read_conversation_email_attachment((select id from fx where k='request'),gen_random_uuid(),(select v->>'payload_hash' from data where k='review'))$$,'42501',null,'Unrelated attachment denied');
+select throws_ok($$select read_conversation_email_attachment((select id from fx where k='request'),(select id from fx where k='upload'),repeat('b',64))$$,'42501',null,'Changed review hash denied');
+select set_config('request.jwt.claims','{"sub":"ee200000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select read_conversation_email_attachment((select id from fx where k='request'),(select id from fx where k='upload'),(select v->>'payload_hash' from data where k='review'))$$,'42501',null,'Other staff cannot inspect private draft');
+select set_config('request.jwt.claims','{"sub":"ee200000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
 select throws_ok($$select enqueue_conversation_email((select id from fx where k='request'),(select v->>'payload_hash' from data where k='review'),false)$$,'23514',null,'Explicit review required');
 select throws_ok($$select enqueue_conversation_email((select id from fx where k='request'),repeat('a',64),true)$$,'42501',null,'Wrong review hash rejected');
 select throws_ok($$select enqueue_communication(auth.uid(),(select id from fx where k='request'),(select id from fx where k='conversation'),'EMAIL','client@example.test','Your file','Please review',array[(select id from fx where k='upload')])$$,'23514',null,'Ordinary enqueue cannot bypass attachment review');

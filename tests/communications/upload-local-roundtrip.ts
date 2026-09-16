@@ -1,3 +1,5 @@
+import { parseConversationEmailReview } from "../../src/hub/features/communications/conversation-email-review.ts";
+import { readCapturedConversationFile } from "../../src/hub/features/communications/conversation-email-attachment.ts";
 import { createCaptureConversationEmailHandler } from "../../supabase/functions/_shared/capture-conversation-email.ts";
 import { uploadConversationAttachment } from "../../src/hub/features/communications/attachment-upload.ts";
 import { createAttachmentUploadTransport } from "../../src/hub/features/communications/attachment-upload-api.ts";
@@ -313,6 +315,13 @@ try {
   const review = await captureRetry.json();
   check(review.captured === true && /^[a-f0-9]{64}$/.test(review.payload_hash), "Recovered capture contains reviewed payload hash");
   check(captureCalls === 1 && downloads === 1, "Capture recovery neither redownloads nor rebuilds committed payload");
+  const reviewModel = parseConversationEmailReview(review, { requestId, conversationId: conversation.data.id });
+  const inspected = await readCapturedConversationFile(owner.client, owner.id, () => owner.id, reviewModel, id);
+  check(await inspected.text() === await content.text(), "Staff inspection returns exact captured original bytes through real RPC");
+  check(!!(await other.client.rpc("read_conversation_email_attachment", {
+    p_request_id: requestId, p_upload_id: id, p_payload_hash: review.payload_hash,
+  })).error, "Other staff cannot inspect owned captured draft through real RPC");
+
   check(!(await captureHandler(captureRequest(other.token))).ok, "Other actor cannot recover captured email");
   const queue = (hash: string, attest: boolean) => owner.client.rpc("enqueue_conversation_email", {
     p_request_id: requestId, p_reviewed_payload_hash: hash, p_attest: attest,
