@@ -31,7 +31,8 @@ const anonymous = { apikey: local.ANON_KEY, 'Content-Type': 'application/json' }
 const service = { ...anonymous, Authorization: `Bearer ${local.SERVICE_ROLE_KEY}` };
 async function post(path: string, body: unknown, headers: Record<string, string>) {
   const response = await fetch(`${local.API_URL}${path}`, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
-  const value = await response.json();
+  const bodyText = await response.text();
+  const value = bodyText.trim() === "" ? null : JSON.parse(bodyText);
   return { ok: response.ok, status: response.status, value };
 }
 async function user(label: string) {
