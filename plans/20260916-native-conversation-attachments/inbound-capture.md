@@ -102,3 +102,9 @@ CI35094146408 remains live at53c0337, most recently in source-bound release inte
 CI35094146408 completed all jobs at53c0337, including16 actual Auth/RPC/Storage checks for incoming capture/list/read. Timeline/error/concurrency/localhost-HTTP changes were pushed ate0c4753 and CI35095400693 is active. Its incoming claim/finalization/revocation concurrency step has now passed; full HTTP/integration/browser outcome remains pending.
 
 Added `retention.md` with schema-derived retention distinctions and implementation/acceptance requirements, plus read-only `scripts/attachment-retention/inventory.sql`. The inventory uses a read-only transaction, returns aggregate sizes/counts only, retains verified/current/pending categories and separates abandoned/superseded/unknown review categories. It performs no deletion; SQL runtime validation, cleanup receipts/worker/tests and hosted acceptance remain outstanding. Diff checks pass.
+
+## Retention inventory runtime fixture prepared
+
+Extended the pending localhost HTTP/Auth/Storage harness to create actual verified, same-identity superseded-path and unknown-path objects; execute the read-only inventory; assert all three categories, absence of private paths/actor identity, and unchanged Storage object metadata. Fixture object removal remains exact-path synthetic cleanup. Tightened inventory path matching to canonical UUID segment shapes before classifying a superseded path. Node syntax, targeted ESLint and diff checks pass; the inventory runtime assertions have not yet executed. Cleanup automation remains unimplemented.
+
+CI35095400693 ate0c4753 is still active; incoming concurrency passed and later SQL/service/browser regression stages continue. These inventory additions remain local until the existing run finishes.

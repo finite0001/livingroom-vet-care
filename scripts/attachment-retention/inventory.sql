@@ -26,7 +26,7 @@ with inventory as (
   on superseding_capture.inbound_id::text=split_part(o.name,'/',1)
   and superseding_capture.attachment_id::text=split_part(o.name,'/',2)
   and superseding_capture.storage_path<>o.name
-  and o.name ~ '^[a-f0-9-]{36}/[a-f0-9-]{36}/[a-f0-9-]{36}/original$'
+  and o.name ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/original$'
  where o.bucket_id='inbound-attachment-originals'
 )
 select bucket_id,category,count(*) as objects,coalesce(sum(bytes),0) as known_bytes,

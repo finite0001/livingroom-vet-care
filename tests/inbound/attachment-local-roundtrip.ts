@@ -180,6 +180,20 @@ try {
   check(!!hidden.error, "Staff cannot bypass authorized retrieval through Storage");
   const overwritten = await owner.client.storage.from("inbound-attachment-originals").upload(path, bytes, { contentType: metadata.content_type, upsert: true });
   check(!!overwritten.error, "Staff cannot overwrite incoming original");
+  // Exercise read-only retention classification against actual stored bytes.
+  const supersededPath = `${ids.inbound}/${ids.attachment}/${randomUUID()}/original`;
+  const unknownPath = `${randomUUID()}/${randomUUID()}/${randomUUID()}/original`;
+  for (const extraPath of [supersededPath, unknownPath]) {
+    paths.add(extraPath);
+    const { error } = await bucket.upload(extraPath, bytes, { contentType: metadata.content_type, upsert: false });
+    if (error) throw error;
+  }
+  const snapshotQuery = `select jsonb_agg(jsonb_build_object('id',id,'name',name,'metadata',metadata) order by name) from storage.objects where bucket_id='inbound-attachment-originals' and name=any(array[${[...paths].map(quote).join(",")}]);`;
+  const beforeInventory = sql(snapshotQuery);
+  const inventory = sql(readFileSync(`${project}/scripts/attachment-retention/inventory.sql`, "utf8"));
+  check(inventory.includes("retain_verified_incoming") && inventory.includes("superseded_attempt_review") && inventory.includes("unknown_object_review"), "Retention inventory separates verified, superseded and unknown actual objects");
+  check(![...paths].some(value => inventory.includes(value)) && !inventory.includes(actor), "Retention inventory exposes aggregate evidence without private paths or actors");
+  check(sql(snapshotQuery) === beforeInventory, "Read-only retention report leaves stored object metadata unchanged");
   sql(`update profiles set is_active=false where id=${quote(actor)}`);
   check((await request()).status === 503 && downloads === 1, "Revoked staff cannot recover captured receipt");
   check((await read()).status === 404, "Revoked staff cannot read private original");
