@@ -104,6 +104,6 @@ select ok(exists(select 1 from record_release_events where release_id=(select id
 select throws_ok($$select verify_release_source_original_v5('{"schema_version":10,"api_attachments":[],"attachments":[],"selection":{"api_attachment_ids":[]}}','{}',decode('00','hex'))$$,'23514','Original is not an exact selected package file','Schema10 uses canonical original verification rather than legacy bypass');
 select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);set local role authenticated;
 select throws_ok($$select pg_temp.confirm_native_release((select id from fx where k='release'),(select v from data where k='selection'),(select v from data where k='preview'))$$,'23514',null,'Another actor cannot replay original confirmation');
-reset role;update profiles set is_active=false where id='a5510000-0000-4000-8000-000000000002';set local role authenticated;
+reset role;select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);update profiles set is_active=false where id='a5510000-0000-4000-8000-000000000002';select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);set local role authenticated;
 select throws_ok($$select pg_temp.preview_native_release((select v from data where k='selection'))$$,'42501',null,'Inactive staff denied preview');
 select * from finish();rollback;
