@@ -145,8 +145,9 @@ try:
     check(receipt(first)==original,'Replacement and page commits preserve historical receipt')
     # Source changes while decision waits: post-wait snapshot rejects old review.
     request=str(uuid.uuid4())
+    before_head=json.loads(scalar('begin;'+staff+f"select read_ezyvet_migration_resolution_context('{fx['scope']}',{quote(json.dumps(target))});commit;"))
     change=gate('ezyvet-migration-scope-binding:'+fx['scope'])+"update ezyvet_identity_heads set version=version+1 where source_site_uid='resolution-site';"
-    contended(change,save(request,'Stale review',second),lambda code,out,err:code!=0 and 'Operational evidence changed' in err)
+    contended(change,save(request,'Stale review',second,ctx=before_head),lambda code,out,err:code!=0 and 'Operational evidence changed' in err)
     check(receipt(request) is None,'Stale decision writes no receipt')
     check(receipt(first)==original,'Exact recovery survives source drift')
     contended(gate('ezyvet-migration-resolution:'+first),save(first),lambda code,out,err:code==0)
