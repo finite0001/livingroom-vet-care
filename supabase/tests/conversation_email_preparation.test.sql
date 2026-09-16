@@ -62,6 +62,15 @@ select throws_ok($$select enqueue_communication(auth.uid(),(select id from fx wh
 insert into fx select 'outbox',id from enqueue_conversation_email((select id from fx where k='request'),(select v->>'payload_hash' from data where k='review'),true);
 select is((enqueue_conversation_email((select id from fx where k='request'),(select v->>'payload_hash' from data where k='review'),true)).id,(select id from fx where k='outbox'),'Queue retry returns one outbox');
 select is((select count(*) from communication_outbox),1::bigint,'Exactly one message queued');
+select is((select jsonb_array_length(files) from list_conversation_message_attachments(array[(select message_id from communication_outbox where id=(select id from fx where k='outbox'))])),1,'Queued message exposes one file in shared history');
+select ok((select not (files->0 ? 'storage_path') from list_conversation_message_attachments(array[(select message_id from communication_outbox where id=(select id from fx where k='outbox'))])),'History omits private Storage paths');
+select set_config('request.jwt.claims','{"sub":"ee200000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select is(read_conversation_message_attachment((select message_id from communication_outbox where id=(select id from fx where k='outbox')),(select id from fx where k='upload'),(select v->>'payload_hash' from data where k='review'))#>>'{attachment,content}','JVBERi0=','Other active staff can inspect queued message bytes');
+select throws_ok($$select read_conversation_message_attachment(gen_random_uuid(),(select id from fx where k='upload'),(select v->>'payload_hash' from data where k='review'))$$,'42501',null,'Unrelated message cannot expose draft bytes');
+select throws_ok($$select read_conversation_message_attachment((select message_id from communication_outbox where id=(select id from fx where k='outbox')),gen_random_uuid(),(select v->>'payload_hash' from data where k='review'))$$,'42501',null,'Unrelated upload cannot be read through queued message');
+select throws_ok($$select list_conversation_message_attachments(array_fill(gen_random_uuid(),array[101]))$$,'23514',null,'History lookup is bounded');
+select set_config('request.jwt.claims','{"sub":"ee200000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
 select resolve_message_request(auth.uid(),(select id from fx where k='request'),'email:test',false);
 select pg_temp.prepare_email((select id from fx where k='abandoned'));
 select resolve_message_request(auth.uid(),(select id from fx where k='abandoned'),'email:test',true);

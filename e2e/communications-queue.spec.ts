@@ -879,3 +879,27 @@ for (const mobile of [false, true]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+test('queued attachment appears in conversation history and downloads captured bytes', async ({ page }) => {
+  await fixture(page, 'lost');
+  const bytes = Buffer.from('%PDF-history');
+  const { createHash } = await import('node:crypto');
+  const hash = createHash('sha256').update(bytes).digest('hex');
+  await page.route(`${backend}/rest/v1/messages*`, route => route.fulfill({ json: [{ id: message,
+    conversation_id: conversation, type: 'EMAIL', sender_type: 'STAFF', sender_id: staff,
+    content: 'Your reviewed file', is_internal: false, created_at: '2026-09-16T12:00:00Z',
+    audio_url: null, transcription: null, ivr_path: null }] }));
+  await page.route(`${backend}/rest/v1/rpc/list_conversation_message_attachments`, route => route.fulfill({ json: [{ message_id: message,
+    request_id: conversation, payload_hash: 'a'.repeat(64), files: [{ upload_id: client, file_name: 'history.pdf', mime_type: 'application/pdf', byte_length: bytes.length, sha256: hash }] }] }));
+  await page.route(`${backend}/rest/v1/rpc/read_conversation_message_attachment`, async route => {
+    expect(route.request().postDataJSON()).toEqual({ p_message_id: message, p_upload_id: client, p_payload_hash: 'a'.repeat(64) });
+    await route.fulfill({ json: { message_id: message, request_id: conversation, upload_id: client, payload_hash: 'a'.repeat(64),
+      attachment: { filename: 'history.pdf', content_type: 'application/pdf', content: bytes.toString('base64') } } });
+  });
+  await page.goto(`/hub/conversation/${conversation}`);
+  const files = page.getByRole('list', { name: 'Message attachments' });
+  await expect(files).toContainText('history.pdf');
+  const download = page.waitForEvent('download');
+  await files.getByRole('button', { name: /history.pdf/ }).click();
+  expect((await download).suggestedFilename()).toBe('history.pdf');
+});

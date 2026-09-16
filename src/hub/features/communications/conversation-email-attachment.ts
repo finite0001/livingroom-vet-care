@@ -8,7 +8,7 @@ export async function readCapturedConversationFile(
   client: ConversationEmailAttachmentClient,
   actorId: string,
   currentActor: () => string | null,
-  review: ConversationEmailReview,
+  review: Pick<ConversationEmailReview, "requestId" | "payloadHash" | "files">,
   uploadId: string,
 ): Promise<Blob> {
   const check = () => { if (!actorId || currentActor() !== actorId) throw new Error("Account changed. Reopen this review after signing in."); };

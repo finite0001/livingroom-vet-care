@@ -1,3 +1,4 @@
+import { parseMessageAttachments, readMessageAttachment } from "../../src/hub/features/communications/message-attachments.ts";
 import { parseConversationEmailReview } from "../../src/hub/features/communications/conversation-email-review.ts";
 import { readCapturedConversationFile } from "../../src/hub/features/communications/conversation-email-attachment.ts";
 import { createCaptureConversationEmailHandler } from "../../supabase/functions/_shared/capture-conversation-email.ts";
@@ -332,6 +333,13 @@ try {
   check(!queued.error && !!queued.data?.id, "Reviewed captured email queues through real authenticated RPC");
   const queuedRetry = await queue(review.payload_hash, true);
   check(!queuedRetry.error && queuedRetry.data?.id === queued.data.id, "Lost queue reply recovers one outbox ID");
+  const listed = await other.client.rpc("list_conversation_message_attachments", { p_message_ids: [queued.data.message_id] });
+  if (listed.error) throw listed.error;
+  const history = parseMessageAttachments(listed.data, [queued.data.message_id]);
+  check(history.length === 1, "Other active staff can list reviewed message files after queueing");
+  const sharedFile = await readMessageAttachment(other.client, other.id, () => other.id, history[0], id);
+  check(await sharedFile.text() === await content.text(), "Shared message history returns exact captured bytes without draft Storage access");
+
   check(sql(`select count(*) from communication_outbox where request_id=${quote(requestId)}::uuid`) === "1", "Exactly one outbox persists after queue retry");
   const acknowledged = await owner.client.rpc("resolve_message_request", {
     p_actor_id: owner.id, p_request_id: requestId, p_scope: "attachment-roundtrip", p_abandon: false,

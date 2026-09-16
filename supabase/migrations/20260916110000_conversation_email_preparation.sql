@@ -261,3 +261,42 @@ begin
 end $$;
 revoke all on function public.read_conversation_email_attachment(uuid,uuid,text) from public,anon,authenticated,service_role;
 grant execute on function public.read_conversation_email_attachment(uuid,uuid,text) to authenticated;
+
+-- Shared history follows the platform's active-staff message access. Draft tables
+-- and Storage reservations remain owner-only; only a reviewed outbox link qualifies.
+create function public.list_conversation_message_attachments(p_message_ids uuid[])
+returns table(message_id uuid,request_id uuid,payload_hash text,files jsonb)
+language plpgsql security definer set search_path=public as $$
+begin
+ perform public.clinical_require_staff();
+ if p_message_ids is null or cardinality(p_message_ids)>100 then
+  raise exception 'At most one hundred message IDs required' using errcode='23514';end if;
+ return query select o.message_id,a.request_id,a.payload_hash,
+  (select jsonb_agg(file-array['storage_path'] order by ord) from jsonb_array_elements(a.manifest) with ordinality x(file,ord))
+ from public.communication_outbox o
+ join public.messages m on m.id=o.message_id and m.conversation_id=o.conversation_id and m.sender_id=o.created_by and not m.is_internal
+ join public.conversation_email_outbox_links l on l.outbox_id=o.id and l.queued_by=o.created_by and l.request_id=o.request_id
+ join public.conversation_email_artifacts a on a.request_id=l.request_id and a.payload_hash=l.reviewed_payload_hash
+ join public.communication_prepared_requests r on r.request_id=a.request_id and r.actor_id=o.created_by and r.state<>'abandoned'
+ where o.message_id=any(p_message_ids) and o.channel='EMAIL' and a.payload_text is not null;
+end $$;
+revoke all on function public.list_conversation_message_attachments(uuid[]) from public,anon,authenticated,service_role;
+grant execute on function public.list_conversation_message_attachments(uuid[]) to authenticated;
+
+create function public.read_conversation_message_attachment(p_message_id uuid,p_upload_id uuid,p_payload_hash text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare matched record;a public.conversation_email_artifacts;ordinal bigint;
+begin
+ perform public.clinical_require_staff();
+ select * into matched from public.list_conversation_message_attachments(array[p_message_id]);
+ if not found or matched.payload_hash is distinct from p_payload_hash then
+  raise exception 'Reviewed message attachment unavailable' using errcode='42501';end if;
+ select * into a from public.conversation_email_artifacts where request_id=matched.request_id;
+ select ord into ordinal from jsonb_array_elements(a.manifest) with ordinality x(file,ord) where file->>'upload_id'=p_upload_id::text;
+ if ordinal is null or a.payload_hash is distinct from encode(sha256(convert_to(a.payload_text,'UTF8')),'hex') then
+  raise exception 'Reviewed message attachment unavailable' using errcode='42501';end if;
+ return jsonb_build_object('message_id',p_message_id,'request_id',a.request_id,'upload_id',p_upload_id,'payload_hash',a.payload_hash,
+  'attachment',(a.payload_text::jsonb->'attachments')->(ordinal::integer-1));
+end $$;
+revoke all on function public.read_conversation_message_attachment(uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.read_conversation_message_attachment(uuid,uuid,text) to authenticated;
