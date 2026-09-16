@@ -101,13 +101,13 @@ select is(record_native_dispense_finance((select id from fx where k='native-refu
 insert into data select 'failed-refund',record_native_dispense_finance((select id from fx where k='failed-refund'),pg_temp.finance_request(pg_temp.finance_intent('refund','100',(select id from fx where k='native-credit'),(select id from fx where k='payment'))));
 select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','50','Two prepared requests consume credit capacity');
 set local role service_role;
-select apply_refund_evidence('evt_finance_failed',(select id from fx where k='failed-refund'),'acct_finance',false,'re_finance_failed','pi_finance',100,'usd','failed');
+select is((apply_refund_evidence('evt_finance_failed',(select id from fx where k='failed-refund'),'acct_finance',false,'re_financefailed','pi_finance',100,'usd','failed')).disposition,'accepted','Synthetic failed refund evidence accepted');
 set local role authenticated;
 select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','150','Confirmed failure without settlement releases capacity');
 select is(recover_native_dispense_finance((select id from fx where k='failed-refund')),(select v from data where k='failed-refund'),'Failure does not rewrite preparation receipt');
 insert into data select 'before-settlement',pg_temp.finance_request(pg_temp.finance_intent('refund','10',(select id from fx where k='native-credit'),(select id from fx where k='payment')));
 set local role service_role;
-select apply_refund_evidence('evt_finance_success',(select id from fx where k='native-refund'),'acct_finance',false,'re_finance_success','pi_finance',150,'usd','succeeded');
+select is((apply_refund_evidence('evt_finance_success',(select id from fx where k='native-refund'),'acct_finance',false,'re_financesuccess','pi_finance',150,'usd','succeeded')).disposition,'accepted','Synthetic settled refund evidence accepted');
 set local role authenticated;
 select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','150','Settled refund counted once, never as extra reservation');
 select is(pg_temp.finance_read()#>>'{snapshot,balance,refunded_cents}','150','Only provider ledger evidence changes completed refund amount');
@@ -129,7 +129,11 @@ select is(recover_native_dispense_finance((select id from fx where k='native-ref
 select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select throws_ok($$select recover_native_dispense_finance((select id from fx where k='native-credit'))$$,'42501',null,'Other active staff cannot recover creator receipt');
 select lives_ok($$select pg_temp.finance_read()$$,'Active staff may read shared financial history');
-reset role;update profiles set is_active=false where id='a5510000-0000-4000-8000-000000000002';set local role authenticated;
+reset role;
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+update profiles set is_active=false where id='a5510000-0000-4000-8000-000000000002';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select throws_ok($$select pg_temp.finance_read()$$,'42501',null,'Inactive staff denied');
 reset role;
 select is((select document from native_dispenses where id=(select id from fx where k='dispense')),(select v->'dispense' from data where k='finance-original'),'Original signed dispense unchanged');
@@ -142,6 +146,8 @@ select ok(not has_table_privilege('authenticated','native_dispense_finance_opera
 select throws_ok($$update native_dispense_finance_operations set request_hash=repeat('0',64)$$,'23514',null,'Finance receipts immutable even for table owner');
 -- A restored row with recomputed hashes must still satisfy the closed contract.
 -- The expected exception rolls back both trigger changes and the synthetic corruption.
+-- Verify and drain original deferred links before ALTER TABLE in the isolated probe.
+set constraints all immediate;
 create function pg_temp.corrupt_finance_context(p_path text[],p_value jsonb) returns void language plpgsql as $$
 declare op public.native_dispense_finance_operations;doc jsonb;patched_request jsonb;begin
  select * into op from native_dispense_finance_operations where id=(select id from fx where k='native-credit');

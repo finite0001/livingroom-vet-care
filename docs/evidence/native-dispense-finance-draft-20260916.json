@@ -10,11 +10,16 @@
     "focused_latest_adapter_tests": 11,
     "initial_browser_after_fixture_fix": 2,
     "static_sql_statements": 22,
-    "static_plpgsql_definitions": 12
+    "static_plpgsql_definitions": 12,
+    "unit_tests": 869,
+    "lint": "0 errors; existing AuthContext fast-refresh warning",
+    "typescript": "app and node configurations",
+    "production_build": true,
+    "focused_browser_tests": 30,
+    "finance_browser_scenarios": 4
   },
   "pending": [
-    "Final frontend/build checks and four finance plus inherited payment/billing/fulfillment browser cases",
-    "Fresh final-source actual Auth, SQL, concurrency and populated restore acceptance",
+    "Fresh CI including corrected SQL fixtures, observed concurrency, actual finance Auth and populated restore",
     "Hosted rollout, clinical/operational review and owner-deferred payment provider acceptance"
   ],
   "first_runtime": {
@@ -28,6 +33,22 @@
     "supabase/migrations/20260916110000_native_dispense_finance.sql": "90a42ae2880f9017652c912ea6f1829d678809d7a780242e87e7040cf1cb018a",
     "tests/prescriptions/local-finance.ts": "5230caf441c4a715b1dca858e07758244c361c60e51a0bf11f299552dcd787cd",
     "tests/prescriptions/native_finance_concurrency.py": "7252741a2956253dba5d69045dc21e992c24b0b06530d8b7fab7918879b5e0ae",
-    "tests/prescriptions/restore-native.py": "39d0e430518954d1e4bddc4ba9f8c70b61d39581a9162080d687556176af8ba1"
+    "tests/prescriptions/restore-native.py": "39d0e430518954d1e4bddc4ba9f8c70b61d39581a9162080d687556176af8ba1",
+    "supabase/tests/native_dispense_finance.test.sql": "8a7fc04e9d796f9e5f761270b811b68f5b9a7cc346f443b526e5a63fbc5e3f6e"
+  },
+  "initial_ci": {
+    "run": 35089443689,
+    "head": "b7602754836ea956f961270b3b938ff900163974",
+    "database": "New finance suite: invalid synthetic refund IDs correctly quarantined and non-admin fixture deactivation denied. Fixtures corrected; all other100SQLsuites passed.",
+    "sql_files": 101,
+    "sql_assertions_executed": 4134
+  },
+  "second_local_runtime": {
+    "identity": "lrv-prescription-1da5b670d622",
+    "inherited_auth_checks_passed": 167,
+    "browser": "Timed out waiting for existing physical-return action to become enabled after release confirmation; no finance Auth or restore acceptance claimed",
+    "finance_sql": "68 assertions passed,8 restored-corruption fixture probes blocked by pending deferred trigger events. Added explicit constraint flush before isolated probes; verification pending.",
+    "parallel_tests": "Parent cleanup interrupted concurrent schema-clone and subsequent SQL rerun; no passing result claimed",
+    "cleanup_verified": true
   }
 }

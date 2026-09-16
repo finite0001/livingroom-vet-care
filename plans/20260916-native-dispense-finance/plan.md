@@ -70,3 +70,5 @@ This closes one native medication lifecycle gap. Estimates/client acceptance, cl
 ## Implementation checkpoint
 
 Migration126 implements attributed credits and separate refund preparation, with exact reviewed context and recovery. The staff panel and strict adapter preserve uncertain requests across reloads and refresh sibling invoice evidence. Actual finance database acceptance is still pending: the first execution caught a PL/pgSQL local-reference error, fixed before a fresh run. See [draft evidence](../../docs/evidence/native-dispense-finance-draft-20260916.json). Do not claim hosted readiness or provider execution from these changes.
+
+Candidate [PR154](https://github.com/finite0001/livingroom-vet-care/pull/154) is stacked on PR151. Final local frontend acceptance passed869 unit tests, app/node TypeScript, lint, build and30 focused browser cases, including4 finance workflows. SQL fixture corrections and full database/concurrency/Auth/restore CI remain pending; the failed local runs were cleaned up.
