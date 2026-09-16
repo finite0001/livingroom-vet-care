@@ -34,6 +34,10 @@ if not args.run_synthetic_local_rehearsal:
     parser.error('Explicit --run-synthetic-local-rehearsal is required')
 root = Path(__file__).resolve().parents[2]
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
+versions = [p.name.split('_')[0] for p in migration_files]
+assert len(versions) == len(set(versions)) == 114, 'Review canonical restore migration inventory'
+assert {'20260916010000','20260916033310','20260916043949'} <= set(versions), 'Canonical identity, weight and resolution migrations required'
+assert '20260916040000' not in versions, 'Alternate identity receipt migration is not canonical'
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 baseline_path = Path(__file__).with_name('staging-baseline-20260914.json')
 if args.rehearse_staging_baseline:
@@ -45,13 +49,13 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,24)] + ['20260916000000','20260916010000','20260916033310']
+new_versions = [f'20260914{v:02d}0000' for v in range(1,24)] + ['20260916000000','20260916010000','20260916033310','20260916043949']
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 113
+    assert len(migration_files) == 114
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==113 and len(initial_files)==51
+    assert len(migration_files)==114 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
@@ -180,7 +184,7 @@ def functions_snapshot(project):
         from pg_default_acl d where d.defaclnamespace='public'::regnamespace));"""))
 
 def vaccination_snapshot(project):
-    tables = ['ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings', 'ezyvet_migration_attempt_events',
+    tables = ['ezyvet_migration_resolutions', 'ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings', 'ezyvet_migration_attempt_events',
               'ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
               'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
               'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',
@@ -205,6 +209,8 @@ def migration_recovery_snapshot(project):
       insert into public.user_roles(user_id,role) values('{actor}','ADMIN') on conflict do nothing;
       do $$begin perform set_config('request.jwt.claim.sub','{actor}',true);end $$;
       select jsonb_build_object(
+        'resolution_receipts',(select jsonb_agg(public.read_ezyvet_migration_resolution(id) order by id) from public.ezyvet_migration_resolutions),
+        'resolution_history',(select jsonb_agg(public.list_ezyvet_migration_resolutions(id)-'observed_at' order by id) from public.ezyvet_migration_scopes),
         'manifests',(select jsonb_agg(public.read_ezyvet_migration_run(id) order by id) from public.ezyvet_migration_runs),
         'bindings',(select jsonb_agg(public.read_ezyvet_migration_binding(id) order by id) from public.ezyvet_migration_bindings),
         'items',(select jsonb_agg(public.list_ezyvet_migration_items(id)-'observed_at' order by id) from public.ezyvet_migration_bindings),
@@ -383,6 +389,8 @@ try:
             (run/'backfill-evidence.json').write_text(json.dumps({'initial_versions':[p.name.split('_')[0] for p in initial_files],'applied_versions':[p.name.split('_')[0] for p in missing_files],'final_versions':ledger(source),'migration_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in migration_files},'fixture_preserved':True,'ordinary_push_refused':True,'observed_direct_grants_reproduced':args.rehearse_observed_hosted_gaps,'baseline_kind':'staging_20260914' if args.rehearse_staging_baseline else 'legacy_51','baseline_ledger_sha256':hashlib.sha256(baseline_path.read_bytes()).hexdigest() if args.rehearse_staging_baseline else None,'hosted_body_parity_verified':False,'initial_access_inventory_sha256':hashlib.sha256((run/'initial-access-inventory.json').read_bytes()).hexdigest(),'access_inventory_sql_sha256':hashlib.sha256(access_sql.encode()).hexdigest(),'initial_routine_inventory_sha256':hashlib.sha256((run/'initial-routine-inventory.json').read_bytes()).hexdigest(),'routine_inventory_sql_sha256':hashlib.sha256(inventory_sql.encode()).hexdigest()},indent=2))
         if any(p.name.startswith('20260913520000_') for p in migration_files):
             seed_vaccination_receipt(source)
+            resolution_actor=str(uuid.UUID(json.loads((run/'synthetic-fixture.json').read_text())['user']))
+            sql(source,(root/'scripts/restore-rehearsal/resolutions-seed.sql').read_text().replace('__ACTOR__',resolution_actor))
             # Preserve all prior rows and explicitly capture the four new release audit entries.
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-review-audit',str(source['path']/'status.json'),str(run)])
             command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'capture-api-originals',str(source['path']/'status.json'),str(run)])
@@ -460,6 +468,8 @@ try:
     if (run/'vaccination-receipt-fixture.json').exists():
         assert vaccination_snapshot(destination)==json.loads((run/'vaccination-receipt-fixture.json').read_text()), 'Restored source, decision and delivery rows must match before verification reads'
         assert migration_recovery_snapshot(destination)==json.loads((run/'migration-recovery-fixture.json').read_text()), 'Restored manifest digest and owned binding recovery differ'
+    resolution_actor=str(uuid.UUID(json.loads((run/'synthetic-fixture.json').read_text())['user']))
+    sql(destination,(root/'scripts/restore-rehearsal/resolutions-verify.sql').read_text().replace('__ACTOR__',resolution_actor))
     command(['node',str(root/'scripts/restore-rehearsal/fixture.mjs'),'verify',str(destination['path']/'status.json'),str(run)])
     if verify_canonical:
         assert functions_snapshot(destination)==canonical_inventory, 'Restored backfilled routines/grants/triggers differ from canonical order'
@@ -481,7 +491,10 @@ try:
                 verified_link_reads+=2
                 budgets[0]['used']+=2
         assert vaccination_snapshot(destination) == expected_after_reads, 'Restored rows differ beyond exactly verified link access accounting'
-        vaccination_evidence = {'receipt_rows': len(expected_vaccinations['ezyvet_vaccination_pages']),
+        vaccination_evidence = {'resolution_rows':len(expected_vaccinations['ezyvet_migration_resolutions']),
+                               'resolution_chains':len({d['target_key'] for d in expected_vaccinations['ezyvet_migration_resolutions']}),
+                               'resolution_exact_recovery_and_role_denial_verified':True,
+                               'receipt_rows': len(expected_vaccinations['ezyvet_vaccination_pages']),
                                'scoped_context_rows': len(expected_vaccinations['ezyvet_vaccination_runs']),
                                'observation_rows': len(expected_vaccinations['ezyvet_vaccination_page_observations']),
                                'approved_vaccination_rows': len(expected_vaccinations['ezyvet_imported_vaccinations']),
@@ -531,6 +544,7 @@ finally:
         raise RuntimeError('Rehearsal cleanup failed; no success recorded: '+'; '.join(cleanup_errors))
 # This is reached only if restore/verification and every checked cleanup succeeded.
 results['cleanup_verified']=True
+results['resolution_restore_sources_sha256']={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [root/'scripts/restore-rehearsal/resolutions-seed.sql',root/'scripts/restore-rehearsal/resolutions-verify.sql']}
 results['release_package_sources_sha256']={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [root/'scripts/restore-rehearsal/release-packages.mjs',*sorted((root/'supabase/functions/_shared').glob('*.ts'))]}
 if verify_canonical: results['backfill']=json.loads((run/'backfill-evidence.json').read_text())
 results['total_seconds']=round(time.monotonic()-started,2)
