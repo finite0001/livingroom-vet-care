@@ -1,6 +1,6 @@
 # Native prescription release integration map
 
-Read-only audit of the schema9 baseline; native schema10 implementation remains pending. This map is not proof that all consumers have been converted.
+Audit of the schema9 baseline used to implement schema10 in migration120. Items below describe required consumers; the native release evidence checkpoint records verification and remaining acceptance limits.
 
 ## Database composition and dispatch
 

@@ -20,7 +20,7 @@ export interface NativePrescriptionArtifact {
   starts_on: string;
   expires_on: string;
 }
-export interface NativeDispenseArtifact {
+export interface NativeDispenseDetails {
   id: string;
   authorization_id: string;
   authorization_hash: string;
@@ -29,8 +29,10 @@ export interface NativeDispenseArtifact {
   unit: string;
   dispensed_at: string;
   recorded_by: { user_id: string; name: string };
-  invoice_id: string;
   lots: Array<{ id: string; number: string; expires_on: string; quantity: string }>;
+}
+export interface NativeDispenseArtifact extends NativeDispenseDetails {
+  invoice_id: string;
 }
 export interface NativePrescriptionPrintStatus {
   authorization_id: string;
@@ -64,6 +66,11 @@ function instant(value: unknown): asserts value is string {
   day(value.slice(0, 10));
   if (Number(value.slice(11, 13)) > 23 || Number(value.slice(14, 16)) > 59 || Number(value.slice(17, 19)) > 59) fail();
 }
+export function nativePrescriptionInstantMicros(value: string): bigint {
+  instant(value);
+  const fraction = /\.(\d+)(?:Z|[+-]\d{2}:\d{2})$/.exec(value)?.[1] ?? "";
+  return BigInt(Date.parse(value)) * 1000n + BigInt(fraction.padEnd(6, "0").slice(3));
+}
 function quantity(value: unknown): bigint {
   if (typeof value !== "string" || !/^(?:0|[1-9]\d{0,10})(?:\.\d{1,3})?$/.test(value)) fail();
   const [whole, fraction = ""] = value.split(".");
@@ -74,7 +81,7 @@ function quantity(value: unknown): bigint {
 function integer(value: unknown, max: number) {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0 || value > max) fail();
 }
-function validatePrescription(value: unknown): asserts value is NativePrescriptionArtifact {
+export function validateNativePrescriptionArtifact(value: unknown): asserts value is NativePrescriptionArtifact {
   const s = object(value, ["schema_version", "authorization_id", "authorization_hash", "signed_at", "signature_name", "patient", "household", "prescriber", "medication", "quantity_per_fill", "unit", "refills_authorized", "fulfillment_mode", "starts_on", "expires_on"]);
   if (s.schema_version !== 1 || !["practice_stock", "external_pharmacy"].includes(s.fulfillment_mode as string)) fail();
   id(s.authorization_id); digest(s.authorization_hash); instant(s.signed_at); text(s.signature_name);
@@ -94,18 +101,25 @@ function validateStatus(value: unknown, s: NativePrescriptionArtifact): asserts 
   if (value === null) throw new Error("Refresh prescription status before printing.");
   const status = object(value, ["authorization_id", "authorization_hash", "checked_at", "state", "reason", "replacement_id"]);
   if (status.authorization_id !== s.authorization_id || status.authorization_hash !== s.authorization_hash || !["active", "cancelled", "replaced", "expired"].includes(status.state as string)) fail();
-  instant(status.checked_at); if (Date.parse(status.checked_at) < Date.parse(s.signed_at)) fail();
+  instant(status.checked_at); if (nativePrescriptionInstantMicros(status.checked_at) < nativePrescriptionInstantMicros(s.signed_at)) fail();
   if (status.state === "cancelled" || status.state === "replaced") text(status.reason, 2000);
   else if (status.reason !== null) text(status.reason, 2000);
   if (status.state === "replaced") { id(status.replacement_id); if (status.replacement_id === s.authorization_id) fail(); }
   else if (status.replacement_id !== null) fail();
 }
-function validateDispense(value: unknown, s: NativePrescriptionArtifact): asserts value is NativeDispenseArtifact {
+export function validateNativeDispenseArtifact(value: unknown, s: NativePrescriptionArtifact): asserts value is NativeDispenseArtifact {
   const d = object(value, ["id", "authorization_id", "authorization_hash", "fill_index", "quantity", "unit", "dispensed_at", "recorded_by", "invoice_id", "lots"]);
-  id(d.id); id(d.invoice_id);
+  id(d.invoice_id);
+  const details = { ...d };
+  delete details.invoice_id;
+  validateNativeDispenseDetails(details, s);
+}
+export function validateNativeDispenseDetails(value: unknown, s: NativePrescriptionArtifact): asserts value is NativeDispenseDetails {
+  const d = object(value, ["id", "authorization_id", "authorization_hash", "fill_index", "quantity", "unit", "dispensed_at", "recorded_by", "lots"]);
+  id(d.id);
   if (s.fulfillment_mode !== "practice_stock" || d.authorization_id !== s.authorization_id || d.authorization_hash !== s.authorization_hash || d.unit !== s.unit) fail();
   integer(d.fill_index, s.refills_authorized); instant(d.dispensed_at);
-  if (Date.parse(d.dispensed_at) < Date.parse(s.signed_at)) fail();
+  if (nativePrescriptionInstantMicros(d.dispensed_at) < nativePrescriptionInstantMicros(s.signed_at)) fail();
   const actor = object(d.recorded_by, ["user_id", "name"]); id(actor.user_id); text(actor.name);
   const total = quantity(d.quantity); if (total > quantity(s.quantity_per_fill)) fail();
   if (!Array.isArray(d.lots) || !d.lots.length || d.lots.length > 100) fail();
@@ -126,10 +140,10 @@ export function renderNativePrescription(
   status: NativePrescriptionPrintStatus | null,
   dispense?: NativeDispenseArtifact,
 ): string {
-  validatePrescription(prescription); validateStatus(status, prescription);
+  validateNativePrescriptionArtifact(prescription); validateStatus(status, prescription);
   if (dispense !== undefined) {
-    validateDispense(dispense, prescription);
-    if (Date.parse(status.checked_at) < Date.parse(dispense.dispensed_at)) fail();
+    validateNativeDispenseArtifact(dispense, prescription);
+    if (nativePrescriptionInstantMicros(status.checked_at) < nativePrescriptionInstantMicros(dispense.dispensed_at)) fail();
   }
   const s = prescription;
   const title = dispense ? "Recorded prescription dispense" : "Signed prescription order copy";

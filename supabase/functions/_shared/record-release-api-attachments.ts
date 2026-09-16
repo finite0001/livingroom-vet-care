@@ -109,7 +109,7 @@ export function releaseApiAttachmentDocument(
   };
 }
 export function validateReleaseApiAttachments(s: ReleaseSnapshot): void {
-  if (s.schema_version !== 9) {
+  if (s.schema_version !== 9 && s.schema_version !== 10) {
     if (
       s.api_attachments !== undefined ||
       s.attachments.some(
@@ -289,6 +289,6 @@ const esc = (v: unknown) =>
   );
 export function renderReleaseApiAttachments(s: ReleaseSnapshot): string {
   validateReleaseApiAttachments(s);
-  if (s.schema_version !== 9 || !s.api_attachments!.length) return "";
+  if ((s.schema_version !== 9 && s.schema_version !== 10) || !s.api_attachments!.length) return "";
   return `<article><h2>Selected ezyVet API originals</h2>${s.api_attachments!.map(({ record: r, capture: c }) => `<section><h3>${esc(r.title)}</h3><p>Staff-reviewed API attachment ${esc(r.attachment_external_id)} · Approval version ${r.version}</p><p>Source site ${esc(r.source_site_uid)} · ${esc(r.source_context.parent.parent_type)} ${esc(r.source_context.parent.parent_external_id)} · Observed revision ${r.source_context.attachment_observed_head_version}</p><p>${esc(r.review_reason)}</p><p>Staff reviewer ${esc(r.actor_id)} · ${esc(r.created_at)} · Approval ${esc(r.id)}</p><p>Previous approval ${esc(r.previous_record_id)} · Original attachment ${s.attachments.findIndex((d) => d.id === c.request_id) + 1} · SHA-256 ${esc(c.content_sha256)}</p></section>`).join("")}<aside>API source files retain their outside content. Staff source review is not an outside author’s signature or a clinical interpretation. Selected observations do not establish complete migration coverage.</aside></article>`;
 }

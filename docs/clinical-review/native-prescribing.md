@@ -56,8 +56,18 @@ Review the actual workspace against the PR144 implementation and its recorded ac
 5. Record pickup separately, including after cancellation when documenting an earlier physical handoff. Review that wording carefully; it must not imply renewed authorization or another stock/financial transaction.
 6. Change stock, invoice or slot evidence during review. Retain entered details but require a fresh explicit review; an uncertain save must keep its original operation until recovered or retried.
 7. Reprint an exact saved fill and review the label on the intended printer. Historical lot, quantity, directions and staff remain frozen; a current cancellation warning is separate. No new fill or charge may result.
-8. Review the boundaries still outstanding: linked returns/corrections/credits, native selected record-release groups, controlled-medication/electronic pharmacy requirements and full provider/clinical commissioning.
+8. Review the boundaries still outstanding: linked returns/corrections/credits, controlled-medication/electronic pharmacy requirements and full provider/clinical commissioning.
+
+## Native selected record-release review
+
+Schema10 supports explicit signed-order and actual-dispense selections. Review the [synthetic release example](native-prescription-release-example.html) alongside the staff workflow. Dr. Susan Edler's decisions remain pending.
+
+- Confirm that signed directions, recorded partial-fill quantities, lots and pickup are clearly distinguished from authorization for a new fill or administration.
+- Select only a dispense. Verify that its parent instructions provide context without implying all prescription history was selected.
+- Review cancelled, replaced and expired history; verify that the frozen review status and later invalidation warning are understandable.
+- Confirm that native usage totals may include unselected events and that external-pharmacy fulfillment remains unknown.
+- Review the exported medical package for appropriate clinical detail and absence of internal invoice/operation context. Email and secure-link delivery still need practice acceptance and commissioning.
 
 ## Reproduce the examples
 
-Run `node --experimental-strip-types docs/clinical-review/generate-native-prescribing.ts`. The script uses the actual shared renderer and synthetic test fixture; each artifact includes SHA-256 hashes of both. It makes no network request. Regenerate after renderer or fixture changes. Record the exact implementation revision and source hashes with any review decision; renderer changes require re-review of affected content.
+Run `node --experimental-strip-types docs/clinical-review/generate-native-prescribing.ts` and `node --experimental-strip-types docs/clinical-review/generate-native-release.ts`. The script uses the actual shared renderer and synthetic test fixture; each artifact includes SHA-256 hashes of both. It makes no network request. Regenerate after renderer or fixture changes. Record the exact implementation revision and source hashes with any review decision; renderer changes require re-review of affected content.

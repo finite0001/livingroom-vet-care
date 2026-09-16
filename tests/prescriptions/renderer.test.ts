@@ -86,3 +86,12 @@ test('text limits count Unicode code points consistently with PostgreSQL', () =>
   assert.ok(renderNativePrescription(allowed, status).includes('🐾'.repeat(200)));
   assert.throws(() => renderNativePrescription({ ...allowed, medication: { ...allowed.medication, name: '🐾'.repeat(201) } }, status));
 });
+
+test("printed chronology preserves database microseconds", () => {
+  const s = { ...prescription, signed_at: "2026-09-16T10:00:00.000002Z" };
+  const d = { ...dispense, dispensed_at: "2026-09-16T10:00:00.000001Z" };
+  assert.throws(() => renderNativePrescription(s, status, d));
+  d.dispensed_at = "2026-09-16T10:30:00.000002Z";
+  assert.throws(() => renderNativePrescription(s, { ...status, checked_at: "2026-09-16T10:30:00.000001Z" }, d));
+  assert.doesNotThrow(() => renderNativePrescription(s, { ...status, checked_at: "2026-09-16T04:30:00.000002-06:00" }, d));
+});

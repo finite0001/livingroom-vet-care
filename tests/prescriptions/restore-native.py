@@ -47,6 +47,7 @@ tables = [
     'native_prescription_draft_revisions', 'native_refills', 'native_refill_events',
     'native_refill_operations', 'refill_requests', 'inventory_movements',
     'inventory_lots', 'catalog_products', 'billing_invoice_items', 'billing_invoices',
+    'record_releases', 'record_release_sources', 'record_release_events',
 ]
 
 
@@ -172,6 +173,8 @@ try:
     # Stronger evidence than row counts: exact source/restored authorization verification too.
     check(sql("select count(*) from public.native_prescription_authorizations where public.native_rx_verified_authorization(id) is distinct from document;", restored) == '0',
           'Restored immutable authorization signatures/context/artifacts must verify')
+    check(sql("select count(*) from public.record_releases where source_hash is distinct from encode(sha256(convert_to(snapshot::text,'UTF8')),'hex');", restored) == '0',
+          'Restored record-release snapshots retain their exact source fingerprints')
     success = True
 finally:
     cleanup_errors = []

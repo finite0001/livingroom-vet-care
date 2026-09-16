@@ -1,8 +1,8 @@
 # Native prescription release UI contract
 
-Status: proposed browser contract for schema10, September 16, 2026. Analysis only; no implementation, deployment, policy acceptance or clinical approval is implied. Aligned with the parent-approved [database contract](native-release-database-contract.md). Implementation and runtime acceptance remain pending.
+Status: schema10 browser implementation locally verified, September 16, 2026. Hosted deployment, live policy acceptance and clinical approval remain pending. Aligned with the parent-approved [database contract](native-release-database-contract.md). See the native release evidence checkpoint for the exact tested scope.
 
-## Existing behavior and evidence
+## Audited baseline before implementation
 
 Paths below are relative to this worktree.
 
