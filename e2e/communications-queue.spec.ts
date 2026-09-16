@@ -819,3 +819,63 @@ test("client dialog reload restores saved email subject and body instead of new 
   );
   expect(state.requests).toHaveLength(1);
 });
+
+for (const mobile of [false, true]) {
+  test(`attachment email requires file review before queueing (${mobile ? 'mobile' : 'desktop'})`, async ({ page }) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    const state = await fixture(page, 'lost');
+    const bytes = Buffer.from('%PDF-synthetic');
+    const { createHash } = await import('node:crypto');
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    let reservation: Record<string, unknown> = {};
+    let queued = 0;
+    await page.route(`${backend}/rest/v1/rpc/prepare_conversation_attachment`, async route => {
+      const a = route.request().postDataJSON();
+      reservation = { id: a.p_id, actor_id: staff, conversation_id: conversation, file_name: a.p_file_name,
+        mime_type: a.p_mime_type, byte_length: a.p_byte_length, storage_path: `${staff}/${conversation}/${a.p_id}/original`, status: 'uploading', sha256: null };
+      await route.fulfill({ json: reservation });
+    });
+    await page.route(`${backend}/storage/v1/object/conversation-attachment-uploads/**`, route => route.fulfill({ json: { Key: reservation.storage_path } }));
+    await page.route(`${backend}/functions/v1/verify-conversation-attachment`, route => route.fulfill({ json: { ...reservation, status: 'ready', sha256: hash } }));
+    await page.route(`${backend}/rest/v1/rpc/prepare_conversation_email`, async route => {
+      const a = route.request().postDataJSON();
+      const snapshot = { request_id: a.p_request_id, actor: staff, scope: a.p_scope, status: 'prepared', receipt: null,
+        payload: { conversation_id: conversation, channel: 'EMAIL', to: a.p_recipient, subject: a.p_subject, body: a.p_body, attachment_ids: a.p_attachment_ids } };
+      state.prepared.set(a.p_request_id, snapshot); await route.fulfill({ json: snapshot });
+    });
+    await page.route(`${backend}/functions/v1/capture-conversation-email`, async route => {
+      const snapshot = state.prepared.get(route.request().postDataJSON().id)!;
+      await route.fulfill({ json: { ...snapshot, captured: true, payload_hash: 'a'.repeat(64), attachment_manifest: [{ upload_id: reservation.id,
+        file_name: 'report.pdf', mime_type: 'application/pdf', byte_length: bytes.length, sha256: hash }] } });
+    });
+    await page.route(`${backend}/rest/v1/rpc/read_conversation_email_attachment`, async route => {
+      const a = route.request().postDataJSON();
+      await route.fulfill({ json: { request_id: a.p_request_id, upload_id: a.p_upload_id, payload_hash: a.p_payload_hash,
+        attachment: { filename: 'report.pdf', content_type: 'application/pdf', content: bytes.toString('base64') } } });
+    });
+    await page.route(`${backend}/rest/v1/rpc/enqueue_conversation_email`, async route => {
+      const a = route.request().postDataJSON(); expect(a.p_attest).toBe(true); expect(a.p_reviewed_payload_hash).toBe('a'.repeat(64)); queued++;
+      state.prepared.get(a.p_request_id)!.receipt = { success: true, queued: true, outbox_id: conversation, message_id: message, state: 'pending' };
+      await route.fulfill({ json: { id: conversation } });
+    });
+    await page.goto(`/hub/conversation/${conversation}`);
+    await page.getByPlaceholder('Subject', { exact: true }).fill('Reviewed attachment');
+    await page.getByPlaceholder('Send EMAIL...').fill('Please review this file.');
+    await page.getByLabel('Choose email attachments').setInputFiles({ name: 'report.pdf', mimeType: 'application/pdf', buffer: bytes });
+    await expect(page.getByRole('list', { name: 'Selected attachments' })).toContainText('report.pdf');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Review email and attachments' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Queue email' })).toBeDisabled(); expect(queued).toBe(0);
+    const download = page.waitForEvent('download');
+    await dialog.getByRole('button', { name: 'Download report.pdf for review' }).click();
+    expect((await download).suggestedFilename()).toBe('report.pdf');
+    await dialog.getByLabel('I reviewed the recipient, message, and attached files.').check();
+    await dialog.getByRole('button', { name: 'Queue email' }).click();
+    await expect.poll(() => queued).toBe(1);
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByPlaceholder('Send EMAIL...')).toHaveValue('');
+    expect(state.legacyCalls).toBe(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}

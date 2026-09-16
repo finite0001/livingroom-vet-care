@@ -1,3 +1,6 @@
+import type { SelectedConversationAttachment } from "@/hub/features/communications/attachment-selection";
+import { uploadConversationAttachment } from "@/hub/features/communications/attachment-upload";
+import { createAttachmentUploadTransport } from "@/hub/features/communications/attachment-upload-api";
 import { AttachmentEmailReviewDialog } from "@/hub/components/conversations/AttachmentEmailReviewDialog";
 import type { ConversationEmailReview } from "@/hub/features/communications/conversation-email-review";
 import type { ConversationEmailApproval } from "@/hub/features/communications/conversation-email-queue";
@@ -170,6 +173,7 @@ function ConversationDetailContent() {
     channel: "SMS" | "EMAIL" | "NOTE",
     subject?: string,
     restored?: MessageIntent,
+    attachments: SelectedConversationAttachment[] = [],
   ): Promise<boolean> => {
     if (!id || !conversation || sendingRef.current || !session?.user.id)
       return false;
@@ -236,14 +240,22 @@ function ConversationDetailContent() {
           toast.error("Client has no email address");
           return false;
         }
+        const uploadTransport = createAttachmentUploadTransport(supabase, session.user.id,
+          () => currentConversation.current === id ? currentActor.current : null);
+        const attachmentIds: string[] = [];
+        for (const selected of attachments) {
+          const verified = await uploadConversationAttachment({ id: selected.id, actorId: session.user.id,
+            conversationId: id, file: selected.file }, uploadTransport);
+          attachmentIds.push(verified.id);
+        }
         const result = await queue.send({
           conversation_id: id,
           channel,
           to: email,
           subject: subject ?? "",
           body: content,
-          attachment_ids: [],
-        });
+          attachment_ids: attachmentIds,
+        }, attachmentIds.length ? requestAttachmentReview : undefined);
         toast.success(
           result.state === "pending"
             ? "Email queued"
