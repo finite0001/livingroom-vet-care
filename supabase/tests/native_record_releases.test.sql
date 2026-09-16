@@ -99,6 +99,42 @@ select is((select v#>>'{snapshot,native_dispenses,0,prescription,status,reason}'
 select is((select v#>>'{snapshot,native_dispenses,0,artifact,quantity}' from data where k='cancel-preview'),'10.000','Cancellation does not erase actual dispense evidence');
 select is(jsonb_array_length(list_record_release_sources_v10((select id from fx where k='pet'))->'native_prescription_ids'),1,'Cancelled history remains discoverable');
 select lives_ok($$select pg_temp.confirm_native_release((select id from fx where k='release-cancel'),(select v from data where k='fill-selection'),(select v from data where k='cancel-preview'))$$,'Reviewed canceled history can be confirmed');
+-- Schema9 receipt and dispatch retain their exact historical meaning alongside10.
+insert into fx values('release9',gen_random_uuid());
+insert into data select 'selection9',jsonb_build_object('patient_summary_ids',jsonb_build_array(id)) from fx where k='pet';
+insert into data select 'preview9',preview_record_release_v9((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',v) from data where k='selection9';
+insert into data select 'receipt9',to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release9'),(select v from data where k='selection9'),(select v from data where k='preview9')));
+select is((select v#>>'{snapshot,schema_version}' from data where k='receipt9'),'9','Schema9 still confirms without reinterpretation');
+-- Even a canceled historical order can explicitly forfeit an open remainder.
+insert into data select 'forfeit',close_native_fill_slot(gen_random_uuid(),jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'slot_index',0,'expected_slot_version',1,'expected_context_hash',preview_native_slot_close((select id from fx where k='sign'),(select id from fx where k='pet'),0)->>'context_hash','reason','Synthetic unused remainder forfeited','attest_forfeit',true));
+select is(read_record_release((select id from fx where k='release-cancel'))->>'eligible','false','Slot forfeiture invalidates selected dispense aggregate usage');
+select is(pg_temp.preview_native_release((select v from data where k='fill-selection'))#>>'{snapshot,native_dispenses,0,prescription,usage,forfeited_quantity}','20.000','Forfeited remainder disclosed separately from dispensed quantity');
+select is(to_jsonb(pg_temp.confirm_native_release((select id from fx where k='release9'),(select v from data where k='selection9'),(select v from data where k='preview9'))),(select v from data where k='receipt9'),'Schema9 exact recovery preserved after native changes');
+select is(read_record_release((select id from fx where k='release9'))->>'eligible','true','Unselected native changes do not invalidate schema9');
+-- Create real signed records rather than bypassing immutable artifact validation.
+create function pg_temp.sign_release_fixture() returns uuid language plpgsql as $$declare di uuid:=gen_random_uuid();aid uuid:=gen_random_uuid();begin
+ perform save_native_prescription_draft(gen_random_uuid(),(select v||jsonb_build_object('draft_id',di) from data where k='save-request'));
+ perform sign_native_prescription(aid,jsonb_build_object('draft_id',di,'pet_id',(select id from fx where k='pet'),'expected_version',1,'expected_context_hash',preview_native_prescription_sign(di,1)->>'context_hash','signature_name','Synthetic prescriber','attest_review',true));return aid;end $$;
+create temp table boundary_ids(id uuid primary key);grant all on boundary_ids to authenticated;
+insert into boundary_ids select id from fx where k='sign';
+insert into boundary_ids select pg_temp.sign_release_fixture() from generate_series(1,19);
+select is(jsonb_array_length(pg_temp.preview_native_release(jsonb_build_object('native_prescription_ids',(select jsonb_agg(id order by id) from boundary_ids)))#>'{snapshot,native_prescriptions}'),20,'Exactly20 real verified authorizations permitted');
+select is(jsonb_array_length(select_all_record_release_sources_v10((select id from fx where k='pet'))#>'{selection,native_prescription_ids}'),20,'Select-all returns all20 without truncation');
+select is(pg_temp.preview_native_release(jsonb_build_object('native_prescription_ids',(select jsonb_agg(id order by id desc) from boundary_ids))),pg_temp.preview_native_release(jsonb_build_object('native_prescription_ids',(select jsonb_agg(id order by id) from boundary_ids))),'Caller ordering canonicalized to same snapshot and hash');
+insert into fx values('replace-prior',pg_temp.sign_release_fixture()),('replacement',gen_random_uuid()),('replace-release',gen_random_uuid());
+select throws_ok($$select select_all_record_release_sources_v10((select id from fx where k='pet'))$$,'23514','More than20 native sources per family; split into explicit packages','Select-all fails at21 rather than dropping history');
+insert into data select 'replace-selection',jsonb_build_object('native_prescription_ids',jsonb_build_array(id)) from fx where k='replace-prior';
+insert into data select 'replace-preview',pg_temp.preview_native_release(v) from data where k='replace-selection';
+select pg_temp.confirm_native_release((select id from fx where k='replace-release'),(select v from data where k='replace-selection'),(select v from data where k='replace-preview'));
+select save_native_prescription_draft((select id from fx where k='save2'),(select v||jsonb_build_object('draft_id',(select id from fx where k='draft2')) from data where k='save-request'));
+insert into data select 'replacement',replace_native_prescription((select id from fx where k='replacement'),jsonb_build_object('authorization_id',(select id from fx where k='replace-prior'),'pet_id',(select id from fx where k='pet'),'expected_event_id',null,'expected_context_hash',preview_native_prescription_replacement((select id from fx where k='replace-prior'),(select id from fx where k='pet'),(select id from fx where k='draft2'),1)->>'context_hash','reason','Synthetic replacement','attest_review',true,'draft_id',(select id from fx where k='draft2'),'expected_version',1,'signature_name','Synthetic prescriber','reconciliation',jsonb_build_object('native_use_note','Known native use reviewed','external_use_status','reconciled','external_use_note','Manual veterinarian reconciliation; no server verification','remaining_allowance_note','Remaining native allowance reviewed','attest_review',true)));
+select is(read_record_release((select id from fx where k='replace-release'))->>'eligible','false','Replacement invalidates earlier signed authorization release');
+insert into data select 'replaced-preview',pg_temp.preview_native_release(v) from data where k='replace-selection';
+select is((select v#>>'{snapshot,native_prescriptions,0,status,state}' from data where k='replaced-preview'),'replaced','Replaced signed order remains historical evidence');
+select is((select v#>>'{snapshot,native_prescriptions,0,status,replacement_id}' from data where k='replaced-preview'),(select id::text from fx where k='replacement'),'Replacement identity explicitly disclosed');
+select is(jsonb_array_length((select v#>'{snapshot,native_prescriptions}' from data where k='replaced-preview')),1,'Replacement does not automatically select successor');
+select is((select v#>>'{snapshot,native_prescriptions,0,id}' from data where k='replaced-preview'),(select id::text from fx where k='replace-prior'),'Historical selection remains exact prior authorization');
+
 reset role;
 select ok(exists(select 1 from record_release_events where release_id=(select id from fx where k='release') and kind='source_changed'),'Native invalidation appends immutable release events');
 select throws_ok($$select verify_release_source_original_v5('{"schema_version":10,"api_attachments":[],"attachments":[],"selection":{"api_attachment_ids":[]}}','{}',decode('00','hex'))$$,'23514','Original is not an exact selected package file','Schema10 uses canonical original verification rather than legacy bypass');
