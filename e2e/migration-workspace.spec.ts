@@ -2,8 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const actor = id(1), runId = id(2), scopeId = id(3), bindingId = id(4), child = id(5), snapshot = id(6), mapping = id(7), pet = id(8), client = id(9), otherScope = id(10);
 const at = "2026-09-14T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic migration source";
-async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false, identity: "contact" | "animal" | null = null) {
-  const resource = identity ?? (prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment"), parentEvidence = identity ? "selected_identity_filter" : history || prescription ? "mapping_identity_only" : "exact_parent_version";
+async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false, identity: "contact" | "animal" | "healthstatus" | null = null) {
+  const resource = identity ?? (prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment"), parentEvidence = identity === "healthstatus" ? "mapping_identity_only" : identity ? "selected_identity_filter" : history || prescription ? "mapping_identity_only" : "exact_parent_version";
   const clinical = history || vaccination || prescription || prescriptionItem || Boolean(identity);
   const user = { id: actor, aud: "authenticated", role: "authenticated", email: "synthetic@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: at };
   const exp = Math.floor(Date.now() / 1000) + 3600;
@@ -17,7 +17,7 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
     child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource, parent_evidence: parentEvidence, context: {} } };
   const savedPlans = new Map<string, typeof manifest>(), savedBindings = new Map<string, typeof binding>();
-  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failVaccinations: false, failPrescriptions: false, failIdentity: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failVaccinations: false, failPrescriptions: false, failIdentity: false, failWeight: false, unapprovedWeight: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -69,6 +69,14 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       observations: { occurrences: clinical ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: identity ? null : state.stale ? 0 : clinical ? 1 : 21, currentness_available: !identity },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
+    if (rpc === "read_ezyvet_migration_weight_evidence") {
+      if (state.failWeight) return unavailable();
+      const older = Boolean(body.p_before_request_id);
+      const reviews = state.unapprovedWeight ? [] : Array.from({length: older ? 1 : 20}, (_, i) => ({id:id(older ? 80 : 120-i),created_at:at,snapshot_id:snapshot,head_version:2,relationship:"same_snapshot_unknown_observed_head",source_current:false,promotes_local_weight:false}));
+      return route.fulfill({json:{version:1,binding_id:bindingId,scope_id:scopeId,child_run_id:child,actor_id:actor,resource:"healthstatus",page:body.p_page,snapshot_id:body.p_snapshot_id,evidence_hash:body.p_evidence_hash,observation_head_available:false,exact_source_version_verified:false,complete_coverage_verified:false,observed_at:at,
+        approval:state.unapprovedWeight ? null : {id:id(79),approved_at:at,action:"link",weight_id:id(78),relationship:"different_snapshot",source_current:false,patient_version_unchanged:false,household_current:false,local_weight_matches_review:true},
+        source_reviews:reviews,has_more:!older&&!state.unapprovedWeight,next_cursor:!older&&!state.unapprovedWeight ? {created_at:at,request_id:id(101)} : null}});
+    }
     if (rpc === "read_ezyvet_migration_identity_evidence") return state.failIdentity ? unavailable() : route.fulfill({ json: {
       version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, resource, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
       visibility: "approved_identity_mapping", observation_head_available: false, exact_source_version_verified: false, complete_coverage_verified: false, observed_at: at,
@@ -515,4 +523,35 @@ for (const resource of ["contact", "animal"] as const) for (const width of [390,
   await expect(panel.getByText("Local record has changed since approval.")).toBeVisible();
   await expect(panel.getByText("Household association no longer matches the approval.")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+for (const width of [390,1440]) test(`weight evidence keeps acknowledgments separate at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:1600});
+  const state=await fixture(page,true,false,false,false,false,"healthstatus");
+  const workspace=page.getByRole("region",{name:"Migration reconciliation"});
+  await workspace.getByRole("button",{name:"Browse saved migrations"}).click();
+  await workspace.getByRole("button",{name:/Open migration/}).click();
+  await workspace.getByRole("button",{name:/Inspect weights scope/i}).click();
+  await workspace.getByRole("button",{name:/Inspect attempt/}).click();
+  state.failWeight=true;
+  await workspace.getByRole("button",{name:/Evidence references for source/}).click();
+  const panel=workspace.getByRole("region",{name:"Weight approval evidence"});
+  await expect(panel.getByRole("alert")).toContainText("could not be loaded");
+  await expect(panel.getByText(/No approved local weight/)).toHaveCount(0);
+  state.failWeight=false;
+  await panel.getByRole("button",{name:"Refresh weight evidence"}).click();
+  await expect(panel.getByText("Linked existing local weight")).toBeVisible();
+  await expect(panel.getByText("Local measurement still matches the approved values.")).toBeVisible();
+  await expect(panel.getByText("Household association no longer matches.")).toBeVisible();
+  await expect(panel.getByText(/This did not promote or replace/)).toHaveCount(20);
+  await panel.getByRole("button",{name:"Older acknowledgments"}).click();
+  await expect(panel.getByText(/This did not promote or replace/)).toHaveCount(1);
+  await expect(panel.getByRole("button",{name:"Older acknowledgments"})).toHaveCount(0);
+  await panel.getByRole("button",{name:"Newest acknowledgments"}).click();
+  await expect(panel.getByText(/This did not promote or replace/)).toHaveCount(20);
+  state.unapprovedWeight=true;
+  await panel.getByRole("button",{name:"Refresh weight evidence"}).click();
+  await expect(panel.getByText(/No approved local weight/)).toBeVisible();
+  await expect(panel.getByText("Linked existing local weight")).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
