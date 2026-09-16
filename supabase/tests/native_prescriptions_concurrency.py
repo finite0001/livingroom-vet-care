@@ -147,7 +147,7 @@ finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
         check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
+        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid() and usename=current_user and backend_type='client backend';")
         sql(f'drop database "{database}";')
         check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
 print(f'Native prescription concurrency: {checks} checks passed; no provider calls.')

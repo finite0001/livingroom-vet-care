@@ -249,7 +249,7 @@ finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
         check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
+        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid() and usename=current_user and backend_type='client backend';")
         for proc in processes:
             if proc.stdin and not proc.stdin.closed:proc.stdin.close()
             proc.wait(timeout=10)
