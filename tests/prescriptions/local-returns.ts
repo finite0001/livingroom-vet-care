@@ -105,7 +105,7 @@ const source = await rpc('read_native_dispense_returns', targetArgs);
 check(source.head.version === 0 && source.allocations.length === 1, 'New dispense has zero return head and exact original allocations');
 const allocationId = source.allocations[0].allocation_id;
 const original = () => sql(`select jsonb_build_object('dispense',(select document from native_dispenses where id=${quote(dispenseId)}),'negative',(select jsonb_agg(to_jsonb(m) order by id) from inventory_movements m where kind='dispense'),'items',(select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i),'slots',(select jsonb_agg(to_jsonb(s) order by id) from native_fill_slots s),'refills',(select count(*) from native_refill_events),'outbox',(select count(*) from communication_outbox),'credits',(select count(*) from billing_credits),'payments',(select count(*) from invoice_payments))::text`);
-const beforeOriginal = original();
+let beforeOriginal = original();
 const selected = { native_prescription_ids: [authorization.id], native_dispense_ids: [dispenseId] };
 const releaseArgs = { p_pet_id: patient.id, p_client_id: client.id, p_channel: 'EMAIL', p_recipient: client.primary_email, p_selection: selected };
 policy(11);
@@ -172,10 +172,24 @@ const unsafe = await append({ ...intent('intake', '0.250'), custody: 'unknown', 
 const unsafeIntent = intent('restock', '0.250', unsafe.receipt.id);
 const unsafeReview = await review(unsafeIntent, doctor.headers);
 check(!unsafeReview.allowed && ['custody_not_retained','package_not_sealed','storage_not_controlled'].every(code => unsafeReview.blockers.includes(code)), 'Unknown custody/storage and open packaging disclose all blockers');
-const handoff = await api.previewPickup(dispenseId, null);
-await api.execute({ id: randomUUID(), kind: 'pickup', payload: { authorization_id: authorization.id, pet_id: patient.id, dispense_id: dispenseId, expected_context_hash: handoff.context_hash, recipient_name: 'Synthetic pickup', recipient_relationship: 'Synthetic household', reason: 'Synthetic blocker fixture', attest_handoff: true, refill_close: null } });
-const withPickup = await review(unsafeIntent, doctor.headers);
-check(withPickup.blockers.includes('original_pickup_exists'), 'Original pickup blocks any return to available stock');
+await denied('preview_native_pickup', { p_dispense_id: dispenseId, p_pet_id: patient.id, p_refill_close: null }, '23514', staff.headers);
+await denied('record_native_pickup', { p_id: randomUUID(), p_request: { authorization_id: authorization.id, pet_id: patient.id, dispense_id: dispenseId, expected_context_hash: '0'.repeat(64), recipient_name: 'Synthetic forbidden pickup', recipient_relationship: 'Synthetic household', reason: 'Return already recorded', attest_handoff: true, refill_close: null } }, '23514', staff.headers);
+check(original() === beforeOriginal, 'All return actions preserve source ledgers before independent pickup fixture');
+// Pickup-blocker fixture is a separate dispense: original pickup precedes intake.
+const stateForSecond = await api.read(); assert.ok(stateForSecond?.open_slot);
+const secondTarget = { ...target, expected_slot_version: stateForSecond.open_slot.version };
+const secondPreview = await api.previewDispense(secondTarget);
+const secondDispense = randomUUID();
+await api.execute({ id: secondDispense, kind: 'dispense', payload: { ...secondTarget, expected_context_hash: secondPreview.context_hash, reason: 'Independent pickup-before-return fixture', attest_alert_review: true, attest_dispense_review: true } });
+const handoff = await api.previewPickup(secondDispense, null);
+await api.execute({ id: randomUUID(), kind: 'pickup', payload: { authorization_id: authorization.id, pet_id: patient.id, dispense_id: secondDispense, expected_context_hash: handoff.context_hash, recipient_name: 'Synthetic pickup', recipient_relationship: 'Synthetic household', reason: 'Synthetic blocker fixture', attest_handoff: true, refill_close: null } });
+beforeOriginal = original(); // Explicit fixture creation above is not a return side effect.
+const secondRead = await rpc('read_native_dispense_returns', { ...targetArgs, p_dispense_id: secondDispense });
+const secondIntakeIntent = { ...intent('intake', '0.250'), target: { ...returnTarget, dispense_id: secondDispense }, allocations: [{ allocation_id: secondRead.allocations[0].allocation_id, quantity: '0.250' }] };
+const secondIntake = await append(secondIntakeIntent);
+const secondRestockIntent = { ...secondIntakeIntent, action: 'restock' as const, intake_id: secondIntake.receipt.id, custody: null, package_condition: null, storage_history: null };
+const withPickup = await review(secondRestockIntent, doctor.headers);
+check(withPickup.blockers.includes('original_pickup_exists'), 'Original pickup before intake blocks return to available stock');
 const inactiveProduct = await rpc('save_catalog_product', { p_id: product.id, p_expected_version: product.version, p_name: product.name, p_kind: product.kind, p_manufacturer: product.manufacturer, p_unit: product.unit, p_unit_price_cents: product.unit_price_cents, p_active: false });
 check((await review(unsafeIntent, doctor.headers)).blockers.includes('product_inactive'), 'Inactive product disclosed as independent blocker');
 await rpc('save_catalog_product', { p_id: product.id, p_expected_version: inactiveProduct.version, p_name: product.name, p_kind: product.kind, p_manufacturer: product.manufacturer, p_unit: product.unit, p_unit_price_cents: product.unit_price_cents, p_active: true });
