@@ -58,3 +58,9 @@ Five handler tests, frozen Deno entry-point checking, targeted lint and diff che
 ## Worker HTTP acceptance prepared
 
 Extended the disposable integration server with shared cleanup-handler routes. Before the authorized cleanup path, it checks ordinary staff rejection, valid worker denial on the disabled route, arbitrary-path rejection and absence of any cleanup intent from those requests. The enabled test-only route invokes the real service RPC/Storage adapter and retains lost-deletion-response recovery checks. This is localhost Node-hosted shared-handler acceptance, not deployed Edge gateway acceptance. Node syntax, targeted lint and diff checks pass; runtime is pending. The existing frontend job35096847299 is still running after its known SQL fixture failure, so the corrected candidate has not been pushed yet.
+
+## Cleanup concurrency acceptance prepared
+
+Added `abandoned_attachment_cleanup_concurrency.py` and a CI step using the existing explicit-local/Docker-label and observed pg_blocking_pids harness. Cases cover competing claims, a verification winner excluding cleanup after lock wait, duplicate completion receipt recovery, replaced cleanup leases rejecting the waiting old worker, and changed Storage identity preserved for review. Python compile/diff checks pass; these new cases have not executed. Fixtures use only synthetic SQL metadata, while actual file deletion is covered separately by the HTTP/Auth/Storage harness.
+
+CI35097849305 at9b46cc6 has now passed the complete SQL stage, including the corrected cleanup fixture and14 receipt assertions. Edge checking passed; later integration/browser jobs are still active. This local concurrency follow-up is not in that run.

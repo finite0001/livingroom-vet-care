@@ -60,6 +60,8 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify abandoned attachment cleanup claims, replacement and receipt races
+        run: python3 supabase/tests/abandoned_attachment_cleanup_concurrency.py --project-config supabase/config.toml --run-synthetic-local
       - name: Verify incoming attachment claim, finalization and revocation races
         run: python3 supabase/tests/inbound_attachment_concurrency.py --project-config supabase/config.toml --run-synthetic-local
       - name: Verify conversation attachment capture and queue races
