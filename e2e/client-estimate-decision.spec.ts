@@ -289,3 +289,21 @@ test('a denied refresh clears a previously displayed recorded status', async ({ 
   await expect(page.getByRole('heading', { name: 'Decision recorded', exact: true })).toHaveCount(0);
   await expect(page.locator('iframe')).toHaveCount(0);
 });
+
+
+test('changing respondent details invalidates earlier acknowledgments', async ({ page }) => {
+  const state = await fixture(page); await open(page);
+  const edits = [
+    () => page.getByRole('textbox', { name: 'Your name', exact: true }).fill('Another respondent'),
+    () => page.getByRole('combobox', { name: 'Your relationship', exact: true }).selectOption('authorized_agent'),
+    () => page.getByRole('textbox', { name: 'Optional message', exact: true }).fill('Changed instruction'),
+  ];
+  for (const edit of edits) {
+    await choose(page);
+    await expect(page.getByRole('button', { name: 'Confirm acceptance', exact: true })).toBeEnabled();
+    await edit();
+    await expect(page.getByRole('button', { name: 'Confirm acceptance', exact: true })).toBeDisabled();
+    for (const box of await page.getByRole('checkbox').all()) await expect(box).not.toBeChecked();
+  }
+  expect(state.calls.filter(request => request.postDataJSON().action === 'record')).toHaveLength(0);
+});
