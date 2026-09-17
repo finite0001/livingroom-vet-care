@@ -1,0 +1,76 @@
+{
+  "project_ref": "kothoqicubowyhwfsrte",
+  "checks": [
+    {
+      "function": "verify-conversation-attachment",
+      "expected": 400,
+      "status": 400,
+      "matched": true
+    },
+    {
+      "function": "verify-conversation-attachment",
+      "expected": 403,
+      "status": 403,
+      "matched": true
+    },
+    {
+      "function": "capture-conversation-email",
+      "expected": 400,
+      "status": 400,
+      "matched": true
+    },
+    {
+      "function": "capture-inbound-attachment",
+      "expected": 503,
+      "status": 503,
+      "matched": true
+    },
+    {
+      "function": "read-inbound-attachment",
+      "expected": 503,
+      "status": 503,
+      "matched": true
+    },
+    {
+      "function": "cleanup-abandoned-attachment",
+      "expected": 401,
+      "status": 401,
+      "matched": true
+    },
+    {
+      "function": "cleanup-abandoned-attachment",
+      "credential": "server",
+      "expected": 503,
+      "status": 503,
+      "matched": true
+    }
+  ],
+  "temporary_auth_user_removed": true,
+  "provider_calls": 0,
+  "client_messages_sent": 0,
+  "contact_email_sent": false,
+  "observed_date": "2026-09-16",
+  "scope": "Hosted authenticated access and disabled capability checks; not full attachment acceptance",
+  "auth_provider_repair": {
+    "before": "email_provider_disabled (HTTP 422)",
+    "after_email_enabled": true,
+    "public_signup_disabled": true,
+    "anonymous_signin_enabled": false,
+    "email_confirmation_enabled": true,
+    "primary_settings_changed": false
+  },
+  "worker_credential": "Managed secret API key in apikey header. Legacy credential probes returned 401; no legacy hosted compatibility claimed.",
+  "limitations": [
+    "No successful attachment upload or download was exercised in this check.",
+    "No conversation email manifest was prepared or queued.",
+    "No capture or cleanup capability was enabled.",
+    "No production backend or frontend publication performed."
+  ],
+  "ci": {
+    "run_id": 35112894055,
+    "head": "2dd8ae6bff106d7c3f9cf2517dd852c663eb010d",
+    "frontend": "success",
+    "database": "success",
+    "edge": "success"
+  }
+}

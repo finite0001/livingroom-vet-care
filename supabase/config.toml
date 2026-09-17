@@ -77,5 +77,19 @@ verify_jwt = true
 verify_jwt = true
 
 # Staff JWT plus active-owner checks before capture and the final review receipt.
+[functions.verify-conversation-attachment]
+verify_jwt = true
+
 [functions.capture-conversation-email]
 verify_jwt = true
+
+# Staff JWT, active matched-inbound claim and current lease checks. Capture defaults off.
+[functions.capture-inbound-attachment]
+verify_jwt = true
+
+[functions.read-inbound-attachment]
+verify_jwt = true
+
+# Server-only worker credentials are checked explicitly; secret API keys are not JWTs.
+[functions.cleanup-abandoned-attachment]
+verify_jwt = false

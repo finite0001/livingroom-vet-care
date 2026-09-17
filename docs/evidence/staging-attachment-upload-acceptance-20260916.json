@@ -1,0 +1,46 @@
+{
+  "project_ref": "kothoqicubowyhwfsrte",
+  "checks": [
+    "create confirmed synthetic actor",
+    "staff password login",
+    "create synthetic household",
+    "create household conversation",
+    "reserve actor-owned attachment",
+    "upload actual private PDF bytes",
+    "deployed Edge verifies actual bytes",
+    "read ready attachment receipt",
+    "owner download exact byte match",
+    "anonymous private read denied",
+    "prepare immutable attachment manifest",
+    "recover identical prepared request",
+    "unconfigured email capture fails closed",
+    "review remains uncaptured",
+    "deactivate synthetic staff profile",
+    "ban synthetic Auth account",
+    "verify inactive profile"
+  ],
+  "result": "upload and manifest passed; email capture blocked by missing sender configuration",
+  "sha256": "a560ed04ead31b45a9b15fa04952058c34b12fd5748389a3484bac98faa7e9fa",
+  "actor_deactivated": true,
+  "observed_date": "2026-09-16",
+  "synthetic_fixture_retained": true,
+  "fixture_identity_location": "Protected local staging acceptance state; no credentials committed",
+  "observed_database_postconditions": {
+    "message_count": 0,
+    "outbox_links": 0,
+    "prepared_state": "prepared",
+    "payload_uncaptured": true,
+    "actor_active": false,
+    "actor_banned": true
+  },
+  "sender_configuration": {
+    "RESEND_FROM_present": false,
+    "RESEND_REPLY_TO_present": false
+  },
+  "limitations": [
+    "No sender identity or reply mailbox was commissioned.",
+    "No frozen email payload was captured, queued or sent.",
+    "Incoming provider attachment retrieval remains disabled and untested against an actual provider.",
+    "Hosted UI acceptance and primary rollout remain outstanding."
+  ]
+}

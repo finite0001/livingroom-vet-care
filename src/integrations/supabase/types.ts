@@ -7802,6 +7802,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      list_inbound_message_attachments: {
+        Args: { p_message_ids: string[] }
+        Returns: Json
+      }
       list_conversation_message_attachments: {
         Args: { p_message_ids: string[] }
         Returns: { message_id: string; request_id: string; payload_hash: string; files: Json }[]
