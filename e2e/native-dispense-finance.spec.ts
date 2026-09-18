@@ -290,12 +290,29 @@ async function workspace(page: Page) {
   await mount();
   return { control, calls, results, mount, closeCalls };
 }
+// Reviewing financial evidence is asynchronous, and the component clears the
+// attestation when a new preview resolves. Ticking the box before that happens
+// is silently undone and "Lock reviewed request" stays disabled, so wait for the
+// preview response and retry the tick until the lock button is really enabled.
+async function reviewAndLock(page: Page) {
+  const previewed = page.waitForResponse((r) =>
+    r.url().includes("preview_native_dispense_finance"),
+  );
+  await page.getByRole("button", { name: "Review financial evidence" }).click();
+  await previewed;
+  const attestation = page.getByRole("checkbox");
+  const lock = page.getByRole("button", { name: "Lock reviewed request" });
+  await expect(attestation).toBeVisible();
+  await expect(async () => {
+    await attestation.check();
+    await expect(lock).toBeEnabled({ timeout: 1000 });
+  }).toPass({ timeout: 20000 });
+  await lock.click();
+}
 async function review(page: Page) {
   await page.getByLabel("Amount in dollars").fill("2.50");
   await page.getByLabel("Financial reason").fill("Duplicate charge");
-  await page.getByRole("button", { name: "Review financial evidence" }).click();
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Lock reviewed request" }).click();
+  await reviewAndLock(page);
   await page
     .getByRole("button", { name: "Record reviewed financial operation" })
     .click();
@@ -381,9 +398,7 @@ test("sibling invoice invalidation preserves a locked review and requires new ev
   const w = await workspace(page);
   await page.getByLabel("Amount in dollars").fill("2.50");
   await page.getByLabel("Financial reason").fill("Duplicate charge");
-  await page.getByRole("button", { name: "Review financial evidence" }).click();
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Lock reviewed request" }).click();
+  await reviewAndLock(page);
   await page.evaluate(async (invoiceId) => {
     const h = await import("/tests/prescriptions/finance-browser-harness.tsx");
     await h.invalidateFinanceInvoice(invoiceId);
