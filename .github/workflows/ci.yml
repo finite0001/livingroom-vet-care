@@ -72,6 +72,8 @@ jobs:
         run: python3 -B supabase/tests/native_record_releases_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify native dispense correction and release concurrency
         run: python3 -B supabase/tests/native_dispense_corrections_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native physical return custody and inventory concurrency
+        run: python3 -B supabase/tests/native_dispense_returns_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks

@@ -103,7 +103,7 @@ test("token refresh preserves an unsaved draft while authorization revalidates",
   const revalidationGate = new Promise<void>((resolve) => { release = resolve; });
   const profileReads = await mockStaffBackend(page, { revalidationGate });
   await page.goto("/hub/settings");
-  const signature = page.locator("textarea");
+  const signature = page.getByRole("textbox", { name: "Email signature", exact: true });
   await expect(signature).toHaveValue("Original signature");
   await signature.fill("Unsaved staff draft must survive token refresh");
   // Exercise the real auth client and event listener, with its HTTP response mocked.

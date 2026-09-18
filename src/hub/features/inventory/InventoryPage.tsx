@@ -501,7 +501,7 @@ export function InventoryPage() {
                 <p key={m.id} className="text-sm">
                   {practiceTimestamp(m.created_at)} ·{" "}
                   {m.quantity > 0 ? "+" : ""}
-                  {m.quantity} · {m.kind} · {m.reason}
+                  {m.quantity} · {m.kind === "native_return" ? "Reviewed return to stock" : m.kind} · {m.reason}
                 </p>
               ))}
               {(ledger.data?.length ?? 0) > 50 && (

@@ -582,12 +582,42 @@ async function fixture(
       }
       return r.fulfill({ json: saved });
     }
-    if (name === "read_native_prescription_print_v2") {
+    if (name === "read_native_prescription_print_v3") {
       state.printReads++;
       const d = state.records.find((d) => d.id === input.p_dispense_id);
       return r.fulfill({
         json: {
-          version: 2,
+          version: 3,
+          return_summary: {
+            version: 1,
+            event_count: 0,
+            affected_dispense_count: 0,
+            heads_hash:
+              "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          },
+          dispense_returns: d
+            ? {
+                version: 1,
+                head: { event_id: null, version: 0, record_hash: null },
+                events: [],
+                allocations: d.artifact.lots
+                  .map((l: Row, i: number) => ({
+                    allocation_id: id(800 + i),
+                    lot_id: l.id,
+                    lot_number: l.number,
+                    expires_on: l.expires_on,
+                    dispensed_quantity: l.quantity,
+                    returned_quantity: "0.000",
+                    remaining_returnable_quantity: l.quantity,
+                    held_quantity: "0.000",
+                    disposed_quantity: "0.000",
+                    restocked_quantity: "0.000",
+                  }))
+                  .sort((a: Row, b: Row) =>
+                    a.allocation_id.localeCompare(b.allocation_id),
+                  ),
+              }
+            : null,
           correction_summary: {
             version: 1,
             event_count: 0,
@@ -1270,4 +1300,417 @@ test("corrected handoff requires explicit facts and preserves the original ackno
   expect(f.calls[0].p_request.pickup_amendment.handoff.recipient_name).toBe(
     "Correct recipient",
   );
+});
+
+async function returnFixture(page: Page, eligible = false) {
+  const state = await fixture(page, true, 0, eligible),
+    d = state.records[0],
+    allocation = id(800),
+    rows: Row[] = [],
+    calls: Row[] = [],
+    receipts = new Map<string, Row>();
+  const controls = { lost: false, absent: false };
+  const policy = eligible
+    ? {
+        version: 1,
+        enabled: true,
+        review_reference: "Synthetic review",
+        actor_id: actor,
+        actor_name: "Synthetic DVM",
+        reviewed_at: time,
+        record_hash: hash,
+      }
+    : {
+        version: 0,
+        enabled: false,
+        review_reference: null,
+        actor_id: null,
+        actor_name: null,
+        reviewed_at: null,
+        record_hash: null,
+      };
+  const total = (action: string) =>
+      rows
+        .filter((e) => e.action === action)
+        .reduce((n, e) => n + Number(e.allocations[0].quantity), 0),
+    q = (n: number) => n.toFixed(3);
+  const head = () =>
+    rows.length
+      ? { event_id: rows[0].id, version: rows[0].sequence, record_hash: hash }
+      : { event_id: null, version: 0, record_hash: null };
+  const balance = () => ({
+    allocation_id: allocation,
+    lot_id: d.allocations[0].lot_id,
+    lot_number: d.artifact.lots[0].number,
+    expires_on: d.artifact.lots[0].expires_on,
+    dispensed_quantity: d.quantity,
+    returned_quantity: q(total("intake")),
+    remaining_returnable_quantity: q(Number(d.quantity) - total("intake")),
+    held_quantity: q(total("intake") - total("dispose") - total("restock")),
+    disposed_quantity: q(total("dispose")),
+    restocked_quantity: q(total("restock")),
+  });
+  const target = {
+    authorization_id: d.authorization_id,
+    pet_id: pet,
+    dispense_id: d.id,
+  };
+  const intake = (id: string) => {
+    const e = rows.find((e) => e.id === id);
+    return e
+      ? {
+          id: e.id,
+          sequence: e.sequence,
+          custody: e.custody,
+          package_condition: e.package_condition,
+          storage_history: e.storage_history,
+          allocations: [
+            {
+              allocation_id: allocation,
+              lot_id: d.allocations[0].lot_id,
+              quantity: e.allocations[0].quantity,
+              held_quantity: balance().held_quantity,
+              disposed_quantity: balance().disposed_quantity,
+              restocked_quantity: balance().restocked_quantity,
+            },
+          ],
+        }
+      : null;
+  };
+  await page.route("**/rest/v1/rpc/*native*return*", async (r) => {
+    const name = new URL(r.request().url()).pathname.split("/").at(-1),
+      input = r.request().postDataJSON() ?? {};
+    if (name === "read_native_dispense_returns")
+      return r.fulfill({
+        json: {
+          version: 1,
+          target,
+          authorization_hash: hash,
+          dispense_document_hash: hash,
+          dispensed_at: d.dispensed_at,
+          head: head(),
+          allocations: [balance()],
+        },
+      });
+    if (name === "list_native_dispense_returns")
+      return r.fulfill({
+        json: {
+          version: 1,
+          target,
+          head: head(),
+          events: rows,
+          next_before_version: null,
+        },
+      });
+    if (name === "read_native_return_intake")
+      return r.fulfill({
+        json: {
+          version: 1,
+          target,
+          head: head(),
+          intake: intake(input.p_intake_id),
+        },
+      });
+    if (name === "read_native_return_policy")
+      return r.fulfill({ json: policy });
+    if (name === "preview_native_dispense_return") {
+      const intent = input.p_intent,
+        restock = intent.action === "restock";
+      const blockers =
+        restock && !eligible
+          ? [
+              "policy_disabled",
+              "dvm_required",
+              "custody_not_retained",
+              "package_not_sealed",
+              "storage_not_controlled",
+            ]
+          : [];
+      return r.fulfill({
+        json: {
+          version: 1,
+          actor_id: actor,
+          observed_at: time,
+          context: {
+            version: 1,
+            target,
+            authorization_hash: hash,
+            dispense_document_hash: hash,
+            dispensed_at: d.dispensed_at,
+            head: head(),
+            original_pickup: null,
+            correction_head: { event_id: null, version: 0, record_hash: null },
+            allocations: [balance()],
+            intake:
+              intent.action === "intake" ? null : intake(intent.intake_id),
+            stock_review: restock
+              ? {
+                  product: {
+                    id: signed().context.draft.fields.product_id,
+                    name: "Synthetic product",
+                    unit: d.unit,
+                    active: true,
+                    version: 1,
+                  },
+                  lots: [
+                    { lot_id: d.allocations[0].lot_id, balance: "10.000" },
+                  ],
+                  practice_date: "2026-09-16",
+                }
+              : null,
+            policy: restock ? policy : null,
+            intent,
+          },
+          context_hash: hash,
+          allowed: !blockers.length,
+          blockers,
+        },
+      });
+    }
+    if (name === "recover_native_dispense_return")
+      return r.fulfill({
+        json: controls.absent ? null : (receipts.get(input.p_id) ?? null),
+      });
+    if (name === "record_native_dispense_return") {
+      calls.push(input);
+      if (receipts.has(input.p_id))
+        return r.fulfill({ json: receipts.get(input.p_id) });
+      const i = input.p_request.intent,
+        event = {
+          version: 1,
+          id: input.p_id,
+          target,
+          authorization_hash: hash,
+          dispense_document_hash: hash,
+          sequence: rows.length + 1,
+          prior_event_id: head().event_id,
+          prior_record_hash: head().record_hash,
+          actor: {
+            id: actor,
+            name: "Synthetic staff",
+            authority: i.action === "restock" ? "active_dvm" : "active_staff",
+          },
+          action: i.action,
+          intake_id: i.intake_id,
+          allocations: i.allocations.map((a: Row) => ({
+            ...a,
+            quantity: q(Number(a.quantity)),
+            lot_id: d.allocations[0].lot_id,
+            movement_id: i.action === "restock" ? id(950) : null,
+          })),
+          custody: i.custody,
+          package_condition: i.package_condition,
+          storage_history: i.storage_history,
+          reason: i.reason,
+          note: i.note,
+          policy: i.action === "restock" ? policy : null,
+          reviewed_context_hash: hash,
+          created_at: time,
+          record_hash: hash,
+        };
+      rows.unshift(event);
+      const receipt = {
+        version: 1,
+        id: input.p_id,
+        actor_id: actor,
+        request: input.p_request,
+        request_hash: hash,
+        result: event,
+        created_at: time,
+      };
+      receipts.set(input.p_id, receipt);
+      if (controls.lost) {
+        controls.lost = false;
+        return r.abort();
+      }
+      return r.fulfill({ json: receipt });
+    }
+    return r.fallback();
+  });
+  await page
+    .getByRole("button", {
+      name: "Review physical returns and disposition",
+      exact: true,
+    })
+    .click();
+  const panel = page.getByRole("region", {
+    name: "Physical return records",
+    exact: true,
+  });
+  await expect(
+    panel.getByRole("button", { name: "Review return evidence", exact: true }),
+  ).toBeEnabled();
+  return {
+    state,
+    rows,
+    calls,
+    controls,
+    panel,
+    lot: d.artifact.lots[0].number,
+  };
+}
+async function reviewReturn(
+  f: Awaited<ReturnType<typeof returnFixture>>,
+  quantity: string,
+) {
+  await f.panel
+    .getByLabel(`Quantity for lot ${f.lot}`, { exact: true })
+    .fill(quantity);
+  await f.panel
+    .getByLabel("Return or disposition reason", { exact: true })
+    .fill("Actual synthetic custody action");
+  await f.panel
+    .getByLabel("Custody and disposition note", { exact: true })
+    .fill("Synthetic shareable custody facts");
+  await f.panel
+    .getByRole("button", { name: "Review return evidence", exact: true })
+    .click();
+}
+async function confirmReturn(f: Awaited<ReturnType<typeof returnFixture>>) {
+  await f.panel
+    .getByRole("checkbox", { name: /I verified the exact original lots/ })
+    .check();
+  await f.panel
+    .getByRole("button", { name: "Save reviewed return record", exact: true })
+    .click();
+}
+test("physical intake recovers exact request then partial disposal preserves original and allowance", async ({
+  page,
+}) => {
+  const f = await returnFixture(page),
+    original = structuredClone(f.state.records);
+  await reviewReturn(f, "0.750");
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Save reviewed return record",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  f.controls.lost = true;
+  await confirmReturn(f);
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Recover original operation",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  f.controls.absent = true;
+  await f.panel
+    .getByRole("button", { name: "Recover original operation", exact: true })
+    .click();
+  await f.panel
+    .getByRole("button", { name: "Retry identical operation", exact: true })
+    .click();
+  await expect(
+    f.panel.getByText("Held 0.750; disposed 0.000; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(f.calls[0]).toEqual(f.calls[1]);
+  expect(f.rows).toHaveLength(1);
+  await f.panel
+    .getByLabel("Return action", { exact: true })
+    .selectOption("dispose");
+  await f.panel
+    .getByLabel("Original return intake", { exact: true })
+    .selectOption(f.rows[0].id);
+  await expect(
+    f.panel.getByText(/0.750 tablet available for this action/),
+  ).toBeVisible();
+  await reviewReturn(f, "0.250");
+  await confirmReturn(f);
+  await expect(
+    f.panel.getByText("Held 0.500; disposed 0.250; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(f.state.records).toEqual(original);
+  expect(f.rows).toHaveLength(2);
+  expect(f.rows[0].allocations[0].movement_id).toBeNull();
+});
+test("ineligible restock shows every known blocker and cannot confirm", async ({
+  page,
+}) => {
+  const f = await returnFixture(page);
+  await reviewReturn(f, "0.5");
+  await confirmReturn(f);
+  await expect(
+    f.panel.getByText("Held 0.500; disposed 0.000; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await f.panel
+    .getByLabel("Return action", { exact: true })
+    .selectOption("restock");
+  await f.panel
+    .getByLabel("Original return intake", { exact: true })
+    .selectOption(f.rows[0].id);
+  await reviewReturn(f, "0.25");
+  const review = f.panel.getByRole("region", {
+    name: "Reviewed return evidence",
+  });
+  await expect(review.getByRole("listitem")).toHaveCount(5);
+  await expect(review).toContainText("disabled or unconfigured");
+  await expect(review).toContainText("active DVM");
+  await expect(review).toContainText("Controlled storage");
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Save reviewed return record",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+});
+test("eligible restock requires separate DVM acknowledgment and consumes held quantity", async ({
+  page,
+}) => {
+  const f = await returnFixture(page, true);
+  await f.panel
+    .getByLabel("Custody before receipt", { exact: true })
+    .selectOption("clinic_retained");
+  await f.panel
+    .getByLabel("Packaging condition", { exact: true })
+    .selectOption("sealed_intact");
+  await f.panel
+    .getByLabel("Storage history", { exact: true })
+    .selectOption("controlled");
+  await reviewReturn(f, "0.5");
+  await confirmReturn(f);
+  await expect(
+    f.panel.getByText("Held 0.500; disposed 0.000; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await f.panel
+    .getByLabel("Return action", { exact: true })
+    .selectOption("restock");
+  await f.panel
+    .getByLabel("Original return intake", { exact: true })
+    .selectOption(f.rows[0].id);
+  await reviewReturn(f, "0.25");
+  await f.panel
+    .getByRole("checkbox", { name: /I verified the exact original lots/ })
+    .check();
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Save reviewed return record",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await f.panel.getByRole("checkbox", { name: /As the reviewing DVM/ }).check();
+  await f.panel
+    .getByRole("button", { name: "Save reviewed return record", exact: true })
+    .click();
+  await expect(
+    f.panel.getByText("Held 0.250; disposed 0.000; restocked 0.250", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(f.rows[0].allocations[0].movement_id).toBe(id(950));
+});
+test("return policy is reachable in settings, defaults disabled and requires explicit ADMIN+DVM review",async({page})=>{
+ await fixture(page,true);
+ await page.route("**/rest/v1/user_roles*",r=>r.fulfill({json:[{role:"STAFF"},{role:"ADMIN"},{role:"DVM"}]}));
+ let policy:Row={version:0,enabled:false,review_reference:null,actor_id:null,actor_name:null,reviewed_at:null,record_hash:null};const requests:Row[]=[];
+ await page.route("**/rest/v1/rpc/*native_return_policy",r=>{const name=new URL(r.request().url()).pathname.split("/").at(-1),input=r.request().postDataJSON()??{};if(name==="read_native_return_policy")return r.fulfill({json:policy});if(name==="configure_native_return_policy"){requests.push(input);policy={version:1,enabled:input.p_request.enabled,review_reference:input.p_request.review_reference,actor_id:actor,actor_name:"Synthetic reviewing DVM administrator",reviewed_at:time,record_hash:hash};return r.fulfill({json:{version:1,id:input.p_id,actor_id:actor,request:input.p_request,request_hash:hash,result:policy,created_at:time}});}return r.fulfill({json:null});});
+ await page.goto("/hub/settings");const panel=page.getByRole("region",{name:"Native return policy",exact:true});await expect(panel).toContainText("Disabled · revision 0");await expect(panel.getByRole("checkbox",{name:"Enable guarded native restocking",exact:true})).not.toBeChecked();await panel.getByRole("checkbox",{name:"Enable guarded native restocking",exact:true}).check();await panel.getByLabel("Policy review reference",{exact:true}).fill("Synthetic explicit review; not clinical commissioning");await panel.getByRole("button",{name:"Review return policy decision",exact:true}).click();await expect(panel.getByRole("button",{name:"Save reviewed return policy",exact:true})).toBeDisabled();await panel.getByRole("checkbox",{name:/I reviewed the practice policy/}).check();await panel.getByRole("button",{name:"Save reviewed return policy",exact:true}).click();await expect(panel).toContainText("Enabled with restrictive checks · revision 1");expect(requests[0].p_request.expected_version).toBe(0);expect(requests[0].p_request.attest_review).toBe(true);
 });

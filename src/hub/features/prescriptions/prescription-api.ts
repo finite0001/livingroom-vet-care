@@ -1,4 +1,4 @@
-import { renderNativePrescriptionV2, type NativePrescriptionPrintV2 } from "../../../../supabase/functions/_shared/native-dispense-corrections.ts";
+import { renderNativePrescriptionV3, type NativePrescriptionPrintV3 } from "../../../../supabase/functions/_shared/native-dispense-returns.ts";
 import { z } from "zod";
 import type { PrescriptionOperation } from "./prescription-state.ts";
 const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
@@ -167,8 +167,8 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
     },
     async readPrint(prior: PrescriptionAuthorization) {
       authorization(prior, patientId, prior.id);
-      const result = await rpc("read_native_prescription_print_v2", { p_authorization_id: prior.id, p_dispense_id: null }) as NativePrescriptionPrintV2;
-      renderNativePrescriptionV2(result); if (result.dispense !== null) throw new Error("Order-only print contains an unexpected dispense");
+      const result = await rpc("read_native_prescription_print_v3", { p_authorization_id: prior.id, p_dispense_id: null }) as NativePrescriptionPrintV3;
+      renderNativePrescriptionV3(result); if (result.dispense !== null) throw new Error("Order-only print contains an unexpected dispense");
       if (!same(result.prescription, prior.artifact) || result.status.authorization_id !== prior.id || result.status.authorization_hash !== prior.authorization_hash) throw new Error("Print copy differs from signed authorization"); return result;
     },
     async listEvents(prior: PrescriptionAuthorization, cursor: PrescriptionCursor | null = null, limit = 20) {

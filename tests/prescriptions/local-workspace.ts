@@ -324,7 +324,7 @@ const untouched = sql(
 );
 // Explicitly synthetic acceptance in the owned disposable database only.
 sql(`insert into public.record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version)
-  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',11)
+  values(true,true,'Synthetic local browser reviewer',now(),'Disposable browser acceptance only; not production clinical approval',12)
   on conflict(id) do update set enabled=true,accepted_by=excluded.accepted_by,accepted_at=excluded.accepted_at,
   acceptance_reference=excluded.acceptance_reference,accepted_schema_version=excluded.accepted_schema_version;`);
 const privateDir = mkdtempSync(resolve(tmpdir(), "lrv-native-browser-"));
@@ -595,7 +595,7 @@ try {
   const previewResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/preview_record_release_v11` &&
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v12` &&
       response.request().method() === "POST",
   );
   await releasePanel
@@ -605,7 +605,7 @@ try {
   check(reviewedResponse.ok(), "Actual browser release preview succeeds");
   const reviewed = await reviewedResponse.json();
   check(
-    reviewed.snapshot.schema_version === 11 &&
+    reviewed.snapshot.schema_version === 12 &&
       reviewed.snapshot.native_prescriptions.length === 1 &&
       reviewed.snapshot.native_dispenses.length === 1,
     "Actual browser preview explicitly selects both native families",
@@ -642,7 +642,7 @@ try {
   const confirmedResponse = await confirmResponse;
   check(
     confirmedResponse.ok(),
-    "Actual browser confirms reviewed schema11 package",
+    "Actual browser confirms reviewed schema12 package",
   );
   const confirmed = await confirmedResponse.json();
   await expect(
@@ -878,7 +878,7 @@ try {
   const correctedPreviewResponse = page.waitForResponse(
     (response) =>
       response.url() ===
-        `${local.API_URL}/rest/v1/rpc/preview_record_release_v11` &&
+        `${local.API_URL}/rest/v1/rpc/preview_record_release_v12` &&
       response.request().method() === "POST",
   );
   await releasePanel
@@ -887,7 +887,7 @@ try {
   const correctedPreviewHttp = await correctedPreviewResponse;
   check(
     correctedPreviewHttp.ok(),
-    "Actual browser re-reviews a schema11 package after corrections",
+    "Actual browser re-reviews a schema12 package after corrections",
   );
   const correctedPreview = await correctedPreviewHttp.json();
   check(
@@ -948,6 +948,210 @@ try {
     ).eligible === true,
     "New correction-aware release is eligible while its exact context remains current",
   );
+  await page
+    .getByRole("button", {
+      name: "Review physical returns and disposition",
+      exact: true,
+    })
+    .click();
+  const returns = page.getByRole("region", {
+    name: "Physical return records",
+    exact: true,
+  });
+  await expect(
+    returns.getByRole("button", {
+      name: "Review return evidence",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await returns
+    .getByLabel("Custody before receipt", { exact: true })
+    .selectOption("client_returned");
+  await returns
+    .getByLabel("Quantity for lot SYNTHETIC-BROWSER-1", { exact: true })
+    .fill("0.500");
+  await returns
+    .getByLabel("Quantity for lot SYNTHETIC-BROWSER-2", { exact: true })
+    .fill("0.250");
+  await returns
+    .getByLabel("Return or disposition reason", { exact: true })
+    .fill("Synthetic multi-lot physical receipt");
+  await returns
+    .getByLabel("Custody and disposition note", { exact: true })
+    .fill(
+      "Synthetic returned material received into held custody, no clinical reuse assertion.",
+    );
+  await returns
+    .getByRole("button", { name: "Review return evidence", exact: true })
+    .click();
+  await expect(
+    returns.getByRole("button", {
+      name: "Save reviewed return record",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  checks++;
+  await returns
+    .getByRole("checkbox", { name: /I verified the exact original lots/ })
+    .check();
+  const intakeResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/record_native_dispense_return` &&
+      response.request().method() === "POST",
+  );
+  await returns
+    .getByRole("button", { name: "Save reviewed return record", exact: true })
+    .click();
+  const intakeHttp = await intakeResponse;
+  check(intakeHttp.ok(), "Actual browser records multi-lot physical intake");
+  const intakeReceipt = await intakeHttp.json();
+  await expect(
+    returns.getByText("Held 0.500; disposed 0.000; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    returns.getByText("Held 0.250; disposed 0.000; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  checks += 2;
+  await returns
+    .getByLabel("Return action", { exact: true })
+    .selectOption("dispose");
+  await returns
+    .getByLabel("Original return intake", { exact: true })
+    .selectOption(intakeReceipt.id);
+  await returns
+    .getByLabel("Quantity for lot SYNTHETIC-BROWSER-1", { exact: true })
+    .fill("0.125");
+  await returns
+    .getByLabel("Return or disposition reason", { exact: true })
+    .fill("Synthetic completed partial disposal");
+  await returns
+    .getByLabel("Custody and disposition note", { exact: true })
+    .fill(
+      "Synthetic disposal completed for the exact selected held allocation.",
+    );
+  await returns
+    .getByRole("button", { name: "Review return evidence", exact: true })
+    .click();
+  await returns
+    .getByRole("checkbox", { name: /I verified the exact original lots/ })
+    .check();
+  const disposalResponse = page.waitForResponse(
+    (response) =>
+      response.url() ===
+        `${local.API_URL}/rest/v1/rpc/record_native_dispense_return` &&
+      response.request().method() === "POST",
+  );
+  await returns
+    .getByRole("button", { name: "Save reviewed return record", exact: true })
+    .click();
+  const disposalHttp = await disposalResponse;
+  check(disposalHttp.ok(), "Actual browser records completed partial disposal");
+  const disposalReceipt = await disposalHttp.json();
+  await expect(
+    returns.getByText("Held 0.375; disposed 0.125; restocked 0.000", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  checks++;
+  const returnArgs = {
+    p_authorization_id: authorization.id,
+    p_pet_id: patient.id,
+    p_dispense_id: saved.id,
+  };
+  const returnRead = await rpc(
+    "read_native_dispense_returns",
+    returnArgs,
+    staff.headers,
+  );
+  check(
+    returnRead.allocations.length === 2 &&
+      returnRead.allocations.find(
+        (a: { lot_id: string }) => a.lot_id === lotIds[0],
+      ).held_quantity === "0.375" &&
+      returnRead.allocations.find(
+        (a: { lot_id: string }) => a.lot_id === lotIds[1],
+      ).held_quantity === "0.250",
+    "Actual return balances preserve distinct original lot attribution and partial held amounts",
+  );
+  check(
+    disposalReceipt.result.intake_id === intakeReceipt.id &&
+      disposalReceipt.result.allocations.length === 1 &&
+      disposalReceipt.result.allocations[0].movement_id === null,
+    "Actual disposal links its exact intake and creates no available-stock movement",
+  );
+  await returns
+    .getByLabel("Return action", { exact: true })
+    .selectOption("restock");
+  await returns
+    .getByLabel("Original return intake", { exact: true })
+    .selectOption(intakeReceipt.id);
+  await returns
+    .getByLabel("Quantity for lot SYNTHETIC-BROWSER-1", { exact: true })
+    .fill("0.125");
+  await returns
+    .getByLabel("Return or disposition reason", { exact: true })
+    .fill("Synthetic restock eligibility review");
+  await returns
+    .getByLabel("Custody and disposition note", { exact: true })
+    .fill("Review blockers only; no eligible reuse asserted.");
+  await returns
+    .getByRole("button", { name: "Review return evidence", exact: true })
+    .click();
+  await expect(
+    returns.getByRole("region", { name: "Reviewed return evidence" }),
+  ).toContainText("An original pickup exists");
+  await expect(
+    returns.getByRole("region", { name: "Reviewed return evidence" }),
+  ).toContainText("not retained in clinic custody");
+  await expect(
+    returns.getByRole("button", {
+      name: "Save reviewed return record",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  checks += 3;
+  check(
+    originalDispense ===
+      sql(
+        `select document::text from native_dispenses where id=${quote(saved.id)}`,
+      ) &&
+      originalPickup ===
+        sql(
+          `select document::text from native_pickups where id=${quote(pickups[0].id)}`,
+        ),
+    "Physical receipt and disposal preserve original documents, including disputed original pickup",
+  );
+  check(
+    sql(
+      `select count(*) from billing_invoice_items where invoice_id=${quote(invoiceId)}`,
+    ) === "1" &&
+      sql(
+        `select sum(quantity)::text from inventory_movements where lot_id in (${lotIds.map(quote).join(",")})`,
+      ) === "18.000" &&
+      (await api.read())?.usage.fulfillment_head.version === 1,
+    "Intake/disposal and blocked restock have no stock, charge or allowance effect",
+  );
+  check(
+    (
+      await rpc(
+        "read_record_release",
+        { p_id: correctedSaved.id },
+        staff.headers,
+      )
+    ).eligible === false,
+    "Physical return invalidates prior correction-aware package",
+  );
+  await returns
+    .getByRole("button", {
+      name: "Close return panel and discard draft",
+      exact: true,
+    })
+    .click();
   check(
     untouched ===
       sql(

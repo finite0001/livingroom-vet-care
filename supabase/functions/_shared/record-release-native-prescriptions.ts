@@ -1,3 +1,4 @@
+import { validateReturnDisclosure, renderReturnSummary, renderReturnDisclosure, type ReturnSummary, type ReturnDisclosure } from "./native-dispense-returns.ts";
 import {
   validateAuthorizationCorrectionSummary, validateDispenseCorrectionDisclosure,
   renderAuthorizationCorrectionSummary, renderDispenseCorrectionDisclosure, correctionEvidenceEqual,
@@ -56,6 +57,8 @@ export interface NativeDispenseRelease {
 }
 export interface NativePrescriptionReleaseV11 extends NativePrescriptionRelease { corrections: AuthorizationCorrectionSummary }
 export interface NativeDispenseReleaseV11 extends NativeDispenseRelease { prescription: NativePrescriptionReleaseV11; corrections: DispenseCorrectionDisclosure }
+export interface NativePrescriptionReleaseV12 extends NativePrescriptionReleaseV11 { returns: ReturnSummary }
+export interface NativeDispenseReleaseV12 extends NativeDispenseReleaseV11 { prescription: NativePrescriptionReleaseV12; returns: ReturnDisclosure }
 const fail = (): never => { throw new Error("Invalid native prescription release evidence; review a fresh package."); };
 function require(value: unknown): asserts value { if (!value) fail(); }
 function keys(value: unknown, names: string): void {
@@ -154,8 +157,34 @@ function validateNativeCorrections(s: ReleaseSnapshot): void {
   });
   validateNativePrescriptions({ ...s, schema_version: 10, native_prescriptions: orders, native_dispenses: fills });
 }
+function validateNativeReturns(s: ReleaseSnapshot): void {
+  require(Array.isArray(s.native_prescriptions) && Array.isArray(s.native_dispenses));
+  const summaries = new Map<string, ReturnSummary>();
+  function plainPrescription(value: NativePrescriptionRelease): NativePrescriptionReleaseV11 {
+    require("returns" in value);
+    const v = value as NativePrescriptionReleaseV12;
+    validateAuthorizationCorrectionSummary(v.returns);
+    const prior = summaries.get(v.id); require(!prior || correctionEvidenceEqual(prior, v.returns));
+    summaries.set(v.id, v.returns);
+    const { returns: _returns, ...base } = v; return base;
+  }
+  const orders = s.native_prescriptions.map(plainPrescription);
+  const counts = new Map<string, { events: number; dispenses: number }>();
+  const fills = s.native_dispenses.map(value => {
+    require("returns" in value);
+    const d = value as NativeDispenseReleaseV12, base = plainPrescription(d.prescription);
+    validateReturnDisclosure(d.returns, { authorization_id: base.id, pet_id: s.patient.id, dispense_id: d.id }, base.authorization_hash, d.artifact, d.pickup);
+    const count = counts.get(base.id) ?? { events: 0, dispenses: 0 };
+    count.events += d.returns.events.length; count.dispenses += d.returns.events.length ? 1 : 0;
+    require(count.events <= d.prescription.returns.event_count && count.dispenses <= d.prescription.returns.affected_dispense_count);
+    counts.set(base.id, count);
+    const { returns: _returns, ...rest } = d; return { ...rest, prescription: base };
+  });
+  validateNativePrescriptions({ ...s, schema_version: 11, native_prescriptions: orders, native_dispenses: fills });
+}
 /** Validates clinical projections; cryptographic verification of saved source artifacts is server-side. */
 export function validateNativePrescriptions(s: ReleaseSnapshot): void {
+  if (s.schema_version === 12) { validateNativeReturns(s); return; }
   if (s.schema_version === 11) { validateNativeCorrections(s); return; }
   if (s.schema_version !== 10) {
     require(s.native_prescriptions === undefined && s.native_dispenses === undefined && s.selection?.native_prescription_ids === undefined && s.selection?.native_dispense_ids === undefined);
@@ -197,10 +226,10 @@ const escape = (v: unknown) => String(v ?? "Not recorded").replace(/[&<>"']/g, c
 const field = (label: string, v: unknown) => `<div><dt>${escape(label)}</dt><dd>${escape(v)}</dd></div>`;
 function order(v: NativePrescriptionRelease): string {
   const a = v.artifact, u = v.usage;
-  return `${v.status.state === "active" ? "" : `<aside><strong>${escape(v.status.state.toUpperCase())} — historical prescription</strong><p>Status recorded when this package was reviewed.</p></aside>`}<dl>${field("Patient at signing", `${a.patient.name} · ${a.patient.species}`)}${field("Client at signing", a.household.name)}${field("Client address at signing", a.household.address)}${field("Medication", a.medication.name)}${field("Strength / form", `${a.medication.strength} / ${a.medication.form}`)}${field("Directions as signed", a.medication.directions)}${field("Route", a.medication.route)}${field("Maximum quantity per fill", `${a.quantity_per_fill} ${a.unit}`)}${field("Refills originally authorized", a.refills_authorized)}${field("Valid from / through", `${a.starts_on} / ${a.expires_on}`)}${field("Prescriber", a.prescriber.name)}${field("License", `${a.prescriber.license_state} ${a.prescriber.license_number}`)}${field("Practice at signing", a.prescriber.practice_name)}${field("Practice address", a.prescriber.practice_address)}${field("Practice phone", a.prescriber.practice_phone)}${field("Electronically signed by", a.signature_name)}${field("Signed at", a.signed_at)}${field("Status when package reviewed", v.status.state)}${field("Status reason", v.status.reason)}${field("Status event time", v.status.event_at)}${field("Replacement authorization reference", v.status.replacement_id)}</dl><p>This frozen order history does not authorize a new fill, confirm administration or establish current eligibility.</p><h4>Native dispensing totals when reviewed</h4><dl>${field("Recorded quantity dispensed", `${u.dispensed_quantity} ${a.unit}`)}${field("Used fill slots", u.used_fill_slots)}${field("Forfeited quantity", `${u.forfeited_quantity} ${a.unit}`)}${field("Recorded remaining allowance", u.remaining_quantity === null ? "Unknown — external pharmacy" : `${u.remaining_quantity} ${a.unit}`)}${field("Unopened fill slots", u.unopened_fill_slots)}</dl><p>Outside pharmacy fulfillment is unknown. These totals may include dispensing events not selected for this package. Remaining allowance is historical accounting, not permission to dispense.</p><dl>${field("Authorization reference", v.id)}${field("Signed authorization fingerprint", v.authorization_hash)}</dl>${"corrections" in v ? renderAuthorizationCorrectionSummary((v as NativePrescriptionReleaseV11).corrections) : ""}`;
+  return `${v.status.state === "active" ? "" : `<aside><strong>${escape(v.status.state.toUpperCase())} — historical prescription</strong><p>Status recorded when this package was reviewed.</p></aside>`}<dl>${field("Patient at signing", `${a.patient.name} · ${a.patient.species}`)}${field("Client at signing", a.household.name)}${field("Client address at signing", a.household.address)}${field("Medication", a.medication.name)}${field("Strength / form", `${a.medication.strength} / ${a.medication.form}`)}${field("Directions as signed", a.medication.directions)}${field("Route", a.medication.route)}${field("Maximum quantity per fill", `${a.quantity_per_fill} ${a.unit}`)}${field("Refills originally authorized", a.refills_authorized)}${field("Valid from / through", `${a.starts_on} / ${a.expires_on}`)}${field("Prescriber", a.prescriber.name)}${field("License", `${a.prescriber.license_state} ${a.prescriber.license_number}`)}${field("Practice at signing", a.prescriber.practice_name)}${field("Practice address", a.prescriber.practice_address)}${field("Practice phone", a.prescriber.practice_phone)}${field("Electronically signed by", a.signature_name)}${field("Signed at", a.signed_at)}${field("Status when package reviewed", v.status.state)}${field("Status reason", v.status.reason)}${field("Status event time", v.status.event_at)}${field("Replacement authorization reference", v.status.replacement_id)}</dl><p>This frozen order history does not authorize a new fill, confirm administration or establish current eligibility.</p><h4>Native dispensing totals when reviewed</h4><dl>${field("Recorded quantity dispensed", `${u.dispensed_quantity} ${a.unit}`)}${field("Used fill slots", u.used_fill_slots)}${field("Forfeited quantity", `${u.forfeited_quantity} ${a.unit}`)}${field("Recorded remaining allowance", u.remaining_quantity === null ? "Unknown — external pharmacy" : `${u.remaining_quantity} ${a.unit}`)}${field("Unopened fill slots", u.unopened_fill_slots)}</dl><p>Outside pharmacy fulfillment is unknown. These totals may include dispensing events not selected for this package. Remaining allowance is historical accounting, not permission to dispense.</p><dl>${field("Authorization reference", v.id)}${field("Signed authorization fingerprint", v.authorization_hash)}</dl>${"corrections" in v ? renderAuthorizationCorrectionSummary((v as NativePrescriptionReleaseV11).corrections) : ""}${"returns" in v ? renderReturnSummary((v as NativePrescriptionReleaseV12).returns) : ""}`;
 }
 export function renderNativePrescriptions(s: ReleaseSnapshot): string {
   validateNativePrescriptions(s);
-  if (s.schema_version !== 10 && s.schema_version !== 11) return "";
-  return s.native_prescriptions!.map(v => `<article><h2>Selected signed prescription</h2>${order(v)}</article>`).join("") + s.native_dispenses!.map(d => `<article><h2>Selected recorded dispense</h2><dl>${field("Dispense reference", d.id)}${field("Quantity in this event", `${d.artifact.quantity} ${d.artifact.unit}`)}${field("Fill", d.artifact.fill_index === 0 ? "Initial fill" : `Refill ${d.artifact.fill_index}`)}${field("Dispensed at", d.artifact.dispensed_at)}${field("Recorded by", d.artifact.recorded_by.name)}</dl><p>A dispensing event may be a partial fill; it does not establish administration.</p><h3>Dispensed lots</h3>${d.artifact.lots.map(l => `<dl>${field("Lot number", l.number)}${field("Expiration date", l.expires_on)}${field("Quantity", `${l.quantity} ${d.artifact.unit}`)}</dl>`).join("")}<h3>${s.schema_version === 11 ? "Original pickup when reviewed" : "Pickup when reviewed"}</h3>${d.pickup ? `<dl>${field("Recipient", d.pickup.recipient_name)}${field("Picked up at", d.pickup.picked_up_at)}${field("Recorded by staff reference", d.pickup.actor_id)}</dl>` : "<p>No pickup recorded for this dispense.</p>"}<h3>Signed prescription context for this dispense</h3><p>This context is included to interpret the selected dispense; it does not select other orders or dispensing events.</p>${order(d.prescription)}${s.schema_version === 11 ? renderDispenseCorrectionDisclosure((d as NativeDispenseReleaseV11).corrections, d.pickup) : ""}${field("Original full dispensing artifact fingerprint (before clinical projection)", d.artifact_hash)}</article>`).join("");
+  if (s.schema_version !== 10 && s.schema_version !== 11 && s.schema_version !== 12) return "";
+  return s.native_prescriptions!.map(v => `<article><h2>Selected signed prescription</h2>${order(v)}</article>`).join("") + s.native_dispenses!.map(d => `<article><h2>Selected recorded dispense</h2><dl>${field("Dispense reference", d.id)}${field("Quantity in this event", `${d.artifact.quantity} ${d.artifact.unit}`)}${field("Fill", d.artifact.fill_index === 0 ? "Initial fill" : `Refill ${d.artifact.fill_index}`)}${field("Dispensed at", d.artifact.dispensed_at)}${field("Recorded by", d.artifact.recorded_by.name)}</dl><p>A dispensing event may be a partial fill; it does not establish administration.</p><h3>Dispensed lots</h3>${d.artifact.lots.map(l => `<dl>${field("Lot number", l.number)}${field("Expiration date", l.expires_on)}${field("Quantity", `${l.quantity} ${d.artifact.unit}`)}</dl>`).join("")}<h3>${(s.schema_version === 11 || s.schema_version === 12) ? "Original pickup when reviewed" : "Pickup when reviewed"}</h3>${d.pickup ? `<dl>${field("Recipient", d.pickup.recipient_name)}${field("Picked up at", d.pickup.picked_up_at)}${field("Recorded by staff reference", d.pickup.actor_id)}</dl>` : "<p>No pickup recorded for this dispense.</p>"}<h3>Signed prescription context for this dispense</h3><p>This context is included to interpret the selected dispense; it does not select other orders or dispensing events.</p>${order(d.prescription)}${(s.schema_version === 11 || s.schema_version === 12) ? renderDispenseCorrectionDisclosure((d as NativeDispenseReleaseV11).corrections, d.pickup) : ""}${s.schema_version === 12 ? renderReturnDisclosure((d as NativeDispenseReleaseV12).returns, d.artifact.unit) : ""}${field("Original full dispensing artifact fingerprint (before clinical projection)", d.artifact_hash)}</article>`).join("");
 }

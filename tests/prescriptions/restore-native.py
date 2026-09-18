@@ -49,6 +49,8 @@ tables = [
     'inventory_lots', 'catalog_products', 'billing_invoice_items', 'billing_invoices',
     'record_releases', 'record_release_sources', 'record_release_events',
     'native_dispense_correction_events', 'native_dispense_correction_operations',
+    'native_return_policy_decisions', 'native_return_policy_state', 'native_return_events',
+    'native_return_operations', 'native_return_stock_links',
 ]
 
 
@@ -135,6 +137,36 @@ def correction_boundaries_query():
     );"""
 
 
+def return_evidence_query():
+    return """with targets as (
+      select distinct authorization_id,pet_id,dispense_id from public.native_return_events
+    ), chains as (
+      select dispense_id,public.native_return_verified(authorization_id,pet_id,dispense_id) evidence from targets
+    ), authors as (select distinct authorization_id from targets)
+    select jsonb_build_object(
+      'chains',(select count(*) from chains),
+      'events',(select count(*) from public.native_return_events),
+      'verified',(select coalesce(bool_and(evidence is not null),false) from chains),
+      'chain_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('dispense_id',dispense_id,'evidence',evidence) order by dispense_id),'[]') from chains)),
+      'summary_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('authorization_id',authorization_id,'summary',public.native_return_summary(authorization_id)) order by authorization_id),'[]') from authors)),
+      'policies_verified',(select coalesce(bool_and(public.native_return_policy_verified(version)=document),false) from public.native_return_policy_decisions),
+      'current_policy_sha256',public.native_fulfillment_hash(public.native_return_policy_verified()),
+      'positive_movements',(select count(*) from public.inventory_movements where kind='native_return'),
+      'stock_links',(select count(*) from public.native_return_stock_links),
+      'invalid_stock_links',(select count(*) from public.native_return_stock_links l left join public.inventory_movements m on m.id=l.movement_id left join public.native_return_events e on e.id=l.event_id left join public.native_dispense_allocations a on a.id=l.allocation_id where m.id is null or e.id is null or a.id is null or m.kind is distinct from 'native_return' or m.quantity is distinct from l.quantity or m.quantity<=0 or m.lot_id is distinct from l.lot_id or a.lot_id is distinct from l.lot_id or a.dispense_id is distinct from e.dispense_id or e.action is distinct from 'restock' or m.created_by is distinct from e.actor_id or m.created_at is distinct from e.created_at),
+      'unlinked_positive_movements',(select count(*) from public.inventory_movements m where m.kind='native_return' and not exists(select 1 from public.native_return_stock_links l where l.movement_id=m.id)),
+      'schema12_releases',(select count(*) from public.record_releases where snapshot->>'schema_version'='12'),
+      'schema12_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('id',id,'snapshot',snapshot,'hash',source_hash) order by id),'[]') from public.record_releases where snapshot->>'schema_version'='12'))
+    );"""
+
+
+def return_boundaries_query():
+    return """select jsonb_build_object(
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'triggers',(select coalesce(jsonb_agg(pg_get_triggerdef(t.oid,true) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and (c.relname in('native_return_policy_decisions','native_return_policy_state','native_return_events','native_return_operations','native_return_stock_links','inventory_movements'))),
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'security_definer',p.prosecdef,'volatility',p.provolatile,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'native_return_%' or p.proname in('read_native_return_policy','configure_native_return_policy','recover_native_return_policy','preview_native_dispense_return','record_native_dispense_return','recover_native_dispense_return','read_native_dispense_returns','list_native_dispense_returns','read_native_return_intake','read_native_prescription_print_v3','release_preview_v12_internal','preview_record_release_v12')))
+    );"""
+
+
 try:
     verify_project()
     project_verified = True
@@ -157,6 +189,16 @@ try:
     before_grants = json.loads(snapshot_sql(grants_query()))
     before_corrections = json.loads(snapshot_sql(correction_evidence_query()))
     before_correction_boundaries = json.loads(snapshot_sql(correction_boundaries_query()))
+    before_returns = json.loads(snapshot_sql(return_evidence_query()))
+    before_return_boundaries = json.loads(snapshot_sql(return_boundaries_query()))
+    check(before_returns['chains'] > 0 and before_returns['verified'], 'Populated verified return chains required')
+    check(before_returns['schema12_releases'] > 0, 'Populated schema12 return release evidence required')
+    check(before_returns['policies_verified'], 'Historical return policy decisions must verify')
+    check(before_returns['positive_movements'] > 0 and before_returns['positive_movements'] == before_returns['stock_links']
+          and before_returns['invalid_stock_links'] == 0 and before_returns['unlinked_positive_movements'] == 0,
+          'Populated restock must have exact bidirectional movement links')
+    check(before['native_return_operations']['rows'] == before_returns['events'], 'Every return event requires an operation receipt')
+    check(all(row['rls'] for row in before_return_boundaries['tables']), 'Return and stock ledger RLS must be enabled')
     check(before_corrections['chains'] > 0 and before_corrections['events'] > 0 and before_corrections['verified'],
           'Populated verified correction chains required')
     check(before_corrections['schema11_releases'] > 0, 'Populated schema11 corrected-release evidence required')
@@ -202,6 +244,8 @@ try:
         ('native_prescription_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation',operation,'request',request)"),
         ('native_fulfillment_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation',operation,'request',request)"),
         ('native_refill_operations', 'request'),
+        ('native_return_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','record_native_dispense_return','request',request)"),
+        ('native_return_policy_decisions', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','configure_native_return_policy','request',request)"),
         ('native_dispense_correction_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','append_native_dispense_correction','request',request)"),
     ]:
         invalid = sql("select count(*) from public." + table + " where request_hash is distinct from encode(sha256(convert_to((" + basis + ")::text,'UTF8')),'hex');", restored)
@@ -219,6 +263,10 @@ try:
           'Restored correction chains, immutable receipts, summaries and schema11 snapshots must verify exactly')
     check(json.loads(sql(correction_boundaries_query(), restored)) == before_correction_boundaries,
           'Correction RLS, immutability triggers and private/public function grants must survive restore')
+    restored_returns = json.loads(sql(return_evidence_query(), restored))
+    check(restored_returns == before_returns, 'Restored return chains, balances, policy, stock links and schema12 evidence must verify exactly')
+    check(json.loads(sql(return_boundaries_query(), restored)) == before_return_boundaries,
+          'Return RLS, immutable/deferred stock-link triggers and private/public function grants must survive restore')
     success = True
 finally:
     cleanup_errors = []
@@ -285,5 +333,6 @@ if success:
                'tables': before, 'verified_dispenses': verified['count'],
                'verified_correction_evidence': restored_corrections,
                'correction_boundaries_verified': True,
+               'verified_return_evidence': restored_returns, 'return_boundaries_verified': True,
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     print(json.dumps(summary, sort_keys=True))

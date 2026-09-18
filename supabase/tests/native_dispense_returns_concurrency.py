@@ -87,8 +87,8 @@ def contended(first_query, second_query, second_expected):
 import tomllib
 inspection=subprocess.run(['docker','inspect',CONTAINER],capture_output=True,text=True,check=True,timeout=30)
 check(json.loads(inspection.stdout)[0]['Config']['Labels']['com.supabase.cli.project']==project_id,'Verified owned local project')
-database='lrv_native_fulfillment_race_'+uuid.uuid4().hex
-marker='owned-native-fulfillment-race-'+uuid.uuid4().hex
+database='lrv_native_return_race_'+uuid.uuid4().hex
+marker='owned-native-return-race-'+uuid.uuid4().hex
 created=False
 fixture=Path(__file__).with_name('native_prescriptions_lifecycle.test.sql').read_text().split('-- FIXTURE_BEGIN')[1].split('-- FIXTURE_END')[0]
 def scalar(query):return sql(query).stdout.strip().splitlines()[-1]
@@ -151,100 +151,86 @@ try:
     def effects(inv,l):return scalar("select jsonb_build_object('stock',(select sum(quantity) from inventory_movements where lot_id="+quote(l)+"),'charges',(select count(*) from billing_invoice_items where invoice_id="+quote(inv)+"))::text;")
     def rejected(*codes):return lambda code,out,err:code!=0 and any(c in err for c in codes)
     def success(code,out,err):return code==0
-    # Different operations reviewed against the same unopened slot cannot both open it.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);win,lose=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(dispense(win,r),dispense(lose,r),rejected('40001'))
-    check(fill_receipt(lose) is None,'Losing slot race creates no receipt')
-    check(json.loads(effects(t['invoice_id'],l))==dict(stock=8,charges=1),'One slot winner debits and charges exactly once')
-    # Exact replay waits and recovers the first immutable transaction, without child effects.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    contended(dispense(op,r),dispense(op,r),success)
-    check(json.loads(effects(t['invoice_id'],l))==dict(stock=8,charges=1),'Same UUID race debits and charges once')
-    # Distinct authorizations/invoices compete for the same physical lot.
-    l=lot(10);t1=target(signed(),l,quantity='6');t2=target(signed(),l,quantity='6');r1,r2=reviewed(t1),reviewed(t2);op1,op2=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(dispense(op1,r1),dispense(op2,r2),rejected('23514','40001'))
-    check(fill_receipt(op2) is None and json.loads(effects(t2['invoice_id'],l))==dict(stock=4,charges=0),'Stock loser rolls back allowance and charge')
-    # Invoice issuance wins its row lock; reviewed draft can no longer be charged.
-    service=invoke('save_catalog_product','null','null',quote('Synthetic service'),quote('service'),quote(''),quote('service'),'100','true')['id']
-    a=signed();l=lot();t=target(a,l)
-    invoke('add_invoice_service',quote(str(uuid.uuid4())),quote(t['invoice_id']),quote(fx['pet']),quote(service),'1')
-    r=reviewed(t);op=str(uuid.uuid4())
-    contended(staff+call('issue_billing_invoice',quote(t['invoice_id']),'2'),dispense(op,r),rejected('23514','40001'))
-    check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=10,charges=1),'Invoice issuance prevents dispensing side effects')
-    # A service charge invalidates reviewed invoice evidence while it holds that row.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    charge=staff+call('add_invoice_service',quote(str(uuid.uuid4())),quote(t['invoice_id']),quote(fx['pet']),quote(service),'1')
-    contended(charge,dispense(op,r),rejected('40001'))
-    check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=10,charges=1),'Competing service charge keeps only its own invoice effect')
-    # A terminal cancellation winning authorization serialization blocks dispensing.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    contended(operation('cancel_native_prescription',str(uuid.uuid4()),cancel_request(a)),dispense(op,r),rejected('23514','40001'))
-    check(fill_receipt(op) is None,'Canceled authorization cannot produce a fill')
-    # Conversely an actual fill invalidates a previously reviewed cancellation context.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);cancel_id=str(uuid.uuid4());cr=cancel_request(a)
-    contended(dispense(str(uuid.uuid4()),r),operation('cancel_native_prescription',cancel_id,cr),rejected('40001'))
-    check(receipt(cancel_id) is None,'Cancellation cannot ignore newly recorded native usage')
-    # Replacement is terminal-only and cannot leave an old-order fill behind it.
-    a=signed();d=draft();rr=replacement(a,d);l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    contended(operation('replace_native_prescription',str(uuid.uuid4()),rr),dispense(op,r),rejected('23514','40001'))
-    check(fill_receipt(op) is None,'Replacement winner leaves no prior-order fill')
-    # Explicit remainder closure versus another partial; no reopen or lost forfeiture.
-    a=signed();l=lot();t=target(a,l);invoke('record_native_dispense',quote(str(uuid.uuid4())),jsonsql(reviewed(t)))
-    t2={**t,'expected_slot_version':1};r=reviewed(t2);p=invoke('preview_native_slot_close',quote(a),quote(fx['pet']),'0')
-    close=dict(authorization_id=a,pet_id=fx['pet'],slot_index=0,expected_slot_version=1,expected_context_hash=p['context_hash'],reason='Synthetic forfeiture race',attest_forfeit=True);op=str(uuid.uuid4())
-    contended(operation('close_native_fill_slot',str(uuid.uuid4()),close),dispense(op,r),rejected('40001','23514'))
-    check(fill_receipt(op) is None and invoke('read_native_fulfillment',quote(a),quote(fx['pet']))['open_slot'] is None,'Forfeited slot cannot reopen through a stale partial')
-    # Operational request changes serialize before authorization and reject old versions.
-    a=signed();i=create_refill();p=invoke('preview_native_refill_link',quote(i),quote(fx['pet']),quote(a));tr=transition(i,'link');tr.update(authorization_id=a,expected_link_context_hash=p['context_hash']);invoke('transition_native_refill',quote(str(uuid.uuid4())),jsonsql(tr))
-    l=lot();t=target(a,l,refill=dict(id=i,expected_version=2));r=reviewed(t);op=str(uuid.uuid4());assignment=transition(i,'assign',2);assignment['assigned_to']=actor
-    contended(operation('transition_native_refill',str(uuid.uuid4()),assignment),dispense(op,r),rejected('40001'))
-    check(fill_receipt(op) is None and invoke('read_native_refill',quote(i),quote(fx['pet']))['refill']['version']==3,'Refill race keeps only operational winner')
-    # Receiving changes balance while dispensing waits on its exact stock row.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    receive=staff+call('receive_inventory',quote(str(uuid.uuid4())),quote(l),quote(fx['product']),quote('SYNTHETIC-'+l),quote('2099-12-31'),quote('Synthetic shelf'),'1',quote('Synthetic received during review'))
-    contended(receive,dispense(op,r),rejected('40001'))
-    check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=11,charges=0),'Receipt balance drift requires fresh review, with no partial effect')
-    # A current alert update holds the patient row and invalidates the old review.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    alert=staff+call('save_patient_problem','null',quote(fx['pet']),'null',quote('Synthetic concurrent alert'),quote('Synthetic caution'),'null',quote('active'),quote('high'))
-    contended(alert,dispense(op,r),rejected('40001'))
-    check(fill_receipt(op) is None,'Alert changed while waiting cannot be bypassed')
-    # Real three-writer schedule: receive owns product SHARE while waiting on lot;
-    # catalog UPDATE queues; native dispense joins SHARE before its lot wait.
-    sql('create extension if not exists pgrowlocks with schema extensions;')
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    tag='native_fill_product_'+uuid.uuid4().hex
-    def launch(suffix,query,hold=False):
-        proc=subprocess.Popen(COMMAND,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True);processes.append(proc)
-        proc.stdin.write('set application_name='+quote(tag+suffix)+";set statement_timeout='30s';begin;"+query+('\n' if hold else 'commit;\n'));proc.stdin.flush()
-        if not hold:proc.stdin.close()
-        return proc
-    def observe(suffix,condition):
-        deadline=time.monotonic()+15
-        while time.monotonic()<deadline:
-            if scalar('select count(*) from pg_stat_activity where application_name='+quote(tag+suffix)+' and '+condition+';')=='1':check(True,'Observed '+suffix+' '+condition);return
-            time.sleep(.03)
-        raise AssertionError('Native product schedule condition not observed: '+suffix)
-    blocker=launch('_lot','select 1 from inventory_lots where id='+quote(l)+' for update;',True);observe('_lot',"state='idle in transaction'")
-    receiver=launch('_receive',staff+call('receive_inventory',quote(str(uuid.uuid4())),quote(l),quote(fx['product']),quote('SYNTHETIC-'+l),quote('2099-12-31'),quote('Synthetic shelf'),'1',quote('Synthetic queued receiving')))
-    observe('_receive',"wait_event_type='Lock' and (select pid from pg_stat_activity where application_name="+quote(tag+'_lot')+")=any(pg_blocking_pids(pid))")
-    catalog=launch('_catalog',staff+call('save_catalog_product',quote(fx['product']),'1',quote('Synthetic medication'),quote('medication'),quote(''),quote('tablet'),'200','true'))
-    observe('_catalog',"wait_event_type='Lock' and (select pid from pg_stat_activity where application_name="+quote(tag+'_receive')+")=any(pg_blocking_pids(pid))")
-    filling=launch('_fill',dispense(op,r))
-    observe('_fill',"wait_event_type='Lock' and exists(select 1 from pg_locks k where k.pid=pg_stat_activity.pid and k.locktype='tuple' and k.relation='public.inventory_lots'::regclass and not k.granted)")
-    ownership="select count(*) from extensions.pgrowlocks('public.catalog_products') r join public.catalog_products p on p.ctid=r.locked_row cross join lateral unnest(r.pids,r.modes) x(pid,mode) where p.id="+quote(fx['product'])+" and x.mode='For Share' and x.pid=(select pid from pg_stat_activity where application_name="+quote(tag+'_fill')+");"
-    check(scalar(ownership)=='1','Actual native dispense owns exact product SHARE before lot wait')
-    blocker.stdin.write('commit;\n');blocker.stdin.close()
-    for proc,label in [(blocker,'lot holder'),(receiver,'receiver'),(catalog,'catalog')]:
-        proc.wait(timeout=30);check(proc.returncode==0,label+' failed: '+proc.stderr.read())
-    filling.wait(timeout=30);check(filling.returncode!=0 and '40001' in filling.stderr.read(),'Concurrent receiving invalidates the exact reviewed balance')
-    check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=11,charges=0),'Three-way stale dispense rolls back stock and billing effects')
-    # Role revocation while authorization gate is held is rechecked after waiting.
-    a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    revocation="select pg_advisory_xact_lock(hashtextextended('native-prescription-authorization:'||"+quote(a)+"::text,0));update profiles set is_active=false where id="+quote(actor)+';'
-    contended(revocation,dispense(op,r),rejected('42501'))
-    sql('update profiles set is_active=true where id='+quote(actor)+';')
-    check(fill_receipt(op) is None,'Actor revoked during wait has no receipt or fill')
+    email="native-race@example.test"
+    sql("update clients set primary_email="+quote(email)+" where id="+quote(fx['client'])+';')
+    sql("insert into record_release_policy(id,enabled,accepted_schema_version,accepted_by,accepted_at,acceptance_reference) values(true,true,12,'Synthetic',now(),'Synthetic race only');")
+    def selection(a,fill=None):return dict(native_prescription_ids=[a],native_dispense_ids=[] if fill is None else [fill])
+    def preview(sel):return invoke('preview_record_release_v12',quote(fx['pet']),quote(fx['client']),quote('EMAIL'),quote(email),jsonsql(sel))
+    def confirm(i,sel,p):return staff+call('confirm_record_release',quote(i),quote(fx['pet']),quote(fx['client']),quote('EMAIL'),quote(email),jsonsql(sel),jsonsql(p['snapshot']),quote(p['source_hash']),'true')
+    def absent(i):check(scalar('select count(*) from record_releases where id='+quote(i)+';')=='0','Rejected review leaves no release')
+    def filled():
+        a=signed();t=target(a,lot());d=str(uuid.uuid4())
+        invoke('record_native_dispense',quote(d),jsonsql(reviewed(t)))
+        return a,d,t
+    def intent(a,d,action='intake',quantity='1',intake=None):
+        read=invoke('read_native_dispense_returns',quote(a),quote(fx['pet']),quote(d))
+        return dict(target=dict(authorization_id=a,pet_id=fx['pet'],dispense_id=d),action=action,intake_id=intake,allocations=[dict(allocation_id=read['allocations'][0]['allocation_id'],quantity=quantity)],custody='clinic_retained' if action=='intake' else None,package_condition='sealed_intact' if action=='intake' else None,storage_history='controlled' if action=='intake' else None,reason='Synthetic physical return',note='Synthetic concurrent custody note')
+    def review(i):
+        p=invoke('preview_native_dispense_return',jsonsql(i))
+        check(p['allowed'],'Synthetic target allowed before contention')
+        return dict(intent=i,expected_context_hash=p['context_hash'],expected_head=p['context']['head'],attest_review=True,attest_restock=i['action']=='restock')
+    def append(i,r):return operation('record_native_dispense_return',i,r)
+    def intake(a,d):
+        i=str(uuid.uuid4());invoke('record_native_dispense_return',quote(i),jsonsql(review(intent(a,d))));return i
+    def read(a,d):return invoke('read_native_dispense_returns',quote(a),quote(fx['pet']),quote(d))
+    def restock(a,d,i):return review(intent(a,d,'restock','1',i))
+    def policy_request(enabled):return dict(expected_version=invoke('read_native_return_policy')['version'],enabled=enabled,review_reference='Synthetic local acceptance only',attest_review=True)
+    sql("insert into native_return_policy_state values(true,0,null);")
+    invoke('configure_native_return_policy',quote(str(uuid.uuid4())),jsonsql(policy_request(True)))
+    # Two new intakes cannot both consume the same reviewed allocation balance.
+    a,d,t=filled();r=review(intent(a,d));one,two=str(uuid.uuid4()),str(uuid.uuid4())
+    contended(append(one,r),append(two,r),rejected('40001'))
+    check(read(a,d)['allocations'][0]['returned_quantity']=='1.000','Only one cumulative intake')
+    check(invoke('recover_native_dispense_return',quote(two)) is None,'Stale intake has no receipt')
+    # Concurrent exact UUID recovers once, including the stock-producing operation.
+    a,d,t=filled();i=intake(a,d);r=restock(a,d,i);op=str(uuid.uuid4())
+    contended(append(op,r),append(op,r),success)
+    check(read(a,d)['allocations'][0]['restocked_quantity']=='1.000','Restock UUID does not duplicate movement')
+    check(scalar("select count(*) from native_return_stock_links where event_id="+quote(op)+';')=='1','Exactly one attributed positive movement')
+    # Disposal and restocking compete for the same held quantity/head.
+    a,d,t=filled();i=intake(a,d);dispose=review(intent(a,d,'dispose','1',i));stock=restock(a,d,i)
+    contended(append(str(uuid.uuid4()),dispose),append(str(uuid.uuid4()),stock),rejected('40001','23514'))
+    check(read(a,d)['allocations'][0]['held_quantity']=='0.000','Disposition consumes held once')
+    # Policy changes while restocking waits invalidate the exact reviewed context.
+    a,d,t=filled();i=intake(a,d);r=restock(a,d,i);change=policy_request(False)
+    contended(operation('configure_native_return_policy',str(uuid.uuid4()),change),append(str(uuid.uuid4()),r),rejected('40001','42501','23514'))
+    check(read(a,d)['allocations'][0]['held_quantity']=='1.000','Disabled policy leaves custody unchanged')
+    invoke('configure_native_return_policy',quote(str(uuid.uuid4())),jsonsql(policy_request(True)))
+    # Current inventory and product changes must force a fresh stock review.
+    a,d,t=filled();i=intake(a,d);r=restock(a,d,i);lid=t['allocations'][0]['lot_id']
+    adjust=staff+call('adjust_inventory',quote(str(uuid.uuid4())),quote(lid),'1',quote('Synthetic adjustment'))
+    contended(adjust,append(str(uuid.uuid4()),r),rejected('40001'))
+    def catalog_change(active):
+        product=json.loads(scalar("select to_jsonb(p) from catalog_products p where id="+quote(fx['product'])+';'))
+        return staff+call('save_catalog_product',quote(product['id']),str(product['version']),quote(product['name']),quote(product['kind']),quote(product['manufacturer']),quote(product['unit']),str(product['unit_price_cents']),'true' if active else 'false')
+    a,d,t=filled();i=intake(a,d);r=restock(a,d,i)
+    contended(catalog_change(False),append(str(uuid.uuid4()),r),rejected('40001','42501','23514'))
+    sql(transaction(catalog_change(True)))
+    # Original pickup wins first: reviewed intake must be refreshed.
+    a,d,t=filled();r=review(intent(a,d));p=invoke('preview_native_pickup',quote(d),quote(fx['pet']),'null')
+    pickup=dict(authorization_id=a,pet_id=fx['pet'],dispense_id=d,refill_close=None,expected_context_hash=p['context_hash'],recipient_name='Synthetic recipient',recipient_relationship='Owner',reason='Synthetic handoff',attest_handoff=True)
+    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),append(str(uuid.uuid4()),r),rejected('40001'))
+    # Intake wins first: a later unqualified original pickup is refused.
+    a,d,t=filled();r=review(intent(a,d));p=invoke('preview_native_pickup',quote(d),quote(fx['pet']),'null');pickup.update(authorization_id=a,dispense_id=d,expected_context_hash=p['context_hash'])
+    contended(append(str(uuid.uuid4()),r),operation('record_native_pickup',str(uuid.uuid4()),pickup),rejected('23514'))
+    # Current print waits for and discloses the committed physical intake.
+    a,d,t=filled();r=review(intent(a,d))
+    contended(append(str(uuid.uuid4()),r),staff+call('read_native_prescription_print_v3',quote(a),quote(d)),lambda code,out,err:code==0 and 'Synthetic concurrent custody note' in out)
+    # Client-package confirmation shares the source gate in both arrival orders.
+    a,d,t=filled();sel=selection(a,d);p=preview(sel);op=str(uuid.uuid4());r=review(intent(a,d))
+    contended(append(str(uuid.uuid4()),r),confirm(op,sel,p),rejected('40001'));absent(op)
+    a,d,t=filled();sel=selection(a,d);p=preview(sel);op=str(uuid.uuid4());r=review(intent(a,d))
+    contended(confirm(op,sel,p),append(str(uuid.uuid4()),r),success)
+    check(not invoke('read_record_release',quote(op))['eligible'],'Return invalidates saved release')
+    check(json.loads(scalar(transaction(confirm(op,sel,p))))['snapshot']==p['snapshot'],'Historical exact replay preserved')
+    # Current DVM authority must be checked again after the authorization wait.
+    a,d,t=filled();i=intake(a,d);r=restock(a,d,i)
+    gate="select pg_advisory_xact_lock(hashtextextended('native-prescription-authorization:'||"+quote(a)+"::text,0));"
+    contended(gate+"delete from user_roles where user_id="+quote(actor)+" and role='DVM';",append(str(uuid.uuid4()),r),rejected('42501','23514'))
+    sql("insert into user_roles(user_id,role) values("+quote(actor)+",'DVM');")
+    a,d,t=filled();r=review(intent(a,d));gate="select pg_advisory_xact_lock(hashtextextended('native-prescription-authorization:'||"+quote(a)+"::text,0));"
+    contended(gate+"update profiles set is_active=false where id="+quote(actor)+';',append(str(uuid.uuid4()),r),rejected('42501'))
+
 finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
@@ -255,4 +241,4 @@ finally:
             proc.wait(timeout=10)
         sql(f'drop database "{database}";')
         check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
-print(f'Native fulfillment concurrency: {checks} checks passed; no provider calls.')
+print(f'Native return concurrency: {checks} checks passed; no provider calls.')
