@@ -1,12 +1,42 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { paymentRoute, validPaymentAccess } from "./shared/payment-client";
+import { bootstrapEstimateDecisionAccess } from "./shared/estimate-decision-public-api";
+
+// Strip private estimate access before importing a page, staff auth or marketing.
+const estimateAccess = bootstrapEstimateDecisionAccess(window);
 
 const paymentAccess = paymentRoute(
   window.location.pathname,
   window.location.hash,
 );
-if (paymentAccess) {
+if (estimateAccess) {
+  const referrer = document.createElement("meta");
+  referrer.name = "referrer";
+  referrer.content = "no-referrer";
+  document.head.appendChild(referrer);
+  const robots = document.createElement("meta");
+  robots.name = "robots";
+  robots.content = "noindex, nofollow, noarchive";
+  document.head.appendChild(robots);
+  document.title = "Your estimate · The Living Room Vet";
+  void import("./shared/EstimateDecisionPage.tsx").then(
+    ({ default: EstimateDecisionPage }) => {
+      createRoot(document.getElementById("root")!).render(
+        <EstimateDecisionPage access={estimateAccess} />,
+      );
+    },
+  ).catch(() => {
+    estimateAccess.retire();
+    const root = document.getElementById("root");
+    if (root) {
+      const message = document.createElement("p");
+      message.setAttribute("role", "alert");
+      message.textContent = "Your estimate could not be opened. Please reopen the original link or contact the practice.";
+      root.replaceChildren(message);
+    }
+  });
+} else if (paymentAccess) {
   if (!validPaymentAccess(paymentAccess)) paymentAccess.token = "";
   window.addEventListener(
     "pagehide",
