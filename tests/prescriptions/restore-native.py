@@ -61,6 +61,10 @@ tables = [
     'native_estimate_draft_operations', 'native_estimate_draft_closures',
     'native_estimate_publication_preparations', 'native_estimate_publication_artifacts',
     'native_estimate_publication_events', 'native_estimate_publication_closures',
+    'native_estimate_decision_grants', 'native_estimate_decision_grant_captures',
+    'native_estimate_decision_grant_events', 'native_estimate_decisions',
+    'native_estimate_decision_operations', 'native_estimate_decision_closures',
+    'native_estimate_decision_access_budget',
 ]
 
 
@@ -264,6 +268,70 @@ def publication_boundaries_query():
     );"""
 
 
+def decision_evidence_query():
+    # Full verified historical outputs are hashed, never returned as public payloads.
+    # No current eligibility filter: revoked and expired evidence must still verify.
+    return """select jsonb_build_object(
+      'grants',(select count(*) from public.native_estimate_decision_grants),
+      'decisions',(select count(*) from public.native_estimate_decisions),
+      'closures',(select count(*) from public.native_estimate_decision_closures),
+      'bearer_decisions',(select count(*) from public.native_estimate_decisions where document#>>'{provenance,kind}'='grant'),
+      'witness_decisions',(select count(*) from public.native_estimate_decisions where document#>>'{provenance,kind}'='staff_witness'),
+      'staff_closed_grants',(select count(*) from public.native_estimate_decision_closures where principal->>'kind'='grant' and closed_by->>'kind'='staff'),
+      'bearer_closures',(select count(*) from public.native_estimate_decision_closures where principal->>'kind'='grant' and closed_by=principal),
+      'revoked',(select count(*) from public.native_estimate_decision_grants where public.native_estdec_verified_grant(id)->>'state'='revoked'),
+      'expired',(select count(*) from public.native_estimate_decision_grants where expires_at<statement_timestamp()),
+      'budget_rows',(select count(*) from public.native_estimate_decision_access_budget),
+      'verified_grants',(select public.native_fulfillment_hash(coalesce(jsonb_agg(public.native_estdec_verified_grant(id) order by id),'[]')) from public.native_estimate_decision_grants),
+      'verified_states',(select public.native_fulfillment_hash(coalesce(jsonb_agg(public.native_estdec_verified_state(estimate_id) order by estimate_id),'[]')) from (select estimate_id from public.native_estimate_decision_grants union select estimate_id from public.native_estimate_decisions) roots),
+      'verified_operations',(select public.native_fulfillment_hash(coalesce(jsonb_agg(public.native_estdec_verified_operation(id) order by id),'[]')) from public.native_estimate_decision_operations),
+      'verified_closures',(select public.native_fulfillment_hash(coalesce(jsonb_agg(public.native_estdec_verified_closure(id) order by id),'[]')) from public.native_estimate_decision_closures),
+      'invalid_context_hashes',(select count(*) from public.native_estimate_decision_grant_captures where context_hash is distinct from encode(sha256(convert_to(capability_context,'UTF8')),'hex')),
+      'invalid_capture_hashes',(select count(*) from public.native_estimate_decision_grant_captures c where record_hash is distinct from public.native_fulfillment_hash(to_jsonb(c)-'record_hash')),
+      'invalid_request_hashes',(select count(*) from public.native_estimate_decision_operations where request_hash is distinct from public.native_estdec_request_hash(family,principal,mutation)),
+      'invalid_closure_request_hashes',(select count(*) from public.native_estimate_decision_closures where request_hash is distinct from public.native_estdec_request_hash(family,principal,mutation)),
+      'conflicting_closures',(select count(*) from public.native_estimate_decision_closures c join public.native_estimate_decision_operations o using(id))
+    );"""
+
+
+def decision_boundaries_query():
+    return """select jsonb_build_object(
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,'owner',pg_get_userbyid(c.relowner),
+        'triggers',(select coalesce(jsonb_agg(jsonb_build_object('name',t.tgname,'definition',pg_get_triggerdef(t.oid,true),'enabled',t.tgenabled,'deferrable',t.tgdeferrable,'initially_deferred',t.tginitdeferred) order by t.tgname),'[]') from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal),
+        'grants',(select jsonb_object_agg(r,(select jsonb_object_agg(priv,has_table_privilege(r,c.oid,priv)) from unnest(array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) priv)) from unnest(array['anon','authenticated','service_role']) r),
+        'policies',(select coalesce(jsonb_agg(to_jsonb(p) order by policyname),'[]') from pg_policies p where p.schemaname='public' and p.tablename=c.relname)) order by c.relname)
+        from pg_class c where c.relnamespace='public'::regnamespace and c.relname in ('native_estimate_decision_grants','native_estimate_decision_grant_captures','native_estimate_decision_grant_events','native_estimate_decisions','native_estimate_decision_operations','native_estimate_decision_closures','native_estimate_decision_access_budget')),
+      'functions',(select jsonb_agg(jsonb_build_object('name',p.proname,'signature',p.oid::regprocedure::text,'definition',pg_get_functiondef(p.oid),'owner',pg_get_userbyid(p.proowner),'security_definer',p.prosecdef,'configuration',p.proconfig,
+        'grants',(select jsonb_object_agg(r,has_function_privilege(r,p.oid,'EXECUTE')) from unnest(array['anon','authenticated','service_role']) r)) order by p.oid::regprocedure::text)
+        from pg_proc p where p.pronamespace='public'::regnamespace and p.prokind='f' and (p.proname like 'native_estdec_%' or p.proname in ('preview_native_estimate_decision_grant','record_native_estimate_decision_grant','recover_native_estimate_decision_grant','close_native_estimate_decision_grant','read_native_estimate_decision_grants','record_native_estimate_witnessed_decision','recover_native_estimate_witnessed_decision','close_native_estimate_witnessed_decision','read_native_estimate_decisions','read_native_estimate_decision_state','reconcile_native_estimate_client_decision','native_estimate_decision_grant_capture_context','capture_native_estimate_decision_grant','native_estimate_decision_access_context','retrieve_native_estimate_decision','record_native_estimate_client_decision','recover_native_estimate_client_decision','close_native_estimate_client_decision')))
+    );"""
+
+
+def check_decision_boundaries(value):
+    check(len(value['tables']) == 7, 'All seven decision tables must be represented')
+    for table in value['tables']:
+        check(table['rls'] and not table['policies'] and not any(any(priv.values()) for priv in table['grants'].values()),
+              'Decision tables are private with RLS and no application-role raw privileges')
+        triggers = {t['name']: t for t in table['triggers']}
+        if table['name'] == 'native_estimate_decision_access_budget':
+            check(not triggers, 'Private rate budget is mutable operational state, not an immutable audited decision ledger')
+        else:
+            expected = {'native_estdec_immutable', 'native_estdec_no_truncate', 'native_estdec_audit', 'native_estdec_integrity'}
+            check(expected <= triggers.keys() and all(triggers[n]['enabled'] == 'O' for n in expected)
+                  and triggers['native_estdec_integrity']['deferrable'] and triggers['native_estdec_integrity']['initially_deferred'],
+                  'Six immutable decision tables require enabled immutable/audit/deferred integrity protections')
+    service_names = {'native_estimate_decision_grant_capture_context','capture_native_estimate_decision_grant','native_estimate_decision_access_context',
+                     'retrieve_native_estimate_decision','record_native_estimate_client_decision','recover_native_estimate_client_decision','close_native_estimate_client_decision'}
+    check(bool(value['functions']) and service_names <= {f['name'] for f in value['functions']}, 'Decision service entry points are represented')
+    for fn in value['functions']:
+        expected = {'anon': False, 'authenticated': False, 'service_role': False}
+        if fn['name'] in service_names:
+            expected['service_role'] = True
+        elif not fn['name'].startswith('native_estdec_'):
+            expected['authenticated'] = True
+        check(fn['grants'] == expected and fn['security_definer'], 'Decision helpers and staff/service boundaries retain exact execute authority')
+
+
 try:
     verify_project()
     project_verified = True
@@ -289,6 +357,14 @@ try:
     before_returns = json.loads(snapshot_sql(return_evidence_query()))
     before_return_boundaries = json.loads(snapshot_sql(return_boundaries_query()))
     before_finance = json.loads(snapshot_sql(finance_evidence_query()))
+    before_decisions = json.loads(snapshot_sql(decision_evidence_query()))
+    before_decision_boundaries = json.loads(snapshot_sql(decision_boundaries_query()))
+    check(before_decisions['grants'] >= 4 and before_decisions['decisions'] >= 2 and before_decisions['closures'] >= 2
+          and all(before_decisions[k] > 0 for k in ('bearer_decisions','witness_decisions','staff_closed_grants','bearer_closures','revoked','expired','budget_rows')),
+          'Populated grant, bearer/witness decision, independent closure, revoked/expired and private budget evidence required')
+    check(all(before_decisions[k] == 0 for k in ('invalid_context_hashes','invalid_capture_hashes','invalid_request_hashes','invalid_closure_request_hashes','conflicting_closures')),
+          'Decision context/capture/request hashes and exclusive closures must verify historically')
+    check_decision_boundaries(before_decision_boundaries)
     before_publications = json.loads(snapshot_sql(publication_evidence_query()))
     before_publication_boundaries = json.loads(snapshot_sql(publication_boundaries_query()))
     check(before_publications['preparations'] > 0 and before_publications['artifacts'] > 0
@@ -412,6 +488,13 @@ try:
           'Publication frozen preparations, lifecycle/receipt/closure chains and original artifact byte digests must survive restore')
     check(json.loads(sql(publication_boundaries_query(), restored)) == before_publication_boundaries,
           'Publication RLS policies, trigger definitions/enablement and private/staff/service function ACLs must survive restore')
+    restored_decisions = json.loads(sql(decision_evidence_query(), restored))
+    check(restored_decisions == before_decisions,
+          'Full verified grant/state/operation/closure outputs and historical hashes survive restore despite revoked/expired access')
+    restored_decision_boundaries = json.loads(sql(decision_boundaries_query(), restored))
+    check(restored_decision_boundaries == before_decision_boundaries,
+          'Decision function definitions/owners/execute grants and table RLS/audit/deferred guards survive without grant patching')
+    check_decision_boundaries(restored_decision_boundaries)
     restored_estimates = json.loads(sql(estimate_evidence_query(), restored))
     check(restored_estimates == before_estimates,
           'Restored estimate revisions, frozen catalog totals, exact receipts and terminal closures must verify')
@@ -491,6 +574,7 @@ if success:
                'verified_return_evidence': restored_returns, 'return_boundaries_verified': True,
                'verified_finance_evidence': restored_finance, 'finance_boundaries_verified': True,
                'verified_estimate_evidence': restored_estimates, 'estimate_boundaries_verified': True,
+               'verified_decision_evidence': restored_decisions, 'decision_boundaries_verified': True,
                'verified_publication_evidence': restored_publications, 'publication_boundaries_verified': True,
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     print(json.dumps(summary, sort_keys=True))

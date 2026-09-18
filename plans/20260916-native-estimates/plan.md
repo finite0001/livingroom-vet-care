@@ -1,6 +1,6 @@
 # Native estimates, acceptance and actual charge capture
 
-Status: draft foundation implemented as a candidate under verification; complete estimates are not yet implemented or accepted. This is the next dependent phase after native dispense finance. It does not replace remaining standalone feature parity or communications work.
+Status: native drafts and staff publication passed local acceptance; publication CI passed; combined CI and hosted rollout remain pending. Complete estimates are not yet implemented or accepted. This is the next dependent phase after native dispense finance. It does not replace remaining standalone feature parity or communications work.
 
 ## Outcome
 
@@ -14,9 +14,9 @@ Use immutable accepted line authorizations, consumed by actual work, with one at
 
 ## Phases and status
 
-1. **In progress — lifecycle and staff documents.** Versioned drafts, exact publication, replacement/withdrawal, immutable history and reviewed delivery.
-2. **Pending — client and staff decisions.** Separate capability-bound public review/accept/decline; explicit staff-witnessed attribution and recovery.
-3. **Pending — accepted work and billing.** Services, medications and vaccines; exact quoted prices, partial work, rounding, unused balance and replacement.
+1. **Locally verified — draft and publication lifecycle.** Versioned drafts, exact retained publication, replacement/withdrawal, immutable history and staff review. Reviewed delivery remains pending.
+2. **In progress — client and staff decisions.** Separate capability-bound public review/accept/decline; explicit staff-witnessed attribution and recovery. See decision-contract.md and [browser boundaries](decision-browser-contract.md).
+3. **Pending — reviewed delivery, accepted work and billing.** [Delivery contract](delivery-contract.md) precedes provider acceptance. Services, medications and vaccines; exact quoted prices, partial work, rounding, unused balance and replacement.
 4. **Pending — integrated acceptance.** SQL, actual Auth/HTTP, observed contention, public/staff browser workflows, selected document delivery and populated restore. Provider and clinical acceptance remain separate.
 
 Each phase can be a dependent draft PR; do not describe the estimate feature as complete before all four pass. Existing payment commissioning remains owner-deferred. No ezyVet setup or provider calls are needed for implementation.
@@ -40,4 +40,6 @@ The [standalone matrix](../../docs/standalone-feature-matrix-20260916.md) remain
 
 Clinical reviewer: Dr. Susan Edler. Business wording and production defaults remain unapproved. Provider delivery and Stripe acceptance cannot be inferred from synthetic tests. No question here authorizes charges, external messages or integration changes.
 
-Draft foundation candidate: [exact contract](draft-contract.md), the 127-migration inventory, household staff editor, closed API, immutable revisions, priced lines and saved-request resolution are implemented. Draft backend CI35094462715 passed SQL, actual Auth, observed contention and populated restore verification. Six local staff browser scenarios passed, including mobile history; billing/email regressions passed with two isolated timeout reruns. Final combined-source CI and hosted review remain pending. Publication, client decisions and actual-work pricing conversion remain required.
+Draft PR155 final CI35097366692 passed at02f5fa7. Publication PR158 at9ebfdd8 passed local lint, TypeScript,908 unit tests, build,7 staff browser scenarios,50 SQL assertions,67 observed contention checks,87 actual Auth/publication checks and128 selected populated-restore checks. Publication frontend, Edge and database CI35109152903 passed. Coordinated PR157 includes publication at4e9bdfd with132 migrations; local lint/typecheck/build,1012 unit tests and660 native workflow checks plus128 selected restore checks passed. New communications populated original-byte restore is a separately identified gate, not covered by those native counts. Hosted/provider/clinical acceptance and the full remaining feature matrix remain open.
+
+Decision foundation at95855de: dedicated domain-separated capability/config validation, closed client/witness/public receipt schemas, and token-free session recovery helpers are committed. All19 focused tests, targeted lint and frontend TypeScript checks pass. The new SQL lifecycle and public HTTP implementation are in progress; this foundation does not yet expose a client page or establish full decision acceptance.
