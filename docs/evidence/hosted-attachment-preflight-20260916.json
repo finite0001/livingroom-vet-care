@@ -1,0 +1,92 @@
+{
+  "observed_at": "2026-09-16T14:29:07.162Z",
+  "scope": "Read-only hosted migration receipt and targeted schema comparison; no hosted writes or provider calls",
+  "local_commit": "483546a",
+  "projects": [
+    {
+      "project_id": "mgadheotkdnrsatfivjy",
+      "weight_receipt": [
+        {
+          "version": "20260916020000",
+          "name": "ezyvet_migration_weight_evidence",
+          "statement_count": 3,
+          "statements_md5": "f31f013b8dd369bf8c167154dba71924"
+        }
+      ],
+      "targeted_schema": [
+        {
+          "outgoing_uploads": null,
+          "incoming_captures": null,
+          "cleanup_receipts": null,
+          "canonical_weight_index": null
+        }
+      ],
+      "targeted_routines": [
+        {
+          "nspname": "public",
+          "proname": "read_ezyvet_migration_weight_evidence",
+          "arguments": "p_binding_id uuid, p_page integer, p_snapshot_id uuid, p_evidence_hash text, p_before_created_at timestamp with time zone, p_before_request_id uuid, p_limit integer",
+          "definition_md5": "366a8cd3af3a5b76f2f6136d2ebee3c9"
+        }
+      ]
+    },
+    {
+      "project_id": "kothoqicubowyhwfsrte",
+      "weight_receipt": [
+        {
+          "version": "20260916020000",
+          "name": "ezyvet_migration_weight_evidence",
+          "statement_count": 3,
+          "statements_md5": "f31f013b8dd369bf8c167154dba71924"
+        }
+      ],
+      "targeted_schema": [
+        {
+          "outgoing_uploads": null,
+          "incoming_captures": null,
+          "cleanup_receipts": null,
+          "canonical_weight_index": null
+        }
+      ],
+      "targeted_routines": [
+        {
+          "nspname": "public",
+          "proname": "read_ezyvet_migration_weight_evidence",
+          "arguments": "p_binding_id uuid, p_page integer, p_snapshot_id uuid, p_evidence_hash text, p_before_created_at timestamp with time zone, p_before_request_id uuid, p_limit integer",
+          "definition_md5": "366a8cd3af3a5b76f2f6136d2ebee3c9"
+        }
+      ]
+    }
+  ],
+  "hosted_inventory_comparison": {
+    "primary_and_staging_exactly_equal": true,
+    "migration_receipts": 113,
+    "application_routines": 538,
+    "application_triggers": 270,
+    "policies": 240,
+    "relations": 205,
+    "default_privilege_entries": 6,
+    "routine_inventory_json_sha256": "0c38c5fc6be37ba8b11d96f60c8d438b81ec1813350c2c6b96f873dcbc8e10fd",
+    "access_inventory_json_sha256": "56d2ded86ca96272e1fc43abdd8999547694bf1dd539b3e33da8f0cda0255e3e",
+    "scope": "Existing read-only routine/access inventory queries; excludes patient data and does not establish complete database equivalence."
+  },
+  "candidate_ci": {
+    "run_id": "35107565034",
+    "commit": "843ca9239e64d1ff5210aea6595d2470b766919a",
+    "conclusion": "success",
+    "jobs": ["database", "frontend", "edge"],
+    "browser_tests_passed": 348,
+    "incoming_http_auth_rpc_storage_checks": 33,
+    "limitations": "Synthetic local workflows; not hosted Edge gateway or provider acceptance. Later local commits require their own CI."
+  },
+  "finding": "Hosted 20260916020000 is NOT a timestamp alias of local 20260916033310: read_ezyvet_migration_weight_evidence versus list_ezyvet_migration_weight_evidence, different arguments/response shape and index absent.",
+  "next_steps": [
+    "Preserve hosted receipt; do not mark local canonical migration applied based on matching name.",
+    "Schema rehearsal passed: see hosted-attachment-upgrade-rehearsal-20260916.json. Complete populated backup/upgrade acceptance before hosted rollout.",
+    "Finish parent CI and verify later candidate commits; attachment candidate not deployed."
+  ],
+  "limitations": [
+    "Targeted metadata only, not full schema equivalence or production backup acceptance.",
+    "No clinical or provider acceptance inferred."
+  ]
+}
