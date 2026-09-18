@@ -16,6 +16,8 @@ import {
   type EstimateRequest,
 } from "./estimate-api";
 import { useEstimateDraftOperation } from "./useEstimateDraftOperation";
+import { EstimatePublicationWorkspace } from "./EstimatePublicationWorkspace";
+import { EstimateDecisionWorkspace } from "./EstimateDecisionWorkspace";
 const errorText = (error: unknown, fallback: string) => error instanceof ZodError
   ? "Estimate data could not be verified. Refresh and review the draft fields before continuing."
   : error instanceof Error ? error.message : fallback;
@@ -176,6 +178,9 @@ export function EstimateDraftWorkspace({
     [history, setHistory] = useState<History | null>(null),
     [historyRows, setHistoryRows] = useState<EstimateDraft[]>([]),
     [editor, setEditor] = useState<Editor | null>(null),
+    [publicationDraft, setPublicationDraft] = useState<EstimateDraft | null>(null),
+    [publicationDirty, setPublicationDirty] = useState(false),
+    [decisionDirty, setDecisionDirty] = useState(false),
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -281,14 +286,14 @@ export function EstimateDraftWorkspace({
       setDirty(true);
     }
   }, [operation.pending]);
-  const unsaved = dirty || operation.locked || busy;
+  const unsaved = dirty || operation.locked || busy || publicationDirty || decisionDirty;
   useEffect(() => {
     onDirtyChange(unsaved);
     return () => onDirtyChange(false);
   }, [unsaved, onDirtyChange]);
-  const locked = busy || operation.locked;
+  const locked = busy || operation.locked || publicationDraft !== null;
   async function run(action: () => Promise<void>) {
-    if (actionLock.current || operation.locked) return;
+    if (actionLock.current || operation.locked || publicationDraft !== null) return;
     actionLock.current = true;
     setBusy(true);
     setError("");
@@ -348,6 +353,28 @@ export function EstimateDraftWorkspace({
       }
     });
   }
+  async function openPublication() {
+    if (!editor || locked || dirty || compareRequired || editor.expectedVersion === null) return;
+    const estimateId = editor.estimateId;
+    await run(async () => {
+      const saved = await api.read(estimateId);
+      if (!saved) throw new Error("Saved draft unavailable. Refresh the draft list before publication review.");
+      if (!alive.current) return;
+      // Mount locked until the child reports its restored recovery state. This
+      // prevents closing over an unresolved publication before its first effect.
+      setPublicationDirty(true);
+      setDecisionDirty(true);
+      setPublicationDraft(saved);
+      setEditor(editorFromDraft(saved));
+      setReviewed(false);
+      setHistory(null);
+      setHistoryRows([]);
+    });
+  }
+  function closePublication() {
+    if (publicationDirty || decisionDirty || busy || !publicationDraft) return;
+    setPublicationDraft(null);
+  }
   function addLine() {
     const p = products.find((p) => p.id === selectedProduct);
     if (!p || !editor || editor.lines.length >= 100) return;
@@ -406,6 +433,7 @@ export function EstimateDraftWorkspace({
     setDirty(true);
   }
   function validateReview() {
+    if (locked) return;
     try {
       const q = request();
       api.parseOperation({
@@ -814,6 +842,7 @@ export function EstimateDraftWorkspace({
                 variant="outline"
                 disabled={locked}
                 onClick={() => {
+                  if (locked) return;
                   if (
                     !dirty ||
                     window.confirm(
@@ -860,6 +889,15 @@ export function EstimateDraftWorkspace({
                 Resolve or close original estimate save
               </Button>
             </div>
+          )}
+          {editor.expectedVersion !== null && !publicationDraft && (
+            <Button
+              variant="outline"
+              disabled={locked || dirty || compareRequired}
+              onClick={() => void openPublication()}
+            >
+              Review publication and history
+            </Button>
           )}
           <div className="space-y-2">
             <h4 className="font-medium">Immutable revision history</h4>
@@ -909,6 +947,31 @@ export function EstimateDraftWorkspace({
               </Button>
             )}
           </div>
+        </div>
+      )}
+      {publicationDraft && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Draft editing and selection are paused while publication is open.
+              Resolve saved publication requests and discard unpublished reviews before closing.
+            </p>
+            <Button
+              variant="outline"
+              disabled={publicationDirty || decisionDirty || busy}
+              onClick={closePublication}
+            >
+              Close publication workspace
+            </Button>
+          </div>
+          <EstimatePublicationWorkspace
+            draft={publicationDraft}
+            onDirtyChange={setPublicationDirty}
+          />
+          <EstimateDecisionWorkspace
+            draft={publicationDraft}
+            onDirtyChange={setDecisionDirty}
+          />
         </div>
       )}
     </section>
