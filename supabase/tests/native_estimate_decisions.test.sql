@@ -1,0 +1,200 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+insert into auth.users(id,email,raw_user_meta_data) values('e5710000-0000-4000-8000-000000000001','estimate-admin@example.test','{}'),('e5710000-0000-4000-8000-000000000002','estimate-staff@example.test','{}');
+insert into user_roles(user_id,role) values('e5710000-0000-4000-8000-000000000001','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Estimate','Household',null,'estimate@example.test','EMAIL',null,null);
+insert into fx select 'client2',id from save_client(auth.uid(),null,null,'Other','Household',null,'other-estimate@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Estimate Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select 'pet2',id from save_patient(null,(select id from fx where k='client2'),null,'Other Patient','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic service','service','','visit',5,true);
+insert into fx select k,gen_random_uuid() from unnest(array['estimate','estimate2','save','save2','closed','stale','line','line2'])k;
+create function pg_temp.estimate_line(p_id uuid,p_quantity text,p_price jsonb,p_reason jsonb default 'null') returns jsonb language sql as $$select jsonb_build_object('id',p_id,'product_id',(select id from fx where k='product'),'product_version',1,'description','Chosen description','kind','service','unit','visit','quantity',p_quantity,'pricing',p_price,'pricing_reason',p_reason)$$;
+insert into data select 'fields',jsonb_build_object('title','Care proposal','notes','','terms','Draft requires explicit later approval.','accept_by','2020-02-29','lines',jsonb_build_array(pg_temp.estimate_line((select id from fx where k='line'),'0.5','{"kind":"unit","unit_price_cents":"5"}'),pg_temp.estimate_line((select id from fx where k='line2'),'3','{"kind":"allocated","amount_cents":"0"}','"Included service"')));
+insert into data select 'request',jsonb_build_object('estimate_id',(select id from fx where k='estimate'),'client_id',(select id from fx where k='client'),'pet_id',(select id from fx where k='pet'),'expected_version',null,'fields',v) from data where k='fields';
+insert into data select 'receipt',save_native_estimate_draft((select id from fx where k='save'),v) from data where k='request';
+insert into fx select k,gen_random_uuid() from unnest(array['prep1','prep2','prep3','pub1','pub2','withdraw','closepub'])k;
+create function pg_temp.prepare_request(v integer) returns jsonb language sql as $$select jsonb_build_object('target',preview#>'{context,target}','draft_version',v,'expected_source_hash',preview->'source_hash','expected_publication_head',preview#>'{context,publication_head}','replaces_publication_id',preview#>'{context,current_publication_id}') from(select preview_native_estimate_publication((select id from fx where k='estimate'),(select id from fx where k='client'),v)preview)p$$;
+create function pg_temp.publish_request(p_key text) returns jsonb language sql as $$select jsonb_build_object('target',v#>'{request,target}','preparation_id',v->'id','expected_draft_version',v#>'{request,draft_version}','expected_publication_head',v#>'{request,expected_publication_head}','expected_content_hash',v->'content_hash','expected_artifact_hash',v#>'{artifact,sha256}','replaces_publication_id',v#>'{request,replaces_publication_id}','attest_document_review',true,'attest_pricing_review',true,'attest_terms_review',true) from data where data.k=p_key$$;
+select throws_ok($$select prepare_native_estimate_publication(gen_random_uuid(),pg_temp.prepare_request(1))$$,'23514',null,'Past draft deadline cannot be prepared');
+insert into data select 'future-request',jsonb_set(jsonb_set(v,'{expected_version}','1'),'{fields,accept_by}','"2099-12-31"') from data where k='request';
+select save_native_estimate_draft(gen_random_uuid(),(select v from data where k='future-request'));
+insert into data select 'prep1-request',pg_temp.prepare_request(2);
+insert into data select 'prep1',prepare_native_estimate_publication((select id from fx where k='prep1'),v) from data where k='prep1-request';
+select is((select v->'artifact' from data where k='prep1'),'null'::jsonb,'Preparation alone captures no bytes and publishes nothing');
+select is(read_native_estimate_publication((select id from fx where k='estimate'),(select id from fx where k='client'))->>'current_status','none','No implicit publication');
+select is(prepare_native_estimate_publication((select id from fx where k='prep1'),(select v from data where k='prep1-request')),(select v from data where k='prep1'),'Preparation retry exact');
+select throws_ok($$select prepare_native_estimate_publication((select id from fx where k='prep1'),jsonb_set((select v from data where k='prep1-request'),'{draft_version}','1'))$$,'23514',null,'Preparation cannot change identity');
+select throws_ok($$select prepare_native_estimate_publication(gen_random_uuid(),jsonb_set((select v from data where k='prep1-request'),'{expected_source_hash}',to_jsonb(repeat('0',64))))$$,'40001',null,'Stale reviewed source hash rejected');
+insert into data values('html',to_jsonb('<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src ''none''; style-src ''unsafe-inline''; base-uri ''none''; form-action ''none''"></head><body><p>Synthetic captured estimate: $0.03 &lt;a href=&quot;javascript:alert(1)&quot;&gt;special&lt;/a&gt; &lt;img src=x onerror=&quot;bad&quot;&gt; url(example) @import text</p></body></html>'::text));
+select throws_ok($$select capture_native_estimate_publication_artifact((select id from fx where k='prep1'),auth.uid(),(select v->>'content_hash' from data where k='prep1'),1,'')$$,'42501',null,'Staff cannot impersonate artifact renderer');
+set local role service_role;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"service_role"}',true);
+select is(native_estimate_capture_context((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001')->'captured','false'::jsonb,'Trusted renderer receives uncaptured context');
+select throws_ok($$select native_estimate_capture_context((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000002')$$,'42501',null,'Capture context binds creator');
+select throws_ok($$select capture_native_estimate_publication_artifact((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep1'),1,'!!!')$$,'23514',null,'Malformed artifact encoding rejected');
+select throws_ok($$select capture_native_estimate_publication_artifact((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep1'),1,replace(encode(convert_to((select v#>>'{}' from data where k='html')||'<script>alert(1)</script>','UTF8'),'base64'),E'\n',''))$$,'23514',null,'Active HTML capture rejected');
+select throws_ok($$select capture_native_estimate_publication_artifact((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep1'),1,replace(encode(convert_to((select v#>>'{}' from data where k='html')||'<p onclick="bad()">bad</p>','UTF8'),'base64'),E'\n',''))$$,'23514',null,'Literal active HTML attribute rejected');
+insert into data select 'artifact',capture_native_estimate_publication_artifact((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep1'),1,replace(encode(convert_to((select v#>>'{}' from data where k='html'),'UTF8'),'base64'),E'\n',''));
+select is(capture_native_estimate_publication_artifact((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep1'),1,replace(encode(convert_to((select v#>>'{}' from data where k='html'),'UTF8'),'base64'),E'\n','')),(select v from data where k='artifact'),'Exact byte capture retry permits escaped hostile prose');
+select throws_ok($$select capture_native_estimate_publication_artifact((select id from fx where k='prep1'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep1'),1,replace(encode(convert_to((select v#>>'{}' from data where k='html')||' ','UTF8'),'base64'),E'\n',''))$$,'23514',null,'Even trailing-space artifact changes rejected');
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+update data set v=recover_native_estimate_preparation((select id from fx where k='prep1')) where k='prep1';
+select is(convert_from(decode(read_native_estimate_publication_artifact((select id from fx where k='prep1'),(select id from fx where k='client'),(select v->>'sha256' from data where k='artifact'))->>'content_base64','base64'),'UTF8'),(select v#>>'{}' from data where k='html'),'Stored artifact bytes returned exactly');
+select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select read_native_estimate_publication_artifact((select id from fx where k='prep1'),(select id from fx where k='client'),(select v->>'sha256' from data where k='artifact'))$$,'42501',null,'Unpublished artifact creator-only');
+select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into data select 'pub1-request',pg_temp.publish_request('prep1');
+select throws_ok($$select publish_native_estimate(gen_random_uuid(),jsonb_set((select v from data where k='pub1-request'),'{attest_pricing_review}','false'))$$,'23514',null,'Pricing review explicit');
+select throws_ok($$select publish_native_estimate(gen_random_uuid(),jsonb_set((select v from data where k='pub1-request'),'{expected_artifact_hash}',to_jsonb(repeat('0',64))))$$,'23514',null,'Publish binds exact bytes');
+insert into data select 'pub1',publish_native_estimate((select id from fx where k='pub1'),v) from data where k='pub1-request';
+select is(publish_native_estimate((select id from fx where k='pub1'),(select v from data where k='pub1-request')),(select v from data where k='pub1'),'Publication retry exact');
+select is(read_native_estimate_publication((select id from fx where k='estimate'),(select id from fx where k='client'))->>'current_status','open','Reviewed captured publication becomes open');
+select is(close_native_estimate_publication_operation((select id from fx where k='pub1'),jsonb_build_object('kind','publish','request',(select v from data where k='pub1-request')))->'receipt',(select v from data where k='pub1'),'Close recovers already published outcome');
+
+-- Decision-specific acceptance begins with the real published fixture above.
+insert into fx select k,gen_random_uuid() from unnest(array['grant1','grant2','activate1','activate2','decision1','closeddecision','revokeg1','pendingafterrevoke','witness2','grantclose'])k;
+insert into data select 'grant-preview',preview_native_estimate_decision_grant((select id from fx where k='pub1'),(select id from fx where k='client'));
+insert into data select 'grant-request',jsonb_build_object('binding',v->'binding','expected_publication_head',v->'publication_head','expires_at',v->'expires_at','recipient_label','Synthetic estimate owner','purpose','Review exact care proposal','attest_recipient_authority',true) from data where k='grant-preview';
+insert into data select 'issue',jsonb_build_object('kind','issue','request',v) from data where k='grant-request';
+select throws_ok($$select record_native_estimate_decision_grant(gen_random_uuid(),jsonb_set((select v from data where k='issue'),'{request,expires_at}','"2020-01-01T00:00:00Z"'))$$,'23514',null,'Expired grant issue rejected');
+select throws_ok($$select record_native_estimate_decision_grant(gen_random_uuid(),jsonb_set((select v from data where k='issue'),'{request,attest_recipient_authority}','null'))$$,'23514',null,'Null recipient attestation rejected');
+insert into data select 'grant1',record_native_estimate_decision_grant((select id from fx where k='grant1'),v) from data where k='issue';
+insert into data select 'grant2',record_native_estimate_decision_grant((select id from fx where k='grant2'),v) from data where k='issue';
+select is((select v#>'{result,capability}' from data where k='grant1'),'null'::jsonb,'Grant configuration absent until trusted capture');
+select is(recover_native_estimate_decision_grant((select id from fx where k='grant1')),(select v from data where k='grant1'),'Grant issue exact creator recovery');
+select is(record_native_estimate_decision_grant((select id from fx where k='grant1'),(select v from data where k='issue')),(select v from data where k='grant1'),'Grant issue exact replay');
+insert into data select 'grantclose',close_native_estimate_decision_grant((select id from fx where k='grantclose'),v) from data where k='issue';
+select is((select v->>'status' from data where k='grantclose'),'closed_unrecorded','Uncertain grant creation can be durably closed');
+select throws_ok($$select record_native_estimate_decision_grant((select id from fx where k='grantclose'),(select v from data where k='issue'))$$,'23514',null,'Delayed issue cannot commit after closure');
+select throws_ok($$select native_estimate_decision_access_context((select id from fx where k='grant1'))$$,'42501',null,'Staff cannot call capability service metadata');
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+insert into data select 'context1',native_estimate_decision_grant_capture_context((select id from fx where k='grant1'),'e5710000-0000-4000-8000-000000000001','https://example.test','k1');
+select throws_ok($$select native_estimate_decision_grant_capture_context((select id from fx where k='grant1'),'e5710000-0000-4000-8000-000000000002','https://example.test','k1')$$,'42501',null,'Capture context actor bound');
+insert into data select 'capture1',capture_native_estimate_decision_grant((select id from fx where k='grant1'),'e5710000-0000-4000-8000-000000000001','https://example.test','k1',v->>'context_hash',repeat('a',64)) from data where k='context1';
+select is(capture_native_estimate_decision_grant((select id from fx where k='grant1'),'e5710000-0000-4000-8000-000000000001','https://example.test','k1',(select v->>'context_hash' from data where k='context1'),repeat('a',64)),(select v from data where k='capture1'),'Capture retry exact');
+select throws_ok($$select capture_native_estimate_decision_grant((select id from fx where k='grant1'),'e5710000-0000-4000-8000-000000000001','https://example.test','k1',(select v->>'context_hash' from data where k='context1'),repeat('b',64))$$,'23514',null,'Captured token digest cannot change');
+select throws_ok($$select retrieve_native_estimate_decision((select id from fx where k='grant1'),repeat('a',64),'https://example.test','k1')$$,'42501',null,'Captured but unreviewed capability inaccessible');
+insert into data select 'context2',native_estimate_decision_grant_capture_context((select id from fx where k='grant2'),'e5710000-0000-4000-8000-000000000001','https://example.test','k1');
+insert into data select 'capture2',capture_native_estimate_decision_grant((select id from fx where k='grant2'),'e5710000-0000-4000-8000-000000000001','https://example.test','k1',v->>'context_hash',repeat('b',64)) from data where k='context2';
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+create function pg_temp.activate_request(p_key text) returns jsonb language sql as $$select jsonb_build_object('kind','activate','request',jsonb_build_object('grant_id',v->'id','expected_grant_head',v->'head','expected_publication_head',(select v->'publication_head' from data where k='grant-preview'),'expected_context_hash',v#>'{capability,context_hash}','attest_review',true)) from data where k=p_key$$;
+insert into data select 'activate1',record_native_estimate_decision_grant((select id from fx where k='activate1'),pg_temp.activate_request('capture1'));
+insert into data select 'activate2',record_native_estimate_decision_grant((select id from fx where k='activate2'),pg_temp.activate_request('capture2'));
+select is(recover_native_estimate_decision_grant((select id from fx where k='grant1')),(select v from data where k='grant1'),'Original issue receipt does not gain later capture metadata');
+insert into data select 'decision-request',jsonb_build_object('binding',v->'binding','grant_id',(select id from fx where k='grant1'),'expected_publication_head',v->'publication_head','choice','accept','signer_name','Synthetic Owner','signer_relationship','owner','comment',null,'acknowledgment_version',1,'attest_document_review',true,'attest_authority',true,'attest_choice',true) from data where k='grant-preview';
+select is(read_native_estimate_decision_grants((select id from fx where k='estimate'),(select id from fx where k='client'),null,1)->'has_more','true'::jsonb,'Grant history paginated');
+select throws_ok($$select read_native_estimate_decision_state((select id from fx where k='estimate'),(select id from fx where k='client2'))$$,'23514',null,'Decision staff read household scoped');
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+insert into data select 'review',retrieve_native_estimate_decision((select id from fx where k='grant1'),repeat('a',64),'https://example.test','k1');
+select is(convert_from(decode((select v->>'content_base64' from data where k='review'),'base64'),'UTF8'),(select v#>>'{}' from data where k='html'),'Client sees exact immutable captured artifact bytes');
+select ok(not (select v ? 'snapshot' or v ? 'actor_id' or v ? 'capability_context' from data where k='review'),'Public review omits private snapshot and capability context');
+select throws_ok($$select retrieve_native_estimate_decision((select id from fx where k='grant1'),repeat('b',64),'https://example.test','k1')$$,'42501',null,'Wrong bearer digest rejected');
+select throws_ok($$select record_native_estimate_client_decision(gen_random_uuid(),jsonb_set((select v from data where k='decision-request'),'{choice}','null'),repeat('a',64),'https://example.test','k1')$$,'23514',null,'JSON null choice rejected');
+select throws_ok($$select record_native_estimate_client_decision(gen_random_uuid(),jsonb_set((select v from data where k='decision-request'),'{signer_relationship}','null'),repeat('a',64),'https://example.test','k1')$$,'23514',null,'JSON null relationship rejected');
+select throws_ok($$select record_native_estimate_client_decision(gen_random_uuid(),jsonb_set((select v from data where k='decision-request'),'{attest_choice}','null'),repeat('a',64),'https://example.test','k1')$$,'23514',null,'JSON null choice attestation rejected');
+select is(recover_native_estimate_client_decision((select id from fx where k='closeddecision'),(select v from data where k='decision-request'),repeat('a',64),'https://example.test','k1')->>'status','unrecorded','Recovery absence is explicitly nonterminal');
+insert into data select 'decision-closure',close_native_estimate_client_decision((select id from fx where k='closeddecision'),v,repeat('a',64),'https://example.test','k1') from data where k='decision-request';
+select is((select v->>'status' from data where k='decision-closure'),'closed_unrecorded','Bearer closure durable terminal evidence');
+select is(close_native_estimate_client_decision((select id from fx where k='closeddecision'),(select v from data where k='decision-request'),repeat('a',64),'https://example.test','k1'),(select v from data where k='decision-closure'),'Bearer closure exact replay');
+select throws_ok($$select record_native_estimate_client_decision((select id from fx where k='closeddecision'),(select v from data where k='decision-request'),repeat('a',64),'https://example.test','k1')$$,'23514',null,'Delayed decision rejected after closure');
+insert into data select 'decision1',record_native_estimate_client_decision((select id from fx where k='decision1'),v,repeat('a',64),'https://example.test','k1') from data where k='decision-request';
+select is(record_native_estimate_client_decision((select id from fx where k='decision1'),(select v from data where k='decision-request'),repeat('a',64),'https://example.test','k1'),(select v from data where k='decision1'),'Exact client decision replay');
+select is(close_native_estimate_client_decision((select id from fx where k='decision1'),(select v from data where k='decision-request'),repeat('a',64),'https://example.test','k1')->'receipt',(select v from data where k='decision1'),'Close returns recorded winner');
+select throws_ok($$select record_native_estimate_client_decision((select id from fx where k='decision1'),jsonb_set((select v from data where k='decision-request'),'{choice}','"decline"'),repeat('a',64),'https://example.test','k1')$$,'23514',null,'Same UUID cannot change decision');
+select throws_ok($$select record_native_estimate_client_decision(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='decision-request'),'{grant_id}',to_jsonb((select id from fx where k='grant2'))),'{choice}','"decline"'),repeat('b',64),'https://example.test','k1')$$,'23514',null,'Second grant cannot add opposing decision');
+select ok(not ((select v->'result' from data where k='decision1') ? 'provenance'),'Public receipt omits internal attribution identities');
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into data select 'revoke',jsonb_build_object('kind','revoke','request',jsonb_build_object('grant_id',(select id from fx where k='grant1'),'expected_grant_head',v#>'{result,head}','reason','Lost access link','attest_review',true)) from data where k='activate1';
+insert into data select 'revocation',record_native_estimate_decision_grant((select id from fx where k='revokeg1'),v) from data where k='revoke';
+select is(read_native_estimate_decision_state((select id from fx where k='estimate'),(select id from fx where k='client'))#>>'{current_decision,choice}','accept','Grant revocation does not cancel acceptance');
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select throws_ok($$select recover_native_estimate_client_decision((select id from fx where k='decision1'),(select v from data where k='decision-request'),repeat('a',64),'https://example.test','k1')$$,'42501',null,'Revoked capability recovery unavailable, never absent');
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select is(reconcile_native_estimate_client_decision((select id from fx where k='decision1'),(select v from data where k='decision-request'),false,'Owner asked to reconcile lost response')->>'status','recorded','Staff can reconcile recorded decision after revocation');
+insert into data select 'admin-closure',reconcile_native_estimate_client_decision((select id from fx where k='pendingafterrevoke'),v,true,'Close uncertain original after link revocation') from data where k='decision-request';
+select is((select v#>>'{closure,principal,kind}' from data where k='admin-closure'),'grant','Administrative closure retains original grant principal');
+select is((select v#>>'{closure,closed_by,kind}' from data where k='admin-closure'),'staff','Administrative closer separately attributed');
+select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select recover_native_estimate_decision_grant((select id from fx where k='grant1'))$$,'42501',null,'Grant operation recovery creator bound');
+select is(reconcile_native_estimate_client_decision((select id from fx where k='pendingafterrevoke'),(select v from data where k='decision-request'),true,'Another staff follows up'),(select v from data where k='admin-closure'),'Authorized staff retry retains exact original closure attribution');
+select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+-- A replacement needs a new decision; the old accepted evidence remains immutable.
+insert into data select 'prep2',prepare_native_estimate_publication((select id from fx where k='prep2'),pg_temp.prepare_request(2));
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select capture_native_estimate_publication_artifact((select id from fx where k='prep2'),'e5710000-0000-4000-8000-000000000001',(select v->>'content_hash' from data where k='prep2'),1,replace(encode(convert_to((select v#>>'{}' from data where k='html'),'UTF8'),'base64'),E'\n',''));
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+update data set v=recover_native_estimate_preparation((select id from fx where k='prep2')) where k='prep2';
+insert into data select 'pub2',publish_native_estimate((select id from fx where k='pub2'),pg_temp.publish_request('prep2'));
+insert into data select 'preview2',preview_native_estimate_decision_grant((select id from fx where k='pub2'),(select id from fx where k='client'));
+insert into data select 'witness-request',jsonb_build_object('decision',jsonb_set(jsonb_set(jsonb_set(jsonb_set((select v from data where k='decision-request'),'{grant_id}','null'),'{choice}','"decline"'),'{binding}',v->'binding'),'{expected_publication_head}',v->'publication_head'),'witness',jsonb_build_object('channel','telephone','occurred_at',to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),'note','Owner directly declined the revised proposal','attest_direct_client_instruction',true)) from data where k='preview2';
+select throws_ok($$select record_native_estimate_witnessed_decision(gen_random_uuid(),jsonb_set((select v from data where k='witness-request'),'{witness,channel}','null'))$$,'23514',null,'JSON null witness channel rejected');
+insert into data select 'witness2',record_native_estimate_witnessed_decision((select id from fx where k='witness2'),v) from data where k='witness-request';
+select is(recover_native_estimate_witnessed_decision((select id from fx where k='witness2')),(select v from data where k='witness2'),'Witness recovery exact');
+select is(read_native_estimate_decisions((select id from fx where k='estimate'),(select id from fx where k='client'),null,1)->'has_more','true'::jsonb,'Decisions retain paginated cross-publication history');
+select is(read_native_estimate_decisions((select id from fx where k='estimate'),(select id from fx where k='client'),2,1)#>>'{items,0,choice}','accept','Original accepted decision survives replacement');
+reset role;
+select throws_ok($$select native_estdec_principal('{"kind":null,"id":"e5710000-0000-4000-8000-000000000001"}')$$,'23514',null,'JSON null principal discriminant rejected');
+select ok(not has_table_privilege('authenticated','native_estimate_decisions','select'),'Raw decision table private');
+select ok(not has_table_privilege('service_role','native_estimate_decision_grant_captures','select'),'Raw capability captures private');
+select ok(not has_function_privilege('authenticated','record_native_estimate_client_decision(uuid,jsonb,text,text,text)','execute'),'Staff cannot impersonate bearer RPC');
+select ok(not has_function_privilege('service_role','record_native_estimate_witnessed_decision(uuid,jsonb)','execute'),'Service cannot impersonate staff witness');
+select ok(not has_function_privilege('anon','retrieve_native_estimate_decision(uuid,text,text,text)','execute'),'Anonymous SQL cannot use service access boundary');
+select ok(not has_function_privilege('service_role','native_estdec_record(uuid,jsonb,jsonb,jsonb)','execute'),'Private generic mutation helper inaccessible');
+-- Probe mutations roll back inside a function; pgTAP bookkeeping remains outside.
+create function pg_temp.issuer_revocation_probe() returns boolean language plpgsql as $$
+declare denied boolean:=false;
+begin
+  begin
+    perform set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+    update profiles set is_active=false where id='e5710000-0000-4000-8000-000000000001';
+    perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+    begin
+      perform retrieve_native_estimate_decision((select id from fx where k='grant2'),repeat('b',64),'https://example.test','k1');
+    exception when insufficient_privilege then denied:=true; end;
+    raise exception 'Rollback synthetic issuer probe' using errcode='P7777';
+  exception when sqlstate 'P7777' then return denied; end;
+end $$;
+select ok(pg_temp.issuer_revocation_probe(),'Issuer deactivation blocks still-active capability');
+create function pg_temp.budget_probe() returns jsonb language plpgsql as $$
+declare denied boolean:=false; recovered text;
+begin
+  begin
+    insert into native_estimate_decision_access_budget values((select id from fx where k='grant2'),clock_timestamp(),60)
+      on conflict(grant_id) do update set used=60,window_started_at=clock_timestamp();
+    perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+    begin
+      perform retrieve_native_estimate_decision((select id from fx where k='grant2'),repeat('b',64),'https://example.test','k1');
+    exception when program_limit_exceeded then denied:=true; end;
+    update native_estimate_decision_access_budget set window_started_at=clock_timestamp()-interval '2 minutes' where grant_id=(select id from fx where k='grant2');
+    recovered:=retrieve_native_estimate_decision((select id from fx where k='grant2'),repeat('b',64),'https://example.test','k1')->>'publication_status';
+    raise exception 'Rollback synthetic budget probe' using errcode='P7777';
+  exception when sqlstate 'P7777' then return jsonb_build_object('denied',denied,'recovered',recovered); end;
+end $$;
+insert into data values('budget-probe',pg_temp.budget_probe());
+select is((select v->'denied' from data where k='budget-probe'),'true'::jsonb,'Private window budget bounds public artifact reads');
+select is((select v->>'recovered' from data where k='budget-probe'),'superseded','Window budget resets without lifetime lockout; old grant remains read-only');
+select is((select count(*) from billing_invoices where client_id=(select id from fx where k='client')),0::bigint,'Decisions create no invoice');
+select is((select count(*) from communication_outbox where client_id=(select id from fx where k='client')),0::bigint,'Decisions send no messages');
+set constraints all immediate;
+select lives_ok($$select native_estdec_verified_state((select id from fx where k='estimate'))$$,'Complete immutable decision history verifies');
+create function pg_temp.corruption_probe(p_family text) returns boolean language plpgsql as $$
+declare rejected boolean:=false;
+begin
+  begin
+    if p_family='decision' then
+      alter table native_estimate_decisions disable trigger user;
+      update native_estimate_decisions set document=jsonb_set(document,'{choice}','null') where id=(select id from fx where k='decision1');
+    elsif p_family='capture' then
+      alter table native_estimate_decision_grant_captures disable trigger user;
+      update native_estimate_decision_grant_captures set context_hash=repeat('0',64) where grant_id=(select id from fx where k='grant1');
+    else raise exception 'Unknown corruption probe'; end if;
+    begin
+      if p_family='decision' then perform native_estdec_verified_operation((select id from fx where k='decision1'));
+      else perform native_estdec_verified_grant((select id from fx where k='grant1')); end if;
+    exception when check_violation then rejected:=true; end;
+    raise exception 'Rollback synthetic corruption probe' using errcode='P7777';
+  exception when sqlstate 'P7777' then return rejected; end;
+end $$;
+select ok(pg_temp.corruption_probe('decision'),'Corrupted restored decision fails closed');
+select ok(pg_temp.corruption_probe('capture'),'Corrupted capability context fails closed');
+select * from finish();rollback;

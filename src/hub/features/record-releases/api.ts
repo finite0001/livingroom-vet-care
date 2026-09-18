@@ -47,7 +47,7 @@ export interface ReleaseCandidates {
   policy_v4_accepted?: boolean;
   policy_v8_accepted: boolean;
   policy_v9_accepted: boolean;
-  policy_v12_accepted: boolean;
+  policy_v13_accepted: boolean;
   native_prescription_ids: ReleaseCandidate[];
   native_dispense_ids: ReleaseCandidate[];
   api_attachment_ids: ReleaseCandidate[];
@@ -96,7 +96,7 @@ interface ReleaseDatabase {
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
     Functions: {
-      select_all_record_release_sources_v12: {
+      select_all_record_release_sources_v13: {
         Args: { p_pet_id: string };
         Returns: {
           selection: ReleaseSelection;
@@ -105,11 +105,11 @@ interface ReleaseDatabase {
           scope: string;
         };
       };
-      list_record_release_sources_v12: {
+      list_record_release_sources_v13: {
         Args: { p_pet_id: string; p_offset: number };
         Returns: ReleaseCandidates;
       };
-      preview_record_release_v12: {
+      preview_record_release_v13: {
         Args: { [K in keyof ReleasePreviewArgs]: ReleasePreviewArgs[K] };
         Returns: ReleasePreview;
       };

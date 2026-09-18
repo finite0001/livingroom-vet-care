@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,9 @@ function PaymentSession({
   onDirtyChange,
   actor,
 }: Props & { actor: string }) {
+  const queryCache = useQueryClient();
+  const [financeStale, setFinanceStale] = useState(false);
+  const dirtyState = useRef(false);
   const [state, setState] = useState<PaymentState | null>(null),
     [profile, setProfile] = useState<ProviderProfile | null>(null),
     [configReady, setConfigReady] = useState(false),
@@ -69,18 +73,18 @@ function PaymentSession({
     lock = useRef(false),
     initialized = useRef(false);
   const storageKey = `invoice-payment-intent:${actor}:${invoiceId}:${clientId}`;
-  const clearPending = () => {
+  const clearPending = useCallback(() => {
     pending.current = null;
     sessionStorage.removeItem(storageKey);
     setUncertain(false);
-  };
+  }, [storageKey]);
   const hydratePending = () => {
     if (pending.current) return;
     const raw = sessionStorage.getItem(storageKey);
     if (raw)
       pending.current = validateIntent(JSON.parse(raw), invoiceId, clientId);
   };
-  const read = async () => {
+  const read = useCallback(async () => {
     const r = await db.rpc("read_invoice_payment_state", {
       p_invoice_id: invoiceId,
       p_client_id: clientId,
@@ -98,6 +102,7 @@ function PaymentSession({
     }
     if (!active.current) return fresh;
     setState(fresh);
+    setFinanceStale(false);
     setReadError(false);
     if (pending.current) {
       const intent = pending.current;
@@ -122,7 +127,7 @@ function PaymentSession({
       }
     }
     return fresh;
-  };
+  }, [invoiceId, clientId, actor, clearPending]);
   const readProfile = async () => {
     const r = await db
       .from("payment_provider_profiles")
@@ -173,6 +178,18 @@ function PaymentSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const dirty = busy || uncertain || draft;
+  dirtyState.current = dirty;
+  useEffect(() => queryCache.getQueryCache().subscribe(event => {
+    if (event.type !== "updated" || event.action.type !== "invalidate") return;
+    const key = event.query.queryKey;
+    if (!["invoice", "invoice-details", "native-dispense-finance"].includes(String(key[0])) || key[1] !== invoiceId) return;
+    setFinanceStale(true);
+    if (!ready || dirtyState.current || lock.current || pending.current) return;
+    lock.current = true;
+    setBusy(true);
+    void read().catch(() => { if (active.current) setError("Financial evidence changed but current payment records could not refresh."); }).finally(() => { lock.current = false; if (active.current) setBusy(false); });
+  }), [queryCache, invoiceId, ready, read]);
+
   useEffect(() => {
     onDirtyChange(dirty);
     return () => onDirtyChange(false);
@@ -414,6 +431,7 @@ function PaymentSession({
       className="space-y-4 rounded-md border p-4"
     >
       <h4 className="font-semibold">Payments and refunds</h4>
+      {financeStale && <p role="status">Financial evidence changed. Your current draft or recovery request is retained; refresh recorded state before a new review.</p>}
       {!ready && <p role="status">Checking recorded payments…</p>}
       {error && (
         <p role="alert" className="text-destructive">

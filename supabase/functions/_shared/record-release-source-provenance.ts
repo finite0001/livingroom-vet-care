@@ -79,7 +79,7 @@ const fail = () => {
 /** Validate both directions so missing optional attachment fields cannot downgrade verified sources. */
 export function validateReleaseSourceProvenance(s: ReleaseSnapshot): void {
   validateReleaseApiAttachments(s);
-  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11 && s.schema_version !== 12) return;
+  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11 && s.schema_version !== 12 && s.schema_version !== 13) return;
   if (
     !Array.isArray(s.lab_reports) || !Array.isArray(s.external_records) ||
     !Array.isArray(s.attachments)
@@ -179,7 +179,7 @@ export function validateReleaseSourceProvenance(s: ReleaseSnapshot): void {
   for (const d of s.attachments) {
     const refs = expected.get(d.id);
     if (!refs) {
-      if ((s.schema_version === 9 || s.schema_version === 10 || s.schema_version === 11 || s.schema_version === 12) && d.bucket === "ezyvet-attachment-originals") continue;
+      if ((s.schema_version === 9 || s.schema_version === 10 || s.schema_version === 11 || s.schema_version === 12 || s.schema_version === 13) && d.bucket === "ezyvet-attachment-originals") continue;
       if (
         d.content_sha256 !== undefined || d.provenance_captures !== undefined
       ) fail();
@@ -204,7 +204,7 @@ const esc = (v: unknown) =>
       ]!,
   );
 export function renderReleaseSourceProvenance(s: ReleaseSnapshot): string {
-  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11 && s.schema_version !== 12) return "";
+  if (s.schema_version !== 5 && s.schema_version !== 6 && s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11 && s.schema_version !== 12 && s.schema_version !== 13) return "";
   validateReleaseSourceProvenance(s);
   const common = (r: ReleaseSourceVersion) =>
     `<p>Version ${r.version} · ${esc(r.kind)} · ${

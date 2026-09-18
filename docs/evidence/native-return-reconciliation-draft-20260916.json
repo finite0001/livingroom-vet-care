@@ -1,0 +1,94 @@
+{
+  "status": "synthetic-acceptance-passed-awaiting-rollout",
+  "date": "2026-09-16",
+  "scope": "Native medication return corrections, discrepancies, inventory holds and current record output",
+  "synthetic_only": true,
+  "provider_requests": 0,
+  "hosted_deployed": false,
+  "clinical_accepted": false,
+  "passed": {
+    "unit_tests": 858,
+    "lint": "0 errors; existing AuthContext fast-refresh warning",
+    "typescript": "app and node configurations",
+    "production_build": true,
+    "edge_entrypoint_typecheck": true,
+    "reconciliation_renderer_tests": 21,
+    "native_release_tests_including_historical": 52,
+    "reconciliation_adapter_tests": 11,
+    "migration_static_parse": {
+      "124": 43,
+      "125": 12
+    },
+    "focused_browser_tests": 67,
+    "focused_browser_execution": "60 passed in second batch, 4 further passed in bounded retry, final 3 passed after Vite fixture and reload-readiness fixes",
+    "sql_files": 100,
+    "sql_assertions": 4078,
+    "reconciliation_contention_checks": 83,
+    "actual_auth_and_browser_checks": 461,
+    "actual_reconciliation_auth_checks": 57,
+    "populated_restore_checks": 84,
+    "full_browser_ci": {
+      "passed_without_retry": 384,
+      "passed_on_retry": 1,
+      "total": 385
+    },
+    "browser_selector_followup": {
+      "tests": 2,
+      "repetitions": 3,
+      "passed": 6,
+      "change": "Assert recovered reason inside saved history article rather than transient review and history text"
+    }
+  },
+  "pending": [
+    "CI for the subsequent test-selector/documentation commit",
+    "Hosted rollout and Dr. Susan Edler clinical review"
+  ],
+  "prior_stack_ci": {
+    "147": {
+      "head": "1faf7912cc60fdfa05f6bc22f90f65ed4ab8eb56",
+      "run": 35082063968,
+      "conclusion": "success"
+    },
+    "148": {
+      "head": "fb2e2f43a9f49649cdc91a2cd4cf95e970f83c8b",
+      "run": 35082065567,
+      "conclusion": "success"
+    },
+    "149": {
+      "head": "bee444432c6195c66734747d51832f7079965e11",
+      "run": 35082076507,
+      "conclusion": "success"
+    }
+  },
+  "file_sha256": {
+    "supabase/migrations/20260916094500_native_return_reconciliation.sql": "2e8040d9750d5b580dbc102562e6fd9c0d09dd4af30682606273d8848787553d",
+    "supabase/migrations/20260916100000_native_return_reconciliation_releases.sql": "7886c3873ebf467d8fb9b621448fbd4ff7900d78f629deec36d5bb12050f1d47",
+    "supabase/functions/_shared/native-return-reconciliation.ts": "0a6debfc02dd31773076186f1535a06fa72a706e1cef1ea6bd8245e08edeaf08",
+    "supabase/functions/_shared/native-return-reconciliation-contract.ts": "86dc4cfa7668c27756182249b72f8adc17923d7f9091206615279cb6d7960587",
+    "tests/prescriptions/local-reconciliation.ts": "6843fe29e05a1684fd2916bcf06c585c3e0a96525b0675ad2238ee66f3dad8b3",
+    "tests/prescriptions/native_reconciliation_concurrency.py": "db6932b502882a84213d74b3a38dd1c59a8235ee6e580e68f81f6c4eee31db2c"
+  },
+  "initial_ci": {
+    "run": 35085477764,
+    "migration_apply": "passed",
+    "edge": "passed",
+    "database": "failed: local variable and JSON row aliases collided; qualified row aliases in follow-up",
+    "sql_assertions_executed": 3945,
+    "sql_files": 100
+  },
+  "second_ci": {
+    "run": 35085951595,
+    "sql_files": 100,
+    "sql_assertions_executed": 4056,
+    "database": "One reconciliation suite aborted because correction-resolution links lacked the id required by the audit trigger; added stable link IDs and an actor audit assertion",
+    "other_sql_suites": "No reported failure in other 99 files"
+  },
+  "ci": {
+    "run": 35086396244,
+    "head": "1393a84f8f3708f786b4987b1fbede648531fe4b",
+    "conclusion": "success",
+    "frontend": "success",
+    "edge": "success",
+    "database": "success"
+  }
+}

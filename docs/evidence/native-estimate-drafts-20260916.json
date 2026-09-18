@@ -1,0 +1,53 @@
+{
+  "status": "backend-ci-passed-final-ui-local-acceptance-passed",
+  "date": "2026-09-16",
+  "scope": "Native priced estimate drafts, immutable revision history and exact uncertain-save resolution",
+  "synthetic_only": true,
+  "provider_requests": 0,
+  "backend_tested_commit": "839908d0fa01e5f7cd071c81450a4798c4cae4ce",
+  "backend_ci": {
+    "run": 35094462715,
+    "frontend": "success",
+    "edge": "success",
+    "database": "success",
+    "sql_files": 102,
+    "sql_assertions": 4231,
+    "draft_contention_checks": 51,
+    "draft_actual_auth_checks": 51,
+    "populated_restore_checks": 115
+  },
+  "source_sha256": {
+    "supabase/migrations/20260916120716_native_estimate_drafts.sql": "c96db25282024213273242077891f7a4845623a70ceda2a25fde139502ef651b",
+    "src/hub/features/estimates/estimate-api.ts": "c701bb82602ac31b9fbb48b6a6d99dcc13257be9fe43ef51ce3e15e5622a6c88",
+    "tests/estimates/estimate-api.test.ts": "d37be61742d719f3cf7e2405ec5755cb774df2cb41a7cffd28173e8d718b754c",
+    "tests/estimates/local-drafts.ts": "dd8649625bcd7d15abdf2f08e45332f21e3d7ab01c2f1e3277329464af9d23be",
+    "tests/estimates/draft-concurrency.py": "9a57ea6d312d830fe01f9402bbc0259ff2bb36f33fdd60309b2f53c6f0de895b",
+    "tests/prescriptions/restore-native.py": "1445fc723eadfedf8d8e85a1aa91abdc642fb0355cc956eed3c683267efd473d"
+  },
+  "local_candidate": {
+    "api_units": 8,
+    "publication": false,
+    "ui": "Six estimate browser scenarios pass, including mobile history; readable error recovery; screenshot inspected",
+    "disposable_runtime": "Prior local127 run stopped at existing browser navigation timeout before estimate acceptance; owned containers and volumes removed",
+    "estimate_browser_scenarios": 6,
+    "billing_email_scenarios": 14,
+    "billing_email_timing": "Initial combined run had2 deadline failures; isolated rerun with60-second per-test budget passed both in10.2s and6.8s",
+    "typecheck": "Passed after editor/history refinement; final CI will cover subsequent error-copy and mobile-test additions",
+    "focused_lint": "Passed"
+  },
+  "pending": [
+    "Final combined-source CI and coordinated stack review",
+    "Hosted staff/clinical review",
+    "Frozen publication and reviewed delivery",
+    "Client decisions and accepted-price execution",
+    "Combined stack migration integration and commercial readiness"
+  ],
+  "ui_source_sha256": {
+    "src/hub/features/estimates/HouseholdEstimates.tsx": "6a9cf8f53e1ead333fc7533f3f718d3d4208ea74bc69c985c3a6342389a01a7e",
+    "src/hub/features/estimates/useEstimateDraftOperation.ts": "de916a56c8ff9068a58001b1995c96ac2c98dead8e85d7e39059247420b8d95d",
+    "src/hub/pages/ClientProfilePage.tsx": "7bf50bfbcea8ba51720f06725edf60ca9ce791d5bdf893e871cf7e7c9fb37cdf",
+    "src/hub/features/billing/HouseholdInvoices.tsx": "bb535566544fd912618291f27e6bdb3be7347ed9c149b05d87027b3ed9e097fe",
+    "e2e/native-estimate-drafts.spec.ts": "bd3227e4e6e5d3b48bd1086fa8a66cab6757dbb63ac1fbd9529e42bac3687150",
+    "tests/estimates/browser-harness.tsx": "3991b91ccff9e8bc3cca412c7aa1cbe9ef62a824d4614edf47791f74da40a6f7"
+  }
+}

@@ -1,3 +1,4 @@
+import { renderNativePrescriptionV4, type NativePrescriptionPrintV4 } from "../../../../supabase/functions/_shared/native-return-reconciliation.ts";
 import { renderNativePrescriptionV3, type NativePrescriptionPrintV3 } from "../../../../supabase/functions/_shared/native-dispense-returns.ts";
 import { renderNativePrescriptionV2, type NativePrescriptionPrintV2 } from "../../../../supabase/functions/_shared/native-dispense-corrections.ts";
 import {
@@ -32,6 +33,11 @@ export function renderReviewedPrescriptionCopy(value: unknown, target: Prescript
   }
   const bundle = record(value);
   const keys = Object.keys(bundle);
+  if (bundle.version === 4) {
+    const prescription = record(bundle.prescription), patient = record(prescription.patient);
+    if (patient.id !== target.patientId || prescription.authorization_id !== target.authorizationId || (target.dispenseId === null ? bundle.dispense !== null : record(bundle.dispense).id !== target.dispenseId)) throw new Error("Reconciliation print response belongs to another record.");
+    return renderNativePrescriptionV4(bundle as unknown as NativePrescriptionPrintV4);
+  }
   if (bundle.version === 3) {
     const prescription = record(bundle.prescription), patient = record(prescription.patient);
     if (patient.id !== target.patientId || prescription.authorization_id !== target.authorizationId || (target.dispenseId === null ? bundle.dispense !== null : record(bundle.dispense).id !== target.dispenseId)) throw new Error("Return-aware print response belongs to another record.");

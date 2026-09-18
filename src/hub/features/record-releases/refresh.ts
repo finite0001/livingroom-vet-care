@@ -5,7 +5,7 @@ export function refreshPatientReleases(cache: QueryClient, petId: string) {
     cache.invalidateQueries({ queryKey: ["release-candidates-v9", petId] }),
     cache.invalidateQueries({ queryKey: ["release-candidates-v10", petId] }),
     cache.invalidateQueries({ queryKey: ["release-candidates-v11", petId] }),
-    cache.invalidateQueries({ queryKey: ["release-candidates-v12", petId] }),
+    cache.invalidateQueries({ queryKey: ["release-candidates-v13", petId] }),
     cache.invalidateQueries({ queryKey: ["patient-record-releases", petId] }),
   ]);
 }
