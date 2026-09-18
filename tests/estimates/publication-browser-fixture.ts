@@ -213,6 +213,18 @@ export async function publicationFixture(page: Page) {
       };
     else if (name === "read_native_estimate_draft")
       value = { version: 1, actor_id: state.actor, draft: d };
+    else if (name === "read_native_estimate_decision_state")
+      value = {
+        version: 1, target: target(d), publication_head: head(),
+        decision_head: { event_id: null, version: 0, record_hash: null },
+        current_publication_id: current()?.id ?? null, current_decision: null,
+      };
+    else if (name === "read_native_estimate_decisions")
+      value = {
+        version: 1, target: target(d),
+        head: { event_id: null, version: 0, record_hash: null },
+        items: [], next_before_sequence: null, has_more: false,
+      };
     else if (name === "read_native_estimate_publication")
       value = {
         version: 1,

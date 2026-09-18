@@ -17,6 +17,7 @@ import {
 } from "./estimate-api";
 import { useEstimateDraftOperation } from "./useEstimateDraftOperation";
 import { EstimatePublicationWorkspace } from "./EstimatePublicationWorkspace";
+import { EstimateDecisionWorkspace } from "./EstimateDecisionWorkspace";
 const errorText = (error: unknown, fallback: string) => error instanceof ZodError
   ? "Estimate data could not be verified. Refresh and review the draft fields before continuing."
   : error instanceof Error ? error.message : fallback;
@@ -179,6 +180,7 @@ export function EstimateDraftWorkspace({
     [editor, setEditor] = useState<Editor | null>(null),
     [publicationDraft, setPublicationDraft] = useState<EstimateDraft | null>(null),
     [publicationDirty, setPublicationDirty] = useState(false),
+    [decisionDirty, setDecisionDirty] = useState(false),
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -284,7 +286,7 @@ export function EstimateDraftWorkspace({
       setDirty(true);
     }
   }, [operation.pending]);
-  const unsaved = dirty || operation.locked || busy || publicationDirty;
+  const unsaved = dirty || operation.locked || busy || publicationDirty || decisionDirty;
   useEffect(() => {
     onDirtyChange(unsaved);
     return () => onDirtyChange(false);
@@ -361,6 +363,7 @@ export function EstimateDraftWorkspace({
       // Mount locked until the child reports its restored recovery state. This
       // prevents closing over an unresolved publication before its first effect.
       setPublicationDirty(true);
+      setDecisionDirty(true);
       setPublicationDraft(saved);
       setEditor(editorFromDraft(saved));
       setReviewed(false);
@@ -369,7 +372,7 @@ export function EstimateDraftWorkspace({
     });
   }
   function closePublication() {
-    if (publicationDirty || busy || !publicationDraft) return;
+    if (publicationDirty || decisionDirty || busy || !publicationDraft) return;
     setPublicationDraft(null);
   }
   function addLine() {
@@ -955,7 +958,7 @@ export function EstimateDraftWorkspace({
             </p>
             <Button
               variant="outline"
-              disabled={publicationDirty || busy}
+              disabled={publicationDirty || decisionDirty || busy}
               onClick={closePublication}
             >
               Close publication workspace
@@ -964,6 +967,10 @@ export function EstimateDraftWorkspace({
           <EstimatePublicationWorkspace
             draft={publicationDraft}
             onDirtyChange={setPublicationDirty}
+          />
+          <EstimateDecisionWorkspace
+            draft={publicationDraft}
+            onDirtyChange={setDecisionDirty}
           />
         </div>
       )}
