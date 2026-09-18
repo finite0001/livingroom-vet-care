@@ -1,3 +1,6 @@
+import { PrescriptionFulfillmentCorrections } from "./PrescriptionFulfillmentCorrections";
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -85,6 +88,7 @@ function FulfillmentWorkspace({
   onDirtyChange,
 }: Props) {
   const petId = authorization.pet_id;
+  const releaseCache = useQueryClient();
   const api = useMemo(
     () =>
       createFulfillmentApi(
@@ -149,6 +153,7 @@ function FulfillmentWorkspace({
     execute: api.execute,
     recover: api.recover,
     onConfirmed: () => {
+      void refreshPatientReleases(releaseCache, petId);
       onEvidenceChanged();
       setMode(null);
       setPreview(null);
@@ -158,7 +163,9 @@ function FulfillmentWorkspace({
       setLoaded(false);
     },
   });
-  const dirty = mode !== null || operation.dirty;
+  const [correctionTarget, setCorrectionTarget] = useState<NativeDispense | null>(null);
+  const [correctionDirty, setCorrectionDirty] = useState(false);
+  const dirty = mode !== null || operation.dirty || correctionDirty;
   useEffect(() => {
     onDirtyChange(dirty);
   }, [dirty, onDirtyChange]);
@@ -266,7 +273,7 @@ function FulfillmentWorkspace({
     setPrintHtml("");
     if (next === "dispense") await read(() => loadChoices());
   }
-  const locked = disabled || busy || operation.dirty;
+  const locked = disabled || busy || operation.dirty || correctionTarget !== null;
   async function review() {
     await read(async () => {
       if (!mode) throw new Error("Choose fulfillment action");
@@ -381,7 +388,7 @@ function FulfillmentWorkspace({
       try {
         const { data, error } = await (
           supabase as unknown as PrescriptionRpc
-        ).rpc("read_native_prescription_print", {
+        ).rpc("read_native_prescription_print_v2", {
           p_authorization_id: authorization.id,
           p_dispense_id: d.id,
         });
@@ -943,6 +950,7 @@ function FulfillmentWorkspace({
               Dispense {d.id} · invoice {d.invoice_id}
             </p>
             <div className="flex flex-wrap gap-2">
+              <Button variant="outline" disabled={dirty || disabled || busy || correctionTarget !== null} onClick={() => setCorrectionTarget(d)}>Review annotations and pickup amendments</Button>
               <Button
                 variant="outline"
                 disabled={
@@ -1045,6 +1053,7 @@ function FulfillmentWorkspace({
           </Button>
         )}
       </section>
+      {correctionTarget && <PrescriptionFulfillmentCorrections evidenceRevision={evidenceRevision} actor={actor} dispense={correctionTarget} medicationName={authorization.artifact.medication.name} disabled={disabled || busy || mode !== null || operation.dirty} onDirtyChange={setCorrectionDirty} onClose={() => { setCorrectionTarget(null); setCorrectionDirty(false); }} onConfirmed={() => { void refreshPatientReleases(releaseCache, petId); onEvidenceChanged(); setPrintHtml(""); setCurrent(null); setLoaded(false); }} />}
       {printHtml && (
         <section aria-label="Dispensing label copy">
           <p className="text-sm">

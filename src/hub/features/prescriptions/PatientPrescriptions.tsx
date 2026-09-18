@@ -1,5 +1,6 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export function PatientPrescriptions(props: Props) {
 }
 interface WorkspaceProps extends Props { actor: string; isAdmin: boolean; isDvm: boolean }
 function PrescriptionWorkspace({ petId, clientId, actor, isAdmin, isDvm, inactive, disabled, onDirtyChange }: WorkspaceProps) {
+  const releaseCache = useQueryClient();
   const api = useMemo(() => createPrescriptionApi(supabase as unknown as PrescriptionRpc, actor, petId), [actor, petId]);
   const alive = useRef(true), sequence = useRef(0), readLock = useRef(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
@@ -33,7 +35,7 @@ function PrescriptionWorkspace({ petId, clientId, actor, isAdmin, isDvm, inactiv
   const [preview, setPreview] = useState<PrescriptionSignPreview | null>(null), [history, setHistory] = useState<PrescriptionAuthorization | null>(null), [ack, setAck] = useState(false), [settingsDirty, setSettingsDirty] = useState(false), [authorizationDirty, setAuthorizationDirty] = useState(false), [fulfillmentDirty, setFulfillmentDirty] = useState(false), [evidenceRevision, setEvidenceRevision] = useState(0), [search, setSearch] = useState("");
   const operation = usePrescriptionOperation({ actor, patientId: petId, execute: api.execute, recover: api.recover, onConfirmed: receipt => {
     if (receipt.operation === "save_draft") { setSelected(receipt.result); setValues(editorFields(receipt.result.fields)); setDrafts(previous => previous.some(d => d.id === receipt.result.id) ? previous.map(d => d.id === receipt.result.id ? receipt.result : d) : [receipt.result, ...previous]); }
-    else if (receipt.operation === "sign") { setHistory(receipt.result); setEditing(false); setSelected(null); setDrafts(previous => previous.map(d => d.id === receipt.result.draft_id ? { ...d, status: "signed", authorization_id: receipt.result.id } : d)); }
+    else if (receipt.operation === "sign") { void refreshPatientReleases(releaseCache, petId); setHistory(receipt.result); setEditing(false); setSelected(null); setDrafts(previous => previous.map(d => d.id === receipt.result.draft_id ? { ...d, status: "signed", authorization_id: receipt.result.id } : d)); }
     else throw new Error("Wrong patient operation receipt");
     setModified(false); setPreview(null); setAck(false);
   } });

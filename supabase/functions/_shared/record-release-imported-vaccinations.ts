@@ -83,7 +83,7 @@ function date(value: string | null, status: string) {
   );
 }
 export function validateImportedVaccinations(s: ReleaseSnapshot): void {
-  if (s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9) return;
+  if (s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11) return;
   require(
     Array.isArray(s.imported_vaccinations) &&
       s.imported_vaccinations.length <= 20,
@@ -228,7 +228,7 @@ const literal = (v: unknown) =>
 const field = (label: string, v: unknown) =>
   `<div><dt>${escape(label)}</dt><dd>${literal(v)}</dd></div>`;
 export function renderImportedVaccinations(s: ReleaseSnapshot): string {
-  if (s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9) return "";
+  if (s.schema_version !== 7 && s.schema_version !== 8 && s.schema_version !== 9 && s.schema_version !== 10 && s.schema_version !== 11) return "";
   validateImportedVaccinations(s);
   return s.imported_vaccinations!.map((v) =>
     `<article><h2>Clinician-reviewed outside vaccination history</h2><p>ezyVet vaccination ${

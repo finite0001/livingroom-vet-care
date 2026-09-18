@@ -582,11 +582,28 @@ async function fixture(
       }
       return r.fulfill({ json: saved });
     }
-    if (name === "read_native_prescription_print") {
+    if (name === "read_native_prescription_print_v2") {
       state.printReads++;
       const d = state.records.find((d) => d.id === input.p_dispense_id);
       return r.fulfill({
         json: {
+          version: 2,
+          correction_summary: {
+            version: 1,
+            event_count: 0,
+            affected_dispense_count: 0,
+            heads_hash:
+              "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          },
+          dispense_corrections: d
+            ? {
+                version: 1,
+                head: { event_id: null, version: 0, record_hash: null },
+                events: [],
+                latest_pickup_amendment: null,
+              }
+            : null,
+          original_pickup: null,
           prescription: authorization.artifact,
           status: status(),
           dispense: d
@@ -939,4 +956,318 @@ test("re-review gets a concurrent partial slot version without discarding entere
   ).toContainText("Open fill 1: 1.000");
   expect(state.calls[0].p_request.expected_slot_version).toBe(1);
   expect(state.calls[0].p_request.quantity).toBe("0.5");
+});
+
+async function correctionFixture(page: Page, pickup = false) {
+  const state = await fixture(page, true);
+  const d = state.records[0];
+  const rows: Row[] = [],
+    calls: Row[] = [];
+  const receipts = new Map<string, Row>();
+  const controls = {
+    lost: false,
+    absent: false,
+    stale: false,
+    observedAt: time,
+  };
+  const empty = { event_id: null, version: 0, record_hash: null };
+  const context = () => ({
+    version: 1,
+    target: { authorization_id: signed().id, pet_id: pet, dispense_id: d.id },
+    authorization_hash: hash,
+    dispense_document_hash: hash,
+    dispense_artifact_hash: hash,
+    dispensed_at: d.dispensed_at,
+    original_pickup: pickup
+      ? {
+          id: id(700),
+          document_hash: hash,
+          picked_up_at: time,
+          recipient_name: "Original recipient",
+          recipient_relationship: "Owner",
+          actor_id: actor,
+        }
+      : null,
+    head: rows.length
+      ? {
+          event_id: rows[0].id,
+          version: rows[0].sequence,
+          record_hash: rows[0].record_hash,
+        }
+      : empty,
+    latest_pickup_amendment: rows.find((e) => e.kind === "pickup_amendment")
+      ? {
+          event_id: rows.find((e) => e.kind === "pickup_amendment")!.id,
+          version: rows.find((e) => e.kind === "pickup_amendment")!.sequence,
+          value: rows.find((e) => e.kind === "pickup_amendment")!
+            .pickup_amendment,
+        }
+      : null,
+  });
+  await page.route("**/rest/v1/rpc/*native_dispense_correction*", async (r) => {
+    const name = new URL(r.request().url()).pathname.split("/").at(-1),
+      input = r.request().postDataJSON();
+    if (name === "preview_native_dispense_correction")
+      return r.fulfill({
+        json: {
+          version: 1,
+          actor_id: actor,
+          context: context(),
+          context_hash: hash,
+          observed_at: controls.observedAt,
+        },
+      });
+    if (name === "read_native_dispense_corrections")
+      return r.fulfill({
+        json: { version: 1, context: context(), context_hash: hash },
+      });
+    if (name === "list_native_dispense_corrections")
+      return r.fulfill({
+        json: {
+          version: 1,
+          target: context().target,
+          head: context().head,
+          events: rows,
+          next_before_version: null,
+        },
+      });
+    if (name === "recover_native_dispense_correction")
+      return r.fulfill({
+        json: controls.absent ? null : (receipts.get(input.p_id) ?? null),
+      });
+    if (name === "append_native_dispense_correction") {
+      calls.push(input);
+      if (controls.stale)
+        return r.fulfill({
+          status: 409,
+          json: { code: "40001", message: "Review changed" },
+        });
+      if (receipts.has(input.p_id))
+        return r.fulfill({ json: receipts.get(input.p_id) });
+      const q = input.p_request,
+        event = {
+          version: 1,
+          id: input.p_id,
+          target: context().target,
+          authorization_hash: hash,
+          dispense_document_hash: hash,
+          sequence: rows.length + 1,
+          prior_event_id: context().head.event_id,
+          prior_record_hash: context().head.record_hash,
+          actor: {
+            id: actor,
+            name: "Synthetic staff",
+            authority:
+              q.kind === "clinical_annotation" ? "active_dvm" : "active_staff",
+          },
+          kind: q.kind,
+          reason: q.reason,
+          note: q.note,
+          amends_event_id: q.amends_event_id,
+          pickup_amendment: q.pickup_amendment,
+          reviewed_context_hash: hash,
+          created_at: controls.observedAt,
+          record_hash: hash,
+        };
+      const receipt = {
+        version: 1,
+        id: input.p_id,
+        actor_id: actor,
+        request: q,
+        request_hash: hash,
+        result: event,
+        created_at: controls.observedAt,
+      };
+      rows.unshift(event);
+      receipts.set(input.p_id, receipt);
+      if (controls.lost) {
+        controls.lost = false;
+        return r.abort();
+      }
+      return r.fulfill({ json: receipt });
+    }
+    return r.fallback();
+  });
+  await page
+    .getByRole("button", {
+      name: "Review annotations and pickup amendments",
+      exact: true,
+    })
+    .click();
+  const panel = page.getByRole("region", {
+    name: "Dispense record corrections",
+    exact: true,
+  });
+  await expect(
+    panel.getByText("No annotations recorded.", { exact: true }),
+  ).toBeVisible();
+  return { state, rows, calls, controls, panel };
+}
+test("record annotation preserves original dispense and exact request through uncertain recovery", async ({
+  page,
+}) => {
+  const f = await correctionFixture(page);
+  const original = structuredClone(f.state.records);
+  await f.panel
+    .getByLabel("Reason for annotation", { exact: true })
+    .fill("Clarify original record");
+  await f.panel
+    .getByLabel("Correction note", { exact: true })
+    .fill("Client-shareable correction facts");
+  await expect(
+    page.getByRole("button", { name: "Record a dispense", exact: true }),
+  ).toBeDisabled();
+  await f.panel
+    .getByRole("button", { name: "Review record correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Save reviewed correction",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await f.panel
+    .getByRole("checkbox", { name: /I reviewed the original record/ })
+    .check();
+  f.controls.lost = true;
+  await f.panel
+    .getByRole("button", { name: "Save reviewed correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Recover original correction",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  f.controls.absent = true;
+  await f.panel
+    .getByRole("button", { name: "Recover original correction", exact: true })
+    .click();
+  f.controls.stale = true;
+  await f.panel
+    .getByRole("button", { name: "Retry identical correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Close annotation panel and discard draft",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  f.controls.absent = false;
+  await f.panel
+    .getByRole("button", { name: "Recover original correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByText("The original saved operation was recovered.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(f.calls[0]).toEqual(f.calls[1]);
+  expect(f.rows).toHaveLength(1);
+  expect(f.state.records).toEqual(original);
+  await expect(
+    f.panel.getByText("Client-shareable correction facts", { exact: true }),
+  ).toBeVisible();
+});
+test("pickup amendment disputes acknowledgment without inventing a replacement handoff", async ({
+  page,
+}) => {
+  const f = await correctionFixture(page, true);
+  await f.panel
+    .getByLabel("Annotation type", { exact: true })
+    .selectOption("pickup_amendment");
+  await f.panel
+    .getByLabel("Reason for annotation", { exact: true })
+    .fill("Original acknowledgment inaccurate");
+  await f.panel
+    .getByLabel("Correction note", { exact: true })
+    .fill("Actual handoff is not established");
+  await f.panel
+    .getByRole("button", { name: "Review record correction", exact: true })
+    .click();
+  await f.panel
+    .getByRole("checkbox", { name: /I reviewed the original record/ })
+    .check();
+  await f.panel
+    .getByRole("button", { name: "Save reviewed correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByText(
+      /Latest pickup assertion: Original acknowledgment disputed/,
+    ),
+  ).toBeVisible();
+  expect(f.calls[0].p_request.pickup_amendment).toEqual({
+    original_pickup_id: id(700),
+    disposition: "recorded_in_error",
+    handoff: null,
+  });
+  await expect(
+    f.panel.getByText(/Original pickup: Original recipient/),
+  ).toBeVisible();
+});
+test("corrected handoff requires explicit facts and preserves the original acknowledgment", async ({
+  page,
+}) => {
+  const f = await correctionFixture(page, true);
+  await f.panel
+    .getByLabel("Annotation type", { exact: true })
+    .selectOption("pickup_amendment");
+  await f.panel
+    .getByLabel("Pickup amendment meaning", { exact: true })
+    .selectOption("corrected_handoff");
+  await f.panel
+    .getByLabel("Reason for annotation", { exact: true })
+    .fill("Correct recipient details");
+  await f.panel
+    .getByLabel("Correction note", { exact: true })
+    .fill("Reviewed actual handoff facts");
+  await f.panel
+    .getByRole("button", { name: "Review record correction", exact: true })
+    .click();
+  await expect(f.panel.getByRole("alert")).toContainText(
+    "Enter an actual handoff time",
+  );
+  await f.panel
+    .getByLabel("Corrected recipient name", { exact: true })
+    .fill("Correct recipient");
+  await f.panel
+    .getByLabel("Corrected recipient relationship", { exact: true })
+    .fill("Authorized family member");
+  // Browser timezone is explicit; preserve second precision inside the synthetic dispense instant.
+  const local = await page.evaluate((t) => {
+    const d = new Date(t);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.124`;
+  }, time);
+  // Make preview observation one second later than the original for the corrected assertion.
+  f.controls.observedAt = "2026-09-16T10:00:01Z";
+  await f.panel.getByLabel(/Actual handoff time/).fill(local);
+  await f.panel
+    .getByRole("button", { name: "Review record correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByRole("region", { name: "Frozen correction review" }),
+  ).toContainText("Correct recipient");
+  await expect(
+    f.panel.getByRole("button", {
+      name: "Save reviewed correction",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await f.panel
+    .getByRole("checkbox", { name: /I reviewed the original record/ })
+    .check();
+  await f.panel
+    .getByRole("button", { name: "Save reviewed correction", exact: true })
+    .click();
+  await expect(
+    f.panel.getByText(
+      /Latest pickup assertion: Corrected handoff attested to Correct recipient/,
+    ),
+  ).toBeVisible();
+  await expect(
+    f.panel.getByText(/Original pickup: Original recipient/),
+  ).toBeVisible();
+  expect(f.calls[0].p_request.pickup_amendment.handoff.recipient_name).toBe(
+    "Correct recipient",
+  );
 });

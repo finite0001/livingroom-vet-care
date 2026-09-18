@@ -177,7 +177,7 @@ async function fixture(page: Page, role = "ADMIN") {
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
-    if (path === "/rest/v1/rpc/list_record_release_sources_v9") {
+    if (path === "/rest/v1/rpc/list_record_release_sources_v10" || path === "/rest/v1/rpc/list_record_release_sources_v11") {
       state.sourceLoads++;
       return route.fulfill({
         json: {
@@ -190,6 +190,8 @@ async function fixture(page: Page, role = "ADMIN") {
           policy_v4_accepted: true,
           policy_v8_accepted: true,
           policy_v9_accepted: true,
+          policy_v10_accepted: true,
+          policy_v11_accepted: true,
           ...Object.fromEntries(Object.keys(sourceLabels).map((k) => [k, []])),
           has_more: Object.fromEntries(
             Object.keys(sourceLabels).map((k) => [k, false]),

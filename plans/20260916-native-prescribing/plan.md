@@ -71,3 +71,9 @@ The strict fulfillment adapter and V2 usage/refill parsers are preparation for11
 Migration119 and the staff workspace implement initial/refill slots, partial and multiple-lot dispensing, one atomic invoice charge, explicit remainder forfeiture, separate pickup, V2 native allowance and linked operational request events. Staff can recover the exact operation after an uncertain response, inspect bounded histories and print the exact saved fill with fresh authorization status. Sibling authorization/fulfillment panels invalidate their evidence after confirmed operations without discarding drafts or uncertain requests. Historical V1 receipts remain unchanged.
 
 See [native fulfillment evidence](../../docs/evidence/native-fulfillment-20260916.json) for exact tested source, runtime counts and limits. The next implementation work is native record-release schema10 integration, then explicit correction/return/credit linkage and the remaining full practice/communications roadmap. Clinical approval, provider commissioning and full hosted disaster recovery remain open.
+
+## Native selected record-release120 checkpoint
+
+Schema10 now explicitly selects immutable signed orders and actual dispenses, preserving signed context, frozen status/usage and separate pickup. Invoice references and operational context are excluded from the clinical projection. Historical schemas1–9, original-byte verification and dynamic policy acceptance remain intact. Source changes invalidate later delivery; uncertain confirmations retain their exact request.
+
+See [native release evidence](../../docs/evidence/native-record-releases-20260916.json) for local verification. Next: explicit correction/return/credit linkage, followed by remaining native practice/communications features and hosted/clinical/provider acceptance. No live policy or provider gate was enabled.

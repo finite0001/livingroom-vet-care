@@ -1,3 +1,5 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,7 @@ function UsageEvidence({ usage }: { usage: PrescriptionCurrentStatus["usage"] })
   return <div className="space-y-1 text-sm"><p>Native dispensed quantity: {usage.dispensed_quantity} · used fill slots: {usage.used_fill_slots} · forfeited quantity: {usage.forfeited_quantity}</p>{usage.allowance_basis === "external_unknown" ? <p>External use and remaining allowance are unknown; native ledger counts do not describe outside pharmacy activity.</p> : <p>Unopened fill slots: {usage.unopened_fill_slots} · remaining mathematical allowance: {usage.remaining_quantity}{usage.open_slot ? ` · open fill remainder: ${usage.open_slot.remaining_quantity}` : ""}. Current order status controls whether allowance can be used.</p>}<p>External fulfillment: unknown.</p></div>;
 }
 export function PrescriptionAuthorizationReview({ evidenceRevision, onEvidenceChanged, api, actor, petId, authorization, drafts, isDvm, inactive, disabled, onDirtyChange, onReplacement }: Props) {
+  const releaseCache = useQueryClient();
   const alive = useRef(true), loading = useRef(false), popup = useRef<Window | null>(null);
   const attemptedRevision = useRef(-1);
   const [observedRevision, setObservedRevision] = useState(-1);
@@ -23,6 +26,7 @@ export function PrescriptionAuthorizationReview({ evidenceRevision, onEvidenceCh
   useEffect(() => { alive.current = true; return () => { alive.current = false; popup.current?.close(); }; }, []);
   const operation = usePrescriptionOperation({ actor, patientId: petId, execute: api.execute, recover: api.recover, onConfirmed: receipt => {
     if (receipt.operation !== "cancel" && receipt.operation !== "replace") throw new Error("Wrong authorization change receipt");
+    void refreshPatientReleases(releaseCache, petId);
     onEvidenceChanged();
     setMode(null); setAck(false); setManualAttest(false); setCancelPreview(null); setReplacePreview(null); setPrintHtml(""); setStatus(null);
     if (receipt.operation === "replace") onReplacement(receipt.result.authorization);

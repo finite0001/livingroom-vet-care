@@ -3,6 +3,8 @@ import type { QueryClient } from "@tanstack/react-query";
 export function refreshPatientReleases(cache: QueryClient, petId: string) {
   return Promise.all([
     cache.invalidateQueries({ queryKey: ["release-candidates-v9", petId] }),
+    cache.invalidateQueries({ queryKey: ["release-candidates-v10", petId] }),
+    cache.invalidateQueries({ queryKey: ["release-candidates-v11", petId] }),
     cache.invalidateQueries({ queryKey: ["patient-record-releases", petId] }),
   ]);
 }

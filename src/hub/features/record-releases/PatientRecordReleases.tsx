@@ -1,6 +1,6 @@
 import { DocumentSmsComposer } from "../document-links/DocumentSmsComposer";
 import { ReleaseEmailComposer } from "./ReleaseEmailComposer";
-import { mergeReleaseSelection } from "./selection";
+import { mergeReleaseSelection, releaseFamilyLimit } from "./selection";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,15 @@ import {
   type ReleaseCandidate,
   type ReleasePreviewArgs,
 } from "./api";
-import type { ReleasePreview, ReleaseBundle, ReleaseArtifact } from "./print";
+import { renderRecordRelease, type ReleasePreview, type ReleaseBundle, type ReleaseArtifact } from "./print";
 interface PatientRecordReleasesProps {
   petId: string;
   onDirtyChange?: (dirty: boolean) => void;
 }
 const kinds = Object.keys(sourceLabels) as SourceKind[];
+function canonicalReleaseValue(value: unknown): string {
+  return JSON.stringify(value && typeof value === "object" ? Array.isArray(value) ? value.map(item => JSON.parse(canonicalReleaseValue(item))) : Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, JSON.parse(canonicalReleaseValue(item))])) : value);
+}
 function artifactFor(bundle: ReleaseBundle): ReleaseArtifact {
   return {
     preview: bundle.release,
@@ -40,12 +43,18 @@ function artifactFor(bundle: ReleaseBundle): ReleaseArtifact {
     },
   };
 }
-export function PatientRecordReleases({
-  petId,
-  onDirtyChange,
-}: PatientRecordReleasesProps) {
+export function PatientRecordReleases(props: PatientRecordReleasesProps) {
+  const { user } = useAuth();
+  return user ? <ReleaseWorkspace key={`${user.id}:${props.petId}`} {...props} /> : null;
+}
+function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) {
   const { user, profile } = useAuth();
   const cache = useQueryClient();
+  const [sourceEvidenceStale, setSourceEvidenceStale] = useState(false);
+  useEffect(() => cache.getQueryCache().subscribe(event => {
+    const key = event.query.queryKey;
+    if (key[0] === "release-candidates-v11" && key[1] === petId && key[2] === user?.id && event.query.state.isInvalidated) { setSourceEvidenceStale(true); if (!pendingRef.current) setReviewed(false); }
+  }), [cache, petId, user?.id]);
   const [emailDirty, setEmailDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
   const [selection, setSelection] = useState<ReleaseSelection>({});
@@ -70,6 +79,7 @@ export function PatientRecordReleases({
   const [pending, setPending] = useState<ReleaseConfirmArgs | null>(null);
   const [withdrawReason, setWithdrawReason] = useState("");
   const pendingRef = useRef<ReleaseConfirmArgs | null>(null);
+  const pendingUncertain = useRef(false);
   const previewArgsRef = useRef<ReleasePreviewArgs | null>(null);
   const withdrawalRef = useRef<{
     p_id: string;
@@ -103,10 +113,14 @@ export function PatientRecordReleases({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty]);
   const candidates = useQuery({
-    queryKey: ["release-candidates-v9", petId, sourcePage],
+    queryKey: ["release-candidates-v11", petId, user?.id, sourcePage],
+    enabled: !!user && !!profile?.is_active && !preview && !pending,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
     queryFn: async () => {
       const { data, error } = await releases.rpc(
-        "list_record_release_sources_v9",
+        "list_record_release_sources_v11",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
@@ -117,7 +131,7 @@ export function PatientRecordReleases({
         typeof data.client_id !== "string" ||
         typeof data.client_name !== "string" ||
         typeof data.policy_accepted !== "boolean" ||
-        typeof data.policy_v9_accepted !== "boolean" ||
+        typeof data.policy_v11_accepted !== "boolean" ||
         !data.has_more ||
         !kinds.every((kind) => typeof data.has_more[kind] === "boolean") ||
         !kinds.every(
@@ -146,6 +160,10 @@ export function PatientRecordReleases({
                   (Number.isSafeInteger(item.version) &&
                     item.version > 0 &&
                     typeof item.source_label === "string")) &&
+                ((kind !== "native_prescription_ids" && kind !== "native_dispense_ids") ||
+                  (item.version === 1 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id) &&
+                    typeof item.recorded_at === "string" && Number.isFinite(Date.parse(item.recorded_at)) &&
+                    item.source_label === (kind === "native_prescription_ids" ? "Living Room Vet · Signed prescription" : "Living Room Vet · Recorded dispense"))) &&
                 (kind !== "imported_prescription_ids" ||
                   (typeof item.version_hash === "string" &&
                     /^[a-f0-9]{64}$/.test(item.version_hash) &&
@@ -233,7 +251,7 @@ export function PatientRecordReleases({
     }
   }
   const history = useQuery({
-    queryKey: ["patient-record-releases", petId, historyPage],
+    queryKey: ["patient-record-releases", petId, user?.id, historyPage],
     queryFn: async () => {
       const { data, error } = await releases
         .from("record_releases")
@@ -246,8 +264,8 @@ export function PatientRecordReleases({
       return Promise.all((data || []).map((r) => readRelease(r.id)));
     },
   });
-  const recipient =
-    channel === "EMAIL" ? candidates.data?.email : candidates.data?.phone;
+  const configuredRecipient = channel === "EMAIL" ? candidates.data?.email : candidates.data?.phone;
+  const recipient = configuredRecipient ? channel === "EMAIL" ? configuredRecipient.trim().toLowerCase() : configuredRecipient.trim().replace(/[ ().-]/g, "") : null;
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
     setError("");
@@ -271,7 +289,7 @@ export function PatientRecordReleases({
   };
   const setChosen = (kind: SourceKind, id: string, checked: boolean) => {
     const existing = selection[kind] || [];
-    const limit = (kind === "api_attachment_ids" || kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100;
+    const limit = releaseFamilyLimit(kind);
     if (checked && existing.length >= limit) {
       setError(
         `Use a separate package for more than ${limit} records in this source family.`,
@@ -291,7 +309,7 @@ export function PatientRecordReleases({
       const ids = mergeReleaseSelection(
         selection[kind] || [],
         (candidates.data?.[kind] || []).map((item) => item.id),
-        (kind === "api_attachment_ids" || kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100,
+        releaseFamilyLimit(kind),
       );
       edit();
       setSelection((current) => ({ ...current, [kind]: ids }));
@@ -302,7 +320,7 @@ export function PatientRecordReleases({
   const selectAllEligible = () =>
     run(async () => {
       const { data, error } = await releases.rpc(
-        "select_all_record_release_sources_v9",
+        "select_all_record_release_sources_v11",
         { p_pet_id: petId },
       );
       if (error) throw error;
@@ -312,7 +330,7 @@ export function PatientRecordReleases({
         !kinds.every(
           (kind) =>
             Array.isArray(data.selection[kind]) &&
-            data.selection[kind]!.length <= ((kind === "api_attachment_ids" || kind === "imported_vaccination_ids" || kind === "imported_prescription_ids") ? 20 : 100) &&
+            data.selection[kind]!.length <= (releaseFamilyLimit(kind)) &&
             data.selection[kind]!.every((id) => typeof id === "string"),
         )
       )
@@ -341,16 +359,19 @@ export function PatientRecordReleases({
         p_selection: structuredClone(selection),
       };
       const { data, error } = await releases.rpc(
-        "preview_record_release_v9",
+        "preview_record_release_v11",
         args,
       );
       if (error) throw error;
-      if (!data || data.snapshot.schema_version !== 9)
+      if (!data || data.snapshot.schema_version !== 11)
         throw new Error(
           "Current source-aware release preview is unavailable. Preserve selections and retry.",
         );
+      if (data.snapshot.patient.id !== args.p_pet_id || data.snapshot.recipient.client_id !== args.p_client_id || data.snapshot.recipient.channel !== args.p_channel || data.snapshot.recipient.address !== args.p_recipient || !kinds.every(kind => JSON.stringify([...(data.snapshot.selection?.[kind] ?? [])].sort()) === JSON.stringify([...(args.p_selection[kind] ?? [])].sort()))) throw new Error("Release preview does not match this patient, recipient and explicit selection.");
+      renderRecordRelease({ preview: data }); // Validate before displaying an untrusted artifact in React.
       previewArgsRef.current = args;
       setPreview(data);
+      setSourceEvidenceStale(false);
       setReviewed(false);
     });
   const confirm = () =>
@@ -379,15 +400,20 @@ export function PatientRecordReleases({
         args,
       );
       if (error) {
-        if (["40001", "23514", "42501"].includes(error.code)) {
+        if (!pendingUncertain.current && ["40001", "23514", "42501"].includes(error.code)) {
           pendingRef.current = null;
           setPending(null);
           setPreview(null);
           setReviewed(false);
           previewArgsRef.current = null;
         }
+        pendingUncertain.current = pendingRef.current !== null;
         throw error;
       }
+      pendingUncertain.current = true; // A malformed success cannot establish whether the write committed.
+      if (!data || data.id !== args.p_id || data.created_by !== user.id || data.pet_id !== args.p_pet_id || data.client_id !== args.p_client_id || data.channel !== args.p_channel || data.recipient !== args.p_recipient || data.source_hash !== args.p_reviewed_hash || canonicalReleaseValue(data.snapshot) !== canonicalReleaseValue(args.p_reviewed_snapshot) || canonicalReleaseValue(data.selection) !== canonicalReleaseValue(args.p_selection)) throw new Error("Saved release could not be matched to this exact reviewed request. Preserve the original confirmation and retry it.");
+      renderRecordRelease({ preview: data });
+      pendingUncertain.current = false;
       pendingRef.current = null;
       setPending(null);
       setPreview(null);
@@ -607,6 +633,7 @@ export function PatientRecordReleases({
       )}
       <div className="space-y-3 border-t pt-4">
         <h4 className="font-semibold">Prepare a reviewed package</h4>
+        {sourceEvidenceStale && (selectedCount > 0 || !!preview || !!pending) && <p role="status">Patient sources changed. Your selection and original request are retained. Review a fresh package before a new confirmation; recover any uncertain confirmation first.</p>}
         {candidates.isLoading ? (
           <p role="status">Loading eligible sources…</p>
         ) : (
@@ -620,7 +647,7 @@ export function PatientRecordReleases({
                 id={`release-channel-${petId}`}
                 className="w-full rounded-md border bg-background p-2"
                 value={channel}
-                disabled={busy || !!preview || !!pending}
+                disabled={busy || candidates.isError || !!preview || !!pending}
                 onChange={(e) => {
                   edit();
                   setChannel(e.target.value as "EMAIL" | "SMS");
@@ -637,17 +664,17 @@ export function PatientRecordReleases({
                 This contact binds the package to the household. It does not
                 authorize messaging or replace consent checks.
               </p>
-              {!candidates.data.policy_v9_accepted && (
+              {!candidates.data.policy_v11_accepted && (
                 <p className="rounded-md bg-muted p-3 text-sm">
                   Preview is available. Confirmation requires recorded clinical
                   acceptance of the applicable release form by the practice
-                  operator (version 9, including reviewed API originals, outside prescriptions, vaccinations, imported clinical narratives,
+                  operator (version 11, including dispensing annotations and pickup amendments, signed practice prescriptions, recorded dispensing, reviewed API originals, outside prescriptions, vaccinations, imported clinical narratives,
                   locally reviewed source findings, verified laboratory and
                   imported-record provenance).
                 </p>
               )}
               <fieldset
-                disabled={busy || !!preview || !!pending}
+                disabled={busy || candidates.isError || !!preview || !!pending}
                 className="space-y-4"
               >
                 <Button
@@ -742,6 +769,7 @@ export function PatientRecordReleases({
                           {kind === "api_attachment_ids" && (
                             <p className="text-sm">{item.source_label}. Staff-reviewed original, version {item.version}. Includes the original file; source review does not imply clinical interpretation. Select at most 20 API originals per package.</p>
                           )}
+                          {(kind === "native_prescription_ids" || kind === "native_dispense_ids") && <p className="text-sm">{item.source_label}. {kind === "native_prescription_ids" ? "Signed instructions are not proof of dispensing or administration. Selecting an order does not include every dispense." : "An actual dispense includes its required signed prescription context, not invoice details. A dispense is not proof of administration or physical pickup."} Current status, native allowance, correction summaries, selected dispense annotations and any included original or amended pickup acknowledgment are checked in the complete preview. Select at most 20 per package.</p>}
                           {kind === "imported_prescription_ids" && (
                             <div className="space-y-1 text-sm">
                               <p>{item.source_label}. Reviewed outside prescription history; no local prescription, dispensing or medication reconciliation is inferred. Select at most 20 prescription versions per package.</p>
@@ -833,7 +861,7 @@ export function PatientRecordReleases({
               <p className="text-sm">
                 Select all shown applies to this source page. A package supports
                 at most 20 API originals, 20 outside vaccinations and 20 outside
-                prescriptions, and 100 records per other family. Delivery also
+                prescriptions, 20 signed practice prescriptions and 20 recorded dispenses, and 100 records per other family. The complete snapshot must fit within 1 MiB; oversized selections must be split. Delivery also
                 limits the combined original files to 24; use another package
                 for additional history. Body maps include every observation and
                 correction, not a signed diagnosis.
@@ -843,6 +871,8 @@ export function PatientRecordReleases({
                   disabled={
                     busy ||
                     !!pending ||
+                    candidates.isError ||
+                    candidates.isFetching ||
                     selectedCount === 0 ||
                     !recipient ||
                     dependencyWarnings.length > 0
@@ -903,7 +933,8 @@ export function PatientRecordReleases({
                       busy ||
                       emailDirty ||
                       smsDirty ||
-                      !candidates.data.policy_v9_accepted ||
+                      !candidates.data.policy_v11_accepted ||
+                      (sourceEvidenceStale && !pending) ||
                       !reviewed
                     }
                     onClick={() => void confirm()}
