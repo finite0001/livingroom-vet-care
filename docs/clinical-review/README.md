@@ -54,3 +54,7 @@ The separate schema5 example includes original/corrected lab reports and origina
 [Imported API history and locally reviewed problems](imported-history-and-problems.md) adds C11 and extends C01/D02/D04. Source preservation, administrator approval and local DVM clinical decisions remain separate. All decisions remain pending.
 
 The schema6 examples compare [full imported narratives](imported-history-example.html) with [source references alone](imported-history-references-example.html) for the same synthetic local problem. Both retain local decision attribution, original extraction fields, later local edits and discrepancy history. Full-narrative omission must remain explicit; source references are not a complete original record.
+
+## Native prescribing review in progress
+
+The independent native prescription workflow has a [separate pending review checklist and synthetic print examples](native-prescribing.md). Signed authorization, partial dispensing and canceled history are shown separately. These component examples do not establish a completed prescribing workflow or clinical acceptance.

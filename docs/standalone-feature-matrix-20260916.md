@@ -12,8 +12,8 @@ Evidence levels: **native** means a reachable implementation and related tests w
 | SOAP, diagnoses and critical alerts | `src/hub/features/clinical/ClinicalWorkspace.tsx`, `PatientProblems.tsx`, `PatientAlerts.tsx`; `supabase/tests/clinical_core.test.sql` | Native signed notes/addenda and safety acknowledgments. Dr. Edler review pending. |
 | Clinic and housecall scheduling | `features/scheduling/SchedulePage.tsx`, `HousecallDayRoute.tsx`; scheduling and route browser suites | Native Denver-time bookings and Maps links. Travel optimization is not established by Maps links. |
 | Care and appointment reminders | `features/care-reminders/CareRemindersPage.tsx`; `care_reminders.test.sql`, `reminder_outbox.test.sql` | Native due plans and overrides. Clinical interval/wording review and live delivery acceptance remain. |
-| Medication/vaccine stock and administration | `features/inventory/InventoryPage.tsx`, `features/treatments/PatientTreatments.tsx`; `inventory_billing.test.sql` | Native lots, expiry, locations, stock movements and administration charges. Supplier purchasing and prescription dispensing need separate workflows. |
-| Prescriptions and refills | `src/hub/pages/RefillsPage.tsx`, `hooks/use-refills.ts` | **Gap:** request-status updates do not establish a signed prescription, authorized quantity, remaining refills or stock/invoice fulfillment. Treatment administration is not take-home prescribing. |
+| Medication/vaccine stock and administration | `features/inventory/InventoryPage.tsx`, `features/treatments/PatientTreatments.tsx`; `inventory_billing.test.sql` | Native lots, expiry, locations, stock movements and administration charges. Native prescription dispensing now has its own linked ledger/workspace below. Supplier purchasing and stock transfers remain unassessed gaps. |
+| Prescriptions and refills | `src/hub/features/prescriptions/`, `pages/RefillsPage.tsx`, `hooks/use-refills.ts` | **Native authorization implemented and locally verified:** configured DVM signing, immutable orders, cancellation/replacement, current status and order copies ([evidence](evidence/native-prescribing-events-20260916.json)). **Native refill intake/links locally verified:** explicit patient selection, assignment, exact-order links, close/deny and preserved read-only legacy history ([evidence](evidence/native-refill-intake-20260916.json)). **Native fulfillment implemented:** versioned allowance, partial/multiple-lot stock and invoice transactions, explicit forfeiture, separate pickup and exact saved-fill printing ([evidence](evidence/native-fulfillment-20260916.json)). **Still incomplete:** native selected release integration and explicit return/correction/credit linkage. Legacy queue statuses confer no clinical authority. Clinical review and rollout remain pending. |
 | Estimates and quotes | Ticket metadata includes `estimate_sent`; no native estimate ledger found | **Gap:** versioned estimates, client acceptance, controlled conversion to charges and document delivery. |
 | Billing and payments | `features/billing/HouseholdInvoices.tsx`, payment and invoice-document modules; billing/payment browser suites | Native billing/credit/recovery machinery. Stripe sandbox acceptance deferred pending owner setup. |
 | Vaccination and rabies certificates | `features/certificates/PatientCertificates.tsx`, `print.ts`; certificate SQL/browser suites | Native issued versions/corrections and due plans. Issuer and clinical acceptance pending. |
@@ -39,6 +39,20 @@ The published catalog adds these parity areas to the original practice requireme
 | Financial workflows | Estimates, statements, pricing/bundles, remote payment links and insurance-related workflows. Compare native record lifecycle and recovery, not just document appearance. [Official invoicing overview](https://www.ezyvet.com/features/invoicing-and-transactions) |
 | Business reporting | Financial and activity filters, staff/product breakdowns, scheduled reports and underlying totals. Do not infer parity from a dashboard. [Official reporting overview](https://www.ezyvet.com/features/business-reporting) |
 | Inventory and prescriptions | Catalogs, balances, purchasing, batches and prescription entities appear in the API reference. Use these as discovery prompts; endpoint availability does not prove an equivalent staff workflow. [Official API reference](https://developers.ezyvet.com/) |
+
+## Client-facing workflow audit
+
+Read-only native route/server inspection at `19e044a` established these additional gaps. No hosted access or provider calls were made.
+
+| Capability | Evidence and status |
+|---|---|
+| Client portal | **Gap:** `/hub/client/:id` and `/hub/patient/:id` require active staff through `src/App.tsx` and `ProtectedRoute.tsx`. No client authentication, household membership, portal dashboard or client-managed patient workflow found. |
+| Appointment self check-in | **Gap:** `/contact`, `public-contact` and `accept_contact_intake` collect inquiries. They do not identify an appointment, confirm a patient, record arrival or populate a staff check-in queue. |
+| Client e-signatures | **Gap:** legacy consent tables, token lookup and a ticket checkbox exist, but no reachable consent route, signature UI, signing RPC or immutable signed snapshot/version was found. Existing schema does not prove a signing workflow. |
+| Shared documents | Native scoped `/shared/:grant` access via `SharedDocumentsPage.tsx` and `document-link-http.ts`, with browser isolation/revocation coverage. This is a specific capability grant, not general client access. |
+| Public payments | Native `/pay/:grant` and payment-return capability workflows, with `e2e/client-payment.spec.ts`. Provider acceptance remains pending; these grants do not establish household portal membership. |
+
+Portal authentication/household delegation, appointment-bound arrival and versioned consent signing remain explicit future native work. Preserve the narrower public capability boundaries when adding them; possession of a document/payment link must not implicitly grant wider patient access.
 
 ## Communications comparison
 

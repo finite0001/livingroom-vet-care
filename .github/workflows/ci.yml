@@ -60,6 +60,14 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify native prescription cancellation and replacement concurrency
+        run: python3 -B supabase/tests/native_prescriptions_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native refill operational transitions and linked-order concurrency
+        run: python3 -B supabase/tests/native_refills_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify product and lot ordering with queued catalog updates
+        run: python3 -B supabase/tests/inventory_product_locking_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native dispensing allowance, stock and invoice concurrency
+        run: python3 -B supabase/tests/native_fulfillment_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify concurrent treatment alert snapshot locks
         run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
       - name: Verify concurrent payment collection and invoice locks
@@ -107,6 +115,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Install browser for native full-stack acceptance
+        run: npx playwright install --with-deps chromium
+      - name: Verify native prescribing, real browser dispensing and populated restore
+        run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
       - uses: denoland/setup-deno@v2
         with:
           deno-version: 2.9.6

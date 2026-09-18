@@ -776,25 +776,44 @@ test("client dialog reload restores saved email subject and body instead of new 
   page,
 }) => {
   const state = await fixture(page, "offline");
-  await page.route(`${backend}/rest/v1/refill_requests*`, (route) =>
+  const pet = "77777777-7777-4777-8777-777777777777";
+  await page.route(`${backend}/rest/v1/rpc/list_native_refills`, (route) =>
     route.fulfill({
-      json: [
-        {
-          id: "88888888-8888-4888-8888-888888888888",
-          client_id: client,
-          pet_id: null,
-          medication_name: "Synthetic refill",
-          status: "APPROVED",
-          assigned_to_id: null,
-          requested_at: "2026-09-12T12:00:00Z",
-          clients: { full_name: "Synthetic Household" },
-          pets: null,
-        },
-      ],
+      json: {
+        version: 1,
+        refills: [{
+          version: 1,
+          refill: {
+            id: "88888888-8888-4888-8888-888888888888",
+            pet_id: pet,
+            client_id: client,
+            version: 1,
+            state: "open",
+            medication_requested: "Synthetic refill",
+            requester_note: null,
+            channel: "email",
+            assigned_to: null,
+            authorization_id: null,
+            authorization_hash: null,
+            created_by: staff,
+            created_at: "2026-09-16T12:00:00Z",
+            updated_by: staff,
+            updated_at: "2026-09-16T12:00:00Z",
+          },
+          head_id: "99999999-9999-4999-8999-999999999999",
+          current_household_id: client,
+          household_matches: true,
+          authorization_status: null,
+          authorization_usage: null,
+          operational_only: true,
+        }],
+        has_more: false,
+        next_cursor: null,
+      },
     }),
   );
   await page.goto("/hub/tools/refills");
-  await page.getByRole("button", { name: "Notify client" }).click();
+  await page.getByRole("button", { name: "Compose neutral client update" }).click();
   const dialog = page.getByRole("dialog", { name: "Send to client" });
   await dialog.getByRole("button", { name: "Email", exact: true }).click();
   await dialog
@@ -808,7 +827,7 @@ test("client dialog reload restores saved email subject and body instead of new 
     dialog.getByRole("button", { name: "Restore saved draft" }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: "Notify client" }).click();
+  await page.getByRole("button", { name: "Compose neutral client update" }).click();
   await dialog.getByRole("button", { name: "Restore saved draft" }).click();
   await page.getByRole("button", { name: "Replace with saved draft" }).click();
   await expect(dialog.getByPlaceholder("Subject", { exact: true })).toHaveValue(
