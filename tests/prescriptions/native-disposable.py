@@ -12,12 +12,16 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
+parser.add_argument('--decision-sql-only', action='store_true', help='Run the new decision SQL gate, then clean the owned runtime without claiming full acceptance')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
-harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts', 'local-corrections.ts', 'local-returns.ts', 'local-reconciliation.ts']]
+harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts', 'local-corrections.ts', 'local-returns.ts', 'local-reconciliation.ts', 'local-finance.ts']]
+harnesses.append(root / 'tests/estimates/local-drafts.ts')
+harnesses.append(root / 'tests/estimates/local-publications.ts')
+harnesses.append(root / 'tests/estimates/local-decisions.ts')
 harness_hashes = {}
 results = []
 identity = 'lrv-prescription-' + uuid.uuid4().hex[:12]
@@ -60,7 +64,7 @@ try:
         versions.add(version)
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
-    assert len(versions) == 125 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 129 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521
@@ -86,6 +90,34 @@ enabled = false
     started = True
     command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     verify_identity()
+    runtime_status_path = root / 'tests/estimates/owned-runtime-status.ts'
+    runtime_status_hash = hashlib.sha256(runtime_status_path.read_bytes()).hexdigest()
+    command(['node', '--experimental-strip-types', '--input-type=module', '-e',
+             "import { readOwnedRuntimeStatus } from './tests/estimates/owned-runtime-status.ts'; readOwnedRuntimeStatus(process.argv[1]); console.log('Owned runtime status validated; credentials withheld.');",
+             str(project)], cwd=root)
+    print('Owned runtime status preflight passed.', flush=True)
+    decision_sql = root / 'supabase/tests/native_estimate_decisions.test.sql'
+    decision_sql_hash = hashlib.sha256(decision_sql.read_bytes()).hexdigest()
+    command(['supabase', 'test', 'db', str(decision_sql), '--workdir', str(project)], cwd=root)
+    assert hashlib.sha256(decision_sql.read_bytes()).hexdigest() == decision_sql_hash
+    print('Estimate decision SQL invariants passed.', flush=True)
+    if args.decision_sql_only:
+        raise SystemExit(0)
+    decision_races = root / 'tests/estimates/decision-concurrency.py'
+    decision_races_hash = hashlib.sha256(decision_races.read_bytes()).hexdigest()
+    decision_race_output = command(['python3', '-B', str(decision_races), '--run-synthetic-local', '--project-config', str(project / 'supabase/config.toml')], cwd=root)
+    assert hashlib.sha256(decision_races.read_bytes()).hexdigest() == decision_races_hash
+    print(decision_race_output.strip(), flush=True)
+    publication_sql = root / 'supabase/tests/native_estimate_publications.test.sql'
+    publication_sql_hash = hashlib.sha256(publication_sql.read_bytes()).hexdigest()
+    command(['supabase', 'test', 'db', str(publication_sql), '--workdir', str(project)], cwd=root)
+    assert hashlib.sha256(publication_sql.read_bytes()).hexdigest() == publication_sql_hash
+    print('Estimate publication SQL invariants passed.', flush=True)
+    publication_races = root / 'tests/estimates/publication-concurrency.py'
+    publication_races_hash = hashlib.sha256(publication_races.read_bytes()).hexdigest()
+    race_output = command(['python3', '-B', str(publication_races), '--run-synthetic-local', '--project-config', str(project / 'supabase/config.toml')], cwd=root)
+    assert hashlib.sha256(publication_races.read_bytes()).hexdigest() == publication_races_hash
+    print(race_output.strip(), flush=True)
     parity_path = root / 'tests/prescriptions/return-replay-parity.py'
     parity_hash = hashlib.sha256(parity_path.read_bytes()).hexdigest()
     replay_parity = json.loads(command(['python3', '-B', str(parity_path), '--run-synthetic-local', '--project-config', str(project / 'supabase/config.toml')], cwd=root))
@@ -93,6 +125,7 @@ enabled = false
     assert hashlib.sha256(parity_path.read_bytes()).hexdigest() == parity_hash
     print('SQL/TypeScript quantity replay: ' + str(replay_parity['cases']) + ' matching cases.', flush=True)
     for harness_path in harnesses:
+        assert hashlib.sha256(runtime_status_path.read_bytes()).hexdigest() == runtime_status_hash, 'Runtime status helper changed during execution'
         harness_hash = hashlib.sha256(harness_path.read_bytes()).hexdigest()
         output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'NATIVE_PRESCRIPTION_TEST_PROJECT': str(project)}, cwd=root)
         assert hashlib.sha256(harness_path.read_bytes()).hexdigest() == harness_hash, 'Harness changed during execution'
@@ -119,6 +152,8 @@ finally:
             containers = command(['docker', 'ps', '-a', '--filter', 'name=' + identity, '--format', '{{.Names}}']).splitlines()
             volumes = command(['docker', 'volume', 'ls', '--format', '{{.Name}}']).splitlines()
             assert not containers and not any(v.endswith('_' + identity) for v in volumes), 'Owned disposable resources remain'
+            if args.decision_sql_only:
+                print('SQL-only owned runtime cleanup verified; full decision acceptance remains pending.', flush=True)
     finally:
         log.close()
 if success:
@@ -126,7 +161,9 @@ if success:
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hashes, 'restore_runner_sha256': restore_hash, 'restore': restore,
-               'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash}
+               'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash,
+               'decision_sql_sha256': decision_sql_hash, 'decision_races_sha256': decision_races_hash, 'publication_sql_sha256': publication_sql_hash, 'publication_races_sha256': publication_races_hash,
+               'runtime_status_sha256': runtime_status_hash}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)

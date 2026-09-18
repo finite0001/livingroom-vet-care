@@ -1,6 +1,6 @@
 # Native dispense financial adjustments
 
-Status: planned, not implemented. Depends on reconciliation PR151 acceptance. This is independent practice software; no ezyVet connection, provider activation or credential change is required.
+Status: implemented candidate, acceptance in progress. Reconciliation PR151 passed all CI jobs at ce82da6 (run35088142107). This is independent practice software; no ezyVet connection, provider activation or credential change is required.
 
 ## Outcome
 
@@ -66,3 +66,13 @@ Confirm existing financial-role policy rather than implicitly broadening it; cur
 ## Wider roadmap retained
 
 This closes one native medication lifecycle gap. Estimates/client acceptance, client portal and consent workflows, inventory purchasing/transfers, practice reporting and the unassessed ezyVet feature inventory remain in scope. Vet Connect Hub communication parity remains tracked separately in `docs/standalone-feature-matrix-20260916.md`, using Fastmail and Resend. No endpoint inventory alone establishes full feature parity.
+
+## Implementation checkpoint
+
+Migration126 implements attributed credits and separate refund preparation, with exact reviewed context and recovery. The staff panel and strict adapter preserve uncertain requests across reloads and refresh sibling invoice evidence. Actual finance database acceptance is still pending: the first execution caught a PL/pgSQL local-reference error, fixed before a fresh run. See [draft evidence](../../docs/evidence/native-dispense-finance-draft-20260916.json). Do not claim hosted readiness or provider execution from these changes.
+
+Candidate [PR154](https://github.com/finite0001/livingroom-vet-care/pull/154) is stacked on PR151. Final local frontend acceptance passed869 unit tests, app/node TypeScript, lint, build and30 focused browser cases, including4 finance workflows. SQL fixture corrections and full database/concurrency/Auth/restore CI remain pending; the failed local runs were cleaned up.
+
+Recovery review identified a permanent lock after a lost-before-commit request and later invoice change. The follow-up adds serialized server closure, preserving recorded results and permanently rejecting delayed writes for closed IDs. Local frontend acceptance now passes872 unit tests,14 focused finance tests and8 finance browser scenarios. New SQL/contention/actual Auth/restore acceptance remains pending. Existing run35090225400 covers the pre-closure candidate and passed SQL and finance contention steps; it does not prove the new closure behavior.
+
+Final-source acceptance: e8f0c28 passed all CI jobs in35091844016, including101SQLfiles/4169assertions,169finance contention checks,61finance actual Auth checks and103populated restore checks. PR154 remains draft for coordinated stack rollout. The extra local run stopped during runtime discovery after347 inherited checks and cleaned up; no finance/restore pass is inferred from that local attempt.
