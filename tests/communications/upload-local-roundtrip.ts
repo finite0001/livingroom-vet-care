@@ -1,3 +1,7 @@
+import { parseMessageAttachments, readMessageAttachment } from "../../src/hub/features/communications/message-attachments.ts";
+import { parseConversationEmailReview } from "../../src/hub/features/communications/conversation-email-review.ts";
+import { readCapturedConversationFile } from "../../src/hub/features/communications/conversation-email-attachment.ts";
+import { createCaptureConversationEmailHandler } from "../../supabase/functions/_shared/capture-conversation-email.ts";
 import { uploadConversationAttachment } from "../../src/hub/features/communications/attachment-upload.ts";
 import { createAttachmentUploadTransport } from "../../src/hub/features/communications/attachment-upload-api.ts";
 /** Owned local Auth/Storage integration; no provider calls and no hosted fallback. */
@@ -88,7 +92,7 @@ try {
     p_first_name: "Upload",
     p_last_name: "Fixture",
     p_primary_phone: null,
-    p_primary_email: null,
+    p_primary_email: "attachment-client@example.test",
     p_preferred_channel: "EMAIL",
     p_mailing_address: null,
     p_housecall_address: null,
@@ -260,6 +264,87 @@ try {
       .download(path)).error,
     "Verified bytes remain after denied deletion",
   );
+  const requestId = randomUUID();
+  const prepared = await owner.client.rpc("prepare_conversation_email", {
+    p_request_id: requestId, p_scope: "attachment-roundtrip", p_conversation_id: conversation.data.id,
+    p_recipient: "attachment-client@example.test", p_subject: "Synthetic attachment", p_body: "Review fixture",
+    p_attachment_ids: [id],
+  });
+  check(!prepared.error && prepared.data?.request_id === requestId, "Prepare binds verified file to owned conversation");
+  let captureCalls = 0;
+  let downloads = 0;
+  const captureHandler = createCaptureConversationEmailHandler({
+    authenticate: async token => {
+      const auth = await service.auth.getUser(token);
+      if (auth.error || !auth.data.user) return null;
+      const client = userClient(token);
+      return {
+        actorId: auth.data.user.id,
+        download: async objectPath => {
+          downloads++;
+          const result = await client.storage.from("conversation-attachment-uploads").download(objectPath);
+          if (result.error) throw result.error;
+          if (!result.data) throw new Error("Missing bytes");
+          return result.data;
+        },
+        readReview: async requestId => {
+          const result = await client.rpc("read_conversation_email_review", { p_request_id: requestId });
+          if (result.error) throw result.error;
+          return result.data;
+        },
+      };
+    },
+    context: async (requestId, actorId) => {
+      const result = await service.rpc("conversation_email_capture_context", { p_request_id: requestId, p_actor_id: actorId });
+      if (result.error) throw result.error;
+      return result.data;
+    },
+    capture: async (requestId, actorId, text) => {
+      captureCalls++;
+      const result = await service.rpc("capture_conversation_email", { p_request_id: requestId, p_actor_id: actorId, p_payload_text: text });
+      if (result.error) throw result.error;
+      throw new Error("Synthetic lost response after committed capture");
+    },
+    sender: () => ({ from: "care@example.test", replyTo: "care@example.test" }),
+  });
+  const captureRequest = (token: string) => new Request("http://127.0.0.1/capture-conversation-email", {
+    method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ id: requestId }),
+  });
+  check((await captureHandler(captureRequest(owner.token))).status === 503, "Lost capture acknowledgment reports uncertainty");
+  const captureRetry = await captureHandler(captureRequest(owner.token));
+  check(captureRetry.status === 200, "Retry recovers committed capture through real authenticated database read");
+  const review = await captureRetry.json();
+  check(review.captured === true && /^[a-f0-9]{64}$/.test(review.payload_hash), "Recovered capture contains reviewed payload hash");
+  check(captureCalls === 1 && downloads === 1, "Capture recovery neither redownloads nor rebuilds committed payload");
+  const reviewModel = parseConversationEmailReview(review, { requestId, conversationId: conversation.data.id });
+  const inspected = await readCapturedConversationFile(owner.client, owner.id, () => owner.id, reviewModel, id);
+  check(await inspected.text() === await content.text(), "Staff inspection returns exact captured original bytes through real RPC");
+  check(!!(await other.client.rpc("read_conversation_email_attachment", {
+    p_request_id: requestId, p_upload_id: id, p_payload_hash: review.payload_hash,
+  })).error, "Other staff cannot inspect owned captured draft through real RPC");
+
+  check(!(await captureHandler(captureRequest(other.token))).ok, "Other actor cannot recover captured email");
+  const queue = (hash: string, attest: boolean) => owner.client.rpc("enqueue_conversation_email", {
+    p_request_id: requestId, p_reviewed_payload_hash: hash, p_attest: attest,
+  });
+  check(!!(await queue(review.payload_hash, false)).error, "Queue requires explicit review");
+  check(!!(await queue("a".repeat(64), true)).error, "Queue rejects different reviewed bytes");
+  const queued = await queue(review.payload_hash, true);
+  check(!queued.error && !!queued.data?.id, "Reviewed captured email queues through real authenticated RPC");
+  const queuedRetry = await queue(review.payload_hash, true);
+  check(!queuedRetry.error && queuedRetry.data?.id === queued.data.id, "Lost queue reply recovers one outbox ID");
+  const listed = await other.client.rpc("list_conversation_message_attachments", { p_message_ids: [queued.data.message_id] });
+  if (listed.error) throw listed.error;
+  const history = parseMessageAttachments(listed.data, [queued.data.message_id]);
+  check(history.length === 1, "Other active staff can list reviewed message files after queueing");
+  const sharedFile = await readMessageAttachment(other.client, other.id, () => other.id, history[0], id);
+  check(await sharedFile.text() === await content.text(), "Shared message history returns exact captured bytes without draft Storage access");
+
+  check(sql(`select count(*) from communication_outbox where request_id=${quote(requestId)}::uuid`) === "1", "Exactly one outbox persists after queue retry");
+  const acknowledged = await owner.client.rpc("resolve_message_request", {
+    p_actor_id: owner.id, p_request_id: requestId, p_scope: "attachment-roundtrip", p_abandon: false,
+  });
+  check(!acknowledged.error && acknowledged.data?.status === "acknowledged", "Existing composer acknowledgment resolves attachment request");
   console.log(
     `Conversation attachment Auth/Storage: ${checks} checks passed. Synthetic files only; no provider requests.`,
   );

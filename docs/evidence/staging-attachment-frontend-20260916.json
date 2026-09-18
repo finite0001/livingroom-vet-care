@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-16",
+  "source_revision": "e629419",
+  "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+  "deployment_id": "dpl_6YwbA24U21GZ4Fs5yXj1ZRtH6wG1",
+  "url": "https://livingroom-vet-care-bs5jji6fb-daves-projects-e0da43ba.vercel.app",
+  "state": "READY",
+  "target": "preview",
+  "backend_ref": "kothoqicubowyhwfsrte",
+  "contact_intake_enabled": false,
+  "source_upload_count": 539,
+  "environment_files_excluded": true,
+  "entry_bundle": "/assets/index-Cw3ScYO9.js",
+  "entry_sha256": "8e877e0fdd5dee9fe973d44c6be6c9de4ab6fd832289af1ade24b1a93d2e153f",
+  "served_entry_has_staging_ref": true,
+  "served_entry_has_primary_or_legacy_ref": false,
+  "browser_homepage_rendered": true,
+  "browser_staff_login_rendered": true,
+  "stable_staging_alias_changed": false,
+  "public_lovable_site_changed": false,
+  "remaining": [
+    "CI35114824602 is still running; do not cancel or supersede it.",
+    "Assign the stable staging alias after completed CI.",
+    "Complete authenticated staff UI acceptance.",
+    "Sender/reply commissioning and full attachment email capture are unfinished.",
+    "Primary rollout and Lovable publication remain outstanding."
+  ]
+}
