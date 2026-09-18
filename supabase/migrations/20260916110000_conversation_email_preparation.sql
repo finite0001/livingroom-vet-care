@@ -1,0 +1,302 @@
+-- Attachment emails share the existing composer recovery identity and preserve text-only gates.
+create table public.conversation_email_artifacts (
+ request_id uuid primary key references public.communication_prepared_requests(request_id),
+ manifest jsonb not null check(jsonb_typeof(manifest)='array' and jsonb_array_length(manifest) between 1 and 5),
+ payload_text text check(octet_length(payload_text)<=33554432),payload_hash text,
+ created_at timestamptz not null default clock_timestamp(),captured_at timestamptz,
+ check((payload_text is null and payload_hash is null and captured_at is null) or
+  (payload_text is not null and captured_at is not null and payload_hash is not null and payload_hash=encode(sha256(convert_to(payload_text,'UTF8')),'hex')))
+);
+create table public.conversation_email_outbox_links (
+ outbox_id uuid primary key references public.communication_outbox(id),
+ request_id uuid not null unique references public.conversation_email_artifacts(request_id),
+ reviewed_payload_hash text not null check(reviewed_payload_hash ~ '^[a-f0-9]{64}$'),
+ queued_by uuid not null references public.profiles(id),queued_at timestamptz not null default clock_timestamp()
+);
+alter table public.conversation_email_artifacts enable row level security;
+alter table public.conversation_email_outbox_links enable row level security;
+revoke all on public.conversation_email_artifacts,public.conversation_email_outbox_links from public,anon,authenticated,service_role;
+create function public.guard_conversation_email_artifact() returns trigger
+language plpgsql security invoker set search_path=public as $$begin
+ if tg_op='DELETE' or old.payload_text is not null or new.payload_text is null
+  or (to_jsonb(new)-array['payload_text','payload_hash','captured_at']) is distinct from (to_jsonb(old)-array['payload_text','payload_hash','captured_at']) then
+  raise exception 'Captured conversation email is immutable' using errcode='23514';end if;
+ return new;
+end $$;
+create trigger guard_conversation_email_artifact before update or delete on public.conversation_email_artifacts for each row execute function public.guard_conversation_email_artifact();
+create trigger guard_conversation_email_link before update or delete on public.conversation_email_outbox_links for each row execute function public.guard_inquiry_history();
+
+create function public.read_conversation_email_review(p_request_id uuid) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();r public.communication_prepared_requests;a public.conversation_email_artifacts;
+begin
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=actor;
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id;
+ if r.request_id is null or a.request_id is null then raise exception 'Owned attachment email required' using errcode='42501';end if;
+ return public.recover_message_request(actor,r.scope,r.request_id)||jsonb_build_object('attachment_manifest',a.manifest,'payload_hash',a.payload_hash,'captured',a.payload_text is not null);
+end $$;
+create function public.prepare_conversation_email(p_request_id uuid,p_scope text,p_conversation_id uuid,p_recipient text,p_subject text,p_body text,p_attachment_ids uuid[])
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();r public.communication_prepared_requests;payload jsonb;manifest jsonb;files integer;bytes bigint;
+begin
+ if p_request_id is null or p_scope is null or p_scope !~ '^[A-Za-z0-9:_-]{1,200}$'
+  or public.communication_recipient('EMAIL',p_recipient) is null or p_subject is null or length(trim(p_subject)) not between 1 and 500
+  or p_body is null or length(trim(p_body)) not between 1 and 100000 or p_attachment_ids is null or cardinality(p_attachment_ids) not between 1 and 5
+  or (select count(distinct id) from unnest(p_attachment_ids) id)<>cardinality(p_attachment_ids) then
+  raise exception 'Exact attachment email intent required' using errcode='23514';end if;
+ payload:=jsonb_build_object('conversation_id',p_conversation_id,'channel','EMAIL','to',p_recipient,'subject',p_subject,'body',p_body,'attachment_ids',to_jsonb(p_attachment_ids));
+ perform pg_advisory_xact_lock(hashtextextended(p_request_id::text,914));
+ perform pg_advisory_xact_lock(hashtextextended(actor::text||':'||p_scope,1200));
+ if public.is_active_staff(actor) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into r from public.communication_prepared_requests where request_id=p_request_id;
+ if found then
+  if r.actor_id is distinct from actor or r.scope is distinct from p_scope or r.payload is distinct from payload or r.state='abandoned' then
+   raise exception 'Request already used or abandoned' using errcode='23505';end if;
+  return public.read_conversation_email_review(r.request_id);
+ end if;
+ if exists(select 1 from public.communication_prepared_requests where actor_id=actor and scope=p_scope and state='prepared') then
+  raise exception 'Composer has an unresolved prepared request' using errcode='23505';end if;
+ if not exists(select 1 from public.conversations c join public.clients h on h.id=c.client_id where c.id=p_conversation_id
+  and public.communication_recipient('EMAIL',h.primary_email)=public.communication_recipient('EMAIL',p_recipient)) then
+  raise exception 'Recipient does not match conversation household' using errcode='42501';end if;
+ select count(*),sum(u.byte_length),jsonb_agg(jsonb_build_object('upload_id',u.id,'file_name',u.file_name,'mime_type',u.mime_type,'byte_length',u.byte_length,'sha256',u.sha256,'storage_path',u.storage_path) order by x.ordinal)
+ into files,bytes,manifest from unnest(p_attachment_ids) with ordinality x(id,ordinal) join public.conversation_attachment_uploads u on u.id=x.id
+ where u.actor_id=actor and u.conversation_id=p_conversation_id and u.status='ready';
+ if files<>cardinality(p_attachment_ids) then raise exception 'Every file must be verified and owned in this conversation' using errcode='42501';end if;
+ if bytes>20971520 then raise exception 'Attachment email exceeds twenty MiB raw limit' using errcode='23514';end if;
+ insert into public.communication_prepared_requests(request_id,actor_id,scope,payload,state) values(p_request_id,actor,p_scope,payload,'prepared');
+ insert into public.conversation_email_artifacts(request_id,manifest) values(p_request_id,manifest);
+ return public.read_conversation_email_review(p_request_id);
+end $$;
+
+create function public.conversation_email_capture_context(p_request_id uuid,p_actor_id uuid) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare r public.communication_prepared_requests;a public.conversation_email_artifacts;
+begin
+ perform public.communication_require_service();
+ if public.is_active_staff(p_actor_id) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=p_actor_id and state<>'abandoned';
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id;
+ if r.request_id is null or a.request_id is null then raise exception 'Owned attachment email required' using errcode='42501';end if;
+ return jsonb_build_object('request_id',r.request_id,'actor_id',r.actor_id,'payload',r.payload,'manifest',a.manifest,'captured',a.payload_text is not null);
+end $$;
+create function public.capture_conversation_email(p_request_id uuid,p_actor_id uuid,p_payload_text text) returns void
+language plpgsql security definer set search_path=public as $$
+declare r public.communication_prepared_requests;a public.conversation_email_artifacts;payload jsonb;item jsonb;file jsonb;decoded bytea;position integer:=0;
+begin
+ perform public.communication_require_service();
+ perform pg_advisory_xact_lock(hashtextextended(p_request_id::text,914));
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=p_actor_id and state<>'abandoned';
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id for update;
+ if r.request_id is null or a.request_id is null or public.is_active_staff(p_actor_id) is not true then raise exception 'Owned attachment email required' using errcode='42501';end if;
+ if p_payload_text is null or octet_length(p_payload_text)>33554432 then raise exception 'Frozen email payload exceeds limit' using errcode='23514';end if;
+ if a.payload_text is not null then
+  if a.payload_text is distinct from p_payload_text then raise exception 'Captured conversation email is immutable' using errcode='23505';end if;return;
+ end if;
+ payload:=p_payload_text::jsonb;
+ if jsonb_typeof(payload) is distinct from 'object' or payload-array['from','reply_to','to','subject','text','attachments']<>'{}'
+  or payload->'to' is distinct from jsonb_build_array(public.communication_recipient('EMAIL',r.payload->>'to'))
+  or payload->>'subject' is distinct from r.payload->>'subject' or payload->>'text' is distinct from r.payload->>'body'
+  or public.communication_recipient('EMAIL',payload->>'reply_to') is null or jsonb_typeof(payload->'from') is distinct from 'string'
+  or length(payload->>'from') not between 1 and 500 or payload->>'from' ~ '[[:cntrl:]]'
+  or public.communication_recipient('EMAIL',coalesce(substring(payload->>'from' from '<([^<>]+)>$'),payload->>'from')) is null then
+  raise exception 'Captured payload differs from prepared email' using errcode='23514';end if;
+ if jsonb_typeof(payload->'attachments') is distinct from 'array' or jsonb_array_length(payload->'attachments')<>jsonb_array_length(a.manifest) then
+  raise exception 'Captured attachment set differs' using errcode='23514';end if;
+ for file in select value from jsonb_array_elements(a.manifest) loop
+  item:=payload->'attachments'->position;position:=position+1;
+  if jsonb_typeof(item) is distinct from 'object' or item-array['filename','content_type','content']<>'{}'
+   or item->>'filename' is distinct from file->>'file_name' or item->>'content_type' is distinct from file->>'mime_type'
+   or jsonb_typeof(item->'content') is distinct from 'string' or item->>'content' !~ '^[A-Za-z0-9+/]*={0,2}$' then
+   raise exception 'Captured file metadata differs' using errcode='23514';end if;
+  decoded:=decode(item->>'content','base64');
+  if octet_length(decoded)<>(file->>'byte_length')::bigint or encode(sha256(decoded),'hex') is distinct from file->>'sha256' then
+   raise exception 'Captured file bytes differ from verified upload' using errcode='23514';end if;
+ end loop;
+ update public.conversation_email_artifacts set payload_text=p_payload_text,payload_hash=encode(sha256(convert_to(p_payload_text,'UTF8')),'hex'),captured_at=clock_timestamp() where request_id=p_request_id;
+end $$;
+
+-- Explicit privileges: default PUBLIC execution must not expose capture operations.
+revoke all on function public.guard_conversation_email_artifact() from public,anon,authenticated,service_role;
+revoke all on function public.read_conversation_email_review(uuid) from public,anon,authenticated,service_role;
+revoke all on function public.prepare_conversation_email(uuid,text,uuid,text,text,text,uuid[]) from public,anon,authenticated,service_role;
+revoke all on function public.conversation_email_capture_context(uuid,uuid) from public,anon,authenticated,service_role;
+revoke all on function public.capture_conversation_email(uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.read_conversation_email_review(uuid),public.prepare_conversation_email(uuid,text,uuid,text,text,text,uuid[]) to authenticated;
+grant execute on function public.conversation_email_capture_context(uuid,uuid),public.capture_conversation_email(uuid,uuid,text) to service_role;
+
+-- Queue only the immutable payload the owner explicitly reviewed. The frozen
+-- reader and provider-attempt guard below are part of this same migration.
+create function public.enqueue_conversation_email(p_request_id uuid,p_reviewed_payload_hash text,p_attest boolean)
+returns public.communication_outbox language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();r public.communication_prepared_requests;
+ a public.conversation_email_artifacts;l public.conversation_email_outbox_links;o public.communication_outbox;
+begin
+ if p_request_id is null or p_attest is distinct from true then
+  raise exception 'Review the exact attachment email before queueing' using errcode='23514';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_request_id::text,914));
+ if public.is_active_staff(actor) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=actor;
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id;
+ if r.request_id is null or r.state='abandoned' or a.payload_text is null or a.payload_hash is null
+  or a.payload_hash is distinct from p_reviewed_payload_hash
+  or a.payload_hash is distinct from encode(sha256(convert_to(a.payload_text,'UTF8')),'hex') then
+  raise exception 'Prepared email or reviewed payload does not match' using errcode='42501';end if;
+ select * into l from public.conversation_email_outbox_links where request_id=p_request_id;
+ if found then
+  select * into o from public.communication_outbox where id=l.outbox_id and request_id=p_request_id and created_by=actor;
+  if o.id is null or l.queued_by is distinct from actor or l.reviewed_payload_hash is distinct from a.payload_hash then
+   raise exception 'Attachment email queue receipt does not match' using errcode='23514';end if;
+  return o;
+ end if;
+ if r.state<>'prepared' then raise exception 'Only a prepared email can be queued' using errcode='23514';end if;
+ if exists(select 1 from public.communication_outbox where request_id=p_request_id) then
+  raise exception 'Request ID already belongs to another queue workflow' using errcode='23505';end if;
+ -- The private core retains current recipient/suppression checks. Attachment bytes
+ -- are bound atomically through the immutable link, not its legacy empty array.
+ o:=public.enqueue_prepared_communication_internal(actor,p_request_id,(r.payload->>'conversation_id')::uuid,
+  'EMAIL',r.payload->>'to',r.payload->>'subject',r.payload->>'body','{}');
+ insert into public.conversation_email_outbox_links(outbox_id,request_id,reviewed_payload_hash,queued_by)
+ values(o.id,p_request_id,a.payload_hash,actor);
+ return o;
+end $$;
+revoke all on function public.enqueue_conversation_email(uuid,text,boolean) from public,anon,authenticated,service_role;
+grant execute on function public.enqueue_conversation_email(uuid,text,boolean) to authenticated;
+
+create function public.conversation_email_delivery_context(p_outbox_id uuid,p_lease_token uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare o public.communication_outbox;l public.conversation_email_outbox_links;
+ a public.conversation_email_artifacts;r public.communication_prepared_requests;
+begin
+ perform public.communication_require_service();
+ select * into o from public.communication_outbox where id=p_outbox_id for update;
+ if not found or o.state<>'claimed' or o.lease_token is distinct from p_lease_token
+  or o.lease_expires_at is null or o.lease_expires_at<=now() or o.attempt_started_at is not null then
+  raise exception 'Outbox lease unavailable' using errcode='40001';end if;
+ select * into l from public.conversation_email_outbox_links where outbox_id=o.id;
+ if not found then
+  if exists(select 1 from public.conversation_email_artifacts where request_id=o.request_id) then
+   raise exception 'Attachment email is missing its reviewed queue association' using errcode='23514';end if;
+  return null;
+ end if;
+ if exists(select 1 from public.invoice_email_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.release_email_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.payment_delivery_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.document_link_outbox_links where outbox_id=o.id)
+  or exists(select 1 from public.reminder_outbox_links where outbox_id=o.id) then
+  raise exception 'Ambiguous attachment email association' using errcode='23514';end if;
+ select * into a from public.conversation_email_artifacts where request_id=l.request_id;
+ select * into r from public.communication_prepared_requests where request_id=l.request_id;
+ if a.payload_text is null or a.payload_hash is null or r.request_id is null or r.state='abandoned'
+  or l.reviewed_payload_hash is distinct from a.payload_hash
+  or a.payload_hash is distinct from encode(sha256(convert_to(a.payload_text,'UTF8')),'hex')
+  or l.queued_by is distinct from r.actor_id
+  or row(o.request_id,o.created_by,o.conversation_id,o.channel,o.recipient,o.subject,o.body) is distinct from
+     row(r.request_id,r.actor_id,(r.payload->>'conversation_id')::uuid,'EMAIL'::text,
+         public.communication_recipient('EMAIL',r.payload->>'to'),r.payload->>'subject',r.payload->>'body') then
+  raise exception 'Reviewed attachment payload unavailable or changed' using errcode='23514';end if;
+ return jsonb_build_object('payload_text',a.payload_text,'payload_hash',a.payload_hash,'artifact_kind','conversation');
+end $$;
+revoke all on function public.conversation_email_delivery_context(uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.conversation_email_delivery_context(uuid,uuid) to service_role;
+
+alter function public.read_frozen_email_payload(uuid,uuid) rename to read_frozen_email_payload_without_conversation;
+revoke all on function public.read_frozen_email_payload_without_conversation(uuid,uuid) from public,anon,authenticated,service_role;
+create function public.read_frozen_email_payload(p_outbox_id uuid,p_lease_token uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare payload jsonb;
+begin
+ perform public.communication_require_service();
+ payload:=public.conversation_email_delivery_context(p_outbox_id,p_lease_token);
+ if payload is not null then return payload;end if;
+ return public.read_frozen_email_payload_without_conversation(p_outbox_id,p_lease_token);
+end $$;
+revoke all on function public.read_frozen_email_payload(uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.read_frozen_email_payload(uuid,uuid) to service_role;
+
+-- Preserve the complete current wrapper chain, including payment delivery guards.
+alter function public.start_communication_attempt(uuid,uuid,jsonb) rename to start_communication_attempt_without_conversation;
+revoke all on function public.start_communication_attempt_without_conversation(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
+create function public.start_communication_attempt(p_id uuid,p_lease_token uuid,p_provider_config jsonb)
+returns public.communication_outbox language plpgsql security definer set search_path=public as $$
+declare o public.communication_outbox;context jsonb;payload jsonb;valid boolean:=true;
+begin
+ perform public.communication_require_service();
+ select * into o from public.communication_outbox where id=p_id for update;
+ if not found or o.state<>'claimed' or o.lease_token is distinct from p_lease_token
+  or o.lease_expires_at is null or o.lease_expires_at<=now() or o.attempt_started_at is not null then
+  raise exception 'Outbox lease unavailable' using errcode='40001';end if;
+ begin
+  context:=public.conversation_email_delivery_context(p_id,p_lease_token);
+  if context is not null then
+   payload:=(context->>'payload_text')::jsonb;
+   valid:=p_provider_config->>'conversation_payload_hash'=context->>'payload_hash'
+    and payload->>'from'=p_provider_config->>'from' and payload->>'reply_to'=p_provider_config->>'reply_to';
+  elsif p_provider_config ? 'conversation_payload_hash' then valid:=false;
+  end if;
+ exception when sqlstate '23514' or sqlstate '42501' then valid:=false;
+ end;
+ if valid is distinct from true then
+  update public.communication_outbox set state='failed',last_error='conversation_payload_ineligible',lease_token=null,
+   lease_expires_at=null,updated_at=now() where id=o.id returning * into o;return o;
+ end if;
+ return public.start_communication_attempt_without_conversation(p_id,p_lease_token,p_provider_config-'conversation_payload_hash');
+end $$;
+revoke all on function public.start_communication_attempt(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
+grant execute on function public.start_communication_attempt(uuid,uuid,jsonb) to service_role;
+
+-- Draft inspection returns the exact frozen attachment, never a mutable Storage URL.
+create function public.read_conversation_email_attachment(p_request_id uuid,p_upload_id uuid,p_payload_hash text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare actor uuid:=public.clinical_require_staff();a public.conversation_email_artifacts;r public.communication_prepared_requests;ordinal bigint;
+begin
+ select * into r from public.communication_prepared_requests where request_id=p_request_id and actor_id=actor and state<>'abandoned';
+ select * into a from public.conversation_email_artifacts where request_id=p_request_id;
+ if r.request_id is null or a.payload_text is null or a.payload_hash is distinct from p_payload_hash then
+  raise exception 'Owned reviewed attachment unavailable' using errcode='42501';end if;
+ select ord into ordinal from jsonb_array_elements(a.manifest) with ordinality as files(file,ord) where file->>'upload_id'=p_upload_id::text;
+ if ordinal is null then raise exception 'Attachment does not belong to this email' using errcode='42501';end if;
+ return jsonb_build_object('request_id',r.request_id,'upload_id',p_upload_id,'payload_hash',a.payload_hash,
+  'attachment',(a.payload_text::jsonb->'attachments')->(ordinal::integer-1));
+end $$;
+revoke all on function public.read_conversation_email_attachment(uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.read_conversation_email_attachment(uuid,uuid,text) to authenticated;
+
+-- Shared history follows the platform's active-staff message access. Draft tables
+-- and Storage reservations remain owner-only; only a reviewed outbox link qualifies.
+create function public.list_conversation_message_attachments(p_message_ids uuid[])
+returns table(message_id uuid,request_id uuid,payload_hash text,files jsonb)
+language plpgsql security definer set search_path=public as $$
+begin
+ perform public.clinical_require_staff();
+ if p_message_ids is null or cardinality(p_message_ids)>100 then
+  raise exception 'At most one hundred message IDs required' using errcode='23514';end if;
+ return query select o.message_id,a.request_id,a.payload_hash,
+  (select jsonb_agg(file-array['storage_path'] order by ord) from jsonb_array_elements(a.manifest) with ordinality x(file,ord))
+ from public.communication_outbox o
+ join public.messages m on m.id=o.message_id and m.conversation_id=o.conversation_id and m.sender_id=o.created_by and not m.is_internal
+ join public.conversation_email_outbox_links l on l.outbox_id=o.id and l.queued_by=o.created_by and l.request_id=o.request_id
+ join public.conversation_email_artifacts a on a.request_id=l.request_id and a.payload_hash=l.reviewed_payload_hash
+ join public.communication_prepared_requests r on r.request_id=a.request_id and r.actor_id=o.created_by and r.state<>'abandoned'
+ where o.message_id=any(p_message_ids) and o.channel='EMAIL' and a.payload_text is not null;
+end $$;
+revoke all on function public.list_conversation_message_attachments(uuid[]) from public,anon,authenticated,service_role;
+grant execute on function public.list_conversation_message_attachments(uuid[]) to authenticated;
+
+create function public.read_conversation_message_attachment(p_message_id uuid,p_upload_id uuid,p_payload_hash text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare matched record;a public.conversation_email_artifacts;ordinal bigint;
+begin
+ perform public.clinical_require_staff();
+ select * into matched from public.list_conversation_message_attachments(array[p_message_id]);
+ if not found or matched.payload_hash is distinct from p_payload_hash then
+  raise exception 'Reviewed message attachment unavailable' using errcode='42501';end if;
+ select * into a from public.conversation_email_artifacts where request_id=matched.request_id;
+ select ord into ordinal from jsonb_array_elements(a.manifest) with ordinality x(file,ord) where file->>'upload_id'=p_upload_id::text;
+ if ordinal is null or a.payload_hash is distinct from encode(sha256(convert_to(a.payload_text,'UTF8')),'hex') then
+  raise exception 'Reviewed message attachment unavailable' using errcode='42501';end if;
+ return jsonb_build_object('message_id',p_message_id,'request_id',a.request_id,'upload_id',p_upload_id,'payload_hash',a.payload_hash,
+  'attachment',(a.payload_text::jsonb->'attachments')->(ordinal::integer-1));
+end $$;
+revoke all on function public.read_conversation_message_attachment(uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.read_conversation_message_attachment(uuid,uuid,text) to authenticated;
