@@ -1,0 +1,39 @@
+{
+  "phase": "native-return-reconciliation-arithmetic",
+  "recorded_date": "2026-09-16",
+  "base_revision": "8945cce9292d30a67f0020a367262ced228bbf4b",
+  "source_sha256": {
+    "supabase/functions/_shared/native-return-quantity-replay.ts": "c761e829286edeb64800e418e5901554e2aef0643e2afa494b3bbbd838018e85",
+    "supabase/functions/_shared/native-dispense-returns.ts": "b37c2e59c886e622592aa72240a9457fde567694934c224ae29aca8270859457",
+    "tests/prescriptions/return-quantity-replay.test.ts": "764aff00a21cbda16b6763bec9ac1a9c9349c76a4857cd0720bf4b1b8882dd5f",
+    "tests/prescriptions/return-renderer.test.ts": "80f2871d50650206abf753c2c71aa9f8bbd885912cc8d456aa6196fb8363969c",
+    "plans/20260916-native-prescribing/return-reconciliation-contract.md": "214036d33fd01cf3a9b44ae9ef43c3a39d7a05088d74d4fa3d7b7fb2c6a892ad"
+  },
+  "scope": "Chronological quantity replay and existing v1 disclosure integration; correction workflow is not enabled.",
+  "verification": {
+    "unit_tests": 821,
+    "lint": true,
+    "typescript": true,
+    "production_build": true,
+    "edge_typecheck": true,
+    "quantity_replay_tests": 26,
+    "historical_artifact_bytes_unchanged": true,
+    "independent_review": "No concrete defects identified; arithmetic/v1 validation scope only.",
+    "focused_browser_tests": 24
+  },
+  "historical_fixture_sha256": {
+    "full": "43375a444c79d7469e9862688b3c3345e047cb2a564f81590a7c5b5b31397f75",
+    "order_only": "0995ab9cf5ec55b6cf0f5628c2f25b947cd7dd3aa05f5d7b719fc6c8785736e2"
+  },
+  "database_changes": false,
+  "hosted_deployment": false,
+  "provider_requests": 0,
+  "remaining": [
+    "Database correction and unresolved-discrepancy lifecycle",
+    "Negative inventory compensation and observed contention",
+    "Staff correction/reconciliation review and recovery",
+    "Versioned current print/releases with historical compatibility",
+    "Actual Auth/browser/restore acceptance for the new correction workflow",
+    "Clinical approval and coordinated rollout"
+  ]
+}
