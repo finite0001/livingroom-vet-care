@@ -1,3 +1,4 @@
+import { readOwnedRuntimeStatus } from "../estimates/owned-runtime-status.ts";
 /** Actual browser + Auth + RPC acceptance, restricted to an explicitly owned
  * disposable runtime. Does not start, reset or stop a database. */
 import assert from "node:assert/strict";
@@ -66,9 +67,7 @@ assert.equal(
   projectPath,
   "Container workdir ownership must match",
 );
-const local = JSON.parse(
-  capture("supabase", ["status", "--workdir", projectPath, "--output", "json"]),
-);
+const local = readOwnedRuntimeStatus(projectPath);
 assert.match(local.API_URL, /^http:\/\/127\.0\.0\.1:\d+$/);
 assert.equal(typeof local.ANON_KEY, "string");
 assert.equal(typeof local.SERVICE_ROLE_KEY, "string");

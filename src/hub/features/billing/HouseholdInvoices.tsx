@@ -30,6 +30,8 @@ import { InvoiceDocumentPreview } from "./InvoiceDocumentPreview";
 
 interface HouseholdInvoicesProps {
   clientId: string;
+  onDirtyChange?: (dirty: boolean) => void;
+  externalNavigationGuard?: boolean;
 }
 interface PendingOperation {
   run: () => Promise<void>;
@@ -50,7 +52,7 @@ const knownRejection = (error: unknown) =>
     String(error.code),
   );
 
-export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
+export function HouseholdInvoices({ clientId, onDirtyChange, externalNavigationGuard = false }: HouseholdInvoicesProps) {
   const { session } = useAuth();
   const cache = useQueryClient();
   const [childPending, setChildPending] = useState(false);
@@ -61,16 +63,16 @@ export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const unconfirmed = busy || Boolean(createId.current) || childPending;
-  const blocker = useBlocker(unconfirmed);
+  useEffect(() => { onDirtyChange?.(unconfirmed); return () => onDirtyChange?.(false); }, [onDirtyChange, unconfirmed]);
   useEffect(() => {
-    if (!unconfirmed) return;
+    if (!unconfirmed || externalNavigationGuard) return;
     const beforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", beforeUnload);
     return () => window.removeEventListener("beforeunload", beforeUnload);
-  }, [unconfirmed]);
+  }, [unconfirmed, externalNavigationGuard]);
   const invoices = useQuery({
     queryKey: ["household-invoices", clientId, page],
     queryFn: async () => {
@@ -124,32 +126,7 @@ export function HouseholdInvoices({ clientId }: HouseholdInvoicesProps) {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        <AlertDialog open={blocker.state === "blocked"}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                Leave unfinished invoice work?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Unsaved email text will be discarded. A submitted request may
-                already be recorded; recover the saved invoice email or review
-                invoice history before submitting it again.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                onClick={() => blocker.state === "blocked" && blocker.reset()}
-              >
-                Stay and reconcile
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => blocker.state === "blocked" && blocker.proceed()}
-              >
-                Leave and review later
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!externalNavigationGuard && <InvoiceNavigationGuard dirty={unconfirmed} />}
         <p className="text-sm text-muted-foreground">
           USD charges and accounting credits. Payment collection is not
           connected. Issued invoices can be prepared for reviewed email
@@ -791,4 +768,35 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
       )}
     </section>
   );
+}
+
+interface InvoiceNavigationGuardProps { dirty: boolean }
+function InvoiceNavigationGuard({ dirty }: InvoiceNavigationGuardProps) {
+  const blocker = useBlocker(dirty);
+  return (<AlertDialog open={blocker.state === "blocked"}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Leave unfinished invoice work?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Unsaved email text will be discarded. A submitted request may
+                already be recorded; recover the saved invoice email or review
+                invoice history before submitting it again.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => blocker.state === "blocked" && blocker.reset()}
+              >
+                Stay and reconcile
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => blocker.state === "blocked" && blocker.proceed()}
+              >
+                Leave and review later
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>);
 }

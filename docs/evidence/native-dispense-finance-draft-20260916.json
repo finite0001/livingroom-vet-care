@@ -1,5 +1,5 @@
 {
-  "status": "draft-under-verification",
+  "status": "synthetic-acceptance-passed",
   "date": "2026-09-16",
   "scope": "Native dispense accounting credit and separately reviewed refund reservation attribution",
   "synthetic_only": true,
@@ -17,7 +17,6 @@
     "pre_closure_focused_browser_tests": 30
   },
   "pending": [
-    "Final-source CI for terminal closure, SQL, observed contention, actual finance Auth and populated restore",
     "Hosted rollout, clinical/operational review and owner-deferred payment provider acceptance"
   ],
   "first_runtime": {
@@ -50,9 +49,22 @@
     "cleanup_verified": true
   },
   "terminal_resolution": {
-    "status": "implemented-under-verification",
+    "status": "synthetic-acceptance-passed",
     "behavior": "Serialized closure recovers committed receipt or permanently prevents delayed native write; exact request persists on unknown outcomes",
     "frontend_checks": "872 units,14 focused finance tests,8 finance browser scenarios; lint/typecheck/build pass",
-    "local_runtime": "lrv-prescription-f3c71c677c12 is running a pre-final-timestamp migration; not final-source acceptance"
+    "local_runtime": "lrv-prescription-f3c71c677c12 stopped after347 inherited checks when Supabase runtime status discovery failed; cleanup verified; final-source CI is authoritative"
+  },
+  "tested_commit": "e8f0c289ddaf89e85c7e2737d204d85b4523d9e0",
+  "final_ci": {
+    "run": 35091844016,
+    "head": "e8f0c289ddaf89e85c7e2737d204d85b4523d9e0",
+    "frontend": "success",
+    "edge": "success",
+    "database": "success",
+    "sql_files": 101,
+    "sql_assertions": 4169,
+    "finance_contention_checks": 169,
+    "finance_actual_auth_checks": 61,
+    "populated_restore_checks": 103
   }
 }
