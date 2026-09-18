@@ -1,3 +1,4 @@
+import { renderNativePrescriptionV2, type NativePrescriptionPrintV2 } from "../../../../supabase/functions/_shared/native-dispense-corrections.ts";
 import {
   renderNativePrescription,
   type NativePrescriptionArtifact,
@@ -30,6 +31,12 @@ export function renderReviewedPrescriptionCopy(value: unknown, target: Prescript
   }
   const bundle = record(value);
   const keys = Object.keys(bundle);
+  const v2 = bundle.version === 2;
+  if (v2) {
+    const prescription = record(bundle.prescription), patient = record(prescription.patient);
+    if (patient.id !== target.patientId || prescription.authorization_id !== target.authorizationId || (target.dispenseId === null ? bundle.dispense !== null : record(bundle.dispense).id !== target.dispenseId)) throw new Error("Correction-aware print response belongs to another record.");
+    return renderNativePrescriptionV2(bundle as unknown as NativePrescriptionPrintV2);
+  }
   if (keys.length !== 3 || !['prescription', 'status', 'dispense'].every(key => Object.prototype.hasOwnProperty.call(bundle, key))) {
     throw new Error('Invalid prescription print response. Refresh the patient record.');
   }

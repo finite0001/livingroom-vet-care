@@ -48,6 +48,7 @@ tables = [
     'native_refill_operations', 'refill_requests', 'inventory_movements',
     'inventory_lots', 'catalog_products', 'billing_invoice_items', 'billing_invoices',
     'record_releases', 'record_release_sources', 'record_release_events',
+    'native_dispense_correction_events', 'native_dispense_correction_operations',
 ]
 
 
@@ -105,6 +106,35 @@ def grants_query():
     return "select coalesce(jsonb_agg(jsonb_build_object('table',r.relname,'owner',pg_get_userbyid(r.relowner),'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(r.relacl,acldefault('r',r.relowner))) a)) order by r.relname),'[]') from pg_class r join pg_namespace n on n.oid=r.relnamespace where n.nspname='public' and r.relname in (" + ','.join(map(quote, tables)) + ");"
 
 
+def correction_evidence_query():
+    # Stable private readers verify canonical operation/event/parent chains. No
+    # public preview calls or write locks are taken in the exported read snapshot.
+    return """with targets as (
+      select distinct authorization_id,pet_id,dispense_id
+      from public.native_dispense_correction_events
+    ), chains as (
+      select dispense_id,public.native_correction_verified(authorization_id,pet_id,dispense_id) evidence
+      from targets
+    ), authors as (
+      select distinct authorization_id from targets
+    ) select jsonb_build_object(
+      'chains',(select count(*) from chains),
+      'events',(select count(*) from public.native_dispense_correction_events),
+      'verified',(select coalesce(bool_and(evidence is not null),false) from chains),
+      'chain_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('dispense_id',dispense_id,'evidence',evidence) order by dispense_id),'[]') from chains)),
+      'summary_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('authorization_id',authorization_id,'summary',public.native_correction_summary(authorization_id)) order by authorization_id),'[]') from authors)),
+      'schema11_releases',(select count(*) from public.record_releases where snapshot->>'schema_version'='11'),
+      'schema11_sha256',public.native_fulfillment_hash((select coalesce(jsonb_agg(jsonb_build_object('id',id,'snapshot',snapshot,'hash',source_hash) order by id),'[]') from public.record_releases where snapshot->>'schema_version'='11'))
+    );"""
+
+
+def correction_boundaries_query():
+    return """select jsonb_build_object(
+      'tables',(select jsonb_agg(jsonb_build_object('name',c.relname,'rls',c.relrowsecurity,'policies',(select coalesce(jsonb_agg(pg_get_expr(p.polqual,p.polrelid) order by p.polname),'[]') from pg_policy p where p.polrelid=c.oid),'triggers',(select jsonb_agg(pg_get_triggerdef(t.oid,true) order by t.tgname) from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal)) order by c.relname) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in('native_dispense_correction_events','native_dispense_correction_operations')),
+      'functions',(select jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,'security_definer',p.prosecdef,'volatility',p.provolatile,'acl',(select coalesce(jsonb_agg(a::text order by a::text),'[]') from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) a)) order by p.oid::regprocedure::text) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'native_correction_%' or p.proname in('preview_native_dispense_correction','append_native_dispense_correction','recover_native_dispense_correction','read_native_dispense_corrections','list_native_dispense_corrections','read_native_prescription_print_v2','release_preview_v11_internal','preview_record_release_v11')))
+    );"""
+
+
 try:
     verify_project()
     project_verified = True
@@ -125,6 +155,14 @@ try:
     before = json.loads(snapshot_sql(manifest_query()))
     before_constraints = json.loads(snapshot_sql(constraints_query()))
     before_grants = json.loads(snapshot_sql(grants_query()))
+    before_corrections = json.loads(snapshot_sql(correction_evidence_query()))
+    before_correction_boundaries = json.loads(snapshot_sql(correction_boundaries_query()))
+    check(before_corrections['chains'] > 0 and before_corrections['events'] > 0 and before_corrections['verified'],
+          'Populated verified correction chains required')
+    check(before_corrections['schema11_releases'] > 0, 'Populated schema11 corrected-release evidence required')
+    check(before['native_dispense_correction_operations']['rows'] == before_corrections['events'],
+          'Every populated correction has an immutable operation receipt')
+    check(all(row['rls'] for row in before_correction_boundaries['tables']), 'Correction ledger RLS must be enabled')
     check(before['native_dispenses']['rows'] > 0, 'Populated saved dispenses required; empty restore is not acceptance')
     check(before['native_fulfillment_operations']['rows'] > 0, 'Populated operation receipts required')
     check(all(c['validated'] for c in before_constraints), 'Source constraints must already be validated')
@@ -164,6 +202,7 @@ try:
         ('native_prescription_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation',operation,'request',request)"),
         ('native_fulfillment_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation',operation,'request',request)"),
         ('native_refill_operations', 'request'),
+        ('native_dispense_correction_operations', "jsonb_build_object('version',1,'actor_id',actor_id,'operation','append_native_dispense_correction','request',request)"),
     ]:
         invalid = sql("select count(*) from public." + table + " where request_hash is distinct from encode(sha256(convert_to((" + basis + ")::text,'UTF8')),'hex');", restored)
         check(invalid == '0', 'Restored operation request hash differs for ' + table)
@@ -175,6 +214,11 @@ try:
           'Restored immutable authorization signatures/context/artifacts must verify')
     check(sql("select count(*) from public.record_releases where source_hash is distinct from encode(sha256(convert_to(snapshot::text,'UTF8')),'hex');", restored) == '0',
           'Restored record-release snapshots retain their exact source fingerprints')
+    restored_corrections = json.loads(sql(correction_evidence_query(), restored))
+    check(restored_corrections == before_corrections,
+          'Restored correction chains, immutable receipts, summaries and schema11 snapshots must verify exactly')
+    check(json.loads(sql(correction_boundaries_query(), restored)) == before_correction_boundaries,
+          'Correction RLS, immutability triggers and private/public function grants must survive restore')
     success = True
 finally:
     cleanup_errors = []
@@ -239,5 +283,7 @@ if success:
                'future_object_default_privileges_restored': False, 'selected_table_grants_verified': True,
                'scope': 'Selected native clinical/operational and stock/billing rows with schema/data restore; not full commercial disaster recovery',
                'tables': before, 'verified_dispenses': verified['count'],
+               'verified_correction_evidence': restored_corrections,
+               'correction_boundaries_verified': True,
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     print(json.dumps(summary, sort_keys=True))

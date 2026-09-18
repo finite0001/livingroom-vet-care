@@ -17,7 +17,7 @@ args = parser.parse_args()
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
-harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts']]
+harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts', 'local-corrections.ts']]
 harness_hashes = {}
 results = []
 identity = 'lrv-prescription-' + uuid.uuid4().hex[:12]
@@ -60,7 +60,7 @@ try:
         versions.add(version)
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
-    assert len(versions) == 120 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 121 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521

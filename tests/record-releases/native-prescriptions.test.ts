@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { correctionFixture } from "../prescriptions/correction-fixture.ts";
+import type { NativePrescriptionReleaseV11, NativeDispenseReleaseV11 } from "../../supabase/functions/_shared/record-release-native-prescriptions.ts";
 import { nativeReleaseArtifact } from "./native-prescription-fixture.ts";
 import { renderRecordRelease, type ReleaseBundle } from "../../supabase/functions/_shared/record-release-renderer.ts";
 import { buildReleaseEmailPayload } from "../../supabase/functions/_shared/release-email-payload.ts";
@@ -111,4 +113,49 @@ test("release chronology retains microseconds for terminal events and pickups", 
   assert.throws(() => renderRecordRelease(a));
   d.pickup.picked_up_at = "2026-09-16T04:30:00.000002-06:00";
   assert.doesNotThrow(() => renderRecordRelease(a));
+});
+
+function correctedRelease(mixed = false) {
+  const a = nativeReleaseArtifact(mixed), s = a.preview.snapshot;
+  const p = s.native_prescriptions![0] as NativePrescriptionReleaseV11;
+  const d = s.native_dispenses![0] as NativeDispenseReleaseV11;
+  const c = correctionFixture(p.artifact, { ...d.artifact, invoice_id: null });
+  s.schema_version = 11;
+  p.corrections = c.correction_summary;
+  d.prescription = structuredClone(p);
+  d.corrections = c.dispense_corrections!;
+  const pickup = c.original_pickup!;
+  d.pickup = { id: pickup.id, picked_up_at: pickup.picked_up_at, recipient_name: pickup.recipient_name, actor_id: pickup.actor_id };
+  return a;
+}
+test("schema11 preserves original pickup and discloses the complete correction history", () => {
+  const a = correctedRelease(), before = structuredClone(a), html = renderRecordRelease(a);
+  assert.deepEqual(a, before);
+  for (const text of ["Original recipient", "Corrected recipient", "Synthetic DVM", "Original packaging note", "Corrected handoff assertion"]) assert.ok(html.includes(text), text);
+  const old = nativeReleaseArtifact();
+  assert.doesNotMatch(renderRecordRelease(old), /Corrected handoff assertion/);
+});
+test("schema11 order-only selection discloses existence without disclosing unselected amendment text", () => {
+  const a = correctedRelease(), s = a.preview.snapshot;
+  s.native_dispenses = []; s.selection!.native_dispense_ids = [];
+  const html = renderRecordRelease(a);
+  assert.match(html, /correction/i); assert.doesNotMatch(html, /Original packaging note|Corrected recipient/);
+});
+for (const [name, mutate] of Object.entries({
+  "omitted event": (a: ReturnType<typeof correctedRelease>) => { (a.preview.snapshot.native_dispenses![0] as NativeDispenseReleaseV11).corrections.events.splice(1,1); },
+  "summary disagreement": (a: ReturnType<typeof correctedRelease>) => { (a.preview.snapshot.native_prescriptions![0] as NativePrescriptionReleaseV11).corrections.event_count++; },
+  "wrong patient": (a: ReturnType<typeof correctedRelease>) => { (a.preview.snapshot.native_dispenses![0] as NativeDispenseReleaseV11).corrections.events[0].target.pet_id = "00000000-0000-4000-8000-000000000099"; },
+  "version downgrade": (a: ReturnType<typeof correctedRelease>) => { a.preview.snapshot.schema_version = 10; },
+  "missing correction summary": (a: ReturnType<typeof correctedRelease>) => { Reflect.deleteProperty(a.preview.snapshot.native_prescriptions![0], "corrections"); },
+})) test(`schema11 rejects ${name}`, () => { const a = correctedRelease(); mutate(a); assert.throws(() => renderRecordRelease(a)); });
+
+for (const channel of ["EMAIL", "SMS"] as const) test(`mixed schema11 ${channel} retains original-byte binding`, async () => {
+  const a = correctedRelease(true), s = a.preview.snapshot;
+  s.recipient.channel = channel; s.recipient.address = channel === "EMAIL" ? "owner@example.test" : "+13035550123";
+  const b: ReleaseBundle = { release: { ...a.preview, id: "00000000-0000-4000-8000-000000000030", pet_id: s.patient.id, client_id: s.recipient.client_id, channel, recipient: s.recipient.address, selection: s.selection!, created_by: "00000000-0000-4000-8000-000000000031", created_at: "2026-09-16T12:00:00Z" }, events: [], eligible: true, ineligibility_reason: null };
+  const run = (tamper: boolean) => {
+    const download = async () => { const bytes = apiOriginalBytes.slice(); if (tamper) bytes[bytes.length - 1] ^= 1; return bytes; };
+    return channel === "EMAIL" ? buildReleaseEmailPayload({ id: "request", release_id: b.release.id, actor_id: b.release.created_by, recipient: b.release.recipient, subject: "Records", body: "Reviewed records", release_hash: b.release.source_hash }, b, { from: "care@example.test", replyTo: "care@example.test" }, download) : buildDocumentLinkArtifacts({ id: "grant", family: "record_release", source_id: b.release.id, client_id: b.release.client_id, actor_id: b.release.created_by, recipient: b.release.recipient, source_hash: b.release.source_hash, source_bundle: b, created_at: b.release.created_at, expires_at: "2026-09-17T00:00:00Z", origin: "https://example.test", key_version: "test", capability_context: "synthetic", message_template: "Records", state: "preparing" }, { name: "Synthetic", address: "Synthetic", domain: null }, download);
+  };
+  await run(false); await assert.rejects(run(true), /bytes.*(capture|provenance)|original.*capture/i);
 });
