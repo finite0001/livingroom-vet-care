@@ -819,3 +819,167 @@ test("client dialog reload restores saved email subject and body instead of new 
   );
   expect(state.requests).toHaveLength(1);
 });
+
+for (const mobile of [false, true]) {
+  test(`attachment email requires file review before queueing (${mobile ? 'mobile' : 'desktop'})`, async ({ page }) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    const state = await fixture(page, 'lost');
+    const bytes = Buffer.from('%PDF-synthetic');
+    const { createHash } = await import('node:crypto');
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    let reservation: Record<string, unknown> = {};
+    let queued = 0;
+    await page.route(`${backend}/rest/v1/rpc/prepare_conversation_attachment`, async route => {
+      const a = route.request().postDataJSON();
+      reservation = { id: a.p_id, actor_id: staff, conversation_id: conversation, file_name: a.p_file_name,
+        mime_type: a.p_mime_type, byte_length: a.p_byte_length, storage_path: `${staff}/${conversation}/${a.p_id}/original`, status: 'uploading', sha256: null };
+      await route.fulfill({ json: reservation });
+    });
+    await page.route(`${backend}/storage/v1/object/conversation-attachment-uploads/**`, route => route.fulfill({ json: { Key: reservation.storage_path } }));
+    await page.route(`${backend}/functions/v1/verify-conversation-attachment`, route => route.fulfill({ json: { ...reservation, status: 'ready', sha256: hash } }));
+    await page.route(`${backend}/rest/v1/rpc/prepare_conversation_email`, async route => {
+      const a = route.request().postDataJSON();
+      const snapshot = { request_id: a.p_request_id, actor: staff, scope: a.p_scope, status: 'prepared', receipt: null,
+        payload: { conversation_id: conversation, channel: 'EMAIL', to: a.p_recipient, subject: a.p_subject, body: a.p_body, attachment_ids: a.p_attachment_ids } };
+      state.prepared.set(a.p_request_id, snapshot); await route.fulfill({ json: snapshot });
+    });
+    await page.route(`${backend}/functions/v1/capture-conversation-email`, async route => {
+      const snapshot = state.prepared.get(route.request().postDataJSON().id)!;
+      await route.fulfill({ json: { ...snapshot, captured: true, payload_hash: 'a'.repeat(64), attachment_manifest: [{ upload_id: reservation.id,
+        file_name: 'report.pdf', mime_type: 'application/pdf', byte_length: bytes.length, sha256: hash }] } });
+    });
+    await page.route(`${backend}/rest/v1/rpc/read_conversation_email_attachment`, async route => {
+      const a = route.request().postDataJSON();
+      await route.fulfill({ json: { request_id: a.p_request_id, upload_id: a.p_upload_id, payload_hash: a.p_payload_hash,
+        attachment: { filename: 'report.pdf', content_type: 'application/pdf', content: bytes.toString('base64') } } });
+    });
+    await page.route(`${backend}/rest/v1/rpc/enqueue_conversation_email`, async route => {
+      const a = route.request().postDataJSON(); expect(a.p_attest).toBe(true); expect(a.p_reviewed_payload_hash).toBe('a'.repeat(64)); queued++;
+      state.prepared.get(a.p_request_id)!.receipt = { success: true, queued: true, outbox_id: conversation, message_id: message, state: 'pending' };
+      await route.fulfill({ json: { id: conversation } });
+    });
+    await page.goto(`/hub/conversation/${conversation}`);
+    await page.getByPlaceholder('Subject', { exact: true }).fill('Reviewed attachment');
+    await page.getByPlaceholder('Send EMAIL...').fill('Please review this file.');
+    await page.getByLabel('Choose email attachments').setInputFiles({ name: 'report.pdf', mimeType: 'application/pdf', buffer: bytes });
+    await expect(page.getByRole('list', { name: 'Selected attachments' })).toContainText('report.pdf');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Review email and attachments' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Queue email' })).toBeDisabled(); expect(queued).toBe(0);
+    const download = page.waitForEvent('download');
+    await dialog.getByRole('button', { name: 'Download report.pdf for review' }).click();
+    expect((await download).suggestedFilename()).toBe('report.pdf');
+    await dialog.getByLabel('I reviewed the recipient, message, and attached files.').check();
+    await dialog.getByRole('button', { name: 'Queue email' }).click();
+    await expect.poll(() => queued).toBe(1);
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByPlaceholder('Send EMAIL...')).toHaveValue('');
+    expect(state.legacyCalls).toBe(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
+test('queued attachment appears in conversation history and downloads captured bytes', async ({ page }) => {
+  await fixture(page, 'lost');
+  const bytes = Buffer.from('%PDF-history');
+  const { createHash } = await import('node:crypto');
+  const hash = createHash('sha256').update(bytes).digest('hex');
+  await page.route(`${backend}/rest/v1/messages*`, route => route.fulfill({ json: [{ id: message,
+    conversation_id: conversation, type: 'EMAIL', sender_type: 'STAFF', sender_id: staff,
+    content: 'Your reviewed file', is_internal: false, created_at: '2026-09-16T12:00:00Z',
+    audio_url: null, transcription: null, ivr_path: null }] }));
+  await page.route(`${backend}/rest/v1/rpc/list_conversation_message_attachments`, route => route.fulfill({ json: [{ message_id: message,
+    request_id: conversation, payload_hash: 'a'.repeat(64), files: [{ upload_id: client, file_name: 'history.pdf', mime_type: 'application/pdf', byte_length: bytes.length, sha256: hash }] }] }));
+  await page.route(`${backend}/rest/v1/rpc/read_conversation_message_attachment`, async route => {
+    expect(route.request().postDataJSON()).toEqual({ p_message_id: message, p_upload_id: client, p_payload_hash: 'a'.repeat(64) });
+    await route.fulfill({ json: { message_id: message, request_id: conversation, upload_id: client, payload_hash: 'a'.repeat(64),
+      attachment: { filename: 'history.pdf', content_type: 'application/pdf', content: bytes.toString('base64') } } });
+  });
+  await page.goto(`/hub/conversation/${conversation}`);
+  const files = page.getByRole('list', { name: 'Message attachments' });
+  await expect(files).toContainText('history.pdf');
+  const download = page.waitForEvent('download');
+  await files.getByRole('button', { name: /history.pdf/ }).click();
+  expect((await download).suggestedFilename()).toBe('history.pdf');
+});
+
+for (const mobile of [false, true]) {
+  test(`incoming image retrieval preserves binary download (${mobile ? 'mobile' : 'desktop'})`, async ({ page }) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    await fixture(page, 'lost');
+    const bytes = Buffer.from('89504e470d0a1a0a00ff80fe010203', 'hex');
+    const { createHash } = await import('node:crypto');
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    let ready = false;
+    await page.route(`${backend}/rest/v1/messages*`, route => route.fulfill({ json: [{ id: message,
+      conversation_id: conversation, type: 'EMAIL', sender_type: 'CLIENT', sender_id: null,
+      content: 'Here is the photo', is_internal: false, created_at: '2026-09-16T12:00:00Z',
+      audio_url: null, transcription: null, ivr_path: null }] }));
+    await page.route(`${backend}/rest/v1/rpc/list_inbound_message_attachments`, route => route.fulfill({ json: [{
+      inbound_id: conversation, inbound_version: 1, message_id: message, attachment_id: client,
+      filename: 'pet.png', byte_length: bytes.length, mime_type: 'image/png',
+      status: ready ? 'ready' : 'pending', capture_id: ready ? staff : null, sha256: ready ? hash : null,
+    }] }));
+    await page.route(`${backend}/functions/v1/capture-inbound-attachment`, async route => {
+      expect(route.request().postDataJSON()).toEqual({ inbound_id: conversation, attachment_id: client, version: 1 });
+      ready = true; await route.fulfill({ json: { status: 'ready' } });
+    });
+    await page.route(`${backend}/functions/v1/read-inbound-attachment`, async route => {
+      expect(route.request().postDataJSON()).toEqual({ capture_id: staff, message_id: message });
+      await route.fulfill({ contentType: 'image/png', body: bytes });
+    });
+    await page.goto(`/hub/conversation/${conversation}`);
+    await expect(page.getByText('Here is the photo', { exact: true })).toBeVisible({ timeout: 15000 });
+    const files = page.getByRole('list', { name: 'Incoming attachments' });
+    await expect(files).toContainText('Not yet retrieved');
+    await expect(files.getByRole('button', { name: 'Download', exact: true })).toHaveCount(0);
+    await files.getByRole('button', { name: 'Retrieve file', exact: true }).click();
+    await expect(files).toContainText('Verified file');
+    const downloadEvent = page.waitForEvent('download');
+    await files.getByRole('button', { name: 'Download', exact: true }).click();
+    const download = await downloadEvent;
+    expect(download.suggestedFilename()).toBe('pet.png');
+    const path = await download.path(); expect(path).toBeTruthy();
+    const { readFile } = await import('node:fs/promises');
+    expect(await readFile(path!)).toEqual(bytes);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
+for (const scenario of ['capture-unavailable', 'changed-bytes']) {
+  test(`incoming file failure stays actionable without downloading (${scenario})`, async ({ page }) => {
+    await fixture(page, 'lost');
+    const bytes = Buffer.from('%PDF-original');
+    const { createHash } = await import('node:crypto');
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    const ready = scenario === 'changed-bytes';
+    let lists = 0, downloads = 0;
+    page.on('download', () => downloads++);
+    await page.route(`${backend}/rest/v1/messages*`, route => route.fulfill({ json: [{ id: message,
+      conversation_id: conversation, type: 'EMAIL', sender_type: 'CLIENT', sender_id: null,
+      content: 'Incoming failure fixture', is_internal: false, created_at: '2026-09-16T12:00:00Z',
+      audio_url: null, transcription: null, ivr_path: null }] }));
+    await page.route(`${backend}/rest/v1/rpc/list_inbound_message_attachments`, async route => {
+      lists++;
+      await route.fulfill({ json: [{ inbound_id: conversation, inbound_version: 1, message_id: message,
+        attachment_id: client, filename: 'original.pdf', byte_length: bytes.length, mime_type: 'application/pdf',
+        status: ready ? 'ready' : 'pending', capture_id: ready ? staff : null, sha256: ready ? hash : null }] });
+    });
+    await page.route(`${backend}/functions/v1/capture-inbound-attachment`, route => route.fulfill({ status: 503, json: { error: 'Unavailable' } }));
+    await page.route(`${backend}/functions/v1/read-inbound-attachment`, route => route.fulfill({ contentType: 'application/pdf', body: Buffer.from('%PDF-modified') }));
+    await page.goto(`/hub/conversation/${conversation}`);
+    await expect(page.getByText('Incoming failure fixture', { exact: true })).toBeVisible({ timeout: 15000 });
+    const files = page.getByRole('list', { name: 'Incoming attachments' });
+    await files.getByRole('button', { name: ready ? 'Download' : 'Retrieve file', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText(ready ? 'download is unconfirmed' : 'retrieval is unconfirmed');
+    expect(downloads).toBe(0);
+    if (!ready) await expect(files.getByRole('button', { name: 'Download', exact: true })).toHaveCount(0);
+    const refresh = page.getByRole('button', { name: 'Refresh file status', exact: true });
+    await expect(refresh).toBeEnabled();
+    const previousLists = lists;
+    await refresh.click();
+    await expect.poll(() => lists).toBeGreaterThan(previousLists);
+    expect(downloads).toBe(0);
+  });
+}

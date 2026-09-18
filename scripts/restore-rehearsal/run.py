@@ -20,6 +20,8 @@ parser.add_argument('--destination-port', type=int, default=59321, help='Loopbac
 parser.add_argument('--resume-backup', type=Path, help='Retry only a retained synthetic backup destination')
 parser.add_argument('--rehearse-observed-hosted-gaps', action='store_true')
 parser.add_argument('--rehearse-staging-baseline', action='store_true')
+parser.add_argument('--retained-hosted-migration', type=Path, help='Include the exact captured September16 hosted historical receipt in a full restore')
+parser.add_argument('--expected-inventory-directory', type=Path, help='Reviewed routine/access inventories for resuming an older backup without source schema inventories')
 args = parser.parse_args()
 if any(port not in range(1025,65533) for port in [args.source_port,args.destination_port]):
     parser.error('Source and destination API ports must be between1025 and65532')
@@ -30,12 +32,14 @@ if args.rehearse_observed_hosted_gaps and args.rehearse_staging_baseline:
     parser.error('Choose one baseline')
 if upgrade_mode and args.resume_backup:
     parser.error('Gap rehearsal requires a fresh run; resume cannot prove the upgrade')
+if upgrade_mode and args.retained_hosted_migration:
+    parser.error('Retained hosted history requires full restore mode, not a historical gap baseline')
 if not args.run_synthetic_local_rehearsal:
     parser.error('Explicit --run-synthetic-local-rehearsal is required')
 root = Path(__file__).resolve().parents[2]
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 versions = [p.name.split('_')[0] for p in migration_files]
-assert len(versions) == len(set(versions)) == 114, 'Review canonical restore migration inventory'
+assert len(versions) == len(set(versions)) == 118, 'Review canonical restore migration inventory'
 assert {'20260916010000','20260916033310','20260916043949'} <= set(versions), 'Canonical identity, weight and resolution migrations required'
 assert '20260916040000' not in versions, 'Alternate identity receipt migration is not canonical'
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
@@ -49,14 +53,21 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = [f'20260914{v:02d}0000' for v in range(1,24)] + ['20260916000000','20260916010000','20260916033310','20260916043949']
+new_versions = [f'20260914{v:02d}0000' for v in range(1,24)] + ['20260916000000','20260916010000','20260916033310','20260916043949','20260916100000','20260916110000','20260916120000','20260916130000']
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 114
+    assert len(migration_files) == 118
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==114 and len(initial_files)==51
+    assert len(migration_files)==118 and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
+if args.retained_hosted_migration:
+    retained = args.retained_hosted_migration.resolve()
+    assert retained.name == '20260916020000_ezyvet_migration_weight_evidence.sql'
+    receipt = json.loads((root/'docs/evidence/hosted-attachment-upgrade-rehearsal-20260916.json').read_text())
+    assert hashlib.sha256(retained.read_bytes()).hexdigest() == receipt['legacy_sql_sha256'], 'Captured hosted SQL differs from reviewed receipt'
+    migration_files = sorted([*migration_files, retained], key=lambda p: p.name)
+    assert len({p.name.split('_')[0] for p in migration_files}) == 119
 os.umask(0o077)
 run = args.resume_backup.resolve() if args.resume_backup else Path(tempfile.mkdtemp(prefix='lrv-restore-synthetic-'))
 if args.resume_backup:
@@ -70,6 +81,9 @@ else:
 started = time.monotonic()
 projects = []
 log = (run / 'commands.log').open('a')
+inventory_directory = args.expected_inventory_directory.resolve() if args.expected_inventory_directory else run/'source-schema'
+if args.resume_backup:
+    assert all((inventory_directory/f'{kind}-inventory.json').is_file() for kind in ['routine','access']), 'Resume requires source or explicitly supplied reviewed schema inventories'
 # A resumed failure must not leave an earlier success receipt looking current.
 (run/'result.json').unlink(missing_ok=True)
 
@@ -398,6 +412,11 @@ try:
             (run/'vaccination-receipt-fixture.json').write_text(json.dumps(vaccination_snapshot(source),sort_keys=True))
             (run/'migration-recovery-fixture.json').write_text(json.dumps(migration_recovery_snapshot(source),sort_keys=True))
         # No worker runtime or provider secrets exist. Stop all source API writers before the backup pair.
+        assert not args.expected_inventory_directory, 'Fresh backups capture their own source inventories'
+        inventory_directory.mkdir()
+        for kind in ['routine','access']:
+            query=(root/f'scripts/restore-rehearsal/{kind}-inventory.sql').read_text()
+            (inventory_directory/f'{kind}-inventory.json').write_text(sql(source,query))
         verify_identity(source)
         command(['docker','stop',*services(source)])
         backup_started=time.monotonic()
@@ -448,8 +467,17 @@ try:
     # object grant rewriting is permitted. Exact canonical comparison follows.
     sql(destination, '''alter default privileges for role supabase_admin in schema public revoke all on functions from anon,authenticated,service_role;
       alter default privileges for role supabase_admin in schema public revoke all on tables from anon,authenticated,service_role;
-      alter default privileges for role supabase_admin in schema public revoke all on sequences from anon,authenticated,service_role;''')
+      alter default privileges for role supabase_admin in schema public revoke all on sequences from anon,authenticated,service_role;
+      alter default privileges for role postgres in schema public revoke all on functions from public,anon,authenticated,service_role;
+      alter default privileges for role postgres in schema public revoke all on tables from public,anon,authenticated,service_role;
+      alter default privileges for role postgres in schema public revoke all on sequences from public,anon,authenticated,service_role;''')
     command(['docker','exec','-i',docker_name(destination),'pg_restore','-U','supabase_admin','-d','postgres','--clean','--if-exists','--exit-on-error','--single-transaction'],input=dump,binary=True)
+    for kind in ['routine','access']:
+        query=(root/f'scripts/restore-rehearsal/{kind}-inventory.sql').read_text()
+        observed=run/f'restored-{kind}-inventory.json'
+        observed.write_text(sql(destination,query))
+        command(['python3',str(root/f'scripts/restore-rehearsal/compare-{kind}-inventories.py'),str(inventory_directory/f'{kind}-inventory.json'),str(observed)])
+    print('Restored routine and access inventories match reviewed expectations.',flush=True)
     command(['docker','cp',str(run/'storage')+'/.',docker_name(destination,'storage')+':/mnt'])
     command(['docker','start',*services(destination)])
     # All three APIs must be ready after restart; Auth alone can become healthy

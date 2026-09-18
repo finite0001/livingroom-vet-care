@@ -1,0 +1,60 @@
+{
+  "date": "2026-09-16",
+  "project_ref": "kothoqicubowyhwfsrte",
+  "project_name": "livingroom-vet-staging",
+  "scope": "Six reviewed additive migrations applied to staging only, with skip-vault and no seeds or roles.",
+  "backup": "staging-attachment-backup-20260916.json",
+  "actual_backup_rehearsal": "staging-attachment-restored-upgrade-20260916.json",
+  "prior_table_fingerprints": 233,
+  "changed_tables": [],
+  "prior_buckets_unchanged": true,
+  "added_buckets": [
+    {
+      "id": "conversation-attachment-uploads",
+      "public": false,
+      "file_size_limit": 10485760,
+      "allowed_mime_types": [
+        "application/pdf",
+        "image/png",
+        "image/jpeg"
+      ]
+    },
+    {
+      "id": "inbound-attachment-originals",
+      "public": false,
+      "file_size_limit": 10485760,
+      "allowed_mime_types": [
+        "application/pdf",
+        "image/png",
+        "image/jpeg"
+      ]
+    }
+  ],
+  "receipt_count": 119,
+  "added_versions": [
+    "20260916033310",
+    "20260916043949",
+    "20260916100000",
+    "20260916110000",
+    "20260916120000",
+    "20260916130000"
+  ],
+  "routine_inventory": {
+    "matches": true,
+    "routines": 576,
+    "triggers": 276
+  },
+  "access_inventory": {
+    "matches": true,
+    "relations": 211,
+    "policies": 241,
+    "default_privilege_entries": 6
+  },
+  "primary_project_migrated": false,
+  "edge_functions_deployed": false,
+  "provider_delivery_activated": false,
+  "limitations": [
+    "Staging database acceptance only; frontend and Edge deployment remain separate.",
+    "No authenticated hosted attachment workflow, external provider delivery, primary rollout or clinical acceptance claimed."
+  ]
+}
