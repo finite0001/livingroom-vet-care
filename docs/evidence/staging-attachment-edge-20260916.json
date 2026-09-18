@@ -1,0 +1,92 @@
+{
+  "date": "2026-09-16",
+  "project_ref": "kothoqicubowyhwfsrte",
+  "functions": [
+    {
+      "slug": "verify-conversation-attachment",
+      "version": 1,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "795fb85041efb9986c92e7a5f1723e9ebe7ac1a6a19d19101f1d54709891bc66"
+    },
+    {
+      "slug": "capture-conversation-email",
+      "version": 1,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "27dce66a1abdfb3222156a60df463ba8fa81802f0d7ee46a6a5f609c78b76981"
+    },
+    {
+      "slug": "capture-inbound-attachment",
+      "version": 1,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "da69fbdb1a2f07eaeefdb8bace983ecb99236513d70b88ed6b65b490c1634404"
+    },
+    {
+      "slug": "read-inbound-attachment",
+      "version": 1,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "076032e71c27945aeee35f179040ef9f86c77dce6bc7d807b09fbb17f0eea2ed"
+    },
+    {
+      "slug": "cleanup-abandoned-attachment",
+      "version": 1,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "b6ef1e2ef622d2f6109ab6906adb421df494b21ac39843e3cc24e4d07309be0f"
+    }
+  ],
+  "unique_deployed_source_files_verified": 30,
+  "exact_deployed_source_match": true,
+  "unauthenticated_post_status": 401,
+  "unauthenticated_probes": 5,
+  "enable_flags": {
+    "INBOUND_ATTACHMENT_CAPTURE_ENABLED": "absent",
+    "ATTACHMENT_CLEANUP_ENABLED": "absent",
+    "ATTACHMENT_CLEANUP_GRACE_HOURS": "absent"
+  },
+  "primary_changed": false,
+  "provider_capture_enabled": false,
+  "cleanup_enabled": false,
+  "limitations": [
+    "Authenticated deployed workflow remains unverified.",
+    "Dispatch-outbox and process-inbound dependency updates remain pending deployment review.",
+    "Frontend rollout and staff acceptance remain pending.",
+    "No provider requests, messages or file deletions were performed."
+  ],
+  "source_sha256": {
+    "functions/verify-conversation-attachment/index.ts": "f87efed12232450230092685ffdc0be9afb023ce42afbc2e583df8e065985d8c",
+    "functions/_shared/verify-conversation-attachment.ts": "b18dcb2d5f2b8dc9e48503221b85a1ce117f24823836ac9a9eaee1158477e17c",
+    "functions/_shared/inbound/verification.ts": "2786857cadd4958b619711b223d271d5600fcf8a2f895e2c4b3ef522acfd8d9e",
+    "functions/capture-conversation-email/index.ts": "77b78cda11a4eff4263d9d7d79508ea040cb7e1a9911169fe41fa7d5df46ef5b",
+    "functions/_shared/capture-conversation-email.ts": "3ecd6937e50c62d90064a7eee1576cfbdd99c4d228835cb8ae2eb84a8cbe0b96",
+    "functions/_shared/conversation-email-payload.ts": "44239edbf5fa9cef8da601a7fe24d05469586a0d8979accea9e719cf6bc4b1c4",
+    "functions/_shared/delivery-policy.ts": "7c7b3adc98c5317f6993cb1a514ddd6832117cfeff249df3bb0fb703bfc63db7",
+    "functions/_shared/release-email-payload.ts": "bd732342e74b905aa03c6c369693a6712d2b92e95dd461ed26be4c9f562bc6d2",
+    "functions/_shared/record-release-renderer.ts": "01b49ad15268dd3d6432547aad8400ce7f15d3d9f517af4d001164f5a429140d",
+    "functions/_shared/record-release-api-attachments.ts": "67bec357438cf272b8fb340edce791a0ff74bfb8b461b592469a853055695425",
+    "functions/_shared/record-release-imported-prescriptions.ts": "bfb2ee21d2e8c63195ffd429d16701cef7b5c2752480d33dee735d792472d15c",
+    "functions/_shared/prescription-reconciliation.ts": "b767fd9f8babbf276b3ebae48263185b23766b7a84d3f64edcfa21cad2a93902",
+    "functions/_shared/record-release-imported-vaccinations.ts": "1e96791c1d3b6ac51dc35525a6671bf774e82fa6d47653661664f5cd33679e8f",
+    "functions/_shared/record-release-imported-history.ts": "05a4530400559f0e27a3610a8ec82fe6a65f5b6cb0f4f7b6b7550bb99092a5bd",
+    "functions/_shared/record-release-source-provenance.ts": "0ac7d831ad1f35ec16b7b3fd388d607f07782fc38a2307e942fe8026bf327009",
+    "functions/_shared/record-release-history.ts": "476fa274caf968423b962b81cfaa7a816eee39c7d42fe963f5154f0b8695e3b8",
+    "functions/_shared/record-release-charts.ts": "3bd03f9be382188b01a946693e76ea2a38764b31b08dff7406226a86875284ee",
+    "functions/_shared/vaccine-certificate-renderer.ts": "2b344a1ef67825199cbac1c3d0ff2585fe9d765b58726f62f8386c4b623e47c9",
+    "functions/capture-inbound-attachment/index.ts": "e85295d1dc76c3c31bbe7cc1040cd379fda1b03c1edba92f896ac24de1051b48",
+    "functions/_shared/inbound/capture-attachment.ts": "8aed8422ee6c3e7e5c98ea65e5a40b2f6a55a8ef91e37d8b7a98886e46e9436e",
+    "functions/_shared/inbound/resend-attachment.ts": "e247cf7fe5626923cc67654860bda9d51aee25b0f52bffd71278ad7a29fa2344",
+    "functions/_shared/inbound/store-attachment.ts": "810c134fc92a619b3cca0004a32e0919ad001620b51e5f87b7e0141bc2f32b28",
+    "functions/read-inbound-attachment/index.ts": "32fc78ab18ed84953d00697fd9934c17d150bc73b5405e2571f82bf48d0a8439",
+    "functions/_shared/inbound/read-attachment.ts": "cbc9bf52ed25d08fd5775bffa13298e11b824f973a35ebea283ffe5c3209cb90",
+    "functions/cleanup-abandoned-attachment/index.ts": "33fef5928d5abd103ae76132f0e53ba5c23b7b19cd88888bccb4a8440634684c",
+    "functions/_shared/cleanup-abandoned-handler.ts": "0542f6f360c5490d4668a84981589a59979fdfc0fb0df304b68b1fe3be06d624",
+    "functions/_shared/worker-auth.ts": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896",
+    "functions/_shared/abandoned-cleanup-adapter.ts": "4794197803af7d4d1845a7d439ebe3d93aa135bdad4e911782f7c8c262dc085c",
+    "functions/_shared/cleanup-abandoned-attachment.ts": "c186d9c1b85d4906ddc4a5fa0f33977362f80666cfe3fea09fa45ec184c8c79e",
+    "functions/_shared/attachment-cleanup-storage.ts": "58f2f44c02c9245c37e0935ac5281ce54dffbfab38dbea9cb667c1806b496871"
+  },
+  "function_config_sha256": "17e4992faffc757b4d84ac1a6d662efb26b730eaa60b4a41e73897dd1e5b7e2b"
+}

@@ -386,7 +386,7 @@ export function EzyVetImportPage() {
                     : "Leave import recovery?"}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {migrationDirty ? "Unsaved migration scope and binding fields may be lost. Leaving does not cancel a pending save. Confirmed migration records remain available in saved history." : "Original request references remain saved for recovery. Leaving does not cancel an in-flight scan or approve source records. Unsaved review fields may be lost."}
+                {migrationDirty ? "Leaving discards unsaved migration fields and this page's decision request reference. It does not cancel a pending save. Decisions that finish saving remain available in decision history when you reopen the same migration and target." : "Original request references remain saved for recovery. Leaving does not cancel an in-flight scan or approve source records. Unsaved review fields may be lost."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -398,7 +398,7 @@ export function EzyVetImportPage() {
               <AlertDialogAction
                 onClick={() => blocker.state === "blocked" && blocker.proceed()}
               >
-                Leave and retain recovery
+                {migrationDirty ? "Leave migration workspace" : "Leave and retain recovery"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -17,7 +17,7 @@ export function MigrationIdentityEvidence({ actor, binding, item }: Props) {
       <p className="font-medium">Approved {query.data.resource === "contact" ? "household" : "patient"} mapping · {receipt.action === "create" ? "Created local record" : "Linked existing local record"}</p>
       <p>{receipt.relationship === "same_snapshot_unknown_observed_head" ? "Approval uses the same source snapshot; the observed version is unknown." : "Approval uses a different source snapshot."}</p>
       <p>{receipt.source_current ? "Approved source version is current." : "Approved source version is no longer current."}</p>
-      <p>{receipt.local_record_unchanged ? "Local record version is unchanged since approval." : "Local record has changed since approval."}</p>
+      <p>{receipt.local_record_unchanged ? "Local record version is unchanged since approval." : "Local record version has changed since approval."}</p>
       <p>{receipt.household_current ? "Household association still matches the approval." : "Household association no longer matches the approval."}</p>
       <p className="text-xs text-muted-foreground">Approved {new Date(receipt.approved_at).toLocaleString()}. Checked {new Date(query.data.observed_at).toLocaleString()}.</p>
     </div>}

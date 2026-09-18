@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-16",
+  "method": "Read-only Chrome browser navigation; no form submissions or account changes",
+  "homepage": {
+    "url": "https://thelivingroom.vet/",
+    "rendered": true,
+    "opening_targets": "Housecalls late October 2026; clinic early 2027; targets subject to change"
+  },
+  "www": {
+    "requested_url": "https://www.thelivingroom.vet",
+    "final_url": "https://thelivingroom.vet/",
+    "homepage_rendered": true
+  },
+  "contact": {
+    "url": "https://thelivingroom.vet/contact",
+    "rendered": true,
+    "form_unavailable_alert": true,
+    "verification_unavailable_alert": true,
+    "send_message_disabled": true
+  },
+  "staff_login": {
+    "reachable_from_public_footer": true,
+    "email_and_password_fields_rendered": true,
+    "administrator_created_accounts_notice": true,
+    "sign_in_attempted": false
+  },
+  "limitations": [
+    "This verifies visible public behavior, not authenticated staff workflows or backend deployment.",
+    "Command-line HTTP probes returned403; Chrome rendered the site successfully. Those probes do not establish a public outage.",
+    "Contact anti-spam setup and hosted submission acceptance remain open."
+  ]
+}

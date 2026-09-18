@@ -3,36 +3,40 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { createMigrationWeightApi } from "./migration-weight-api";
-import type { MigrationWeightCursor } from "./migration-weight-api";
-import type { MigrationBinding, MigrationRpc } from "./migration-run-api";
+import type { MigrationBinding, MigrationCursor, MigrationRpc } from "./migration-run-api";
 import type { MigrationItem } from "./migration-items-api";
 interface Props { actor: string; binding: MigrationBinding; item: MigrationItem }
 export function MigrationWeightEvidence({ actor, binding, item }: Props) {
   const api = useMemo(() => createMigrationWeightApi(supabase as unknown as MigrationRpc, actor), [actor]);
-  const [before, setBefore] = useState<MigrationWeightCursor | null>(null);
-  const query = useQuery({ queryKey: ["migration-weight-evidence", actor, binding.id, item.evidence_hash, before], retry: false, queryFn: () => api.read(binding, item, before) });
-  const data = query.data;
-  return <section aria-label="Weight approval evidence" className="mt-3 space-y-3 border-t pt-3">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="font-medium">Weight approval evidence</h5><Button type="button" size="sm" variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh weight evidence</Button></div>
-    <p className="text-xs text-muted-foreground">These observations retain snapshots without the source version observed on each page. Snapshot agreement cannot establish exact version matching or complete migration coverage. Source-change acknowledgments do not create or replace local weights.</p>
-    {query.isFetching ? <p role="status">Loading weight evidence…</p> : query.isError ? <p role="alert">Weight evidence could not be loaded. Refresh to try again.</p> : data && <>
-      {data.approval ? <div className="space-y-1 rounded-md border p-3">
-        <p className="font-medium">{data.approval.action === "create" ? "Created local weight" : "Linked existing local weight"}</p>
-        <p>{data.approval.relationship === "same_snapshot_unknown_observed_head" ? "Approval uses the same snapshot; the observed version is unknown." : "Approval uses a different source snapshot."}</p>
-        <p>{data.approval.source_current ? "Approved source version is current." : "Approved source version is no longer current."}</p>
-        <p>{data.approval.local_weight_matches_review ? "Local measurement still matches the approved values." : "Local measurement no longer matches the approved values."}</p>
-        <p>{data.approval.patient_version_unchanged ? "Patient version is unchanged since approval." : "Patient record has changed since approval."}</p>
-        <p>{data.approval.household_current ? "Household association still matches." : "Household association no longer matches."}</p>
-        <p className="text-xs text-muted-foreground">Approved {new Date(data.approval.approved_at).toLocaleString()}.</p>
-      </div> : <p>No approved local weight matches this source identity and patient mapping.</p>}
+  const [cursor, setCursor] = useState<MigrationCursor | null>(null);
+  const [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]);
+  const query = useQuery({ queryKey: ["migration-weight-evidence", actor, binding.id, item.evidence_hash, cursor], retry: false,
+    queryFn: () => api.list(binding, item, cursor) });
+  return <section aria-label="Weight review evidence" className="mt-3 space-y-3 border-t pt-3">
+    <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="font-medium">Weight review evidence</h5><Button type="button" size="sm" variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh weight evidence</Button></div>
+    <p className="text-xs text-muted-foreground">The original scan saved this source snapshot without its source-head version. A snapshot match cannot establish which historical source version was observed.</p>
+    {query.isFetching ? <p role="status">Loading weight evidence…</p> : query.isError ? <p role="alert">Weight evidence could not be loaded. Refresh to try again.</p> : query.data && <>
+      <p className="text-xs text-muted-foreground">Checked {new Date(query.data.observed_at).toLocaleString()}. Complete migration coverage is not assessed here.</p>
+      {query.data.approval ? <div className="space-y-1 rounded-md border p-3">
+        <p className="font-medium">{query.data.approval.action === "create" ? "Approved imported weight" : "Approved link to an existing weight"}</p>
+        <p>{query.data.approval.relationship === "exact_snapshot" ? "Approval matches this source snapshot." : "Approval refers to a different snapshot of this source record."}</p>
+        <p>{query.data.approval.source_current ? "Approved source snapshot and head are current." : "Approved source snapshot or head has changed."}</p>
+        <p>{query.data.approval.local_weight_matches ? "Saved local weight still matches the approved values." : "Saved local weight no longer matches the approved values."}</p>
+        {!query.data.approval.household_current && <p>The patient’s household no longer matches the saved migration scope.</p>}
+        <p className="text-xs text-muted-foreground break-all">Local weight receipt: {query.data.approval.weight_id}</p>
+        <p className="text-xs text-muted-foreground">Approved {new Date(query.data.approval.approved_at).toLocaleString()}</p>
+      </div> : <p>No approved weight receipt. Prepared requests are not approvals.</p>}
       <h6 className="font-medium">Source-change acknowledgments</h6>
-      {data.source_reviews.length === 0 ? <p>No acknowledgments on this page.</p> : data.source_reviews.map(review => <div key={review.id} className="space-y-1 rounded-md border p-3">
-        <p>{review.relationship === "same_snapshot_unknown_observed_head" ? "Acknowledged snapshot matches; the observed version is unknown." : "Acknowledgment concerns a different snapshot."}</p>
-        <p>{review.source_current ? "Acknowledged source version is current." : "Acknowledged source version is no longer current."}</p>
-        <p className="text-xs text-muted-foreground">Acknowledged {new Date(review.created_at).toLocaleString()}. This did not promote or replace a local measurement.</p>
-      </div>)}
-      <div className="flex flex-wrap gap-2">{before && <Button type="button" size="sm" variant="outline" onClick={() => setBefore(null)}>Newest acknowledgments</Button>}{data.has_more && data.next_cursor && <Button type="button" size="sm" variant="outline" onClick={() => setBefore(data.next_cursor)}>Older acknowledgments</Button>}</div>
-      <p className="text-xs text-muted-foreground">Checked {new Date(data.observed_at).toLocaleString()}. Each page is a live view, not a frozen report.</p>
+      <p className="text-xs text-muted-foreground">These acknowledgments record review of changed source data. They do not create another weight or replace the approved local values.</p>
+      {query.data.reviews.length === 0 ? <p>No source-change acknowledgments on this page.</p> : <ul className="space-y-2">{query.data.reviews.map(row => <li key={row.id} className="space-y-1 rounded-md border p-3">
+        <p>{row.relationship === "exact_snapshot" ? "Acknowledgment matches this source snapshot." : "Acknowledgment refers to a different source snapshot."}</p>
+        <p>{row.source_current ? "Acknowledged source snapshot and head are current." : "Acknowledged source snapshot or head has changed."}</p>
+        <p className="text-xs text-muted-foreground">Reviewed {new Date(row.reviewed_at).toLocaleString()}</p>
+      </li>)}</ul>}
+      <nav aria-label="Weight acknowledgment pages" className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" disabled={!previous.length} onClick={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }}>Previous acknowledgments</Button>
+        <Button type="button" variant="outline" size="sm" disabled={!query.data.has_more} onClick={() => { setPrevious([...previous, cursor]); setCursor(query.data.next_cursor); }}>Next acknowledgments</Button>
+      </nav>
     </>}
   </section>;
 }

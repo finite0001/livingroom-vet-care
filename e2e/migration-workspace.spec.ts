@@ -2,9 +2,9 @@ import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const actor = id(1), runId = id(2), scopeId = id(3), bindingId = id(4), child = id(5), snapshot = id(6), mapping = id(7), pet = id(8), client = id(9), otherScope = id(10);
 const at = "2026-09-14T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic migration source";
-async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false, identity: "contact" | "animal" | "healthstatus" | null = null) {
-  const resource = identity ?? (prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment"), parentEvidence = identity === "healthstatus" ? "mapping_identity_only" : identity ? "selected_identity_filter" : history || prescription ? "mapping_identity_only" : "exact_parent_version";
-  const clinical = history || vaccination || prescription || prescriptionItem || Boolean(identity);
+async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false, weight = false, identity: "contact" | "animal" | null = null) {
+  const resource = identity ?? (weight ? "healthstatus" : prescriptionItem ? "prescriptionitem" : prescription ? "prescription" : vaccination ? "vaccination" : history ? "history" : "attachment"), parentEvidence = identity ? "selected_identity_filter" : weight || history || prescription ? "mapping_identity_only" : "exact_parent_version";
+  const clinical = Boolean(identity) || weight || history || vaccination || prescription || prescriptionItem;
   const user = { id: actor, aud: "authenticated", role: "authenticated", email: "synthetic@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: at };
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`, refresh_token: "synthetic", token_type: "bearer", expires_in: 3600, expires_at: exp, user };
@@ -17,7 +17,7 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
   const binding = { id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, replaces_id: null, reason: "Saved source attempt", context_hash: "c".repeat(64), created_at: at,
     child_context: { version: 1, run_id: child, owner: actor, source_origin: origin, source_site_uid: site, resource, parent_evidence: parentEvidence, context: {} } };
   const savedPlans = new Map<string, typeof manifest>(), savedBindings = new Map<string, typeof binding>();
-  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failVaccinations: false, failPrescriptions: false, failIdentity: false, failWeight: false, unapprovedWeight: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
+  const state = { resumeRunning: false, resumeLease: false, resumeRetry: null as string | null, resumePage: 4, failResume: false, resumeBodies: [] as Record<string, unknown>[], holdResume: false, releaseResume: null as (() => void) | null, holdPlan: false, releasePlan: null as (() => void) | null, losePlanReply: false, omitPlanSave: false, rejectPlan: false, loseBindingReply: false, failMapping: false, failParent: false, requests: [] as { name: string; body: Record<string, unknown> }[], empty: false, failCaptures: false, failHistory: false, failVaccinations: false, failPrescriptions: false, failIdentity: false, failWeights: false, emptyWeight: false, failItems: false, failProgress: false, failRuns: false, stale: false, holdItems: false, releaseItems: null as (() => void) | null, calls: [] as string[] };
   await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
@@ -66,17 +66,9 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       version: 2, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource, context_hash: binding.context_hash,
       superseded: false, parent_evidence: parentEvidence, parent_current: !state.stale, household_current: true,
       scan: { status: state.resumeRunning ? "running" : "review_ready", next_page: state.resumePage, pages_observed: 3, traversal_ended: !state.resumeRunning, page_limit_reached: false, retry_after: null, latest_error_code: null, provider_total: null, complete_coverage_verified: false },
-      observations: { occurrences: clinical ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: identity ? null : state.stale ? 0 : clinical ? 1 : 21, currentness_available: !identity },
+      observations: { occurrences: clinical ? 1 : 21, distinct_source_identities: 1, distinct_snapshot_versions: 1, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", exact_current_occurrences: weight || identity ? null : state.stale ? 0 : clinical ? 1 : 21, currentness_available: !weight && !identity },
       clinical_review: { reconciled: false, approved_local_outcomes: null }, attempt_history_available: true,
       attempt_history: { origin: "run_created", started_at: at, complete_since_run_creation: true, claims: 3, failed_pages: 0, staged_pages: 3 }, observed_at: at } });
-    if (rpc === "read_ezyvet_migration_weight_evidence") {
-      if (state.failWeight) return unavailable();
-      const older = Boolean(body.p_before_request_id);
-      const reviews = state.unapprovedWeight ? [] : Array.from({length: older ? 1 : 20}, (_, i) => ({id:id(older ? 80 : 120-i),created_at:at,snapshot_id:snapshot,head_version:2,relationship:"same_snapshot_unknown_observed_head",source_current:false,promotes_local_weight:false}));
-      return route.fulfill({json:{version:1,binding_id:bindingId,scope_id:scopeId,child_run_id:child,actor_id:actor,resource:"healthstatus",page:body.p_page,snapshot_id:body.p_snapshot_id,evidence_hash:body.p_evidence_hash,observation_head_available:false,exact_source_version_verified:false,complete_coverage_verified:false,observed_at:at,
-        approval:state.unapprovedWeight ? null : {id:id(79),approved_at:at,action:"link",weight_id:id(78),relationship:"different_snapshot",source_current:false,patient_version_unchanged:false,household_current:false,local_weight_matches_review:true},
-        source_reviews:reviews,has_more:!older&&!state.unapprovedWeight,next_cursor:!older&&!state.unapprovedWeight ? {created_at:at,request_id:id(101)} : null}});
-    }
     if (rpc === "read_ezyvet_migration_identity_evidence") return state.failIdentity ? unavailable() : route.fulfill({ json: {
       version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, resource, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
       visibility: "approved_identity_mapping", observation_head_available: false, exact_source_version_verified: false, complete_coverage_verified: false, observed_at: at,
@@ -88,6 +80,12 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
         { id: id(56), version: 2, version_hash: "d".repeat(64), approved_at: at, replaces_id: id(57), parent_matches: true, exact_occurrence: true, identity_observations: 2, matching_source_observations: 2, disposition: "omitted", start_date_status: null, catalog_matched: null, source_current: false, superseded: false, completeness: "partial" },
         { id: id(57), version: 1, version_hash: "e".repeat(64), approved_at: at, replaces_id: null, parent_matches: true, exact_occurrence: true, identity_observations: 2, matching_source_observations: 2, disposition: "selected", start_date_status: "unknown", catalog_matched: false, source_current: false, superseded: true, completeness: "partial" },
       ] } });
+    if (rpc === "list_ezyvet_migration_weight_evidence") return state.failWeights ? unavailable() : route.fulfill({ json: {
+      version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
+      visibility: "approved_patient_weight", observation_head_version: null, historical_head_fidelity: "unknown", complete_coverage_verified: false, observed_at: at,
+      approval: state.emptyWeight ? null : { id: id(90), weight_id: id(91), action: "link", approved_at: at, snapshot_id: snapshot, head_version: 1, relationship: "exact_snapshot", source_current: false, local_weight_matches: true, household_current: false },
+      reviews: state.emptyWeight ? [] : Array.from({ length: body.p_before_at ? 1 : 20 }, (_, n) => ({ id: id(body.p_before_at ? 99 : 130 - n), reviewed_at: at, snapshot_id: id(92), head_version: 2, relationship: "different_snapshot", source_current: true })),
+      has_more: !state.emptyWeight && !body.p_before_at, next_cursor: !state.emptyWeight && !body.p_before_at ? { before_at: at, before_id: id(111) } : null } });
     if (rpc === "list_ezyvet_migration_prescription_evidence") return state.failPrescriptions ? unavailable() : route.fulfill({ json: {
       version: 1, binding_id: bindingId, scope_id: scopeId, child_run_id: child, actor_id: actor, page: body.p_page, snapshot_id: body.p_snapshot_id, evidence_hash: body.p_evidence_hash,
       visibility: "approved_patient_prescription", has_more: false, next_before_version: null, local_prescribing_verified: false, item_coverage_verified: false, complete_coverage_verified: false, observed_at: at,
@@ -115,8 +113,8 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
       if (state.failItems) return unavailable();
       const start = body.p_after_page ? 20 : 0, count = clinical ? 1 : Math.min(start ? 1 : 20, body.p_limit ?? 20);
       const items = Array.from({ length: count }, (_, index) => ({ page: Math.floor((start + index) / 10) + 1, ordinal: clinical ? 0 : (start + index) % 10 + 1, snapshot_id: snapshot,
-        observed_head_version: identity ? null : 1, external_id: "701", payload_hash: "a".repeat(64), file_id: clinical ? null : "42", raw_record_sha256: clinical ? null : "b".repeat(64), stable_metadata_sha256: clinical ? null : "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
-        current_snapshot_id: snapshot, current_head_version: state.stale ? 3 : 1, payload_current: true, exact_source_current: identity ? null : !state.stale }));
+        observed_head_version: weight || identity ? null : 1, external_id: "701", payload_hash: "a".repeat(64), file_id: clinical ? null : "42", raw_record_sha256: clinical ? null : "b".repeat(64), stable_metadata_sha256: clinical ? null : "c".repeat(64), evidence_hash: (start + index + 1).toString(16).padStart(64, "0"),
+        current_snapshot_id: snapshot, current_head_version: state.stale ? 3 : 1, payload_current: true, exact_source_current: weight || identity ? null : !state.stale }));
       return route.fulfill({ json: { version: 1, binding_id: bindingId, scope_id: scopeId, migration_run_id: runId, child_run_id: child, resource, context_hash: binding.context_hash,
         superseded: false, mapping_matches_manifest: true, mapping_source_current: !state.stale, parent_current: !state.stale, household_current: true, occurrence_fidelity: clinical ? "deduplicated_page_snapshot" : "page_ordinal", review_reconciled: false, complete_coverage_verified: false,
         observed_at: at, items, has_more: !clinical && !start, next_cursor: clinical || start ? null : { page: items.at(-1)!.page, ordinal: items.at(-1)!.ordinal, snapshot_id: snapshot } } });
@@ -504,9 +502,42 @@ for (const width of [390, 1440]) test(`prescription item evidence distinguishes 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+for (const width of [390, 1440]) test(`weight receipts separate approvals and acknowledgments at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1000 });
+  const state = await fixture(page, true, false, false, false, false, true);
+  const workspace = page.getByRole("region", { name: "Migration reconciliation" });
+  await workspace.getByRole("button", { name: "Browse saved migrations" }).click();
+  await workspace.getByRole("button", { name: /Open migration/ }).click();
+  await workspace.getByRole("button", { name: /Inspect weights scope/ }).click();
+  await workspace.getByRole("button", { name: /Inspect attempt/ }).click();
+  await workspace.getByRole("button", { name: /Evidence references for source 701/ }).click();
+  const evidence = workspace.getByRole("region", { name: "Weight review evidence" });
+  await expect(evidence.getByText("Approved link to an existing weight")).toBeVisible();
+  await expect(evidence.getByText(/without its source-head version/)).toBeVisible();
+  await expect(evidence.getByText("Approval matches this source snapshot.")).toBeVisible();
+  await expect(evidence.getByText("Approved source snapshot or head has changed.")).toBeVisible();
+  await expect(evidence.getByText(/household no longer matches/)).toBeVisible();
+  await expect(evidence.getByText("Acknowledgment refers to a different source snapshot.")).toHaveCount(20);
+  await evidence.getByRole("button", { name: "Next acknowledgments" }).click();
+  await expect(evidence.getByText("Acknowledgment refers to a different source snapshot.")).toHaveCount(1);
+  await expect(evidence.getByText("Approved link to an existing weight")).toBeVisible();
+  await evidence.getByRole("button", { name: "Previous acknowledgments" }).click();
+  await expect(evidence.getByText("Acknowledgment refers to a different source snapshot.")).toHaveCount(20);
+  state.failWeights = true;
+  await evidence.getByRole("button", { name: "Refresh weight evidence" }).click();
+  await expect(evidence.getByRole("alert")).toBeVisible();
+  await expect(evidence.getByText("Approved link to an existing weight")).toHaveCount(0);
+  state.failWeights = false; state.emptyWeight = true;
+  await evidence.getByRole("button", { name: "Refresh weight evidence" }).click();
+  await expect(evidence.getByText("No approved weight receipt. Prepared requests are not approvals.")).toBeVisible();
+  await expect(evidence.getByText("No source-change acknowledgments on this page.")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(state.calls.filter(name => name.includes("weight_evidence")).every(name => name.startsWith("list_"))).toBe(true);
+});
+
 for (const resource of ["contact", "animal"] as const) for (const width of [390, 1440]) test(`identity evidence preserves unknown versions for ${resource} at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: 1600 });
-  const state = await fixture(page, true, false, false, false, false, resource);
+  const state = await fixture(page, true, false, false, false, false, false, resource);
   const workspace = page.getByRole("region", { name: "Migration reconciliation" });
   await workspace.getByRole("button", { name: "Browse saved migrations" }).click();
   await workspace.getByRole("button", { name: /Open migration/ }).click();
@@ -520,38 +551,7 @@ for (const resource of ["contact", "animal"] as const) for (const width of [390,
   await panel.getByRole("button", { name: "Refresh identity evidence" }).click();
   await expect(panel.getByText("Approval uses the same source snapshot; the observed version is unknown.")).toBeVisible();
   await expect(panel.getByText("Approved source version is no longer current.")).toBeVisible();
-  await expect(panel.getByText("Local record has changed since approval.")).toBeVisible();
+  await expect(panel.getByText("Local record version has changed since approval.")).toBeVisible();
   await expect(panel.getByText("Household association no longer matches the approval.")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-});
-
-for (const width of [390,1440]) test(`weight evidence keeps acknowledgments separate at ${width}px`,async({page})=>{
-  await page.setViewportSize({width,height:1600});
-  const state=await fixture(page,true,false,false,false,false,"healthstatus");
-  const workspace=page.getByRole("region",{name:"Migration reconciliation"});
-  await workspace.getByRole("button",{name:"Browse saved migrations"}).click();
-  await workspace.getByRole("button",{name:/Open migration/}).click();
-  await workspace.getByRole("button",{name:/Inspect weights scope/i}).click();
-  await workspace.getByRole("button",{name:/Inspect attempt/}).click();
-  state.failWeight=true;
-  await workspace.getByRole("button",{name:/Evidence references for source/}).click();
-  const panel=workspace.getByRole("region",{name:"Weight approval evidence"});
-  await expect(panel.getByRole("alert")).toContainText("could not be loaded");
-  await expect(panel.getByText(/No approved local weight/)).toHaveCount(0);
-  state.failWeight=false;
-  await panel.getByRole("button",{name:"Refresh weight evidence"}).click();
-  await expect(panel.getByText("Linked existing local weight")).toBeVisible();
-  await expect(panel.getByText("Local measurement still matches the approved values.")).toBeVisible();
-  await expect(panel.getByText("Household association no longer matches.")).toBeVisible();
-  await expect(panel.getByText(/This did not promote or replace/)).toHaveCount(20);
-  await panel.getByRole("button",{name:"Older acknowledgments"}).click();
-  await expect(panel.getByText(/This did not promote or replace/)).toHaveCount(1);
-  await expect(panel.getByRole("button",{name:"Older acknowledgments"})).toHaveCount(0);
-  await panel.getByRole("button",{name:"Newest acknowledgments"}).click();
-  await expect(panel.getByText(/This did not promote or replace/)).toHaveCount(20);
-  state.unapprovedWeight=true;
-  await panel.getByRole("button",{name:"Refresh weight evidence"}).click();
-  await expect(panel.getByText(/No approved local weight/)).toBeVisible();
-  await expect(panel.getByText("Linked existing local weight")).toHaveCount(0);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });

@@ -1,0 +1,24 @@
+{
+  "project_ref": "kothoqicubowyhwfsrte",
+  "bytes": 2741451,
+  "sha256": "6374735c6b3d1855061e8169333639e685649e0580ffdccf2198b638f595d34a",
+  "archive_readable": true,
+  "schemas": [
+    "public",
+    "auth",
+    "storage",
+    "supabase_migrations"
+  ],
+  "restoration_verified": false,
+  "physical_storage_backup": false,
+  "date": "2026-09-16",
+  "scope": "Protected read-only staging export before proposed attachment upgrade; no hosted application migration.",
+  "diagnostics": [
+    "Initial native dump omitted the CLI-specified postgres role and failed on auth schema permissions; incomplete archive excluded. Retry with the prescribed role completed and pg_restore could read its directory."
+  ],
+  "limitations": [
+    "Archive readability is not restore acceptance.",
+    "External provider configuration and physical Storage bytes are not included.",
+    "This staging backup does not establish primary-project backup coverage."
+  ]
+}

@@ -1,6 +1,7 @@
 import { MigrationWeightEvidence } from "./MigrationWeightEvidence";
 import { MigrationIdentityEvidence } from "./MigrationIdentityEvidence";
 import { MigrationPrescriptionItemEvidence } from "./MigrationPrescriptionItemEvidence";
+import { MigrationResolutionForm } from "./MigrationResolutionForm";
 import { MigrationResume } from "./MigrationResume";
 import { MigrationScopeBuilder } from "./MigrationScopeBuilder";
 import { MigrationBindingForm } from "./MigrationBindingForm";
@@ -13,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createMigrationRunApi } from "./migration-run-api";
 import type { MigrationBinding, MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
+import { MigrationWeightEvidence } from "./MigrationWeightEvidence";
 import { MigrationPrescriptionEvidence } from "./MigrationPrescriptionEvidence";
 import { MigrationVaccinationEvidence } from "./MigrationVaccinationEvidence";
 import { MigrationHistoryEvidence } from "./MigrationHistoryEvidence";
@@ -24,11 +26,11 @@ interface WorkspaceProps extends Props { onDirtyChange: (dirty: boolean) => void
 const resourceNames: Record<string, string> = { contact: "Contacts", animal: "Patients", healthstatus: "Weights", consult: "Consultations", history: "History", vaccination: "Vaccinations", prescription: "Prescriptions", prescriptionitem: "Prescription items", attachment: "Attachments" };
 const resourceName = (value: string) => resourceNames[value] ?? value;
 const recorded = (value: string) => new Date(value).toLocaleString();
-interface PaginationProps { label: string; previous: boolean; next: boolean; onPrevious: () => void; onNext: () => void }
-function Pagination({ label, previous, next, onPrevious, onNext }: PaginationProps) {
+interface PaginationProps { disabled?: boolean; label: string; previous: boolean; next: boolean; onPrevious: () => void; onNext: () => void }
+function Pagination({ disabled = false, label, previous, next, onPrevious, onNext }: PaginationProps) {
   return <div className="flex flex-wrap gap-2">
-    <Button type="button" variant="outline" size="sm" disabled={!previous} onClick={onPrevious} aria-label={`Previous ${label} page`}>Previous</Button>
-    <Button type="button" variant="outline" size="sm" disabled={!next} onClick={onNext} aria-label={`Next ${label} page`}>Next</Button>
+    <Button type="button" variant="outline" size="sm" disabled={disabled || !previous} onClick={onPrevious} aria-label={`Previous ${label} page`}>Previous</Button>
+    <Button type="button" variant="outline" size="sm" disabled={disabled || !next} onClick={onNext} aria-label={`Next ${label} page`}>Next</Button>
   </div>;
 }
 interface FailureProps { message: string; retry: () => void }
@@ -56,13 +58,13 @@ function MigrationWorkspace({ actor, onDirtyChange }: WorkspaceProps) {
     <CardContent className="space-y-4">
       <fieldset disabled={bindingDirty}><MigrationScopeBuilder actor={actor} onDirtyChange={setPlanDirty} onSaved={saved => { setOpened(true); setCursor(null); setPrevious([]); setSelected(saved.run.id); void runs.refetch(); }} /></fieldset>
       {!opened ? <Button type="button" variant="outline" onClick={() => setOpened(true)}>Browse saved migrations</Button> : <>
-        <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">Your saved migrations</h3><Button type="button" variant="outline" size="sm" disabled={runs.isFetching} onClick={() => void runs.refetch()}>Refresh saved migrations</Button></div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">Your saved migrations</h3><Button type="button" variant="outline" size="sm" disabled={locked || runs.isFetching} onClick={() => void runs.refetch()}>Refresh saved migrations</Button></div>
         {runs.isFetching ? <p role="status">Loading saved migrations…</p> : runs.isError ? <Failure message="Saved migrations could not be loaded." retry={() => void runs.refetch()} /> : runs.data && <>
           {runs.data.runs.length === 0 ? <p className="text-sm text-muted-foreground">No saved migrations on this page. This does not establish that the source migration is complete.</p> : <ul className="space-y-2">{runs.data.runs.map(run => <li key={run.id} className="flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0 text-sm"><p className="break-all font-medium">{run.source_site_uid}</p><p className="text-muted-foreground">{run.source_origin.includes("trial") ? "Trial source" : "Production source"} · Saved {recorded(run.created_at)}</p></div>
             <Button type="button" variant={selected === run.id ? "secondary" : "outline"} disabled={locked} onClick={() => setSelected(run.id)}>Open migration {run.id.slice(0, 8)}</Button>
           </li>)}</ul>}
-          <Pagination label="migration" previous={previous.length > 0} next={runs.data.has_more} onPrevious={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setPrevious([...previous, cursor]); setCursor(runs.data.next_cursor); }} />
+          <Pagination disabled={locked} label="migration" previous={previous.length > 0} next={runs.data.has_more} onPrevious={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setPrevious([...previous, cursor]); setCursor(runs.data.next_cursor); }} />
         </>}
         <fieldset disabled={planDirty}>{selected && <MigrationDetail key={`${actor}:${selected}`} actor={actor} id={selected} locked={locked} onDirtyChange={setBindingDirty} />}</fieldset>
       </>}
@@ -97,7 +99,9 @@ function MigrationDetail({ actor, id, locked, onDirtyChange }: DetailProps) {
 interface ScopeProps extends Props { manifest: MigrationManifest; scopeId: string; onDirtyChange: (dirty: boolean) => void }
 function ScopeBindings({ actor, manifest, scopeId, onDirtyChange }: ScopeProps) {
   const [bindingDirty, setBindingDirty] = useState(false), [resumeDirty, setResumeDirty] = useState(false);
-  useEffect(() => { onDirtyChange(bindingDirty || resumeDirty); }, [bindingDirty, resumeDirty, onDirtyChange]);
+  const [scopeDecisionDirty, setScopeDecisionDirty] = useState(false), [itemDecisionDirty, setItemDecisionDirty] = useState(false);
+  const locked = bindingDirty || resumeDirty || scopeDecisionDirty || itemDecisionDirty;
+  useEffect(() => { onDirtyChange(locked); }, [locked, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const api = useApi(actor);
   const [cursor, setCursor] = useState<MigrationCursor | null>(null);
@@ -107,28 +111,33 @@ function ScopeBindings({ actor, manifest, scopeId, onDirtyChange }: ScopeProps) 
   const binding = useQuery({ queryKey: ["migration-binding", actor, scopeId, selected], enabled: Boolean(selected), retry: false, refetchOnWindowFocus: false, refetchOnReconnect: false, queryFn: () => api.readBinding(selected, scopeId) });
   return <section aria-label="Saved resource attempts" className="space-y-3 border-t pt-4">
     <h4 className="font-medium">Saved resource attempts</h4>
-    <fieldset disabled={resumeDirty}><MigrationBindingForm actor={actor} manifest={manifest} scopeId={scopeId} onDirtyChange={setBindingDirty} onSaved={saved => { setCursor(null); setPrevious([]); setSelected(saved.id); void bindings.refetch(); }} /></fieldset>
+    <fieldset disabled={resumeDirty || scopeDecisionDirty || itemDecisionDirty}><MigrationBindingForm actor={actor} manifest={manifest} scopeId={scopeId} onDirtyChange={setBindingDirty} onSaved={saved => { setCursor(null); setPrevious([]); setSelected(saved.id); void bindings.refetch(); }} /></fieldset>
+    <fieldset disabled={bindingDirty || resumeDirty || itemDecisionDirty}><MigrationResolutionForm actor={actor} manifest={manifest} scopeId={scopeId} target={{ kind: "scope", binding_id: null, page: null, ordinal: null, snapshot_id: null, evidence_hash: null }} onDirtyChange={setScopeDecisionDirty} /></fieldset>
     {bindings.isFetching ? <p role="status">Loading saved attempts…</p> : bindings.isError ? <Failure message="Saved attempts could not be loaded." retry={() => void bindings.refetch()} /> : bindings.data && <>
       {bindings.data.bindings.length === 0 ? <p className="text-sm text-muted-foreground">No source run is bound on this page. Review the saved disposition before assessing coverage.</p> : <ul className="space-y-2">{bindings.data.bindings.map(row => <li key={row.id} className="rounded-md border p-3 text-sm">
         <p className="break-words">{row.reason}</p><p className="text-muted-foreground">Saved {recorded(row.created_at)}{row.replaces_id ? " · Replaces an earlier binding" : ""}</p>
-        <Button type="button" variant="outline" size="sm" className="mt-2" disabled={bindingDirty || resumeDirty} onClick={() => setSelected(row.id)}>Inspect attempt {row.id.slice(0, 8)}</Button>
+        <Button type="button" variant="outline" size="sm" className="mt-2" disabled={locked} onClick={() => setSelected(row.id)}>Inspect attempt {row.id.slice(0, 8)}</Button>
       </li>)}</ul>}
-      <Pagination label="attempt" previous={previous.length > 0} next={bindings.data.has_more} onPrevious={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setPrevious([...previous, cursor]); setCursor(bindings.data.next_cursor); }} />
+      <Pagination disabled={locked} label="attempt" previous={previous.length > 0} next={bindings.data.has_more} onPrevious={() => { setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setPrevious([...previous, cursor]); setCursor(bindings.data.next_cursor); }} />
     </>}
-    {selected && (binding.isFetching && !binding.data ? <p role="status">Loading source run…</p> : binding.isError ? <Failure message="Source run could not be recovered." retry={() => void binding.refetch()} /> : binding.data ? <SourceEvidence key={`${actor}:${binding.data.id}`} actor={actor} manifest={manifest} binding={binding.data} onResumeDirty={setResumeDirty} bindingDirty={bindingDirty} /> : <p role="alert">This source run is unavailable to your account.</p>)}
+    {selected && (binding.isFetching && !binding.data ? <p role="status">Loading source run…</p> : binding.isError ? <Failure message="Source run could not be recovered." retry={() => void binding.refetch()} /> : binding.data ? <SourceEvidence key={`${actor}:${binding.data.id}`} actor={actor} manifest={manifest} binding={binding.data} onResumeDirty={setResumeDirty} onDecisionDirty={setItemDecisionDirty} resumeDirty={resumeDirty} bindingDirty={bindingDirty || scopeDecisionDirty} /> : <p role="alert">This source run is unavailable to your account.</p>)}
   </section>;
 }
-interface EvidenceProps extends Props { manifest: MigrationManifest; binding: MigrationBinding; onResumeDirty: (dirty: boolean) => void; bindingDirty: boolean }
-function SourceEvidence({ actor, manifest, binding, onResumeDirty, bindingDirty }: EvidenceProps) {
+interface EvidenceProps extends Props { manifest: MigrationManifest; binding: MigrationBinding; onResumeDirty: (dirty: boolean) => void; onDecisionDirty: (dirty: boolean) => void; resumeDirty: boolean; bindingDirty: boolean }
+function SourceEvidence({ actor, manifest, binding, onResumeDirty, onDecisionDirty, resumeDirty, bindingDirty }: EvidenceProps) {
+  const [decisionDirty, setDecisionDirty] = useState(false);
+  const locked = decisionDirty || bindingDirty || resumeDirty;
+  useEffect(() => { onDecisionDirty(decisionDirty); }, [decisionDirty, onDecisionDirty]);
+  useEffect(() => () => onDecisionDirty(false), [onDecisionDirty]);
   const api = useApi(actor);
   const [cursor, setCursor] = useState<MigrationItemCursor | null>(null);
   const [previous, setPrevious] = useState<(MigrationItemCursor | null)[]>([]);
   const progress = useQuery({ queryKey: ["migration-progress", actor, binding.id], retry: false, queryFn: () => api.progress(manifest, binding) });
-  const items = useQuery({ queryKey: ["migration-items", actor, binding.id, cursor], retry: false, queryFn: () => api.items(manifest, binding, cursor) });
+  const items = useQuery({ queryKey: ["migration-items", actor, binding.id, cursor], retry: false, refetchOnWindowFocus: false, refetchOnReconnect: false, queryFn: () => api.items(manifest, binding, cursor) });
   const [expanded, setExpanded] = useState<string | null>(null);
   return <section aria-label="Migration source evidence" className="space-y-3 rounded-md border bg-muted/30 p-3 md:p-4">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-medium">Source evidence</h4><Button type="button" variant="outline" size="sm" disabled={items.isFetching || progress.isFetching} onClick={() => { void items.refetch(); void progress.refetch(); }}>Refresh source evidence</Button></div>
-    {manifest.scopes.find(s => s.id === binding.scope_id)?.disposition === "required" && <fieldset disabled={bindingDirty}><MigrationResume actor={actor} manifest_id={manifest.run.id} scope_id={binding.scope_id} binding_id={binding.id} onDirtyChange={onResumeDirty} onUpdated={() => { void progress.refetch(); void items.refetch(); }} /></fieldset>}
+    <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-medium">Source evidence</h4><Button type="button" variant="outline" size="sm" disabled={locked || items.isFetching || progress.isFetching} onClick={() => { void items.refetch(); void progress.refetch(); }}>Refresh source evidence</Button></div>
+    {manifest.scopes.find(s => s.id === binding.scope_id)?.disposition === "required" && <fieldset disabled={bindingDirty || decisionDirty}><MigrationResume actor={actor} manifest_id={manifest.run.id} scope_id={binding.scope_id} binding_id={binding.id} onDirtyChange={onResumeDirty} onUpdated={() => { void progress.refetch(); void items.refetch(); }} /></fieldset>}
     <p className="text-sm text-muted-foreground">Source observations and available review receipts. Original-file verification and migration acceptance are not assessed here.</p>
     {progress.isFetching ? <p role="status">Loading run progress…</p> : progress.isError ? <Failure message="Run progress is unavailable; counts are not shown." retry={() => void progress.refetch()} /> : progress.data ? <>
       <dl className="grid gap-3 sm:grid-cols-3">{[["Observed occurrences", progress.data.observations.occurrences], ["Distinct source records", progress.data.observations.distinct_source_identities], ["Distinct snapshots", progress.data.observations.distinct_snapshot_versions]].map(([label, count]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-lg font-semibold">{count}</dd></div>)}</dl>
@@ -147,8 +156,10 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, bindingDirty 
       {items.data.items.length === 0 ? <p className="text-sm">No observed source items on this page. Unseen source records remain unknown.</p> : <ul className="space-y-2">{items.data.items.map(item => <li key={`${item.page}:${item.ordinal}:${item.snapshot_id}`} className="min-w-0 rounded-md border bg-background p-3 text-sm">
         <div className="flex flex-wrap items-center justify-between gap-2"><span className="break-all font-medium">{resourceName(items.data.resource)} #{item.external_id}</span><Badge variant="outline">{item.exact_source_current === null ? "Observed version not recorded" : item.exact_source_current ? "Observed version is current" : "Source version changed"}</Badge></div>
         <p className="text-muted-foreground">Page {item.page}{item.ordinal > 0 ? ` · Occurrence ${item.ordinal}` : " · Deduplicated snapshot"}</p>
-        <Button type="button" variant="ghost" size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-left" aria-expanded={expanded === item.evidence_hash} onClick={() => setExpanded(expanded === item.evidence_hash ? null : item.evidence_hash)}>Evidence references for source {item.external_id}, page {item.page}{item.ordinal > 0 ? `, occurrence ${item.ordinal}` : ""}</Button>
+        <Button type="button" variant="ghost" size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-left" disabled={locked} aria-expanded={expanded === item.evidence_hash} onClick={() => setExpanded(expanded === item.evidence_hash ? null : item.evidence_hash)}>Evidence references for source {item.external_id}, page {item.page}{item.ordinal > 0 ? `, occurrence ${item.ordinal}` : ""}</Button>
         {expanded === item.evidence_hash && <><dl className="mt-2 space-y-1 break-all text-xs"><dt className="text-muted-foreground">Snapshot reference</dt><dd>{item.snapshot_id}</dd><dt className="text-muted-foreground">Occurrence evidence hash</dt><dd>{item.evidence_hash}</dd></dl>
+          <fieldset disabled={bindingDirty || resumeDirty}><MigrationResolutionForm actor={actor} manifest={manifest} scopeId={binding.scope_id} target={{ kind: "observation", binding_id: binding.id, page: item.page, ordinal: item.ordinal, snapshot_id: item.snapshot_id, evidence_hash: item.evidence_hash }} onDirtyChange={setDecisionDirty} /></fieldset>
+          {items.data.resource === "healthstatus" && <MigrationWeightEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {["contact", "animal"].includes(items.data.resource) && <MigrationIdentityEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "healthstatus" && <MigrationWeightEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
           {items.data.resource === "prescription" && <MigrationPrescriptionEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
@@ -158,7 +169,7 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, bindingDirty 
           {items.data.resource === "attachment" && <CaptureEvidence key={item.evidence_hash} actor={actor} binding={binding} item={item} />}
         </>}
       </li>)}</ul>}
-      <Pagination label="source item" previous={previous.length > 0} next={items.data.has_more} onPrevious={() => { setExpanded(null); setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setExpanded(null); setPrevious([...previous, cursor]); setCursor(items.data.next_cursor); }} />
+      <Pagination disabled={locked} label="source item" previous={previous.length > 0} next={items.data.has_more} onPrevious={() => { setExpanded(null); setCursor(previous.at(-1) ?? null); setPrevious(previous.slice(0, -1)); }} onNext={() => { setExpanded(null); setPrevious([...previous, cursor]); setCursor(items.data.next_cursor); }} />
     </>}
   </section>;
 }

@@ -1,56 +1,45 @@
 import { z } from "zod";
-import { precedes } from "./attachment-review-history.ts";
 import { parseMigrationBinding } from "./migration-run-api.ts";
-import type { MigrationBinding, MigrationRpc } from "./migration-run-api.ts";
+import type { MigrationBinding, MigrationCursor, MigrationRpc } from "./migration-run-api.ts";
 import type { MigrationItem } from "./migration-items-api.ts";
-const uuid = z.string().uuid(), date = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)) && !/\.\d{7}/.test(value));
-const relationship = z.enum(["same_snapshot_unknown_observed_head", "different_snapshot"]);
-const cursor = z.object({ created_at: date, request_id: uuid }).strict();
-const schema = z.object({
-  version: z.literal(1), binding_id: uuid, scope_id: uuid, child_run_id: uuid, actor_id: uuid,
-  resource: z.literal("healthstatus"), page: z.number().int().min(1).max(1000), snapshot_id: uuid,
-  evidence_hash: z.string().regex(/^[a-f0-9]{64}$/), observation_head_available: z.literal(false),
-  exact_source_version_verified: z.literal(false), complete_coverage_verified: z.literal(false),
-  approval: z.object({ id: uuid, approved_at: date, action: z.enum(["create", "link"]), weight_id: uuid,
-    relationship, source_current: z.boolean(), patient_version_unchanged: z.boolean(),
-    household_current: z.boolean(), local_weight_matches_review: z.boolean(),
-  }).strict().nullable(),
-  source_reviews: z.array(z.object({ id: uuid, created_at: date, snapshot_id: uuid,
-    head_version: z.number().int().positive(), relationship, source_current: z.boolean(),
-    promotes_local_weight: z.literal(false),
-  }).strict()).max(20),
-  has_more: z.boolean(), next_cursor: cursor.nullable(), observed_at: date,
+import { precedes } from "./attachment-review-history.ts";
+const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
+const date = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)) && !/\.\d{7}/.test(value));
+const cursorSchema = z.object({ before_at: date, before_id: uuid }).strict();
+const sourceFields = { snapshot_id: uuid, head_version: z.number().int().positive(), relationship: z.enum(["exact_snapshot", "different_snapshot"]), source_current: z.boolean() };
+const pageSchema = z.object({ version: z.literal(1), binding_id: uuid, scope_id: uuid, child_run_id: uuid, actor_id: uuid,
+  page: z.number().int().min(1).max(1000), snapshot_id: uuid, evidence_hash: hash, visibility: z.literal("approved_patient_weight"),
+  observation_head_version: z.null(), historical_head_fidelity: z.literal("unknown"),
+  approval: z.object({ id: uuid, weight_id: uuid, action: z.enum(["create", "link"]), approved_at: date, ...sourceFields, local_weight_matches: z.boolean(), household_current: z.boolean() }).strict().nullable(),
+  reviews: z.array(z.object({ id: uuid, reviewed_at: date, ...sourceFields }).strict()).max(100), has_more: z.boolean(), next_cursor: cursorSchema.nullable(),
+  complete_coverage_verified: z.literal(false), observed_at: date,
 }).strict();
-export interface MigrationWeightCursor extends z.infer<typeof cursor> {}
-export interface MigrationWeightEvidence extends z.infer<typeof schema> {}
+export interface MigrationWeightPage extends z.infer<typeof pageSchema> {}
 export function createMigrationWeightApi(client: MigrationRpc, actor: string) {
   uuid.parse(actor);
   return {
-    async read(binding: MigrationBinding, item: MigrationItem, before: MigrationWeightCursor | null = null): Promise<MigrationWeightEvidence> {
+    async list(binding: MigrationBinding, item: MigrationItem, cursor: MigrationCursor | null = null, limit = 20): Promise<MigrationWeightPage> {
       const owned = parseMigrationBinding(binding, actor, binding.scope_id);
       if (owned.child_context.resource !== "healthstatus" || item.ordinal !== 0 || item.observed_head_version !== null) throw new Error("Legacy weight observation required");
-      const identity = schema.pick({ page: true, snapshot_id: true, evidence_hash: true }).parse({ page: item.page, snapshot_id: item.snapshot_id, evidence_hash: item.evidence_hash });
-      const c = before ? cursor.parse(before) : null;
-      const { data, error } = await client.rpc("read_ezyvet_migration_weight_evidence", {
-        p_binding_id: owned.id, p_page: identity.page, p_snapshot_id: identity.snapshot_id,
-        p_evidence_hash: identity.evidence_hash, p_before_created_at: c?.created_at ?? null,
-        p_before_request_id: c?.request_id ?? null, p_limit: 20,
-      });
+      const identity = pageSchema.pick({ page: true, snapshot_id: true, evidence_hash: true }).parse({ page: item.page, snapshot_id: item.snapshot_id, evidence_hash: item.evidence_hash });
+      z.number().int().min(1).max(100).parse(limit); if (cursor) cursorSchema.parse(cursor);
+      const { data, error } = await client.rpc("list_ezyvet_migration_weight_evidence", { p_binding_id: owned.id, p_page: identity.page, p_snapshot_id: identity.snapshot_id,
+        p_evidence_hash: identity.evidence_hash, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: limit });
       if (error) throw error;
-      const result = schema.parse(data);
+      const result = pageSchema.parse(data);
       if (result.actor_id !== actor || result.binding_id !== owned.id || result.scope_id !== owned.scope_id || result.child_run_id !== owned.child_run_id ||
-        result.page !== identity.page || result.snapshot_id !== identity.snapshot_id || result.evidence_hash !== identity.evidence_hash) throw new Error("Weight evidence scope differs");
-      if ((!result.approval && result.source_reviews.length > 0) || result.has_more !== (result.next_cursor !== null)) throw new Error("Weight evidence history differs");
-      if (result.has_more && result.source_reviews.length !== 20) throw new Error("Weight evidence page size differs");
-      let previous = c;
-      const ids = new Set<string>();
-      for (const review of result.source_reviews) {
-        if (ids.has(review.id) || (previous && !precedes(review.created_at, review.id, previous.created_at, previous.request_id))) throw new Error("Weight evidence order differs");
-        if ((review.snapshot_id === identity.snapshot_id) !== (review.relationship === "same_snapshot_unknown_observed_head")) throw new Error("Weight evidence relationship differs");
-        ids.add(review.id); previous = { created_at: review.created_at, request_id: review.id };
+        result.page !== identity.page || result.snapshot_id !== identity.snapshot_id || result.evidence_hash !== identity.evidence_hash) throw new Error("Weight evidence identity differs");
+      if (result.reviews.length > limit || (result.has_more && result.reviews.length !== limit) || (!result.approval && result.reviews.length > 0)) throw new Error("Weight evidence page differs");
+      for (const row of [...(result.approval ? [result.approval] : []), ...result.reviews]) {
+        if ((row.relationship === "exact_snapshot") !== (row.snapshot_id === item.snapshot_id)) throw new Error("Weight evidence relationship differs");
       }
-      const last = result.source_reviews.at(-1);
-      if (result.next_cursor && (!last || result.next_cursor.request_id !== last.id || result.next_cursor.created_at !== last.created_at)) throw new Error("Weight evidence cursor differs");
+      let previous = cursor;
+      const ids = new Set<string>();
+      for (const row of result.reviews) {
+        if (ids.has(row.id) || (previous && !precedes(row.reviewed_at, row.id, previous.before_at, previous.before_id))) throw new Error("Weight evidence cursor differs");
+        previous = { before_at: row.reviewed_at, before_id: row.id }; ids.add(row.id);
+      }
+      if ((result.has_more && (!result.next_cursor || result.next_cursor.before_at !== previous?.before_at || result.next_cursor.before_id !== previous?.before_id)) || (!result.has_more && result.next_cursor !== null)) throw new Error("Weight evidence continuation differs");
       return result;
     },
   };
