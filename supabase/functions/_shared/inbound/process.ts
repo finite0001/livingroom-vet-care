@@ -1,4 +1,13 @@
-import { redactDocumentCapabilities, redactDocumentMetadata } from "./document-capability-redaction.ts";
+import {
+  InboundAttachmentMetadataError,
+  inboundEmailBody,
+  parseInboundEmailAttachments,
+  parseInboundMediaCount,
+} from "./attachment-metadata.ts";
+import {
+  redactDocumentCapabilities,
+  redactDocumentMetadata,
+} from "./document-capability-redaction.ts";
 import {
   emailAddress,
   type EventDatabase,
@@ -43,20 +52,26 @@ export async function processOneInbound(
     let authorization: string;
     if (event.provider === "resend") {
       if (!env.RESEND_API_KEY) throw new Error("Receiving credentials missing");
-      if (!/^[0-9a-f-]{36}$/i.test(event.resource_id))
+      if (!/^[0-9a-f-]{36}$/i.test(event.resource_id)) {
         throw new ReviewError("Invalid resource");
+      }
       endpoint = `https://api.resend.com/emails/receiving/${event.resource_id}`;
       authorization = `Bearer ${env.RESEND_API_KEY}`;
     } else {
       if (
         !/^AC[0-9a-f]{32}$/i.test(env.TWILIO_ACCOUNT_SID ?? "") ||
         !env.TWILIO_AUTH_TOKEN
-      )
+      ) {
         throw new Error("Receiving credentials missing");
-      if (!/^SM[0-9a-f]{32}$/i.test(event.resource_id))
+      }
+      if (!/^SM[0-9a-f]{32}$/i.test(event.resource_id)) {
         throw new ReviewError("Invalid resource");
-      endpoint = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages/${event.resource_id}.json`;
-      authorization = `Basic ${btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`)}`;
+      }
+      endpoint =
+        `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages/${event.resource_id}.json`;
+      authorization = `Basic ${
+        btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`)
+      }`;
     }
     const response = await transport(endpoint, {
       headers: { Authorization: authorization },
@@ -86,20 +101,20 @@ export async function processOneInbound(
         data.id !== event.resource_id ||
         sender !== event.metadata.from ||
         !recipient
-      )
+      ) {
         throw new ReviewError(
           "Provider resource does not match signed metadata",
         );
-      body =
-        typeof data.text === "string" && data.text.trim()
-          ? data.text
-          : "[Email has no plain-text body. HTML original retained for safe review.]";
+      }
+      attachments = parseInboundEmailAttachments(data.attachments);
+      body = inboundEmailBody(data.text, data.html, attachments.length);
       html = typeof data.html === "string" ? data.html : null;
       subject = typeof data.subject === "string" ? data.subject : "";
       occurred = data.created_at;
       rfc = typeof data.message_id === "string" ? data.message_id : null;
-      const headers =
-        data.headers && typeof data.headers === "object" ? data.headers : {};
+      const headers = data.headers && typeof data.headers === "object"
+        ? data.headers
+        : {};
       const header = (name: string) =>
         Object.entries(headers).find(
           ([key]) => key.toLowerCase() === name,
@@ -109,14 +124,6 @@ export async function processOneInbound(
           /<[^<>\r\n]{1,998}>/g,
         ) ?? []
       ).slice(-50);
-      attachments = Array.isArray(data.attachments)
-        ? data.attachments.map((item: Record<string, unknown>) => ({
-            id: item.id,
-            filename: item.filename,
-            content_type: item.content_type,
-            size: item.size,
-          }))
-        : [];
     } else {
       sender = normalizePhone(data.from);
       recipient = normalizePhone(data.to);
@@ -128,17 +135,24 @@ export async function processOneInbound(
         recipient !== event.metadata.to ||
         typeof data.body !== "string" ||
         (typeof event.metadata.body_hash === "string"
-          ? await digestMetadata({ body: data.body }) !== event.metadata.body_hash ||
+          ? await digestMetadata({ body: data.body }) !==
+              event.metadata.body_hash ||
             redactDocumentCapabilities(data.body) !== event.metadata.body
           : data.body !== event.metadata.body)
-      )
+      ) {
         throw new ReviewError("Provider SMS does not match signed metadata");
+      }
       body = data.body;
       occurred = data.date_created;
-      if (Number(data.num_media) > 0)
-        attachments = [
-          { count: Number(data.num_media), review_required: true },
-        ];
+      const mediaCount = parseInboundMediaCount(data.num_media);
+      if (mediaCount > 0) {
+        attachments = [{ count: mediaCount, review_required: true }];
+        if (!body.trim()) {
+          body = `[Message contains ${mediaCount} media attachment${
+            mediaCount === 1 ? "" : "s"
+          }. Attachment contents have not been retrieved.]`;
+        }
+      }
     }
     if (
       !sender ||
@@ -148,8 +162,9 @@ export async function processOneInbound(
       (html?.length ?? 0) > 500000 ||
       subject.length > 500 ||
       attachments.length > 100
-    )
+    ) {
       throw new ReviewError("Inbound content requires manual review");
+    }
     await call(db, "complete_inbound_communication", {
       p_event_id: event.id,
       p_lease_token: event.lease_token,
@@ -166,17 +181,21 @@ export async function processOneInbound(
     });
     return { processed: true };
   } catch (error) {
-    const review =
-      error instanceof ReviewError ||
+    const review = error instanceof ReviewError ||
+      error instanceof InboundAttachmentMetadataError ||
       (error instanceof WebhookError && error.status === 413);
-    const released: unknown = await call(db, "release_communication_event_outcome", {
-      p_id: event.id,
-      p_lease_token: event.lease_token,
-      p_error: review
-        ? "provider_content_requires_review"
-        : "provider_fetch_or_persistence_retry",
-      p_review: review,
-    });
+    const released: unknown = await call(
+      db,
+      "release_communication_event_outcome",
+      {
+        p_id: event.id,
+        p_lease_token: event.lease_token,
+        p_error: review
+          ? "provider_content_requires_review"
+          : "provider_fetch_or_persistence_retry",
+        p_review: review,
+      },
+    );
     // SQL may exhaust the retry budget even for a transient failure. Never
     // report pending work from our requested disposition or a lost RPC reply.
     if (

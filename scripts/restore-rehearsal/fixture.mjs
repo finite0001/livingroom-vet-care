@@ -1,3 +1,4 @@
+import { seedCommunications, verifyCommunications, assertExactOutbox } from './communications-fixture.mjs';
 import { seedReleasePackages, verifyReleasePackages } from './release-packages.mjs';
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
@@ -6,7 +7,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 const [mode, statusPath, run] = process.argv.slice(2);
-assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals", "capture-release-packages"].includes(mode));
+assert.ok(["create", "verify", "verify-upgrade", "capture-review-audit", "capture-api-originals", "capture-release-packages", "capture-communications"].includes(mode));
 const config = JSON.parse(readFileSync(statusPath, "utf8"));
 const url = new URL(config.API_URL);
 assert.equal(url.hostname, "127.0.0.1");
@@ -55,7 +56,7 @@ const snapshot = () =>
   JSON.parse(
     sql(`select jsonb_object_agg(name,rows) from (
 ${["clients", "pets", "profiles", "user_roles", "clinical_encounters", "clinical_addenda", "patient_documents", "catalog_products", "inventory_lots", "inventory_movements", "billing_invoices", "billing_invoice_items", "billing_credits", "audit_logs"].map((table) => `select '${table}' as name,coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]'::jsonb) as rows from public.${table} t`).join(" union all ")}
-union all select 'auth_users',jsonb_agg(jsonb_build_object('id',id,'email',email,'encrypted_password',encrypted_password)) from auth.users
+union all select 'auth_users',jsonb_agg(jsonb_build_object('id',id,'email',email,'encrypted_password',encrypted_password) order by id) from auth.users
 union all select 'storage_objects',jsonb_agg(to_jsonb(t) order by id) from storage.objects t
 union all select 'schema_migrations',jsonb_agg(to_jsonb(t) order by version) from supabase_migrations.schema_migrations t
 ) x;`),
@@ -138,6 +139,20 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   console.log(
     "Synthetic signed record, private original, issued invoice/credit and stock ledger created.",
   );
+} else if (mode === "capture-communications") {
+  state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(project, `${state.projectRun}-source`);
+  const previous = snapshot();
+  state.communications = await seedCommunications({config,admin,sql});
+  const captured = snapshot();
+  // Every prior row remains byte-for-byte; this fixture may only add its own
+  // synthetic identities, Storage originals and audits to the existing baseline.
+  for (const [table, rows] of Object.entries(previous)) {
+    const current = captured[table];
+    for (const row of rows ?? []) assert.ok(current.some(value => JSON.stringify(value) === JSON.stringify(row)), `Communications changed existing ${table} evidence`);
+  }
+  state.snapshot = captured;
+  writeFileSync(statePath,JSON.stringify(state),{mode:0o600});
 } else if (mode === "capture-api-originals") {
   state = JSON.parse(readFileSync(statePath, "utf8"));
   assert.equal(project, `${state.projectRun}-source`);
@@ -478,7 +493,7 @@ do $$declare rejected boolean := false; begin
 end $$;
 rollback;`);
   }
-  assert.equal(sql("select count(*) from communication_outbox"), "0");
+  assertExactOutbox(sql,state.communications);
   assert.equal(
     sql("select count(*) from pg_extension where extname='pg_cron'"),
     "0",
@@ -512,7 +527,8 @@ rollback;`);
         private_original_bytes: state.originalSize,
         anonymous_and_public_denied: true,
         ready_original_and_signed_history_immutable: true,
-        outbox_empty: true,
+        outbox_empty: !state.communications,
+        exact_reviewed_outbox_inventory_verified: true,
         cron_absent: true,
         api_originals_restored: state.apiOriginals?.length ?? 0,
         approved_corrected_canceled_decisions_restored: state.apiDecisions?.length ?? 0,
@@ -523,6 +539,10 @@ rollback;`);
       2,
     ),
   );
+  if (state.communications) {
+    const communications = await verifyCommunications({config,admin,sql,evidence:state.communications});
+    writeFileSync(join(run,'communications-verification.json'),JSON.stringify(communications,null,2),{mode:0o600});
+  }
   console.log(
     "PASS: restored Auth, linked signed history, immutable ledgers, exact original bytes and private access controls.",
   );

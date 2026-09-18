@@ -1,3 +1,4 @@
+import { assertExactOutbox } from './communications-fixture.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
 import { buildReleaseEmailPayload } from '../../supabase/functions/_shared/release-email-payload.ts';
@@ -141,5 +142,5 @@ export async function verifyReleasePackages({state,api,admin,sql,packages=state.
   }
   assert.equal(payloadRows(),before,'Restore verification must not rewrite saved delivery bytes');
   assert.equal((await staff('read_record_release',{p_id:email.release.id})).eligible,true);
-  assert.equal(sql('select count(*) from communication_outbox'),'0');
+  assertExactOutbox(sql,state.communications);
 }

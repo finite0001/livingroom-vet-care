@@ -1,0 +1,110 @@
+-- Durable cleanup receipts for terminal abandoned uploads; no cleanup scheduler is enabled.
+create table public.abandoned_attachment_cleanup (
+ id uuid primary key default gen_random_uuid(),
+ upload_id uuid not null references public.conversation_attachment_uploads(id),
+ object_id uuid not null,object_created_at timestamptz not null,
+ storage_path text not null,
+ grace_hours integer not null check(grace_hours between 24 and 720),
+ state text not null check(state in ('claimed','complete')),
+ token uuid not null,expires_at timestamptz,
+ created_at timestamptz not null default clock_timestamp(),completed_at timestamptz,
+ unique(upload_id,object_id),
+ check((state='claimed' and expires_at is not null and completed_at is null)
+  or(state='complete' and expires_at is null and completed_at is not null))
+);
+alter table public.abandoned_attachment_cleanup enable row level security;
+revoke all on public.abandoned_attachment_cleanup from public,anon,authenticated,service_role;
+create function public.guard_abandoned_attachment_cleanup() returns trigger language plpgsql set search_path=public as $$
+begin
+ if tg_op='DELETE' or old.state='complete' or
+  (to_jsonb(new)-array['state','token','expires_at','completed_at']) is distinct from
+  (to_jsonb(old)-array['state','token','expires_at','completed_at']) then
+  raise exception 'Cleanup evidence is immutable' using errcode='23514';end if;
+ if new.state='complete' and new.token is distinct from old.token then
+  raise exception 'Cleanup completion must preserve the exact lease' using errcode='23514';end if;
+ return new;
+end $$;
+create trigger abandoned_attachment_cleanup_guard before update or delete on public.abandoned_attachment_cleanup
+ for each row execute function public.guard_abandoned_attachment_cleanup();
+create function public.abandoned_cleanup_lease(p_row public.abandoned_attachment_cleanup,p_upload public.conversation_attachment_uploads)
+returns jsonb language sql immutable set search_path=public as $$
+ select jsonb_build_object('id',p_row.id,'token',p_row.token,'uploadId',p_upload.id,'actorId',p_upload.actor_id,
+ 'conversationId',p_upload.conversation_id,'bucket','conversation-attachment-uploads','path',p_row.storage_path,
+ 'objectId',p_row.object_id,'objectCreatedAt',p_row.object_created_at,'expiresAt',p_row.expires_at)
+$$;
+create function public.claim_abandoned_attachment_cleanup(p_upload_id uuid,p_grace_hours integer) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare upload public.conversation_attachment_uploads;receipt public.abandoned_attachment_cleanup;object_row storage.objects;
+begin
+ perform public.communication_require_service();
+ if p_grace_hours is null or p_grace_hours not between 24 and 720 then
+  raise exception 'Explicit cleanup grace from 24 to 720 hours required' using errcode='23514';end if;
+ select * into upload from public.conversation_attachment_uploads where id=p_upload_id for update;
+ if not found or upload.status<>'abandoned' then raise exception 'Only abandoned uploads may be cleaned' using errcode='42501';end if;
+ -- Defense in depth: no abandoned object may have entered a prepared message manifest.
+ if exists(select 1 from public.conversation_email_artifacts a cross join lateral jsonb_array_elements(a.manifest) f where f->>'upload_id'=upload.id::text) then
+  raise exception 'Referenced attachment evidence must be retained' using errcode='42501';end if;
+ select * into object_row from storage.objects where bucket_id='conversation-attachment-uploads' and name=upload.storage_path for share;
+ select * into receipt from public.abandoned_attachment_cleanup where upload_id=upload.id and state='claimed' order by created_at limit 1 for update;
+ if receipt.id is not null then
+  if object_row.id is not null and row(object_row.id,object_row.created_at) is distinct from row(receipt.object_id,receipt.object_created_at) then
+   raise exception 'Cleanup object identity changed' using errcode='42501';end if;
+  if receipt.expires_at>clock_timestamp() then raise exception 'Cleanup already in progress' using errcode='40001';end if;
+  update public.abandoned_attachment_cleanup set token=gen_random_uuid(),expires_at=clock_timestamp()+interval '2 minutes'
+   where id=receipt.id returning * into receipt;
+ else
+  if object_row.id is null then return null;end if;
+  if object_row.created_at>clock_timestamp()-make_interval(hours=>p_grace_hours)
+   or upload.created_at>clock_timestamp()-make_interval(hours=>p_grace_hours) then return null;end if;
+  if exists(select 1 from public.abandoned_attachment_cleanup where upload_id=upload.id and object_id=object_row.id) then
+   raise exception 'Completed cleanup object unexpectedly exists' using errcode='23514';end if;
+  insert into public.abandoned_attachment_cleanup(upload_id,object_id,object_created_at,storage_path,grace_hours,state,token,expires_at)
+   values(upload.id,object_row.id,object_row.created_at,upload.storage_path,p_grace_hours,'claimed',gen_random_uuid(),clock_timestamp()+interval '2 minutes') returning * into receipt;
+ end if;
+ return public.abandoned_cleanup_lease(receipt,upload);
+end $$;
+create function public.revalidate_abandoned_attachment_cleanup(p_id uuid,p_token uuid) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare receipt public.abandoned_attachment_cleanup;upload public.conversation_attachment_uploads;object_row storage.objects;
+begin
+ perform public.communication_require_service();
+ select * into receipt from public.abandoned_attachment_cleanup where id=p_id;
+ if not found then raise exception 'Cleanup unavailable' using errcode='42501';end if;
+ select * into upload from public.conversation_attachment_uploads where id=receipt.upload_id for update;
+ select * into receipt from public.abandoned_attachment_cleanup where id=p_id for update;
+ if upload.status<>'abandoned' or upload.storage_path is distinct from receipt.storage_path or receipt.state<>'claimed'
+  or receipt.token is distinct from p_token then raise exception 'Cleanup lease or eligibility changed' using errcode='42501';end if;
+ if receipt.expires_at<=clock_timestamp() then raise exception 'Cleanup lease expired' using errcode='40001';end if;
+ if exists(select 1 from public.conversation_email_artifacts a cross join lateral jsonb_array_elements(a.manifest) f where f->>'upload_id'=upload.id::text) then
+  raise exception 'Referenced attachment evidence must be retained' using errcode='42501';end if;
+ select * into object_row from storage.objects where bucket_id='conversation-attachment-uploads' and name=receipt.storage_path for share;
+ if object_row.id is not null and row(object_row.id,object_row.created_at) is distinct from row(receipt.object_id,receipt.object_created_at) then
+  raise exception 'Cleanup object identity changed' using errcode='42501';end if;
+ return public.abandoned_cleanup_lease(receipt,upload);
+end $$;
+create function public.finalize_abandoned_attachment_cleanup(p_id uuid,p_token uuid) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare receipt public.abandoned_attachment_cleanup;
+begin
+ perform public.communication_require_service();
+ select * into receipt from public.abandoned_attachment_cleanup where id=p_id;
+ if not found then raise exception 'Cleanup unavailable' using errcode='42501';end if;
+ -- Preserve claim's upload-before-receipt lock order, including completion replay.
+ perform 1 from public.conversation_attachment_uploads where id=receipt.upload_id for update;
+ select * into receipt from public.abandoned_attachment_cleanup where id=p_id for update;
+ if receipt.token is distinct from p_token then raise exception 'Cleanup lease changed' using errcode='42501';end if;
+ if receipt.state='complete' then
+  if exists(select 1 from storage.objects where bucket_id='conversation-attachment-uploads' and name=receipt.storage_path) then
+   raise exception 'Completed cleanup object unexpectedly exists' using errcode='23514';end if;
+  return jsonb_build_object('id',p_id,'status','complete');
+ end if;
+ perform public.revalidate_abandoned_attachment_cleanup(p_id,p_token);
+ if exists(select 1 from storage.objects where bucket_id='conversation-attachment-uploads' and name=receipt.storage_path) then
+  raise exception 'Cleanup object absence is unconfirmed' using errcode='23514';end if;
+ update public.abandoned_attachment_cleanup set state='complete',expires_at=null,completed_at=clock_timestamp() where id=p_id;
+ return jsonb_build_object('id',p_id,'status','complete');
+end $$;
+revoke all on function public.guard_abandoned_attachment_cleanup() from public,anon,authenticated,service_role;
+revoke all on function public.abandoned_cleanup_lease(public.abandoned_attachment_cleanup,public.conversation_attachment_uploads) from public,anon,authenticated,service_role;
+revoke all on function public.claim_abandoned_attachment_cleanup(uuid,integer),public.revalidate_abandoned_attachment_cleanup(uuid,uuid),public.finalize_abandoned_attachment_cleanup(uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.claim_abandoned_attachment_cleanup(uuid,integer),public.revalidate_abandoned_attachment_cleanup(uuid,uuid),public.finalize_abandoned_attachment_cleanup(uuid,uuid) to service_role;

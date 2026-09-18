@@ -1,3 +1,5 @@
+import { withConversationEmailReview, type ConversationEmailApproval } from "@/hub/features/communications/conversation-email-queue";
+import type { ConversationEmailReview } from "@/hub/features/communications/conversation-email-review";
 import { useEffect, useRef, useState } from "react";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
@@ -220,11 +222,13 @@ export function useMessageQueue(scope: string, active = true) {
     // Actor/scope changes start a fresh authorized recovery, never a send.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actor, scope, active]);
-  const send = async (payload: MessageIntent) => {
+  const send = async (payload: MessageIntent, review?: (value: ConversationEmailReview) => Promise<ConversationEmailApproval>) => {
     check();
     setPending(true);
     try {
-      const result = await intents.send(key, payload, transport);
+      if (payload.attachment_ids.length && !review) throw new Error("Review the saved attachments before queueing this email.");
+      const selectedTransport = review ? withConversationEmailReview(transport, supabase, scope, check, review) : transport;
+      const result = await intents.send(key, payload, selectedTransport);
       check();
       await Promise.all(
         [

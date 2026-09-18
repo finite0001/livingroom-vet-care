@@ -1,3 +1,10 @@
+import type { SelectedConversationAttachment } from "@/hub/features/communications/attachment-selection";
+import { uploadConversationAttachment } from "@/hub/features/communications/attachment-upload";
+import { createAttachmentUploadTransport } from "@/hub/features/communications/attachment-upload-api";
+import { AttachmentEmailReviewDialog } from "@/hub/components/conversations/AttachmentEmailReviewDialog";
+import type { ConversationEmailReview } from "@/hub/features/communications/conversation-email-review";
+import type { ConversationEmailApproval } from "@/hub/features/communications/conversation-email-queue";
+import { readCapturedConversationFile } from "@/hub/features/communications/conversation-email-attachment";
 import type { MessageIntent } from "@/hub/features/communications/queue-intent";
 import { useMessageQueue } from "@/hub/hooks/use-message-queue";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -44,6 +51,47 @@ function ConversationDetailContent() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
   const sendingRef = useRef(false);
+  const [attachmentReview, setAttachmentReview] = useState<ConversationEmailReview | null>(null);
+  const reviewPending = useRef<{
+    resolve: (approval: ConversationEmailApproval) => void;
+    reject: (error: Error) => void;
+  } | null>(null);
+  const currentActor = useRef(session?.user.id ?? null);
+  currentActor.current = session?.user.id ?? null;
+  const currentConversation = useRef(id);
+  currentConversation.current = id;
+  useEffect(() => {
+    currentActor.current = session?.user.id ?? null;
+    return () => { currentActor.current = null; };
+  }, [session?.user.id]);
+  useEffect(() => {
+    setAttachmentReview(null);
+    return () => {
+      reviewPending.current?.reject(new Error("Review closed. The saved email is retained."));
+      reviewPending.current = null;
+    };
+  }, [id]);
+  const requestAttachmentReview = (review: ConversationEmailReview) => new Promise<ConversationEmailApproval>((resolve, reject) => {
+    if (reviewPending.current) { reject(new Error("An attachment review is already open.")); return; }
+    reviewPending.current = { resolve, reject };
+    setAttachmentReview(review);
+  });
+  const closeAttachmentReview = () => {
+    reviewPending.current?.reject(new Error("Review closed. The saved email is retained."));
+    reviewPending.current = null;
+    setAttachmentReview(null);
+  };
+  const inspectAttachment = async (uploadId: string) => {
+    if (!attachmentReview || !session?.user.id) throw new Error("Reopen the saved review.");
+    const blob = await readCapturedConversationFile(supabase, session.user.id, () => currentActor.current, attachmentReview, uploadId);
+    if (currentConversation.current !== attachmentReview.payload.conversation_id) throw new Error("Conversation changed. Reopen the saved review.");
+    const file = attachmentReview.files.find(file => file.uploadId === uploadId)!;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+
 
   const conversationNotFound = !convLoading && !conversation;
   usePageTitle(
@@ -125,6 +173,7 @@ function ConversationDetailContent() {
     channel: "SMS" | "EMAIL" | "NOTE",
     subject?: string,
     restored?: MessageIntent,
+    attachments: SelectedConversationAttachment[] = [],
   ): Promise<boolean> => {
     if (!id || !conversation || sendingRef.current || !session?.user.id)
       return false;
@@ -139,7 +188,7 @@ function ConversationDetailContent() {
           restored.subject !== (subject ?? "")
         )
           throw new Error("Restore the exact saved draft before retrying.");
-        const result = await queue.send(restored);
+        const result = await queue.send(restored, restored.attachment_ids.length ? requestAttachmentReview : undefined);
         toast.success(`Message recorded: ${result.state}`);
         return true;
       }
@@ -191,14 +240,22 @@ function ConversationDetailContent() {
           toast.error("Client has no email address");
           return false;
         }
+        const uploadTransport = createAttachmentUploadTransport(supabase, session.user.id,
+          () => currentConversation.current === id ? currentActor.current : null);
+        const attachmentIds: string[] = [];
+        for (const selected of attachments) {
+          const verified = await uploadConversationAttachment({ id: selected.id, actorId: session.user.id,
+            conversationId: id, file: selected.file }, uploadTransport);
+          attachmentIds.push(verified.id);
+        }
         const result = await queue.send({
           conversation_id: id,
           channel,
           to: email,
           subject: subject ?? "",
           body: content,
-          attachment_ids: [],
-        });
+          attachment_ids: attachmentIds,
+        }, attachmentIds.length ? requestAttachmentReview : undefined);
         toast.success(
           result.state === "pending"
             ? "Email queued"
@@ -369,6 +426,23 @@ function ConversationDetailContent() {
           </div>
         )}
       </div>
+
+      {attachmentReview && (
+        <AttachmentEmailReviewDialog
+          key={`${attachmentReview.requestId}:${attachmentReview.payloadHash}`}
+          review={attachmentReview}
+          open
+          onClose={closeAttachmentReview}
+          onInspect={inspectAttachment}
+          onQueue={async (requestId, payloadHash) => {
+            const pending = reviewPending.current;
+            if (!pending) throw new Error("Review is no longer active. Recover the saved draft.");
+            reviewPending.current = null;
+            pending.resolve({ requestId, payloadHash });
+            setAttachmentReview(null);
+          }}
+        />
+      )}
 
       {/* Composer */}
       {conversation && (
