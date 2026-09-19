@@ -20,7 +20,7 @@ Purpose: a work order that a less capable coding model (Kimi K3, Qwen 3.8 or sim
 
 - **`main` is the product** once the precondition above passes. Until 2026-09-19 it was ~630 commits behind a stacked-PR chain; PR #162 landed the whole chain.
 - Branch from `origin/main`. Open PRs **against `main`**. One task = one branch = one PR. **Never stack a PR on another PR's branch** — that is how `main` fell 630 commits behind.
-- **Ignore every `codex/*`, `hub-*`, `lovable-sync-*` and `integration/*` branch.** ~180 old branches and ~100 old open PRs still exist. They are either already inside `main` or deliberately abandoned (see section 2). Never branch from them, merge them, cherry-pick from them, or treat an open PR as pending work.
+- **Ignore every `codex/*`, `hub-*`, `lovable-sync-*` and `integration/*` branch.** ~180 old branches still exist as an archive; every old PR was closed on 2026-09-19 (104 as landed, 3 as not planned). They are either already inside `main` or deliberately abandoned (see section 2). Never branch from them, merge them, cherry-pick from them, or reopen their PRs.
 - The app is large and already built: 133 migrations, ~200 tables, 44 edge functions. **Before building anything, search `main` for it.** Never conclude "feature absent" without grepping `src/hub/features/`, `supabase/migrations/` and `docs/`.
 - The backlog is in prose, not in code: the repo has **zero** TODO/FIXME markers. The authoritative gap table is `docs/standalone-feature-matrix-20260916.md`.
 
@@ -74,8 +74,8 @@ A test count drops · a migration fails to replay from empty · a task needs a s
 | Second live head | `origin/codex/lovable-publication` — 23 real commits (staging evidence, restore-permission fix, a 30-line extension to `20260916130000_abandoned_attachment_cleanup.sql` that **is** what staging runs). Merged into the integration branch 2026-09-19; both conflicts were additive. It also carried a duplicate import/render in `EzyVetMigrationRuns.tsx` (TS2300) — fixed during integration. |
 | Diverged, deliberately NOT merged | `codex/ezyvet-attachment-import` (61 commits) and `codex/api-original-release` (37) are an earlier parallel draft of the ezyVet attachment importer (`ezyvet_attachment_download_*`, `_review_*` tables) that the tip reimplemented as `ezyvet_attachment_capture_*`. Merging would duplicate schema for a roadmap stopped on 2026-09-16. Branches kept as an archive. **Never merge or cherry-pick from them.** |
 | Size of tip | 133 migrations · 44 edge-function dirs · 398 TS/TSX files in `src` · 64 e2e specs |
-| `main` | Lands via PR #162. **Still unprotected** — see 0.2. |
-| GitHub | Repo is **PUBLIC**. 108 open PRs, of which ≥102 are already contained in the tip. 180 remote branches. |
+| `main` | Landed 2026-09-19 as merge commit `9bc97b6`. **Protected:** pull request required; `frontend`, `edge` and `database` checks must pass; no force-push, no deletion; rules apply to admins too. Zero approvals required (solo repo). |
+| GitHub | Repo is **PUBLIC**. 0 open PRs from the old stack (all 107 closed 2026-09-19). 180 remote branches retained. |
 | Unpushed work | The e2e race fix `d7efd35` is now in the product (cherry-picked as `004c4aa`). Still local-only: `feat/stripe-sandbox-invoicing` (2 commits) and `feat/stripe-runtime-setup` (1 commit) — a competing Stripe starter the docs say not to commission. |
 | Uncommitted work | Worktree `~/Developer/livingroom-readiness-outcomes`: 81 paths of ezyVet migration-report tooling, last touched 2026-09-16 04:02, i.e. just before the standalone decision stopped that roadmap. |
 | Hosted | Staging `kothoqicubowyhwfsrte` is at **119** migration receipts (per `docs/standalone-feature-matrix-20260916.md`); primary `mgadheotkdnrsatfivjy` was last recorded at 113. The repo has 133. All outbound delivery and all Stripe gates are off. No provider secret is installed. |
@@ -90,12 +90,12 @@ A test count drops · a migration fails to replay from empty · a task needs a s
 | # | Status | Task | Notes |
 |---|---|---|---|
 | 0.1 | **DONE 2026-09-19** | Build `integration/2026-09` and prove it. | `024fd13`; PR #162; local `npm run check` + 1,069 unit tests; GitHub CI green on all three jobs. |
-| 0.2 | **OWNER — the only blocker** | Merge PR #162 into `main`, then protect `main` (require PR + passing CI, no force-push). | **Use "Create a merge commit" or the fast-forward push. NEVER "Squash and merge"** — squashing 669 commits destroys the history that proves the old PRs are contained, and orphans every evidence reference to a commit SHA. After merging, point the Lovable project back at `main` (it currently tracks `codex/lovable-publication`). |
-| 0.3 | after 0.2 | Close the ~100 superseded PRs and prune merged branches. | Stronger model, scripted: close only PRs whose head is an ancestor of `main`, with a "landed via #162" comment. Leave `codex/ezyvet-attachment-import`, `codex/api-original-release` and their PRs (#126, #130, #121, #122) closed-as-abandoned but **do not delete those branches**. |
+| 0.2 | **DONE 2026-09-19** | PR #162 merged as a merge commit; `main` protected. | **Use "Create a merge commit" or the fast-forward push. NEVER "Squash and merge"** — squashing 669 commits destroys the history that proves the old PRs are contained, and orphans every evidence reference to a commit SHA. **Lovable:** it currently tracks `codex/lovable-publication`. Do **not** point it at `main` — Lovable syncs by pushing commits directly, which protected `main` rejects. Owner + stronger model: give Lovable its own branch (e.g. `lovable`) reset to `main`, and bring Lovable edits into `main` by PR. |
+| 0.3 | **DONE 2026-09-19** | Superseded PRs closed; branches kept. | Stronger model, scripted: close only PRs whose head is an ancestor of `main`, with a "landed via #162" comment. Leave `codex/ezyvet-attachment-import`, `codex/api-original-release` and their PRs (#126, #130, #121, #122) closed-as-abandoned but **do not delete those branches**. |
 | 0.4 | OWNER | The 81 uncommitted ezyVet paths in `~/Developer/livingroom-readiness-outcomes`. | Recommendation: commit as WIP on `codex/migration-global-outcomes`, push, label "archived — roadmap stopped 2026-09-16", then remove the worktree. Do not merge. |
 | 0.5 | OWNER | Drop the three local Stripe-starter commits. | `docs/STRIPE-INTEGRATION.md` already says not to commission a competing ledger. |
 | 0.6 | OWNER | Make the GitHub repo private. | It documents project refs, the staging topology and the security model of a system that will hold client PII and take payments. |
-| 0.7 | **OWNER — today** | In BOTH Supabase projects, Auth → "Allow new users to sign up" must be OFF. | See A1. Until A1 ships this toggle is the only thing between a stranger and every client record. |
+| 0.7 | **VERIFIED 2026-09-19** | Both Supabase projects report `disable_signup = true` and anonymous users off (read from the public `/auth/v1/settings` endpoint). | Safe today, but it is still a dashboard toggle. **A1 remains the first task** so the protection lives in the database. |
 | 0.8 | after 0.2 | Bring staging (119) and primary (113) up to the repo's 133 migrations through the documented preflight (`docs/hosted-upgrade-preflight.md`). | Stronger model + owner. Never the executor. |
 
 ---
@@ -238,7 +238,7 @@ If it means **sell it to other clinics**, know that the system is hard single-te
 
 | Wave | Tasks | Why |
 |---|---|---|
-| 0 | Phase 0.2 (merge #162), 0.7 | Owner only. The executor cannot start until the precondition check passes. |
+| 0 | Phase 0.1–0.3, 0.7 | **Done.** The executor may start once the precondition check passes. |
 | 1 | **A1**, then A3, B6, B7, B8, D1, D2, D3, C0, C9 | The one critical fix, then safe cleanups that make later work easier. No schema except A1. |
 | 2 | C1 (after contract), C2, C3, C4, C6, C8, B2, B3, B4 | The layout pass — the visible product improvement. |
 | 3 | A2, A4, A5, A6, B1, B5, C5/E2, C7 | Reviewed schema and edge work; scheduler; patient flow. |
