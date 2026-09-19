@@ -1,0 +1,512 @@
+{
+  "phase": "native-dispense-corrections",
+  "recorded_date": "2026-09-16",
+  "scope": "Native immutable annotations and pickup amendments; printV2 and schema11 releases",
+  "synthetic_only": true,
+  "provider_requests": 0,
+  "hosted_deployment": false,
+  "tested_revision": "9091dfa9091870f78b89b00095f6d1b2782eab04",
+  "source_sha256": {
+    ".github/workflows/ci.yml": "23e3abc672a270e5f22162062727042d138d5f4a7411d72f7c5088747d0a04ee",
+    "docs/clinical-review/generate-native-corrections.ts": "48a8dc84d73949e97e5e5f38878e75945b246265e9cfde7557cda400aefecf10",
+    "docs/clinical-review/native-dispense-corrections-example.html": "517e6f2b417f613842e3da2aeca6dd2b4d7e7fa452c491e4cb910126167c8318",
+    "e2e/native-fulfillment.spec.ts": "14fdf21556750e0f96e4a044becff7e341bba909c8edc35458eedb71d1f6c361",
+    "e2e/native-prescribing.spec.ts": "a991ca891d9db1a652ba84f0d8e76ee4288e30f34605792582ab11cad7005783",
+    "e2e/native-record-releases.spec.ts": "523a8b0eee1d18bec9a29414a168628de393b912f49da27a495a3d455f719e91",
+    "e2e/record-release-workflow.spec.ts": "4ed408c7c69ed9198bebc173493f34ed2c6dc5dfdc889a5a971e79bca5f19c2b",
+    "plans/20260916-native-prescribing/correction-rpc-contract.md": "ed76e73429d9267fbacfb1928ef3c43e1ffbd957b65f57dbabba4383b12b1309",
+    "plans/20260916-native-prescribing/corrections-integration-map.md": "c233dcd69a58c6f7b34193620e7e90283c95bedea4031c1cda151e77f1759956",
+    "plans/20260916-native-prescribing/corrections-ui-contract.md": "1ce907e0e04520bbada40b774855b5b7ecead2cc32c153865d1d24f70b776677",
+    "scripts/restore-rehearsal/run.py": "a954304bb6522a04ad17b8e9de96b89d79fb5696876e55f6b5da726c831f73af",
+    "src/hub/features/prescriptions/PrescriptionFulfillment.tsx": "54ddefad303fca58939de972b5bfa09e67dcb15bf47fe970d7903096d00c8c52",
+    "src/hub/features/prescriptions/PrescriptionFulfillmentCorrections.tsx": "a60475f2a7d099807b6ee9806a1a9ce35ab768298a52a0e1a0d492b91688479e",
+    "src/hub/features/prescriptions/fulfillment-corrections-api.ts": "63538b88e66e1373c897cbeea3c73cfd6967c5c861724b8d566ea612b3c4e1f4",
+    "src/hub/features/prescriptions/prescription-api.ts": "afa3ddf2b93e70106caa81339e5e111af8726bf5069d879a848e4f7b9507a97c",
+    "src/hub/features/prescriptions/prescription-print.ts": "6bb7d94f512a7c90158ab84fc4451979178189c6629f05d214274dbffda4bb8b",
+    "src/hub/features/record-releases/PatientRecordReleases.tsx": "d03296a88b1edd1bf066c82daf23cea5fa504b05e62af8fe516326de13a9686c",
+    "src/hub/features/record-releases/api.ts": "6f7a9ef7367a5487e13543ec561091ab3daa13d0017571c728accd7848879877",
+    "src/hub/features/record-releases/refresh.ts": "c766aea46d16afb9121977c13835ed73382d0423e23f99ad9b36203d53d66450",
+    "supabase/functions/_shared/document-link-artifacts.ts": "b2458d2d12fab3e132cf90203b7a4ac6e9c96653d337c99127e8fb09533c6d7f",
+    "supabase/functions/_shared/native-dispense-corrections.ts": "31c358c1e38edfbc4024b7423bfd7b7b99edef838937d72b424803a6311d2827",
+    "supabase/functions/_shared/record-release-api-attachments.ts": "1f694070c0740ec161b21edf8d43bb5b4cec3a218eb9236d5bbde02fc0306a41",
+    "supabase/functions/_shared/record-release-imported-history.ts": "affe52fd228d1eac07d66e6fec9293dedb48d2505053539c1347193bfb8a6ee2",
+    "supabase/functions/_shared/record-release-imported-prescriptions.ts": "bdad155e38695eedc52c7d2c0ec0ca575c544fc1254956982ec7c6fda5169195",
+    "supabase/functions/_shared/record-release-imported-vaccinations.ts": "5735d92f0c2b35b5fd0dff143ebbd1acac69152106c26edcd8f7065a026062fb",
+    "supabase/functions/_shared/record-release-native-prescriptions.ts": "222dedca45524d247a058294364c038553765947c5cf7d57df6841fa81876468",
+    "supabase/functions/_shared/record-release-renderer.ts": "717128eeea7e278bb27fe689bd42d12e0455eb573bf4913efaa1bcc29e1147f8",
+    "supabase/functions/_shared/record-release-source-provenance.ts": "0d2d09807bb9d23ce8b6d0ce43e054c2fde53db7717a82be0e32b17e1f604a93",
+    "supabase/functions/_shared/release-email-payload.ts": "739cd51e73e2ec0dd98667db824f31465eaab75772c32b2238449ae45a7be40d",
+    "supabase/migrations/20260916083056_native_dispense_corrections.sql": "9f69e07b24e7d01007420f5f444941422177e6bf2fa4ff548c20b210dd642c03",
+    "supabase/tests/native_dispense_corrections.test.sql": "8fabb1eb3c6fbe11208426ac123500dac04e54862144c36d7b433862b42f9c62",
+    "supabase/tests/native_dispense_corrections_concurrency.py": "8e0b754f0b8dcfa82b95bc2a1b647af99dc6f65a3bd6f59355d5134e672340e5",
+    "tests/ezyvet/attachment-metadata-disposable.py": "633ad903505ead4f058ae9b08013ce44afaa76041b462a0d1609d859fa1dc309",
+    "tests/prescriptions/correction-fixture.ts": "b082c58a043fc7ec0bcd51b5119ac170a466f2386513aa1e9e21badf330df64a",
+    "tests/prescriptions/correction-renderer.test.ts": "94c63f0cfba92dbbf8ae186d08afdf4cb41cae445a7067c9e6a412b181965bd6",
+    "tests/prescriptions/corrections-api.test.ts": "c3bbe106679c280e9487a12aa35aca2b52026660ff4b287bbe2de57e1948cebd",
+    "tests/prescriptions/local-corrections.ts": "566a1e4503fac531ba59b3cb59ee61a8a99633ccd09e9d795daf9a088f2db020",
+    "tests/prescriptions/local-workspace.ts": "1cf73b2d55dc107e85370a679a0e66e5b99041ec6abf4c8a469b3d5f1b8a4da5",
+    "tests/prescriptions/native-disposable.py": "49f379caf997c885a13adf98b1083b32fe62ebb15bd9c4b2bb93a33f7a290583",
+    "tests/prescriptions/prescription-api.test.ts": "c3456e4ffd110db1d033d39df4ddd1cb52c70d0cb52e88cf9dc39096b7d3f8e5",
+    "tests/prescriptions/restore-native.py": "39b1e1f61b823eb563f13d904df29ae6499b7e4a1af67d19b352a6b7ba0c7f9b",
+    "tests/record-releases/native-prescriptions.test.ts": "b69796f486a804e5025aaa4399b9bd467c5b63f1ec817bb9d5318a4f204fe3df"
+  },
+  "frontend": {
+    "check": "passed",
+    "unit_tests": 749,
+    "lint": true,
+    "typecheck": true,
+    "build": true,
+    "edge_deno_frozen_check": true,
+    "focused_browser": {
+      "passed": 55,
+      "post_history_guard_targeted_passed": 3,
+      "reported_by": "resolution_ui"
+    }
+  },
+  "sql": {
+    "suites": [
+      {
+        "suite": "ezyvet_prescription_release_reference.test.sql",
+        "passed": true,
+        "checks": 27
+      },
+      {
+        "suite": "ezyvet_release_discovery_boundaries.test.sql",
+        "passed": true,
+        "checks": 33
+      },
+      {
+        "suite": "inventory_billing.test.sql",
+        "passed": true,
+        "checks": 58
+      },
+      {
+        "suite": "inventory_product_locking.test.sql",
+        "passed": true,
+        "checks": 16
+      },
+      {
+        "suite": "inventory_read_models.test.sql",
+        "passed": true,
+        "checks": 12
+      },
+      {
+        "suite": "native_dispense_corrections.test.sql",
+        "passed": true,
+        "checks": 68
+      },
+      {
+        "suite": "native_fulfillment.test.sql",
+        "passed": true,
+        "checks": 62
+      },
+      {
+        "suite": "native_prescription_authorization_events.test.sql",
+        "passed": true,
+        "checks": 47
+      },
+      {
+        "suite": "native_prescriptions_lifecycle.test.sql",
+        "passed": true,
+        "checks": 64
+      },
+      {
+        "suite": "native_record_releases.test.sql",
+        "passed": true,
+        "checks": 71
+      },
+      {
+        "suite": "native_refills.test.sql",
+        "passed": true,
+        "checks": 51
+      },
+      {
+        "suite": "record_release_charts.test.sql",
+        "passed": true,
+        "checks": 24
+      },
+      {
+        "suite": "record_release_history.test.sql",
+        "passed": true,
+        "checks": 30
+      },
+      {
+        "suite": "record_releases.test.sql",
+        "passed": true,
+        "checks": 43
+      },
+      {
+        "suite": "release_email_delivery.test.sql",
+        "passed": true,
+        "checks": 44
+      },
+      {
+        "suite": "release_imported_history.test.sql",
+        "passed": true,
+        "checks": 20
+      },
+      {
+        "suite": "release_imported_prescription.test.sql",
+        "passed": true,
+        "checks": 36
+      },
+      {
+        "suite": "release_imported_vaccination.test.sql",
+        "passed": true,
+        "checks": 24
+      },
+      {
+        "suite": "release_inherited_provenance.test.sql",
+        "passed": true,
+        "checks": 3
+      },
+      {
+        "suite": "release_source_byte_binding.test.sql",
+        "passed": true,
+        "checks": 14
+      },
+      {
+        "suite": "release_source_provenance.test.sql",
+        "passed": true,
+        "checks": 33
+      },
+      {
+        "suite": "release_weight_provenance.test.sql",
+        "passed": true,
+        "checks": 54
+      }
+    ],
+    "checks": 834,
+    "correction_suite_checks": 68,
+    "isolated_schema_clone_cleanup": true
+  },
+  "concurrency": {
+    "checks": 48,
+    "observed_lock_waits": true,
+    "cases": [
+      "distinct stale append",
+      "same UUID retry",
+      "pickup added after preview",
+      "current print after append",
+      "release confirmation both arrival orders",
+      "email capture context both arrival orders",
+      "secure link source both arrival orders",
+      "DVM revoked while waiting",
+      "staff deactivated while waiting"
+    ],
+    "source": "supabase/tests/native_dispense_corrections_concurrency.py"
+  },
+  "fresh_disposable": {
+    "synthetic_only": true,
+    "fixture": "native-prescribing-and-fulfillment",
+    "suites": [
+      {
+        "suite": "native-prescription-lifecycle-http",
+        "checks_passed": 82
+      },
+      {
+        "suite": "native-fulfillment-http",
+        "checks_passed": 85
+      },
+      {
+        "suite": "native-fulfillment-and-release-browser",
+        "checks_passed": 63
+      },
+      {
+        "suite": "native-release-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-corrections-local-auth",
+        "checks_passed": 46
+      }
+    ],
+    "project_id": "lrv-prescription-a1082b3e4d42",
+    "checks_passed": 333,
+    "cleanup_verified": true,
+    "git_revision": "b10ae11f583ce790bd45aa3e075f9d777a5490f9",
+    "runner_sha256": "49f379caf997c885a13adf98b1083b32fe62ebb15bd9c4b2bb93a33f7a290583",
+    "harness_sha256": {
+      "local-lifecycle.ts": "21535306e2f88720559c6ca98488ff8d6c378b4ced33f0100a826e23ed716fba",
+      "local-fulfillment.ts": "03f1c3244059cfd1a7bd20a423090af8d68b4b073adaa02c5bbac7b81651fbd3",
+      "local-workspace.ts": "1cf73b2d55dc107e85370a679a0e66e5b99041ec6abf4c8a469b3d5f1b8a4da5",
+      "local-releases.ts": "d836f9d7dec3d9e919216702a3c9a949431108e6835da1dc5a641b5c763ba0f1",
+      "local-corrections.ts": "566a1e4503fac531ba59b3cb59ee61a8a99633ccd09e9d795daf9a088f2db020"
+    },
+    "restore_runner_sha256": "39b1e1f61b823eb563f13d904df29ae6499b7e4a1af67d19b352a6b7ba0c7f9b",
+    "restore": {
+      "checks_passed": 58,
+      "cleanup_verified": true,
+      "correction_boundaries_verified": true,
+      "default_privilege_statements_omitted": 36,
+      "future_object_default_privileges_restored": false,
+      "project_id": "lrv-prescription-a1082b3e4d42",
+      "provider_requests": 0,
+      "runner_sha256": "39b1e1f61b823eb563f13d904df29ae6499b7e4a1af67d19b352a6b7ba0c7f9b",
+      "scope": "Selected native clinical/operational and stock/billing rows with schema/data restore; not full commercial disaster recovery",
+      "selected_table_grants_verified": true,
+      "source_mutated": false,
+      "storage_binary_coverage": false,
+      "suite": "native-populated-database-restore",
+      "synthetic_only": true,
+      "tables": {
+        "billing_invoice_items": {
+          "rows": 7,
+          "sha256": "fd50e0fc899389e92af9cd0373fdd75aea4984576d7e2eb7261c59290a7589df"
+        },
+        "billing_invoices": {
+          "rows": 5,
+          "sha256": "115750206a0a8ca04bab832022bc3784c409fa2724a72758dee027b63ead24fe"
+        },
+        "catalog_products": {
+          "rows": 5,
+          "sha256": "544569471bd1568f69f3b2b24381d45578771887e9e72a96d5f07c85e3f4a62a"
+        },
+        "inventory_lots": {
+          "rows": 9,
+          "sha256": "260a7db4955e63c92784cd42f9b0cc254f94807e82bff701aa899db7317a4829"
+        },
+        "inventory_movements": {
+          "rows": 19,
+          "sha256": "dc5fedea0e2085095cc03f8c21432d3ef51a0cd8e7b08e9954d6d5a1ce102f62"
+        },
+        "native_dispense_allocations": {
+          "rows": 8,
+          "sha256": "a2697386421088dfaf11355724d3ab7a6dff6f594198eec5c8985a91e22a1fcb"
+        },
+        "native_dispense_correction_events": {
+          "rows": 6,
+          "sha256": "9ef9cb84f83577d547c5c6000d8526238159cf2cb70460d0e0d50a12731b5cbb"
+        },
+        "native_dispense_correction_operations": {
+          "rows": 6,
+          "sha256": "a26c3a20264b74bc0cc2d166142031d865d08376b615aa0b4ce4dca496c4e4d7"
+        },
+        "native_dispenses": {
+          "rows": 6,
+          "sha256": "b8135e7cb3aa9072fe5969c0ac47d2dcfe409ac1103828cf3c5707c25db7fa5b"
+        },
+        "native_fill_slots": {
+          "rows": 5,
+          "sha256": "afc96d79e2254b28e2fec4b7fef6dd75a8590f8505fcb3ce25df4f9c06b44a15"
+        },
+        "native_fulfillment_events": {
+          "rows": 7,
+          "sha256": "4b405cc7a1eaa96a0ed73a9f7cafff4283dc70342e19a1e6528de06dda2a4ebe"
+        },
+        "native_fulfillment_operations": {
+          "rows": 11,
+          "sha256": "f4b1516f2d4b70970c7f8879041c54ea4cbc3e8098c15119b5659d67d32d6046"
+        },
+        "native_pickups": {
+          "rows": 4,
+          "sha256": "b1dc8fd2f62e40d6ce70633053d4cae41d7d8ab30f35f02419076f8491c0cc9b"
+        },
+        "native_prescriber_configurations": {
+          "rows": 5,
+          "sha256": "e6bc969f9a1c02ca091853ac94647e9913f2565c7b655723ad8401fb86d2d8f8"
+        },
+        "native_prescription_authorization_events": {
+          "rows": 5,
+          "sha256": "f1839ccfaf2bb21890885322a7af634ca803a9eb9fb53075ef60001537207b8c"
+        },
+        "native_prescription_authorizations": {
+          "rows": 7,
+          "sha256": "3ed6648ab6d6c28986b380bec9575a40fe2f2a91e6ecb8353a26dba3dcd87647"
+        },
+        "native_prescription_draft_revisions": {
+          "rows": 7,
+          "sha256": "972aaa346298c9f2e03405a84e33a1b4fd5dd86a9ef9f7e52a91cce5d1ab6df9"
+        },
+        "native_prescription_drafts": {
+          "rows": 7,
+          "sha256": "8b9dd8889a4e2abe6b534d5895e26630910eb4105e10a9468834561b1262f1bc"
+        },
+        "native_prescription_operations": {
+          "rows": 23,
+          "sha256": "4be9ac2d20834d5404212861083d4dcd1cdcd346c30335b9cbc571c9c37c296a"
+        },
+        "native_refill_events": {
+          "rows": 8,
+          "sha256": "1f9802c64c1f00619446b05320f91569f6e06f18e0dc12c1abe4bc7800258025"
+        },
+        "native_refill_operations": {
+          "rows": 6,
+          "sha256": "3b0d8dd5ad69901c10a22b181b8b16d5753a08e5631d118592972b744dd054f5"
+        },
+        "native_refills": {
+          "rows": 2,
+          "sha256": "6696a164ea8268978b464adf3bb50f2c69fe81fdb9b0b34aaed489063d774fca"
+        },
+        "native_slot_closures": {
+          "rows": 1,
+          "sha256": "f5bd0dc7e146fa7ab2060d6b42fdd7973cdf4025e116855036b1013eedd46d9f"
+        },
+        "record_release_events": {
+          "rows": 19,
+          "sha256": "9b3058c8ec50865b82454f139f32928ea85a74ad4dc6b7b720b4ecc720ae26a7"
+        },
+        "record_release_sources": {
+          "rows": 25,
+          "sha256": "903f6b695e6022770b979324dc06ad03f3b8c93468b65a6770d2e698208f5c3a"
+        },
+        "record_releases": {
+          "rows": 14,
+          "sha256": "05d5d66f2a44099aad7e9a5de69e220dfee3bbdecf910c849f2d2b494a554010"
+        },
+        "refill_requests": {
+          "rows": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        }
+      },
+      "verified_correction_evidence": {
+        "chain_sha256": "f8c54add24ff38303cd9b86e885118e5f841692e7c3c30c0dc2e6653ee75c794",
+        "chains": 2,
+        "events": 6,
+        "schema11_releases": 3,
+        "schema11_sha256": "841169b44ea29d914bcac8e3cba645bb37acf1e84b285c141eae489479d17d8a",
+        "summary_sha256": "ea116e6a3bf6661a7d354395bdd69d0f629069ca534b733af76e7514c19f4269",
+        "verified": true
+      },
+      "verified_dispenses": 6
+    },
+    "migration_sha256": {
+      "20260308184039_cbd27973-fb79-4b1b-9fe4-3036b0fc4640.sql": "bc5cdd2b4996121a4dca04d640d1b851e55d5bb52f67f595b7edc983b298fda6",
+      "20260308194312_688620cd-8ef1-4782-bb44-a5b6b5355eac.sql": "d113f1afdfaba4127af9e4968885eeeab611c9b492b385f52cd9fc7732e95c83",
+      "20260308215204_ca5349ea-d2b2-4f7b-bd73-c46c19dfadb6.sql": "faecd5e51a541c7b69b9ed410fb9dfd71cacece43bf0351fc8e6904d22a7f681",
+      "20260308231655_aa98042d-5e6d-4530-8cc2-b66f9581b35d.sql": "006d9b3ce55b1a6540775bc0d2a1eb3200d7729394a31e6ceff4f5cb4f45587e",
+      "20260309034659_7490047a-6052-4ad6-9f68-9a16b0851759.sql": "1fdb8d6dd54e1b5dd2364f114524fdd85952af97383e5a920fd3faa9dd594b99",
+      "20260309045202_7de7ae36-24fd-46b2-9fe5-ddd9e38ff237.sql": "0272b2ed511c39cb8006bee2eb8a588a388f15783ab601dff08203c3e8f5be0d",
+      "20260309045831_031a7a42-a506-4c29-bce7-e20869ded224.sql": "00cadf9a3bcb8645bb850b20962175694ae994ca1c07328ab051306797a73b7f",
+      "20260613183224_9575f409-8565-4e33-ab7a-1a004e11a670.sql": "c2c7c30ec2a0c2af87067ba5994f9fa6702274d3aa4d2f6626a04fc0a03f5ef0",
+      "20260613184005_cbe9bfe4-734b-4f1e-ac8e-854a19ad7864.sql": "f26ad7401854df31703d2daf678c3dbdfa3a49daa4af5a86e257a347e8218e7b",
+      "20260613195035_768d08b4-e93d-4eb6-8f21-ca48b39d895f.sql": "86b431780095a17390d8c58ca16740fe5c616f5d2c099efd7bbebf0a313f846f",
+      "20260613223600_0b5db918-2014-43cf-aaf0-08cdccbc4d96.sql": "c0cdad5f23b5603f58c234bb3e62a320654d5de619e2b578f3f1fc25cd642ecc",
+      "20260613225133_e28d9447-249a-4821-9614-c088efb2f9b8.sql": "9c461518b67bbe6adfe7aed34640079788b35cfd62c261cc180207b39e8e89f7",
+      "20260614151553_376b87c5-04a7-4f77-8386-321af04d2cfe.sql": "9de1b8538881568584b5b703b80d37d5d92518c8a1c7265bcbb57cbcbe1af5dd",
+      "20260614171114_5b96273b-12b6-48bc-8ff1-d89edc292f62.sql": "7c3bc59c2941d24936ef939f0f86f41a58198608b7b25daca76f61cef834b8a3",
+      "20260912193000_explicit_application_grants.sql": "15e9bb4e187863d2cefbf613d4fd8e493689018f60cf7e09c514a6906e44786d",
+      "20260912210000_clinical_core.sql": "848c88dbce56db3a208b61196204d82c510d35ad06d04936e56e06e687a2e570",
+      "20260912220000_patient_documents.sql": "bea51a8fa11700f5f35e29ecdb1b16fc4530fbc62b24c576cb3a7f6aed9b5527",
+      "20260912230000_scheduling.sql": "21b7763c7fc8f7076b8b228683ccaaed5a3b800722a855b2e77c0fb92f5774ec",
+      "20260913000000_inventory_billing.sql": "f66ea7f8becb2086b877d95b7d07f7d09d6376b98c34727ad6f6a5b652700b42",
+      "20260913010000_ezyvet_import.sql": "c1ebeb6ff344a62dba3bb87b7ec93386c77db4985f3dbde306d63700d060d561",
+      "20260913020000_communications_outbox.sql": "79dc2e0b7f3502282aaab07b54ad3f7c088e18c38012dfc08c2727a024e529ba",
+      "20260913030000_inventory_read_models.sql": "b489a6144497e6c587b3589fabc94331675f23028db430dd7399074b3cd117e9",
+      "20260913040000_ezyvet_review_import.sql": "265de3144193c9953421e665a2a6edbaa565f3fe15104e5c9743e19e2873a0f5",
+      "20260913050000_inbound_delivery.sql": "54b16c38f7f28b0d051452a33c1a3c78e1539326bc5114e6129afe5989140206",
+      "20260913060000_care_charts.sql": "2a5748e49d6d5227bb4ae8f3bca2808bfbb2575d38b61f8fbbb7e176f56b721e",
+      "20260913070000_dental_chart.sql": "29bf371559422dab92e8080c52013d83595b2ec073a15983b03b5ea39d28632e",
+      "20260913080000_vaccine_certificates.sql": "0458a8935b232cee05ddcce8dbef1ff9c3a9b525c939e2d30906ab6800662819",
+      "20260913095000_inbox_workspace.sql": "ec1e2b4e04f9d5b378963d870da52958dc3d172c61987e25f4b77b623e0ada6a",
+      "20260913095500_sms_consent_workspace.sql": "a500f8d6c22cea59c1d4e7caec4dde6747afe662bc6b4df840f9f8250c4fa529",
+      "20260913100000_lab_work.sql": "57de6079bd4ac4aa5f1ce5c265d55043dc92028080165656d5bd6568730ceb48",
+      "20260913110000_anesthesia_records.sql": "6d6ae2efd81a3369f53f9318bb92f1548d6e39b318ea07d0e86c0bda57a3aee3",
+      "20260913120000_message_recovery.sql": "6b4539677ee5623cebba7a08d6d725e8e82c6bcd45703b8f69798f070ebefd76",
+      "20260913130000_record_releases.sql": "b3020a8d6a5ec8e339fff9175f3886894c6c63238702ebb7884e85da1a780b6e",
+      "20260913140000_care_reminders.sql": "d6178c6b01babbb4cbd084155f7775b0a76d895a5bc2e50d52be4884206cfad7",
+      "20260913150000_invoice_documents.sql": "b749f0582cb559a044c2a934f219b1315dbabe0a25752e96ee9b3e964aab9dfb",
+      "20260913160000_record_release_charts.sql": "edd3837724baef301e3c79993a5664857a07fe7e0c7c098764f5b9211a208a24",
+      "20260913170000_website_inquiries.sql": "67784aa96721fdf0e7449feae27e3371b21e65c53281cccfbfdbe662864f4772",
+      "20260913180000_reminder_outbox.sql": "8cd864b017f6f45c98e069020a5af708576f1f1d66f93a4027194ff7d248f8de",
+      "20260913190000_certificate_due_plans.sql": "7b881b762d20f67c3c55d7e403237f783646419586589cedd8c529b336db03f0",
+      "20260913200000_record_release_history.sql": "bbb1d07c0af92d5c2c4b5364e0dde9b2c6c2b366ddf82f71e9db811b70145d93",
+      "20260913210000_public_intake.sql": "9a982e9954923406800d9322cbcb293878aac525d84f916521d5ead4dc87b926",
+      "20260913220000_release_email_delivery.sql": "96d067482676be11272b6744a5800bc8114bbc823a136b27a32c384a983b5dd8",
+      "20260913230000_reviewed_weight_import.sql": "0cca99074bbec7295247a31c9e0b4602218e24a77aae9a73e6381cff1a1c06f5",
+      "20260913240000_disable_reminder_policy.sql": "808fb93229dc37fe195cd9182371b1926229a343de9ceeaa0e56c27ec065ae41",
+      "20260913250000_release_weight_provenance.sql": "93f2e036b98086ad19c1da102b26f2c855e27bc7f368cc5e4350711e523f3e80",
+      "20260913260000_treatment_alert_review.sql": "3c3d9356795038795223953e290344135c3bf2d189d9163d4f80f3ab97ccf19b",
+      "20260913270000_invoice_email.sql": "c68f9651ee967836043f37e8e2015ff0d5d79092bc48ffb48e7dd57cab20ec22",
+      "20260913280000_document_links.sql": "5518d60b15af79a6539e77ac221a10afbfe2f6e8c52f30fa6da7fbdaa8d8bc8d",
+      "20260913290000_document_link_sms.sql": "9f75d5200cd8840dbd3706b2327fe5063ced6a76b6da355511561a3efa259bb4",
+      "20260913300000_payment_ledger.sql": "9734e98439ed740e9f834ee6a7a08b8c6f08789ebf1b2d7d38ef4e37322220fa",
+      "20260913310000_stripe_event_inbox.sql": "9e0d777bf53ad93ea7b4b80a3684ee8a3e16c4da38ecab56379d81c77c867fd5",
+      "20260913320000_document_link_history.sql": "e32225762e75eacb105a9568cc37dfee499e98e092f228388c14b16df78be956",
+      "20260913330000_payment_reconciliation_observations.sql": "5642a52d381c3d52197a12b53080dda519754aa8cb9126a5de0c07e700f87c33",
+      "20260913340000_payment_collection_access.sql": "4f2c57d1d48b3b7e704b1fd312c14ff696465447b9632e456b3cb1f504e411a7",
+      "20260913350000_payment_reconciliation_resolution.sql": "fab068acdbd9e87b9ad94c7f1f2e484eec5561802b5c07b0f2f0dd3492ee49f9",
+      "20260913360000_payment_capability_persistence.sql": "3db739a03a752fd8e1f5d7fc79c7025e0024c9a2e4e73f0bc38d00b775d59c95",
+      "20260913370000_payment_link_delivery.sql": "4c7d72537c2a1f67978886737fbe92d8e46f80fd6e8b0b2c926db3ec1308c007",
+      "20260913380000_payment_reconciliation_discovery.sql": "31afef5f8f6eef4d32762d8f0c93e91df8fa0103193dbab7cc8b331ad6e561a5",
+      "20260913390000_payment_delivery_history.sql": "dc0940bf93f5efa995b82b984ccacaaa3a44d56781deb64379e58f45a8f8bc06",
+      "20260913400000_stripe_event_retry_cycles.sql": "24eccd4439891a011f351d1e9968dcf86bcb5d491be2f4a080f968332f21550d",
+      "20260913410000_lab_result_provenance.sql": "2235cd0e6c0723e4a52edb9832debe3de84a4b170f9d69bfb60a512d0111db47",
+      "20260913420000_external_record_provenance.sql": "f898abaae9e5dca5ffefeb9ebce62b32ca6d4ca51d73f4b05ded9050c9c94b95",
+      "20260913430000_inbound_processing_recovery.sql": "6b795cb4a90294393f78785edcbfe957e880d38d925475f6d7bdd9faee6d3e61",
+      "20260913440000_operations_visibility.sql": "d16ae722b1bf061bcc1279f43836b7fe01827473368546e8b0d6d10441e375b2",
+      "20260913450000_outbox_retry_recovery.sql": "d4d839dc6330afe94fa7119fc60a4115e3a93b3e3bc54103c0c0e49cf3849193",
+      "20260913460000_explicit_staff_rpc_grants.sql": "911a1b7ef72fba6adf76e3d3ddadd7014862382462f219e038f034237639a090",
+      "20260913470000_release_source_provenance.sql": "c93ee13241ae03224933682d9f1fa545e111d7572198385c4c525189f822d2f7",
+      "20260913480000_release_source_byte_binding.sql": "5fa8f57c60170d1d37c00fb6efa939430fb6c9dfbccb7dd5c659bb2aa6f6be31",
+      "20260913490000_ezyvet_clinical_runs.sql": "2be6365996c6a9b6f8913c136beed26ed9e7a349b366d1e28db702a9efc8ecda",
+      "20260913500000_reviewed_imported_history.sql": "934ce9f93334f9c2b8ca363a8241f62d09fd0f4231d3a223136013cc1a171178",
+      "20260913510000_release_imported_history.sql": "0cf7d1430aa717c00ed8c1cc702af1fe05555013f184d29050c0c77c16910ea9",
+      "20260913520000_consult_scoped_vaccination_import.sql": "f5e52dffeb5e074d8f09496e968cb4392d098d27cad983600b88746115d11238",
+      "20260913530000_reviewed_imported_vaccinations.sql": "cafca6ef47c3567659c0860fbffdf62d322f243856e9f3a4f74f2af0b66e28a4",
+      "20260913540000_record_release_vaccination_history.sql": "9cdd5c52a9a5cd21aa8975717eb254a5ba9144f3c2cc2c8f77fe62338d9029d6",
+      "20260913550000_patient_scoped_prescription_import.sql": "c88563d4f7be486e342bbd861fee3ce64c757ac7a8bac3b11aeb0cb61ce64fa8",
+      "20260913560000_parent_scoped_prescription_items.sql": "c0e54a6e493fdbbb2a6dc5929e77c25f7b799b94e930a3eb5fb3faa614f26d48",
+      "20260913570000_prescription_reference_reconciliation.sql": "0f997eda4bff08f8176022a39fba030593f2c4da1926afd877acfef7e6b4bcbc",
+      "20260913580000_prescription_source_review_context.sql": "eefb2b5082655e3370627af9bbfa241fd03139d4e2b2df3ca6c52fd915d9ee91",
+      "20260913590000_prescription_review_preparation.sql": "b4f1b7f1bf8cc7049e51a2be7567b6961c345809415694202c34563e228a2b4c",
+      "20260913600000_prescription_interpretation_context.sql": "f384af5b367967f266ccbe784daa4d745c2e336d71ed5447ba596fbb4e397530",
+      "20260913610000_reviewed_imported_prescriptions.sql": "90ffe6b5f1239bbe023bcc73c4b46e43c7f16c33e9da7d5829502683a53a4340",
+      "20260913620000_prescription_review_discovery.sql": "f8956c02f11e601b04493ac1c583ded18f2da19c218b410f95733328474e2e75",
+      "20260913630000_record_release_prescription_history.sql": "493d5bd5fec3218b0cefe5b592b0e1f456afc7959b2c842922e10cd11db2ebac",
+      "20260913650000_prescription_release_reference_hardening.sql": "b65de6b1174a29697005b4712f6d8ea29a3232beade870b9d6d674e9f15b2314",
+      "20260913690000_attachment_metadata_runs.sql": "4bd2efe726b1a65e234789b6ed3e782119f18a8489f717d4fa23f8199e74f675",
+      "20260913700000_attachment_original_capture.sql": "a7bdad11bd33ddc708cc6f4d961d0dd4c54c441e3a5d6202ab89fe1a5c4ce851",
+      "20260913900000_payment_immutable_search_path.sql": "10d42581e8fab9fe793d4cd5685e600106332476be5f4a4ef53d846d158ef335",
+      "20260914010000_reviewed_canonical_api_originals.sql": "857aa836de8e9665551214e2cd8ec043b43fdf2a44072e5cab791a0f8a338a58",
+      "20260914020000_canonical_api_approval_cancellation.sql": "cd63b0ae5872ff7dea924ce776ddf94f4cfea59ed2952489adf4338f6405851f",
+      "20260914030000_canonical_api_review_history.sql": "f8f28dc0e56acd4b1bd8b666a2d42454302622486ac1969a14a35e7da982016c",
+      "20260914040000_canonical_api_patient_chart.sql": "7b99052b98a6b04bf2a3576bbd9eb6fb39ee39ce91fe9a4a9e2572ec8b3aa3a7",
+      "20260914050000_canonical_reviewed_original_context.sql": "4c79b8ed01e2118cd0f506ff683ed77e609857793c8202611da3f4e59639d60f",
+      "20260914060000_canonical_release_attachment_validation.sql": "e13aad2cfa60dafa1c6343216d0b79c794967486591c47f80616d6162ee7917e",
+      "20260914070000_canonical_api_release_preview.sql": "6904f48810147c251ee808554efaf70234380eb3cabcada1c1346e42aae6ca32",
+      "20260914080000_canonical_release_original_verification.sql": "746be80a19ab71c76a437082c891bf0ce9d0e5319715c1772d6726d1cebe1f07",
+      "20260914090000_canonical_api_release_confirmation.sql": "6a04c3278fb2d586992e7184904bdbed0984e4a32e1615d38e1bd11247e9b076",
+      "20260914100000_canonical_api_release_discovery.sql": "9e6caaf747d742119da8fa3bf9d6d05928421e340f1aae30a3cabb7b5ee3d9ac",
+      "20260914110000_document_link_retrieval_wait_authorization.sql": "e2587cba8bc82776c12240aa14ebbcda11c834a386a7df16070477532f5a270a",
+      "20260914120000_explicit_public_creation_privileges.sql": "5a380d2b047fd5a7e9f8790048b9d040cbb0a6033e524fdc08ab6d0c112ae179",
+      "20260914130000_ezyvet_migration_manifests.sql": "37c71f3b999dc364622e4fa0a522bbc6fd0bff4b69d4fc2d86e6be0c78f353de",
+      "20260914140000_ezyvet_migration_bindings.sql": "163ee3c5cfd9d860ee1d73a3e646f4fee8f9bd08f56a9b785be29d9f6323f8a5",
+      "20260914150000_ezyvet_migration_progress.sql": "586b74a7061ca47da6baf0419a7742b8fa13fcb5a292c94a28b6de9f97e85783",
+      "20260914160000_ezyvet_migration_attempt_events.sql": "508bb76cdcfbfdc8c7c297f5668ea26b0a45ce0e6eb419f7a7024e5f01cbef0d",
+      "20260914170000_ezyvet_claim_wait_authorization.sql": "8068210531712750907bc76b7c020529744a7451b59b2a24b61bdeaf370409b8",
+      "20260914180000_ezyvet_stage_failure_wait_authorization.sql": "3bb76fd6f48d17e908ca24ece1f6db2ea2535c129e6bb1c31fe9d1ef67a70dbd",
+      "20260914190000_ezyvet_migration_items.sql": "ae3fe406e5ec31ef87f8dd752e857526dadce49840961f75d4293ba366962cd5",
+      "20260914200000_ezyvet_migration_capture_evidence.sql": "d77f381718e70a4b9bf4e5ac1bc44225621c30c52f1e40c9407d1461dd55a9dc",
+      "20260914210000_ezyvet_migration_history_evidence.sql": "fd3ca27d247245fe1d6d4787de4da25145bdd79d26e07773b363aa2437669bdb",
+      "20260914220000_ezyvet_migration_vaccination_evidence.sql": "4298f81466a19aa7553d28d5d323df243e39e01dc2e47be1bf2ebb57a8088e77",
+      "20260914230000_ezyvet_migration_prescription_evidence.sql": "3743aa061f51443b12436aaf2310e0d8bc7cef4086805a6ff69d9b29317ae612",
+      "20260916000000_ezyvet_migration_prescription_item_evidence.sql": "a5f2538bd30054f9b703a3b6b955a351bed1d4ee0fdbf8740b4a5e157a54a80e",
+      "20260916010000_ezyvet_migration_identity_evidence.sql": "da1c5c63687ef1d5a958cd21c24ee75eb1ea4edb620c328ad86f05cad710521b",
+      "20260916033310_ezyvet_migration_weight_evidence.sql": "34bcc7cc5fe438dbf9eebecf823d26aea372428dd11a81195e65ea1856cb1633",
+      "20260916043949_ezyvet_migration_resolutions.sql": "b63e5239dfd42e2f5c75617ac372a6762165230e6d0b9358ed52e2adcf64bc96",
+      "20260916055043_native_prescriptions_lifecycle.sql": "efecf301581ab56378d31c72e9aa8df573f6d8c2686de41e3e2f8bd64c8657f2",
+      "20260916062136_native_prescription_authorization_events.sql": "95d4efb383231f02b0272f617330b4a39de6da68d54dab01c5d9b94795592bb9",
+      "20260916063857_native_refill_operational_intake.sql": "7a9e7e4cd397b1c623f90fbfc41af88cf9b776c6fe5aa23a2103d7d28bfcf623",
+      "20260916070108_inventory_product_before_lot_locking.sql": "be9f2492346f3ac585ef8c5a13b5a7524b7031067f6a64457ee2b2289781b1cd",
+      "20260916072509_native_fulfillment.sql": "51fab4412ccffa2e11b3b48d579bd729cfd432c7f8510cbf8d5acf9d647ce9f8",
+      "20260916080105_native_record_releases.sql": "31e775d594072b0c42ae1da3427c4d5d60c9986aa5b24d1dd2873c2ac0f29c70",
+      "20260916083056_native_dispense_corrections.sql": "9f69e07b24e7d01007420f5f444941422177e6bf2fa4ff548c20b210dd642c03"
+    },
+    "provider_requests": 0
+  },
+  "remaining": [
+    "Physical return/disposition ledger",
+    "Dispense-linked credit and refund workflow",
+    "Dr. Susan Edler clinical review",
+    "Hosted acceptance and commissioning",
+    "Real Stripe acceptance deferred by owner",
+    "Broader independent practice and communications feature parity"
+  ],
+  "verification_notes": [
+    "Initial standalone SQL regression on populated exploration database encountered preexisting policy fixture; clean schema clone then needed storage bucket seed rows. Final isolated clone with bucket metadata passed all22 suites; no application change for fixture setup.",
+    "Independent review found original pickup clock-regression gap; fixed before final tests.",
+    "Canonical lowercase correction request UUIDs prevent accepted but unrenderable reference casing.",
+    "Prior PR145 CI35073728655 database and edge passed; frontend browser failed, diagnosis tracked separately."
+  ]
+}

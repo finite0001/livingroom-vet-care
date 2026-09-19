@@ -16,6 +16,8 @@ export default defineConfig({
     url: "http://127.0.0.1:8080",
     reuseExistingServer: false,
     env: {
+      VITE_CONTACT_INTAKE_URL: "http://127.0.0.1:54321/functions/v1/public-contact",
+      VITE_CONTACT_TURNSTILE_SITE_KEY: "synthetic-site-key",
       VITE_SUPABASE_URL: "http://127.0.0.1:54321",
       VITE_SUPABASE_PUBLISHABLE_KEY: "foundation-browser-tests-placeholder",
     },

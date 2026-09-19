@@ -47,7 +47,7 @@ select is((select count(*) from pg_tables where schemaname = 'public' and (
   has_table_privilege('service_role', format('%I.%I', schemaname, tablename), 'TRUNCATE')
 )), 0::bigint, 'No application role has TRUNCATE on any public table');
 set local role anon;
-select lives_ok($$insert into public.contact_submissions(name,email,subject,message) values ('Synthetic','contact@example.test','Test','Rollback only')$$, 'Public contact form can insert');
+select throws_ok($$insert into public.contact_submissions(name,email,subject,message) values ('Synthetic','contact@example.test','Test','Rollback only')$$, '42501', null, 'Public contact requires verified Edge intake; direct insert denied');
 select throws_ok($$select * from public.clients$$, '42501', 'permission denied for table clients', 'Anonymous direct client reads fail');
 reset role;
 select * from finish();

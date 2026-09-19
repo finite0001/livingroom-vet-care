@@ -1,0 +1,140 @@
+# Synthetic local database and Storage restore rehearsal
+
+## September 16 hosted attachment schema upgrade
+
+`hosted-attachment-upgrade.py` rehearses the observed 113-receipt hosted baseline in a fresh local Supabase project. Supply a private directory containing the read-only `routine-inventory.json`, `access-inventory.json`, and the captured `20260916020000_ezyvet_migration_weight_evidence.sql`. The historical hosted migration is a distinct function, not a timestamp alias of canonical `20260916033310`.
+
+```sh
+python3 scripts/restore-rehearsal/hosted-attachment-upgrade.py --baseline-directory /private/observed-baseline --run-synthetic-local-rehearsal
+```
+
+The script requires exact baseline routine/access inventory equality before applying the six missing canonical migrations. It creates the existing synthetic fixture of signed clinical records, an issued invoice/credit, stock movements and an actual private Storage original before upgrading. Afterward it compares captured rows, authenticates afresh, verifies the original bytes and checks anonymous/public access denial. It preserves the historical receipt, yielding 119 receipts, and runs the four attachment SQL suites. Random owned project labels and workdir checks constrain cleanup. It captures private diagnostics and emits a success receipt only after cleanup verification. This is a synthetic populated upgrade: backup restoration, hosted Edge Functions and provider acceptance remain separate requirements. It neither changes hosted migration history nor expands retained import functionality.
+
+## Full synthetic restore
+
+The current fixture also seeds conversation attachment lifecycle states when the cleanup schema is present: a verified outgoing original, an unfinished owner upload, an abandoned original, a completed cleanup receipt with its file absent, a verified incoming original, and an interrupted incoming capture with private bytes. Restoration compares their exact metadata and bytes, verifies staff/anonymous boundaries, and replays the completed cleanup receipt without another removal. This is local synthetic recovery coverage; it does not commission provider capture, production cleanup or email delivery.
+
+For the intended hosted attachment release, include its distinct historical migration using `--retained-hosted-migration /private/observed-baseline/20260916020000_ezyvet_migration_weight_evidence.sql`. The runner verifies the captured file against the saved schema-rehearsal digest, then backs up and restores all 119 receipts. This option cannot be combined with older gap-baseline modes. Supply it again when resuming that backup so the source migration digest inventory remains identical.
+
+Every full restore now compares routine and access inventories, including sequence UPDATE and PostgreSQL17 table MAINTAIN privileges. Fresh runs capture these under `source-schema/` before backup. For an older retained backup without those files, `--expected-inventory-directory` must point to explicitly reviewed `routine-inventory.json` and `access-inventory.json`; this checks that expected schema, not a retrospectively claimed source capture. Destination-only creation defaults for both `postgres` and `supabase_admin` are neutralized before archive replay. No post-restore grant repair is used to conceal a mismatch.
+
+The first September16 119-receipt full restore passed record/Storage verification but a separate inventory comparison rejected extra sequence UPDATE grants and table/sequence defaults. Its functional result is not permission acceptance. The corrected destination replay must pass the mandatory comparisons before a complete restore receipt is accepted.
+
+Requirements: Docker, the repository-pinned Supabase CLI (2.115.0), Node22+, Python3, and `npm ci --ignore-scripts` in this worktree. No hosted credentials are needed. Ports58320/58321/58322/58324 and59320/59321/59322/59324 must be unused.
+
+Run from this repository:
+
+```sh
+python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal
+```
+
+The explicit flag is mandatory. The runner creates randomly named local projects and private temporary artifact directories. It never resets or backs up an existing practice/project. Source and destination use separate database and Storage volumes. All source migrations are replayed; the destination starts with only the platform baseline before restoring the full database archive, including Auth, Storage metadata, application rows, migration ledger, owners and grants. Physical Storage files are copied separately while writers are stopped.
+
+Synthetic fixtures include a confirmed local Auth identity/password, signed SOAP and immutable addendum, a linked private PDF original uploaded through the real Storage API, an issued invoice and accounting credit, and reasoned stock movements. Restored login, RLS, relationships, original IDs, original byte hashes, signed URL retrieval, denied public/anonymous access and immutable writes are checked. Read/denied-write checks must leave the captured clinical/audit/ledger snapshot unchanged. The complete physical file inventory must match before and after restoration.
+
+No Edge runtime, providers, SMTP delivery or scheduled workers are commissioned. Auth uses the local mail catcher; fixture users are confirmed via admin API without requesting email. The restored outbox is empty and pg_cron absent. These are no-sends-by-construction checks, not a claim of a hosted disabled-worker HTTP probe.
+
+The runner prints its protected artifact directory and writes `result.json`, `database.dump`, physical `storage/` and `restored-storage/` inventories, `synthetic-fixture.json`, local status/config and a command log. The artifact directory is0700; generated credentials and logs are0600. Physical Storage copies retain their file modes inside that protected directory. Even synthetic Auth/session/database credentials in these artifacts must stay outsideGit and should be deleted when the evidence is no longer needed. Commit only sanitized result summaries. Use `--resume-backup <printed-artifact-directory>` with the explicit run flag to retry only the destination. The runner validates the stored run ID, database checksum and each physical file checksum first; it never reuses an existing destination volume. Failed runs retain protected diagnostics, and generated containers/volumes are stopped and removed in `finally`. Every stop return code and subsequent container/volume absence check must pass before `result.json` and PASS are emitted; a resumed attempt removes any stale prior success receipt. Cleanup checks exact generated project prefix, config path and available Docker project/workdir labels; it never enumerates unrelated projects for deletion.
+
+This tests one frozen synthetic point in time on the same local platform versions. It is not production backup coverage, hosted PITR, cross-version upgrade validation, a promised RTO/RPO, an incident cutover or writer reconciliation. Real recovery still requires the practice-specific controls in `docs/restore-runbook.md`.
+
+The fresh destination realtime schema is dropped before archive restoration because PostgreSQL cannot individually drop inherited primary-key constraints of the platform baseline partitions during `pg_restore --clean`. Its full schema/data are then restored from the archive; no archive errors or managed schemas are skipped. The restore uses `--exit-on-error --single-transaction`. API readiness waits cover Auth, PostgREST and Storage.
+
+Privileged immutability probes retain the database administrator role while setting the real active synthetic actor claims. They require SQLSTATE23514 and the exact signed-record/addendum/ledger message; an authentication or unrelated SQL failure cannot count as proof.
+
+## Rehearse the current staging baseline locally
+
+```sh
+python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-staging-baseline
+```
+
+This mode uses the 84-version ledger read from staging `kothoqicubowyhwfsrte` on September 14, 2026, recorded in `staging-baseline-20260914.json`. It checks every baseline version and name against local migration files. It creates clinical, billing, Auth and physical document fixtures before applying the 15 missing migrations to reach 99. The CLI must refuse the three historical gaps (6500, 6900 and 7000) before explicit local `--include-all` application. The twelve September14 migrations are applied in the same upgrade.
+
+Both canonical inventory comparisons and all existing physical restore checks remain mandatory. This mode does not reproduce the obsolete six extra grants from the older 51-version fixture. Its receipt identifies the baseline and hashes the observed ledger. The source schema is reconstructed from local migration bodies: matching hosted version/name history does **not** prove hosted function-body parity. Hosted relation/RLS drift inspection and provider commissioning remain separate requirements.
+
+The two baseline flags are mutually exclusive. Neither accepts `--resume-backup` as evidence of a fresh upgrade. Restore-only resume retains the original upgrade receipt and checks exact current migration hashes.
+
+## Rehearse the older hosted migration gaps locally
+
+```sh
+python3 scripts/restore-rehearsal/run.py --run-synthetic-local-rehearsal --rehearse-observed-hosted-gaps
+```
+
+This optional mode recreates the observed 51-version subset through2700 plus3000/3100/3300/3400 in a randomly named local source. It creates the synthetic records before applying the missing2800/2900/3200,3500–6300,6500,6900,7000 and9000 migrations and the twelve September14 migrations. It requires ordinary local push to refuse the historical gaps, then performs explicit local `--include-all` dry run and application. The final99-version ledger must match the repository, and every captured fixture row except the migration ledger must remain identical.
+
+Before restoring the archive, the separate destination applies all99 migrations in canonical order. Every public function definition, security-definer flag, configuration, effective anon/authenticated/service-role execution permission and application trigger binding must match the backfilled source. The normal physical Storage/database restoration and access checks then run. After the actual restore, the destination must match that same canonical inventory again, including table/sequence grants, RLS flags and policies, and default privileges. Evidence records `post_restore_canonical_match` separately from the pre-restore upgrade comparison. `result.json` includes the initial, missing and final version lists, migration hashes and successful comparison evidence only after cleanup passes.
+
+The gap mode rejects `--resume-backup`: a resumed destination does not repeat the upgrade and cannot attest to it. A restore-only resume remains available. For a retained gap backup, it verifies the original migration hashes, builds a fresh canonical destination and repeats the post-restore comparison. Its backfill receipt retains the original upgrade evidence; it does not claim the upgrade was repeated. This mode has a frozen99/51 inventory and exact missing-version list; future migration additions require reviewing and updating it. It never links to a hosted project. This synthetic rehearsal does not establish who applied the hosted migrations, approve a hosted backfill, or test provider delivery.
+
+## Compare a hosted read-only routine inventory
+
+Gap mode now writes `initial-routine-inventory.json` before applying missing migrations. Run `routine-inventory.sql` through an authorized read-only database connection and save its `inventory` value as JSON outsideGit, then compare:
+
+```sh
+python3 scripts/restore-rehearsal/compare-routine-inventories.py /private/path/initial-routine-inventory.json /private/path/hosted-routine-inventory.json
+python3 -B -m unittest discover -s scripts/restore-rehearsal -p 'test_*.py'
+```
+
+The comparison exits nonzero for different migration versions, function bodies, owners, security-definer settings, search-path configuration, effective execution grants or trigger bindings/enable modes. It reports changed routine names and fields, not function bodies. The SQL sets a consistent deparser search path and C sort ordering, excluding extension-owned routines managed by Supabase. MD5 is used only to detect definition differences, not to authenticate the source. Full artifact SHA256 hashes remain in protected evidence.
+
+This is a public-function/trigger inventory, not a complete schema, RLS-policy, role-membership, data, provider or deployment audit. Matching inventories do not authorize a hosted mutation. The canonical backfill comparison also checks function ownership and trigger enable mode in addition to its existing checks.
+
+The current gap rehearsal also reproduces the six observed extra direct execution grants on its generated local source before capturing the initial inventory. Migration4600 must remove those extras while retaining the intended staff/consent access; the final99-migration canonical comparison verifies convergence. This fixture changes only local function ACLs and records that reproduction in the protected result. The separate `supabase/tests/explicit_rpc_grants_upgrade.py` runner also proves correction and rollback without changing bodies, owners or global default ACLs.
+
+A fresh 51→84 run on September13,2026 passed both canonical comparisons, populated record and private-file verification, and checked cleanup in256.84seconds. The [sanitized receipt](../../docs/evidence/fresh-gap-restore-local-20260913.json) includes exact runner/fixture hashes and post-restore inventory counts. This local timing is not a production recovery target.
+
+The current fixture also preserves two attachment metadata runs (one completed and one pending), a committed page with two ordered observations of one stable snapshot, and their raw/stable metadata digests. These receipts contain no file bytes or temporary download URLs. The [attachment metadata receipt](../../docs/evidence/attachment-metadata-restore-local-20260913.json) records the51→86 upgrade and actual restoration against canonical permissions.
+
+The87-migration fixture also uploads two API originals through the authenticated staff Storage API, verifies both through privileged readback, completes one capture and preserves the other as reserved. Restore checks exact immutable capture/intent rows and both physical originals; direct owner/anonymous downloads stay denied.
+
+Final 51→87 rehearsal evidence, including ready and reserved API originals, is in [`attachment-originals-restore-local-20260913.json`](../../docs/evidence/attachment-originals-restore-local-20260913.json). The matching full SQL and observed contention receipt is [`attachment-originals-sql-contention-local-20260913.json`](../../docs/evidence/attachment-originals-sql-contention-local-20260913.json).
+
+The current84→98 staging-baseline rehearsal passed on September14,2026 in131.03seconds, including physical restore, both canonical inventory comparisons and checked cleanup. The [sanitized receipt](../../docs/evidence/canonical-staging-baseline-restore-20260914.json) separately records a read-only match of473 hosted routines and252 trigger bindings. It explicitly retains the outstanding populated schema9/saved-artifact and hosted relation/RLS coverage limitations. The updated legacy51→98 mode has not been executed for this receipt.
+
+The current fixture also creates an approval, its correction and a separately canceled approval through actual authenticated RPC calls against the physically uploaded API original. The restore snapshot includes both immutable decision tables. Destination verification recovers exact decision outcomes, retries both historical approvals, confirms that cancellation cannot overwrite an approval or revive a canceled decision, verifies reviewed-original byte retrieval, and checks denied anonymous recovery/direct table access plus privileged update/delete rejection. The separate release-package checks below extend this coverage to schema9 releases and saved email/link artifacts.
+
+The [decision restore receipt](../../docs/evidence/canonical-api-decisions-restore-20260914.json) records the passing84→98 run with two approval versions and one cancellation, exact authenticated recovery, original-byte checks and verified cleanup. Decision rows are populated after upgrade; pre-upgrade populated preservation remains the native fixture.
+
+The release-package extension builds an API-original schema9 email payload and a separately reviewed document-link package using the production shared renderers and actual private Storage reads. It freezes both source releases, source registries, requests, exact payload text/manifests, link review events/access budget, synthetic SMS consent and conversation. The fixture's synthetic parent payload now has a real SHA256 digest instead of a placeholder, so renderer acceptance exercises the production provenance contract. Expected new audit entries are retained while every earlier native/Auth/Storage/audit row must remain unchanged.
+
+After restore, exact prepare/confirmation retries recover the same records and package hashes. Saved report/original bytes are compared, and service RPC retrieval of the reviewed link returns its saved manifest and original while incrementing each restored link access counter by exactly two. Separate rolled-back policy-disable and Animal-source-head-change probes must deny fresh release authorization and public artifact retrieval while allowing staff recovery of the saved package hashes. Source change must also produce an invalidation event. Denials must not spend access budget; payload rows and earlier fixture rows remain identical. This is local SQL/PostgREST/Storage recovery acceptance, not deployed public Edge routing, provider sending, hosted PITR or clinical approval.
+
+The source/decision/delivery snapshot must match exactly before any verification reads. After verification, the only permitted difference is a +2 access-counter increment on each known restored link. All other counters and every other captured row still compare exactly; denied accesses cannot add increments.
+
+The [saved release-package receipt](../../docs/evidence/canonical-api-release-packages-restore-20260914.json) records the passing84→98 rehearsal with both packages, post-restore authorization/invalidation checks, exact access accounting, production-renderer fingerprints and verified cleanup.
+
+## Compare public table, sequence, policy and default access
+
+Upgrade modes also write `initial-access-inventory.json` before applying missing migrations. Run the read-only `access-inventory.sql` against the authorized hosted database and save its inventory value privately, then compare:
+
+```sh
+python3 scripts/restore-rehearsal/compare-access-inventories.py /private/local-inventory.json /private/hosted-inventory.json
+```
+
+The comparison rejects missing/duplicate/malformed inventories and reports differing object names and fields without printing policy expressions. It covers public relation owners, effective table privileges including PostgreSQL17 MAINTAIN, sequence privileges, RLS flags, policy definitions/roles and explicit global/public default ACLs. Internal role OIDs are replaced with names for stable default-ACL ordering. A matching version ledger is mandatory. It does not cover column grants, schema grants, role membership, managed schemas or application data.
+
+The September14 staging audit found permission differences despite matching routines and RLS policies. See the [access correction requirements](../../plans/20260914-attachment-canonical-integration/access-hardening.md). No automatic hosted changes are made by either inventory or comparator.
+
+Migration20260914120000 normalizes public-schema defaults for the application migration owner `postgres` and removes API-role grants on the five private history sequences. The current staging-baseline mode reaches99 migrations. Hosted `postgres` cannot act as managed `supabase_admin`, so that role's defaults are deliberately preserved. Hosted ownership checks confirm all application relations/functions belong to postgres; a future migration-creator change requires renewed review. No implicit global PUBLIC function EXECUTE override is claimed; every new function must revoke PUBLIC explicitly.
+
+The fixture preserves the API-only package pair and adds a second email/link pair combining the corrected reviewed prescription with the API original in the same household conversation. The actual schema9 preview must retain both source identities/hashes, and the source registry must contain both kinds. The prescription remains partial, with its exact missing-item disclosure. After restore, both saved reports must retain the outside-history heading, partial disclosure and non-prescribing disclaimer; both original files still match their capture digest. A separately rolled-back prescription-head change must invalidate the combined release, deny authorization/public retrieval, and preserve saved-package recovery and access budget. Both link counters must advance by exactly two (four successful reads total), with no other restored-row changes.
+
+The [prescription/API composition receipt](../../docs/evidence/canonical-prescription-api-composition-restore-20260914.json) records the passing99-migration run with both variants, two saved email payloads, two reviewed link packages and exact four-read accounting.
+
+The local migration-manifest candidate reaches100 migrations. Its populated fixture adds one immutable manifest with three Animal/Consult/Prescription parent scopes through the create RPC. Both manifest tables participate in exact before/after restore comparisons. The [foundation receipt](../../docs/evidence/canonical-migration-manifest-foundation-20260914.json) records the passing84→100 rehearsal. Child binding, manifest Auth transport and hosted rollout remain pending.
+
+The child-binding candidate reaches101 migrations. The same fixture now binds its existing attachment and vaccination child runs to the saved scopes; binding rows participate in the exact restore comparison. No provider calls or child claims occur inside a binding.
+
+The scan-progress candidate reaches102 migrations. The rehearsal also saves the actual owned manifest and binding recovery responses before backup, then compares them after restoration. This explicitly verifies the versioned resolved-scope digest, rather than inferring API recovery from table parity alone.
+
+The attempt-history candidate reaches103 migrations. Before the baseline upgrade, the fixture creates one synthetic leased import with a latest error. Upgrade must leave that row unchanged and add exactly one `migration_baseline` event with a hashed lease reference. All attempt-event rows join the exact database restore comparison; prior history is never manufactured.
+
+The claim-authorization candidate reaches104 migrations. It rechecks active administrator status after source/run waits and before returning from the canonical core and six scoped claim functions. The latest attachment original-capture interlock is preserved. The same populated restore and routine/permission comparisons apply.
+
+The staging/failure authorization candidate reaches 105 migrations. It rechecks administrator access before staging returns and after failure updates, so revocation during a database wait rolls back page and attempt history together. The exact 84→105 populated upgrade and restore comparisons apply.
+
+The source-item candidate reaches 106 migrations. Owned binding recovery now also compares bounded item pages before and after restore, excluding only the live observation timestamp. Occurrence hashes and mapping/parent currentness must match, alongside the existing physical Storage and canonical routine/access checks.
+
+The capture-evidence candidate reaches 107 migrations. The migration fixture adds an owned prepared capture and compares prepared, reserved and ready requests, two approval versions and one canceled unconfirmed decision for both duplicate observations after restore. Exact-occurrence versus same-source-version relationships remain distinct. Ready physical originals and clinical approval rows retain their existing full-row and physical-file restore checks; this added projection fixture does not claim a fresh readback of those bytes.
+
+If the default port groups are occupied by another rehearsal, use `--source-port 60321 --destination-port 61321`. Each group reserves API−1, API, API+1 and API+3. Groups must be disjoint; loopback, generated-project identity and source/destination checks remain enforced. Never stop a different project to acquire its ports.

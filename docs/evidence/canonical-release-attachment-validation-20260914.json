@@ -1,0 +1,33 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "25dc01d97bd804e2a23f6fbe45615f58b8f167b9",
+  "file_sha256": {
+    "supabase/migrations/20260914060000_canonical_release_attachment_validation.sql": "e13aad2cfa60dafa1c6343216d0b79c794967486591c47f80616d6162ee7917e",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "59bee4e0299c0b49f52b957860af6e13d01e9f3d662a8d5a0122ac11d9ece0c4",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "336f7aa2dd6c66604bb14b9b4abba8ebfa643c6873184c0ce03571c54e56c43c",
+    "tests/ezyvet/attachment-metadata-disposable.py": "9c4127c20ade559077556ff014416aa8497092b49007979299370ce145542c4d"
+  },
+  "sql_assertions": 482,
+  "new_sql_assertions": 11,
+  "concurrency_checks": 140,
+  "new_concurrency_checks": 23,
+  "observed_new_cases": [
+    "Staff role loss during attachment source lock wait",
+    "Staff role loss during approval-chain lock wait",
+    "Staff role loss during Storage-object lock wait",
+    "Correction before validation rejects superseded selection",
+    "Validation before correction holds chain until transaction end",
+    "Source revision before validation rejects outdated selection",
+    "Validation before source revision holds source until transaction end"
+  ],
+  "exact_holder_waiter_verified": true,
+  "owned_database_cleanup_verified": true,
+  "python_harness_syntax_verified": true,
+  "log_sha256": "1d6ba9c8a37140ddbe3233c6c0ab46bf6d441310c86b485c5bef9fb6320bb62c",
+  "limitations": [
+    "Private SQL prerequisite only; no public schema9 preview or policy activation.",
+    "Storage metadata only; current93-migration HTTP/Storage suite not rerun in this increment.",
+    "Release snapshot invalidation, byte verification and delivery races require full schema9 integration.",
+    "No hosted changes, provider messages or clinical acceptance."
+  ]
+}

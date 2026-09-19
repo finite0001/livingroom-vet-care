@@ -1,0 +1,37 @@
+{
+  "date": "2026-09-16",
+  "project_ref": "kothoqicubowyhwfsrte",
+  "actual_backup_restored": true,
+  "archive_sha256": "6374735c6b3d1855061e8169333639e685649e0580ffdccf2198b638f595d34a",
+  "baseline_receipts": 113,
+  "existing_tables_preserved": 235,
+  "fingerprint_exception": "storage.buckets gained exactly two validated private buckets; every original bucket row is unchanged.",
+  "sql_assertions": {
+    "ezyvet_migration_weight_evidence": 52,
+    "ezyvet_migration_resolutions": 51,
+    "conversation_attachment_uploads": 22,
+    "conversation_email_preparation": 41,
+    "inbound_attachment_capture": 28,
+    "abandoned_attachment_cleanup": 19
+  },
+  "storage_objects_in_backup": 0,
+  "applied_migration_sha256": {
+    "20260916033310_ezyvet_migration_weight_evidence.sql": "34bcc7cc5fe438dbf9eebecf823d26aea372428dd11a81195e65ea1856cb1633",
+    "20260916043949_ezyvet_migration_resolutions.sql": "b63e5239dfd42e2f5c75617ac372a6762165230e6d0b9358ed52e2adcf64bc96",
+    "20260916100000_conversation_attachment_uploads.sql": "54501285475cb1de4e73d00a12085816feab9acd34760d8bd72fc2f34e8a33b4",
+    "20260916110000_conversation_email_preparation.sql": "7af008b5c2a3cc70dc3882d455c758cf8fd2307750c8c7e870221de158128e9f",
+    "20260916120000_inbound_attachment_capture.sql": "39517274f1dcac9649fe3da8ec22589d843bc99546b09d9edf7cd7df2d47d742",
+    "20260916130000_abandoned_attachment_cleanup.sql": "5d98f50441f1d28321e2ba250b965fb2c9f0a9893c98240e6eac24a3ada6dc41"
+  },
+  "hosted_writes": false,
+  "provider_calls": 0,
+  "restore_adjustments": "Isolated local postgres ownership; provider DEFAULT ACL archive entries omitted; explicit object ACLs retained.",
+  "limitations": [
+    "Not hosted owner/default-privilege parity; those have separate exact synthetic inventory evidence.",
+    "Database archive contains Storage metadata, not physical objects or provider configuration.",
+    "Migration SQL was applied directly in the disposable database; no hosted ledger or deployment changes."
+  ],
+  "cleanup_verified": true,
+  "all_preexisting_rows_unchanged": true,
+  "unchanged_table_fingerprint_count": 234
+}

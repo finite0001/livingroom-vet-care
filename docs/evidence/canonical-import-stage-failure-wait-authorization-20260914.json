@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-14",
+  "scope": "Import staging and failure authorization after database waits",
+  "migration_count": 105,
+  "reproduction": {
+    "failure_update_succeeded_after_observed_row_wait_and_actor_deactivation": true,
+    "synthetic_disposable_only": true,
+    "log_sha256": "b847b76e8165c9239004325c93a51393147f52700b2cfcddb75541ca98b1da8a"
+  },
+  "sql_assertions": 1035,
+  "concurrency_harness_checks": 310,
+  "runtime_checks": 369,
+  "runtime_checks_by_fixture": {
+    "metadata": 50,
+    "originals": 121,
+    "maximum": 137,
+    "migration": 61
+  },
+  "verified_cases": [
+    "Failure update rejects administrator revoked during observed run-row wait",
+    "Denied failure preserves lease, run, page records and durable attempt history",
+    "Late attachment-page write rejection rolls back core progress and attempt event atomically",
+    "Committed attachment replay rejects role loss during operation wait",
+    "Consult, history, vaccination, prescription and prescription-item replay reject role loss during committed-page lookup",
+    "Seven current canonical function bodies preserved with only authorization checks and historical function names",
+    "Existing page contracts, owner restrictions, retries and source locks remain covered by SQL and real runtime tests"
+  ],
+  "source_sha256": {
+    "supabase/migrations/20260914180000_ezyvet_stage_failure_wait_authorization.sql": "3bb76fd6f48d17e908ca24ece1f6db2ea2535c129e6bb1c31fe9d1ef67a70dbd",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "947c21bee4a96d3cb3a653fd0a6a23773259b82996c135ca60841c3fb619c015",
+    "scripts/restore-rehearsal/run.py": "dea9764028bad499f1ef829f3ff946de9f80e50c06643bd55e266e5ef3987340",
+    "tests/ezyvet/attachment-metadata-disposable.py": "c121894056a7cb6df6bdc712c25cceae065c9a226045255e6b8c3a813c4107e0"
+  },
+  "sql_log_sha256": "6f0b7eba40a6fcb4b8035cff9881b48cc4142925dc3d2570056352c1a37a2e78",
+  "runtime_result_sha256": "520e2f948fa3a4ac2dec8a77033e6ea11bdee8932476b143265dfbf8807957b4",
+  "runtime_cleanup_verified": true,
+  "restore": {
+    "result_sha256": "3af781fff08cc75081d0d4c4a3c91ba0da347f4680153f1f6a25853e2b6a38fe",
+    "runner_sha256": "dea9764028bad499f1ef829f3ff946de9f80e50c06643bd55e266e5ef3987340",
+    "physical_storage_files": 3,
+    "exact_rows_before_reads": true,
+    "canonical_functions_grants_triggers_match": true,
+    "post_restore_canonical_match": true,
+    "cleanup_verified": true
+  },
+  "provider_requests": 0,
+  "hosted_changes": false,
+  "hosted_staging_ledger": {
+    "count": 99,
+    "last_version": "20260914120000"
+  },
+  "remaining": [
+    "Complete mapping-source and clinical/capture reconciliation, item drill-down and frozen reports",
+    "Build and exercise the migration operator workspace",
+    "Coordinate staging rollout and supervised acceptance",
+    "Fastmail sign-in, onboarding, vendor commissioning and public cutover remain pending"
+  ]
+}

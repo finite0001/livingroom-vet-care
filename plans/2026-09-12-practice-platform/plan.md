@@ -1,13 +1,13 @@
 # Living Room Vet — practice platform plan
 
-Date: 2026-09-12. Planning baseline: `77e08d1`. Status: approved direction; foundation implementation in progress. See [commissioning and verification](../../docs/foundation-progress-2026-09-12.md).
+Date: 2026-09-12. Planning baseline: `77e08d1`. Status: full commercial-readiness goal active; implementation and verified rollout in progress. See [commissioning and verification](../../docs/foundation-progress-2026-09-12.md).
 Practice: Living Room Vet, 2619 Spruce Street, Boulder, Colorado.
 
 ## Recommendation
 
-Extend this repository into one practice system: public website, staff workspace, patient records, communications, scheduling, inventory and billing. Keep React/TypeScript/Tailwind/shadcn and React Router v6. Keep Lovable connected through GitHub. Establish practice-owned managed Supabase before real patient onboarding; deploy the frontend to Vercel when the staging checks pass.
+Extend this repository into one practice system: public website, staff workspace, patient records, communications, scheduling, inventory and billing. Keep React/TypeScript/Tailwind/shadcn and the owner-approved patched React Router v7. Keep Lovable connected through GitHub. Establish practice-owned managed Supabase before real patient onboarding; deploy the frontend to Vercel when the staging checks pass.
 
-Use a practice-owned email domain with Resend as the initial inbound/outbound email provider and Twilio for SMS. Store the authoritative inbox in Supabase. AgentMail is an alternative to evaluate in a small mailbox prototype, not a required second provider. Use Stripe for new payments. Preserve the veterinary-software API connection, with ezyVet as the reference adapter and explicit external/local record ownership.
+Use a practice-owned email domain with Resend as the initial inbound/outbound email provider and Twilio for SMS. Store the authoritative inbox in Supabase. AgentMail is an alternative to evaluate in a small mailbox prototype, not a required second provider. Use Stripe for new payments. Preserve the veterinary-software API connection, with Living Room Vet as the primary record system and ezyVet as a reviewed import source.
 
 ## What exists
 
@@ -17,10 +17,10 @@ The repo has a public website, staff authentication, clients/basic pets, convers
 
 - Confirmed: both clinic visits and housecalls; 2619 Spruce Street is the home base.
 - Staff-only clinical workspace first; clients receive controlled document/payment links. A full client portal is later scope.
-- Confirmed targets: housecalls as early as late October 2026; physical clinic early 2027. Stripe is preferred. Owned domain is `thelivingroom.vet`. Staff capacity, lab/anesthesia vendors and data-import volume remain unknown.
-- Confirmed: retain external veterinary-software API access. ezyVet is confirmed as the requested integration and implemented in the reference; authorized account access and read-sync versus migration mode still need confirmation.
+- Confirmed targets: housecalls as early as late October 2026; physical clinic early 2027. Stripe is preferred. Owned domain is `thelivingroom.vet`. Antech is the selected laboratory; its onboarding contact is not yet assigned. Staff capacity, anesthesia vendor and data-import volume remain unknown.
+- Confirmed: retain external veterinary-software API access. ezyVet is confirmed as the requested integration and implemented in the reference; Living Room Vet is primary and ezyVet supplies imports. Authorized source account access, clinical resource contracts and migration completeness still require verification.
 - Automatic anesthesia/device and laboratory ingestion depends on the actual vendor interface; provide manual import while validating it.
-- Clinical workflows and certificate content require the practice veterinarian's acceptance before use.
+- Dr. Susan Edler will review clinical workflows and certificate content; acceptance remains pending.
 
 ## Delivery sequence
 
@@ -52,9 +52,13 @@ One technical owner should manage schema/deployments; one veterinarian should ap
 ## Decisions still open
 
 - Which clinical services must run during October housecalls, and who can validate them weekly?
-- Real phone, emergency referral contact, hours and staff credentials? Domain is confirmed as `thelivingroom.vet`.
-- Lab vendor, anesthesia device/recording software, veterinary API account and desired source-of-truth mode?
+- Real phone, emergency referral contact and verified staff credentials remain open. Domain is `thelivingroom.vet`; GoDaddy manages DNS; hours are Monday–Saturday, 9 am–5 pm Mountain.
+- Anesthesia device/recording software and authorized ezyVet source account remain open. Antech is selected; Living Room Vet is primary with reviewed ezyVet imports.
 - Is a housecall offline mode essential? Initial scope assumes a connection, visible save status and an outage procedure; true offline synchronization is additional work.
-- Logo direction: warm residential, Boulder botanical, or quiet contemporary?
+- Develop the approved armchair/dog/cat direction with a medical-service cue; final artwork and owner acceptance remain pending.
 
 This plan covers the complete requested scope. Foundation commissioning is recorded separately; later phases and logo production remain outstanding. It is not live-system certification. The Perplexity reference could not be accessed; the GitHub hub was reviewed directly.
+
+## Commercial rollout tracking
+
+The user requested stacked PRs followed by one coordinated rollout. Track every original requirement and actual acceptance evidence in [commercial-readiness.md](../../docs/commercial-readiness.md). No phase is complete merely because its first implementation increment merged.

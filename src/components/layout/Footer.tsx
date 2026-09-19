@@ -1,3 +1,4 @@
+import { Logo } from "@/components/Logo";
 import { practice, practiceAddress, practiceMapsUrl, practiceLaunchSummary } from "@/config/practice";
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
@@ -10,14 +11,10 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Column */}
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <span className="font-heading text-xl font-bold tracking-tight">
-                The Living Room Vet
-              </span>
-              <span className="text-sm font-serif italic text-cream-light/70">
-                Where Wellness Feels Like Home
-              </span>
-            </div>
+            <Logo stacked inverse />
+            <p className="text-sm font-serif italic text-cream-light/70">
+              Where Wellness Feels Like Home
+            </p>
             <p className="text-sm text-cream-light/70 leading-relaxed">
               Housecall and clinic veterinary care planned for Boulder, Colorado.
             </p>
@@ -85,7 +82,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
 
 
               <div className="pt-2 text-sm text-cream-light/70">
-                <p className="font-medium text-cream-light mb-1">Hours</p>
+                <p className="font-medium text-cream-light mb-1">{practice.launchStages.some((stage) => stage.status === "open") ? "Hours" : "Planned hours"}</p>
                 <p>{practice.hours ?? "Hours will be announced before opening."}</p>
                 <p className="mt-2">{practiceLaunchSummary}. Targets subject to change.</p>
                 <Link to={practice.contactPath} className="inline-block mt-3 underline">Contact the practice</Link>

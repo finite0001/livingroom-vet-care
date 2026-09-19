@@ -1,0 +1,39 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "2de8beaa1683ac2c58503137a4b6416093287a1a",
+  "file_sha256": {
+    "src/hub/features/imports/AttachmentOriginalCapture.tsx": "eeebbe6220441384e8a8fe36d683c53d8636b6a1bba878e2f6e321561acb4873",
+    "src/hub/features/imports/attachment-capture-api.ts": "e456803735bbaafe61984adb78906e493050e73f1ec9803a20733c24cc7a3532",
+    "src/hub/features/imports/AttachmentReviewHistory.tsx": "b2991fe73f8a261449134e947ea3f3dda0285eec28d8e45552a53cab7a93b88d",
+    "src/hub/features/imports/attachment-review-history.ts": "28ba2d0e968624f4ccc2f3917d3abf55acf5faede7c18b4a79e6e5ee23d9b345",
+    "supabase/migrations/20260914030000_canonical_api_review_history.sql": "f8f28dc0e56acd4b1bd8b666a2d42454302622486ac1969a14a35e7da982016c",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "5a3a3ba3290d4caa9e4aa65a4a7827cbf3fe856add0262e361ddd9b8b7fc4cc5",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "af6cac30a8850f8e0094152fb491a9924b7fe3229182bdf8944cfdf72befdf11",
+    "tests/ezyvet/attachment-review-history.test.ts": "99b3c5f94d34ec4a058d9ca3e168a0f4fa6687cff52beef9fa90cd356332461f",
+    "e2e/attachment-original-capture.spec.ts": "60ccb7bdba73547225ff75343d8040b634e5a5f5399f81843e4f779efabb9ce0"
+  },
+  "sql_assertions": 450,
+  "new_sql_assertions": 9,
+  "concurrency_checks": 117,
+  "unit_tests": 519,
+  "new_parser_tests": 3,
+  "capture_browser_tests": 14,
+  "new_browser_tests": 1,
+  "check_command": "npm run check",
+  "check_passed": true,
+  "warnings": [
+    "Existing AuthContext fast-refresh lint warning",
+    "Existing large production chunk warning"
+  ],
+  "owned_database_cleanup_verified": true,
+  "log_sha256": {
+    "/tmp/lrv-canonical-history.log": "9d597f464c64272ef1336db1d0d3f91bd757e5b67e71bf7d809ad12665b8d58f",
+    "/tmp/lrv-canonical-history-check.log": "85486703762566691aa354e59707f7b207bfb4254223f317be573086db5dae6b",
+    "/tmp/lrv-canonical-history-browser.log": "76b59fd7846cfb963101d9d209d1c89b3c063abe6faa4d4e878db1874f5fcdc0"
+  },
+  "limitations": [
+    "Local SQL and mocked browser transport; no hosted or physical-file acceptance.",
+    "Approval form, patient chart and schema9 integration remain required.",
+    "No Fastmail login, invitation, provider send or deployment performed."
+  ]
+}

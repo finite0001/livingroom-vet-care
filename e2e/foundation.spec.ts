@@ -41,7 +41,7 @@ test.beforeEach(async ({ page }) => {
   // No live APIs, embedded maps, analytics or externally hosted assets are contacted.
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    return url.origin === "http://127.0.0.1:8080" ? route.continue() : route.abort();
+    return url.origin === new URL(test.info().project.use.baseURL!).origin ? route.continue() : route.abort();
   });
 });
 
@@ -58,6 +58,7 @@ test("password setup is a public route and invalid links offer recovery", async 
 });
 
 test("contact CTA reaches a working form with accurate launch and domain information", async ({ page }, testInfo) => {
+  await page.addInitScript(() => { window.turnstile = {render: (_host, options) => { (options.callback as (token:string)=>void)("synthetic-token"); return "widget"; },remove: () => {}}; });
   await page.goto("/");
   const domain = await page.evaluate(async (moduleUrl) => (await import(moduleUrl)).practice.domain, "/src/config/practice.ts");
   expect(domain).toBe("thelivingroom.vet");
@@ -75,10 +76,10 @@ test("contact CTA reaches a working form with accurate launch and domain informa
   await page.getByLabel("Subject", { exact: false }).fill("Housecall opening");
   await page.getByLabel("Message", { exact: false }).fill("Synthetic request intercepted by the browser test.");
   let requests = 0;
-  await page.route(`${backend}/rest/v1/contact_submissions`, (route) => {
+  await page.route(`${backend}/functions/v1/public-contact`, (route) => {
     requests++;
     expect(route.request().method()).toBe("POST");
-    return route.fulfill({ status: 201, json: [] });
+    return route.fulfill({ status: 200, json: {received:true} });
   });
   await page.getByRole("button", { name: "Send Message" }).click();
   await expect(page.getByText("Request received", { exact: true }).first()).toBeVisible();
@@ -102,7 +103,7 @@ test("token refresh preserves an unsaved draft while authorization revalidates",
   const revalidationGate = new Promise<void>((resolve) => { release = resolve; });
   const profileReads = await mockStaffBackend(page, { revalidationGate });
   await page.goto("/hub/settings");
-  const signature = page.locator("textarea");
+  const signature = page.getByRole("textbox", { name: "Email signature", exact: true });
   await expect(signature).toHaveValue("Original signature");
   await signature.fill("Unsaved staff draft must survive token refresh");
   // Exercise the real auth client and event listener, with its HTTP response mocked.

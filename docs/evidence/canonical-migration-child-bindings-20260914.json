@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-14",
+  "scope": "Local immutable migration child bindings and recovery",
+  "migration_count": 101,
+  "sql_assertions": 956,
+  "binding_sql_assertions": 37,
+  "resource_adapter_sql_assertions": 21,
+  "concurrency_harness_checks": 227,
+  "successful_resource_families": [
+    "contact",
+    "animal",
+    "healthstatus",
+    "consult",
+    "history",
+    "vaccination",
+    "prescription",
+    "prescriptionitem",
+    "attachment"
+  ],
+  "verified_cases": [
+    "Owner-only exact create/read/retry and bounded history",
+    "Explicit predecessor replacement preserves historical attempts",
+    "Cross-owner/site/resource/patient/parent-version and missing-context rejection",
+    "Excluded scope and duplicate child rejection",
+    "Observed concurrent exact binding and scope-chain contention",
+    "Role revoked during observed scope wait prevents mutation",
+    "Binding does not change child cursor, owner, lease or cooldown",
+    "Historical binding after source drift does not renew child lease",
+    "Private table grants and immutable history"
+  ],
+  "source_sha256": {
+    "supabase/migrations/20260914140000_ezyvet_migration_bindings.sql": "163ee3c5cfd9d860ee1d73a3e646f4fee8f9bd08f56a9b785be29d9f6323f8a5",
+    "supabase/tests/ezyvet_migration_bindings.test.sql": "2fcfe42b79d1292ceba362f61a13baaeda24e289f2169d316f6902c5c215436f",
+    "supabase/tests/ezyvet_migration_binding_adapters.test.sql": "3f5f9ea53de3a3451a9209568843de22dc003650c548e9eb0aad737f269a03f0",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "b089f80897ab81e8aa8a4b0d1c336de14e9325ade3ee4441a6146d49fdf261ba",
+    "scripts/restore-rehearsal/run.py": "3256a00d3b09354d94fa86c9e9178aabc891fac8fd15a0feec2f758d3dbb464d"
+  },
+  "log_sha256": "4eee84caf526553f513465f424b830bb6979adc65038c0f16fbe05f5bf00a1f4",
+  "restore": {
+    "passed": true,
+    "synthetic_only": true,
+    "initial_migrations": 84,
+    "final_migrations": 101,
+    "manifest_rows": 1,
+    "scope_rows": 3,
+    "binding_rows": 2,
+    "binding_resources": [
+      "attachment",
+      "vaccination"
+    ],
+    "exact_rows_before_reads": true,
+    "only_expected_link_counters_change_after_reads": true,
+    "physical_storage_files": 3,
+    "cleanup_verified": true,
+    "result_sha256": "f02f1636f540c8cadd615e9ed18a20f951c05ac9cd61f6d3c473599998237303",
+    "runner_sha256": "3256a00d3b09354d94fa86c9e9178aabc891fac8fd15a0feec2f758d3dbb464d",
+    "fixture_sha256": "6522ccd895bbaa65c67e4ed0832de41c9381508bcb6802513bd5402e08074669"
+  },
+  "staging_read_only_recheck": {
+    "project": "kothoqicubowyhwfsrte",
+    "migration_count": 99,
+    "last_version": "20260914120000",
+    "new_candidates_deployed": false
+  },
+  "limitations": [
+    "No real Auth/PostgREST acceptance of new binding APIs yet",
+    "No resolved-scope digest, reconciliation report or operator UI yet",
+    "Historical binding is not source currentness, clinical approval or migration completion",
+    "No provider calls or hosted changes in this increment"
+  ]
+}

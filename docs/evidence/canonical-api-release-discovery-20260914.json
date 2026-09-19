@@ -1,0 +1,34 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "55b4e7d2b7b82ef52ba62e0590bd185c3896cc24",
+  "file_sha256": {
+    "supabase/migrations/20260914100000_canonical_api_release_discovery.sql": "9e6caaf747d742119da8fa3bf9d6d05928421e340f1aae30a3cabb7b5ee3d9ac",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "73614aa2fdd02ec8e6e3262ad271841767f460393894ee8cea49f58e2ec99fc2",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "b3a9f04a880d2c2756d4681e6494418bf02bd432d924de3da4027fa31027b23b",
+    "tests/ezyvet/attachment-metadata-disposable.py": "f975617e5aef9db67605265b3023af3e50656fcf2d6b6921b3fc402bfd28f725"
+  },
+  "migration_count": 97,
+  "targeted_sql_files": 9,
+  "sql_assertions": 544,
+  "new_sql_assertions": 18,
+  "attachment_harness_checks": 177,
+  "new_contention_cases": 0,
+  "count_note": "Targeted harness count includes SQL-file, setup and cleanup assertions, plus previously implemented observed contention. Prior full-regression count included64 additional SQL-file checks.",
+  "owned_database_cleanup_verified": true,
+  "log_sha256": "2b0382f4aa76fb10d362366492a4529da104f5ff3ff0ceb5d861316a33812396",
+  "verified_behaviors": [
+    "Current latest canonical approvals appear with hashes and file metadata but no private Storage paths",
+    "All schema8 candidate families, policy fields and disclosures are preserved",
+    "Select-all preserves schema8 choices and adds exact current API review identity",
+    "Changed Storage metadata and stale parent sources remove originals from candidates",
+    "Offset pagination excludes the prior row; negative/null offsets are rejected",
+    "Private helper, anonymous discovery and service-role staff selection remain denied"
+  ],
+  "limitations": [
+    "Discovery is a read-only hint; preview and confirmation remain authoritative for locked provenance validation.",
+    "20API/24total selection overflow and multi-page maximum fixtures still require integrated acceptance.",
+    "97-migration actual HTTP/Storage has not been rerun; the prior96-migration receipt remains the latest actual transport evidence.",
+    "Release UI, shared renderer and worker integration remain outstanding.",
+    "No hosted changes, policy activation or provider messages."
+  ]
+}

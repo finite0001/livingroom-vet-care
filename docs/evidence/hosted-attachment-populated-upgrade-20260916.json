@@ -1,0 +1,50 @@
+{
+  "synthetic_only": true,
+  "hosted_writes": false,
+  "provider_calls": 0,
+  "baseline_inventory_match": true,
+  "applied_versions": [
+    "20260916033310",
+    "20260916043949",
+    "20260916100000",
+    "20260916110000",
+    "20260916120000",
+    "20260916130000"
+  ],
+  "sql_assertions": {
+    "conversation_attachment_uploads": 22,
+    "conversation_email_preparation": 41,
+    "inbound_attachment_capture": 28,
+    "abandoned_attachment_cleanup": 19
+  },
+  "legacy_sql_sha256": "36a62855e2f9fd98f58cd64ac1e0a7aa557c6c69dad159397bac8be28e5816a6",
+  "populated_upgrade": {
+    "captured_clinical_billing_inventory_audit_auth_storage_rows_unchanged": true,
+    "fresh_login": true,
+    "private_original_bytes": 78,
+    "private_original_sha256": "1fc62aca512802276c79f6f3fc12c6dc743239fde62ad71938e6b698dc1d9c5e",
+    "anonymous_and_public_original_reads_denied": true,
+    "verification_preserves_captured_rows": true
+  },
+  "limitations": [
+    "Synthetic populated upgrade only; no backup restoration, hosted deployment, or provider acceptance."
+  ],
+  "cleanup_verified": true,
+  "legacy_routine_definition_and_grants_preserved": true,
+  "date": "2026-09-16",
+  "baseline_receipt_count": 113,
+  "final_receipt_count": 119,
+  "baseline_reference": "hosted-attachment-preflight-20260916.json",
+  "source_sha256": {
+    "scripts/restore-rehearsal/hosted-attachment-upgrade.py": "3c3c121ae306e8eb8b13b973ccfedacf17d04debbd9d0fef81d4d3dab5070c03",
+    "scripts/restore-rehearsal/fixture.mjs": "2dab11647d8cfd935b9e1fd928822f611537bc74238fa5c7397fe16034a6c1d6"
+  },
+  "applied_migration_sha256": {
+    "20260916043949_ezyvet_migration_resolutions.sql": "b63e5239dfd42e2f5c75617ac372a6762165230e6d0b9358ed52e2adcf64bc96",
+    "20260916033310_ezyvet_migration_weight_evidence.sql": "34bcc7cc5fe438dbf9eebecf823d26aea372428dd11a81195e65ea1856cb1633",
+    "20260916100000_conversation_attachment_uploads.sql": "54501285475cb1de4e73d00a12085816feab9acd34760d8bd72fc2f34e8a33b4",
+    "20260916130000_abandoned_attachment_cleanup.sql": "5d98f50441f1d28321e2ba250b965fb2c9f0a9893c98240e6eac24a3ada6dc41",
+    "20260916120000_inbound_attachment_capture.sql": "39517274f1dcac9649fe3da8ec22589d843bc99546b09d9edf7cd7df2d47d742",
+    "20260916110000_conversation_email_preparation.sql": "7af008b5c2a3cc70dc3882d455c758cf8fd2307750c8c7e870221de158128e9f"
+  }
+}

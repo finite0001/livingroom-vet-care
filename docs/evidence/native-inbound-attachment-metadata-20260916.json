@@ -1,0 +1,17 @@
+{
+  "status": "local_checks_passed",
+  "scope": "Inbound attachment metadata validation and file-only body visibility",
+  "baseline": "7bded879f9f8e8dd3a6b3c0bacff9ed3780145d5",
+  "unit_tests": 41,
+  "new_attachment_tests": 7,
+  "eslint": "passed",
+  "deno_check": "passed",
+  "provider_requests": 0,
+  "hosted_deployed": false,
+  "complete_attachment_workflow": false,
+  "source_sha256": {
+    "supabase/functions/_shared/inbound/process.ts": "f0ec0dceffffc536e22bc907b7d4dd3b4cd8fafaa26aee8e42339729756b20a8",
+    "supabase/functions/_shared/inbound/attachment-metadata.ts": "d0361edd14b6d4b402ca297a7456b3610b3006c7872ad7e0a57198b16b0325ec",
+    "tests/inbound/attachments.test.ts": "c5a10f60c8cfd5749ea284a4d7480d723008c8754d300bf0d4dd6690583972aa"
+  }
+}

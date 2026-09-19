@@ -1,0 +1,74 @@
+{
+  "date": "2026-09-14",
+  "scope": "Bounded owned migration source-item drill-down; not clinical outcome reconciliation or frozen reporting",
+  "migration_count": 106,
+  "sql_assertions": 1088,
+  "concurrency_harness_checks": 314,
+  "unit_tests": 558,
+  "lint_typecheck_build_passed": true,
+  "runtime_checks": 378,
+  "runtime_checks_by_fixture": {
+    "metadata": 50,
+    "originals": 121,
+    "maximum": 137,
+    "migration": 70
+  },
+  "verified_cases": [
+    "Populated canonical observation adapters for all nine resource families",
+    "Real generic contact page includes an unrelated identity that the scoped item list excludes",
+    "Attachment duplicate snapshot occurrences remain distinct across cursor pages and evidence hashes",
+    "Missing legacy observed head versions remain unknown",
+    "Same snapshot at a later head is payload-current but not exact-version-current",
+    "Mapping/parent source drift is visible without changing saved occurrence hashes",
+    "Owner checks and role revocation during observed database wait deny item reads",
+    "Bounded full cursor, ordered UUID tie-breaks and malformed/private response rejection",
+    "No raw source medical payload, worker lease or Storage locator returned",
+    "Actual Auth/HTTP item pagination and source drift",
+    "Populated restore preserves complete fixture item pages and canonical access definitions"
+  ],
+  "source_sha256": {
+    "supabase/migrations/20260914190000_ezyvet_migration_items.sql": "ae3fe406e5ec31ef87f8dd752e857526dadce49840961f75d4293ba366962cd5",
+    "src/hub/features/imports/migration-items-api.ts": "04f8521ab219a10f95672df2b7689c3fa80d6de5e0c1dc1634309a96cf32e133",
+    "src/hub/features/imports/migration-run-api.ts": "7b17b8149d47842c1c312f88d74cb77a8e5ce88ae894e1ab9e620152e5096756",
+    "supabase/tests/ezyvet_migration_items.test.sql": "b0547a83d99b62e98c04b0572db771c6e3a959b230bb7a2b3d840594f1a3be4f",
+    "supabase/tests/ezyvet_migration_binding_adapters.test.sql": "c5a3cc91474df2d56504e1750a7c307b1a2123bfecade3979852a7c1fe401b00",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "4a97f3103dc864e918067d4ce3332cb5528115d774168d5325ef92d05a60b90a",
+    "tests/ezyvet/migration-items-api.test.ts": "5e45285958f2c32815b4d131d2996bc5bb57fc5d988ffb3307a9827ad5fbdc4c",
+    "tests/ezyvet/migration-local-roundtrip.ts": "a438aca718f9a14cce5cd8965ca6c5f1a847b7ca141b83d308c0f7de173d1e01",
+    "tests/ezyvet/attachment-metadata-disposable.py": "2fb76ffc8b39eaba01c626019bc5748f2a7f9dbfcda94e38ef18144b33ffd66c",
+    "scripts/restore-rehearsal/run.py": "63b6c8cd6372c1485f6303d5531987fe00bef740a2ad5d6e1ab663a78af8ceab"
+  },
+  "sql_log_sha256": "90408c984d3bcb7978deec0f8b97b1a2e61d0a61c486bafea692bc50932d9f8d",
+  "check_log_sha256": "135564c5d60632e97f97a4df1b14565c22546a4a7d037aa90c606048dc33c5b6",
+  "runtime_result_sha256": "22943291b88980025987d420466e8f0a4b9aa3cd63d96f47c8ad59eea0f010a4",
+  "runtime_cleanup_verified": true,
+  "restore": {
+    "result_sha256": "a5422828bf85674af1df7a1be8185648dd06d927b5b1aa0ef789e9f5db250dfc",
+    "recovery_fixture_sha256": "a1efc8d074b29ecb72dfc382ad177eea7dfa492a0b68d9b64828b02e67186aff",
+    "runner_sha256": "63b6c8cd6372c1485f6303d5531987fe00bef740a2ad5d6e1ab663a78af8ceab",
+    "physical_storage_files": 3,
+    "item_pages": 2,
+    "items": 3,
+    "all_fixture_item_pages_complete": true,
+    "exact_rows_before_reads": true,
+    "canonical_functions_grants_triggers_match": true,
+    "post_restore_canonical_match": true,
+    "cleanup_verified": true
+  },
+  "validation_notes": [
+    "An intermediate repeat failed an unlabeled existing document-link boundary assertion. The harness now waits for database-observed expiry instead of a host-clock delay and labels boundary failures; the final complete run passed both source/budget role and expiry cases. No document-link production function was changed."
+  ],
+  "provider_requests": 0,
+  "hosted_changes": false,
+  "hosted_staging_ledger": {
+    "count": 99,
+    "last_version": "20260914120000"
+  },
+  "remaining": [
+    "Exact clinical review and original-capture receipt reconciliation",
+    "Operational resolutions and frozen report generation/acceptance",
+    "Operator UI composition and signed-in desktop/mobile acceptance",
+    "Coordinated staging rollout and supervised source/clinical acceptance",
+    "Fastmail onboarding and remaining commercial commissioning gates"
+  ]
+}

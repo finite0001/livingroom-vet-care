@@ -1,3 +1,8 @@
+import { useEffect, useState } from "react";
+import { useBlocker } from "react-router-dom";
+import { HouseholdEstimates } from "@/hub/features/estimates/HouseholdEstimates";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { SmsConsentPanel } from "@/hub/features/communications/SmsConsentPanel";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Phone, Mail, MessageSquare, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,9 +18,16 @@ import { PatientFormDialog } from "@/hub/features/patients/PatientFormDialog";
 import { EditClientDialog } from "@/hub/components/clients/EditClientDialog";
 import { usePageTitle } from "@/hooks/use-page-title";
 
+import { HouseholdInvoices } from "@/hub/features/billing/HouseholdInvoices";
+
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [invoiceDirty, setInvoiceDirty] = useState(false);
+  const [estimateDirty, setEstimateDirty] = useState(false);
+  const dirty = invoiceDirty || estimateDirty;
+  const blocker = useBlocker(dirty);
+  useEffect(() => { if (!dirty) return; const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; }; window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn); }, [dirty]);
   const { data: client, isLoading, isError, refetch } = useClient(id);
   const { data: recentMessages } = useClientMessages(id);
 
@@ -51,6 +63,7 @@ export default function ClientProfilePage() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
+      <AlertDialog open={blocker.state === "blocked"}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Leave unfinished household work?</AlertDialogTitle><AlertDialogDescription>Unsent edits will be discarded. Submitted requests may already be recorded. Estimate recovery requests remain saved; recover those requests and review invoice history before submitting again.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel onClick={() => blocker.state === "blocked" && blocker.reset()}>Stay and reconcile</AlertDialogCancel><AlertDialogAction onClick={() => blocker.state === "blocked" && blocker.proceed()}>Leave and recover later</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-3 py-2.5 bg-card sticky top-0 z-10">
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={goBack} aria-label="Go back">
@@ -128,6 +141,9 @@ export default function ClientProfilePage() {
         </Card>
 
         {/* Notes */}
+        <HouseholdEstimates key={`estimates:${client.id}`} clientId={client.id} onDirtyChange={setEstimateDirty} />
+        <HouseholdInvoices key={client.id} clientId={client.id} externalNavigationGuard onDirtyChange={setInvoiceDirty} />
+        <SmsConsentPanel key={`consent:${client.id}`} clientId={client.id} />
         <ClientNotesCard clientId={id!} />
 
         {/* Recent messages */}

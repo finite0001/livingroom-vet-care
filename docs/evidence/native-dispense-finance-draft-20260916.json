@@ -1,0 +1,70 @@
+{
+  "status": "synthetic-acceptance-passed",
+  "date": "2026-09-16",
+  "scope": "Native dispense accounting credit and separately reviewed refund reservation attribution",
+  "synthetic_only": true,
+  "hosted_deployed": false,
+  "provider_requests": 0,
+  "passed": {
+    "prior_full_check_unit_tests": 865,
+    "focused_latest_adapter_tests": 14,
+    "initial_browser_after_fixture_fix": 2,
+    "unit_tests": 872,
+    "lint": "0 errors; existing AuthContext fast-refresh warning",
+    "typescript": "app and node configurations",
+    "production_build": true,
+    "finance_browser_scenarios": 8,
+    "pre_closure_focused_browser_tests": 30
+  },
+  "pending": [
+    "Hosted rollout, clinical/operational review and owner-deferred payment provider acceptance"
+  ],
+  "first_runtime": {
+    "identity": "lrv-prescription-5b771258c01b",
+    "native_inherited_auth_browser_checks": 461,
+    "finance_sql": "Failed: function-qualified local variable was parsed as missing table; source now uses unambiguous target_dispense_id",
+    "finance_concurrency": "Failed at same initial snapshot SQL reference, before race checks",
+    "cleanup_verified": true
+  },
+  "file_sha256": {
+    "supabase/migrations/20260916110000_native_dispense_finance.sql": "0f2180c0f91304bdf44971fea3b8ececa25c479eb199b546731cf866f496906d",
+    "tests/prescriptions/local-finance.ts": "62bc218e5e88c8648550f70648991fbfcc8be5c4b8f6fe5c6b6e0e3e2d3d7c1c",
+    "tests/prescriptions/native_finance_concurrency.py": "ee4705243938a5c50a9d43c31192cd3e081167e3511869231419cc7c297a925b",
+    "tests/prescriptions/restore-native.py": "879eca0ac88da99205e0e1df12c66c9055705c071dedf1675fb7e4cda4828ed5",
+    "supabase/tests/native_dispense_finance.test.sql": "eaeb5dd0eac62f1fe36bebad3bce9740993dd3b0d37baf64c6fcc25f34b7236c"
+  },
+  "initial_ci": {
+    "run": 35089443689,
+    "head": "b7602754836ea956f961270b3b938ff900163974",
+    "database": "New finance suite: invalid synthetic refund IDs correctly quarantined and non-admin fixture deactivation denied. Fixtures corrected; all other100SQLsuites passed.",
+    "sql_files": 101,
+    "sql_assertions_executed": 4134
+  },
+  "second_local_runtime": {
+    "identity": "lrv-prescription-1da5b670d622",
+    "inherited_auth_checks_passed": 167,
+    "browser": "Timed out waiting for existing physical-return action to become enabled after release confirmation; no finance Auth or restore acceptance claimed",
+    "finance_sql": "68 assertions passed,8 restored-corruption fixture probes blocked by pending deferred trigger events. Added explicit constraint flush before isolated probes; verification pending.",
+    "parallel_tests": "Parent cleanup interrupted concurrent schema-clone and subsequent SQL rerun; no passing result claimed",
+    "cleanup_verified": true
+  },
+  "terminal_resolution": {
+    "status": "synthetic-acceptance-passed",
+    "behavior": "Serialized closure recovers committed receipt or permanently prevents delayed native write; exact request persists on unknown outcomes",
+    "frontend_checks": "872 units,14 focused finance tests,8 finance browser scenarios; lint/typecheck/build pass",
+    "local_runtime": "lrv-prescription-f3c71c677c12 stopped after347 inherited checks when Supabase runtime status discovery failed; cleanup verified; final-source CI is authoritative"
+  },
+  "tested_commit": "e8f0c289ddaf89e85c7e2737d204d85b4523d9e0",
+  "final_ci": {
+    "run": 35091844016,
+    "head": "e8f0c289ddaf89e85c7e2737d204d85b4523d9e0",
+    "frontend": "success",
+    "edge": "success",
+    "database": "success",
+    "sql_files": 101,
+    "sql_assertions": 4169,
+    "finance_contention_checks": 169,
+    "finance_actual_auth_checks": 61,
+    "populated_restore_checks": 103
+  }
+}

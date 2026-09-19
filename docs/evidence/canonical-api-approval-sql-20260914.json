@@ -1,0 +1,20 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "81c04fbc52e0640b96805cf9f4f037d759f899e7",
+  "file_sha256": {
+    "supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql": "857aa836de8e9665551214e2cd8ec043b43fdf2a44072e5cab791a0f8a338a58",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "15e0119a70d37424960482e6f454b47f63d4fd7aba46d18fadaa32903c1def1a",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "71cf2e98d5cd9f0321c073feb0474d4a03210ed3cc3ae7c393673804202b30c2"
+  },
+  "sql_assertions": 432,
+  "new_approval_sql_assertions": 14,
+  "existing_capture_concurrency_checks": 72,
+  "owned_database_cleanup_verified": true,
+  "log_sha256": "aa7451c205e01e7438678b14ae7b981411fd7c920df09b1bda8fd694e6689d80",
+  "limitations": [
+    "SQL fixture uses synthetic Storage metadata; no physical files or provider requests in this run.",
+    "Existing capture contention is not approval-specific concurrency acceptance.",
+    "Cancellation/UI/chart/schema9 integration and current-stack populated restore remain incomplete.",
+    "No hosted migration or deployment."
+  ]
+}

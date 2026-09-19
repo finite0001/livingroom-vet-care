@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-14",
+  "checkpoint": "77850d6",
+  "readiness_checkpoint": "ca00429",
+  "preserved_lovable_main": "44822ff",
+  "repository": "finite0001/livingroom-vet-care",
+  "lovable_project_id": "7ea421c9-31d9-4bc4-acc7-d206c92b4b42",
+  "lovable_connected_branch": "codex/lovable-publication",
+  "editor_sync_verified": true,
+  "public_publish_performed": false,
+  "backend_changed": false,
+  "unit_tests": 583,
+  "browser_tests": 42,
+  "lint_typecheck_build_passed": true,
+  "canonical_migration_count": 110,
+  "legacy_duplicate_archived": "docs/legacy-lovable-migrations/20260913031849_clinical_core.sql",
+  "primary_migration_count_observed": 52,
+  "staging_migration_count_observed": 99,
+  "logs_sha256": {
+    "check": "89216caeae959ecd41b3a92514a3912416366ea78d329e1695f423fdd2284685",
+    "browser": "66e879a0ecf57fef9c79ff5f675afe39cf57e74e217b7fb311185dd3c8d56132"
+  },
+  "limitations": [
+    "Editor synchronization is not public deployment",
+    "Tracked Lovable environment still points to old backend ugpyjacqganaqtsiekay",
+    "Primary and staging require matching rollout for current hub functionality",
+    "Public backend rollout scope clarification is pending"
+  ]
+}

@@ -1,3 +1,4 @@
+import { StripeRetryPanel } from "@/hub/features/payments/StripeRetryPanel";
 import { TrendingUp, TrendingDown, Minus, Clock, Gauge, Inbox, Send, UserPlus } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar,
@@ -75,6 +76,7 @@ export default function AdminDashboardPage() {
       </header>
 
       <div className="p-4 space-y-4">
+        <StripeRetryPanel />
         {isLoading || !data ? (
           <>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

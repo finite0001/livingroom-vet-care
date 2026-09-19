@@ -1,0 +1,63 @@
+{
+  "date": "2026-09-14",
+  "git_base": "037da85",
+  "migration_version": "20260914120000",
+  "migration_count": 99,
+  "hosted_changed": false,
+  "source_sha256": {
+    "supabase/migrations/20260914120000_explicit_public_creation_privileges.sql": "5a380d2b047fd5a7e9f8790048b9d040cbb0a6033e524fdc08ab6d0c112ae179",
+    "supabase/tests/public_access_defaults.test.sql": "558bee42a8acf237502ccef83519f3e95e038953be7f7609fabff6d4f4e6c57d",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "fa9160fcb7f5941b9dcab2492be3590fd1e1f90725cf817b36a95ae2f391bc01",
+    "tests/ezyvet/attachment-metadata-disposable.py": "2d94af64f68c09c4c2a56cf76c926f72f5e64011c533ad78d561df610387c7b9",
+    "scripts/restore-rehearsal/run.py": "756fb298f378e9684ed710aa1a6864fd24018d622dcba77bb4852284aa94e9c3"
+  },
+  "authority_preflight": {
+    "project_id": "kothoqicubowyhwfsrte",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "can_act_as_postgres": true,
+    "can_act_as_supabase_admin": false,
+    "postgres_owned_public_relations": 191,
+    "postgres_owned_application_functions": 473
+  },
+  "scope": {
+    "creator_defaults": "postgres/public only",
+    "private_history_sequences": 5,
+    "existing_table_and_function_access_preserved": true,
+    "managed_and_global_defaults_preserved": true,
+    "implicit_public_function_execute_requires_explicit_per_function_revoke": true
+  },
+  "verification": {
+    "sql_files": 74,
+    "sql_assertions": 3109,
+    "hardening_assertions_per_baseline": 93,
+    "hardening_baselines": [
+      "already migrated",
+      "reproduced local",
+      "reproduced hosted"
+    ],
+    "prescription_contention_checks": 162,
+    "attachment_contention_checks": 262,
+    "physical_http_auth_storage_checks": 171,
+    "restore_migration_path": [
+      84,
+      99
+    ],
+    "post_start_and_restore_privilege_snapshots_verified": 3,
+    "comparator_unit_tests": 10,
+    "cleanup_verified": true
+  },
+  "initial_concurrency_attempt": {
+    "status": "failed",
+    "failure": "Source-lock expiry fixture did not observe intended lock wait",
+    "conditions": "Concurrent owned runtime startup tests",
+    "cause_verified": false,
+    "followup": "Unchanged full suite rerun after other tests completed; passed"
+  },
+  "limitations": [
+    "No hosted migration has been applied; coordinated hosted parity remains unverified.",
+    "Managed supabase_admin defaults are preserved; current application objects and SQL executor use postgres. A future creator-role change requires review.",
+    "Private release policy remains fixture-only; no provider sends or clinical acceptance implied.",
+    "Maximum physical packages/discovery/mapping and broader commercial commissioning remain outstanding."
+  ]
+}

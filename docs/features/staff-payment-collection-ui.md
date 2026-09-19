@@ -1,0 +1,15 @@
+# Staff review of client payment access
+
+The issued-invoice workspace includes a Client payment access panel alongside the existing manual Stripe Checkout/refund controls. It prepares safe metadata, records explicit review, recovers the original request, lists the current actor’s history, and revokes access with a reason. It does not display usable payment URLs, send messages, call Stripe, or interpret review as payment.
+
+Preparation uses the current invoice/client, exact outstanding cents and payment source hash. Staff choose one through seven days (seven by default); the deadline is frozen when the original request UUID is created. Before preparation and attestation the panel rereads the payment state. Changed source, amount, expiration or unresolved reconciliation prevents a new review. The SQL functions remain authoritative for eligibility and immutable retries.
+
+Only the original six nonsecret preparation arguments enter session storage under the existing actor-scoped payment intent prefix. Authentication cleanup removes them on signout/account change. A keyed invoice session clears in-memory metadata when the invoice or actor changes; responses after unmount are ignored. Lost acknowledgements retain the original UUID and deadline, with explicit recovery and retry of that same preparation. No replacement request is created while an original preparation is outstanding. A captured or revoked recovery confirms completion and removes its pending intent.
+
+The browser verifies the frozen canonical context digest and grant identity, then retains a minimal metadata projection. Canonical context, arbitrary extra fields, URLs and capabilities are not retained in React state, browser storage or query caches. The review shows the household and invoice, exact authorized amount, collection expiry and later status deadline in Mountain time, plus forwarding risk. An explicit checkbox precedes `attest_payment_collection` with the displayed context hash.
+
+History and exact recovery remain available after source changes; revocation requires a reason. The panel explains that revocation does not cancel a Stripe Checkout URL already disclosed. Existing manual Checkout controls remain available for that separate operation. Busy, uncertain or unsaved access work participates in the invoice navigation guard and prevents competing invoice/email/SMS/payment edits.
+
+Reconciliation observations now accept optional `resolved`. Explicit true labels an observation as resolved history; false or absent still requires review. Any unresolved observation, Checkout reconciliation state or refund reconciliation state continues blocking new payment actions. No administrator resolution interface is added here.
+
+Tests cover lost preparation before/after commit (including reload), exact review hash, lost review acknowledgement, source changes, retained history/revocation, cross-panel dirty guards, safe metadata parsing and resolved versus newly unresolved reconciliation. Browser tests mock backend contracts; no real provider requests or messages occur.

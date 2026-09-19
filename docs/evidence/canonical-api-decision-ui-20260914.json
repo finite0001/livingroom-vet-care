@@ -1,0 +1,42 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "531881e309642774125189c688fe4af5f0b23985",
+  "file_sha256": {
+    "src/hub/features/imports/AttachmentDecisionForm.tsx": "2ff77ccddd9562e6dbac4b10022eab65822db98e48e93c108d57aa1fcaa134ac",
+    "src/hub/features/imports/attachment-decision-api.ts": "6f75ed2a00bb455d2b0805f7e6c2fc5f3ce270f3e43c18a83dae6d26b5ed9098",
+    "src/hub/features/imports/attachment-decision-state.ts": "3efb9f85aa15afaf5e8d705ea929ae2277147f79b8b618386963704504febcc3",
+    "src/hub/features/imports/AttachmentOriginalCapture.tsx": "2a8e395131f47d2c9fb8512bbca1ef4e9d550629dadeeb500691d1759b14745d",
+    "src/hub/features/imports/EzyVetAttachmentImports.tsx": "c319478205d5b43c8bfd33c59d9623c90f4a2234ac6c4c4b6f41073755c48a6b",
+    "src/hub/features/imports/attachment-review-history.ts": "3b05ac4d126b6edb73ce2bf9de97d48c5b452d4f43a65a76999e06f3f57e28b7",
+    "tests/ezyvet/attachment-decision-state.test.ts": "d30e557a354142ac332d52b8b6834f9a71a29174d4cf4e9b43f326d4b8165985",
+    "e2e/attachment-original-capture.spec.ts": "fffdf65c16d8395279547588bd260180bd481a66bb726388256ef47fae5f5135"
+  },
+  "unit_tests": 522,
+  "new_unit_tests": 3,
+  "attachment_browser_tests": 28,
+  "new_browser_tests": 3,
+  "verified_behaviors": [
+    "Original inspection attestation requires verified download",
+    "Lost response retains exact decision across reload and recovers without resubmission",
+    "Explicit cancellation precedes new draft after unconfirmed rejection",
+    "Signout during fresh history check prevents persistence and submission",
+    "Read-only same-run recovery breaks restored run/capture lock cycle",
+    "Canonical source context, both metadata hashes, file ID and ordinal bound in approval response"
+  ],
+  "check_command": "npm run check",
+  "check_passed": true,
+  "warnings": [
+    "Existing AuthContext fast-refresh lint warning",
+    "Existing large production chunk warning"
+  ],
+  "log_sha256": {
+    "/tmp/lrv-canonical-decision-check.log": "cde9666060ff6899baf219218f0a5797bd9ddd12489f2157aaad8508ad51a0f5",
+    "/tmp/lrv-canonical-decision-browser.log": "850526dae8008f1579efad65e7ffe0a85b38789208968bc4ee00ada8a2750db1"
+  },
+  "limitations": [
+    "Browser transport is mocked; no hosted, actual local HTTP/Storage or clinician acceptance.",
+    "No SQL changes in this increment; earlier SQL/concurrency evidence is separate.",
+    "Patient chart, schema9, mixed release and populated restore integration remain required.",
+    "No Fastmail login, invitation, external message or deployment."
+  ]
+}

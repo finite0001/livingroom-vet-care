@@ -1,0 +1,53 @@
+{
+  "scope": "Local immutable ezyVet migration manifest create/read/list foundation",
+  "date": "2026-09-14",
+  "migration_count": 100,
+  "sql_assertions": 898,
+  "manifest_sql_assertions": 42,
+  "concurrency_checks": 213,
+  "verified_cases": [
+    "Exact retry and reordered scope recovery",
+    "Historical recovery after source head change",
+    "Owner isolation and inactive administrator denial",
+    "Observed concurrent create, changed intent and role-loss waits",
+    "Atomic rollback after an earlier valid scope",
+    "Bounded keyset history without skipped original manifest",
+    "No new provider runs or outgoing messages",
+    "Direct table access denied and immutable history",
+    "Owned disposable database cleanup"
+  ],
+  "source_sha256": {
+    "supabase/migrations/20260914130000_ezyvet_migration_manifests.sql": "37c71f3b999dc364622e4fa0a522bbc6fd0bff4b69d4fc2d86e6be0c78f353de",
+    "supabase/tests/ezyvet_migration_manifests.test.sql": "b4f2a61c395cdb5c9004208bcf108d524ca648e58e6796d6913a4a6533ac6e22",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "e08ebdb3ab0e4c24ef2dcf59b4c284fece191d96ff8f1a46c59b418145408a62"
+  },
+  "log_sha256": "a689b65a5dad05e2bf948d28ed80df91c3780d7720d9061ebfde837959d474bc",
+  "hosted_deployment": false,
+  "limitations": [
+    "No child binding API, reconciliation projection, frozen report or operator UI yet",
+    "No actual Auth transport acceptance for the manifest APIs yet",
+    "Positive Contact parent fixture remains pending",
+    "Source-provider and clinical acceptance remain external gates"
+  ],
+  "restore_acceptance": {
+    "passed": true,
+    "synthetic_only": true,
+    "initial_migrations": 84,
+    "final_migrations": 100,
+    "manifest_rows": 1,
+    "scope_rows": 3,
+    "parent_types": [
+      "animal",
+      "consult",
+      "prescription"
+    ],
+    "exact_rows_before_reads": true,
+    "after_reads_only_expected_link_access_changes": true,
+    "physical_storage_files": 3,
+    "cleanup_verified": true,
+    "runner_sha256": "15991411c81afb2297dfcf69472be3595fce6726e1412673bfc0b3d21c8664e0",
+    "result_sha256": "24dc9ee14a7d968661befb163adb8bce88396e2a00554f0e612971414d72a899",
+    "fixture_sha256": "0664dc03eb371edac13fd4c5d0b388201b99c4016c78ece51b7411ae877bbcb0",
+    "total_seconds": 134.92
+  }
+}

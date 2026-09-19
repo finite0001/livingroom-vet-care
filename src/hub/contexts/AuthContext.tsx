@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import { useQueryClient } from "@tanstack/react-query";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearInvoiceEmailSession } from "./session-draft-retention";
 import { createAuthRequestState } from "./auth-request-state";
 import type { AuthRequest } from "./auth-request-state";
 
@@ -60,11 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (rolesRes.error) throw rolesRes.error;
       if (!profileRes.data || !rolesRes.data?.length) throw new Error("Your staff access could not be verified. Contact an administrator or retry.");
       if (!requests.current.resolve(request, profileRes.data.is_active)) return;
+      if (!profileRes.data.is_active) clearInvoiceEmailSession(null);
       setAuthError(null);
       setProfile(profileRes.data);
       setRoles(profileRes.data.is_active ? rolesRes.data.map((row) => row.role) : []);
     } catch {
       if (!requests.current.resolve(request, false)) return;
+      clearInvoiceEmailSession(null);
       setProfile(null);
       setRoles([]);
       setAuthError("Your staff access could not be verified. Contact an administrator or retry.");
@@ -77,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let alive = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!alive) return;
+      clearInvoiceEmailSession(nextSession?.user.id ?? null);
       const request = requests.current.begin(nextSession?.user.id ?? null);
       if (request.identityChanged) queryClient.clear();
       setSession(nextSession);
@@ -113,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     requests.current.invalidate();
+    clearInvoiceEmailSession(null);
     const { error } = await supabase.auth.signOut();
     if (error) {
       setProfile(null);

@@ -1,0 +1,65 @@
+{
+  "date": "2026-09-15",
+  "scope": "Read-only approved weight and separately paginated source-change acknowledgment receipts for exact owned migration observations",
+  "implementation_commit": "32b0d0e",
+  "migration_count": 112,
+  "unit_tests": 601,
+  "lint_typecheck_build_passed": true,
+  "existing_warnings": [
+    "AuthContext fast-refresh export warning",
+    "Vite chunk size notice"
+  ],
+  "sql_assertions": 52,
+  "sql_execution": "New weight pgTAP suite executed in rollback transaction before real Auth/PostgREST migration fixture; aggregate includes one suite-success check",
+  "browser_tests": 33,
+  "browser_transport": "Synthetic RPC fixtures; actual Auth/PostgREST validated separately",
+  "viewports": [
+    390,
+    1440
+  ],
+  "runtime_checks": 446,
+  "runtime_by_fixture": {
+    "metadata": 50,
+    "originals": 121,
+    "maximum": 137,
+    "migration": 138
+  },
+  "runtime_result_sha256": "ae4e2e8b937a2849bd203395b427ee81e104e5da64ab66b3d91c35ec938acfea",
+  "runtime_cleanup_verified": true,
+  "provider_requests": 0,
+  "hosted_writes": false,
+  "populated_restore_rerun": false,
+  "source_sha256": {
+    "supabase/migrations/20260916033310_ezyvet_migration_weight_evidence.sql": "34bcc7cc5fe438dbf9eebecf823d26aea372428dd11a81195e65ea1856cb1633",
+    "supabase/tests/ezyvet_migration_weight_evidence.test.sql": "8899bc6f69d5dc552b223a444ba8f7ea9ceaf6414692d1289781f4d3176876df",
+    "src/hub/features/imports/migration-weight-api.ts": "e498321b912f6ee9899a76dff729bdb69a5aa943859e1ceecb1e2b6767078e38",
+    "src/hub/features/imports/MigrationWeightEvidence.tsx": "c8346be305b8f8106830149e8fc0656f43ac1857e4f9e338ca00bb3d60c86128",
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "e69a9d14bc514c5f49880d5f593153ef1e0db4023625ed544a523153a7bb4244",
+    "tests/ezyvet/migration-weight-api.test.ts": "8372af90c5747aa74bede7c85574c56b7e2e91156ec1c95dc632c55b648cc206",
+    "tests/ezyvet/migration-local-roundtrip.ts": "d48babffa393e91efafcfde218800994c1349f46373ffc48a58366b38e9a6d7f",
+    "tests/ezyvet/attachment-metadata-disposable.py": "c54189ba630dd25c13f00fa2447b7769f1c5a656c4da59da57ac7db7ca38c3f7",
+    "e2e/migration-workspace.spec.ts": "cbbe7a7575a82b24839cded3df884146ab2cd70952c24232c64ff2718f92acb5",
+    "scripts/restore-rehearsal/run.py": "1d7b7d0e8a4fc7928af740ec89543e4b5919ec9dadf68f1d6aa00ee863f3ed9d"
+  },
+  "check_log_sha256": "26d56d235d9ce36914cf2755216c2ce03fd98b3253cf6306cf74bcd4bba580f3",
+  "verified_cases": [
+    "Created versus linked native weight receipts",
+    "Snapshot equality never invents historical observation head fidelity",
+    "Source A-to-B-to-A retains stale approval head",
+    "Independent acknowledgment pagination retains approval",
+    "Household drift preserves historical receipts and acknowledgment history",
+    "Prepared and staged requests are not approvals",
+    "Forged binding/page/snapshot/hash, foreign admin, inactive admin, active non-admin, anonymous and worker denial",
+    "No private clinical prose or review reasons in projection",
+    "Native weight unchanged by reconciliation and acknowledgments",
+    "390px and1440px pagination, empty, failure and retry rendering"
+  ],
+  "diagnostics": [
+    "Earlier full-sequence attempts correctly rejected two SQL fixture setup actions: direct household transfer and non-admin profile deactivation. Corrected rollback-only setup; production protections unchanged. Final112-migration sequence passed."
+  ],
+  "limitations": [
+    "Identity receipt reconciliation, global totals, operational resolutions and frozen acceptance reports remain separate work",
+    "Historical observation head version is unavailable in legacy weight page ledger",
+    "No hosted deployment, live provider verification or new populated restore acceptance claimed"
+  ]
+}

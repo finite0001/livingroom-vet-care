@@ -25,16 +25,207 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Check read-only schema comparison safeguards
+        run: python3 -B -m unittest discover -s scripts/restore-rehearsal -p 'test_*.py'
+      - name: Verify restore privilege diagnostics and original Storage metadata
+        run: |
+          python3 -B -m unittest discover -s tests/restore -p 'test_*.py'
+          node --test tests/restore/storage-metadata.test.mjs
       - run: npm run check
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
+  edge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+          cache: true
+      - name: Check all Edge Function entry points with the committed dependency lock
+        run: deno check --frozen supabase/functions/*/index.ts supabase/functions/ezyvet-import/attachment-metadata.ts
+      - name: Verify invoice handler without root Node dependencies
+        run: python3 scripts/verify-invoice-edge-isolation.py
 
   database:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify lock observation timing regressions
+        run: python3 -B -m unittest discover -s supabase/tests -p 'test_attachment_contention_harness.py'
       - uses: supabase/setup-cli@v1
         with:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify native prescription cancellation and replacement concurrency
+        run: python3 -B supabase/tests/native_prescriptions_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native refill operational transitions and linked-order concurrency
+        run: python3 -B supabase/tests/native_refills_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify product and lot ordering with queued catalog updates
+        run: python3 -B supabase/tests/inventory_product_locking_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native dispensing allowance, stock and invoice concurrency
+        run: python3 -B supabase/tests/native_fulfillment_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native record-release source concurrency
+        run: python3 -B supabase/tests/native_record_releases_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native dispense correction and release concurrency
+        run: python3 -B supabase/tests/native_dispense_corrections_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native physical return custody and inventory concurrency
+        run: python3 -B supabase/tests/native_dispense_returns_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native return compensation and discrepancy hold concurrency
+        run: python3 -B tests/prescriptions/native_reconciliation_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native dispense credits and refund reservation concurrency
+        run: python3 -B tests/prescriptions/native_finance_concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify native estimate drafts, catalog review and uncertain-save resolution
+        run: python3 -B tests/estimates/draft-concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify abandoned attachment cleanup claims, replacement and receipt races
+        run: python3 supabase/tests/abandoned_attachment_cleanup_concurrency.py --project-config supabase/config.toml --run-synthetic-local
+      - name: Verify incoming attachment claim, finalization and revocation races
+        run: python3 supabase/tests/inbound_attachment_concurrency.py --project-config supabase/config.toml --run-synthetic-local
+      - name: Verify conversation attachment capture and queue races
+        run: python3 supabase/tests/conversation_email_concurrency.py --project-config supabase/config.toml --run-synthetic-local
+      - name: Verify native estimate publication capture, lifecycle and uncertain-save resolution
+        run: python3 -B tests/estimates/publication-concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify concurrent treatment alert snapshot locks
+        run: python3 tests/clinical/verify-alert-locks.py --project-config supabase/config.toml
+      - name: Verify concurrent payment collection and invoice locks
+        run: python3 supabase/tests/payment_collection_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent reconciliation and financial evidence
+        run: python3 supabase/tests/payment_reconciliation_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent reviewed payment delivery guards
+        run: python3 supabase/tests/payment_delivery_concurrency.py --project-config supabase/config.toml
+      - name: Verify audited payment event retry concurrency
+        run: python3 supabase/tests/stripe_event_retry_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent lab report promotion and document guards
+        run: python3 supabase/tests/lab_result_provenance_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent external record approval and correction guards
+        run: python3 supabase/tests/external_record_provenance_concurrency.py --project-config supabase/config.toml
+      - name: Verify concurrent inbound processing retry and lease guards
+        run: python3 supabase/tests/inbound_processing_recovery_concurrency.py --project-config supabase/config.toml
+      - name: Verify operational discovery and scheduler run concurrency
+        run: python3 supabase/tests/operations_visibility_concurrency.py --project-config supabase/config.toml
+      - name: Verify reviewed outgoing retry receipt and stale-work concurrency
+        run: python3 supabase/tests/outbox_retry_concurrency.py --project-config supabase/config.toml
+      - name: Reproduce and correct explicit RPC grant drift
+        run: python3 supabase/tests/explicit_rpc_grants_upgrade.py --project-config supabase/config.toml
+      - name: Verify selected-source release locking and invalidation
+        run: python3 supabase/tests/release_source_provenance_concurrency.py --project-config supabase/config.toml
+      - name: Verify patient-scoped clinical import leases and observation versions
+        run: python3 supabase/tests/ezyvet_clinical_runs_concurrency.py --project-config supabase/config.toml
+      - name: Verify consult-scoped vaccination import races
+        run: python3 supabase/tests/ezyvet_vaccination_runs_concurrency.py --project-config supabase/config.toml
+      - name: Verify prescription parent and item import races
+        run: python3 supabase/tests/ezyvet_prescriptionitem_runs_concurrency.py --project-config supabase/config.toml
+      - name: Verify reviewed vaccination approval and correction races
+        run: python3 supabase/tests/ezyvet_vaccination_review_concurrency.py --project-config supabase/config.toml
+      - name: Verify reviewed prescription approval and correction races
+        run: python3 supabase/tests/ezyvet_prescription_review_concurrency.py --project-config supabase/config.toml
+      - name: Verify attachment metadata leases, parent locks and replay races
+        run: python3 supabase/tests/ezyvet_attachment_metadata_concurrency.py --project-config supabase/config.toml
+      - name: Verify original capture, source leases and fenced Storage races
+        run: python3 supabase/tests/ezyvet_attachment_originals_concurrency.py --project-config supabase/config.toml
+      - name: Verify populated additive prescription reference upgrade
+        run: python3 supabase/tests/prescription_reference_upgrade.py --project-config supabase/config.toml
+      - name: Verify reviewed history, local problem and release concurrency
+        run: python3 supabase/tests/ezyvet_history_provenance_concurrency.py --project-config supabase/config.toml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Install browser for native full-stack acceptance
+        run: npx playwright install --with-deps chromium
+      - name: Verify native prescribing, real browser dispensing and populated restore
+        run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+          cache: true
+      - name: Check and cache payment HTTP roundtrip dependencies
+        run: deno check --frozen tests/payment-access/local-server.ts
+      - name: Verify actual payment capability HTTP and ledger roundtrip
+        run: node --experimental-strip-types tests/payment-access/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache reconciliation HTTP roundtrip dependencies
+        run: deno check --frozen tests/payment-reconciliation/local-server.ts
+      - name: Verify actual administrator reconciliation HTTP and proof capture
+        run: node --experimental-strip-types tests/payment-reconciliation/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache payment delivery HTTP dependencies
+        run: deno check --frozen tests/payment-access/delivery-local-server.ts
+      - name: Verify actual payment delivery HTTP, queue and worker roundtrip
+        run: node --experimental-strip-types tests/payment-access/delivery-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify actual clinical booking, treatment, billing and release workflow
+        run: node --experimental-strip-types tests/clinical/local-workflow.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Compare PostgreSQL and TypeScript return quantity replay
+        run: python3 -B tests/prescriptions/return-replay-parity.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify actual scheduler run receipts and operational discovery
+        run: node --experimental-strip-types tests/operations/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify actual reviewed outbox retry receipts and original delivery guards
+        run: node --experimental-strip-types tests/outbox-retry/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify actual private Storage round-trip
+        run: node scripts/verify-local-storage.mjs
+        env:
+          RUN_ISOLATED_STORAGE_TEST: '1'
+      - name: Check and cache private lab report HTTP dependencies
+        run: deno check --frozen tests/lab-reports/local-server.ts
+      - name: Verify actual lab report HTTP and private Storage byte capture
+        run: node --experimental-strip-types tests/lab-reports/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify signed inbound receipt and actual staff inbox workflow
+        run: node --experimental-strip-types tests/inbound/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify signed SMS consent ordering and inbox persistence
+        run: node --experimental-strip-types tests/inbound/sms-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Check and cache external record HTTP dependencies
+        run: deno check --frozen tests/external-records/local-server.ts
+      - name: Verify actual external record HTTP and private file capture
+        run: node --experimental-strip-types tests/external-records/local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify patient-scoped clinical imports through actual HTTP and Auth
+        run: node --experimental-strip-types tests/ezyvet/clinical-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify consult-scoped vaccination imports through actual HTTP and Auth
+        run: node --experimental-strip-types tests/ezyvet/vaccination-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify prescription intake and clinical review through actual HTTP and Auth
+        run: node --experimental-strip-types tests/ezyvet/prescription-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify source-bound release artifacts in disposable Auth and Storage
+        run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
+      - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage
+        run: python3 tests/record-releases/source-disposable.py --run-synthetic-local --fixture clinical-history
+      - name: Verify attachment metadata and original capture through disposable Auth and Storage
+        run: python3 tests/ezyvet/attachment-metadata-disposable.py --run-synthetic-local --fixture all
+      - name: Verify conversation upload ownership and actual private bytes
+        run: node --experimental-strip-types tests/communications/upload-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify incoming attachment HTTP capture and reads through actual Auth and private Storage
+        run: node --experimental-strip-types tests/inbound/attachment-local-roundtrip.ts
+        env:
+          PAYMENT_TEST_PROJECT: ${{ github.workspace }}

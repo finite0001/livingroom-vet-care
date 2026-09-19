@@ -1,82 +1,26 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-export type RefillStatus = "REQUESTED" | "APPROVED" | "DENIED" | "READY" | "PICKED_UP";
-
-export const REFILL_STATUSES: RefillStatus[] = ["REQUESTED", "APPROVED", "READY", "PICKED_UP", "DENIED"];
-export const refillStatusLabel = (s: string) =>
-  ({ REQUESTED: "Requested", APPROVED: "Approved", READY: "Ready", PICKED_UP: "Picked up", DENIED: "Denied" } as Record<string, string>)[s] ?? s;
-
-export interface Refill {
-  id: string;
-  client_id: string;
-  pet_id: string | null;
-  medication_name: string | null;
-  status: RefillStatus;
-  assigned_to_id: string | null;
-  notes: string | null;
-  requested_at: string;
-  approved_at: string | null;
-  ready_at: string | null;
-  picked_up_at: string | null;
-  created_at: string;
-  client_name: string | null;
-  pet_name: string | null;
+import { createNativeRefillApi } from "@/hub/features/refills/refill-api";
+import type { NativeRefillCursor } from "@/hub/features/refills/refill-api";
+import type { PrescriptionRpc } from "@/hub/features/prescriptions/prescription-api";
+export function useRefillApi(actor: string) { return useMemo(() => createNativeRefillApi(supabase as unknown as PrescriptionRpc, actor), [actor]); }
+export function useRefills(actor: string, enabled = true) {
+  const api = useRefillApi(actor);
+  return useInfiniteQuery({ queryKey: ["native-refills", actor], enabled, initialPageParam: null as NativeRefillCursor | null, queryFn: ({ pageParam }) => api.list(pageParam), getNextPageParam: page => page.next_cursor ?? undefined, refetchOnWindowFocus: false, refetchOnReconnect: false });
+}
+function pattern(search: string) { return `%${search.trim().replace(/[%_\\]/g, "\\$&")}%`; }
+export function useRefillClientSearch(actor: string, search: string, enabled: boolean) {
+  return useQuery({ queryKey: ["refill-client-search", actor, search.trim()], enabled, refetchOnWindowFocus: false, queryFn: async () => { const { data, error } = await supabase.rpc("search_clients", { p_search: search.trim(), p_limit: 21 }); if (error) throw error; return { rows: data.slice(0, 20), hasMore: data.length > 20 }; } });
+}
+export function useRefillPatientSearch(actor: string, clientId: string, search: string, enabled: boolean) {
+  return useQuery({ queryKey: ["refill-patient-search", actor, clientId, search.trim()], enabled: enabled && !!clientId, refetchOnWindowFocus: false, queryFn: async () => { let query = supabase.from("pets").select("id,client_id,name,species").eq("client_id", clientId).is("archived_at", null).is("deceased_at", null).order("name").order("id").limit(21); if (search.trim()) query = query.ilike("name", pattern(search)); const { data, error } = await query; if (error) throw error; return { rows: data.slice(0, 20), hasMore: data.length > 20 }; } });
+}
+export function useRefillAssigneeSearch(actor: string, search: string, enabled: boolean) {
+  return useQuery({ queryKey: ["refill-assignee-search", actor, search.trim()], enabled, refetchOnWindowFocus: false, queryFn: async () => { let query = supabase.from("profiles").select("id,full_name").eq("is_active", true).order("full_name").order("id").limit(21); if (search.trim()) query = query.ilike("full_name", pattern(search)); const { data, error } = await query; if (error) throw error; return { rows: data.slice(0, 20), hasMore: data.length > 20 }; } });
+}
+export function useRefillIdentity(actor: string, patientId: string, clientId: string) {
+  return useQuery({ queryKey: ["refill-identity", actor, patientId, clientId], enabled: !!patientId && !!clientId, refetchOnWindowFocus: false, queryFn: async () => { const [pet, client] = await Promise.all([supabase.from("pets").select("id,name").eq("id", patientId).maybeSingle(), supabase.from("clients").select("id,full_name").eq("id", clientId).maybeSingle()]); if (pet.error) throw pet.error; if (client.error) throw client.error; return { patient: pet.data?.name ?? null, client: client.data?.full_name ?? null }; } });
 }
 
-export function useRefills(status: RefillStatus | "ALL" = "ALL") {
-  return useQuery<Refill[]>({
-    queryKey: ["refills", status],
-    staleTime: 20 * 1000,
-    queryFn: async () => {
-      let q = supabase
-        .from("refill_requests")
-        .select("id, client_id, pet_id, medication_name, status, assigned_to_id, notes, requested_at, approved_at, ready_at, picked_up_at, created_at, clients(full_name), pets(name)")
-        .order("requested_at", { ascending: false });
-      if (status !== "ALL") q = q.eq("status", status);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []).map((r) => ({
-        ...r,
-        client_name: r.clients?.full_name ?? null,
-        pet_name: r.pets?.name ?? null,
-      })) as Refill[];
-    },
-  });
-}
-
-export function useCreateRefill() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { client_id: string; pet_id?: string | null; medication_name: string; notes?: string | null }) => {
-      const { data, error } = await supabase.from("refill_requests").insert(input).select("id").single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["refills"] }),
-  });
-}
-
-export function useUpdateRefill() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, status, assigned_to_id, notes }: { id: string; status?: RefillStatus; assigned_to_id?: string | null; notes?: string | null }) => {
-      const now = new Date().toISOString();
-      const updates: {
-        updated_at: string; status?: RefillStatus; approved_at?: string;
-        ready_at?: string; picked_up_at?: string; assigned_to_id?: string | null; notes?: string | null;
-      } = { updated_at: now };
-      if (status !== undefined) {
-        updates.status = status;
-        if (status === "APPROVED") updates.approved_at = now;
-        if (status === "READY") updates.ready_at = now;
-        if (status === "PICKED_UP") updates.picked_up_at = now;
-      }
-      if (assigned_to_id !== undefined) updates.assigned_to_id = assigned_to_id;
-      if (notes !== undefined) updates.notes = notes;
-      const { error } = await supabase.from("refill_requests").update(updates).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["refills"] }),
-  });
-}
+export function useLegacyRefills(actor: string, enabled = true) { const api = useRefillApi(actor); return useInfiniteQuery({ queryKey: ["legacy-refills", actor], enabled, initialPageParam: null as NativeRefillCursor | null, queryFn: ({ pageParam }) => api.legacy(pageParam), getNextPageParam: page => page.next_cursor ?? undefined, refetchOnWindowFocus: false, refetchOnReconnect: false }); }
