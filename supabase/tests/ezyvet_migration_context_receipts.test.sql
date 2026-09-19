@@ -1,0 +1,326 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN
+
+insert into auth.users(id,email,raw_user_meta_data) values('db700000-0000-4000-8000-000000000001','attachment-admin@example.test','{}'),('db700000-0000-4000-8000-000000000002','attachment-other@example.test','{}');
+insert into user_roles(user_id,role) values('db700000-0000-4000-8000-000000000001','ADMIN'),('db700000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Attachment','Owner','+13035550196','attachment@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Metadata dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','animal-run','run','run2','other-run']) k;
+reset role;
+insert into data select 'animal',to_jsonb(claim_ezyvet_import((select id from fx where k='animal-run'),'db700000-0000-4000-8000-000000000001','attachment-test-site','animal','https://api.trial.ezyvet.com'));
+select stage_ezyvet_import_page((select id from fx where k='animal-run'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='animal'),1,true,'[{"external_id":"77","payload":{"id":77}}]');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select (select id from fx where k='mapping'),gen_random_uuid(),'synthetic-approved-mapping',s.source_origin,s.source_site_uid,s.resource,s.external_id,s.id,h.version,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic reviewed mapping','db700000-0000-4000-8000-000000000001' from ezyvet_import_snapshots s join ezyvet_identity_heads h on h.snapshot_id=s.id where s.resource='animal' and s.source_site_uid='attachment-test-site';
+insert into data values('observation',jsonb_build_object('external_id','701','file_id','42','metadata',jsonb_build_object('id','701','file_id','42','record_type','Animal','record_id','77','name','Synthetic report','mime_type','application/pdf','notes',null),'raw_record_sha256',repeat('a',64),'stable_metadata_sha256',repeat('b',64),'file_sha256',null));
+insert into data select 'page',jsonb_build_object('contract_version','ezyvet_animal_attachment_metadata_v1','parent',jsonb_build_object('record_type','Animal','record_id','77'),'page',1,'complete',true,'pagination',jsonb_build_object('items_page',1,'items_page_total',1,'items_page_size',10,'items_total',2),'observations',jsonb_build_array(v,jsonb_set(v,'{raw_record_sha256}',to_jsonb(repeat('c',64)))),'page_sha256',repeat('d',64)) from data where k='observation';
+insert into data values('side-effects',jsonb_build_object('treatments',(select count(*) from patient_treatments),'invoices',(select count(*) from billing_invoices),'stock',(select count(*) from inventory_movements),'outbox',(select count(*) from communication_outbox),'objects',(select count(*) from storage.objects)));
+
+insert into data select 'run',claim_ezyvet_attachment_import((select id from fx where k='run'),'db700000-0000-4000-8000-000000000001','attachment-test-site','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select stage_ezyvet_attachment_page((select id from fx where k='run'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='run'),(select v from data where k='page'));
+update ezyvet_import_runs set retry_after=null where resource='attachment';
+insert into fx select k,gen_random_uuid() from unnest(array['capture','capture2','capture3','capture4']) k;
+insert into fx select 'attachment-snapshot',snapshot_id from ezyvet_attachment_page_observations where run_id=(select id from fx where k='run') and ordinal=1;
+-- FIXTURE_END
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($$select prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,3,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Unobserved ordinal rejected');
+select throws_ok($$select prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('f',64))$$,'42501',null,'Wrong stable digest rejected');
+insert into data select 'capture',prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64));
+select is((select v->>'status' from data where k='capture'),'prepared','Explicit owned observation prepared');
+select is((select v->>'file_id' from data where k='capture'),'42','File identity retained separately from attachment identity');
+select ok(not((select v from data where k='capture') ?| array['lease_id','intent','object_path']),'Browser projection hides service data');
+select is(prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64)),(select v from data where k='capture'),'Lost preparation reply recovers exact immutable request');
+select throws_ok($$select prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,2,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Same UUID cannot switch duplicate ordinal');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))$$,'42501',null,'Other administrator cannot recover');
+select is(jsonb_array_length(list_ezyvet_attachment_captures((select id from fx where k='mapping'))->'captures'),0,'Discovery is owner scoped');
+select throws_ok($$select prepare_ezyvet_attachment_capture((select id from fx where k='capture2'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'42501',null,'Another admin cannot capture the owned metadata run');
+reset role;set local role service_role;
+insert into data select 'claimed',claim_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001');
+select ok((select v->>'lease_id' is not null from data where k='claimed'),'Service worker receives lease');
+select throws_ok($$select claim_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001')$$,'55P03',null,'Concurrent worker cannot duplicate claim');
+select throws_ok($$select claim_ezyvet_attachment_import((select id from fx where k='other-run'),'db700000-0000-4000-8000-000000000001','attachment-test-site','https://api.trial.ezyvet.com',(select id from fx where k='mapping'))$$,'55P03',null,'Metadata scan respects original capture source lease');
+select throws_ok($$select reserve_ezyvet_attachment_original((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',null,repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64))$$,'40001',null,'Reserve requires current lease');
+insert into data select 'reserved',reserve_ezyvet_attachment_original((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed'),repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64));
+select is((select v#>>'{request,status}' from data where k='reserved'),'reserved','Verified byte intent reserves private object');
+select isnt((select v#>>'{intent,before_raw_sha256}' from data where k='reserved'),(select v#>>'{intent,after_raw_sha256}' from data where k='reserved'),'Raw URL renewal digests need not match');
+select throws_ok($$select reserve_ezyvet_attachment_original((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed'),repeat('f',64),'application/pdf',12,repeat('a',64),repeat('c',64))$$,'23514',null,'Intent bytes cannot change');
+select throws_ok($$select complete_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed'),(select(v#>>'{intent,id}')::uuid from data where k='reserved'),repeat('e',64),'application/pdf',12)$$,'23514',null,'Missing object cannot complete');
+reset role;set local role authenticated;select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select lives_ok($$insert into storage.objects(bucket_id,name,metadata) select 'ezyvet-attachment-originals',v#>>'{intent,object_path}','{"size":12,"mimetype":"application/pdf"}'::jsonb from data where k='reserved'$$,'Owning JWT may insert only reserved object');
+select is((select count(*)::integer from storage.objects where bucket_id='ezyvet-attachment-originals'),0,'Direct object reads denied even to uploader');
+select throws_ok($$insert into storage.objects(bucket_id,name,metadata) values('ezyvet-attachment-originals','other/path','{}')$$,'42501',null,'Unreserved object upload denied');
+reset role;set local role service_role;
+insert into data select 'ready',complete_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed'),(select(v#>>'{intent,id}')::uuid from data where k='reserved'),repeat('e',64),'application/pdf',12);
+select is((select v#>>'{request,status}' from data where k='ready'),'ready','Readback-attested original becomes ready');
+select is((select v#>>'{request,capture,entry_method}' from data where k='ready'),'ezyvet_api_attachment_original_v1','Capture never claims manual export provenance');
+select is(complete_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',null,(select(v#>>'{intent,id}')::uuid from data where k='reserved'),repeat('e',64),'application/pdf',12),(select v from data where k='ready'),'Lost completion reply recovers before lease validation');
+select throws_ok($$select begin_discard_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001')$$,'23514',null,'Captured object cannot be discarded');
+reset role;
+insert into fx select 'approval',gen_random_uuid();insert into fx select 'correction',gen_random_uuid();
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+create function pg_temp.approve_original(k text default 'approval',previous_id uuid default null,attest boolean default true,title text default 'Reviewed canonical original') returns public.ezyvet_attachment_record_versions language sql as $$
+ select approve_ezyvet_attachment_record((select id from fx where fx.k=$1),(select id from fx where fx.k='capture'),(select id from fx where fx.k='pet'),(select v#>>'{request,capture,capture_hash}' from data where data.k='ready'),$2,$4,'Synthetic verified original inspection',$3);
+$$;
+
+insert into fx select k,gen_random_uuid() from unnest(array['migration','scope','binding','cancel']) k;
+select prepare_ezyvet_migration_run((select id from fx where k='migration'),'https://api.trial.ezyvet.com','attachment-test-site',
+ (select jsonb_build_array(jsonb_build_object('id',(select id from fx where k='scope'),'mapping_id',m.id,'resource','attachment','parent_type','animal','parent_snapshot_id',m.snapshot_id,'parent_head_version',m.head_version,'disposition','required','reason','Synthetic exact capture scope')) from ezyvet_record_links m where m.id=(select id from fx where k='mapping')));
+select bind_ezyvet_migration_child((select id from fx where k='binding'),(select id from fx where k='scope'),(select id from fx where k='run'),'Existing metadata evidence');
+insert into data select 'migration-item',list_ezyvet_migration_items((select id from fx where k='binding'))->'items'->0;
+create function pg_temp.capture_evidence(n integer default 1,before_at timestamptz default null,before_id uuid default null,lim integer default 20) returns jsonb language sql as $$
+ select list_ezyvet_migration_capture_evidence((select id from fx where k='binding'),1,n,(select(v->>'snapshot_id')::uuid from data where k='migration-item'),
+  (select x->>'evidence_hash' from jsonb_array_elements(list_ezyvet_migration_items((select id from fx where k='binding'))->'items') x where (x->>'ordinal')::integer=n),before_at,before_id,lim);
+$$;
+insert into data select 'capture-evidence',pg_temp.capture_evidence();
+select is((select jsonb_array_length(v->'captures') from data where k='capture-evidence'),1,'Exact observed source version finds owned capture');
+select is((select v#>>'{captures,0,status}' from data where k='capture-evidence'),'ready','Completed capture is distinct from metadata-only observation');
+select is((select v#>>'{captures,0,relationship}' from data where k='capture-evidence'),'exact_occurrence','Exact occurrence is identified');
+select is(pg_temp.capture_evidence(2)#>>'{captures,0,relationship}','same_source_version','Duplicate occurrence can reference the same captured source version');
+select is((select v#>>'{captures,0,approved_versions}' from data where k='capture-evidence'),'0','Captured bytes are not automatic clinical approval');
+select is((select v->>'original_bytes_reverified' from data where k='capture-evidence'),'false','Receipt read never claims fresh byte verification');
+select ok(not((select v::text from data where k='capture-evidence') ~ 'lease_id|object_path|storage_object_id|request_payload|metadata'),'Capture evidence omits worker and Storage capabilities');
+select pg_temp.approve_original();
+select is(pg_temp.capture_evidence()#>>'{captures,0,approved_versions}','1','Explicit approval is linked to its exact capture');
+select cancel_ezyvet_attachment_approval((select id from fx where k='cancel'),(select id from fx where k='capture'),(select id from fx where k='pet'),(select v#>>'{request,capture,capture_hash}' from data where k='ready'),true);
+select is(pg_temp.capture_evidence()#>>'{captures,0,canceled_unconfirmed_decisions}','1','Unconfirmed cancellation is counted separately');
+select is(pg_temp.capture_evidence()#>>'{captures,0,approved_versions}','1','Canceling another decision does not revoke approved history');
+select pg_temp.approve_original('correction',(select id from fx where k='approval'));
+select is(pg_temp.capture_evidence()#>>'{captures,0,latest_approval,version}','2','Latest immutable correction is identified');
+select is(pg_temp.capture_evidence()#>>'{captures,0,approved_versions}','2','Correction versions do not collapse into a fabricated native record');
+select prepare_ezyvet_attachment_capture((select id from fx where k='capture2'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,2,(select id from fx where k='attachment-snapshot'),1,repeat('b',64));
+insert into data select 'capture-page',pg_temp.capture_evidence(1,null,null,1);
+select is((select v->>'has_more' from data where k='capture-page'),'true','Capture history uses a bounded sentinel');
+select is((select v#>>'{captures,0,status}' from data where k='capture-page'),'prepared','Newer unfinished request remains distinct from an older ready original');
+select is((select v#>>'{captures,0,approved_versions}' from data where k='capture-page'),'0','Approval is not borrowed from another capture request');
+select is((select pg_temp.capture_evidence(1,(v#>>'{next_cursor,before_at}')::timestamptz,(v#>>'{next_cursor,before_id}')::uuid,1)#>>'{captures,0,status}' from data where k='capture-page'),'ready','Cursor recovers older ready capture');
+select throws_ok($$select list_ezyvet_migration_capture_evidence((select id from fx where k='binding'),1,1,(select id from fx where k='attachment-snapshot'),repeat('f',64))$$,'42501','Exact attachment observation required','Wrong occurrence digest is rejected');
+select throws_ok($$select list_ezyvet_migration_capture_evidence((select id from fx where k='binding'),1,0,(select id from fx where k='attachment-snapshot'),repeat('f',64))$$,'23514','Invalid capture evidence identity or cursor','Invalid ordinal is rejected');
+reset role;
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+insert into fx select k,gen_random_uuid() from unnest(array['staff-migration','staff-scope','staff-binding','staff-run']) k;
+insert into data select 'staff-run',claim_ezyvet_attachment_import((select id from fx where k='staff-run'),'db700000-0000-4000-8000-000000000002','attachment-test-site','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select stage_ezyvet_attachment_page((select id from fx where k='staff-run'),'db700000-0000-4000-8000-000000000002',(select(v->>'lease_id')::uuid from data where k='staff-run'),(select v from data where k='page'));
+set local role authenticated;
+select prepare_ezyvet_migration_run((select id from fx where k='staff-migration'),'https://api.trial.ezyvet.com','attachment-test-site',jsonb_build_array(jsonb_build_object('id',(select id from fx where k='staff-scope'),'mapping_id',(select id from fx where k='mapping'),'resource','attachment','parent_type','animal','parent_snapshot_id',(select snapshot_id from ezyvet_record_links where id=(select id from fx where k='mapping')),'parent_head_version',1,'disposition','required','reason','Second staff member reconciles approved patient history')));
+select bind_ezyvet_migration_child((select id from fx where k='staff-binding'),(select id from fx where k='staff-scope'),(select id from fx where k='staff-run'),'Second staff owned observation');
+reset role;
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='staff-migration')) where receipt_kind='attachment_original_approval'),2::bigint,'Other staff approved original versions remain patient history');
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='staff-migration')) where receipt_kind='attachment_original_approval' and facets->>'source_current'='true'),2::bigint,'Shared approved originals use source freshness independently of capture ownership');
+select is((select count(*) from ezyvet_migration_terminal_context_receipts((select id from fx where k='staff-migration')) where receipt_kind in ('attachment_capture_request','attachment_captured_bytes','attachment_unconfirmed_cancellation')),0::bigint,'Another owner capture work and cancellations remain private');
+select ok(not (select coalesce(jsonb_agg(facets)::text,'') from ezyvet_migration_terminal_context_receipts((select id from fx where k='staff-migration'))) ~ 'request_id|capture_hash|object_path|review_reason','Shared approval facets omit private capture identifiers and prose');
+select is((select count(*) from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration'))),0::bigint,'Cross-staff history does not grant access to another owner manifest');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+reset role;
+update ezyvet_identity_heads set version=version+1 where source_site_uid='attachment-test-site' and resource='animal';
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='staff-migration')) where receipt_kind='attachment_original_approval' and facets->>'source_current'='false'),2::bigint,'Shared approved originals remain visible with stale parent context');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+set local role authenticated;
+select is(pg_temp.capture_evidence()#>>'{captures,0,source_current}','false','Parent drift is visible while historical receipts remain readable');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select pg_temp.capture_evidence()$$,'42501','Owned migration binding required','Other administrator cannot use an owned binding');
+reset role;
+select ok(not has_function_privilege('anon','public.list_ezyvet_migration_capture_evidence(uuid,integer,integer,uuid,text,timestamptz,uuid,integer)','execute'),'Anonymous capture evidence denied');
+select ok(not has_function_privilege('service_role','public.list_ezyvet_migration_capture_evidence(uuid,integer,integer,uuid,text,timestamptz,uuid,integer)','execute'),'Worker cannot discover capture evidence');
+
+reset role;select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration')) where receipt_kind='attachment_capture_request'),2::bigint,'Two capture requests retained without counting each duplicate source occurrence as a new request');
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration')) where receipt_kind='attachment_captured_bytes'),1::bigint,'Only ready capture contributes captured bytes');
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration')) where receipt_kind='attachment_original_approval'),2::bigint,'Both immutable approval revisions retained');
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration')) where receipt_kind='attachment_original_approval' and (facets->>'superseded')::boolean),1::bigint,'Superseded original approval remains distinguishable');
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration')) where receipt_kind='attachment_unconfirmed_cancellation' and facets->>'revokes_approval'='false'),1::bigint,'Cancellation never revokes earlier approved original');
+select is((select count(*) from ezyvet_migration_terminal_native_outcomes((select id from fx where k='migration'))),0::bigint,'Original approvals do not fabricate native chart documents');
+select ok(not (select coalesce(jsonb_agg(to_jsonb(r))::text,'') from ezyvet_migration_terminal_context_receipts((select id from fx where k='migration')) r) ~ 'object_path|lease_id|request_payload|review_reason','No private content or worker capabilities in context receipts');
+select ok(not has_function_privilege('authenticated','public.ezyvet_migration_terminal_context_receipts(uuid)','execute'),'Context receipt helper remains private');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,attachment_original_approval,versions}','2','Summary deduplicates original approvals across observations');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,attachment_original_approval,latest_versions}','1','Summary separates superseded original revisions');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,attachment_capture_request,versions}','2','Capture attempts remain separate from approvals');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,attachment_captured_bytes,versions}','1','Captured bytes counted independently');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))->>'standalone_consult_approval','not_applicable','No standalone consult approval fabricated');
+select is(ezyvet_migration_outcome_totals(gen_random_uuid()),null::jsonb,'Unknown manifest does not become empty success');
+select ok(not has_function_privilege('authenticated','public.ezyvet_migration_outcome_totals(uuid)','execute'),'Outcome aggregation stays private before complete summary acceptance');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{attachment_capture,requests_by_status,prepared}','1','Pending request remains distinct from ready original');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{attachment_capture,requests_by_status,ready}','1','Ready capture is counted once across observations');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{attachment_capture,stale_source_requests}','2','Parent drift marks both owned request contexts stale');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{attachment_capture,captured_originals}','1','Captured original count does not equal approval revisions');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{attachment_capture,approved_original_versions}','2','Approval revisions remain separate from captured bytes');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{attachment_capture,retrievability}','not_checked_by_summary','Read-only summary never claims original-byte verification');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select is(ezyvet_migration_outcome_totals((select id from fx where k='staff-migration'))#>'{attachment_capture,requests_by_status}','{}'::jsonb,'Other reviewer receives no private request-status counts');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='staff-migration'))#>>'{attachment_capture,approved_original_versions}','2','Shared approved history remains visible in capture summary');
+insert into fx values('staff-preparation',gen_random_uuid());
+select prepare_ezyvet_migration_projection((select id from fx where k='staff-preparation'),(select id from fx where k='staff-migration'));
+select prepare_ezyvet_migration_source_chunk((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1);
+select is((select count(*) from ezyvet_migration_review_requirements where preparation_id=(select id from fx where k='staff-preparation')),6::bigint,'Two attachment occurrences require capture, original and cancellation streams separately');
+select is(list_ezyvet_migration_review_requirements((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,null,1)->>'has_more','true','Requirement discovery uses bounded continuation');
+insert into data select 'source-aggregation',aggregate_ezyvet_migration_source_chunk((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1);
+select is(aggregate_ezyvet_migration_source_chunk((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1),(select v from data where k='source-aggregation'),'Source aggregation replay returns exact receipt');
+select is((select records from ezyvet_migration_source_counts where preparation_id=(select id from fx where k='staff-preparation') and metric='observation_memberships'),2::bigint,'Two attachment memberships retained');
+select is((select records from ezyvet_migration_source_counts where preparation_id=(select id from fx where k='staff-preparation') and metric='observed_occurrences'),2::bigint,'Duplicate snapshot retains two physical ordinals');
+select is((select records from ezyvet_migration_source_counts where preparation_id=(select id from fx where k='staff-preparation') and metric='source_snapshots'),1::bigint,'Repeated attachment snapshot counted once');
+select is((select records from ezyvet_migration_source_counts where preparation_id=(select id from fx where k='staff-preparation') and metric='source_identities'),1::bigint,'Repeated source identity counted once');
+select is((select records from ezyvet_migration_source_counts where preparation_id=(select id from fx where k='staff-preparation') and metric='recorded_source_versions'),1::bigint,'Repeated observed version counted once');
+select ok(not has_table_privilege('authenticated','public.ezyvet_migration_source_counts','select'),'Partial aggregate counters remain private');
+create function pg_temp.prepared_original(bef integer default null,lim integer default 1) returns jsonb language sql as $$
+ select read_ezyvet_migration_prepared_original_evidence((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1,bef,lim);$$;
+select is(pg_temp.prepared_original()#>>'{approvals,0,version}','2','Shared prepared history starts at latest approved revision');
+select is(pg_temp.prepared_original()->>'has_more','true','Bounded original history uses sentinel');
+select is(pg_temp.prepared_original()#>>'{next_cursor,before_version}','2','Version cursor retains selected boundary');
+select is(pg_temp.prepared_original(2)#>>'{approvals,0,version}','1','Cursor recovers predecessor approval');
+select is(pg_temp.prepared_original(2)#>>'{approvals,0,superseded}','true','Predecessor remains superseded');
+select is(pg_temp.prepared_original(2)->>'has_more','false','Final approval page ends traversal');
+select is(pg_temp.prepared_original()#>>'{approvals,0,source_current}','false','Shared approval retains stale parent context');
+select is(pg_temp.prepared_original()->>'original_bytes_reverified','false','Approval history never claims fresh original retrieval');
+select is(pg_temp.prepared_original()->>'report_ready','false','Approval page is not complete report');
+select ok(not (pg_temp.prepared_original()::text ~ 'request_id|capture_hash|object_path|review_reason|source_context'),'Shared reader omits private capture capabilities and prose');
+select is((select jsonb_agg(x->>'id' order by x->>'id') from jsonb_array_elements(pg_temp.prepared_original(null,100)->'approvals') x),
+ (select jsonb_agg(id::text order by id::text) from (select distinct receipt_id id from ezyvet_migration_terminal_context_receipts((select id from fx where k='staff-migration')) where receipt_kind='attachment_original_approval') ids),'Bounded shared approvals match full projection');
+select throws_ok($$select pg_temp.prepared_original(null,101)$$,'23514','Invalid prepared original cursor','Oversized approval page rejected');
+select throws_ok($$select pg_temp.prepared_original(0)$$,'23514','Invalid prepared original cursor','Invalid version cursor rejected');
+select ok(not has_function_privilege('authenticated','public.read_ezyvet_migration_prepared_original_evidence(uuid,uuid,integer,integer,integer,integer)','execute'),'Shared prepared approval reader remains private');
+insert into fx values('saved-original',gen_random_uuid()),('saved-timed',gen_random_uuid());
+create function pg_temp.save_original() returns jsonb language sql as $$
+ select prepare_ezyvet_migration_review_page((select id from fx where k='saved-original'),(select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1,'original',null,null,null,null,1);$$;
+insert into data select 'saved-original',pg_temp.save_original();
+select is(pg_temp.save_original()->'input_cursor','{}'::jsonb,'First original page records empty input cursor');
+select is(pg_temp.save_original()->'continuation_cursor','{"before_version":2}'::jsonb,'Original continuation stores exact predecessor boundary');
+select is(pg_temp.save_original()->>'has_more','true','Original page retains nonterminal state');
+
+select is(pg_temp.save_original(),(select v from data where k='saved-original'),'Shared original persistence replays exact receipt');
+select is(pg_temp.save_original()#>'{evidence,approvals}',pg_temp.prepared_original()->'approvals','Saved shared approvals retain canonical bounded interpretation');
+insert into fx select k,gen_random_uuid() from unnest(array['original-link1','original-link2','original-page2','original-skipped']) k;
+select prepare_ezyvet_migration_review_page((select id from fx where k='original-page2'),(select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1,'original',2,null,null,null,1);
+select prepare_ezyvet_migration_review_page((select id from fx where k='original-skipped'),(select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1,'original',1,null,null,null,1);
+select throws_ok($$select append_ezyvet_migration_review_chain(gen_random_uuid(),(select id from fx where k='original-page2'))$$,'23514','Review continuation cursor mismatch','Stream cannot begin at an intermediate cursor');
+insert into data select 'original-link1',append_ezyvet_migration_review_chain((select id from fx where k='original-link1'),(select id from fx where k='saved-original'));
+select is((select v->>'stream_ended' from data where k='original-link1'),'false','First page retains incomplete stream');
+select throws_ok($$select append_ezyvet_migration_review_chain(gen_random_uuid(),(select id from fx where k='original-page2'))$$,'40001','Current review chain predecessor required','Concurrent stale predecessor rejected');
+select throws_ok($$select append_ezyvet_migration_review_chain(gen_random_uuid(),(select id from fx where k='original-skipped'),(select id from fx where k='original-link1'))$$,'23514','Review continuation cursor mismatch','Skipped approval boundary rejected');
+insert into data select 'original-link2',append_ezyvet_migration_review_chain((select id from fx where k='original-link2'),(select id from fx where k='original-page2'),(select id from fx where k='original-link1'));
+select is((select v->>'position' from data where k='original-link2'),'2','Exact continuation appends next position');
+select is((select v->>'stream_ended' from data where k='original-link2'),'true','Terminal page completes this stream only');
+select is((select v->>'report_ready' from data where k='original-link2'),'false','One completed stream is not a complete report');
+select is(append_ezyvet_migration_review_chain((select id from fx where k='original-link1'),(select id from fx where k='saved-original')),(select v from data where k='original-link1'),'Historical link replay survives later append');
+select throws_ok($$select append_ezyvet_migration_review_chain(gen_random_uuid(),(select id from fx where k='original-skipped'),(select id from fx where k='original-link2'))$$,'23514','Review stream already ended','Cannot append after stream termination');
+select ok(not has_table_privilege('authenticated','public.ezyvet_migration_review_chain_links','select'),'Review chains stay private');
+select is((select count(*) from jsonb_array_elements(list_ezyvet_migration_review_requirements((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1)->'requirements') r where (r->>'stream_ended')::boolean),1::bigint,'Requirement list distinguishes completed original stream from missing work');
+select ok(not has_table_privilege('authenticated','public.ezyvet_migration_review_requirements','select'),'Requirement ledger remains private');
+select throws_ok($$select complete_ezyvet_migration_chunk_reviews((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1)$$,'23514','Required review streams are incomplete','One completed attachment stream does not complete chunk');
+do $$declare r record;page_id uuid;begin
+ for r in select * from ezyvet_migration_review_requirements where preparation_id=(select id from fx where k='staff-preparation') loop
+  if not exists(select 1 from ezyvet_migration_review_chain_links where stream_hash=r.stream_hash and stream_ended) then
+   page_id:=gen_random_uuid();
+   perform prepare_ezyvet_migration_review_page(page_id,r.preparation_id,r.binding_id,r.first_page,r.observation_index,r.kind);
+   perform append_ezyvet_migration_review_chain(gen_random_uuid(),page_id);
+  end if;
+ end loop;
+end $$;
+insert into data select 'chunk-completion',complete_ezyvet_migration_chunk_reviews((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1);
+select is((select v->>'required_streams' from data where k='chunk-completion'),'6','Completion includes all three review kinds for both occurrences');
+select is((select v->>'review_pages' from data where k='chunk-completion'),'7','Completion includes predecessor pages in selected chains');
+select is((select v->>'report_ready' from data where k='chunk-completion'),'false','Chunk completion does not claim report readiness');
+select is(complete_ezyvet_migration_chunk_reviews((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1),(select v from data where k='chunk-completion'),'Completion retry recovers exact receipt');
+select ok(not has_table_privilege('authenticated','public.ezyvet_migration_review_completions','select'),'Chunk completion ledger stays private');
+select aggregate_ezyvet_migration_source_chunk((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1);
+select process_ezyvet_migration_aggregation_work((select id from fx where k='staff-preparation'),null,10);
+select process_ezyvet_migration_aggregation_work((select id from fx where k='staff-preparation'),null,10);
+select is((select records from ezyvet_migration_coverage_counts where preparation_id=(select id from fx where k='staff-preparation') and resource='attachment' and metric='observed_occurrences'),2::bigint,'Coverage retains two distinct attachment occurrences');
+select is((select records from ezyvet_migration_coverage_counts where preparation_id=(select id from fx where k='staff-preparation') and resource='attachment' and metric='occurrences_with_approval'),2::bigint,'Shared approved originals cover both occurrences without multiplying by revisions');
+select is((select records from ezyvet_migration_coverage_counts where preparation_id=(select id from fx where k='staff-preparation') and resource='attachment' and metric='occurrences_with_exact_approval'),(select (r->>'occurrences_with_exact_approval')::bigint from jsonb_array_elements(ezyvet_migration_review_totals((select id from fx where k='staff-migration'))->'resources') r where r->>'resource'='attachment'),'Attachment exact coverage matches full projection after paged revisions and retries');
+select is((select coalesce(sum(records),0) from ezyvet_migration_coverage_counts where preparation_id=(select id from fx where k='staff-preparation') and metric='occurrences_with_current_latest_exact_approval'),(select (r->>'occurrences_with_current_latest_exact_approval')::numeric from jsonb_array_elements(ezyvet_migration_review_totals((select id from fx where k='staff-migration'))->'resources') r where r->>'resource'='attachment'),'Attachment current exact coverage retains source drift');
+select ok(not has_table_privilege('authenticated','public.ezyvet_migration_coverage_counts','select'),'Partial observation coverage remains private');
+
+create function pg_temp.save_timed() returns jsonb language sql as $$
+ select prepare_ezyvet_migration_review_page((select id from fx where k='saved-timed'),(select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1,'timed',null,'2026-09-15 12:00:00+00',(select id from fx where k='capture'),null,1);$$;
+set local timezone='America/Los_Angeles';
+insert into data select 'saved-timed',pg_temp.save_timed();
+set local timezone='Asia/Tokyo';
+select is(pg_temp.save_timed(),(select v from data where k='saved-timed'),'Identical timed retry survives session timezone change');
+select is(current_setting('TimeZone'),'Asia/Tokyo','Save function restores caller timezone');
+select is(pg_temp.save_timed()#>'{evidence,captures}','[]'::jsonb,'Saving timed page does not expose another owner capture requests');
+select is(pg_temp.save_timed()#>>'{input_cursor,before_at}','2026-09-15T12:00:00+00:00','Timed input cursor is normalized to UTC');
+select is(pg_temp.save_timed()->'continuation_cursor','null'::jsonb,'Terminal timed page stores no continuation');
+
+set local timezone='UTC';
+select is(jsonb_array_length(read_ezyvet_migration_prepared_cancellation_evidence((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1)->'cancellations'),0,'Another staff member cannot discover private cancellations through shared attachment history');
+select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx values('cancel2',gen_random_uuid());
+select cancel_ezyvet_attachment_approval((select id from fx where k='cancel2'),(select id from fx where k='capture'),(select id from fx where k='pet'),(select v#>>'{request,capture,capture_hash}' from data where k='ready'),true);
+insert into fx values('owner-aggregation-preparation',gen_random_uuid());
+select prepare_ezyvet_migration_projection((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='migration'));
+select prepare_ezyvet_migration_source_chunk((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1);
+do $$declare n integer;p uuid;l uuid;begin for n in 1..2 loop
+ p:=gen_random_uuid();l:=gen_random_uuid();
+ perform prepare_ezyvet_migration_review_page(p,(select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1,n,'timed');
+ perform append_ezyvet_migration_review_chain(l,p);
+ perform aggregate_ezyvet_migration_approval_page(l);perform aggregate_ezyvet_migration_approval_page(l);
+end loop;end $$;
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_capture_request' and metric='versions'),2::bigint,'Duplicate observations and retries retain two capture requests');
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_captured_bytes' and metric='versions'),1::bigint,'Only captured original contributes byte receipt');
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_capture_request' and metric='capture_status_prepared'),1::bigint,'Pending capture status deduplicates by request');
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_capture_request' and metric='capture_status_ready'),1::bigint,'Ready capture status stays separate from approval versions');
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_capture_request' and metric='source_stale_versions'),2::bigint,'Capture aggregates retain parent source drift');
+select is((select count(*) from ezyvet_migration_coverage_keys where preparation_id=(select id from fx where k='owner-aggregation-preparation')),0::bigint,'Capture requests and captured bytes alone contribute no approval coverage');
+insert into data select 'prepared-cancellations',read_ezyvet_migration_prepared_cancellation_evidence((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1,1,null,1);
+select is((select v#>>'{cancellations,0,id}' from data where k='prepared-cancellations'),(select id::text from fx where k in ('cancel','cancel2') order by id desc limit 1),'Cancellation reader retains exact decision identity');
+select is((select v#>>'{cancellations,0,revokes_approval}' from data where k='prepared-cancellations'),'false','Cancellation never revokes approved original');
+select is((select v->>'has_more' from data where k='prepared-cancellations'),'true','Cancellation sentinel identifies remaining decision');
+select is((select jsonb_array_length(read_ezyvet_migration_prepared_cancellation_evidence((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1,1,(v#>>'{cancellations,0,id}')::uuid,1)->'cancellations') from data where k='prepared-cancellations'),1,'Exclusive cancellation cursor reaches remaining decision');
+select ok(not ((select v#>'{cancellations,0}' from data where k='prepared-cancellations') ? 'capture_hash'),'Cancellation summary omits captured-byte hash');
+select throws_ok($$select read_ezyvet_migration_prepared_cancellation_evidence((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1,1,null,101)$$,'23514','Invalid prepared cancellation cursor','Unbounded cancellation page rejected');
+select throws_ok($$select read_ezyvet_migration_prepared_cancellation_evidence((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1,1)$$,'42501','Owned source chunk required','Foreign preparation cancellation reader denied');
+select ok(not has_function_privilege('authenticated','public.read_ezyvet_migration_prepared_cancellation_evidence(uuid,uuid,integer,integer,uuid,integer)','execute'),'Cancellation reader stays private');
+
+do $$declare n integer;p uuid;l uuid;previous uuid;cursor_id uuid;saved jsonb;begin
+ for n in 1..2 loop
+  previous:=null;cursor_id:=null;
+  loop
+   p:=gen_random_uuid();l:=gen_random_uuid();
+   saved:=prepare_ezyvet_migration_review_page(p,(select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1,n,'cancellation',null,null,cursor_id,null,1);
+   perform append_ezyvet_migration_review_chain(l,p,previous);
+   perform aggregate_ezyvet_migration_approval_page(l);perform aggregate_ezyvet_migration_approval_page(l);
+   exit when not (saved->>'has_more')::boolean;
+   previous:=l;cursor_id:=(saved#>>'{continuation_cursor,before_id}')::uuid;
+  end loop;
+ end loop;
+end $$;
+select is((select count(*) from ezyvet_migration_review_pages where preparation_id=(select id from fx where k='owner-aggregation-preparation') and kind='cancellation'),4::bigint,'Both observations persist both bounded cancellation pages');
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_unconfirmed_cancellation' and metric='versions'),2::bigint,'Cancellation IDs deduplicate across observations and retries');
+select is((select records from ezyvet_migration_approval_counts where preparation_id=(select id from fx where k='owner-aggregation-preparation') and receipt_kind='attachment_unconfirmed_cancellation' and metric='versions'),(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,attachment_unconfirmed_cancellation,versions}')::bigint,'Incremental cancellation total equals canonical full projection');
+select is((select count(*) from ezyvet_migration_coverage_keys where preparation_id=(select id from fx where k='owner-aggregation-preparation')),0::bigint,'Cancellation decisions add no approval coverage');
+select is((select count(*) from ezyvet_migration_review_chain_links l join ezyvet_migration_review_pages p on p.id=l.review_page_id where p.preparation_id=(select id from fx where k='owner-aggregation-preparation') and p.kind='cancellation' and l.stream_ended),2::bigint,'Both cancellation streams terminate only after continuation');
+-- Finish all owner attachment streams, aggregate, freeze, and compare the entire presentation.
+do $$declare n integer;p uuid;begin
+ for n in 1..2 loop
+  p:=gen_random_uuid();
+  perform prepare_ezyvet_migration_review_page(p,(select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1,n,'original');
+  perform append_ezyvet_migration_review_chain(gen_random_uuid(),p);
+ end loop;
+end $$;
+select complete_ezyvet_migration_chunk_reviews((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1);
+select aggregate_ezyvet_migration_source_chunk((select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),1);
+select process_ezyvet_migration_aggregation_work((select id from fx where k='owner-aggregation-preparation'),null,10);
+select throws_ok($$select freeze_ezyvet_migration_calculations((select id from fx where k='owner-aggregation-preparation'))$$,'23514','Prepared attempt history is incomplete','Uncollected attempt history prevents calculation freeze');
+do $$declare page jsonb;previous uuid;begin
+ loop
+  page:=prepare_ezyvet_migration_attempt_page(gen_random_uuid(),(select id from fx where k='owner-aggregation-preparation'),(select id from fx where k='binding'),previous,1);
+  exit when not (page->>'has_more')::boolean;
+  previous:=(page->>'id')::uuid;
+ end loop;
+end $$;
+select freeze_ezyvet_migration_calculations((select id from fx where k='owner-aggregation-preparation'));
+insert into data select 'attachment-frozen-view',read_ezyvet_migration_calculation_snapshot((select id from fx where k='owner-aggregation-preparation'));
+select is((select v->'scan' from data where k='attachment-frozen-view'),ezyvet_migration_scan_totals((select id from fx where k='migration')),'Frozen attachment scan history matches full canonical projection');
+select is((select v->'outcomes' from data where k='attachment-frozen-view'),ezyvet_migration_outcome_totals((select id from fx where k='migration')),'Frozen attachment outcomes match every canonical receipt, status, cancellation and native field');
+select is((select v->'review' from data where k='attachment-frozen-view'),ezyvet_migration_review_totals((select id from fx where k='migration')),'Frozen attachment review coverage equals full projection');
+select is((select v->'source_resources' from data where k='attachment-frozen-view'),ezyvet_migration_source_totals((select id from fx where k='migration'))->'resources','Frozen attachment source summary preserves ordinal occurrence fidelity');
+select is((select v#>>'{outcomes,attachment_capture,requests_by_status,prepared}' from data where k='attachment-frozen-view'),'1','Frozen summary preserves prepared request status');
+select is((select v#>>'{outcomes,attachment_capture,requests_by_status,ready}' from data where k='attachment-frozen-view'),'1','Frozen summary preserves ready request status');
+select is((select v#>>'{outcomes,attachment_capture,unconfirmed_cancellations}' from data where k='attachment-frozen-view'),'2','Frozen summary preserves two unconfirmed decisions');
+select throws_ok($$select pg_temp.prepared_original()$$,'42501','Owned source chunk required','Shared patient approvals do not expose another administrator preparation');
+select throws_ok($$select append_ezyvet_migration_review_chain((select id from fx where k='original-link1'),(select id from fx where k='saved-original'))$$,'42501','Owned review page required','Foreign administrator cannot recover chain');
+select throws_ok($$select complete_ezyvet_migration_chunk_reviews((select id from fx where k='staff-preparation'),(select id from fx where k='staff-binding'),1)$$,'42501','Owned source chunk required','Foreign administrator cannot recover completion');
+select * from finish();rollback;

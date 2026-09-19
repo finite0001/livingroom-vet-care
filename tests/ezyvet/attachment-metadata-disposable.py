@@ -15,15 +15,17 @@ import urllib.request
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
-parser.add_argument('--fixture', choices=['metadata','originals','maximum','migration','all'], default='metadata')
+parser.add_argument('--fixture', choices=['metadata','originals','maximum','migration','sql-only','all'], default='metadata')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 parser.add_argument('--extra-sql-test', action='append', type=Path, default=[])
 parser.add_argument('--api-port', type=int, default=62421, help='Disjoint local port group; alternate ports supported for migration fixture')
 args = parser.parse_args()
-if not 1025 <= args.api_port <= 65532 or (args.api_port != 62421 and args.fixture != 'migration'):
-    parser.error('Alternate port must be 1025–65532 and use migration fixture')
+if not 1025 <= args.api_port <= 65532 or (args.api_port != 62421 and args.fixture not in ('migration','sql-only')):
+    parser.error('Alternate port must be 1025–65532 and use migration or sql-only fixture')
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
+if args.fixture == 'sql-only' and not args.extra_sql_test:
+    parser.error('sql-only requires at least one --extra-sql-test')
 root = Path(__file__).resolve().parents[2]
 fixtures = {
     'migration': ('migration-local-roundtrip.ts', 'Migration manifest HTTP/Auth/PostgREST'),
@@ -31,7 +33,7 @@ fixtures = {
     'originals': ('attachment-original-local-roundtrip.ts', 'Attachment original HTTP/Auth/Storage'),
     'maximum': ('attachment-max-package-roundtrip.mjs', 'Attachment maximum physical packages'),
 }
-selected = ['metadata','originals','maximum','migration'] if args.fixture == 'all' else [args.fixture]
+selected = ['metadata','originals','maximum','migration'] if args.fixture == 'all' else ([] if args.fixture == 'sql-only' else [args.fixture])
 harness_paths = [root / 'tests/ezyvet' / fixtures[name][0] for name in selected]
 identity = 'lrv-attachment-' + uuid.uuid4().hex[:12]
 os.umask(0o077)
@@ -84,8 +86,8 @@ try:
     assert {'20260913550000', '20260913560000', '20260913570000', '20260913580000', '20260913590000', '20260913600000', '20260913610000', '20260913620000', '20260913650000'} <= versions, 'Prescription intake and clinical review migrations required'
     assert '20260913690000' in versions, 'Canonical metadata workflow migration required'
     assert '20260913700000' in versions, 'Canonical original capture migration required'
-    assert {'20260914010000','20260914020000','20260914030000','20260914040000','20260914050000','20260914060000','20260914070000','20260914080000','20260914090000','20260914100000','20260914110000','20260914120000','20260914130000','20260914140000','20260914150000','20260914160000','20260914170000','20260914180000','20260914190000','20260914200000','20260914210000','20260914220000','20260914230000','20260916000000','20260916010000','20260916020000'} <= versions, 'Canonical approval, history, chart and verified retrieval migrations required'
-    assert len(versions) == 113 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
+    assert {'20260914010000','20260914020000','20260914030000','20260914040000','20260914050000','20260914060000','20260914070000','20260914080000','20260914090000','20260914100000','20260914110000','20260914120000','20260914130000','20260914140000','20260914150000','20260914160000','20260914170000','20260914180000','20260914190000','20260914200000','20260914210000','20260914220000','20260914230000','20260916000000','20260916010000','20260916020000','20260916030000'} <= versions, 'Canonical approval, history, chart and verified retrieval migrations required'
+    assert len(versions) == 114 and not ({'20260913640000','20260913660000','20260913670000','20260913680000'} & versions), 'Refuse incompatible alternate attachment stack'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = {args.api_port}
@@ -141,6 +143,7 @@ enabled = false
         checks_by_fixture[name] = int(matched[1])
         checks += int(matched[1])
         print(matched[0], flush=True)
+    assert all(hashlib.sha256((root / path).read_bytes()).hexdigest() == digest for path, digest in source_hashes.items()), 'Source changed during execution; rerun exact source'
     success = True
 finally:
     try:

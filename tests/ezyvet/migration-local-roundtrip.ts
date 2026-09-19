@@ -10,7 +10,7 @@ import { createMigrationSelectionApi } from "../../src/hub/features/imports/migr
 /** Actual local Auth/PostgREST acceptance; no provider or outbound delivery. */
 import assert from "node:assert/strict";
 import { createMigrationCaptureApi } from "../../src/hub/features/imports/migration-capture-api.ts";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { createMigrationRunApi, parseMigrationManifest, parseMigrationBinding } from "../../src/hub/features/imports/migration-run-api.ts";
@@ -341,7 +341,461 @@ check(identityEvidence.approval.relationship === "same_snapshot_unknown_observed
 check(identityEvidence.approval.source_current && identityEvidence.approval.local_record_unchanged && identityEvidence.approval.household_current, "Initial identity currentness facts remain separate");
 await assert.rejects(() => identityApi.read(identityBinding, { ...identityItem, evidence_hash: "f".repeat(64) })); checks++;
 await assert.rejects(() => request("/rest/v1/rpc/read_ezyvet_migration_identity_evidence", { p_binding_id: identityBinding.id, p_page: 1, p_snapshot_id: identityItem.snapshot_id, p_evidence_hash: identityItem.evidence_hash }, other.auth)); checks++;
-sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
+// Internal summary helpers are deliberately not exposed over HTTP. Exercise them
+// with explicit authenticated actor claims after the canonical HTTP approvals.
+const standardReceipts = (manifest: string) => JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select coalesce(jsonb_agg(to_jsonb(t)),'[]') from ezyvet_migration_terminal_standard_receipts(${quote(manifest)}) t;`).split("\n").at(-1)!);
+const historySummary=standardReceipts(historyManifest.run.id);
+check(historySummary.some(r=>r.receipt_id===historyApproval && r.relationship==="exact_source_version" && !r.source_current),"Internal history receipt retains exact observation despite later source drift");
+const vaccineSummary=standardReceipts(vaccineManifest.run.id);
+check(vaccineSummary.some(r=>r.receipt_id===vaccineApproval && r.native_id===null && !r.source_current),"Vaccination summary does not infer native administration");
+const prescriptionSummary=standardReceipts(prescriptionManifest.run.id);
+check(prescriptionSummary.some(r=>r.receipt_id===prescriptionApproval && r.superseded) && prescriptionSummary.some(r=>r.receipt_id===medicationCorrection && !r.superseded),"Prescription summary preserves corrections and predecessor independently");
+check(prescriptionSummary.every(r=>r.native_id===null),"Outside prescription approvals cannot count as native prescriptions");
+const contextReceipts = (manifest: string) => JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select coalesce(jsonb_agg(to_jsonb(t)),'[]') from ezyvet_migration_terminal_context_receipts(${quote(manifest)}) t;`).split("\n").at(-1)!);
+const itemSummary=contextReceipts(medicationManifest.run.id);
+check(itemSummary.some(r=>r.receipt_id===prescriptionApproval && r.facets.disposition==="omitted" && r.facets.superseded),"Item summary retains omitted predecessor");
+check(itemSummary.some(r=>r.receipt_id===medicationCorrection && r.facets.disposition==="selected" && r.facets.parent_matches),"Item summary matches selected correction and exact parent");
+check(itemSummary.every(r=>r.facets.native_prescribing===false),"Item selection adds no native prescribing credit");
+const attachmentSummary=contextReceipts(saved.run.id);
+check(attachmentSummary.some(r=>r.receipt_id===captureId && r.receipt_kind==="attachment_capture_request" && r.facets.status==="prepared"),"Prepared capture remains a request in global evidence");
+check(!attachmentSummary.some(r=>r.receipt_kind==="attachment_captured_bytes" || r.receipt_kind==="attachment_original_approval"),"Pending capture adds neither byte nor approval credit");
+const reviewTotals = (manifest: string) => JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select ezyvet_migration_review_totals(${quote(manifest)});`).split("\n").at(-1)!);
+const pendingAttachmentReview = reviewTotals(saved.run.id).resources[0];
+check(pendingAttachmentReview.observed_occurrences===2 && pendingAttachmentReview.occurrences_without_approval===2,"Prepared capture does not hide unapproved observations");
+const weightReviewTotals = reviewTotals(weightManifest.run.id).resources[0];
+check(weightReviewTotals.occurrences_without_approval===0 && weightReviewTotals.occurrences_with_snapshot_only_approval===1 && weightReviewTotals.occurrences_with_exact_approval===0,"Weight snapshot match stays distinct from exact observed-version approval");
+check(weightReviewTotals.occurrences_with_current_latest_exact_approval===0,"Current source acknowledgment cannot upgrade stale weight approval");
+const historyReviewTotals = reviewTotals(historyManifest.run.id).resources[0];
+check(historyReviewTotals.occurrences_with_exact_approval===1 && historyReviewTotals.occurrences_with_current_latest_exact_approval===0,"Historical exact approval remains visible after source drift without current credit");
+const itemReviewTotals = reviewTotals(medicationManifest.run.id).resources[0];
+check(itemReviewTotals.observed_occurrences===1 && itemReviewTotals.occurrences_with_exact_approval===1,"Multiple prescription revisions do not multiply reviewed item observations");
+const consultManifest = await api.prepare({id:randomUUID(),source_origin:origin,source_site_uid:site,scopes:[{...historyManifest.run.intent.scopes[0],id:randomUUID(),resource:"consult"}]});
+const consultReviewTotals = reviewTotals(consultManifest.run.id).resources[0];
+check(consultReviewTotals.approval_applicability==="not_applicable" && consultReviewTotals.occurrences_without_approval===null,"Unbound consultation scope never fabricates pending standalone approvals");
+// Bind the same source runs into one mixed manifest to exercise global deduplication.
+const combinedManifest = await api.prepare({ id: randomUUID(), source_origin: origin, source_site_uid: site, scopes: [
+  { ...prescriptionManifest.run.intent.scopes[0], id: randomUUID() },
+  { ...medicationManifest.run.intent.scopes[0], id: randomUUID() },
+] });
+for (const scope of combinedManifest.scopes) {
+  await api.bind({ id: randomUUID(), scope_id: scope.id, child_run_id: scope.resource === "prescription" ? prescriptionRun : itemRun, reason: "Synthetic combined header and item coverage", replaces_id: null });
+}
+const outcomeTotals = (manifest: string, actor = owner.id) => JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:actor,role:"authenticated"}))},false); select coalesce(ezyvet_migration_outcome_totals(${quote(manifest)}),'null'::jsonb);`).split("\n").at(-1)!);
+const combinedTotals = outcomeTotals(combinedManifest.run.id);
+check(combinedTotals.receipts.imported_prescription.versions === 2, "Header and item share two approval revisions, not four");
+check(combinedTotals.receipts.imported_prescription.latest_versions === 1, "Combined summary retains one latest prescription revision");
+check(combinedTotals.receipts.imported_prescription.source_stale_versions === 2, "Item drift invalidates both shared prescription revisions");
+check(combinedTotals.prescription_item_relations.omitted === 1 && combinedTotals.prescription_item_relations.selected === 1, "Combined summary distinguishes predecessor omission from corrected selection");
+check(Object.keys(combinedTotals.native_outcomes).length === 0, "Mixed prescription summary creates no native prescribing credit");
+check(outcomeTotals(combinedManifest.run.id, other.id) === null, "Other administrator cannot aggregate an owned manifest");
+const prescriptionGaps=combinedTotals.prescription_review_gaps;
+check(prescriptionGaps.reviewed_versions===2 && prescriptionGaps.partial_versions===2 && prescriptionGaps.latest_partial_versions===1,"Partial approved revisions remain visible without header/item duplication");
+check(prescriptionGaps.missing_item_versions===2 && prescriptionGaps.unresolved_reference_versions===2,"Approvals retain missing-item and unresolved-source gaps");
+check(prescriptionGaps.duplicate_source_reference_versions===2 && prescriptionGaps.duplicate_observation_versions===0,"Duplicate provider references remain distinct from repeated observations");
+check(prescriptionGaps.unknown_date_versions===2 && prescriptionGaps.unknown_status_versions===2,"Outside prescription interpretation uncertainties remain visible");
+check(prescriptionGaps.unfinished_scan_versions===0 && prescriptionGaps.absent_source_list_versions===0,"Finished traversal with a source list does not erase missing references");
+check(!JSON.stringify(prescriptionGaps).includes("Synthetic") && !JSON.stringify(prescriptionGaps).includes("partial_reason"),"Reference gap summary omits clinical prose and reasons");
+
+function preparedVersioned(manifest:string,binding:string) {
+  const preparation=randomUUID();
+  const claims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+  sql(`select set_config('request.jwt.claims',${claims},false); select prepare_ezyvet_migration_projection(${quote(preparation)},${quote(manifest)}); select prepare_ezyvet_migration_source_chunk(${quote(preparation)},${quote(binding)},1);`);
+  return (before:number|null=null)=>JSON.parse(sql(`select set_config('request.jwt.claims',${claims},false); select read_ezyvet_migration_prepared_versioned_evidence(${quote(preparation)},${quote(binding)},1,1,${before===null?'null':before},1);`).split("\n").at(-1)!);
+}
+const preparedVaccine=preparedVersioned(vaccineManifest.run.id,vaccineBinding.id)();
+assert.deepEqual(preparedVaccine.approvals,(await vaccineApi.list(vaccineBinding,vaccineItems.items[0],null,1)).approvals);checks++;
+check(!preparedVaccine.local_administration_verified && !preparedVaccine.approvals[0].source_current,"Prepared vaccination preserves source drift without native administration credit");
+const preparedPrescriptionRead=preparedVersioned(prescriptionManifest.run.id,prescriptionBinding.id);
+const preparedPrescription=preparedPrescriptionRead();
+assert.deepEqual(preparedPrescription.approvals,(await prescriptionApi.list(prescriptionBinding,prescriptionItems.items[0],null,1)).approvals);checks++;
+check(preparedPrescription.approvals[0].missing_items===1 && preparedPrescription.approvals[0].completeness==="partial","Prepared prescription retains missing references and partial approval");
+check(preparedPrescriptionRead(2).approvals[0].id===prescriptionApproval && !preparedPrescription.local_prescribing_verified,"Prepared prescription cursor preserves predecessor without local prescribing");
+const preparedMedicationRead=preparedVersioned(medicationManifest.run.id,medicationBinding.id);
+assert.deepEqual(preparedMedicationRead().approvals,(await medicationApi.list(medicationBinding,medicationItem,null,1)).approvals);checks++;
+check(preparedMedicationRead().approvals[0].disposition==="selected" && preparedMedicationRead(2).approvals[0].disposition==="omitted","Prepared item reader preserves corrected selection and prior omission");
+check(!preparedMedicationRead().dependency_consistency_verified && !preparedMedicationRead().report_ready,"Versioned preparation adapter does not claim assembled consistent report");
+function preparedSupplement(manifest:string,binding:string,kind:"identity"|"timed") {
+  const preparation=randomUUID();
+  const claims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+  sql(`select set_config('request.jwt.claims',${claims},false); select prepare_ezyvet_migration_projection(${quote(preparation)},${quote(manifest)}); select prepare_ezyvet_migration_source_chunk(${quote(preparation)},${quote(binding)},1);`);
+  const result=JSON.parse(sql(`select set_config('request.jwt.claims',${claims},false); select read_ezyvet_migration_prepared_${kind}_evidence(${quote(preparation)},${quote(binding)},1,1);`).split("\n").at(-1)!);
+  return result;
+}
+const preparedIdentity=preparedSupplement(identityManifest.run.id,identityBinding.id,"identity");
+assert.deepEqual(preparedIdentity.approval,(await identityApi.read(identityBinding,identityItem)).approval);checks++;
+check(!preparedIdentity.exact_source_version_verified && !preparedIdentity.report_ready,"Prepared identity preserves unknown observed version and incomplete report");
+const preparedWeight=preparedSupplement(weightManifest.run.id,weightBinding.id,"timed");
+assert.deepEqual(preparedWeight.approval,(await weightApi.read(weightBinding,weightItem)).approval);checks++;
+assert.deepEqual(preparedWeight.source_reviews,(await weightApi.read(weightBinding,weightItem)).source_reviews);checks++;
+check(!preparedWeight.dependency_consistency_verified && !preparedWeight.report_ready,"Weight approval does not establish cross-chunk consistency");
+const preparedCapture=preparedSupplement(saved.run.id,bound.id,"timed");
+assert.deepEqual(preparedCapture.captures,(await captureApi.list(bound,captureItem)).captures);checks++;
+check(preparedCapture.captures[0].status==="prepared" && preparedCapture.captures[0].capture===null,"Prepared capture request cannot become an approved original");
+for (const [manifest,binding,kind,before] of [
+  [identityManifest.run.id,identityBinding.id,"identity",null],
+  [weightManifest.run.id,weightBinding.id,"timed",null],
+  [saved.run.id,bound.id,"timed",null],
+  [historyManifest.run.id,historyBinding.id,"versioned",null],
+  [vaccineManifest.run.id,vaccineBinding.id,"versioned",null],
+  [prescriptionManifest.run.id,prescriptionBinding.id,"versioned",2],
+  [medicationManifest.run.id,medicationBinding.id,"versioned",2],
+] as const) {
+  const preparation=randomUUID(),pageId=randomUUID();
+  const claims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+  sql(`select set_config('request.jwt.claims',${claims},false); select prepare_ezyvet_migration_projection(${quote(preparation)},${quote(manifest)}); select prepare_ezyvet_migration_source_chunk(${quote(preparation)},${quote(binding)},1);`);
+  const args=`${quote(preparation)},${quote(binding)},1,1`;
+  const readArgs=kind==="versioned"?`${args},${before===null?'null':before},20`:args;
+  const direct=JSON.parse(sql(`select set_config('request.jwt.claims',${claims},false); select read_ezyvet_migration_prepared_${kind}_evidence(${readArgs});`).split("\n").at(-1)!);
+  const command=`select set_config('request.jwt.claims',${claims},false); select prepare_ezyvet_migration_review_page(${quote(pageId)},${args},${quote(kind)},${before===null?'null':before});`;
+  const persisted=JSON.parse(sql(command).split("\n").at(-1)!);
+  const replay=JSON.parse(sql(command).split("\n").at(-1)!);
+  assert.deepEqual(replay,persisted);checks++;
+  assert.deepEqual(persisted.input_cursor,before===null?{}:{before_version:before});checks++;
+  check(persisted.has_more===Boolean(direct.has_more) && (persisted.continuation_cursor!==null)===persisted.has_more,"Saved page retains continuation state");
+  delete direct.observed_at;
+  const evidence={...persisted.evidence};delete evidence.observed_at;
+  assert.deepEqual(evidence,direct);checks++;
+  if (before===null) {
+    const linkId=randomUUID();
+    sql(`select set_config('request.jwt.claims',${claims},false); select append_ezyvet_migration_review_chain(${quote(linkId)},${quote(pageId)}); select aggregate_ezyvet_migration_native_page(${quote(linkId)}); select aggregate_ezyvet_migration_native_page(${quote(linkId)});`);
+    const count=Number(sql(`select coalesce(sum(records),0) from ezyvet_migration_native_counts where preparation_id=${quote(preparation)} and metric='records';`));
+    check(count===(kind==="identity" || binding===weightBinding.id?1:0),"Native aggregation respects resource approval boundaries and retries");
+    if (binding!==bound.id) {
+      check(!persisted.has_more,"Coverage comparison consumes complete review fixture");
+      sql(`select set_config('request.jwt.claims',${claims},false); select aggregate_ezyvet_migration_source_chunk(${quote(preparation)},${quote(binding)},1); select aggregate_ezyvet_migration_approval_page(${quote(linkId)}); select aggregate_ezyvet_migration_approval_page(${quote(linkId)});`);
+      for (const expected of reviewTotals(manifest).resources) {
+        const actual=JSON.parse(sql(`select coalesce(jsonb_object_agg(metric,records),'{}'::jsonb) from ezyvet_migration_coverage_counts where preparation_id=${quote(preparation)} and resource=${quote(expected.resource)};`));
+        for (const metric of ['observed_occurrences','occurrences_with_exact_approval','occurrences_with_snapshot_only_approval','occurrences_with_current_latest_exact_approval']) {
+          check((actual[metric]??0)===expected[metric],`Incremental ${expected.resource} coverage ${metric} equals full canonical review`);
+        }
+        check((actual.observed_occurrences??0)-(actual.occurrences_with_approval??0)===expected.occurrences_without_approval,`Incremental ${expected.resource} unapproved count equals full canonical review`);
+      }
+    }
+    if (binding===weightBinding.id) {
+      sql(`select set_config('request.jwt.claims',${claims},false); select aggregate_ezyvet_migration_approval_page(${quote(linkId)}); select aggregate_ezyvet_migration_approval_page(${quote(linkId)});`);
+      const counters=JSON.parse(sql(`select jsonb_object_agg(receipt_kind,metrics) from (select receipt_kind,jsonb_object_agg(metric,records) metrics from ezyvet_migration_approval_counts where preparation_id=${quote(preparation)} group by receipt_kind) c;`));
+      for (const receiptKind of ["weight_approval","weight_source_acknowledgment"]) for (const [metric,expected] of Object.entries(outcomeTotals(weightManifest.run.id).receipts[receiptKind])) {
+        check((counters[receiptKind]?.[metric]??0)===expected,`Incremental ${receiptKind} ${metric} matches canonical outcome`);
+      }
+    }
+  }
+}
+const sharedIdentityRun = randomUUID();
+const identityClaimArgs = {p_id:sharedIdentityRun,p_actor:owner.id,p_site_uid:site,p_resource:"animal",p_source_origin:origin};
+const failedIdentityClaim = await request("/rest/v1/rpc/claim_ezyvet_import",identityClaimArgs);
+await request("/rest/v1/rpc/fail_ezyvet_import_page",{p_id:sharedIdentityRun,p_actor:owner.id,p_lease_id:failedIdentityClaim.lease_id,p_code:"UPSTREAM_TIMEOUT",p_retry_seconds:1});
+for (let page=1;page<=2;page++) {
+  sql(`update ezyvet_import_runs set retry_after=null where id=${quote(sharedIdentityRun)};`);
+  const claim = await request("/rest/v1/rpc/claim_ezyvet_import",identityClaimArgs);
+  await request("/rest/v1/rpc/stage_ezyvet_import_page",{p_id:sharedIdentityRun,p_actor:owner.id,p_lease_id:claim.lease_id,p_page:page,p_complete:page===2,
+    p_items:Array.from({length:50},(_,index)=>({external_id:String(2000+(page-1)*50+index),payload:{id:2000+(page-1)*50+index}}))});
+}
+// Synthetic approved links share a local patient, as explicit legacy identity links may.
+sql(`insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+ select gen_random_uuid(),gen_random_uuid(),'synthetic-overlap',s.source_origin,s.source_site_uid,s.resource,s.external_id,s.id,1,${quote(client)},${quote(pet)},1,'link','SYNTHETIC IDENTITY LINK',${quote(owner.id)} from ezyvet_import_snapshots s where s.source_site_uid=${quote(site)} and s.resource='animal' and s.external_id ~ '^20[0-9]{2}$';`);
+const overlapMappings = JSON.parse(sql(`select jsonb_agg(jsonb_build_object('mapping_id',id,'parent_snapshot_id',snapshot_id) order by external_id) from ezyvet_record_links where source_site_uid=${quote(site)} and resource='animal' and external_id ~ '^20[0-9]{2}$';`));
+const overlapManifest = await api.prepare({id:randomUUID(),source_origin:origin,source_site_uid:site,
+  scopes:overlapMappings.map((m,index)=>({...m,id:randomUUID(),resource:"animal",parent_type:"animal",parent_head_version:1,
+    disposition:index===98?"excluded":index===99?"unsupported":"required",reason:`Synthetic distinct identity scope ${index}`}))});
+for (const scope of overlapManifest.scopes.filter(scope=>scope.disposition==="required").slice(0,96))
+  await api.bind({id:randomUUID(),scope_id:scope.id,child_run_id:sharedIdentityRun,reason:"Synthetic shared identity scan",replaces_id:null});
+const aggregateStarted = performance.now();
+const overlapTotals = JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select jsonb_build_object('source',ezyvet_migration_source_totals(${quote(overlapManifest.run.id)}),'scan',ezyvet_migration_scan_totals(${quote(overlapManifest.run.id)}),'outcomes',ezyvet_migration_outcome_totals(${quote(overlapManifest.run.id)}));`).split("\n").at(-1)!);
+check(performance.now()-aggregateStarted<5000,"Sparse maximum-scope manifest aggregates within five seconds including command overhead");
+check(overlapTotals.source.resources[0].scopes===100 && overlapTotals.source.resources[0].unbound_required_scopes===2,"Unbound scopes remain in maximum manifest denominator");
+check(overlapTotals.source.resources[0].excluded_scopes===1 && overlapTotals.source.resources[0].unsupported_scopes===1,"Excluded and unsupported scopes remain visible");
+check(overlapTotals.source.resources[0].observation_memberships===96 && overlapTotals.source.resources[0].observed_occurrences===96,"Each selected identity counts once without leaking unrelated scan identities");
+check(overlapTotals.scan.scans.distinct_child_runs===1 && overlapTotals.scan.pages_observed===2,"Ninety-six bindings share one scan and two pages");
+check(overlapTotals.scan.attempt_history.failed_pages===1 && overlapTotals.scan.attempt_history.claims===3,"Shared scan counts failure and retry history once");
+check(overlapTotals.scan.bound_required_scopes===96 && overlapTotals.scan.scans.traversal_ended===1,"Scope denominator stays separate from ended traversal");
+check(overlapTotals.outcomes.receipts.identity_mapping.versions===96 && overlapTotals.outcomes.native_outcomes.pet.records===1,"Distinct linked source identities do not multiply local patient");
+check(!overlapTotals.source.complete_coverage_verified && !overlapTotals.scan.complete_coverage_verified && !overlapTotals.outcomes.cutover_accepted,"Maximum manifest does not imply acceptance");
+const combinedStarted=performance.now();
+const maximumCombined=JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select ezyvet_migration_global_projection(${quote(overlapManifest.run.id)});`).split("\n").at(-1)!);
+check(performance.now()-combinedStarted<5000 && maximumCombined.review.resources[0].observed_occurrences===96,"Full combined projection meets sparse maximum-scope bound including review gaps");
+// Bulk seed only the owned disposable fixture to the canonical per-run page limit.
+// These rows test summary scale, not provider traversal or delivery acceptance.
+sql(`insert into ezyvet_import_pages(run_id,page,item_count) select ${quote(sharedIdentityRun)},p,50 from generate_series(3,1000) p;
+ insert into ezyvet_import_page_items(run_id,page,snapshot_id)
+ select ${quote(sharedIdentityRun)},p,s.id from generate_series(3,1000) p
+ join ezyvet_import_snapshots s on s.source_site_uid=${quote(site)} and s.resource='animal' and s.external_id ~ '^20[0-9]{2}$'
+ where (s.external_id::integer-2000)/50=(p-1)%2;
+ analyze ezyvet_import_pages; analyze ezyvet_import_page_items; analyze ezyvet_import_snapshots;`);
+const denseStarted=performance.now();
+const denseTotals=JSON.parse(sql(`set statement_timeout='10s'; select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select ezyvet_migration_global_projection(${quote(overlapManifest.run.id)});`).split("\n").at(-1)!);
+check(performance.now()-denseStarted<10000,"Full single-scan volume aggregate stays within ten-second local budget");
+check(denseTotals.scan.pages_observed===1000 && denseTotals.source.resources[0].observed_occurrences===48000,"Full run retains all selected observations without truncation");
+check(denseTotals.outcomes.receipts.identity_mapping.versions===96 && denseTotals.outcomes.native_outcomes.pet.records===1,"Fifty thousand source rows do not multiply approvals or patient identity");
+check(denseTotals.review.resources[0].occurrences_with_snapshot_only_approval===48000 && denseTotals.review.resources[0].occurrences_with_exact_approval===0,"Large repeated source population preserves unknown-head evidence fidelity");
+const sharedApprovalPreparation=randomUUID();
+const sharedApprovalClaims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+sql(`select set_config('request.jwt.claims',${sharedApprovalClaims},false); select prepare_ezyvet_migration_projection(${quote(sharedApprovalPreparation)},${quote(combinedManifest.run.id)});`);
+const sharedApprovalBindings=JSON.parse(sql(`select jsonb_agg(x->>'binding_id') from ezyvet_migration_preparations p cross join lateral jsonb_array_elements(p.plan) x where p.id=${quote(sharedApprovalPreparation)};`));
+const sharedApprovalRows=[];
+for (const binding of sharedApprovalBindings) {
+  const page=randomUUID(),link=randomUUID();
+  sql(`select set_config('request.jwt.claims',${sharedApprovalClaims},false); select prepare_ezyvet_migration_source_chunk(${quote(sharedApprovalPreparation)},${quote(binding)},1); select prepare_ezyvet_migration_review_page(${quote(page)},${quote(sharedApprovalPreparation)},${quote(binding)},1,1,'versioned'); select append_ezyvet_migration_review_chain(${quote(link)},${quote(page)});`);
+  sharedApprovalRows.push(...JSON.parse(sql(`select set_config('request.jwt.claims',${sharedApprovalClaims},false); select jsonb_agg(to_jsonb(r)) from ezyvet_migration_selected_approvals(${quote(link)}) r;`).split("\n").at(-1)!));
+  sql(`select set_config('request.jwt.claims',${sharedApprovalClaims},false); select aggregate_ezyvet_migration_approval_page(${quote(link)}); select aggregate_ezyvet_migration_approval_page(${quote(link)});`);
+}
+check(sharedApprovalRows.length===4 && new Set(sharedApprovalRows.map(row=>row.receipt_id)).size===2,"Header and item normalization share two approval identities across four references");
+check(sharedApprovalRows.every(row=>row.receipt_kind==="imported_prescription" && row.facets.source_current===false),"Shared prescription normalization retains stale-source status");
+const expectedApprovalMatches=standardReceipts(combinedManifest.run.id).filter(row=>row.receipt_kind==="imported_prescription" && row.relationship==="exact_source_version").length
+  +contextReceipts(combinedManifest.run.id).filter(row=>row.receipt_kind==="imported_prescription" && row.facets.parent_matches && ["selected","omitted"].includes(row.facets.disposition)).length;
+check(sharedApprovalRows.filter(row=>row.facets.exact_match).length===expectedApprovalMatches,"Selected approval relationships match the complete canonical projection");
+const sharedApprovalCounts=JSON.parse(sql(`select jsonb_object_agg(metric,records) from ezyvet_migration_approval_counts where preparation_id=${quote(sharedApprovalPreparation)} and receipt_kind='imported_prescription';`));
+for (const [metric,expected] of Object.entries(outcomeTotals(combinedManifest.run.id).receipts.imported_prescription)) {
+  check((sharedApprovalCounts[metric]??0)===expected,`Incremental shared prescription ${metric} equals full canonical projection`);
+}
+for (const [metric,expected] of Object.entries(outcomeTotals(combinedManifest.run.id).prescription_review_gaps)) {
+  check((sharedApprovalCounts[`gap_${metric}`]??0)===expected,`Incremental prescription gap ${metric} equals full canonical projection across shared references and retries`);
+}
+check(sql(`select count(*) from ezyvet_migration_approval_states where preparation_id=${quote(sharedApprovalPreparation)};`)==="2","Four references and retries preserve two distinct approval states");
+for (const binding of sharedApprovalBindings) {
+  sql(`select set_config('request.jwt.claims',${sharedApprovalClaims},false); select aggregate_ezyvet_migration_source_chunk(${quote(sharedApprovalPreparation)},${quote(binding)},1); select aggregate_ezyvet_migration_source_chunk(${quote(sharedApprovalPreparation)},${quote(binding)},1);`);
+}
+for (const expected of reviewTotals(combinedManifest.run.id).resources) {
+  const actual=JSON.parse(sql(`select coalesce(jsonb_object_agg(metric,records),'{}'::jsonb) from ezyvet_migration_coverage_counts where preparation_id=${quote(sharedApprovalPreparation)} and resource=${quote(expected.resource)};`));
+  for (const metric of ['observed_occurrences','occurrences_with_exact_approval','occurrences_with_snapshot_only_approval','occurrences_with_current_latest_exact_approval']) {
+    check((actual[metric]??0)===expected[metric],`Incremental ${expected.resource} review coverage ${metric} matches full projection`);
+  }
+  check((actual.observed_occurrences??0)-(actual.occurrences_with_approval??0)===expected.occurrences_without_approval,`Incremental ${expected.resource} unapproved observation count matches full projection`);
+}
+const expectedItemRelations=outcomeTotals(combinedManifest.run.id).prescription_item_relations;
+const actualItemRelations=JSON.parse(sql(`select coalesce(jsonb_object_agg(disposition,records),'{}'::jsonb) from ezyvet_migration_item_relation_counts where preparation_id=${quote(sharedApprovalPreparation)};`));
+check(JSON.stringify(actualItemRelations)===JSON.stringify(expectedItemRelations),"Incremental item dispositions equal the canonical full report after shared approval retries");
+check(actualItemRelations.selected===1 && actualItemRelations.omitted===1,"Selected and omitted prescription revisions remain separately visible");
+check(sql(`select count(*) from ezyvet_migration_item_relation_keys where preparation_id=${quote(sharedApprovalPreparation)};`)==="2","Header pages and repeated aggregation add no duplicate item relations");
+check(sql(`select count(*) from information_schema.role_table_grants where table_schema='public' and table_name in ('ezyvet_migration_item_relation_keys','ezyvet_migration_item_relation_counts') and grantee in ('anon','authenticated','service_role','PUBLIC');`)==="0","Partial item relation ledgers remain private");
+// Two canonical source windows repeat one selected identity across different pages.
+const aggregatePreparation=randomUUID();
+const aggregateClaims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+sql(`select set_config('request.jwt.claims',${aggregateClaims},false); select prepare_ezyvet_migration_projection(${quote(aggregatePreparation)},${quote(overlapManifest.run.id)});`);
+const aggregateBinding=sql(`select x->>'binding_id' from ezyvet_migration_preparations p cross join lateral jsonb_array_elements(p.plan) x where p.id=${quote(aggregatePreparation)} and x->>'binding_id' is not null order by x->>'binding_id' limit 1;`);
+for (const firstPage of [1,21]) {
+  sql(`select set_config('request.jwt.claims',${aggregateClaims},false); select prepare_ezyvet_migration_source_chunk(${quote(aggregatePreparation)},${quote(aggregateBinding)},${firstPage}); select aggregate_ezyvet_migration_source_chunk(${quote(aggregatePreparation)},${quote(aggregateBinding)},${firstPage});`);
+}
+const sourceCounters=()=>JSON.parse(sql(`select jsonb_object_agg(metric,records) from ezyvet_migration_source_counts where preparation_id=${quote(aggregatePreparation)};`));
+const overlapSourceCounts=sourceCounters();
+check(overlapSourceCounts.observation_memberships===20 && overlapSourceCounts.observed_occurrences===20,"Two windows preserve twenty selected physical occurrences");
+check(overlapSourceCounts.source_identities===1 && overlapSourceCounts.source_snapshots===1,"Source identity and snapshot deduplicate across chunk boundaries");
+check(overlapSourceCounts.occurrences_without_observed_head===20 && !overlapSourceCounts.recorded_source_versions,"Aggregated legacy identity retains unknown observed versions");
+sql(`select set_config('request.jwt.claims',${aggregateClaims},false); select aggregate_ezyvet_migration_source_chunk(${quote(aggregatePreparation)},${quote(aggregateBinding)},1); select aggregate_ezyvet_migration_source_chunk(${quote(aggregatePreparation)},${quote(aggregateBinding)},21);`);
+assert.deepEqual(sourceCounters(),overlapSourceCounts);checks++;
+check(sql(`select count(*) from ezyvet_migration_source_aggregations where preparation_id=${quote(aggregatePreparation)};`)==="2","Replayed source aggregation retains exactly two processed chunks");
+// A real blocked statement establishes its snapshot before a concurrent source update.
+function sqlSession() {
+  const process = spawn("docker",["exec","-i",`supabase_db_${projectId}`,"psql","-U","postgres","-d","postgres","-X","-q","-t","-A","-v","ON_ERROR_STOP=1"],{stdio:["pipe","pipe","pipe"]});
+  let output="";
+  process.stdout.on("data",chunk=>{output+=chunk.toString();});
+  let diagnostic="";
+  process.stderr.on("data",chunk=>{diagnostic+=chunk.toString();});
+  const done = new Promise<string>((resolve,reject)=>{
+    process.on("error",()=>reject(new Error("Synthetic SQL session could not start")));
+    process.on("close",code=>code===0?resolve(output):reject(new Error(/ERROR:\s+Active administrator required/.test(diagnostic)?"Active administrator required":/ERROR:\s+Prepared dependencies changed/.test(diagnostic)?"Prepared dependencies changed":"Synthetic SQL session failed")));
+  });
+  return {process,done,output:()=>output};
+}
+async function waitForSql(condition:()=>boolean) {
+  const deadline=Date.now()+10000;
+  while(!condition()) {
+    assert.ok(Date.now()<deadline,"Synthetic database barrier timed out");
+    await new Promise(resolve=>setTimeout(resolve,25));
+  }
+}
+// Two real connections request the same complete calculation freeze concurrently.
+const freezeClaims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+function prepareCalculationFixture() {
+  const freezePreparation=randomUUID();
+sql(`select set_config('request.jwt.claims',${freezeClaims},false); select prepare_ezyvet_migration_projection(${quote(freezePreparation)},${quote(combinedManifest.run.id)});`);
+for (const binding of sharedApprovalBindings) {
+  const page=randomUUID(),link=randomUUID();
+  sql(`select set_config('request.jwt.claims',${freezeClaims},false); select prepare_ezyvet_migration_source_chunk(${quote(freezePreparation)},${quote(binding)},1); select aggregate_ezyvet_migration_source_chunk(${quote(freezePreparation)},${quote(binding)},1); select prepare_ezyvet_migration_review_page(${quote(page)},${quote(freezePreparation)},${quote(binding)},1,1,'versioned'); select append_ezyvet_migration_review_chain(${quote(link)},${quote(page)}); select complete_ezyvet_migration_chunk_reviews(${quote(freezePreparation)},${quote(binding)},1);`);
+}
+sql(`select set_config('request.jwt.claims',${freezeClaims},false); select process_ezyvet_migration_aggregation_work(${quote(freezePreparation)},null,10);`);
+  const history=JSON.parse(sql(`select set_config('request.jwt.claims',${freezeClaims},false); select read_ezyvet_migration_attempt_progress(${quote(freezePreparation)});`).split("\n").at(-1)!);
+  for (const child of history.children) {
+    let previous=null;
+    while (true) {
+      const page=JSON.parse(sql(`select set_config('request.jwt.claims',${freezeClaims},false); select prepare_ezyvet_migration_attempt_page(${quote(randomUUID())},${quote(freezePreparation)},${quote(child.binding_id)},${previous?quote(previous):'null'},2);`).split("\n").at(-1)!);
+      if (!page.has_more) break;
+      previous=page.id;
+    }
+  }
+  return freezePreparation;
+}
+const freezePreparation=prepareCalculationFixture();
+{
+  const hold=sqlSession(),writers:ReturnType<typeof sqlSession>[]=[];
+  try {
+    hold.process.stdin.write(`begin; select pg_advisory_xact_lock(hashtextextended(${quote(`migration-calculation-freeze:${freezePreparation}`)},0)); select 'FREEZE_READY';\n`);
+    await waitForSql(()=>hold.output().includes("FREEZE_READY"));
+    for(let index=0;index<2;index++) {
+      const writer=sqlSession();writers.push(writer);
+      writer.process.stdin.end(`select set_config('request.jwt.claims',${freezeClaims},false); select freeze_ezyvet_migration_calculations(${quote(freezePreparation)});`);
+    }
+    const results=Promise.allSettled(writers.map(writer=>writer.done));
+    await waitForSql(()=>sql(`select count(*) from pg_stat_activity where datname='postgres' and wait_event='advisory' and query like ${quote('%'+freezePreparation+'%')};`)==="2");
+    hold.process.stdin.end("commit;\n");await hold.done;
+    const completed=await results;
+    check(completed.every(r=>r.status==="fulfilled"),"Concurrent freeze callers both succeed");
+    const payloads=completed.map(r=>r.status==="fulfilled"?JSON.parse(r.value.trim().split("\n").at(-1)!):null);
+    assert.deepEqual(payloads[0],payloads[1]);checks++;
+    const frozenView=JSON.parse(sql(`select set_config('request.jwt.claims',${freezeClaims},false); select read_ezyvet_migration_calculation_snapshot(${quote(freezePreparation)});`).split("\n").at(-1)!);
+    assert.deepEqual(frozenView.outcomes,outcomeTotals(combinedManifest.run.id));checks++;
+    assert.deepEqual(frozenView.review,reviewTotals(combinedManifest.run.id));checks++;
+    const expectedScan=JSON.parse(sql(`select set_config('request.jwt.claims',${freezeClaims},false); select ezyvet_migration_scan_totals(${quote(combinedManifest.run.id)});`).split("\n").at(-1)!);
+    assert.deepEqual(frozenView.scan,expectedScan);checks++;
+
+
+    check(sql(`select count(*) from ezyvet_migration_calculation_snapshots where preparation_id=${quote(freezePreparation)};`)==="1","Concurrent freeze stores exactly one immutable snapshot");
+  } finally {
+    hold.process.stdin.end();for(const writer of writers) writer.process.stdin.end();
+    await Promise.allSettled([hold.done,...writers.map(writer=>writer.done)]);
+  }
+}
+// Natural expiry during a lock wait must use snapshot assembly time, without a source edit.
+{
+  const childId=sql(`select child_run_id from ezyvet_migration_bindings where id=${quote(sharedApprovalBindings[0])};`);
+  sql(`update ezyvet_import_runs set retry_after=clock_timestamp()+interval '20 seconds',lease_until=clock_timestamp()+interval '20 seconds' where id=${quote(childId)};`);
+  const preparation=prepareCalculationFixture();
+  const hold=sqlSession();let freezer:ReturnType<typeof sqlSession>|null=null;
+  try {
+    hold.process.stdin.write(`begin; select pg_advisory_xact_lock(hashtextextended(${quote(`migration-calculation-freeze:${preparation}`)},0)); select 'EXPIRY_FREEZE_READY';\n`);
+    await waitForSql(()=>hold.output().includes("EXPIRY_FREEZE_READY"));
+    freezer=sqlSession();
+    freezer.process.stdin.end(`select set_config('request.jwt.claims',${freezeClaims},false); select freeze_ezyvet_migration_calculations(${quote(preparation)});`);
+    const completion=Promise.allSettled([freezer.done]);
+    await waitForSql(()=>sql(`select count(*) from pg_stat_activity where datname='postgres' and wait_event='advisory' and query like ${quote('%'+preparation+'%')};`)==="1");
+    check(sql(`select retry_after>clock_timestamp() and lease_until>clock_timestamp() from ezyvet_import_runs where id=${quote(childId)};`)==="t","Expiry fixture is active while freeze waits");
+    hold.process.stdin.end(`select pg_sleep(greatest(0,extract(epoch from (select greatest(retry_after,lease_until) from ezyvet_import_runs where id=${quote(childId)})-clock_timestamp()))+0.1); commit;\n`);
+    await hold.done;
+    const [result]=await completion;
+    check(result.status==="fulfilled","Natural expiry does not invalidate prepared dependencies");
+    const view=JSON.parse(sql(`select set_config('request.jwt.claims',${freezeClaims},false); select read_ezyvet_migration_calculation_snapshot(${quote(preparation)});`).split("\n").at(-1)!);
+    check(view.scan.scans.cooling_down===0 && view.scan.scans.active_leases===0,"Frozen scan excludes cooldowns and leases that expired during lock wait");
+  } finally {
+    hold.process.stdin.end();freezer?.process.stdin.end();
+    await Promise.allSettled([hold.done,...(freezer?[freezer.done]:[])]);
+    sql(`update ezyvet_import_runs set retry_after=null,lease_until=null where id=${quote(childId)};`);
+  }
+}
+// A freeze waiting on its lock must observe committed changes, but ignore rollbacks.
+for (const commitChange of [true,false]) {
+  const preparation=prepareCalculationFixture();
+  const hold=sqlSession();let freezer:ReturnType<typeof sqlSession>|null=null;
+  try {
+    hold.process.stdin.write(`begin; select pg_advisory_xact_lock(hashtextextended(${quote(`migration-calculation-freeze:${preparation}`)},0)); select 'MUTATION_FREEZE_READY';\n`);
+    await waitForSql(()=>hold.output().includes("MUTATION_FREEZE_READY"));
+    freezer=sqlSession();
+    freezer.process.stdin.end(`select set_config('request.jwt.claims',${freezeClaims},false); select freeze_ezyvet_migration_calculations(${quote(preparation)});`);
+    const completion=Promise.allSettled([freezer.done]);
+    await waitForSql(()=>sql(`select count(*) from pg_stat_activity where datname='postgres' and wait_event='advisory' and query like ${quote('%'+preparation+'%')};`)==="1");
+    sql(`begin; update pets set version=version+1 where id=${quote(pet)}; ${commitChange?'commit':'rollback'};`);
+    hold.process.stdin.end("commit;\n");await hold.done;
+    const [result]=await completion;
+    check(result.status===(commitChange?"rejected":"fulfilled"),"Freeze waits for fresh dependency state and distinguishes commit from rollback");
+    if (commitChange) check(result.status==="rejected" && result.reason.message==="Prepared dependencies changed","Committed patient edit rejects freeze for the dependency reason");
+    check(sql(`select count(*) from ezyvet_migration_calculation_snapshots where preparation_id=${quote(preparation)};`)===String(commitChange?0:1),"Stale freeze saves no snapshot; rollback permits one snapshot");
+  } finally {
+    hold.process.stdin.end();freezer?.process.stdin.end();
+    await Promise.allSettled([hold.done,...(freezer?[freezer.done]:[])]);
+  }
+}
+// A lower journal ID can commit AFTER a baseline containing a higher ID.
+async function checkDependencyCommitOrder(commit:boolean) {
+  const writer=sqlSession();
+  const preparation=randomUUID();
+  const claims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+  const readState=()=>JSON.parse(sql(`select set_config('request.jwt.claims',${claims},false); select read_ezyvet_migration_dependency_state(${quote(preparation)});`).split("\n").at(-1)!);
+  try {
+    writer.process.stdin.write("begin; update patient_problems set version=version where false; select 'DEPENDENCY_PENDING';\n");
+    await waitForSql(()=>writer.output().includes("DEPENDENCY_PENDING"));
+    // Empty statements deliberately journal conservatively, without chart changes.
+    sql("update patient_weights set weight=weight where false;");
+    sql(`select set_config('request.jwt.claims',${claims},false); select prepare_ezyvet_migration_projection(${quote(preparation)},${quote(saved.run.id)});`);
+    check(readState().dependencies_unchanged,"Baseline includes committed higher journal entry but not pending transaction");
+    writer.process.stdin.end(commit?"commit;\n":"rollback;\n");
+    await writer.done;
+    const state=readState();
+    check(state.dependencies_unchanged===!commit,"Dependency state follows commit visibility, not sequence allocation order");
+    assert.deepEqual(state.changed_tables,commit?["patient_problems"]:[]);checks++;
+    const fresh=randomUUID();
+    sql(`select set_config('request.jwt.claims',${claims},false); select prepare_ezyvet_migration_projection(${quote(fresh)},${quote(saved.run.id)});`);
+    const refreshed=JSON.parse(sql(`select set_config('request.jwt.claims',${claims},false); select read_ezyvet_migration_dependency_state(${quote(fresh)});`).split("\n").at(-1)!);
+    check(refreshed.dependencies_unchanged,"Fresh preparation absorbs completed transaction history");
+  } finally {
+    writer.process.stdin.end();
+    await Promise.allSettled([writer.done]);
+  }
+}
+await checkDependencyCommitOrder(true);
+await checkDependencyCommitOrder(false);
+let concurrentPreparation=randomUUID();
+const ownerClaims=quote(JSON.stringify({sub:owner.id,role:"authenticated"}));
+sql(`select set_config('request.jwt.claims',${ownerClaims},false); select prepare_ezyvet_migration_projection(${quote(concurrentPreparation)},${quote(saved.run.id)});`);
+let chunkLock=`hashtextextended(${quote(`migration-chunk:${concurrentPreparation}:${bound.id}:1`)},0)`;
+async function raceChunkWriters(revoke:boolean) {
+  const hold=sqlSession();
+  const writers:ReturnType<typeof sqlSession>[]=[];
+  let results:Promise<PromiseSettledResult<string>[]>|null=null;
+  try {
+    hold.process.stdin.write(`begin; select pg_advisory_xact_lock(${chunkLock}); select 'LOCK_READY';\n`);
+    await waitForSql(()=>hold.output().includes("LOCK_READY"));
+    for(let index=0;index<2;index++) {
+      const writer=sqlSession();writers.push(writer);
+      writer.process.stdin.end(`select set_config('request.jwt.claims',${ownerClaims},false); select prepare_ezyvet_migration_source_chunk(${quote(concurrentPreparation)},${quote(bound.id)},1);`);
+    }
+    results=Promise.allSettled(writers.map(writer=>writer.done));
+    await waitForSql(()=>sql(`select count(*) from pg_stat_activity where datname='postgres' and wait_event='advisory' and query like ${quote('%'+concurrentPreparation+'%')};`)==="2");
+    if(revoke) sql(`update profiles set is_active=false where id=${quote(owner.id)};`);
+    hold.process.stdin.end("commit;\n");
+    await hold.done;
+    return await results;
+  } finally {
+    hold.process.stdin.end();
+    for(const writer of writers) writer.process.stdin.end();
+    await Promise.allSettled([hold.done,...writers.map(writer=>writer.done)]);
+    if(revoke) sql(`update profiles set is_active=true where id=${quote(owner.id)};`);
+  }
+}
+const deniedWriters=await raceChunkWriters(true);
+check(deniedWriters.every(result=>result.status==="rejected" && result.reason.message==="Active administrator required"),"Both waiting chunk writers recheck revoked administrator access");
+check(sql(`select count(*) from ezyvet_migration_source_chunks where preparation_id=${quote(concurrentPreparation)};`)==="0","Revoked concurrent writes persist no chunk");
+// Revocation/restoration changed the old dependency baseline; start a fresh preparation.
+concurrentPreparation=randomUUID();
+chunkLock=`hashtextextended(${quote(`migration-chunk:${concurrentPreparation}:${bound.id}:1`)},0)`;
+sql(`select set_config('request.jwt.claims',${ownerClaims},false); select prepare_ezyvet_migration_projection(${quote(concurrentPreparation)},${quote(saved.run.id)});`);
+const replayWriters=await raceChunkWriters(false);
+check(replayWriters.every(result=>result.status==="fulfilled"),"Both authorized concurrent chunk requests recover successfully");
+const replayReceipts=replayWriters.map(result=>JSON.parse((result as PromiseFulfilledResult<string>).value.trim().split("\n").at(-1)!));
+check(JSON.stringify(replayReceipts[0])===JSON.stringify(replayReceipts[1]),"Concurrent retries return the identical saved chunk receipt");
+check(sql(`select count(*) from ezyvet_migration_source_chunks where preparation_id=${quote(concurrentPreparation)};`)==="1","Concurrent chunk requests commit exactly once");
+const gateKey=873619;
+const blocker=sqlSession();
+let reader:ReturnType<typeof sqlSession>|null=null;
+try {
+  blocker.process.stdin.write(`begin; select pg_advisory_xact_lock(${gateKey}); select 'LOCK_READY';\n`);
+  await waitForSql(()=>blocker.output().includes("LOCK_READY"));
+  reader=sqlSession();
+  reader.process.stdin.end(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false);
+    with gate as materialized(select pg_advisory_xact_lock(${gateKey})) select ezyvet_migration_global_projection(${quote(identityManifest.run.id)}) from gate;`);
+  await waitForSql(()=>sql(`select exists(select 1 from pg_locks where locktype='advisory' and objid=${gateKey} and not granted);`)==="t");
+  sql(`update ezyvet_identity_heads set version=version+1 where source_site_uid=${quote(site)} and resource='animal';`);
+  blocker.process.stdin.end("commit;\n");
+  const [,heldOutput]=await Promise.all([blocker.done,reader.done]);
+  const held=JSON.parse(heldOutput.trim().split("\n").at(-1)!);
+  const fresh=JSON.parse(sql(`select set_config('request.jwt.claims',${quote(JSON.stringify({sub:owner.id,role:"authenticated"}))},false); select ezyvet_migration_global_projection(${quote(identityManifest.run.id)});`).split("\n").at(-1)!);
+  check(held.intent_hash===identityManifest.run.intent_hash && !("scope_manifest_hash" in held),"Combined read identifies request intent without mislabeling resolved scope digest");
+  check(held.outcomes.receipts.identity_mapping.source_current_versions===1 && held.scan.stale_parent_scopes===0,"Blocked combined read keeps one consistent pre-change snapshot");
+  check(fresh.outcomes.receipts.identity_mapping.source_stale_versions===1 && fresh.scan.stale_parent_scopes===1,"Fresh combined read sees source change consistently");
+  check(held.source.resources[0].observed_occurrences===fresh.source.resources[0].observed_occurrences && held.review.resources[0].occurrences_with_snapshot_only_approval===1,"Concurrent source change preserves observed evidence and unknown-head relationship");
+} finally {
+  blocker.process.stdin.end();
+  reader?.process.stdin.end();
+  await Promise.allSettled([blocker.done,...(reader?[reader.done]:[])]);
+}
+
 const driftedIdentity = await identityApi.read(identityBinding, identityItem);
 check(!driftedIdentity.approval.source_current && driftedIdentity.approval.relationship === "same_snapshot_unknown_observed_head", "Source reversion does not manufacture exact identity observation credit");
 assert.deepEqual(await api.prepare(manifestRequest), saved); checks++;

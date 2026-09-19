@@ -122,4 +122,28 @@ select throws_ok($$select read_ezyvet_migration_weight_evidence((select id from 
 reset role;
 select ok(not has_function_privilege('anon','public.read_ezyvet_migration_weight_evidence(uuid,integer,uuid,text,timestamptz,uuid,integer)','execute'),'Anonymous denied');
 select ok(not has_function_privilege('service_role','public.read_ezyvet_migration_weight_evidence(uuid,integer,uuid,text,timestamptz,uuid,integer)','execute'),'Service execution denied');
+
+reset role;select set_config('request.jwt.claims','{"sub":"e5000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_standard_receipts((select id from fx where k='migration')) where receipt_kind='weight_approval'),2::bigint,'Two source identities retain two distinct approval receipts');
+select is((select count(distinct native_id) from ezyvet_migration_terminal_standard_receipts((select id from fx where k='migration')) where native_kind='weight'),1::bigint,'Linked source identities count one native weight');
+select is((select count(distinct receipt_id) from ezyvet_migration_terminal_standard_receipts((select id from fx where k='migration')) where receipt_kind='weight_source_acknowledgment'),2::bigint,'Source acknowledgments remain distinct from approvals');
+select is((select count(*) from ezyvet_migration_terminal_standard_receipts((select id from fx where k='migration')) where receipt_kind='weight_source_acknowledgment' and native_id is not null),0::bigint,'Acknowledgments receive no native measurement credit');
+select is((select count(*) from ezyvet_migration_terminal_standard_receipts((select id from fx where k='migration')) where relationship='exact_source_version'),0::bigint,'Weight legacy observations never gain exact observed-version credit');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,versions}','2','Summary deduplicates weight approvals across source pages');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_source_acknowledgment,versions}','2','Summary keeps acknowledgments separate');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{native_outcomes,weight,records}','1','Two approved source identities remain one native measurement');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,exact_observation_version_matches}','0','Summary does not invent missing observed heads');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))->>'standalone_consult_approval','not_applicable','No standalone consult approval fabricated');
+select is(ezyvet_migration_outcome_totals(gen_random_uuid()),null::jsonb,'Unknown manifest does not become empty success');
+select ok(not has_function_privilege('authenticated','public.ezyvet_migration_outcome_totals(uuid)','execute'),'Outcome aggregation stays private before complete summary acceptance');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,created_record_receipts}','1','One weight receipt created a measurement');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,linked_record_receipts}','1','Other weight receipt linked existing measurement');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,changed_patient_versions}','0','Initial patient version matches both weight approvals');
+update pets set version=version+1 where id=(select id from fx where k='pet');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,changed_patient_versions}','2','Both approval contexts show later patient edit');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,locally_changed_versions}','0','Patient edit does not falsely change immutable measurement');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,changed_household_versions}','0','Patient version change does not imply household reassignment');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_source_acknowledgment,created_record_receipts}','0','Acknowledgments never create native records');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_approval,patient_version_assessed_versions}','2','Changed-patient count has explicit assessed denominator');
+select is(ezyvet_migration_outcome_totals((select id from fx where k='migration'))#>>'{receipts,weight_source_acknowledgment,patient_version_assessed_versions}','0','Acknowledgment does not imply patient-version assessment');
 select * from finish();rollback;

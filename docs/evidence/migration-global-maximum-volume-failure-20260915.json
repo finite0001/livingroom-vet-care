@@ -1,0 +1,20 @@
+{
+  "synthetic_only": true,
+  "project_id": "lrv-attachment-2b2f71f79609",
+  "physical_observations_verified": 5000000,
+  "required_scopes": 100,
+  "independent_runs": 100,
+  "query_budget_seconds": 10,
+  "projection_result": "statement_timeout",
+  "failure_context": "ezyvet_migration_terminal_observations",
+  "full_volume_acceptance": false,
+  "cleanup_stop_recorded": true,
+  "database_container_absent_after_cleanup": true,
+  "provider_requests": 0,
+  "protected_log_sha256": "12b7e3ac11d8df53d6ded8859e33ed7c7b203b84cc14c72db22f9f62a2cf3fb0",
+  "source_sha256": {
+    "supabase/tests/ezyvet_migration_maximum_volume.test.sql": "ceb2f0a1b64e25ba2342cf874f070a2d45657124d038493065ffb1eb0f5f9da4",
+    "supabase/migrations/20260916030000_ezyvet_migration_global_outcomes.sql": "5107df0c384474396fc8bfe3546afd40642717323a9a8b3c8e9d1fbc90b74b37",
+    "tests/ezyvet/attachment-metadata-disposable.py": "e8fcc9fa1c0f9d6fd84b302625b0a16d28bfdf95296adee067f9c40a61ff1f8d"
+  }
+}

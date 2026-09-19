@@ -1,0 +1,19 @@
+{
+  "synthetic_only": true,
+  "physical_observations": 5000000,
+  "chunk_page_count": 20,
+  "first_chunk_rows": 1000,
+  "last_chunk_rows": 1000,
+  "each_statement_budget_seconds": 10,
+  "chunk_assertions_passed": 3,
+  "whole_original_run_passed": false,
+  "later_full_query_regression": "Fixed by restoring direct full projection; fresh186-check receipt separate",
+  "bounded_function_bodies_unchanged": true,
+  "function_body_sha256": {
+    "ezyvet_migration_observation_window": "c73602fec4f1cf455c560d34d3d8fa06c89191603e13d73e029d7a2ddc9a9003",
+    "ezyvet_migration_observation_chunk": "c06033bb2dd2b3eac101de94c6ab69d11f4612ab28e333539bd6c45d562b7880"
+  },
+  "cleanup_stop_recorded": true,
+  "provider_requests": 0,
+  "full_report_assembly_verified": false
+}
