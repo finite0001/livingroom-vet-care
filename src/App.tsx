@@ -30,7 +30,6 @@ const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
 const UnavailableToolPage = lazy(() => import("@/hub/pages/UnavailableToolPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
-const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const WebsiteInquiriesPage = lazy(() => import("@/hub/features/inquiries/WebsiteInquiriesPage"));
 const ProcessingQueuePage = lazy(() => import("@/hub/features/inbound-review/ProcessingQueuePage"));
 const InboxReviewPage = lazy(() => import("@/hub/features/inbound-review/InboxReviewPage"));
