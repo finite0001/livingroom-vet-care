@@ -126,6 +126,14 @@ function ImportedHistoryPanel({
         }
       : reviewedProblem(draft);
   const selectedRows = Object.values(selected);
+  if (
+    !dvm &&
+    !histories.isLoading &&
+    !histories.isError &&
+    cursor === null &&
+    (histories.data?.histories.length ?? 0) === 0
+  )
+    return null;
   return (
     <section
       aria-label="Approved imported clinical history"

@@ -113,6 +113,13 @@ function Chart({ petId, disabled, actor }: ChartProps) {
     },
   });
   if (!authorized) return null;
+  if (
+    !history.isLoading &&
+    !history.isError &&
+    cursor === null &&
+    (history.data?.records.length ?? 0) === 0
+  )
+    return null;
   return (
     <Card role="region" aria-label="Reviewed API attachments">
       <CardHeader>
