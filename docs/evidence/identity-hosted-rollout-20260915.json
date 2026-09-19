@@ -1,0 +1,78 @@
+{
+  "candidate": "1dd9ecd70cc95399b0ba2a3b8471e8a1dd0be410",
+  "hosted_changes_applied": true,
+  "expected_hosted_migration_count": 111,
+  "expected_hosted_latest_version": "20260916000000",
+  "candidate_migration_count": 112,
+  "dry_run_pending_migrations": [
+    "20260916010000_ezyvet_migration_identity_evidence.sql"
+  ],
+  "dry_run_seeds": [],
+  "dry_run_roles": [],
+  "backups": {
+    "staging": {
+      "project": "kothoqicubowyhwfsrte",
+      "bytes": 2728578,
+      "sha256": "1847ca786b21c716daaeed9e6697533275ebf184e532d604991b66e007a23340",
+      "inventory_verified": true,
+      "actual_restore_verified": false
+    },
+    "primary": {
+      "project": "mgadheotkdnrsatfivjy",
+      "bytes": 2716126,
+      "sha256": "62f3c052f6b916bfa6eea61f58b9f55488d2804406b71c21d4bf888bf3b5a3ee",
+      "inventory_verified": true,
+      "actual_restore_verified": false
+    }
+  },
+  "staging_restore": {
+    "project": "kothoqicubowyhwfsrte",
+    "actual_backup_restored": true,
+    "migration_sha256": "da1c5c63687ef1d5a958cd21c24ee75eb1ea4edb620c328ad86f05cad710521b",
+    "existing_tables_preserved": 235,
+    "sql_assertions": 30,
+    "owner_normalization": "pg_restore --no-owner into isolated local postgres-owned database",
+    "hosted_owner_parity_verified": false,
+    "hosted_default_privilege_parity_verified": false,
+    "restore_adjustments": "Omitted provider-owned DEFAULT ACL entries; explicit object ACLs retained",
+    "provider_calls": 0,
+    "cleanup_verified": true
+  },
+  "ci_run": 35055825670,
+  "ci_status_at_preflight": "in_progress",
+  "primary_restore": {
+    "project": "mgadheotkdnrsatfivjy",
+    "actual_backup_restored": true,
+    "migration_sha256": "da1c5c63687ef1d5a958cd21c24ee75eb1ea4edb620c328ad86f05cad710521b",
+    "existing_tables_preserved": 235,
+    "sql_assertions": 30,
+    "owner_normalization": "pg_restore --no-owner into isolated local postgres-owned database",
+    "hosted_owner_parity_verified": false,
+    "hosted_default_privilege_parity_verified": false,
+    "restore_adjustments": "Omitted provider-owned DEFAULT ACL entries; explicit object ACLs retained",
+    "provider_calls": 0,
+    "cleanup_verified": true
+  },
+  "ci_status": "success",
+  "merge_commit": "5f5d1b1892d2d2ca7668ace33effbb959c213669",
+  "hosted_migration_count": 112,
+  "hosted_latest_version": "20260916010000",
+  "function_body_sha256": "44294b54e3795c135547a56338adf6abb6affb8f541101db11cd0764725fd5d5",
+  "function_grants": {
+    "authenticated": true,
+    "anon": false,
+    "service_role": false
+  },
+  "function_security_definer": true,
+  "function_search_path": "public",
+  "client_and_patient_fingerprints_preserved": true,
+  "migration_runs_each": 0,
+  "publication": {
+    "index": "/assets/index-CfL-c4vv.js",
+    "app": "/assets/App-BOUJGjWx.js",
+    "import_chunk": "/assets/EzyVetImportPage-rcW3aiaz.js",
+    "import_chunk_sha256": "00cfb2c461941b5b9ea12184604ab358124fb0fc6206702fa6eea3628a01df79",
+    "primary_backend_only": true,
+    "identity_rpc_and_panel_present": true
+  }
+}

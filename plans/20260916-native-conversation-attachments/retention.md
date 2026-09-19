@@ -58,3 +58,25 @@ Five handler tests, frozen Deno entry-point checking, targeted lint and diff che
 ## Worker HTTP acceptance prepared
 
 Extended the disposable integration server with shared cleanup-handler routes. Before the authorized cleanup path, it checks ordinary staff rejection, valid worker denial on the disabled route, arbitrary-path rejection and absence of any cleanup intent from those requests. The enabled test-only route invokes the real service RPC/Storage adapter and retains lost-deletion-response recovery checks. This is localhost Node-hosted shared-handler acceptance, not deployed Edge gateway acceptance. Node syntax, targeted lint and diff checks pass; runtime is pending. The existing frontend job35096847299 is still running after its known SQL fixture failure, so the corrected candidate has not been pushed yet.
+
+## Cleanup concurrency acceptance prepared
+
+Added `abandoned_attachment_cleanup_concurrency.py` and a CI step using the existing explicit-local/Docker-label and observed pg_blocking_pids harness. Cases cover competing claims, a verification winner excluding cleanup after lock wait, duplicate completion receipt recovery, replaced cleanup leases rejecting the waiting old worker, and changed Storage identity preserved for review. Python compile/diff checks pass; these new cases have not executed. Fixtures use only synthetic SQL metadata, while actual file deletion is covered separately by the HTTP/Auth/Storage harness.
+
+CI35097849305 at9b46cc6 has now passed the complete SQL stage, including the corrected cleanup fixture and14 receipt assertions. Edge checking passed; later integration/browser jobs are still active. This local concurrency follow-up is not in that run.
+
+## Bounded discovery and operator instructions
+
+Added service-only `list_abandoned_attachment_cleanup_candidates(grace,limit)` to candidate migration118. It returns upload identity/reason only, bounds batches1–100, excludes current leases, retained files, changed objects and completed absent removals, and offers expired exact intents for recovery. Claim still revalidates transactionally. Five added SQL assertions bring cleanup coverage to19; actual-service discovery assertion added. Targeted lint/syntax/diff pass; new SQL/runtime checks are pending. `docs/attachment-cleanup-operations.md` records gates, explicit grace, per-upload request semantics, receipt recovery and stopping behavior without selecting or enabling hosted settings.
+
+## Release-path verification and documentation correction
+
+CI35097849305 completed all jobs at9b46cc6, including32 actual localhost HTTP/Auth/RPC/Storage checks. Cleanup discovery/concurrency changes were pushed at843ca92; CI35107565034 is active. PRs152/153 were marked ready for review after their checks passed. The current ancestry remains open PR137→139→141→150→152→153→156, rooted in `codex/lovable-publication`; this is not a merged or deployed release claim.
+
+The deployment runbook still began with superseded September12 states (old backend active, no cutover, ezyVet commissioning required). Added a current-direction section grounded in AGENTS.md and the September15/16 release/direction receipts, and clearly marked the older notes historical. No new live infrastructure claim or deployment was made. Diff checks pass; docs-only change needs no runtime test.
+
+## Parent release-chain CI blocker addressed
+
+PR137's prior run35055218973 failed after468 SQL assertions because prescription-review scratch cleanup attempted to terminate a privileged background process. Its harness already records owned worker application names. Changed teardown to terminate only those named workers inside the marker-verified owned database, and to skip termination in SQL-only runs with no owned workers. Syntax/diff checks pass; this is retained test-infrastructure maintenance, not new ezyVet functionality.
+
+An isolated worktree `/Users/davidedler/Developer/livingroom-release-cleanup-fix` on branch `codex/readiness-cleanup-fix` committed214f3a6 and pushed normally to PR137's `codex/readiness-provider-checkpoint` branch. CI35108046454 is confirmed in progress at that commit. Same patch is committed locally in the attachment branch as5c2fb84; do not push it until CI35107565034 finishes. Neither parent fix nor child stack has been merged/deployed.

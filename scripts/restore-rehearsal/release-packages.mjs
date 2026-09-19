@@ -17,9 +17,11 @@ export async function seedReleasePackages({state, api, admin, sql, includePrescr
     assert.equal(bytes.length,size); return bytes;
   };
   const selected = state.apiDecisions.find(item => item.outcome.record?.version === 2).outcome.record;
-  const conversation = state.releasePackages?.conversation ?? randomUUID();
-  if (!state.releasePackages) sql(`insert into conversations(id,client_id) values('${conversation}','${state.client}');
-    update record_release_policy set accepted_schema_version=9,acceptance_reference='Synthetic isolated restore schema9 only',enabled=true;`);
+  const conversation = state.releasePackages?.conversation ?? state.conversationAttachments?.conversation ?? randomUUID();
+  if (!state.releasePackages) {
+    if (!state.conversationAttachments) sql(`insert into conversations(id,client_id) values('${conversation}','${state.client}');`);
+    sql(`update record_release_policy set accepted_schema_version=9,acceptance_reference='Synthetic isolated restore schema9 only',enabled=true;`);
+  }
   const saved = {selection:{api_attachment_ids:[selected.id]},conversation};
   if (includePrescription) {
     const prescription = JSON.parse(sql(`select to_jsonb(p) from ezyvet_imported_prescriptions p where pet_id='${state.pet}' and version=2`));

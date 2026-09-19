@@ -84,6 +84,8 @@ jobs:
         run: python3 -B tests/prescriptions/native_finance_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify native estimate drafts, catalog review and uncertain-save resolution
         run: python3 -B tests/estimates/draft-concurrency.py --run-synthetic-local --project-config supabase/config.toml
+      - name: Verify abandoned attachment cleanup claims, replacement and receipt races
+        run: python3 supabase/tests/abandoned_attachment_cleanup_concurrency.py --project-config supabase/config.toml --run-synthetic-local
       - name: Verify incoming attachment claim, finalization and revocation races
         run: python3 supabase/tests/inbound_attachment_concurrency.py --project-config supabase/config.toml --run-synthetic-local
       - name: Verify conversation attachment capture and queue races

@@ -1,5 +1,6 @@
 import { seedCommunications, verifyCommunications, assertExactOutbox } from './communications-fixture.mjs';
 import { seedReleasePackages, verifyReleasePackages } from './release-packages.mjs';
+import { seedConversationAttachments, verifyConversationAttachments } from './conversation-attachments.mjs';
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -133,6 +134,9 @@ select jsonb_object_agg(k,id) from fx;commit;`);
   );
   state.originalHash = hash(content);
   state.originalSize = content.length;
+  if (sql("select to_regclass('public.abandoned_attachment_cleanup') is not null") === 't') {
+    await seedConversationAttachments({ state, api, admin, sql });
+  }
   // Snapshot after durable fixture creation; never include ephemeral auth session rows in comparison.
   state.snapshot = snapshot();
   writeFileSync(statePath, JSON.stringify(state), { mode: 0o600 });
@@ -268,6 +272,30 @@ select jsonb_object_agg(k,id) from fx;commit;`);
     state.snapshot,
     "Upgrade preserves all captured clinical/billing/audit/Auth/Storage data",
   );
+  const login = checked(await api.auth.signInWithPassword({
+    email: state.email,
+    password: state.password,
+  }));
+  assert.equal(login.user.id, state.user);
+  const bytes = Buffer.from(await checked(
+    await api.storage.from("patient-documents").download(state.document.file_path),
+  ).arrayBuffer());
+  assert.equal(bytes.length, state.originalSize);
+  assert.equal(hash(bytes), state.originalHash);
+  assert.ok((await anonymous.storage.from("patient-documents")
+    .download(state.document.file_path)).error);
+  assert.equal((await fetch(
+    `${config.API_URL}/storage/v1/object/public/patient-documents/${state.document.file_path}`,
+  )).ok, false);
+  assert.deepEqual(snapshot(), upgraded, "Upgrade verification preserves captured records");
+  writeFileSync(join(run, "upgrade-verification.json"), JSON.stringify({
+    captured_clinical_billing_inventory_audit_auth_storage_rows_unchanged: true,
+    fresh_login: true,
+    private_original_bytes: bytes.length,
+    private_original_sha256: hash(bytes),
+    anonymous_and_public_original_reads_denied: true,
+    verification_preserves_captured_rows: true,
+  }, null, 2), { mode: 0o600 });
   state.snapshot = upgraded;
   writeFileSync(statePath, JSON.stringify(state), { mode: 0o600 });
   console.log(
@@ -508,10 +536,14 @@ rollback;`);
     if (state.mixedReleasePackages) await verifyReleasePackages({state,api,admin,sql,packages:state.mixedReleasePackages});
     assert.deepEqual(snapshot(),state.snapshot,'Artifact verification and rolled-back source/policy probes preserve original records');
   }
+  const conversationAttachments = state.conversationAttachments
+    ? await verifyConversationAttachments({ state, api, admin, anonymous, sql })
+    : null;
   writeFileSync(
     join(run, "verification.json"),
     JSON.stringify(
       {
+        conversation_attachment_lifecycle_restore: conversationAttachments,
         mixed_prescription_api_release_packages_restored: Boolean(state.mixedReleasePackages),
         partial_prescription_disclosure_and_source_invalidation_verified: Boolean(state.mixedReleasePackages),
         saved_schema9_email_and_link_restored: Boolean(state.releasePackages),

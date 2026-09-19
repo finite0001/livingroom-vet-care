@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-16",
+  "scope": "Synthetic local 119-receipt restore; no hosted mutation",
+  "initial_functional_checks_passed": true,
+  "initial_restore_accepted": false,
+  "routine_comparison": {
+    "matches": true,
+    "routines": 576,
+    "triggers": 276
+  },
+  "access_comparison": {
+    "matches": false,
+    "unexpected_sequence_update_grants": [
+      "anesthesia_record_revisions_id_seq",
+      "care_plan_revisions_id_seq",
+      "communication_processing_history_id_seq",
+      "lab_work_revisions_id_seq",
+      "reminder_automation_policy_history_id_seq"
+    ],
+    "affected_roles": ["anon", "authenticated", "service_role"],
+    "changed_defaults": ["postgres/public/S", "postgres/public/r"],
+    "policies_match": true,
+    "migration_versions_match": true
+  },
+  "correction": "Neutralize disposable destination postgres creation defaults before pg_restore, alongside existing supabase_admin normalization. Require routine/access comparison for all restore modes.",
+  "verification": "Corrected destination replay started from the existing checksum-verified backup; final outcome must be recorded separately.",
+  "limitations": "Expected schema came from the separately verified populated upgrade. The older backup did not capture source permission inventories; fresh runs now do."
+}

@@ -77,6 +77,9 @@ verify_jwt = true
 verify_jwt = true
 
 # Staff JWT plus active-owner checks before capture and the final review receipt.
+[functions.verify-conversation-attachment]
+verify_jwt = true
+
 [functions.capture-conversation-email]
 verify_jwt = true
 
