@@ -8,7 +8,6 @@ import {
   ClipboardList,
   FileText,
   Pill,
-  Stethoscope,
   LayoutDashboard,
   ChevronDown,
   LogOut,
@@ -44,7 +43,6 @@ const toolItems = [
 
 const adminItems = [
   { path: "/hub/admin/operations", label: "Operations", icon: LayoutDashboard },
-  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
   { path: "/hub/admin", label: "Dashboard", icon: LayoutDashboard },
   { path: "/hub/admin/staff", label: "Staff", icon: Users },
 ];

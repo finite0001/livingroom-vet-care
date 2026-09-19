@@ -8,7 +8,6 @@ import {
   Users,
   FileText,
   Pill,
-  Stethoscope,
   Settings,
   LayoutDashboard,
   X,
@@ -51,7 +50,6 @@ const moreItems = [
 
 const adminMoreItems = [
   { path: "/hub/admin/operations", label: "Operations", icon: LayoutDashboard },
-  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
   { path: "/hub/admin", label: "Admin Dashboard", icon: LayoutDashboard },
 ];
 

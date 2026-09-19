@@ -369,13 +369,11 @@ test("mobile navigation keeps schedule and care reminders while hiding unavailab
     "Surveys",
     "Alerts",
     "Import Clients",
+    "ezyVet imports",
   ])
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(
       0,
     );
-  await expect(
-    page.getByRole("button", { name: "ezyVet imports", exact: true }),
-  ).toBeVisible();
   await page
     .getByRole("button", { name: "Care reminders", exact: true })
     .click();
