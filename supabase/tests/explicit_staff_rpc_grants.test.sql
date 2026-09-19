@@ -18,6 +18,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('b6000000-0000-4000-8000-000000000001','grant-admin@example.test','{}'),
  ('b6000000-0000-4000-8000-000000000002','grant-staff@example.test','{}'),
  ('b6000000-0000-4000-8000-000000000003','grant-inactive@example.test','{}');
+update public.profiles set is_active = true where id in ('b6000000-0000-4000-8000-000000000001','b6000000-0000-4000-8000-000000000002','b6000000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('b6000000-0000-4000-8000-000000000001','STAFF'),('b6000000-0000-4000-8000-000000000002','STAFF'),('b6000000-0000-4000-8000-000000000003','STAFF');
+
 insert into user_roles(user_id,role) values('b6000000-0000-4000-8000-000000000001','ADMIN');
 update profiles set is_active=false where id='b6000000-0000-4000-8000-000000000003';
 insert into clients(id,first_name,last_name,full_name) values('b6000000-0000-4000-8000-000000000004','Synthetic','Grant','Synthetic Grant');

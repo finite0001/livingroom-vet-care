@@ -5,6 +5,9 @@ select no_plan();
 create temp table review_fixture_ids(kind text primary key,id uuid);
 grant all on review_fixture_ids to authenticated;
 insert into auth.users(id,email,raw_user_meta_data) values ('e4000000-0000-4000-8000-000000000001','import-review-admin@example.test','{"first_name":"Review","last_name":"Admin"}'),('e4000000-0000-4000-8000-000000000002','import-review-staff@example.test','{"first_name":"Review","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('e4000000-0000-4000-8000-000000000001','e4000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('e4000000-0000-4000-8000-000000000001','STAFF'),('e4000000-0000-4000-8000-000000000002','STAFF');
+
 insert into public.user_roles(user_id,role) values('e4000000-0000-4000-8000-000000000001','ADMIN');
 insert into public.ezyvet_import_runs(id,source_origin,source_site_uid,resource,requested_by) values('e4100000-0000-4000-8000-000000000001','https://api.trial.ezyvet.com','review-site','contact','e4000000-0000-4000-8000-000000000001');
 insert into public.ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) values

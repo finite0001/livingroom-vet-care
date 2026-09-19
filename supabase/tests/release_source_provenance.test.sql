@@ -1,6 +1,9 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 -- FIXTURE_BEGIN: synthetic metadata and service captures; byte transport is tested separately.
 insert into auth.users(id,email,raw_user_meta_data) values('db470000-0000-4000-8000-000000000001','release-source-admin@example.test','{}'),('db470000-0000-4000-8000-000000000002','release-source-dvm@example.test','{}');
+update public.profiles set is_active = true where id in ('db470000-0000-4000-8000-000000000001','db470000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db470000-0000-4000-8000-000000000001','STAFF'),('db470000-0000-4000-8000-000000000002','STAFF');
+
 insert into user_roles(user_id,role) values('db470000-0000-4000-8000-000000000001','ADMIN'),('db470000-0000-4000-8000-000000000002','DVM');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;

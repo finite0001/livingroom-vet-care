@@ -5,6 +5,9 @@ select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values
 ('31000000-0000-4000-8000-000000000001','clinical-staff@example.test','{"first_name":"Clinical","last_name":"Staff"}'),
 ('31000000-0000-4000-8000-000000000002','clinical-inactive@example.test','{"first_name":"Clinical","last_name":"Inactive"}');
+update public.profiles set is_active = true where id in ('31000000-0000-4000-8000-000000000001','31000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('31000000-0000-4000-8000-000000000001','STAFF'),('31000000-0000-4000-8000-000000000002','STAFF');
+
 update public.profiles set is_active=false where id='31000000-0000-4000-8000-000000000002';
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;

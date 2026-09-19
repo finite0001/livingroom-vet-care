@@ -14,6 +14,9 @@ end $$;
 
 insert into auth.users(id,email,raw_user_meta_data) values
 ('51000000-0000-4000-8000-000000000001','outbox-staff@example.test','{"first_name":"Outbox","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('51000000-0000-4000-8000-000000000001');
+insert into public.user_roles (user_id, role) values ('51000000-0000-4000-8000-000000000001','STAFF');
+
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated,service_role;
 set local role authenticated;

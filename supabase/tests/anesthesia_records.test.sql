@@ -3,6 +3,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values('ab000000-0000-4000-8000-000000000001','anesthesia-staff@example.test','{"first_name":"Anesthesia","last_name":"Staff"}'),('ab000000-0000-4000-8000-000000000002','anesthesia-inactive@example.test','{"first_name":"Inactive","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('ab000000-0000-4000-8000-000000000001','ab000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('ab000000-0000-4000-8000-000000000001','STAFF'),('ab000000-0000-4000-8000-000000000002','STAFF');
+
 update public.profiles set is_active=false where id='ab000000-0000-4000-8000-000000000002';
 create temp table anesthesia_fixture(kind text primary key,id uuid);grant all on anesthesia_fixture to authenticated;
 select ok(not has_table_privilege('authenticated','public.patient_anesthesia_records','UPDATE'),'Direct draft/signature updates denied');

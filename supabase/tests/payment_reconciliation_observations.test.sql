@@ -6,6 +6,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('73300000-0000-4000-8000-000000000001','reconciliation-staff@example.test','{}'),
  ('73300000-0000-4000-8000-000000000002','reconciliation-other@example.test','{}'),
  ('73300000-0000-4000-8000-000000000003','reconciliation-inactive@example.test','{}');
+update public.profiles set is_active = true where id in ('73300000-0000-4000-8000-000000000001','73300000-0000-4000-8000-000000000002','73300000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('73300000-0000-4000-8000-000000000001','STAFF'),('73300000-0000-4000-8000-000000000002','STAFF'),('73300000-0000-4000-8000-000000000003','STAFF');
+
 update public.profiles set is_active=false where id='73300000-0000-4000-8000-000000000003';
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table snapshots(k text primary key,v jsonb);grant all on snapshots to authenticated,service_role;

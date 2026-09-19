@@ -6,6 +6,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('73800000-0000-4000-8000-000000000001','payment-staff@example.test','{}'),
  ('73800000-0000-4000-8000-000000000002','payment-other@example.test','{}'),
  ('73800000-0000-4000-8000-000000000003','payment-inactive@example.test','{}');
+update public.profiles set is_active = true where id in ('73800000-0000-4000-8000-000000000001','73800000-0000-4000-8000-000000000002','73800000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('73800000-0000-4000-8000-000000000001','STAFF'),('73800000-0000-4000-8000-000000000002','STAFF'),('73800000-0000-4000-8000-000000000003','STAFF');
+
 update public.profiles set is_active=false where id='73800000-0000-4000-8000-000000000003';
 insert into public.user_roles(user_id,role) values ('73800000-0000-4000-8000-000000000001','ADMIN') on conflict do nothing;
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;

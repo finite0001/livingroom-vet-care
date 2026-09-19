@@ -88,7 +88,7 @@ def remove_fixture(path):
     sql(f"begin;set local storage.allow_delete_query='true';delete from storage.objects where bucket_id='conversation-attachment-uploads' and name='{path}';commit;")
 
 try:
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','cleanup-race-{actor}@example.test','{{}}');insert into user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','cleanup-race-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into user_roles(user_id,role) values('{actor}','ADMIN');")
     client = sql(f"begin;{staff}select (save_client(auth.uid(),null,null,'Cleanup','Race',null,null,'EMAIL',null,null)).id;commit;")
     fixture_ids.append(client)
     sql(f"insert into conversations(id,client_id) values('{conversation}','{client}');")
