@@ -23,6 +23,22 @@ FOUNDATION_COMMAND = ['docker', 'exec', '-i', CONTAINER, 'psql', '-U', 'postgres
 
 COMMAND = FOUNDATION_COMMAND.copy()
 
+# Cleanup runs as the container superuser. `postgres` is not a superuser in this
+# image, so terminating a connection it does not own - any supabase_admin or
+# background session attached to the scratch database - fails with "Only roles
+# with the SUPERUSER attribute may terminate processes of roles with the
+# SUPERUSER attribute", and then the scratch database is never dropped.
+# The checks themselves still run through `sql()` as `postgres`.
+CLEANUP_COMMAND = FOUNDATION_COMMAND.copy()
+CLEANUP_COMMAND[CLEANUP_COMMAND.index('-U') + 1] = 'supabase_admin'
+
+def cleanup_sql(query):
+    result = subprocess.run(CLEANUP_COMMAND, input=query, capture_output=True, text=True)
+    if result.returncode:
+        raise AssertionError(result.stderr)
+    return result
+
+
 def sql(query, fail=True):
     result = subprocess.run(COMMAND, input=query, capture_output=True, text=True, timeout=30)
     if fail and result.returncode:
@@ -197,7 +213,7 @@ finally:
     if created:
         COMMAND=FOUNDATION_COMMAND.copy()
         check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
-        sql(f'drop database "{database}";')
+        cleanup_sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
+        cleanup_sql(f'drop database "{database}";')
         check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
 print(f'Inventory product-lock concurrency: {checks} checks passed; no provider calls.')
