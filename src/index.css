@@ -37,6 +37,15 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
+    /* Status colours. Use these instead of raw Tailwind palette classes
+       (green/amber/red/emerald/…) so a state reads the same everywhere. */
+    --success: 142 71% 30%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 33%;
+    --warning-foreground: 40 33% 97%;
+    --info: 217 91% 40%;
+    --info-foreground: 0 0% 100%;
+
     --border: 40 20% 85%;
     --input: 40 20% 85%;
     --ring: 16 50% 58%;
@@ -106,6 +115,14 @@
     --clinical-alert: 0 90% 76%;
     --destructive: 0 62% 50%;
     --destructive-foreground: 40 33% 94%;
+
+    /* Status colours (see the light theme). */
+    --success: 142 69% 58%;
+    --success-foreground: 144 61% 12%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 26 83% 14%;
+    --info: 213 94% 68%;
+    --info-foreground: 214 84% 14%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;

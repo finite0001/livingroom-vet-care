@@ -335,7 +335,7 @@ export function AllStaffTimesheet() {
                           <TableCell className="whitespace-nowrap">{formatDateTime(e.clock_in_at)}</TableCell>
                           <TableCell className="whitespace-nowrap">
                             {open ? (
-                              <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                              <Badge variant="outline" className="border-success/40 text-success">
                                 On duty
                               </Badge>
                             ) : (

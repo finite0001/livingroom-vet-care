@@ -29,6 +29,20 @@ export default {
           foreground: "hsl(var(--secondary-foreground))",
         },
         "clinical-alert": "hsl(var(--clinical-alert))",
+        // Status colours — see the tokens in src/index.css. Prefer these over raw
+        // Tailwind palette classes (green-600, amber-500, emerald-500, …).
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
