@@ -93,9 +93,10 @@ async function fixture(page: Page, baseURL: string | undefined, actor = staff) {
       [
         "/rest/v1/rpc/inbox_unread_totals",
         "/rest/v1/rpc/list_inbox_workspace",
+        "/rest/v1/rpc/list_native_refills",
       ].includes(path) ||
       (method === "HEAD" &&
-        ["/rest/v1/conversations", "/rest/v1/tickets"].includes(path));
+        ["/rest/v1/conversations", "/rest/v1/tickets", "/rest/v1/appointments", "/rest/v1/clinical_encounters", "/rest/v1/patient_vaccine_due_plans", "/rest/v1/patient_lab_orders", "/rest/v1/communication_outbox"].includes(path));
     if (homeRead && state.hold) await state.hold;
     if (homeRead && state.fail)
       return method === "HEAD"
@@ -115,6 +116,21 @@ async function fixture(page: Page, baseURL: string | undefined, actor = staff) {
       });
     if (path === "/rest/v1/rpc/list_inbox_workspace")
       return route.fulfill({ json: [row] });
+    if (path === "/rest/v1/rpc/list_native_refills")
+      return route.fulfill({ json: { version: 1, refills: [], has_more: false, next_cursor: null } });
+    // Today-screen read counts (HEAD selects with content-range).
+    if (
+      method === "HEAD" &&
+      ["/rest/v1/appointments", "/rest/v1/clinical_encounters", "/rest/v1/patient_vaccine_due_plans", "/rest/v1/patient_lab_orders", "/rest/v1/communication_outbox"].includes(path)
+    )
+      return route.fulfill({
+        status: 200,
+        body: "",
+        headers: {
+          "access-control-expose-headers": "content-range",
+          "content-range": "0-0/0",
+        },
+      });
     if (
       method === "HEAD" &&
       ["/rest/v1/conversations", "/rest/v1/tickets"].includes(path)
@@ -214,7 +230,7 @@ test("optional direct routes stay read-only and never mount their legacy data ho
   ).toBe(true);
 });
 
-test("desktop home exposes implemented tools and personal unread state, never shared is_read", async ({
+test("desktop home exposes today counts, implemented tools and personal unread state, never shared is_read", async ({
   page,
   baseURL,
 }, testInfo) => {
@@ -227,15 +243,6 @@ test("desktop home exposes implemented tools and personal unread state, never sh
       exact: true,
     }),
   ).toContainText("7");
-  await expect(
-    page.getByRole("region", { name: "Active conversations", exact: true }),
-  ).toContainText("5");
-  await expect(
-    page.getByRole("region", { name: "Open tickets", exact: true }),
-  ).toContainText("3");
-  await expect(
-    page.getByRole("link", { name: /Synthetic Household.*Unread for you/ }),
-  ).toBeVisible();
   for (const name of [
     "Phone",
     "Voicemails",
@@ -267,7 +274,7 @@ test("desktop home exposes implemented tools and personal unread state, never sh
   await page.screenshot({ path: testInfo.outputPath("home-1440.png"), animations: "disabled" });
 });
 
-test("another staff session sees its own unread total and recent read labels", async ({
+test("another staff session sees its own unread total", async ({
   page,
   baseURL,
 }) => {
@@ -279,12 +286,6 @@ test("another staff session sees its own unread total and recent read labels", a
       exact: true,
     }),
   ).toContainText("2");
-  await expect(
-    page.getByRole("link", { name: /Synthetic Household.*Read by you/ }),
-  ).toBeVisible();
-  await expect(page.getByText("Unread for you", { exact: true })).toHaveCount(
-    0,
-  );
 });
 
 test("home distinguishes loading and failed reads from zero and supports retry", async ({
@@ -304,41 +305,37 @@ test("home distinguishes loading and failed reads from zero and supports retry",
       exact: true,
     }),
   ).toContainText("Loading…");
-  await expect(
-    page.getByText("Loading recent conversations…", { exact: true }),
-  ).toBeVisible();
   release();
   state.hold = null;
   for (const label of [
     "Unread conversations for you",
-    "Active conversations",
-    "Open tickets",
+    "Today's appointments",
+    "Open refill requests",
+    "Reminders due",
+    "Unsigned notes",
+    "Outbox failures",
   ])
     await expect(
       page.getByRole("region", { name: label, exact: true }),
     ).toContainText("Unavailable", { timeout: 15000 });
-  await expect(
-    page
-      .getByRole("alert")
-      .filter({ hasText: "Recent conversations could not be loaded" }),
-  ).toBeVisible();
   state.fail = false;
-  for (const name of [
-    "Retry unread conversations for you",
-    "Retry active conversations",
-    "Retry open tickets",
-    "Retry recent conversations",
+  for (const label of [
+    "Unread conversations for you",
+    "Today's appointments",
+    "Open refill requests",
+    "Reminders due",
+    "Unsigned notes",
+    "Outbox failures",
   ])
-    await page.getByRole("button", { name, exact: true }).click();
+    await page
+      .getByRole("button", { name: `Retry ${label.toLowerCase()}`, exact: true })
+      .click();
   await expect(
     page.getByRole("region", {
       name: "Unread conversations for you",
       exact: true,
     }),
   ).toContainText("7");
-  await expect(
-    page.getByRole("link", { name: /Synthetic Household.*Unread for you/ }),
-  ).toBeVisible();
 });
 
 test("mobile navigation keeps schedule and care reminders while hiding unavailable tools", async ({
