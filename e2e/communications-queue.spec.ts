@@ -386,6 +386,7 @@ test("consent records server version and preserves stale entry without bypassing
     });
   });
   await page.goto(`/hub/client/${client}`);
+  await page.getByRole("tab", { name: "Consent & notes", exact: true }).click();
   const panel = page.getByRole("region", { name: "SMS consent" });
   await expect(panel).toContainText("SMS is blocked");
   await panel
