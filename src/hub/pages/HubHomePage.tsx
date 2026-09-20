@@ -8,6 +8,8 @@ import {
   Pill,
 } from "lucide-react";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { PageShell } from "@/hub/components/shared/PageShell";
+import { PageHeader } from "@/hub/components/shared/PageHeader";
 import {
   useConversations,
   useUnreadCount,
@@ -122,15 +124,11 @@ export default function HubHomePage() {
     },
   });
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {getGreeting()}, {profile?.first_name || "there"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The Living Room Vet — Staff workspace
-        </p>
-      </div>
+    <PageShell className="max-w-3xl space-y-6">
+      <PageHeader
+        title={`${getGreeting()}, ${profile?.first_name || "there"}`}
+        description="The Living Room Vet — Staff workspace"
+      />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <CountCard
           label="Unread conversations for you"
@@ -222,6 +220,6 @@ export default function HubHomePage() {
           </div>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

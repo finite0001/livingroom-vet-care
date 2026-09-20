@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageShell } from "@/hub/components/shared/PageShell";
+import { PageHeader } from "@/hub/components/shared/PageHeader";
+import { SectionCard } from "@/hub/components/shared/SectionCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,33 +116,24 @@ export default function AdminStaffPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-6xl">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Staff Management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Activate, deactivate, or change roles for Hub staff accounts.
-        </p>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Staff Management"
+        description="Activate, deactivate, or change roles for Hub staff accounts."
+      />
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Invite a staff member</CardTitle></CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">An email invitation lets staff set their own password. New accounts start as STAFF; assign a clinical or admin role below afterward.</p>
-          <form className="grid gap-4 md:grid-cols-3" onSubmit={(event) => { event.preventDefault(); inviteStaff.mutate(); }}>
-            <div className="space-y-2"><Label htmlFor="invite-first">First name</Label><Input id="invite-first" required maxLength={100} value={invite.first_name} onChange={(event) => setInvite({ ...invite, first_name: event.target.value })} /></div>
-            <div className="space-y-2"><Label htmlFor="invite-last">Last name</Label><Input id="invite-last" required maxLength={100} value={invite.last_name} onChange={(event) => setInvite({ ...invite, last_name: event.target.value })} /></div>
-            <div className="space-y-2"><Label htmlFor="invite-email">Email</Label><Input id="invite-email" type="email" required maxLength={254} value={invite.email} onChange={(event) => setInvite({ ...invite, email: event.target.value })} /></div>
-            <Button type="submit" disabled={inviteStaff.isPending}>{inviteStaff.isPending ? "Sending invitation…" : "Send invitation"}</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <SectionCard title="Invite a staff member">
+        <p className="mb-4 text-sm text-muted-foreground">An email invitation lets staff set their own password. New accounts start as STAFF; assign a clinical or admin role below afterward.</p>
+        <form className="grid gap-4 md:grid-cols-3" onSubmit={(event) => { event.preventDefault(); inviteStaff.mutate(); }}>
+          <div className="space-y-2"><Label htmlFor="invite-first">First name</Label><Input id="invite-first" required maxLength={100} value={invite.first_name} onChange={(event) => setInvite({ ...invite, first_name: event.target.value })} /></div>
+          <div className="space-y-2"><Label htmlFor="invite-last">Last name</Label><Input id="invite-last" required maxLength={100} value={invite.last_name} onChange={(event) => setInvite({ ...invite, last_name: event.target.value })} /></div>
+          <div className="space-y-2"><Label htmlFor="invite-email">Email</Label><Input id="invite-email" type="email" required maxLength={254} value={invite.email} onChange={(event) => setInvite({ ...invite, email: event.target.value })} /></div>
+          <Button type="submit" disabled={inviteStaff.isPending}>{inviteStaff.isPending ? "Sending invitation…" : "Send invitation"}</Button>
+        </form>
+      </SectionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Staff accounts</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
+      <SectionCard title="Staff accounts" contentClassName="p-0">
+        {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
@@ -222,8 +215,7 @@ export default function AdminStaffPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
-    </div>
+      </SectionCard>
+    </PageShell>
   );
 }

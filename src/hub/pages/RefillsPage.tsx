@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { PageHeader } from "@/hub/components/shared/PageHeader";
 import { useLegacyRefills, useRefills, useRefillIdentity } from "@/hub/hooks/use-refills";
 import { NativeRefillEditor } from "@/hub/features/refills/NativeRefillEditor";
 import type { NativeRefillRead } from "@/hub/features/refills/refill-api";
@@ -16,7 +17,7 @@ function RefillQueue({ actor }: { actor: string }) {
   const navigationGuard = useUnsavedChanges(dirty), rows = queue.data?.pages.flatMap(page => page.refills) ?? [], oldRows = legacy.data?.pages.flatMap(page => page.records) ?? [];
   return <section className="mx-auto w-full max-w-5xl space-y-5 p-4 md:p-6" aria-label="Refill requests">
     {navigationGuard}
-    <header className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-semibold">Refill requests</h1><p className="text-sm text-muted-foreground">Track requests separately from prescribing and dispensing.</p></div><Button disabled={dirty || !!notify} onClick={() => { setNewSequence(n => n + 1); setSelection("new"); }}>New refill intake</Button></header>
+    <PageHeader title="Refill requests" description="Track requests separately from prescribing and dispensing." actions={<Button disabled={dirty || !!notify} onClick={() => { setNewSequence(n => n + 1); setSelection("new"); }}>New refill intake</Button>} />
     {selection && <NativeRefillEditor key={selection === "new" ? `new-${newSequence}` : selection.refill.id} actor={actor} disabled={!!notify} initial={selection === "new" ? null : selection} onDirtyChange={setDirty} onSaved={() => { void queryClient.invalidateQueries({ queryKey: ["native-refills", actor] }); }} onClose={() => setSelection(null)} />}
     <section className="space-y-3" aria-label="Current refill queue"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">Current refill requests</h2><Button variant="outline" disabled={dirty || queue.isFetching} onClick={() => void queue.refetch()}>Refresh current requests</Button></div>
       {queue.isLoading && <p role="status">Loading current requests…</p>}{queue.isError && <div role="alert"><p>Current refill requests could not be loaded. This is not an empty queue.</p><Button variant="outline" disabled={dirty || queue.isFetching} onClick={() => void queue.refetch()}>Retry current requests</Button></div>}{!queue.isLoading && !queue.isError && !rows.length && <p>No current refill requests recorded.</p>}

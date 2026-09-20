@@ -1,20 +1,5 @@
 import { useState } from "react";
-import {
-  CalendarDays,
-  Home,
-  MessageSquare,
-  ClipboardList,
-  MoreHorizontal,
-  Users,
-  FileText,
-  Pill,
-  Stethoscope,
-  Settings,
-  LayoutDashboard,
-  X,
-  Clock,
-  History,
-} from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
@@ -25,34 +10,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  adminItems,
+  settingsItem,
+  tabItems,
+  toolItems,
+  workspaceItems,
+  type NavItem,
+} from "./nav-items";
 
-const tabs = [
-  { path: "/hub", label: "Home", icon: Home, exact: true },
-  { path: "/hub/chats", label: "Comm", icon: MessageSquare },
-  { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
-  { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
-];
-
-const moreItems = [
-  { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList },
-  { path: "/hub/inventory", label: "Inventory", icon: Pill },
-  { path: "/hub/clients", label: "Clients", icon: Users },
-  { path: "/hub/time", label: "Time Clock", icon: Clock },
-  { path: "/hub/timesheet", label: "Timesheet", icon: History },
-  {
-    path: "/hub/tools/care-reminders",
-    label: "Care reminders",
-    icon: CalendarDays,
-  },
-  { path: "/hub/tools/templates", label: "Templates", icon: FileText },
-  { path: "/hub/tools/refills", label: "Refills", icon: Pill },
-  { path: "/hub/settings", label: "Settings", icon: Settings },
-];
-
-const adminMoreItems = [
-  { path: "/hub/admin/operations", label: "Operations", icon: LayoutDashboard },
-  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
-  { path: "/hub/admin", label: "Admin Dashboard", icon: LayoutDashboard },
+const moreItems: NavItem[] = [
+  ...workspaceItems.filter((i) => !i.tab),
+  ...toolItems,
+  settingsItem,
 ];
 
 export function BottomTabBar() {
@@ -72,7 +42,7 @@ export function BottomTabBar() {
     return location.pathname.startsWith(path);
   };
 
-  const isMoreActive = [...moreItems, ...adminMoreItems].some((item) =>
+  const isMoreActive = [...moreItems, ...adminItems].some((item) =>
     isActive(item.path),
   );
 
@@ -82,9 +52,10 @@ export function BottomTabBar() {
         className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around bg-card/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
         aria-label="Hub navigation"
       >
-        {tabs.map((tab) => {
+        {tabItems.map((tab) => {
           const active = isActive(tab.path, tab.exact);
           const badge = tab.path === "/hub/chats" ? (unreadCount ?? 0) : 0;
+          const label = tab.mobileLabel ?? tab.label;
           return (
             <button
               key={tab.path}
@@ -92,7 +63,7 @@ export function BottomTabBar() {
               aria-label={
                 tab.path === "/hub/chats"
                   ? `Inbox, ${unreadError ? "unread count unavailable" : unreadPending ? "loading unread count" : `${unreadCount} unread for you`}`
-                  : tab.label
+                  : label
               }
               aria-current={active ? "page" : undefined}
               className={cn(
@@ -112,7 +83,7 @@ export function BottomTabBar() {
                   active ? "font-semibold" : "font-medium",
                 )}
               >
-                {tab.label}
+                {label}
               </span>
               {tab.path === "/hub/chats" && unreadError && (
                 <span className="absolute right-1 top-0.5 text-xs text-muted-foreground">
@@ -172,12 +143,12 @@ export function BottomTabBar() {
               >
                 <item.icon className="h-5 w-5" />
                 <span className="text-[11px] font-medium text-center leading-tight">
-                  {item.label}
+                  {item.mobileLabel ?? item.label}
                 </span>
               </button>
             ))}
             {isAdmin &&
-              adminMoreItems.map((item) => (
+              adminItems.map((item) => (
                 <button
                   key={item.path}
                   onClick={() => {
@@ -193,7 +164,7 @@ export function BottomTabBar() {
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="text-[11px] font-medium text-center leading-tight">
-                    {item.label}
+                    {item.mobileLabel ?? item.label}
                   </span>
                 </button>
               ))}

@@ -1,53 +1,19 @@
 import { useState } from "react";
 import {
-  CalendarDays,
-  Home,
-  MessageSquare,
-  Users,
-  Settings,
-  ClipboardList,
-  FileText,
-  Pill,
-  Stethoscope,
-  LayoutDashboard,
   ChevronDown,
   LogOut,
-  Clock,
-  History,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/AuthContext";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
-
-const workspaceItems = [
-  { path: "/hub/schedule", label: "Schedule", icon: CalendarDays },
-  { path: "/hub/inventory", label: "Inventory", icon: Pill },
-  { path: "/hub", label: "Home", icon: Home, exact: true },
-  { path: "/hub/chats", label: "Communication", icon: MessageSquare },
-  { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList },
-  { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
-  { path: "/hub/clients", label: "Clients", icon: Users },
-  { path: "/hub/time", label: "Time Clock", icon: Clock },
-  { path: "/hub/timesheet", label: "Timesheet", icon: History },
-];
-
-const toolItems = [
-  {
-    path: "/hub/tools/care-reminders",
-    label: "Care reminders",
-    icon: CalendarDays,
-  },
-  { path: "/hub/tools/templates", label: "Templates", icon: FileText },
-  { path: "/hub/tools/refills", label: "Refills", icon: Pill },
-];
-
-const adminItems = [
-  { path: "/hub/admin/operations", label: "Operations", icon: LayoutDashboard },
-  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope },
-  { path: "/hub/admin", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/hub/admin/staff", label: "Staff", icon: Users },
-];
+import {
+  adminItems,
+  settingsItem,
+  toolItems,
+  workspaceItems,
+  type NavItem,
+} from "./nav-items";
 
 export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const location = useLocation();
@@ -68,13 +34,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
     return location.pathname.startsWith(path);
   };
 
-  const renderItem = (item: {
-    path: string;
-    label: string;
-    icon: React.ElementType;
-    exact?: boolean;
-    badge?: number;
-  }) => {
+  const renderItem = (item: NavItem & { badge?: number }) => {
     const active = isActive(item.path, item.exact);
     return (
       <button
@@ -137,11 +97,11 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
           </button>
           {workspaceOpen && (
             <div className="mt-0.5 space-y-0.5">
-              {workspaceItems.map((item) => {
-                if (item.path === "/hub/chats")
-                  return renderItem({ ...item, badge: unreadCount });
-                return renderItem(item);
-              })}
+              {workspaceItems.map((item) =>
+                item.path === "/hub/chats"
+                  ? renderItem({ ...item, badge: unreadCount })
+                  : renderItem(item),
+              )}
             </div>
           )}
         </div>
@@ -177,11 +137,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
       </nav>
 
       <div className="border-t p-3 space-y-0.5">
-        {renderItem({
-          path: "/hub/settings",
-          label: "Settings",
-          icon: Settings,
-        })}
+        {renderItem(settingsItem)}
         <button
           onClick={() => signOut()}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
