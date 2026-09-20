@@ -74,6 +74,7 @@
         "npm:cmdk@^1.1.1",
         "npm:date-fns@^3.6.0",
         "npm:embla-carousel-react@^8.6.0",
+        "npm:eslint-plugin-jsx-a11y@^6.10.2",
         "npm:eslint-plugin-react-hooks@^5.2.0",
         "npm:eslint-plugin-react-refresh@~0.4.20",
         "npm:eslint@^9.32.0",
