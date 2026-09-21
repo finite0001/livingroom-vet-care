@@ -7,19 +7,22 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, createRoutesFromElements, RouterProvider, Outlet, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { MarketingErrorBoundary } from "./components/MarketingErrorBoundary";
-import Index from "./pages/Index";
-import Experience from "./pages/Experience";
-import Services from "./pages/Services";
-import WellnessCare from "./pages/services/WellnessCare";
-import SeniorCare from "./pages/services/SeniorCare";
-import LaserTherapy from "./pages/services/LaserTherapy";
-import Surgery from "./pages/services/Surgery";
-import Diagnostics from "./pages/services/Diagnostics";
-import IllnessCare from "./pages/services/IllnessCare";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Vaccinations from "./pages/services/Vaccinations";
 import NotFound from "./pages/NotFound";
+
+// Marketing pages are lazy so the marketing site stays out of the hub's main
+// bundle (matters on housecall mobile data). Each is its own code-split chunk.
+const Index = lazy(() => import("./pages/Index"));
+const Experience = lazy(() => import("./pages/Experience"));
+const Services = lazy(() => import("./pages/Services"));
+const WellnessCare = lazy(() => import("./pages/services/WellnessCare"));
+const SeniorCare = lazy(() => import("./pages/services/SeniorCare"));
+const LaserTherapy = lazy(() => import("./pages/services/LaserTherapy"));
+const Surgery = lazy(() => import("./pages/services/Surgery"));
+const Diagnostics = lazy(() => import("./pages/services/Diagnostics"));
+const IllnessCare = lazy(() => import("./pages/services/IllnessCare"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Vaccinations = lazy(() => import("./pages/services/Vaccinations"));
 
 // Hub imports
 import { AuthProvider } from "@/hub/contexts/AuthContext";
