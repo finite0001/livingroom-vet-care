@@ -18,6 +18,12 @@ import { randomUUID } from 'node:crypto';
  const email = `storage-${randomUUID()}@example.test`;
  const password = randomUUID()+randomUUID();
  const user = checked(await admin.auth.admin.createUser({email,password,email_confirm:true})).user;
+ // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+ // that needs an active synthetic staff member must activate it explicitly.
+ // This script has no sql() helper; it reaches Postgres through PostgREST with
+ // the service-role client, so activation uses the same mechanism.
+ checked(await admin.from('user_roles').insert({user_id:user.id,role:'STAFF'}));
+ checked(await admin.from('profiles').update({is_active:true}).eq('id',user.id));
  checked(await api.auth.signInWithPassword({email,password}));
  const client = checked(await api.rpc('save_client',{p_actor_id:user.id,p_client_id:null,p_expected_version:null,p_first_name:'Synthetic Storage',p_last_name:'Roundtrip',p_primary_email:null,p_primary_phone:null,p_preferred_channel:'EMAIL',p_mailing_address:null,p_housecall_address:null}));
  const pet = checked(await api.rpc('save_patient',{p_id:null,p_client_id:client.id,p_expected_version:null,p_name:'Synthetic Storage Patient',p_species:'Dog',p_breed:null,p_dob:null,p_birth_date_precision:'unknown',p_color:null,p_sex:'unknown',p_neuter_status:'unknown',p_microchip_id:null,p_archived_at:null,p_deceased_at:null}));

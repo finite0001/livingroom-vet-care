@@ -41,6 +41,9 @@ try{
  if(profiles.length)account=profiles[0].account_id;else{account="acct_Local"+randomUUID().replaceAll("-","");await rpc("configure_payment_provider",{p_account_id:account,p_livemode:false,p_return_origin:origin});createdProfile=true;}
  const email=`reconciliation-${randomUUID()}@example.test`,password=`Synthetic-${randomUUID()}-Aa1!`;
  actor=(await api("/auth/v1/admin/users",{email,password,email_confirm:true})).id;ids.push(actor);
+ // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+ // that needs an active synthetic staff member must activate it explicitly.
+ sql(`insert into public.user_roles(user_id,role) values(${quote(actor)},'STAFF') on conflict do nothing; update public.profiles set is_active=true where id=${quote(actor)};`);
  const auth=await api("/auth/v1/token?grant_type=password",{email,password},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
  client=(await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Reconciliation",p_primary_phone:null,p_primary_email:null,p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null},true)).id;ids.push(client);

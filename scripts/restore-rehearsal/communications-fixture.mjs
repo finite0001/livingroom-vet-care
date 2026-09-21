@@ -36,6 +36,9 @@ export async function seedCommunications({config,admin,sql}) {
     account.email = `restore-communications-${randomUUID()}@example.test`; account.password = randomUUID()+randomUUID();
     account.id = checked(await admin.auth.admin.createUser({ email:account.email,password:account.password,email_confirm:true })).user.id;
     sql(`insert into user_roles(user_id,role) values(${quote(account.id)},'ADMIN');`);
+    // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+    // that needs an active synthetic staff member must activate it explicitly.
+    sql(`insert into user_roles(user_id,role) values(${quote(account.id)},'STAFF') on conflict do nothing; update profiles set is_active=true where id=${quote(account.id)};`);
   }
   const { client } = await session(config,result.owner);
   const saved = await rpc(client,'save_client',{p_actor_id:result.owner.id,p_client_id:null,p_expected_version:null,p_first_name:'Synthetic communications',p_last_name:'Restore',p_primary_phone:null,p_primary_email:'restore-files@example.test',p_preferred_channel:'EMAIL',p_mailing_address:null,p_housecall_address:null});

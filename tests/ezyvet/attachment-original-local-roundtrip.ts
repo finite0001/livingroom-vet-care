@@ -129,6 +129,11 @@ try {
       actor,
     )},'ADMIN') on conflict do nothing;`,
   );
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(
+    `insert into public.user_roles(user_id,role) values(${quote(actor)},'STAFF') on conflict do nothing; update public.profiles set is_active=true where id=${quote(actor)};`,
+  );
   client = (
     await rpc(
       "save_client",
@@ -573,6 +578,9 @@ try {
   const readerEmail=`attachment-reader-${randomUUID()}@example.test`,readerPassword=`Synthetic-${randomUUID()}-Aa1!`;
   const readerActor=(await api("/auth/v1/admin/users",{email:readerEmail,password:readerPassword,email_confirm:true})).id;
   sql(`insert into user_roles(user_id,role) values(${quote(readerActor)},'STAFF') on conflict do nothing;`);
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(`update profiles set is_active=true where id=${quote(readerActor)};`);
   const readerAuth=await api("/auth/v1/token?grant_type=password",{email:readerEmail,password:readerPassword},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
   const readerHeaders={...staffHeaders,Authorization:`Bearer ${readerAuth.access_token}`};
   const chart=await api("/rest/v1/rpc/read_ezyvet_attachment_chart",{p_pet_id:pet},readerHeaders);
@@ -700,6 +708,9 @@ try {
   const otherEmail = `attachment-other-${randomUUID()}@example.test`, otherPassword = `Synthetic-${randomUUID()}-Aa1!`;
   const otherActor = (await api("/auth/v1/admin/users", { email: otherEmail, password: otherPassword, email_confirm: true })).id;
   sql(`insert into user_roles(user_id,role) values(${quote(otherActor)},'ADMIN');`);
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(`insert into user_roles(user_id,role) values(${quote(otherActor)},'STAFF') on conflict do nothing; update profiles set is_active=true where id=${quote(otherActor)};`);
   const otherAuth = await api("/auth/v1/token?grant_type=password", { email: otherEmail, password: otherPassword }, { apikey: local.ANON_KEY, "Content-Type": "application/json" });
   check(!(await act(id, "retrieve", `Bearer ${otherAuth.access_token}`)).ok, "Another active administrator cannot retrieve owned original");
   await assert.rejects(api("/rest/v1/rpc/recover_ezyvet_attachment_capture", { p_id: id, p_animal_link_id: mapping }, { ...staffHeaders, Authorization: `Bearer ${otherAuth.access_token}` }), (e: { code: string }) => e.code === "42501"); assertions++;

@@ -52,6 +52,9 @@ async function account() {
   const user = await request("/auth/v1/admin/users", { email, password, email_confirm: true });
   const login = await request("/auth/v1/token?grant_type=password", { email, password }, headers(local.ANON_KEY));
   sql(`insert into user_roles(user_id,role) values(${quote(user.id)},'ADMIN');`);
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(`insert into user_roles(user_id,role) values(${quote(user.id)},'STAFF') on conflict do nothing; update profiles set is_active=true where id=${quote(user.id)};`);
   return { id: user.id as string, auth: headers(login.access_token) };
 }
 const weightSqlResults = sql(readFileSync(new URL("../../supabase/tests/ezyvet_migration_weight_evidence.test.sql", import.meta.url), "utf8"));
