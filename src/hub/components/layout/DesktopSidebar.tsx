@@ -14,6 +14,7 @@ import {
   LogOut,
   Clock,
   History,
+  PawPrint,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const workspaceItems = [
   { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
   { path: "/hub/clients", label: "Clients", icon: Users },
+  { path: "/hub/patients", label: "Patients", icon: PawPrint },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
 ];
