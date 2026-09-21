@@ -6,6 +6,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('74400000-0000-4000-8000-000000000001','stripe-inbox-staff@example.test','{}'),
  ('74400000-0000-4000-8000-000000000002','stripe-inbox-other@example.test','{}'),
  ('74400000-0000-4000-8000-000000000003','stripe-inbox-inactive@example.test','{}');
+update public.profiles set is_active = true where id in ('74400000-0000-4000-8000-000000000001','74400000-0000-4000-8000-000000000002','74400000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('74400000-0000-4000-8000-000000000001','STAFF'),('74400000-0000-4000-8000-000000000002','STAFF'),('74400000-0000-4000-8000-000000000003','STAFF');
+
 update public.profiles set is_active=false where id='74400000-0000-4000-8000-000000000003';
 insert into public.user_roles(user_id,role) values('74400000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;

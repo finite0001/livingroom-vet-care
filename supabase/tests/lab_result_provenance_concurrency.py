@@ -77,7 +77,7 @@ def contended(first_query, second_query, second_expected):
 
 try:
     source,pet=[str(uuid.uuid4()) for _ in range(2)];ids.extend([source,pet])
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','lab-{actor}@example.test','{{}}');insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','lab-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
     client=sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','Lab',null,null,'EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(client)
     pet=sql(f"begin;{staff}select (public.save_patient(null,'{client}',null,'Synthetic','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(pet)
     sql(f"begin;{staff}select public.review_lab_source_account('{source}','Synthetic source','Manual account','Training','No provider connection');commit;")

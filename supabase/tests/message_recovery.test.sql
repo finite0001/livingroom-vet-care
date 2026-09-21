@@ -5,6 +5,9 @@ select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values
 ('12000000-0000-4000-8000-000000000001','recovery@example.test','{"first_name":"Recovery","last_name":"Staff"}'),
 ('12000000-0000-4000-8000-000000000002','recovery-other@example.test','{"first_name":"Other","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('12000000-0000-4000-8000-000000000001','12000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('12000000-0000-4000-8000-000000000001','STAFF'),('12000000-0000-4000-8000-000000000002','STAFF');
+
 create temp table fixture_ids(kind text primary key,id uuid);grant all on fixture_ids to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"12000000-0000-4000-8000-000000000001","role":"authenticated"}',true);

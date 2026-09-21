@@ -90,7 +90,7 @@ def finalize(lease):
     return f"select finalize_inbound_attachment('{lease['id']}','{actor}','{lease['token']}',repeat('b',64),5,'application/pdf');"
 
 try:
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','incoming-race-{actor}@example.test','{{}}');insert into user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','incoming-race-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into user_roles(user_id,role) values('{actor}','ADMIN');")
     client = sql(f"begin;{staff}select (save_client(auth.uid(),null,null,'Incoming','Race',null,'race@example.test','EMAIL',null,null)).id;commit;")
     fixture_ids.append(client)
     sql(f"insert into conversations(id,client_id) values('{conversation}','{client}');")

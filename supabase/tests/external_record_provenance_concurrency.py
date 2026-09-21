@@ -71,7 +71,7 @@ def contended(first_query, second_query, second_expected):
     check(second_expected(second.returncode, second_output, second_error), second_error or second_output)
 
 try:
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','external-{actor}@example.test','{{}}');insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','external-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
     client=sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','External',null,null,'EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(client)
     for scenario in ['competing_original','patient_edit_first','void_first','approval_first','competing_replacement']:
         pet=sql(f"begin;{staff}select (public.save_patient(null,'{client}',null,'Synthetic','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(pet)

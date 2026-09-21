@@ -1,6 +1,9 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 -- FIXTURE_BEGIN: synthetic scoped outside history and local actors.
 insert into auth.users(id,email,raw_user_meta_data) values('db490000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db490000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db490000-0000-4000-8000-000000000001','db490000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db490000-0000-4000-8000-000000000001','STAFF'),('db490000-0000-4000-8000-000000000002','STAFF');
+
 insert into user_roles(user_id,role) values('db490000-0000-4000-8000-000000000001','ADMIN'),('db490000-0000-4000-8000-000000000002','DVM');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000001","role":"authenticated"}',true);

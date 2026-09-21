@@ -5,6 +5,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('a5510000-0000-4000-8000-000000000002','native-rx-staff@example.test','{}'),
  ('a5510000-0000-4000-8000-000000000003','native-rx-uncommissioned@example.test','{}'),
  ('a5510000-0000-4000-8000-000000000004','native-rx-admin@example.test','{}');
+update public.profiles set is_active = true where id in ('a5510000-0000-4000-8000-000000000001','a5510000-0000-4000-8000-000000000002','a5510000-0000-4000-8000-000000000003','a5510000-0000-4000-8000-000000000004');
+insert into public.user_roles (user_id, role) values ('a5510000-0000-4000-8000-000000000001','STAFF'),('a5510000-0000-4000-8000-000000000002','STAFF'),('a5510000-0000-4000-8000-000000000003','STAFF'),('a5510000-0000-4000-8000-000000000004','STAFF');
+
 update profiles set full_name='Synthetic prescriber' where id='a5510000-0000-4000-8000-000000000001';
 insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000001','DVM'),('a5510000-0000-4000-8000-000000000001','ADMIN'),('a5510000-0000-4000-8000-000000000003','DVM'),('a5510000-0000-4000-8000-000000000004','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;

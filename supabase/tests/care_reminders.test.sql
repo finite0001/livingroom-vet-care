@@ -1,5 +1,8 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values('ac000000-0000-4000-8000-000000000001','care-admin@example.test','{"first_name":"Care","last_name":"Admin"}'),('ac000000-0000-4000-8000-000000000002','care-staff@example.test','{"first_name":"Care","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('ac000000-0000-4000-8000-000000000001','ac000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('ac000000-0000-4000-8000-000000000001','STAFF'),('ac000000-0000-4000-8000-000000000002','STAFF');
+
 insert into public.user_roles(user_id,role) values('ac000000-0000-4000-8000-000000000001','ADMIN') on conflict do nothing;
 create temp table care_fixture(kind text primary key,id uuid);grant all on care_fixture to authenticated,service_role;
 select ok(not has_table_privilege('authenticated','public.care_reminder_jobs','UPDATE'),'Browser cannot mark jobs sent');

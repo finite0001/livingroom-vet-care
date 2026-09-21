@@ -5,6 +5,9 @@ select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values
 ('95000000-0000-4000-8000-000000000001','workspace@example.test','{"first_name":"Workspace","last_name":"Staff"}'),
 ('95000000-0000-4000-8000-000000000002','workspace-other@example.test','{"first_name":"Other","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('95000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('95000000-0000-4000-8000-000000000001','STAFF'),('95000000-0000-4000-8000-000000000002','STAFF');
+
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;
 set local role authenticated;

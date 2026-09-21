@@ -1,6 +1,9 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 -- FIXTURE_BEGIN: owner-only synthetic source observations and reviewed mapping.
 insert into auth.users(id,email,raw_user_meta_data) values('db520000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db520000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db520000-0000-4000-8000-000000000001','db520000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db520000-0000-4000-8000-000000000001','STAFF'),('db520000-0000-4000-8000-000000000002','STAFF');
+
 insert into user_roles(user_id,role) values('db520000-0000-4000-8000-000000000001','ADMIN'),('db520000-0000-4000-8000-000000000002','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"db520000-0000-4000-8000-000000000001","role":"authenticated"}',true);

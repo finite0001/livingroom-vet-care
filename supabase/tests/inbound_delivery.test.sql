@@ -15,6 +15,9 @@ end $$;
 insert into auth.users(id,email,raw_user_meta_data) values
 ('61000000-0000-4000-8000-000000000001','inbound-staff@example.test','{"first_name":"Inbound","last_name":"Staff"}'),
 ('61000000-0000-4000-8000-000000000002','inbound-other@example.test','{"first_name":"Other","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('61000000-0000-4000-8000-000000000001','61000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('61000000-0000-4000-8000-000000000001','STAFF'),('61000000-0000-4000-8000-000000000002','STAFF');
+
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated,service_role;
 set local role authenticated;

@@ -8,6 +8,9 @@ insert into auth.users (id, email, raw_user_meta_data) values
  ('10000000-0000-4000-8000-000000000001', 'owner@example.test', '{"first_name":"Test","last_name":"Owner"}'),
  ('10000000-0000-4000-8000-000000000002', 'staff@example.test', '{"first_name":"Test","last_name":"Staff","role":"ADMIN"}'),
  ('10000000-0000-4000-8000-000000000003', 'inactive@example.test', '{"first_name":"Test","last_name":"Inactive"}');
+update public.profiles set is_active = true where id in ('10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('10000000-0000-4000-8000-000000000001','STAFF'),('10000000-0000-4000-8000-000000000002','STAFF'),('10000000-0000-4000-8000-000000000003','STAFF');
+
 update public.profiles set role = 'ADMIN' where id = '10000000-0000-4000-8000-000000000001';
 update public.user_roles set role = 'ADMIN' where user_id = '10000000-0000-4000-8000-000000000001';
 update public.profiles set is_active = false where id = '10000000-0000-4000-8000-000000000003';

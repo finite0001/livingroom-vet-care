@@ -1,5 +1,8 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values('ae000000-0000-4000-8000-000000000001','reminder-approver@example.test','{"first_name":"Reminder","last_name":"Approver"}'),('ae000000-0000-4000-8000-000000000002','reminder-staff@example.test','{"first_name":"Reminder","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('ae000000-0000-4000-8000-000000000001','ae000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('ae000000-0000-4000-8000-000000000001','STAFF'),('ae000000-0000-4000-8000-000000000002','STAFF');
+
 insert into public.user_roles(user_id,role) values('ae000000-0000-4000-8000-000000000001','ADMIN') on conflict do nothing;
 create temp table reminder_fixture(kind text primary key,id uuid);grant all on reminder_fixture to authenticated,service_role;
 select ok(not has_function_privilege('authenticated','public.queue_due_reminders(integer)','EXECUTE'),'Staff cannot call service queue');

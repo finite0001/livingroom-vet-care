@@ -5,6 +5,9 @@ select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values
  ('ee100000-0000-4000-8000-000000000001','upload-owner@example.test','{}'),
  ('ee100000-0000-4000-8000-000000000002','upload-other@example.test','{}');
+update public.profiles set is_active = true where id in ('ee100000-0000-4000-8000-000000000001','ee100000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('ee100000-0000-4000-8000-000000000001','STAFF'),('ee100000-0000-4000-8000-000000000002','STAFF');
+
 insert into user_roles(user_id,role) values('ee100000-0000-4000-8000-000000000001','ADMIN'),('ee100000-0000-4000-8000-000000000002','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 select set_config('request.jwt.claims','{"sub":"ee100000-0000-4000-8000-000000000001","role":"authenticated"}',true);

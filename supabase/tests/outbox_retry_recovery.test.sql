@@ -14,6 +14,9 @@ end $$;
 
 insert into auth.users(id,email,raw_user_meta_data) values
 ('b5000000-0000-4000-8000-000000000001','outbox-staff@example.test','{"first_name":"Outbox","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('b5000000-0000-4000-8000-000000000001');
+insert into public.user_roles (user_id, role) values ('b5000000-0000-4000-8000-000000000001','STAFF');
+
 insert into public.user_roles(user_id,role) values('b5000000-0000-4000-8000-000000000001','ADMIN');
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated,service_role;
@@ -61,6 +64,9 @@ update communication_outbox set revision=1 where id=(select id from fixture_ids 
 select is((select to_jsonb(revision) from communication_outbox where id=(select id from fixture_ids where kind='email')),(select v from retry_data where k='revision'),'Even owner cannot override monotonic revision through update');
 select throws_ok($$update outbox_retry_actions set reason='source_reverified'$$,'23514',null,'Action history append only');
 insert into auth.users(id,email,raw_user_meta_data) values('b5000000-0000-4000-8000-000000000006','other-retry@example.test','{}');
+update public.profiles set is_active = true where id in ('b5000000-0000-4000-8000-000000000006');
+insert into public.user_roles (user_id, role) values ('b5000000-0000-4000-8000-000000000006','STAFF');
+
 insert into user_roles(user_id,role) values('b5000000-0000-4000-8000-000000000006','ADMIN');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"b5000000-0000-4000-8000-000000000006","role":"authenticated"}',true);
 select is(recover_outbox_retry('b5000000-0000-4000-8000-000000000005'),null::jsonb,'Other administrator cannot recover original action');
