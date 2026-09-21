@@ -8,6 +8,8 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "@/hub/contexts/AuthContext";
+import { PageShell } from "@/hub/components/shared/PageShell";
+import { PageHeader } from "@/hub/components/shared/PageHeader";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
@@ -211,13 +213,11 @@ export default function HubHomePage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Today</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {getGreeting()}, {profile?.first_name || "there"} — The Living Room Vet
-        </p>
-      </div>
+    <PageShell className="max-w-3xl space-y-6">
+      <PageHeader
+        title="Today"
+        description={`${getGreeting()}, ${profile?.first_name || "there"} — The Living Room Vet`}
+      />
 
       <section aria-label="Today at a glance" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {todayItems.map((item) => {
@@ -256,6 +256,6 @@ export default function HubHomePage() {
           ))}
         </div>
       </section>
-    </div>
+    </PageShell>
   );
 }
