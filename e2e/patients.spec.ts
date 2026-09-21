@@ -231,7 +231,9 @@ test("mobile household adds two patients, retains identity fields and dated weig
       .getByRole("link", { name: "Synthetic Household", exact: true })
       .click();
   }
-  await expect(page.getByText("Patients (2)", { exact: false })).toBeVisible();
+  await page.getByRole("tab", { name: "Patients", exact: true }).click();
+  await expect(page.getByRole("link", { name: /Juniper.*Dog/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Maple.*Dog/ })).toBeVisible();
   await page.getByRole("link", { name: /Juniper.*Dog/ }).click();
   for (const [weight, unit, date] of [
     ["10", "lb", "2026-09-10"],

@@ -202,6 +202,7 @@ test("invoice creation and service retries retain operation IDs; issuance and cr
 }, testInfo) => {
   const state = await fixture(page);
   await page.goto(`/hub/client/${clientId}`);
+  await page.getByRole("tab", { name: "Invoices & payments", exact: true }).click();
   await page.getByRole("button", { name: "New draft invoice" }).click();
   await page.getByRole("button", { name: "Retry creating invoice" }).click();
   await expect(
@@ -278,6 +279,7 @@ for (const mobile of [false, true]) {
       },
     ];
     await page.goto(`/hub/client/${clientId}`);
+    await page.getByRole("tab", { name: "Invoices & payments", exact: true }).click();
     await page.getByRole("button", { name: /issued.*125.00/ }).click();
     await page
       .getByRole("button", { name: "Preview invoice document" })

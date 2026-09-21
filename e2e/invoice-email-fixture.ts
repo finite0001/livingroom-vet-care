@@ -214,7 +214,11 @@ export async function fixture(
     }
     return route.fulfill({ json: [] });
   });
-  await page.goto(`/hub/client/${client}`);
+  // C6 moved the invoice list behind the "Invoices & payments" tab, and that tab
+  // stays mounted-but-hidden on every other tab, so the invoice button exists in
+  // the DOM and is not clickable until the tab is open. Use the ?tab= deep link
+  // rather than a click: page.reload() in reopenPayment() then keeps the tab.
+  await page.goto(`/hub/client/${client}?tab=invoices`);
   await page
     .getByRole("button", { name: /issued.*125.00/ })
     .first()
