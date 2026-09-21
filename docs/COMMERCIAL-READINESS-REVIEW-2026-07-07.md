@@ -1,5 +1,13 @@
 # Commercial-Readiness Review — livingroom-vet-care
 
+> **HISTORICAL — superseded.** This review is from 2026-07-07 and describes the
+> repository as it was before the 2026-09 integration landed on `main`. Much of
+> it is now outdated: staff onboarding no longer requires the Lovable Cloud
+> console, outbound SMS is no longer an explicit stub, and the password-reset and
+> setup pathways have changed. Do not act on the findings here without re-checking
+> them against current `main`. See `docs/commercial-readiness.md` and the current
+> plan under `plans/` for the up-to-date status.
+
 **Date:** 2026-07-07 · **Method:** multi-agent review (5 dimensions, 30 agents; every critical/high finding adversarially verified against the code) · **HEAD:** 5a00308 (main, in sync with origin)
 
 **Goal:** commercially ready in ~2 months (early Sept 2026).
