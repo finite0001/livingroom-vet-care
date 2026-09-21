@@ -1,5 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+// Evidence screenshots rewrite tracked PNGs under docs/evidence/. They are
+// opt-in so an ordinary `npm run test:e2e` leaves `git status` clean (MAP.md B6).
+const captureEvidence = process.env.LRV_CAPTURE_EVIDENCE === "1";
 const actor = id(1), runId = id(2), scopeId = id(3), bindingId = id(4), child = id(5), snapshot = id(6), mapping = id(7), pet = id(8), client = id(9), otherScope = id(10);
 const at = "2026-09-14T12:00:00Z", origin = "https://api.trial.ezyvet.com", site = "Synthetic migration source";
 async function fixture(page: Page, admin = true, history = false, vaccination = false, prescription = false, prescriptionItem = false, weight = false, identity: "contact" | "animal" | null = null) {
@@ -408,7 +411,7 @@ for (const width of [390, 1440]) test(`history evidence preserves corrections an
   await expect(panel.getByText(/unresolved consult reference/)).toBeVisible();
   await expect(panel.getByRole("button", { name: "Next history evidence" })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await panel.screenshot({ path: `docs/evidence/migration-history-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
+  if (captureEvidence) await panel.screenshot({ path: `docs/evidence/migration-history-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
 });
 
 for (const width of [390, 1440]) test(`vaccination evidence preserves outside interpretation at ${width}px`, async ({ page }) => {
@@ -433,7 +436,7 @@ for (const width of [390, 1440]) test(`vaccination evidence preserves outside in
   await expect(panel.getByText("Administration date: Unknown. Next source date: Not interpreted.")).toHaveCount(2);
   await expect(panel.getByText(/do not record a vaccination administered here or activate a due plan/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await panel.screenshot({ path: `docs/evidence/migration-vaccination-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
+  if (captureEvidence) await panel.screenshot({ path: `docs/evidence/migration-vaccination-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
 });
 
 for (const width of [390, 1440]) test(`prescription evidence preserves partial history at ${width}px`, async ({ page }) => {
@@ -459,7 +462,7 @@ for (const width of [390, 1440]) test(`prescription evidence preserves partial h
   await expect(panel.getByText(/do not prescribe or dispense medication here/)).toBeVisible();
   await expect(panel.getByRole("button", { name: "Next prescription evidence" })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await panel.screenshot({ path: `docs/evidence/migration-prescription-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
+  if (captureEvidence) await panel.screenshot({ path: `docs/evidence/migration-prescription-${width === 390 ? "mobile" : "desktop"}-20260914.png` });
 });
 
 test("a historical household change leaves valid migration choices available", async ({ page }) => {
