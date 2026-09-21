@@ -72,6 +72,9 @@ async function staff() {
   }
   const id = created.data.user.id; actor = id;
   sql(`insert into user_roles(user_id,role) values(${quote(id)},'ADMIN');`);
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(`insert into user_roles(user_id,role) values(${quote(id)},'STAFF') on conflict do nothing; update profiles set is_active=true where id=${quote(id)};`);
   const client = createClient(local.API_URL, local.ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });

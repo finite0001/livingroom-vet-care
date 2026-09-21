@@ -73,7 +73,7 @@ def contended(first_query, second_query, second_expected):
 service="set local role service_role;select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
 try:
     check(sql("select count(*) from public.reminder_automation_policies where enabled;").stdout.strip()=='0','No unrelated enabled reminder automation')
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','operations-{actor}@example.test','{{}}');insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','operations-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
     client=sql('begin;'+staff+f"select (public.save_client(auth.uid(),null,null,'Synthetic','Operations',null,'{actor}@example.test','EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(client)
     pet=sql('begin;'+staff+f"select (public.save_patient(null,'{client}',null,'Synthetic','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(pet)
     template,policy,order=[str(uuid.uuid4()) for _ in range(3)];ids.extend([template,policy,order])

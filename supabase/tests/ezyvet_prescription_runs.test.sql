@@ -1,6 +1,9 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 -- FIXTURE_BEGIN: owner-created legacy observations simulate a deployment predating4900.
 insert into auth.users(id,email,raw_user_meta_data) values('db550000-0000-4000-8000-000000000001','prescription-import-admin@example.test','{}'),('db550000-0000-4000-8000-000000000002','prescription-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db550000-0000-4000-8000-000000000001','db550000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db550000-0000-4000-8000-000000000001','STAFF'),('db550000-0000-4000-8000-000000000002','STAFF');
+
 insert into user_roles(user_id,role) values('db550000-0000-4000-8000-000000000001','ADMIN'),('db550000-0000-4000-8000-000000000002','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"db550000-0000-4000-8000-000000000001","role":"authenticated"}',true);

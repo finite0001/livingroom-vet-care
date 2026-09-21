@@ -3,6 +3,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values('ee300000-0000-4000-8000-000000000001','inbound-capture@example.test','{}');
+update public.profiles set is_active = true where id in ('ee300000-0000-4000-8000-000000000001');
+insert into public.user_roles (user_id, role) values ('ee300000-0000-4000-8000-000000000001','STAFF');
+
 insert into user_roles(user_id,role) values('ee300000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;

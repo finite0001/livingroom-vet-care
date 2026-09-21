@@ -90,6 +90,11 @@ try {
     { email, password, email_confirm: true },
     serviceHeaders,
   );
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(
+    `insert into public.user_roles(user_id,role) values(${quote(user.id)},'STAFF') on conflict do nothing; update public.profiles set is_active=true where id=${quote(user.id)};`,
+  );
   actor = user.id;
   ids.push(actor);
   const auth = await jsonRequest(

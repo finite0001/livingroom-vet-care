@@ -85,7 +85,7 @@ def retry(action,outbox,work_hash):
     return f"select public.requeue_outbox_retry('{action}','{outbox}','{work_hash}','configuration_repaired',true);"
 try:
     check(scalar("select count(*) from public.communication_outbox where state in ('pending','claimed');")=='0','No unrelated claimable work')
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','outbox-retry-{actor}@example.test','{{}}');insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','outbox-retry-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
     client=scalar('begin;'+staff+f"select (public.save_client(auth.uid(),null,null,'Synthetic','Retry',null,'{actor}@example.test','EMAIL',null,null)).id;commit;");ids.append(client)
     sql(f"insert into public.conversations(id,client_id) values('{conversation}','{client}');")
     outbox,work_hash=prepare_failure();action=str(uuid.uuid4())

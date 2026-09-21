@@ -81,6 +81,9 @@ if (mode === "create") {
       email_confirm: true,
     }),
   ).user.id;
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(`insert into user_roles(user_id,role) values('${state.user}','STAFF') on conflict do nothing; update profiles set is_active=true where id='${state.user}';`);
   checked(
     await api.auth.signInWithPassword({
       email: state.email,

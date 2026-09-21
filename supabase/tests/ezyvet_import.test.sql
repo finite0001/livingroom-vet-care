@@ -6,6 +6,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('e1000000-0000-4000-8000-000000000001','ezyvet-admin@example.test','{"first_name":"Synthetic","last_name":"Admin"}'),
  ('e1000000-0000-4000-8000-000000000002','ezyvet-staff@example.test','{"first_name":"Synthetic","last_name":"Staff"}'),
  ('e1000000-0000-4000-8000-000000000003','ezyvet-inactive@example.test','{"first_name":"Synthetic","last_name":"Inactive"}');
+update public.profiles set is_active = true where id in ('e1000000-0000-4000-8000-000000000001','e1000000-0000-4000-8000-000000000002','e1000000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('e1000000-0000-4000-8000-000000000001','STAFF'),('e1000000-0000-4000-8000-000000000002','STAFF'),('e1000000-0000-4000-8000-000000000003','STAFF');
+
 insert into public.user_roles(user_id,role) values ('e1000000-0000-4000-8000-000000000001','ADMIN'),('e1000000-0000-4000-8000-000000000003','ADMIN');
 update public.profiles set is_active=false where id='e1000000-0000-4000-8000-000000000003';
 create temp table original_counts as select (select count(*) from public.clients) clients,(select count(*) from public.pets) pets,(select count(*) from public.clinical_encounters) encounters;

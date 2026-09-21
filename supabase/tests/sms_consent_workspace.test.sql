@@ -3,6 +3,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values ('96000000-0000-4000-8000-000000000001','consent-display@example.test','{"first_name":"Synthetic","last_name":"Consent"}');
+update public.profiles set is_active = true where id in ('96000000-0000-4000-8000-000000000001');
+insert into public.user_roles (user_id, role) values ('96000000-0000-4000-8000-000000000001','STAFF');
+
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;
 set local role authenticated;

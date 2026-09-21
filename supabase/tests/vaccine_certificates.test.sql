@@ -3,6 +3,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values('48000000-0000-4000-8000-000000000001','cert-vet@example.test','{}'),('48000000-0000-4000-8000-000000000002','cert-staff@example.test','{}');
+update public.profiles set is_active = true where id in ('48000000-0000-4000-8000-000000000001','48000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('48000000-0000-4000-8000-000000000001','STAFF'),('48000000-0000-4000-8000-000000000002','STAFF');
+
 insert into public.user_roles(user_id,role) values('48000000-0000-4000-8000-000000000001','DVM') on conflict do nothing;
 create temp table fx(k text primary key,id uuid); grant all on fx to authenticated;
 create temp table requests(k text primary key,v jsonb); grant all on requests to authenticated;

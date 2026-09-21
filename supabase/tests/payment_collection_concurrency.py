@@ -100,7 +100,7 @@ try:
         account = 'acct_Local' + uuid.uuid4().hex
         sql(f"select public.configure_payment_provider('{account}',false,'{origin}');")
         created_profile = True
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','collection-{actor}@example.test','{{}}');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','collection-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into user_roles(user_id,role) values('{actor}','STAFF');")
     client = sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','Concurrency',null,null,'EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1]
     product = sql(f"begin;{staff}select (public.save_catalog_product(null,null,'Synthetic visit','service','','visit',10000,true)).id;commit;").stdout.strip().splitlines()[-1]
     ids.extend([client, product])

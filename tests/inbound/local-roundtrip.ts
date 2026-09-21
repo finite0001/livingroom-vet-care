@@ -65,6 +65,9 @@ try{
  check(sql("select count(*) from public.communication_provider_events where state in ('pending','claimed');")==="0","No unrelated inbound queue work exists before fixture");
  const email=`inbound-staff-${randomUUID()}@example.test`,password=`Synthetic-${randomUUID()}-Aa1!`;
  actor=(await api("/auth/v1/admin/users",{email,password,email_confirm:true})).id;ids.push(actor);
+ // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+ // that needs an active synthetic staff member must activate it explicitly.
+ sql(`insert into public.user_roles(user_id,role) values(${quote(actor)},'STAFF') on conflict do nothing; update public.profiles set is_active=true where id=${quote(actor)};`);
  const auth=await api("/auth/v1/token?grant_type=password",{email,password},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
  const sender=`family-${randomUUID()}@example.test`;

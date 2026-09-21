@@ -54,6 +54,8 @@ try:
     profile_created = True
     sql(f"""begin;
 insert into auth.users(id,email,raw_user_meta_data) values('{actor}','payment-concurrency-{run_id}@example.test','{{}}');
+update public.profiles set is_active=true where id='{actor}';
+insert into public.user_roles(user_id,role) values('{actor}','STAFF');
 {claims}
 insert into public.clients(id,first_name,last_name,full_name) values('{client}','Payment','Concurrency','Payment Concurrency');
 select public.create_billing_invoice('{invoice}','{client}');

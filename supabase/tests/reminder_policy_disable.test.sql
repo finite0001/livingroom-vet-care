@@ -5,6 +5,9 @@ select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values
 ('b4000000-0000-4000-8000-000000000001','policy-admin@example.test','{"first_name":"Policy","last_name":"Admin"}'),
 ('b4000000-0000-4000-8000-000000000002','policy-staff@example.test','{"first_name":"Policy","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('b4000000-0000-4000-8000-000000000001','b4000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('b4000000-0000-4000-8000-000000000001','STAFF'),('b4000000-0000-4000-8000-000000000002','STAFF');
+
 insert into public.user_roles(user_id,role) values('b4000000-0000-4000-8000-000000000001','ADMIN') on conflict do nothing;
 select ok(not has_function_privilege('anon','public.disable_reminder_automation_policy(uuid,integer,text)','EXECUTE'),'Anonymous cannot disable policies');
 select ok(not has_function_privilege('service_role','public.disable_reminder_automation_policy(uuid,integer,text)','EXECUTE'),'Provider service cannot impersonate policy reviewer');

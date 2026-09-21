@@ -3,6 +3,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values('d7000000-0000-4000-8000-000000000001','dental-staff@example.test','{"first_name":"Dental","last_name":"Staff"}'),('d7000000-0000-4000-8000-000000000002','dental-inactive@example.test','{"first_name":"Inactive","last_name":"Staff"}');
+update public.profiles set is_active = true where id in ('d7000000-0000-4000-8000-000000000001','d7000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('d7000000-0000-4000-8000-000000000001','STAFF'),('d7000000-0000-4000-8000-000000000002','STAFF');
+
 update public.profiles set is_active=false where id='d7000000-0000-4000-8000-000000000002';
 create temp table dental_fixture(kind text primary key,id uuid);grant all on dental_fixture to authenticated;
 select is(cardinality(public.dental_tooth_numbers('dog','adult')),42,'Dog adult tooth count verified');

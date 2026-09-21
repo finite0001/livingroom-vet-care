@@ -8,6 +8,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
 ('32000000-0000-4000-8000-000000000001','document-a@example.test','{}'),
 ('32000000-0000-4000-8000-000000000002','document-b@example.test','{}'),
 ('32000000-0000-4000-8000-000000000003','document-inactive@example.test','{}');
+update public.profiles set is_active = true where id in ('32000000-0000-4000-8000-000000000001','32000000-0000-4000-8000-000000000002','32000000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('32000000-0000-4000-8000-000000000001','STAFF'),('32000000-0000-4000-8000-000000000002','STAFF'),('32000000-0000-4000-8000-000000000003','STAFF');
+
 update public.profiles set is_active=false where id='32000000-0000-4000-8000-000000000003';
 create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;

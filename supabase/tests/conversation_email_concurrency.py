@@ -82,7 +82,7 @@ def race(holder_query, waiter_query, rejected=False):
     check((waiter.returncode != 0 and '42501' in waiter_error) if rejected else waiter.returncode == 0, waiter_error or 'Unexpected waiter outcome')
 
 try:
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','race-{actor}@example.test','{{}}');insert into user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','race-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into user_roles(user_id,role) values('{actor}','ADMIN');")
     client = sql(f"begin;{staff}select (save_client(auth.uid(),null,null,'Race','Fixture',null,'race@example.test','EMAIL',null,null)).id;commit;")
     fixture_ids.append(client)
     sql(f"insert into conversations(id,client_id) values('{conversation}','{client}');")

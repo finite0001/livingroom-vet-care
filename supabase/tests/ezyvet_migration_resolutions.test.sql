@@ -1,6 +1,9 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 -- FIXTURE_BEGIN
 insert into auth.users(id,email,raw_user_meta_data) values('ed900000-0000-4000-8000-000000000001','resolution-admin@example.test','{}'),('ed900000-0000-4000-8000-000000000002','resolution-other@example.test','{}'),('ed900000-0000-4000-8000-000000000003','resolution-staff@example.test','{}');
+update public.profiles set is_active = true where id in ('ed900000-0000-4000-8000-000000000001','ed900000-0000-4000-8000-000000000002','ed900000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('ed900000-0000-4000-8000-000000000001','STAFF'),('ed900000-0000-4000-8000-000000000002','STAFF'),('ed900000-0000-4000-8000-000000000003','STAFF');
+
 insert into user_roles(user_id,role) values('ed900000-0000-4000-8000-000000000001','ADMIN'),('ed900000-0000-4000-8000-000000000002','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ed900000-0000-4000-8000-000000000001","role":"authenticated"}',true);

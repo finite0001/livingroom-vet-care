@@ -90,7 +90,7 @@ def exhausted():
 
 try:
     check(sql("select count(*) from public.communication_provider_events where state in ('pending','claimed');").stdout.strip()=='0','Shared queue has no unrelated active work')
-    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','processing-{actor}@example.test','{{}}');insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
+    sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','processing-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
     event,work_hash=exhausted()
     first_id,second_id=[str(uuid.uuid4()) for _ in range(2)];ids.extend([first_id,second_id])
     def retry(request,event,work_hash):

@@ -37,6 +37,9 @@ async function user(label: string) {
   const email = `native-rx-${label}-${randomUUID()}@example.test`, password = `Synthetic-${randomUUID()}-Aa1!`;
   const created = await post('/auth/v1/admin/users', { email, password, email_confirm: true, user_metadata: { full_name: `Synthetic ${label}` } }, service);
   check(created.ok && typeof created.value.id === 'string', 'Synthetic Auth user created');
+  // A1 (#164): handle_new_user no longer activates a new auth user, so a fixture
+  // that needs an active synthetic staff member must activate it explicitly.
+  sql(`insert into public.user_roles(user_id,role) values(${quote(created.value.id)},'STAFF') on conflict do nothing; update public.profiles set is_active=true where id=${quote(created.value.id)};`);
   const signed = await post('/auth/v1/token?grant_type=password', { email, password }, anonymous);
   check(signed.ok && typeof signed.value.access_token === 'string', 'Synthetic staff signed in using actual Auth');
   return { id: created.value.id as string, headers: { ...anonymous, Authorization: `Bearer ${signed.value.access_token}` } };

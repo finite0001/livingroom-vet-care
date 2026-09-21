@@ -6,6 +6,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
 ('db410000-0000-4000-8000-000000000001','lab-provenance-staff@example.test','{}'),
 ('db410000-0000-4000-8000-000000000002','lab-provenance-dvm@example.test','{}'),
 ('db410000-0000-4000-8000-000000000003','lab-provenance-inactive@example.test','{}');
+update public.profiles set is_active = true where id in ('db410000-0000-4000-8000-000000000001','db410000-0000-4000-8000-000000000002','db410000-0000-4000-8000-000000000003');
+insert into public.user_roles (user_id, role) values ('db410000-0000-4000-8000-000000000001','STAFF'),('db410000-0000-4000-8000-000000000002','STAFF'),('db410000-0000-4000-8000-000000000003','STAFF');
+
 insert into public.user_roles(user_id,role) values('db410000-0000-4000-8000-000000000001','ADMIN'),('db410000-0000-4000-8000-000000000002','DVM');
 update public.profiles set is_active=false where id='db410000-0000-4000-8000-000000000003';
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
