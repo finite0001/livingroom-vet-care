@@ -70,7 +70,7 @@ const ExperienceHero = () => {
               <div className="absolute -inset-4 bg-gradient-warm rounded-3xl opacity-20 blur-2xl" />
               <img
                 src={catRoomImage}
-                alt="Concept image of a calm cat in a living room inspired exam room"
+                alt="Concept of a calm cat in a living-room-style exam room"
                 className="relative w-full rounded-2xl shadow-elevated object-cover aspect-square"
               />
               <motion.div

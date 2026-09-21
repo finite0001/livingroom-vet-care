@@ -30,6 +30,7 @@ const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
 const UnavailableToolPage = lazy(() => import("@/hub/pages/UnavailableToolPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
+const HubNotFoundPage = lazy(() => import("@/hub/pages/HubNotFoundPage"));
 const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const WebsiteInquiriesPage = lazy(() => import("@/hub/features/inquiries/WebsiteInquiriesPage"));
 const ProcessingQueuePage = lazy(() => import("@/hub/features/inbound-review/ProcessingQueuePage"));
@@ -114,6 +115,9 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/tools/surveys" element={<UnavailableToolPage />} />
                   <Route path="/hub/tools/alerts" element={<UnavailableToolPage />} />
                   <Route path="/hub/tools/refills" element={<RefillsPage />} />
+                  {/* Unknown hub URL: keep the staff session and the shell, so a stale
+                      bookmark never lands on the public marketing 404. */}
+                  <Route path="/hub/*" element={<HubNotFoundPage />} />
                 </Route>
               </Route>
 

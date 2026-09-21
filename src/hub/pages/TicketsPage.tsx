@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -20,9 +21,9 @@ import {
 } from "@/hub/hooks/use-tickets";
 
 const STATUS_TONE: Record<string, string> = {
-  OPEN: "bg-blue-500/10 text-blue-600",
-  DVM_REVIEW: "bg-amber-500/10 text-amber-600",
-  READY_FOR_SCHEDULING: "bg-green-500/10 text-green-600",
+  OPEN: "bg-info/10 text-info",
+  DVM_REVIEW: "bg-warning/10 text-warning",
+  READY_FOR_SCHEDULING: "bg-success/10 text-success",
   CLOSED: "bg-muted text-muted-foreground",
 };
 
@@ -32,7 +33,7 @@ export default function TicketsPage() {
   usePageTitle("Tickets");
   const navigate = useNavigate();
   const [filter, setFilter] = useState<TicketStatus | "ALL">("ALL");
-  const { data: tickets, isLoading } = useTickets(filter);
+  const { data: tickets, isLoading, isError, refetch } = useTickets(filter);
   const create = useCreateTicket();
 
   const [open, setOpen] = useState(false);
@@ -87,6 +88,8 @@ export default function TicketsPage() {
       <div className="mx-auto w-full max-w-3xl space-y-2 p-4">
         {isLoading ? (
           <div className="space-y-2">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+        ) : isError ? (
+          <LoadErrorState label="Tickets" onRetry={() => void refetch()} />
         ) : !tickets || tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <ClipboardList className="mb-3 h-10 w-10 text-muted-foreground" />

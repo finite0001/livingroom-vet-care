@@ -28,7 +28,7 @@ function Trend({ value, lowerIsBetter = false }: { value: number; lowerIsBetter?
   const good = lowerIsBetter ? value < 0 : value > 0;
   const Icon = value > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={cn("inline-flex items-center gap-0.5 text-xs font-medium", good ? "text-green-600" : "text-destructive")}>
+    <span className={cn("inline-flex items-center gap-0.5 text-xs font-medium", good ? "text-success" : "text-destructive")}>
       <Icon className="h-3 w-3" />{Math.abs(value)}%
     </span>
   );
@@ -179,7 +179,7 @@ export default function AdminDashboardPage() {
                         <span className="truncate font-medium">{s.staff_name}</span>
                         <span className="text-right tabular-nums">{s.total_responses}</span>
                         <span className="text-right tabular-nums text-muted-foreground">{formatSeconds(s.avg_response_seconds)}</span>
-                        <span className={cn("text-right tabular-nums font-medium", s.sla_compliant >= 80 ? "text-green-600" : s.sla_compliant >= 50 ? "text-amber-600" : "text-destructive")}>{s.sla_compliant}%</span>
+                        <span className={cn("text-right tabular-nums font-medium", s.sla_compliant >= 80 ? "text-success" : s.sla_compliant >= 50 ? "text-warning" : "text-destructive")}>{s.sla_compliant}%</span>
                       </div>
                     ))}
                   </div>
