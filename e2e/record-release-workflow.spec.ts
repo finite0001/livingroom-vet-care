@@ -1475,7 +1475,7 @@ test("schema13 reviews an API original and recovers exact confirmation without s
  const state=await fixture(page,true,true,true,false,false,false,true);
  state.ambiguous=true;
  const panel=page.getByRole("region",{name:"Patient medical-record releases"});
- await panel.getByRole("button",{name:"Select all shown: Reviewed ezyVet API originals",exact:true}).click();
+ await panel.getByRole("button",{name:"Select all shown: Reviewed outside record originals",exact:true}).click();
  await panel.getByRole("button",{name:"Review selected package",exact:true}).click();
  await expect(panel.frameLocator("iframe").getByRole("heading",{name:"Selected ezyVet API originals",exact:true})).toBeVisible();
  await panel.getByLabel("I reviewed the complete selected records, original attachments and household recipient.").check();
@@ -1507,13 +1507,13 @@ for (const mobile of [false, true]) {
     await expect(originals).toHaveCount(1);
     const last = panel.getByRole("checkbox", { name: /^Paged original 101(?:\s|$)/ });
     await last.check();
-    await expect(panel.getByRole("heading", { name: "Reviewed ezyVet API originals · 2 selected", exact: true })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: "Reviewed outside record originals · 2 selected", exact: true })).toBeVisible();
     await expect(panel.getByRole("button", { name: "Older source records", exact: true })).toBeDisabled();
     await panel.getByRole("button", { name: "Newer source records", exact: true }).click();
     await expect(originals).toHaveCount(100);
     await expect(first).toBeChecked();
     await expect(originals.and(page.locator(":checked"))).toHaveCount(1);
-    await expect(panel.getByRole("heading", { name: "Reviewed ezyVet API originals · 2 selected", exact: true })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: "Reviewed outside record originals · 2 selected", exact: true })).toBeVisible();
     await panel.getByRole("button", { name: "Older source records", exact: true }).click();
     await expect(last).toBeChecked();
     expect(offsets).toContain(0);
@@ -1527,7 +1527,7 @@ for (const mobile of [false, true]) {
 async function openCanonicalOriginalPreview(page: Page) {
   const state = await fixture(page, true, true, true, false, false, false, true);
   const panel = page.getByRole("region", { name: "Patient medical-record releases" });
-  await panel.getByRole("button", { name: "Select all shown: Reviewed ezyVet API originals", exact: true }).click();
+  await panel.getByRole("button", { name: "Select all shown: Reviewed outside record originals", exact: true }).click();
   await panel.getByRole("button", { name: "Review selected package", exact: true }).click();
   await expect(panel.getByRole("button", { name: selectedOriginalButton, exact: true })).toBeVisible();
   return { state, panel };
