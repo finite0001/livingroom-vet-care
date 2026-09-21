@@ -15,7 +15,7 @@ interface Row {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
-async function fixture(page: Page, role = "DVM") {
+async function fixture(page: Page, role = "DVM", initialVaccinations: Row[] = []) {
   const user = {
     id: actor,
     aud: "authenticated",
@@ -41,7 +41,7 @@ async function fixture(page: Page, role = "DVM") {
   const state = {
     calls: [] as Row[],
     requests: [] as Row[],
-    vaccinations: [] as Row[],
+    vaccinations: initialVaccinations,
     losePrepare: false,
     loseApprove: false,
     stale: false,
@@ -469,13 +469,12 @@ test("durable discovery restores pointer loss; wrong actor response blocks appro
 test("all active staff read immutable review history, only DVM sees interpretation", async ({
   page,
 }) => {
-  const state = await fixture(page, "CSR");
-  state.vaccinations = [
+  const state = await fixture(page, "CSR", [
     {
       ...receipt(),
       current: { ...receipt().current, is_current: false, is_latest: false },
     },
-  ];
+  ]);
   await page
     .getByRole("button", { name: "Refresh outside vaccination history" })
     .click();

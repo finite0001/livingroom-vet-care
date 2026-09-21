@@ -53,6 +53,14 @@ function OutsideVaccinations({
     },
     [onDirtyChange],
   );
+  if (
+    !dvm &&
+    !history.isLoading &&
+    !history.isError &&
+    cursor === null &&
+    (history.data?.vaccinations.length ?? 0) === 0
+  )
+    return null;
   return (
     <section
       aria-label="Outside vaccination history"

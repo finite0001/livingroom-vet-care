@@ -53,6 +53,14 @@ function OutsidePrescriptions({
     queryFn: () => listPatientImportedPrescriptions(petId, cursor),
     retry: false,
   });
+  if (
+    !dvm &&
+    !history.isLoading &&
+    !history.isError &&
+    cursor === null &&
+    (history.data?.prescriptions.length ?? 0) === 0
+  )
+    return null;
   return (
     <section
       aria-label="Outside prescription history"
