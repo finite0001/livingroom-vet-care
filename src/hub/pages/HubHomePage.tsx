@@ -1,22 +1,35 @@
 import { Link } from "react-router-dom";
 import {
-  MessageSquare,
-  ClipboardList,
-  Users,
-  FileText,
   CalendarDays,
+  ClipboardList,
+  FileText,
+  MessageSquare,
   Pill,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/hub/contexts/AuthContext";
-import {
-  useConversations,
-  useUnreadCount,
-} from "@/hub/hooks/use-conversations";
-import { cn } from "@/lib/utils";
+import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
+
+// The newest native tables (e.g. native_refills) are RPC-only and not in the
+// generated types, so the refill count uses the same permissive cast as the
+// refill API rather than a typed table select.
+interface Database {
+  public: {
+    Tables: Record<never, never>;
+    Views: Record<never, never>;
+    Enums: Record<never, never>;
+    CompositeTypes: Record<never, never>;
+    Functions: {
+      [key: string]: { Args: Record<string, unknown>; Returns: unknown };
+    };
+  };
+}
+const client = supabase as unknown as SupabaseClient<Database>;
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -24,28 +37,33 @@ function getGreeting() {
   if (h < 17) return "Good afternoon";
   return "Good evening";
 }
+
 const quickActions = [
   { label: "Inbox", icon: MessageSquare, path: "/hub/chats" },
   { label: "Schedule", icon: CalendarDays, path: "/hub/schedule" },
-  {
-    label: "Care reminders",
-    icon: CalendarDays,
-    path: "/hub/tools/care-reminders",
-  },
+  { label: "Care reminders", icon: CalendarDays, path: "/hub/tools/care-reminders" },
   { label: "Clients", icon: Users, path: "/hub/clients" },
+  { label: "Patients", icon: Users, path: "/hub/patients" },
   { label: "Inventory", icon: Pill, path: "/hub/inventory" },
   { label: "Templates", icon: FileText, path: "/hub/tools/templates" },
   { label: "Website inquiries", icon: ClipboardList, path: "/hub/inquiries" },
-  { label: "Tickets", icon: ClipboardList, path: "/hub/tickets" },
 ];
-interface CountCardProps {
+
+interface TodayItem {
+  key: string;
   label: string;
   path: string;
-  value: number | null | undefined;
-  pending: boolean;
-  failed: boolean;
-  retry: () => unknown;
 }
+
+const todayItems: TodayItem[] = [
+  { key: "appointments", label: "Today's appointments", path: "/hub/schedule" },
+  { key: "unread", label: "Unread conversations for you", path: "/hub/chats" },
+  { key: "refills", label: "Open refill requests", path: "/hub/tools/refills" },
+  { key: "reminders", label: "Reminders due", path: "/hub/tools/care-reminders" },
+  { key: "unsigned", label: "Unsigned notes", path: "/hub/patients" },
+  { key: "outbox", label: "Outbox failures", path: "/hub/admin/outbox" },
+];
+
 function CountCard({
   label,
   path,
@@ -53,7 +71,14 @@ function CountCard({
   pending,
   failed,
   retry,
-}: CountCardProps) {
+}: {
+  label: string;
+  path: string;
+  value: number | null | undefined;
+  pending: boolean;
+  failed: boolean;
+  retry: () => unknown;
+}) {
   const unavailable = failed || (!pending && typeof value !== "number");
   return (
     <section aria-label={label} className="rounded-xl border bg-card p-4">
@@ -62,10 +87,7 @@ function CountCard({
         className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p
-          className="mt-1 text-lg font-semibold text-foreground"
-          aria-live="polite"
-        >
+        <p className="mt-1 text-lg font-semibold text-foreground" aria-live="polite">
           {unavailable ? "Unavailable" : pending ? "Loading…" : value}
         </p>
       </Link>
@@ -83,80 +105,138 @@ function CountCard({
   );
 }
 
+function useCount(
+  key: string,
+  enabled: boolean,
+  queryFn: () => Promise<number>,
+) {
+  return useQuery({
+    queryKey: ["today", key],
+    enabled,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    queryFn,
+  });
+}
+
 export default function HubHomePage() {
-  const { profile, session } = useAuth();
+  const { profile, session, hasRole } = useAuth();
   const actor = session?.user.id;
-  usePageTitle("Hub Home");
+  const isAdmin = hasRole("ADMIN");
+  usePageTitle("Today");
+
   const unread = useUnreadCount();
-  // Reuse the same actor-scoped, personal-read projection and invalidation keys as the inbox.
-  const recent = useConversations({ status: "ACTIVE" });
-  const active = useQuery({
-    queryKey: ["conversations", actor, "active-count"],
-    enabled: !!actor,
-    staleTime: 10_000,
-    refetchInterval: 15_000,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("conversations")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "ACTIVE");
-      if (error) throw error;
-      if (count === null)
-        throw new Error("Active conversation count unavailable");
-      return count;
-    },
+
+  const appointments = useCount("appointments", !!actor, async () => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    const { count, error } = await supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .gte("scheduled_at", start.toISOString())
+      .lt("scheduled_at", end.toISOString())
+      .in("status", ["SCHEDULED", "CONFIRMED"]);
+    if (error) throw error;
+    if (count === null) throw new Error("Appointment count unavailable");
+    return count;
   });
-  const tickets = useQuery({
-    queryKey: ["tickets", "open-count", actor],
-    enabled: !!actor,
-    staleTime: 10_000,
-    refetchInterval: 15_000,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("tickets")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "OPEN");
-      if (error) throw error;
-      if (count === null) throw new Error("Ticket count unavailable");
-      return count;
-    },
+
+  const refills = useCount("refills", !!actor, async () => {
+    const { data, error } = await client.rpc("list_native_refills", {
+      p_pet_id: null,
+      p_before_at: null,
+      p_before_id: null,
+      p_limit: 100,
+    });
+    if (error) throw error;
+    const page = data as { refills?: { refill?: { state?: string } }[] };
+    const open = (page?.refills ?? []).filter(
+      (r) => r.refill?.state === "open",
+    ).length;
+    return open;
   });
+
+  const reminders = useCount("reminders", !!actor, async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const [vaccines, labs] = await Promise.all([
+      supabase
+        .from("patient_vaccine_due_plans")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "current")
+        .eq("reminders_enabled", true)
+        .lte("current_due_on", today),
+      supabase
+        .from("patient_lab_orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["planned", "ordered"])
+        .not("due_date", "is", null)
+        .lte("due_date", today),
+    ]);
+    if (vaccines.error) throw vaccines.error;
+    if (labs.error) throw labs.error;
+    if (vaccines.count === null || labs.count === null)
+      throw new Error("Reminder count unavailable");
+    return vaccines.count + labs.count;
+  });
+
+  const unsigned = useCount("unsigned", !!actor, async () => {
+    const { count, error } = await supabase
+      .from("clinical_encounters")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "draft");
+    if (error) throw error;
+    if (count === null) throw new Error("Unsigned note count unavailable");
+    return count;
+  });
+
+  const outbox = useCount("outbox", !!actor && isAdmin, async () => {
+    const { count, error } = await supabase
+      .from("communication_outbox")
+      .select("id", { count: "exact", head: true })
+      .eq("state", "failed");
+    if (error) throw error;
+    if (count === null) throw new Error("Outbox failure count unavailable");
+    return count;
+  });
+
+  const counts: Record<string, ReturnType<typeof useCount>> = {
+    appointments,
+    unread,
+    refills,
+    reminders,
+    unsigned,
+    outbox,
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {getGreeting()}, {profile?.first_name || "there"}
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground">Today</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          The Living Room Vet — Staff workspace
+          {getGreeting()}, {profile?.first_name || "there"} — The Living Room Vet
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <CountCard
-          label="Unread conversations for you"
-          path="/hub/chats"
-          value={unread.data}
-          pending={unread.isPending}
-          failed={unread.isError}
-          retry={unread.refetch}
-        />
-        <CountCard
-          label="Active conversations"
-          path="/hub/chats"
-          value={active.data}
-          pending={active.isPending}
-          failed={active.isError}
-          retry={active.refetch}
-        />
-        <CountCard
-          label="Open tickets"
-          path="/hub/tickets"
-          value={tickets.data}
-          pending={tickets.isPending}
-          failed={tickets.isError}
-          retry={tickets.refetch}
-        />
-      </div>
+
+      <section aria-label="Today at a glance" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {todayItems.map((item) => {
+          const q = counts[item.key];
+          if (!q) return null;
+          return (
+            <CountCard
+              key={item.key}
+              label={item.label}
+              path={item.path}
+              value={q.data}
+              pending={q.isPending}
+              failed={q.isError}
+              retry={q.refetch}
+            />
+          );
+        })}
+      </section>
+
       <section aria-labelledby="home-actions">
         <h2 id="home-actions" className="mb-3 text-sm font-semibold">
           Quick actions
@@ -175,52 +255,6 @@ export default function HubHomePage() {
             </Link>
           ))}
         </div>
-      </section>
-      <section aria-labelledby="home-recent">
-        <h2 id="home-recent" className="mb-3 text-sm font-semibold">
-          Recent active conversations
-        </h2>
-        {recent.isError ? (
-          <div role="alert" className="space-y-2 rounded-xl border p-4">
-            <p>Recent conversations could not be loaded.</p>
-            <Button variant="outline" onClick={() => void recent.refetch()}>
-              Retry recent conversations
-            </Button>
-          </div>
-        ) : recent.isPending ? (
-          <p role="status">Loading recent conversations…</p>
-        ) : recent.data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No active conversations.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {recent.data.slice(0, 3).map((conversation) => (
-              <Link
-                key={conversation.id}
-                to={`/hub/conversation/${conversation.id}`}
-                className="flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(
-                      "truncate text-sm",
-                      !conversation.is_read && "font-semibold",
-                    )}
-                  >
-                    {conversation.client.full_name}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {conversation.last_message?.content ?? "No messages"}
-                  </p>
-                </div>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {conversation.is_read ? "Read by you" : "Unread for you"}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );
