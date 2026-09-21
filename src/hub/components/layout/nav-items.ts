@@ -10,9 +10,9 @@ import {
   LayoutDashboard,
   MessageSquare,
   Package,
+  PawPrint,
   Pill,
   Settings,
-  Stethoscope,
   Ticket,
   UserCog,
   Users,
@@ -45,6 +45,7 @@ export const navItems: NavItem[] = [
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },
   { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList, section: "workspace" },
   { path: "/hub/clients", label: "Clients", icon: Users, section: "workspace" },
+  { path: "/hub/patients", label: "Patients", icon: PawPrint, section: "workspace" },
   { path: "/hub/time", label: "Time Clock", icon: Clock, section: "workspace" },
   { path: "/hub/timesheet", label: "Timesheet", icon: History, section: "workspace" },
 
@@ -55,7 +56,6 @@ export const navItems: NavItem[] = [
 
   // Admin
   { path: "/hub/admin/operations", label: "Operations", icon: Activity, section: "admin" },
-  { path: "/hub/tools/ezyvet", label: "ezyVet imports", icon: Stethoscope, section: "admin" },
   { path: "/hub/admin", label: "Dashboard", mobileLabel: "Admin Dashboard", icon: LayoutDashboard, section: "admin" },
   { path: "/hub/admin/staff", label: "Staff", icon: UserCog, section: "admin" },
 
