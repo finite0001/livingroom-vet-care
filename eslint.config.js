@@ -47,9 +47,8 @@ export default tseslint.config(
     // Patient voicemail recordings are plain audio with no caption track to
     // attach, and none can be produced. In MessageTimeline the machine
     // transcription is rendered directly under the player as the text
-    // alternative. VoicemailsPage is deleted by task A3 — drop it from this
-    // list when that lands.
-    files: ["src/hub/components/conversations/MessageTimeline.tsx", "src/hub/pages/VoicemailsPage.tsx"],
+    // alternative.
+    files: ["src/hub/components/conversations/MessageTimeline.tsx"],
     rules: { "jsx-a11y/media-has-caption": "off" },
   },
 );
