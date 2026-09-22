@@ -24,7 +24,9 @@ interface PageData<T> {
 interface SectionProps<T> {
   title: string;
   load: (cursor: Cursor | null) => Promise<PageData<T>>;
-  next: (row: T) => Cursor;
+  // Optional: a section whose rows are a fixed set has no next page and must not
+  // have to invent a cursor.
+  next?: (row: T) => Cursor;
   render: (row: T) => ReactNode;
   children?: ReactNode;
 }
@@ -122,7 +124,7 @@ function QueueSection<T>({
           disabled={busy || !data?.has_more || !data.items.length}
           onClick={() => {
             const last = data?.items.at(-1);
-            if (last) void fetch(next(last));
+            if (last && next) void fetch(next(last));
           }}
         >
           Next {title.toLowerCase()} page
@@ -439,6 +441,39 @@ function OperationsSession() {
           No recorded run means scheduling is unverified. An unfinished run does
           not establish failure or zero work. This page does not invoke a
           worker.
+        </p>
+      </QueueSection>
+      <QueueSection
+        title="Scheduled jobs"
+        load={api.schedulerJobs}
+        render={(j) => (
+          <>
+            <p className={j.stale ? "text-destructive" : undefined}>
+              {j.outcome === "ok"
+                ? "Worker accepted the call"
+                : j.outcome === "dispatched"
+                  ? "Sent; no answer recorded yet"
+                  : j.outcome === "configuration_missing"
+                    ? "Installed but not configured"
+                    : "Worker refused or failed the call"}
+            </p>
+            <p className="break-all text-sm">
+              {j.job} ·{" "}
+              {j.status_code === null ? "no status" : `HTTP ${j.status_code}`}
+            </p>
+            <p>
+              Requested {displayTime(j.requested_at)}
+              {j.stale ? " · overdue for its cadence" : ""}
+            </p>
+            {j.error_message ? <p>{j.error_message}</p> : null}
+          </>
+        )}
+      >
+        <p>
+          Each row is the last attempt for that job. A job that is overdue, or
+          whose worker refused the call, is shown here rather than passing
+          silently. Installed is not enabled: every worker still refuses to
+          deliver until its own gate is switched on.
         </p>
       </QueueSection>
     </div>
