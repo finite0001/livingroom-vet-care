@@ -210,7 +210,7 @@ deliberate and one bound a defect found by testing.
    an outcome into `scheduler_job_results` instead of updating a request row,
    which keeps both tables immutable and consistent with the existing evidence
    discipline. Reads go through an admin-gated definer function,
-   `scheduler_job_status()`.
+   `operations_scheduler_jobs()`.
 
 3. **Unconfigured receipts are bounded to one an hour per job.** Testing found
    that recording every attempt writes a receipt per minute, for as long as the

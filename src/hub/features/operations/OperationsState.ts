@@ -140,6 +140,43 @@ export const blockSchema = z.object({
   created_at: time,
   invalidated_at: time.nullable(),
 });
+export const schedulerJobSchema = z
+  .object({
+    job: z.enum([
+      "dispatch-outbox",
+      "process-inbound",
+      "process-stripe-events",
+      "queue-reminders",
+      "cleanup-abandoned-attachment",
+    ]),
+    requested_at: time,
+    outcome: z.enum(["dispatched", "ok", "failed", "configuration_missing"]),
+    status_code: z.number().int().nullable(),
+    error_message: z.string().nullable(),
+    stale: z.boolean(),
+  })
+  .superRefine((j, ctx) => {
+    // The same rule the database enforces on the outcome it records: a job that
+    // has not been answered yet carries no status, and "ok" means a 2xx.
+    if (
+      (j.outcome === "ok" &&
+        (j.status_code === null ||
+          j.status_code < 200 ||
+          j.status_code > 299 ||
+          j.error_message !== null)) ||
+      (j.outcome === "configuration_missing" &&
+        (j.status_code !== null || j.error_message === null)) ||
+      (j.outcome === "dispatched" && j.status_code !== null)
+    )
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Contradictory scheduler evidence",
+      });
+  });
+export const schedulerStatusSchema = z.object({
+  observed_at: time,
+  jobs: z.array(schedulerJobSchema).max(20),
+});
 export interface Cursor {
   at?: string;
   id?: string;

@@ -101,6 +101,38 @@ async function setup(page: Page, baseURL: string | undefined) {
           has_more: false,
         },
       });
+    if (state.evidence && name === "operations_scheduler_jobs")
+      return route.fulfill({
+        json: {
+          observed_at: time,
+          jobs: [
+            {
+              job: "dispatch-outbox",
+              requested_at: time,
+              outcome: "ok",
+              status_code: 202,
+              error_message: null,
+              stale: false,
+            },
+            {
+              job: "process-inbound",
+              requested_at: time,
+              outcome: "configuration_missing",
+              status_code: null,
+              error_message: "Missing Vault secret(s): scheduler_worker_key",
+              stale: false,
+            },
+            {
+              job: "queue-reminders",
+              requested_at: new Date(Date.now() - 3600_000).toISOString(),
+              outcome: "failed",
+              status_code: 401,
+              error_message: null,
+              stale: true,
+            },
+          ],
+        },
+      });
     if (state.evidence && name === "operations_scheduler_runs")
       return route.fulfill({
         json: {
@@ -262,4 +294,18 @@ test("old blocked source and unresolved scheduler evidence have stable reference
   await expect(runs).toContainText(`Run reference: ${id}`);
   await expect(runs).toContainText("Started; outcome unknown");
   await expect(runs).toContainText("Queue counts unknown.");
+  const jobs = page.getByRole("region", {
+    name: "Scheduled jobs",
+    exact: true,
+  });
+  await expect(jobs).toContainText("dispatch-outbox");
+  await expect(jobs).toContainText("Worker accepted the call");
+  await expect(jobs).toContainText("HTTP 202");
+  await expect(jobs).toContainText("Installed but not configured");
+  await expect(jobs).toContainText(
+    "Missing Vault secret(s): scheduler_worker_key",
+  );
+  await expect(jobs).toContainText("Worker refused or failed the call");
+  await expect(jobs).toContainText("HTTP 401");
+  await expect(jobs).toContainText("overdue for its cadence");
 });

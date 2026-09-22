@@ -6,6 +6,7 @@ import {
   candidateSchema,
   blockSchema,
   runSchema,
+  schedulerStatusSchema,
   type Cursor,
 } from "./OperationsState";
 interface RpcClient {
@@ -59,4 +60,17 @@ export async function runs(cursor: Cursor | null) {
       p_limit: 50,
     }),
   );
+}
+// The scheduled jobs board is a fixed set, not a page: there are as many rows as
+// there are jobs, and never more. It is adapted to the section shape rather than
+// pretending to paginate.
+export async function schedulerJobs() {
+  const status = schedulerStatusSchema.parse(
+    await read("operations_scheduler_jobs"),
+  );
+  return {
+    items: status.jobs,
+    has_more: false,
+    observed_at: status.observed_at,
+  };
 }

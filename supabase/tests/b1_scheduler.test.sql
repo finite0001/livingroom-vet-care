@@ -98,7 +98,7 @@ insert into public.user_roles(user_id,role) values
 set local role authenticated;
 select set_config('request.jwt.claims','{"role":"authenticated","sub":"b1000000-0000-4000-8000-000000000002"}',true);
 
-select throws_ok($$select public.scheduler_job_status()$$,'42501',null,
+select throws_ok($$select public.operations_scheduler_jobs()$$,'42501',null,
   'A non-admin staff member cannot read scheduler status');
 select throws_ok($$select public.scheduler_dispatch('dispatch-outbox')$$,'42501',null,
   'A staff member cannot dispatch a job by hand');
@@ -106,13 +106,13 @@ select throws_ok($$select public.scheduler_reconcile()$$,'42501',null,
   'A staff member cannot run reconciliation');
 
 select set_config('request.jwt.claims','{"role":"authenticated","sub":"b1000000-0000-4000-8000-000000000001"}',true);
-select is((public.scheduler_job_status())->>'observed_at' is not null,true,
+select is((public.operations_scheduler_jobs())->>'observed_at' is not null,true,
   'An admin receives a scheduler status reading');
 select is(
-  (select j->>'outcome' from jsonb_array_elements((public.scheduler_job_status())->'jobs') j where j->>'job'='dispatch-outbox'),
+  (select j->>'outcome' from jsonb_array_elements((public.operations_scheduler_jobs())->'jobs') j where j->>'job'='dispatch-outbox'),
   'configuration_missing','The admin reading shows the unconfigured job as failed');
 select is(
-  (select j->>'stale' from jsonb_array_elements((public.scheduler_job_status())->'jobs') j where j->>'job'='process-inbound'),
+  (select j->>'stale' from jsonb_array_elements((public.operations_scheduler_jobs())->'jobs') j where j->>'job'='process-inbound'),
   'false','A job that just ran is not reported as stale');
 
 select * from finish();

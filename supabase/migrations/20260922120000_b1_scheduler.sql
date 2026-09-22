@@ -162,7 +162,7 @@ end $$;
 revoke all on function public.scheduler_reconcile() from public,anon,authenticated,service_role;
 
 -- 5. Read path for the ops card. Admin-gated, like every other operations read.
-create function public.scheduler_job_status() returns jsonb
+create function public.operations_scheduler_jobs() returns jsonb
 language plpgsql stable security definer set search_path = public
 as $$
 declare _items jsonb;
@@ -193,8 +193,8 @@ begin
   return jsonb_build_object('observed_at', statement_timestamp(), 'jobs', _items);
 end $$;
 
-revoke all on function public.scheduler_job_status() from public,anon,authenticated,service_role;
-grant execute on function public.scheduler_job_status() to authenticated;
+revoke all on function public.operations_scheduler_jobs() from public,anon,authenticated,service_role;
+grant execute on function public.operations_scheduler_jobs() to authenticated;
 
 -- 6. The timetable. cron.schedule updates a job that already carries the name, so
 --    replaying this migration is idempotent.
