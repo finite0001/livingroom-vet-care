@@ -187,3 +187,38 @@ Every item must be checked and its real output recorded — in the pull request,
 - **The batch semantics of each worker** (how many items one call processes) were read only at the level needed to justify the cadences in §3. The implementer must confirm no worker needs a tighter loop; `dispatch-outbox/index.ts` contains a `for` loop and should be checked.
 - **Invocation cost** (§3) assumes the cadences above and no extra scheduling.
 - **Open question for the owner:** is 15 minutes the right reminder cadence for this practice, or should it be 5? It changes invocations, not behaviour, and it is a one-line change later.
+
+---
+
+## 13. Implementation notes (2026-09-22)
+
+Written after the migration was built and tested, and recorded here rather than
+left in a commit message. Three things differ from the design above; two are
+deliberate and one bound a defect found by testing.
+
+1. **The missing-credential path records and warns; it does not raise.** §4 said
+   the job "records a receipt row and raises". That is impossible in one
+   transaction: the raise rolls back the receipt that makes the failure visible.
+   The implementation records the receipt, emits a `WARNING` for the database log
+   and returns `configuration_missing`. The ops card is the visibility surface
+   the map asks for, and it reads that table.
+
+2. **Two append-only tables, not one mutable one.** §5 described a single
+   `scheduler_job_runs`. The repository's existing scheduler evidence
+   (`reminder_scheduler_runs`, `reminder_scheduler_results`) is append-only, with
+   an immutability trigger and no client access at all. Reconcile now **inserts**
+   an outcome into `scheduler_job_results` instead of updating a request row,
+   which keeps both tables immutable and consistent with the existing evidence
+   discipline. Reads go through an admin-gated definer function,
+   `scheduler_job_status()`.
+
+3. **Unconfigured receipts are bounded to one an hour per job.** Testing found
+   that recording every attempt writes a receipt per minute, for as long as the
+   project stays unconfigured — unbounded growth for no new information. The
+   card needs to know the job is failing, not how many times it failed while
+   nobody was watching. `configuration_missing` is therefore recorded at most
+   hourly per job, while every attempt still warns.
+
+Verified at implementation: `supabase db reset` replays all 137 migrations from
+empty, the new test passes 26 assertions, and the full database suite passes
+(111 files, 4,521 tests).
