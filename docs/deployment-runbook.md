@@ -71,3 +71,30 @@ Inventory existing clients, pets, documents, auth users, secrets, scheduled jobs
 ## Provider setup still required
 
 Follow the [mail commissioning proposal](mail-commissioning-plan.md): preserve verified sending DNS, establish private root-domain staff mailboxes, and commission isolated client receiving and Auth SMTP before publication. The website does not currently publish an unconfigured mailbox. Provision Twilio and SMS consent/opt-out, Stripe account/test keys, and authorized ezyVet API access in their respective services. Keep secrets out of chat and Git. ezyVet is confirmed as the requested API; no API credentials or live source records have been used.
+
+## Uptime monitoring
+
+The `health` Edge Function is a public liveness probe. Point a monitor at:
+
+```
+https://<project-ref>.supabase.co/functions/v1/health
+```
+
+- **Healthy:** HTTP 200 with `{"status":"ok","checked_at":"…"}`.
+- **Not healthy:** HTTP 503 with `{"status":"unavailable","checked_at":"…"}`. The
+  body never says why - a public endpoint's error text is reconnaissance, and the
+  regression test enforces that it stays absent.
+- It answers `GET` and `HEAD` (monitors use both) and refuses anything else with
+  405. The response is `no-store`, so a monitor is never shown a cached answer
+  from a healthier minute.
+
+**What a 200 proves:** the function is deployed and serving, and the database
+answered a query. **What it does not prove:** that providers are configured, that
+outbound delivery is enabled, or that the scheduler is running. Those are visible
+to administrators on `/hub/admin/operations`, which is where the practice's real
+operational state belongs.
+
+Deployed with `verify_jwt = false` on purpose: a monitor holds no credential. Do
+not add authentication to it, and do not make it report more than up or down.
+
+Suggested cadence: every minute, alerting after two consecutive failures.
