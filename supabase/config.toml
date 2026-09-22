@@ -19,6 +19,14 @@ verify_jwt = false
 [functions.queue-reminders]
 verify_jwt = false
 
+# Public liveness probe for an uptime monitor, which holds no credential. The
+# handler reports only whether the database answered and when it was asked: it
+# never returns an error text, a version or a count. See
+# _shared/health-ping.ts. The scheduler's real health is visible to administrators
+# on /hub/admin/operations instead.
+[functions.health]
+verify_jwt = false
+
 [functions.public-contact]
 verify_jwt = false
 # Staff JWT required at the gateway; handler also verifies the user and every RPC authorizes staff.
