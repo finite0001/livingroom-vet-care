@@ -29,9 +29,23 @@ reader = None
 writer = None
 created = False
 try:
-    schema = subprocess.run(['docker', 'exec', container, 'pg_dump', '-U', 'supabase_admin', '--schema-only', '--no-owner', 'postgres'], capture_output=True, text=True, check=True).stdout
+    # Only the application schemas, as every other concurrency harness here does.
+    # An unfiltered dump also carries pg_cron, which is bound to one database by
+    # design and refuses to be created in this clone ('can only create extension
+    # in database postgres'). The clone needs no job scheduler.
+    schema = subprocess.run(['docker', 'exec', container, 'pg_dump', '-U', 'supabase_admin', '--schema-only', '--no-owner', '--schema=public', '--schema=auth', '--schema=storage', '--schema=extensions', 'postgres'], capture_output=True, text=True, check=True).stdout
     sql(f'create database {database};', 'postgres')
     created = True
+    # A filtered dump creates the public schema explicitly, and a new database
+    # already has one. It also expects the extensions schema and pgcrypto to be
+    # present, because dumped defaults call extensions.gen_random_bytes. Both
+    # steps are what the other concurrency harnesses do, for the same reasons.
+    sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp" with schema extensions;')
+    # The dump creates the extensions schema and rewrites default privileges that
+    # belong to their source roles; both are what the sibling harnesses strip or
+    # soften before restoring into a clone.
+    schema = schema.replace('CREATE SCHEMA extensions;', 'CREATE SCHEMA IF NOT EXISTS extensions;')
+    schema = "\n".join(line for line in schema.splitlines() if not line.startswith('ALTER DEFAULT PRIVILEGES'))
     sql(schema)
     fixture = Path('supabase/tests/inventory_billing.test.sql').read_text().split('select lives_ok($$select public.record_patient_treatment')[0]
     sql(fixture + '\nreset role;create table race_ids as select * from fx;create table race_requests as select * from requests;grant select on race_ids,race_requests to authenticated;commit;')
