@@ -25,7 +25,6 @@
 -- and APP_ENV is staging or production, and outbound delivery is gated by
 -- OUTBOUND_DELIVERY_MODE. Installing the timetable is not enabling delivery.
 
-create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
 -- 1. Request receipts. Append-only, like reminder_scheduler_runs, and readable
@@ -198,9 +197,32 @@ grant execute on function public.operations_scheduler_jobs() to authenticated;
 
 -- 6. The timetable. cron.schedule updates a job that already carries the name, so
 --    replaying this migration is idempotent.
-select cron.schedule('dispatch-outbox', '* * * * *', $$select public.scheduler_dispatch('dispatch-outbox')$$);
-select cron.schedule('process-inbound', '* * * * *', $$select public.scheduler_dispatch('process-inbound')$$);
-select cron.schedule('process-stripe-events', '* * * * *', $$select public.scheduler_dispatch('process-stripe-events')$$);
-select cron.schedule('queue-reminders', '*/15 * * * *', $$select public.scheduler_dispatch('queue-reminders')$$);
-select cron.schedule('cleanup-abandoned-attachment', '*/30 * * * *', $$select public.scheduler_dispatch('cleanup-abandoned-attachment')$$);
-select cron.schedule('scheduler-reconcile', '* * * * *', $$select public.scheduler_reconcile()$$);
+--
+--    pg_cron is bound to exactly one database: creating the extension anywhere
+--    else raises "can only create extension in database postgres", and scheduling
+--    from another database is refused because the background worker reads job
+--    descriptions only from the configured one. That matters here because this
+--    repository's concurrency harnesses build isolated clones and replay
+--    migrations into them, so an unguarded timetable breaks every one of them.
+--    The jobs are therefore created only where the scheduler can actually run,
+--    and a clone is told plainly that it is skipping them.
+do $$
+declare
+  _cron_database text := coalesce(current_setting('cron.database_name', true), 'postgres');
+begin
+  if current_database() <> _cron_database then
+    raise notice 'Scheduler timetable not created in %: pg_cron schedules in % only. This database is a clone or a scratch database.',
+      current_database(), _cron_database;
+    return;
+  end if;
+
+  create extension if not exists pg_cron;
+  create extension if not exists pg_net;
+
+  perform cron.schedule('dispatch-outbox', '* * * * *', $cmd$select public.scheduler_dispatch('dispatch-outbox')$cmd$);
+  perform cron.schedule('process-inbound', '* * * * *', $cmd$select public.scheduler_dispatch('process-inbound')$cmd$);
+  perform cron.schedule('process-stripe-events', '* * * * *', $cmd$select public.scheduler_dispatch('process-stripe-events')$cmd$);
+  perform cron.schedule('queue-reminders', '*/15 * * * *', $cmd$select public.scheduler_dispatch('queue-reminders')$cmd$);
+  perform cron.schedule('cleanup-abandoned-attachment', '*/30 * * * *', $cmd$select public.scheduler_dispatch('cleanup-abandoned-attachment')$cmd$);
+  perform cron.schedule('scheduler-reconcile', '* * * * *', $cmd$select public.scheduler_reconcile()$cmd$);
+end $$;
