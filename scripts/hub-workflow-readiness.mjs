@@ -11,6 +11,7 @@ const edgeFunctionInventoryPath =
 
 const files = {
   app: 'src/App.tsx',
+  navItems: 'src/hub/components/layout/nav-items.ts',
   desktopSidebar: 'src/hub/components/layout/DesktopSidebar.tsx',
   bottomTabBar: 'src/hub/components/layout/BottomTabBar.tsx',
   hubHome: 'src/hub/pages/HubHomePage.tsx',
@@ -94,8 +95,9 @@ function hasRoute(appSource, route, pageSymbol) {
   return appSource.includes(`path="${route}"`) && appSource.includes(`<${pageSymbol} />`);
 }
 
-function hasNav(navSource, route) {
-  return navSource.includes(`path: "${route}"`);
+function hasNav(navSource, navItemsSource, route) {
+  const routeLiteral = `path: "${route}"`;
+  return navSource.includes(routeLiteral) || navItemsSource.includes(routeLiteral);
 }
 
 function loadJson(path) {
@@ -154,6 +156,7 @@ function hostedPresence(schemaInventory, functionInventory, workflow) {
 }
 
 const appSource = read(files.app);
+const navItemsSource = read(files.navItems);
 const desktopNavSource = read(files.desktopSidebar);
 const mobileNavSource = read(files.bottomTabBar);
 const hubHomeSource = read(files.hubHome);
@@ -179,11 +182,11 @@ const workflowReports = workflows.map((workflow) => {
     addFinding(findings, 'blocker', workflow.id, 'routing', 'Workflow route is not wired to the expected page.', `${files.app}: ${workflow.route}`);
   }
 
-  if (!hasNav(desktopNavSource, workflow.route)) {
+  if (!hasNav(desktopNavSource, navItemsSource, workflow.route)) {
     addFinding(findings, 'blocker', workflow.id, 'desktop-nav', 'Workflow route is missing from desktop Hub navigation.', files.desktopSidebar);
   }
 
-  if (!hasNav(mobileNavSource, workflow.route)) {
+  if (!hasNav(mobileNavSource, navItemsSource, workflow.route)) {
     addFinding(findings, 'blocker', workflow.id, 'mobile-nav', 'Workflow route is missing from mobile Hub navigation.', files.bottomTabBar);
   }
 
@@ -227,8 +230,8 @@ const workflowReports = workflows.map((workflow) => {
       pageExists,
       hookExists,
       routeWired: hasRoute(appSource, workflow.route, workflow.pageSymbol),
-      desktopNav: hasNav(desktopNavSource, workflow.route),
-      mobileNav: hasNav(mobileNavSource, workflow.route),
+      desktopNav: hasNav(desktopNavSource, navItemsSource, workflow.route),
+      mobileNav: hasNav(mobileNavSource, navItemsSource, workflow.route),
       hubHomeMentionsRoute: hubHomeSource.includes(workflow.route),
     },
     hosted,

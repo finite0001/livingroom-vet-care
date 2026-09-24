@@ -1,0 +1,123 @@
+{
+  "generatedAt": "2026-09-24T05:35:29.127Z",
+  "status": "local-hub-ready",
+  "hostedStatus": "hosted-dependencies-ready",
+  "summary": {
+    "workflows": 3,
+    "blockers": 0,
+    "hostedBlockers": 0,
+    "warnings": 0
+  },
+  "evidence": {
+    "remoteSchemaInventory": "docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json",
+    "edgeFunctionInventory": "docs/launch-evidence/2026-09-24-edge-functions-inventory.json"
+  },
+  "workflowReports": [
+    {
+      "id": "contact-submissions",
+      "label": "Contact submission triage",
+      "route": "/hub/contact-submissions",
+      "page": "src/hub/pages/ContactSubmissionsPage.tsx",
+      "hook": "src/hub/hooks/use-contact-submissions.ts",
+      "local": {
+        "pageExists": true,
+        "hookExists": true,
+        "routeWired": true,
+        "desktopNav": true,
+        "mobileNav": true,
+        "hubHomeMentionsRoute": false
+      },
+      "hosted": [
+        {
+          "kind": "database-function",
+          "name": "public.guard_contact_submission",
+          "present": true
+        }
+      ]
+    },
+    {
+      "id": "appointments",
+      "label": "Appointment create/edit/cancel workflow",
+      "route": "/hub/appointments",
+      "page": "src/hub/pages/AppointmentsPage.tsx",
+      "hook": "src/hub/hooks/use-appointments.ts",
+      "local": {
+        "pageExists": true,
+        "hookExists": true,
+        "routeWired": true,
+        "desktopNav": true,
+        "mobileNav": true,
+        "hubHomeMentionsRoute": false
+      },
+      "hosted": [
+        {
+          "kind": "database-function",
+          "name": "public.save_appointment",
+          "present": true
+        },
+        {
+          "kind": "database-function",
+          "name": "public.cancel_appointment",
+          "present": true
+        }
+      ]
+    },
+    {
+      "id": "outbound-deliveries",
+      "label": "Outbound delivery operations",
+      "route": "/hub/deliveries",
+      "page": "src/hub/pages/DeliveriesPage.tsx",
+      "hook": "src/hub/hooks/use-outbound-deliveries.ts",
+      "local": {
+        "pageExists": true,
+        "hookExists": true,
+        "routeWired": true,
+        "desktopNav": true,
+        "mobileNav": true,
+        "hubHomeMentionsRoute": false
+      },
+      "hosted": [
+        {
+          "kind": "table",
+          "name": "public.outbound_deliveries",
+          "present": true
+        },
+        {
+          "kind": "database-function",
+          "name": "public.retry_outbound_delivery",
+          "present": true
+        },
+        {
+          "kind": "database-function",
+          "name": "public.cancel_outbound_delivery",
+          "present": true
+        },
+        {
+          "kind": "edge-function",
+          "name": "dispatch-outbound-deliveries",
+          "present": true,
+          "verifyJwtMatches": true
+        },
+        {
+          "kind": "edge-function",
+          "name": "resend-delivery-webhook",
+          "present": true,
+          "verifyJwtMatches": true
+        },
+        {
+          "kind": "edge-function",
+          "name": "twilio-message-status-callback",
+          "present": true,
+          "verifyJwtMatches": true
+        },
+        {
+          "kind": "edge-function",
+          "name": "twilio-inbound-sms",
+          "present": true,
+          "verifyJwtMatches": true
+        }
+      ]
+    }
+  ],
+  "findings": []
+}

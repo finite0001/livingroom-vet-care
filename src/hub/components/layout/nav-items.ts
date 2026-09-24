@@ -42,8 +42,10 @@ export const navItems: NavItem[] = [
   { path: "/hub/chats", label: "Messages", mobileLabel: "Msgs", icon: MessageSquare, section: "workspace", tab: true },
   { path: "/hub/tickets", label: "Tickets", icon: Ticket, section: "workspace", tab: true },
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays, section: "workspace", tab: true },
+  { path: "/hub/appointments", label: "Appointments", icon: CalendarDays, section: "workspace" },
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },
   { path: "/hub/inquiries", label: "New inquiries", icon: ClipboardList, section: "workspace" },
+  { path: "/hub/contact-submissions", label: "Contact submissions", mobileLabel: "Submissions", icon: ClipboardList, section: "workspace" },
   { path: "/hub/clients", label: "Clients", icon: Users, section: "workspace" },
   { path: "/hub/patients", label: "Patients", icon: PawPrint, section: "workspace" },
   { path: "/hub/time", label: "Time Clock", icon: Clock, section: "workspace" },
@@ -51,6 +53,7 @@ export const navItems: NavItem[] = [
 
   // Tools
   { path: "/hub/tools/care-reminders", label: "Care reminders", icon: BellRing, section: "tools" },
+  { path: "/hub/deliveries", label: "Outbound deliveries", mobileLabel: "Deliveries", icon: Package, section: "tools" },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText, section: "tools" },
   { path: "/hub/tools/refills", label: "Refills", icon: Pill, section: "tools" },
 

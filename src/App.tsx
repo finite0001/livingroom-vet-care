@@ -41,6 +41,9 @@ const ProcessingQueuePage = lazy(() => import("@/hub/features/inbound-review/Pro
 const InboxReviewPage = lazy(() => import("@/hub/features/inbound-review/InboxReviewPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
+const ContactSubmissionsPage = lazy(() => import("@/hub/pages/ContactSubmissionsPage"));
+const AppointmentsPage = lazy(() => import("@/hub/pages/AppointmentsPage"));
+const DeliveriesPage = lazy(() => import("@/hub/pages/DeliveriesPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
 const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
@@ -100,11 +103,14 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route element={<AppShell />}>
                   <Route path="/hub" element={<HubHomePage />} />
                   <Route path="/hub/inquiries" element={<WebsiteInquiriesPage />} />
+                  <Route path="/hub/contact-submissions" element={<ContactSubmissionsPage />} />
                   <Route path="/hub/chats" element={<ConversationsPage />} />
                   <Route path="/hub/inbox/review" element={<InboxReviewPage />} />
                   <Route path="/hub/inbox/processing" element={<ProcessingQueuePage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
                   <Route path="/hub/schedule" element={<SchedulePage />} />
+                  <Route path="/hub/appointments" element={<AppointmentsPage />} />
+                  <Route path="/hub/deliveries" element={<DeliveriesPage />} />
                   <Route path="/hub/inventory" element={<InventoryPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />
                   <Route path="/hub/patients" element={<PatientsPage />} />

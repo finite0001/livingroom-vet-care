@@ -50,13 +50,13 @@ Expected: exactly the 25 migration files listed in Phase 02. No seeds. No roles.
 ## Scheduler containment checks
 
 ```sh
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select name from vault.secrets where name in ('project_url','scheduler_worker_key') order by name;"
 
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select exists(select 1 from pg_extension where extname='pg_cron') as pg_cron_installed, exists(select 1 from pg_extension where extname='pg_net') as pg_net_installed;"
 
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select to_regclass('cron.job') is not null as cron_job_table_exists;"
 ```
 
@@ -73,7 +73,7 @@ If Vault secrets are present, stop and decide whether scheduler worker commissio
 ## Conflict prechecks
 
 ```sh
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select jsonb_build_object(
     'storage_buckets', (
       select coalesce(jsonb_agg(id order by id), '[]'::jsonb)

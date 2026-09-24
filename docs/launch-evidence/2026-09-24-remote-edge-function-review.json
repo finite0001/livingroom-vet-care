@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-24T05:35:28.690Z",
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "inventoryPath": "docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
+  "note": "Downloads remote-only Edge Function source into a temporary directory, records hashes/classification only, then deletes the downloaded source. Source bodies are intentionally not written to evidence.",
+  "status": "reviewed-no-launch-blockers",
+  "summary": {
+    "remoteOnlyReviewed": 0,
+    "launchBlockers": 0,
+    "adjacentWorkflowReview": 0,
+    "reviewedNoLaunchSignal": 0,
+    "downloadFailures": 0
+  },
+  "launchBlockers": [],
+  "reviews": []
+}

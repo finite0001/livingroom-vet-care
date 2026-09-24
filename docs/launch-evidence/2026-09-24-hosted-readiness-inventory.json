@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-24T05:23:00.124Z",
+  "generatedAt": "2026-09-24T05:33:53.561Z",
   "note": "Read-only hosted readiness inventory. Outputs intentionally avoid environment values and provider secrets.",
   "git": {
     "head": {
       "command": "git rev-parse HEAD",
       "status": 0,
       "ok": true,
-      "stdout": "d6cdbf1d65b0053337578654eef355dc84553d34",
+      "stdout": "085251fc0f4f26b808ad0531eb573d92320654b3",
       "stderr": ""
     },
     "branch": {
@@ -20,42 +20,16 @@
       "command": "git status --short",
       "status": 0,
       "ok": true,
-      "stdout": "?? docs/launch-evidence/2026-09-24-public-site-readiness.json",
+      "stdout": "M docs/launch-evidence/2026-09-24-commercial-readiness-summary.json\n M docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json\n M docs/launch-evidence/2026-09-24-public-site-readiness.json\n M scripts/hub-workflow-readiness.mjs\n M src/App.tsx\n M src/hub/components/layout/nav-items.ts\n?? docs/launch-evidence/2026-09-24-edge-functions-inventory.json\n?? docs/launch-evidence/2026-09-24-hub-workflow-readiness.json\n?? docs/launch-evidence/2026-09-24-readiness-refresh.json\n?? docs/launch-evidence/2026-09-24-remote-edge-function-review.json\n?? docs/launch-evidence/2026-09-24-remote-only-migration-file-search.json\n?? docs/launch-evidence/2026-09-24-remote-only-migration-source-comparison.json\n?? docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json",
       "stderr": ""
     }
   },
   "supabase": {
     "migrationDrift": {
-      "matching_count": 123,
+      "matching_count": 148,
       "remote_only_count": 0,
-      "local_only_count": 25,
-      "local_only": [
-        "20260916033310",
-        "20260916043949",
-        "20260916055043",
-        "20260916062136",
-        "20260916063857",
-        "20260916070108",
-        "20260916072509",
-        "20260916080105",
-        "20260916083056",
-        "20260916090000",
-        "20260916093000",
-        "20260916094500",
-        "20260916100000",
-        "20260916100001",
-        "20260916110000",
-        "20260916110001",
-        "20260916120000",
-        "20260916120716",
-        "20260916123017",
-        "20260916130000",
-        "20260916144117",
-        "20260919120000",
-        "20260921120000",
-        "20260921130000",
-        "20260922120000"
-      ],
+      "local_only_count": 0,
+      "local_only": [],
       "remote_only_first": [],
       "remote_only_last": []
     }
@@ -66,14 +40,14 @@
       "status": 0,
       "ok": true,
       "stdout": "",
-      "stderr": "npm warn EBADENGINE Unsupported engine {\nnpm warn EBADENGINE   package: '@renovatebot/pep440@4.2.1',\nnpm warn EBADENGINE   required: { node: '^20.9.0 || ^22.11.0 || ^24', pnpm: '^10.0.0' },\nnpm warn EBADENGINE   current: { node: 'v26.7.0', npm: '11.19.0' }\nnpm warn EBADENGINE }\nVercel CLI 59.26.0 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [676ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [10d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
+      "stderr": "Vercel CLI 59.26.0 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [566ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [10d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
     },
     "environmentNames": {
       "command": "npx --yes vercel env ls",
       "status": 0,
       "ok": true,
       "stdout": "name                               value                       type      environments        created    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Production          1d ago     \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Production          1d ago     \n VITE_SUPABASE_URL [redacted]         Config    Production          1d ago     \n VERCEL_ENV [redacted]                      Secret    Preview             10d ago    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Preview             10d ago    \n VITE_SUPABASE_URL [redacted]         Config    Preview             10d ago    \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Preview             10d ago",
-      "stderr": "Vercel [redacted] 59.26.0 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [113ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
+      "stderr": "Vercel [redacted] 59.26.0 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [110ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
     },
     "domainVerification": [
       {
@@ -97,8 +71,8 @@
           ],
           "current": {
             "nameservers": [
-              "ns08.domaincontrol.com",
-              "ns07.domaincontrol.com"
+              "ns07.domaincontrol.com",
+              "ns08.domaincontrol.com"
             ],
             "cnames": [],
             "aValues": [
@@ -242,14 +216,14 @@
       "command": "dig +short NS thelivingroom.vet",
       "status": 0,
       "ok": true,
-      "stdout": "ns07.domaincontrol.com.\nns08.domaincontrol.com.",
+      "stdout": "ns08.domaincontrol.com.\nns07.domaincontrol.com.",
       "stderr": ""
     },
     "apexA": {
       "command": "dig +short A thelivingroom.vet",
       "status": 0,
       "ok": true,
-      "stdout": "216.150.1.1\n216.150.16.1",
+      "stdout": "216.150.16.1\n216.150.1.1",
       "stderr": ""
     },
     "wwwCname": {

@@ -26,13 +26,13 @@ Expected:
 ## Schema and scheduler checks
 
 ```sh
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select exists(select 1 from pg_extension where extname='pg_cron') as pg_cron_installed, exists(select 1 from pg_extension where extname='pg_net') as pg_net_installed;"
 
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select jobname, schedule, command from cron.job where jobname in ('dispatch-outbox','process-inbound','process-stripe-events','queue-reminders','cleanup-abandoned-attachment','scheduler-reconcile') order by jobname;"
 
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select name from vault.secrets where name in ('project_url','scheduler_worker_key') order by name;"
 ```
 
@@ -45,7 +45,7 @@ Expected:
 After one cron interval, optional direct table evidence:
 
 ```sh
-npx supabase db query --project-ref mgadheotkdnrsatfivjy \
+npx supabase db query --linked \
   "select r.job, s.outcome, s.status_code, s.error_message
    from public.scheduler_job_runs r
    left join public.scheduler_job_results s on s.run_id = r.id
