@@ -10,8 +10,9 @@ This checklist does not approve launch by itself. It gives Dr. Susan Edler, the 
 - Hosted backend selected: `mgadheotkdnrsatfivjy`.
 - Local database replay evidence exists: [2026-09-24 current-stack DB replay and pgTAP](launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 - Generated readiness evidence currently blocks on:
-  - hosted apply of `20260924120000`;
+  - hosted apply of `20260924120000` and `20260924130000`;
   - owner public phone/email/emergency content.
+- Local disabled/test-mode delivery evidence exists: [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md).
 - No live email, SMS, voice, voicemail, phone number, or CloudTalk path is required for this checklist.
 - Outbound delivery must remain disabled or test-only unless a separate provider commissioning step explicitly approves otherwise.
 
@@ -106,9 +107,9 @@ Record the operator, date, environment, commit, backend project, and known excep
 | --- | --- | --- |
 | Clinical approval for pilot scope | Pending | |
 | Staff workflow acceptance | Pending | |
-| No-live-send provider callback drill | Pending | |
+| No-live-send provider callback drill | Local pre-hosted proof complete; hosted staff drill pending | [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md) |
 | Synthetic preventive/inventory/billing loop | Pending | |
-| Hosted migration `20260924120000` applied and refreshed | Pending | |
+| Hosted migrations `20260924120000` and `20260924130000` applied and refreshed | Pending | |
 | Public phone/email/emergency content | Deferred | Final owner/provider gate. |
 | CloudTalk/voice/voicemail | Deferred | Final owner/provider gate. |
 

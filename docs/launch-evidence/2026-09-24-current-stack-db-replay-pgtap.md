@@ -10,11 +10,21 @@ The current repository migration stack replayed locally through:
 
 - `20260924120000_canonical_housecall_appointment_contract.sql`
 
-The local database now reports:
+Subsequent same-day no-live-send verification added and locally applied:
+
+- `20260924130000_inbound_sms_service_rpc_security.sql`
+
+The original replay database reported:
 
 - `149` migration receipts.
 - Latest migration: `20260924120000`.
 - `npx supabase db push --local --include-all --dry-run` reports `upToDate: true`.
+
+After the same-day inbound-SMS service-RPC security migration, the current local ledger reports:
+
+- `150` migration receipts.
+- Latest migration: `20260924130000`.
+- `npx supabase db push --local --dry-run` reports `upToDate: true`.
 
 No hosted database, provider dashboard, phone number, or CloudTalk state was changed.
 

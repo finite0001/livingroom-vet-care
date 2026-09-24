@@ -12,9 +12,9 @@ The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves
 
 ## Current hosted readiness snapshot — September 24, 2026
 
-The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. The current local stack now replays through `20260924120000_canonical_housecall_appointment_contract.sql` with focused Phase 2 and Phase 3 pgTAP passing; that is local proof, not hosted apply evidence. Stage 2 readiness evidence was refreshed before hosted apply, and the explicit linked dry run with `--skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql`, with no seeds or roles. Hosted apply still requires explicit owner approval. The generated commercial-readiness summary now records 3/5 gates passing:
+The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. The current local stack now reaches `20260924130000_inbound_sms_service_rpc_security.sql`; local verification includes focused Phase 2/3 pgTAP plus the no-live-send local drill. That is local proof, not hosted apply evidence. Stage 2 readiness evidence was refreshed before hosted apply, and the explicit linked dry run with `--skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. Hosted apply still requires explicit owner approval. The generated commercial-readiness summary now records 3/5 gates passing:
 
-- Supabase/database operating loop: blocked by 1 local-only migration, `20260924120000`.
+- Supabase/database operating loop: blocked by 2 local-only migrations, `20260924120000` and `20260924130000`.
 - Hub/frontend workflow readiness: pass.
 - External services and deployment readiness: pass.
 - Verification/release control: pass.
@@ -27,6 +27,7 @@ Current evidence:
 - [2026-09-24 commercial readiness summary](launch-evidence/2026-09-24-commercial-readiness-summary.json)
 - [2026-09-24 readiness refresh](launch-evidence/2026-09-24-readiness-refresh.json)
 - [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md)
+- [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md)
 - [2026-09-24 hosted readiness inventory](launch-evidence/2026-09-24-hosted-readiness-inventory.json)
 - [2026-09-24 remote public schema inventory](launch-evidence/2026-09-24-remote-public-schema-inventory.json)
 - [2026-09-24 Edge function inventory](launch-evidence/2026-09-24-edge-functions-inventory.json)

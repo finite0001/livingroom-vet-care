@@ -6,9 +6,9 @@ Hosted Supabase project: `mgadheotkdnrsatfivjy`
 
 ## Summary
 
-Stage 2 evidence was refreshed without applying hosted SQL. The refreshed generated summary is still blocked, but only by the expected non-public-contact blockers:
+Stage 2 evidence was refreshed without applying hosted SQL. A later same-day no-live-send drill added `20260924130000_inbound_sms_service_rpc_security.sql`, so the current hosted apply set is now two local-only migrations. The refreshed generated summary is still blocked, but only by the expected non-public-contact blockers:
 
-- Supabase/database: `1` local readiness migration is not applied remotely.
+- Supabase/database: `2` local readiness migrations are not applied remotely.
 - Public website: owner phone, email, and emergency phone/content are not configured.
 
 Hub/frontend readiness, external services/deployment readiness, and verification/release-control pass.
@@ -43,9 +43,14 @@ Would push these migrations:
 {"upToDate":false,"dryRun":true,"migrations":["20260924120000_canonical_housecall_appointment_contract.sql"],"seeds":[],"roles":[],"message":"Finished supabase db push."}
 ```
 
-This confirms the pending hosted apply set is exactly one migration. No Vault secrets, seeds, or roles are part of the dry-run plan.
+This result was superseded later on 2026-09-24 by the no-live-send drill. The current pending hosted apply set is:
 
-The pending migration is non-data-destructive but behavior-changing: it replaces appointment write/reminder functions so appointment saves remain on the canonical housecall-aware contract. Hosted apply still requires explicit owner approval.
+- `20260924120000_canonical_housecall_appointment_contract.sql`
+- `20260924130000_inbound_sms_service_rpc_security.sql`
+
+No Vault secrets, seeds, or roles are part of the current dry-run plan.
+
+The pending migrations are non-data-destructive but behavior-changing: one replaces appointment write/reminder functions so appointment saves remain on the canonical housecall-aware contract; the other makes the service-role-only inbound SMS RPC run as a definer-owned function so verified Twilio inbound handling can write durable client/conversation/consent rows. Hosted apply still requires explicit owner approval.
 
 ## Refreshed generated evidence
 
@@ -105,7 +110,7 @@ Result: exited `1`, as expected, because the generated summary still has the exa
 
 ## Next exact hosted step, pending explicit approval
 
-After explicit owner approval, apply the one pending migration with:
+After explicit owner approval, apply the two pending migrations with:
 
 ```bash
 npx supabase db push --linked --skip-vault

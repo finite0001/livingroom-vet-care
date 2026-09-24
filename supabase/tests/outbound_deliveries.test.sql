@@ -6,7 +6,11 @@ select no_plan();
 insert into auth.users (id, email, raw_user_meta_data) values
   ('34000000-0000-4000-8000-000000000001', 'outbound-active@example.test', '{}'),
   ('34000000-0000-4000-8000-000000000002', 'outbound-inactive@example.test', '{}');
+update public.profiles set is_active = true where id = '34000000-0000-4000-8000-000000000001';
 update public.profiles set is_active = false where id = '34000000-0000-4000-8000-000000000002';
+insert into public.user_roles (user_id, role)
+values ('34000000-0000-4000-8000-000000000001', 'STAFF')
+on conflict do nothing;
 
 insert into public.outbound_deliveries (
   id,
@@ -871,7 +875,7 @@ from public.save_appointment(
   30,
   'Housecall',
   'SCHEDULED',
-  null,
+  '34000000-0000-4000-8000-000000000001',
   null
 );
 select is(

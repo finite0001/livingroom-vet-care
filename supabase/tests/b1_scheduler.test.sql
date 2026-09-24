@@ -32,7 +32,7 @@ select ok(not has_table_privilege('authenticated','public.scheduler_job_runs','s
 select ok(not has_table_privilege('service_role','public.scheduler_job_results','select'),
   'The outcomes are not readable directly by service_role');
 
-insert into public.scheduler_job_runs(job,url_path) values ('dispatch-outbox','/functions/v1/dispatch-outbox');
+insert into public.scheduler_job_runs(job,url_path) values ('cleanup-abandoned-attachment','/functions/v1/cleanup-abandoned-attachment');
 select throws_ok($$update public.scheduler_job_runs set job='process-inbound'$$,
   '23514','Scheduler run evidence is append-only','Request evidence cannot be rewritten');
 select throws_ok($$delete from public.scheduler_job_runs$$,

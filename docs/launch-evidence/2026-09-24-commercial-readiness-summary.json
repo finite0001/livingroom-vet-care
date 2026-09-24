@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T07:34:20.168Z",
+  "generatedAt": "2026-09-24T07:44:50.335Z",
   "status": "blocked",
   "summary": {
     "gates": 5,
@@ -12,7 +12,7 @@
       "label": "Supabase/database operating loop",
       "status": "blocked",
       "blockers": [
-        "1 local readiness migrations are not applied remotely."
+        "2 local readiness migrations are not applied remotely."
       ],
       "warnings": [],
       "evidence": [

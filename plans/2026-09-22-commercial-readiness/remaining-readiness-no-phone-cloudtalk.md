@@ -8,8 +8,10 @@ Scope: complete all software/evidence work that can be finished before public ph
 - The selected hosted Supabase project is `mgadheotkdnrsatfivjy`.
 - PR #204 hosted rollout evidence recorded 148 matching migrations, 0 remote-only, and 0 local-only at that checkpoint.
 - Local Phase 2 has a later migration: `supabase/migrations/20260924120000_canonical_housecall_appointment_contract.sql`.
+- Local no-live-send verification added `supabase/migrations/20260924130000_inbound_sms_service_rpc_security.sql`.
 - Local current-stack replay now has database evidence through that Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](../../docs/launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 - Stage 2 pre-apply evidence has been refreshed without hosted SQL mutation: [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](../../docs/launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md).
+- Local disabled/test-mode delivery evidence exists: [2026-09-24 no-live-send local workflow drill](../../docs/launch-evidence/2026-09-24-no-live-send-local-drill.md).
 - `/hub/schedule` is now the canonical appointment workspace.
 - Inventory, invoices, payment collection/reconciliation, certificates, care reminders, estimate publication, and delivery operations already have local implementation and tests. Do not restart Phase 3 from an empty-state assumption.
 - Scheduler Vault values are intentionally absent, so database cron is contained until explicit provider/scheduler commissioning.
@@ -70,7 +72,7 @@ Acceptance evidence:
 
 - Updated dated files in `docs/launch-evidence/`.
 - Summary either passes all non-public-contact gates or names the exact local-only hosted blocker.
-- Pre-apply checkpoint: the current summary names the exact local-only hosted blocker, `20260924120000`; an explicit `--linked --skip-vault` dry run would apply only `20260924120000_canonical_housecall_appointment_contract.sql`, with no seeds or roles.
+- Pre-apply checkpoint: the current summary names the exact local-only hosted blockers, `20260924120000` and `20260924130000`; an explicit `--linked --skip-vault` dry run would apply only `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles.
 
 ### 3. Commission a no-live-send hosted workflow drill
 
@@ -98,6 +100,7 @@ Acceptance evidence:
 - A dated hosted drill report under `docs/launch-evidence/`.
 - Outbound mode remains disabled or test-only.
 - Provider dashboard callback URLs are documented but not activated for live sends.
+- Local pre-hosted proof exists for the disabled/test-mode contracts, but it does not replace the hosted staff workflow drill.
 
 ### 4. Prove the native preventive/inventory/billing loop with synthetic data
 
