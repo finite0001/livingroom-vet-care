@@ -62,6 +62,16 @@ const steps = [
     ],
   },
   {
+    id: 'hosted-no-live-send-preflight',
+    command: [
+      'node',
+      'scripts/hosted-no-live-send-drill-preflight.mjs',
+      '--output',
+      `${evidenceDirectory}/${evidenceDate}-hosted-no-live-send-drill-preflight.json`,
+    ],
+    allowedStatuses: [0, 1],
+  },
+  {
     id: 'commercial-summary',
     command: ['node', 'scripts/commercial-readiness-summary.mjs', '--output', `${evidenceDirectory}/${evidenceDate}-commercial-readiness-summary.json`],
   },
@@ -74,6 +84,8 @@ function runStep(step) {
     shell: false,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  const allowedStatuses = step.allowedStatuses ?? [0];
+  const ok = allowedStatuses.includes(result.status);
 
   return {
     id: step.id,
@@ -81,7 +93,8 @@ function runStep(step) {
     startedAt,
     finishedAt: new Date().toISOString(),
     status: result.status,
-    ok: result.status === 0,
+    ok,
+    allowedStatuses,
     stdout: result.stdout.trim().split('\n').filter(Boolean).slice(-5),
     stderr: result.stderr
       .trim()

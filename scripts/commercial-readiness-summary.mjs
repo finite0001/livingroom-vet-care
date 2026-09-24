@@ -11,6 +11,7 @@ const evidenceFiles = {
   functionReview: latestEvidenceFile(/^\d{4}-\d{2}-\d{2}-remote-edge-function-review\.json$/),
   publicSite: latestEvidenceFile(/^\d{4}-\d{2}-\d{2}-public-site-readiness\.json$/),
   hub: latestEvidenceFile(/^\d{4}-\d{2}-\d{2}-hub-workflow-readiness\.json$/),
+  noLiveSendPreflight: latestOptionalEvidenceFile(/^\d{4}-\d{2}-\d{2}-hosted-no-live-send-drill-preflight\.json$/),
 };
 
 function latestEvidenceFile(pattern) {
@@ -23,6 +24,14 @@ function latestEvidenceFile(pattern) {
   }
 
   return `${evidenceDirectory}/${matches.at(-1)}`;
+}
+
+function latestOptionalEvidenceFile(pattern) {
+  const matches = readdirSync(evidenceDirectory)
+    .filter((name) => pattern.test(name))
+    .sort((left, right) => left.localeCompare(right));
+
+  return matches.length > 0 ? `${evidenceDirectory}/${matches.at(-1)}` : null;
 }
 
 function readJson(path) {
@@ -50,6 +59,7 @@ const functions = readJson(evidenceFiles.functions);
 const functionReview = readJson(evidenceFiles.functionReview);
 const publicSite = readJson(evidenceFiles.publicSite);
 const hub = readJson(evidenceFiles.hub);
+const noLiveSendPreflight = evidenceFiles.noLiveSendPreflight ? readJson(evidenceFiles.noLiveSendPreflight) : null;
 
 const migrationDrift = hosted.supabase?.migrationDrift;
 const supabaseBlockers = [];
@@ -90,6 +100,7 @@ if (functionReviewLaunchBlockers.length > 0) {
 }
 
 const vercelBlockers = [];
+const externalWarnings = [];
 const envOutput = hosted.vercel?.environmentNames?.stdout ?? '';
 
 if (!/\bProduction\b/.test(envOutput)) {
@@ -100,6 +111,26 @@ for (const domain of hosted.vercel?.domainVerification ?? []) {
   if (!domain.result?.ok) {
     vercelBlockers.push(`${domain.domain} is not verified/attached in Vercel: ${domain.result?.reason ?? 'unknown'}.`);
   }
+}
+
+const noLiveSendPreflightBlockers = noLiveSendPreflight?.blockers ?? [];
+const noLiveSendPreflightNonMigrationBlockers = noLiveSendPreflightBlockers.filter((blocker) => blocker.check !== 'migration-drift');
+const noLiveSendPreflightEvidence = evidenceFiles.noLiveSendPreflight ? [evidenceFiles.noLiveSendPreflight] : [];
+
+if (!noLiveSendPreflight) {
+  externalWarnings.push('Hosted no-live-send drill preflight evidence is not present yet.');
+} else if (noLiveSendPreflightNonMigrationBlockers.length > 0) {
+  functionBlockers.push(
+    `Hosted no-live-send drill preflight has non-migration blockers: ${noLiveSendPreflightNonMigrationBlockers
+      .map((blocker) => blocker.message)
+      .join('; ')}`,
+  );
+} else if (noLiveSendPreflightBlockers.length > 0) {
+  externalWarnings.push(
+    'Hosted no-live-send drill preflight is waiting on the Supabase migration parity blocker already counted in the Supabase/database gate.',
+  );
+} else if (noLiveSendPreflight.status !== 'ready-for-hosted-drill-approval') {
+  externalWarnings.push(`Hosted no-live-send drill preflight returned status ${noLiveSendPreflight.status}.`);
 }
 
 const publicBlockers = (publicSite.findings ?? [])
@@ -149,7 +180,8 @@ const gates = [
     'External services and deployment readiness',
     statusFromBlockers([...functionBlockers, ...vercelBlockers]),
     [...functionBlockers, ...vercelBlockers],
-    [evidenceFiles.functions, evidenceFiles.functionReview, evidenceFiles.hosted],
+    [evidenceFiles.functions, evidenceFiles.functionReview, evidenceFiles.hosted, ...noLiveSendPreflightEvidence],
+    externalWarnings,
   ),
   makeGate(
     'public-website',
@@ -164,7 +196,7 @@ const gates = [
     'Verification/release control',
     statusFromBlockers(verificationBlockers),
     verificationBlockers,
-    Object.values(evidenceFiles),
+    Object.values(evidenceFiles).filter(Boolean),
   ),
 ];
 
