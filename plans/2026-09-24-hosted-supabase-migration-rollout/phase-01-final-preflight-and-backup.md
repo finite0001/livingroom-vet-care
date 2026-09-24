@@ -13,6 +13,7 @@ Critical. Run immediately before applying hosted migrations.
 - Current local DB replay proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md`
 - Current no-live-send proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-no-live-send-local-drill.md`
 - Current release-control proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-local-release-control-check.md`
+- Current pre-apply linked-target proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-hosted-readiness-preapply-check.md`
 
 ## Required checks
 
@@ -25,6 +26,7 @@ git status --short --branch
 git log -1 --oneline --decorate
 
 rg -n '^project_id = "mgadheotkdnrsatfivjy"$' supabase/config.toml
+npx supabase status --output json
 npm run supabase:migration-drift
 ```
 
@@ -43,12 +45,14 @@ Run explicit dry-run:
 
 ```sh
 npx supabase db push \
-  --project-ref mgadheotkdnrsatfivjy \
+  --linked \
   --skip-vault \
   --dry-run
 ```
 
 Expected: exactly the two migration files listed in Phase 02. No seeds. No roles.
+
+The linked dry run is acceptable only after `supabase/config.toml` and `npx supabase status --output json` both identify `mgadheotkdnrsatfivjy`. If using `--project-ref mgadheotkdnrsatfivjy`, be aware that the CLI may require `SUPABASE_DB_PASSWORD` even when linked commands work.
 
 ## Scheduler containment checks
 
@@ -94,6 +98,7 @@ Do not commit private dumps. A full data dump may contain PII; use a protected l
 ## Success criteria
 
 - Target project verified.
+- Linked project verified as `mgadheotkdnrsatfivjy`.
 - Drift unchanged and understood.
 - Dry-run succeeds with exactly two files.
 - Backup/PITR posture accepted.

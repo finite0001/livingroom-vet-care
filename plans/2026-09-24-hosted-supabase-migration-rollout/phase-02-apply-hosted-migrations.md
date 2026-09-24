@@ -23,14 +23,14 @@ No explicit `COMMIT`, `VACUUM`, `REINDEX`, `CREATE INDEX CONCURRENTLY`, broad `D
 
 ```sh
 npx supabase db push \
-  --project-ref mgadheotkdnrsatfivjy \
+  --linked \
   --skip-vault \
   --yes
 ```
 
 Rationale:
 
-- `--project-ref` prevents accidental linked-context drift.
+- `--linked` matches the current authenticated CLI context after Phase 01 verifies the linked target is `mgadheotkdnrsatfivjy`.
 - `--skip-vault` avoids unintended secret updates.
 - `--include-all` is intentionally omitted because both pending migrations are later than the current hosted checkpoint.
 - `--yes` makes the operation noninteractive and auditable.

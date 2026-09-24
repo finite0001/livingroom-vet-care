@@ -10,7 +10,7 @@ Critical. Run immediately after Phase 02.
 npm run supabase:migration-drift
 
 npx supabase db push \
-  --project-ref mgadheotkdnrsatfivjy \
+  --linked \
   --skip-vault \
   --dry-run
 ```

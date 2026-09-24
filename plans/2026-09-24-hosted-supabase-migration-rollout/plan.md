@@ -13,9 +13,10 @@ Bring hosted Supabase migration history back to parity with current `main` after
 
 - PR #204 hosted rollout evidence recorded 148 matching migrations, 0 remote-only, and 0 local-only at that checkpoint.
 - Current local readiness stack reaches `20260924130000_inbound_sms_service_rpc_security.sql`.
-- `npx supabase db push --project-ref mgadheotkdnrsatfivjy --dry-run --skip-vault` currently reports exactly two local-only migrations:
+- `npx supabase db push --linked --dry-run --skip-vault` currently reports exactly two local-only migrations:
   - `20260924120000_canonical_housecall_appointment_contract.sql`
   - `20260924130000_inbound_sms_service_rpc_security.sql`
+- [2026-09-24 hosted readiness pre-apply check](../../docs/launch-evidence/2026-09-24-hosted-readiness-preapply-check.md) verifies the linked target is `mgadheotkdnrsatfivjy` and records scheduler containment.
 - Generated readiness evidence currently reports 3/5 gates passing, blocked by the two local-only migrations and owner public-contact content.
 - Local release-control proof at `e88b7a8` passed lint, TypeScript, 1078 Node tests, and production build.
 - Local no-live-send and integrated synthetic workflow evidence exists before hosted apply.
@@ -50,12 +51,12 @@ No-go if:
 
 ```sh
 npx supabase db push \
-  --project-ref mgadheotkdnrsatfivjy \
+  --linked \
   --skip-vault \
   --yes
 ```
 
-Do not run this plan with `--include-all`, `--include-seed`, `--include-roles`, or without `--skip-vault` unless a fresh dry run proves that broader scope is required and the owner explicitly approves it.
+Before using `--linked`, verify `npx supabase status --output json` reports `linked_project_ref` as `mgadheotkdnrsatfivjy`. A direct `--project-ref mgadheotkdnrsatfivjy` dry run may require `SUPABASE_DB_PASSWORD` in the current CLI auth context; use it only if the operator has supplied that securely. Do not run this plan with `--include-all`, `--include-seed`, `--include-roles`, or without `--skip-vault` unless a fresh dry run proves that broader scope is required and the owner explicitly approves it.
 
 ## Expected post-apply state
 
