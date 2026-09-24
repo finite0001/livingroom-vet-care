@@ -3,7 +3,7 @@
 Date: 2026-09-24
 Scope: read-only hosted Supabase checks before the current two-migration readiness apply
 Target project: `mgadheotkdnrsatfivjy`
-Commit checked: `b19553f`
+Commit checked: `0441db0`
 
 ## Summary
 
@@ -27,7 +27,7 @@ After PR #204 was merged and the hosted rollout plan was updated, the Phase 2 pr
 - Scheduler containment still held: no `project_url` or `scheduler_worker_key` Vault rows were present, while `pg_cron`, `pg_net`, and `cron.job` existed.
 - `npm run readiness:refresh` completed successfully and regenerated the dated readiness evidence.
 
-After normalizing readiness inventory output, the refresh was repeated from a clean tree at `b19553f`. The regenerated hosted inventory recorded empty `git status --short`, the same 3/5 readiness summary, the same two hosted-migration blockers, and the same owner-content public-site blockers.
+After normalizing readiness inventory output and adding a narrow retry for transient Supabase CLI migration-drift dry-run failures, the refresh was repeated from a clean tree at `0441db0`. The regenerated hosted inventory recorded empty `git status --short`, the same 3/5 readiness summary, the same two hosted-migration blockers, and the same owner-content public-site blockers. The migration drift helper succeeded on one attempt in the clean refresh.
 
 No hosted SQL was applied during these continuation refreshes because the hosted DB mutation approval boundary was not crossed.
 
