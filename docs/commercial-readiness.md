@@ -12,7 +12,7 @@ The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves
 
 ## Current hosted readiness snapshot — September 24, 2026
 
-The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; current migration drift is 148 matching, 0 remote-only, and 0 local-only. The generated commercial-readiness summary records 4/5 gates passing:
+The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. Later local Phase 2 migrations must be applied and revalidated before treating this checkpoint as current for a launch decision. The generated commercial-readiness summary records 4/5 gates passing:
 
 - Supabase/database operating loop: pass.
 - Hub/frontend workflow readiness: pass.
@@ -26,10 +26,17 @@ Current evidence:
 
 - [2026-09-24 commercial readiness summary](launch-evidence/2026-09-24-commercial-readiness-summary.json)
 - [2026-09-24 readiness refresh](launch-evidence/2026-09-24-readiness-refresh.json)
+- [2026-09-24 hosted readiness inventory](launch-evidence/2026-09-24-hosted-readiness-inventory.json)
+- [2026-09-24 remote public schema inventory](launch-evidence/2026-09-24-remote-public-schema-inventory.json)
+- [2026-09-24 Edge function inventory](launch-evidence/2026-09-24-edge-functions-inventory.json)
+- [2026-09-24 Hub workflow readiness](launch-evidence/2026-09-24-hub-workflow-readiness.json)
+- [2026-09-24 current-stack restore rehearsal](launch-evidence/2026-09-24-current-stack-restore-rehearsal.md)
 - [2026-09-24 public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md)
 - [2026-09-24 health Edge smoke](launch-evidence/2026-09-24-health-edge-smoke.md)
 
-## Current live status — September 15, 2026
+## Historical live status — September 15, 2026
+
+This September 15 section is retained as historical rollout evidence. Its 113-migration and 30-function counts are superseded by the September 24 hosted readiness snapshot above: 148 matching migrations and the current Edge inventory.
 
 The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 113 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging is also at 113 migrations after the [weight-evidence rollout](weight-evidence-rollout-20260915.md).
 

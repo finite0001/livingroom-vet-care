@@ -21,6 +21,7 @@ const expectedReadinessObjects = {
     'public.record_outbound_delivery_result',
     'public.retry_outbound_delivery',
     'public.save_appointment',
+    'public.schedule_clinicians',
   ],
   triggers: [
     'trg_create_appointment_reminders',

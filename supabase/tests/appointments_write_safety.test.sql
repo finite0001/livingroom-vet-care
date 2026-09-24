@@ -98,7 +98,7 @@ select is(
   'New scheduled appointment creates two pending reminders'
 );
 
-select throws_ok(
+select lives_ok(
   $$select public.save_appointment(
       null,
       null,
@@ -160,14 +160,12 @@ select throws_ok(
       '38200000-0000-4000-8000-000000000001',
       timestamptz '2026-09-26 16:00:00+00',
       60,
-      'Wrong DVM',
+      'Active staff assignment',
       'SCHEDULED',
       '38000000-0000-4000-8000-000000000001',
       null
     )$$,
-  '23514',
-  'Assigned clinician must be an active DVM',
-  'Assigned clinician must be an active DVM'
+  'Slim compatibility RPC permits active staff assignment'
 );
 
 select throws_ok(
@@ -220,6 +218,30 @@ select is(
   (select count(*) from public.appointment_reminders where appointment_id = (select id from appointment_fixtures where kind = 'appointment') and status = 'PENDING'),
   2::bigint,
   'Reschedule creates the replacement reminder set'
+);
+
+select is(
+  (select count(*) from public.appointment_reminders where appointment_id = (select id from appointment_fixtures where kind = 'appointment') and status = 'PENDING' and appointment_version = 2),
+  2::bigint,
+  'Slim compatibility RPC creates scheduler-eligible replacement reminders'
+);
+
+select throws_ok(
+  $$select public.save_appointment(
+      null,
+      null,
+      '38100000-0000-4000-8000-000000000001',
+      '38200000-0000-4000-8000-000000000001',
+      timestamptz '2026-09-26 18:30:00+00',
+      30,
+      'Slim overlap',
+      'SCHEDULED',
+      '38000000-0000-4000-8000-000000000003',
+      null
+    )$$,
+  '23P01',
+  null,
+  'Slim compatibility RPC enforces the canonical appointment conflict guard'
 );
 
 reset role;

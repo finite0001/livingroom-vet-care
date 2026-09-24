@@ -42,7 +42,6 @@ export const navItems: NavItem[] = [
   { path: "/hub/chats", label: "Messages", mobileLabel: "Msgs", icon: MessageSquare, section: "workspace", tab: true },
   { path: "/hub/tickets", label: "Tickets", icon: Ticket, section: "workspace", tab: true },
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays, section: "workspace", tab: true },
-  { path: "/hub/appointments", label: "Appointments", icon: CalendarDays, section: "workspace" },
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },
   { path: "/hub/inquiries", label: "New inquiries", icon: ClipboardList, section: "workspace" },
   { path: "/hub/contact-submissions", label: "Contact submissions", mobileLabel: "Submissions", icon: ClipboardList, section: "workspace" },

@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, createRoutesFromElements, RouterProvider, Outlet, Route } from "react-router-dom";
+import { createBrowserRouter, createRoutesFromElements, RouterProvider, Outlet, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { MarketingErrorBoundary } from "./components/MarketingErrorBoundary";
 import NotFound from "./pages/NotFound";
@@ -42,7 +42,6 @@ const InboxReviewPage = lazy(() => import("@/hub/features/inbound-review/InboxRe
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ContactSubmissionsPage = lazy(() => import("@/hub/pages/ContactSubmissionsPage"));
-const AppointmentsPage = lazy(() => import("@/hub/pages/AppointmentsPage"));
 const DeliveriesPage = lazy(() => import("@/hub/pages/DeliveriesPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
@@ -109,7 +108,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/inbox/processing" element={<ProcessingQueuePage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
                   <Route path="/hub/schedule" element={<SchedulePage />} />
-                  <Route path="/hub/appointments" element={<AppointmentsPage />} />
+                  <Route path="/hub/appointments" element={<Navigate to="/hub/schedule" replace />} />
                   <Route path="/hub/deliveries" element={<DeliveriesPage />} />
                   <Route path="/hub/inventory" element={<InventoryPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />

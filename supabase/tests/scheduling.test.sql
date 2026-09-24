@@ -6,7 +6,7 @@ insert into auth.users(id,email,raw_user_meta_data) values
 ('41000000-0000-4000-8000-000000000001','schedule-staff@example.test','{"first_name":"Schedule","last_name":"Staff"}'),
 ('41000000-0000-4000-8000-000000000002','schedule-inactive@example.test','{"first_name":"Schedule","last_name":"Inactive"}');
 update public.profiles set is_active = true where id in ('41000000-0000-4000-8000-000000000001','41000000-0000-4000-8000-000000000002');
-insert into public.user_roles (user_id, role) values ('41000000-0000-4000-8000-000000000001','STAFF'),('41000000-0000-4000-8000-000000000002','STAFF');
+insert into public.user_roles (user_id, role) values ('41000000-0000-4000-8000-000000000001','STAFF'),('41000000-0000-4000-8000-000000000002','STAFF') on conflict do nothing;
 
 update public.profiles set is_active=false where id='41000000-0000-4000-8000-000000000002';
 create temp table fixture_ids(kind text primary key,id uuid);

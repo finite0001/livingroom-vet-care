@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T06:30:45.151Z",
+  "generatedAt": "2026-09-24T07:06:35.971Z",
   "status": "local-hub-ready",
   "hostedStatus": "hosted-dependencies-ready",
   "summary": {
@@ -37,17 +37,17 @@
     },
     {
       "id": "appointments",
-      "label": "Appointment create/edit/cancel workflow",
-      "route": "/hub/appointments",
-      "page": "src/hub/pages/AppointmentsPage.tsx",
-      "hook": "src/hub/hooks/use-appointments.ts",
+      "label": "Housecall appointment schedule workflow",
+      "route": "/hub/schedule",
+      "page": "src/hub/features/scheduling/SchedulePage.tsx",
+      "hook": null,
       "local": {
         "pageExists": true,
         "hookExists": true,
         "routeWired": true,
         "desktopNav": true,
         "mobileNav": true,
-        "hubHomeMentionsRoute": false
+        "hubHomeMentionsRoute": true
       },
       "hosted": [
         {
@@ -57,7 +57,7 @@
         },
         {
           "kind": "database-function",
-          "name": "public.cancel_appointment",
+          "name": "public.schedule_clinicians",
           "present": true
         }
       ]

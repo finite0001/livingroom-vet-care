@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { denverLocal } from "./time";
-import { dayRouteAppointments, isPlannedVisit, practiceBaseAddress, routeLegs } from "./housecall-route";
+import {
+  dayRouteAppointments,
+  formatRouteGap,
+  isPlannedVisit,
+  practiceBaseAddress,
+  routeLegs,
+  routeTimings,
+} from "./housecall-route";
 import type { RouteAppointment } from "./housecall-route";
 
 interface HousecallDayRouteProps {
@@ -19,8 +26,11 @@ export function HousecallDayRoute({ day, appointments, refreshing }: HousecallDa
   const selected = staff.some(person => person.id === staffId) ? staffId : "";
   const stops = dayRouteAppointments(appointments, day, selected);
   const legs = routeLegs(stops);
+  const timingByAppointment = new Map(routeTimings(stops).map(timing => [timing.appointment.id, timing]));
   const missingAddress = stops.some(stop => !stop.address_snapshot.trim());
   const unassigned = housecalls.filter(row => !row.assigned_dvm_id).length;
+  const timingWarningCount = [...timingByAppointment.values()].filter(timing =>
+    timing.plannedHoursIssue || (timing.gapAfterMinutes !== null && timing.gapAfterMinutes < 0)).length;
   return (
     <details className="mt-4 rounded-md border bg-muted/30 p-3">
       <summary className="cursor-pointer font-medium">Plan housecall route</summary>
@@ -42,22 +52,49 @@ export function HousecallDayRoute({ day, appointments, refreshing }: HousecallDa
         </select>
         {selected && <>
           <p className="text-sm">{stops.length} scheduled stop(s) · {day} · America/Denver</p>
+          {timingWarningCount > 0 && (
+            <p role="status" className="text-sm text-destructive">
+              {timingWarningCount} timing item(s) need staff review before this route is used.
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">Opening directions shares the two leg addresses with Google Maps. Patient names and clinical details are not included in the link.</p>
           {missingAddress && <p role="alert">Complete every visit address before opening this route.</p>}
           <ol className="space-y-3">
-            {legs.map((leg, index) => <li key={leg.appointment?.id || "return"} className="space-y-1 border-t pt-3 text-sm">
-              <p className="font-medium">{leg.appointment
-                ? `${index + 1}. ${denverLocal(leg.appointment.scheduled_at).slice(11)} · ${leg.appointment.pets?.name || "Patient unavailable"} · ${leg.appointment.visit_type}`
-                : "Return to clinic"}</p>
-              {leg.appointment && <p>{leg.appointment.clients?.full_name} · {leg.appointment.duration_minutes} minutes · Travel buffers: {leg.appointment.travel_before_minutes} before / {leg.appointment.travel_after_minutes} after</p>}
-              <p className="break-words">From: {leg.origin || "Address missing"}</p>
-              <p className="break-words">To: {leg.destination || "Address missing"}</p>
-              {!missingAddress && !refreshing && (leg.url
-                ? <a className="inline-block py-2 text-primary underline" href={leg.url} target="_blank" rel="noopener noreferrer">
-                  {leg.appointment ? `Directions to stop ${index + 1}` : "Directions back to clinic"}
-                </a>
-                : <p>These addresses exceed the directions-link limit. Enter the saved addresses in Maps manually.</p>)}
-            </li>)}
+            {legs.map((leg, index) => {
+              const timing = leg.appointment ? timingByAppointment.get(leg.appointment.id) : undefined;
+              return (
+                <li key={leg.appointment?.id || "return"} className="space-y-1 border-t pt-3 text-sm">
+                  <p className="font-medium">{leg.appointment
+                    ? `${index + 1}. ${denverLocal(leg.appointment.scheduled_at).slice(11)} · ${leg.appointment.pets?.name || "Patient unavailable"} · ${leg.appointment.visit_type}`
+                    : "Return to clinic"}</p>
+                  {leg.appointment && <p>{leg.appointment.clients?.full_name} · {leg.appointment.duration_minutes} minutes · Travel buffers: {leg.appointment.travel_before_minutes} before / {leg.appointment.travel_after_minutes} after</p>}
+                  {timing && (
+                    <>
+                      <p>
+                        Busy block: {timing.busyStartLabel}–{timing.busyEndLabel}; visit {timing.visitStartLabel}–{timing.visitEndLabel}
+                      </p>
+                      {timing.plannedHoursIssue && (
+                        <p role="status" className="text-destructive">
+                          {timing.plannedHoursIssue}
+                        </p>
+                      )}
+                      {timing.gapAfterMinutes !== null && (
+                        <p className={timing.gapAfterMinutes < 0 ? "text-destructive" : "text-muted-foreground"}>
+                          {formatRouteGap(timing.gapAfterMinutes)}
+                        </p>
+                      )}
+                    </>
+                  )}
+                  <p className="break-words">From: {leg.origin || "Address missing"}</p>
+                  <p className="break-words">To: {leg.destination || "Address missing"}</p>
+                  {!missingAddress && !refreshing && (leg.url
+                    ? <a className="inline-block py-2 text-primary underline" href={leg.url} target="_blank" rel="noopener noreferrer">
+                      {leg.appointment ? `Directions to stop ${index + 1}` : "Directions back to clinic"}
+                    </a>
+                    : <p>These addresses exceed the directions-link limit. Enter the saved addresses in Maps manually.</p>)}
+                </li>
+              );
+            })}
           </ol>
         </>}
       </section>

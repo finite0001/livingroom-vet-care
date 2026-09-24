@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { dayRouteAppointments, drivingDirections, practiceBaseAddress, routeLegs } from "../../src/hub/features/scheduling/housecall-route.ts";
+import {
+  dayRouteAppointments,
+  drivingDirections,
+  formatRouteGap,
+  practiceBaseAddress,
+  routeLegs,
+  routeTimings,
+} from "../../src/hub/features/scheduling/housecall-route.ts";
 import type { RouteAppointment } from "../../src/hub/features/scheduling/housecall-route.ts";
 
 function visit(id: string, overrides: Partial<RouteAppointment> = {}): RouteAppointment {
@@ -55,4 +62,61 @@ test("missing or overlong addresses never produce a partial or truncated directi
   assert.equal(legs[0].url, null);
   assert.equal(legs[1].url, null);
   assert.equal(legs[1].origin, "");
+});
+
+test("route timing exposes travel-buffer busy windows and gaps without mutating stops", () => {
+  const stops = [
+    visit("first", {
+      scheduled_at: "2026-10-28T15:00:00Z",
+      duration_minutes: 30,
+      travel_before_minutes: 15,
+      travel_after_minutes: 10,
+    }),
+    visit("second", {
+      scheduled_at: "2026-10-28T16:00:00Z",
+      duration_minutes: 45,
+      travel_before_minutes: 5,
+      travel_after_minutes: 20,
+    }),
+  ];
+  const before = structuredClone(stops);
+  const timings = routeTimings(stops);
+  assert.deepEqual(stops, before);
+  assert.deepEqual(timings.map(timing => ({
+    id: timing.appointment.id,
+    busy: `${timing.busyStartLabel}-${timing.busyEndLabel}`,
+    visit: `${timing.visitStartLabel}-${timing.visitEndLabel}`,
+    gapAfterMinutes: timing.gapAfterMinutes,
+    plannedHoursIssue: timing.plannedHoursIssue,
+  })), [
+    { id: "first", busy: "08:45-09:40", visit: "09:00-09:30", gapAfterMinutes: 15, plannedHoursIssue: null },
+    { id: "second", busy: "09:55-11:05", visit: "10:00-10:45", gapAfterMinutes: null, plannedHoursIssue: null },
+  ]);
+});
+
+test("route timing flags overlaps and planned-hours exceptions as staff review items", () => {
+  const timings = routeTimings([
+    visit("late", {
+      scheduled_at: "2026-10-29T22:30:00Z",
+      duration_minutes: 45,
+      travel_before_minutes: 10,
+      travel_after_minutes: 20,
+    }),
+    visit("overlap", {
+      scheduled_at: "2026-10-29T23:20:00Z",
+      duration_minutes: 30,
+      travel_before_minutes: 15,
+      travel_after_minutes: 10,
+    }),
+    visit("sunday", {
+      scheduled_at: "2026-11-01T17:00:00Z",
+      duration_minutes: 30,
+    }),
+  ]);
+  assert.equal(timings[0].gapAfterMinutes, -30);
+  assert.match(formatRouteGap(timings[0].gapAfterMinutes!), /overlap by 30 minute/);
+  assert.match(timings[0].plannedHoursIssue ?? "", /9 am–5 pm/);
+  assert.match(timings[2].plannedHoursIssue ?? "", /Monday–Saturday/);
+  assert.equal(formatRouteGap(0), "No unscheduled gap before the next stop.");
+  assert.equal(formatRouteGap(25), "25 minute(s) open before the next busy window.");
 });

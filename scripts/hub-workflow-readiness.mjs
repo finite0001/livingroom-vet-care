@@ -41,19 +41,21 @@ const workflows = [
   },
   {
     id: 'appointments',
-    label: 'Appointment create/edit/cancel workflow',
-    route: '/hub/appointments',
-    page: 'src/hub/pages/AppointmentsPage.tsx',
-    hook: 'src/hub/hooks/use-appointments.ts',
-    pageSymbol: 'AppointmentsPage',
-    hookSymbols: ['useAppointmentsForDay', 'useCreateAppointment', 'useUpdateAppointment', 'useCancelAppointment'],
-    requiredHookPatterns: [
+    label: 'Housecall appointment schedule workflow',
+    route: '/hub/schedule',
+    page: 'src/hub/features/scheduling/SchedulePage.tsx',
+    hook: null,
+    pageSymbol: 'SchedulePage',
+    requiredPagePatterns: [
       /save_appointment/g,
-      /cancel_appointment/g,
+      /schedule_clinicians/g,
       /version/g,
+      /denverInstant/g,
+      /HousecallDayRoute/g,
+      /reminderOffsets/g,
     ],
     hostedObjects: {
-      functions: ['public.save_appointment', 'public.cancel_appointment'],
+      functions: ['public.save_appointment', 'public.schedule_clinicians'],
     },
   },
   {
@@ -131,6 +133,7 @@ function latestEvidenceFile(pattern) {
 
 function hostedPresence(schemaInventory, functionInventory, workflow) {
   const result = [];
+  const schemaFunctionSet = new Set(schemaInventory?.objects?.functions ?? []);
 
   for (const table of workflow.hostedObjects?.tables ?? []) {
     const item = schemaInventory?.readinessPresence?.tables?.find((candidate) => candidate.name === table);
@@ -139,7 +142,7 @@ function hostedPresence(schemaInventory, functionInventory, workflow) {
 
   for (const fn of workflow.hostedObjects?.functions ?? []) {
     const item = schemaInventory?.readinessPresence?.functions?.find((candidate) => candidate.name === fn);
-    result.push({ kind: 'database-function', name: fn, present: Boolean(item?.present) });
+    result.push({ kind: 'database-function', name: fn, present: Boolean(item?.present) || schemaFunctionSet.has(fn) });
   }
 
   for (const slug of workflow.hostedFunctions ?? []) {
@@ -166,15 +169,15 @@ const findings = [];
 
 const workflowReports = workflows.map((workflow) => {
   const pageExists = existsSync(workflow.page);
-  const hookExists = existsSync(workflow.hook);
+  const hookExists = workflow.hook ? existsSync(workflow.hook) : true;
   const pageSource = pageExists ? read(workflow.page) : '';
-  const hookSource = hookExists ? read(workflow.hook) : '';
+  const hookSource = workflow.hook && hookExists ? read(workflow.hook) : '';
 
   if (!pageExists) {
     addFinding(findings, 'blocker', workflow.id, 'local-page', 'Workflow page file is missing.', workflow.page);
   }
 
-  if (!hookExists) {
+  if (workflow.hook && !hookExists) {
     addFinding(findings, 'blocker', workflow.id, 'local-hook', 'Workflow hook file is missing.', workflow.hook);
   }
 
@@ -190,19 +193,25 @@ const workflowReports = workflows.map((workflow) => {
     addFinding(findings, 'blocker', workflow.id, 'mobile-nav', 'Workflow route is missing from mobile Hub navigation.', files.bottomTabBar);
   }
 
-  for (const symbol of workflow.hookSymbols) {
+  for (const pattern of workflow.requiredPagePatterns ?? []) {
+    if (!pattern.test(pageSource)) {
+      addFinding(findings, 'blocker', workflow.id, 'page-contract', `Expected page contract pattern is missing: ${pattern.source}.`, workflow.page);
+    }
+  }
+
+  for (const symbol of workflow.hookSymbols ?? []) {
     if (!hookSource.includes(symbol)) {
       addFinding(findings, 'blocker', workflow.id, 'hook-api', `Expected hook export or symbol is missing: ${symbol}.`, workflow.hook);
     }
   }
 
-  for (const pattern of workflow.requiredHookPatterns) {
+  for (const pattern of workflow.requiredHookPatterns ?? []) {
     if (!pattern.test(hookSource)) {
       addFinding(findings, 'blocker', workflow.id, 'hook-contract', `Expected hook contract pattern is missing: ${pattern.source}.`, workflow.hook);
     }
   }
 
-  if (!pageSource.includes(workflow.hook.replace('src/hub/hooks/', '@/hub/hooks/').replace('.ts', ''))) {
+  if (workflow.hook && !pageSource.includes(workflow.hook.replace('src/hub/hooks/', '@/hub/hooks/').replace('.ts', ''))) {
     addFinding(findings, 'warning', workflow.id, 'page-hook', 'Workflow page does not appear to import its expected hook module.', workflow.page);
   }
 
