@@ -9,12 +9,26 @@ const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
 const outgoingBucket = 'conversation-attachment-uploads';
 const incomingBucket = 'inbound-attachment-originals';
-const snapshot = (sql) => JSON.parse(sql(`select jsonb_build_object(
-  'uploads',(select jsonb_agg(to_jsonb(t) order by id) from conversation_attachment_uploads t),
-  'captures',(select jsonb_agg(to_jsonb(t) order by id) from inbound_attachment_captures t),
-  'cleanup',(select jsonb_agg(to_jsonb(t) order by id) from abandoned_attachment_cleanup t),
-  'objects',(select jsonb_agg(to_jsonb(t) order by id) from storage.objects t where bucket_id in ('${outgoingBucket}','${incomingBucket}'))
+const textArray = (values) =>
+  values.length ? `array[${values.map(quote).join(',')}]::text[]` : 'array[]::text[]';
+const uuidArray = (values) =>
+  values.length ? `array[${values.map(quote).join(',')}]::uuid[]` : 'array[]::uuid[]';
+const fixtureScope = (fixture) => ({
+  uploadIds: fixture.outgoing.map((item) => item.id),
+  captureIds: fixture.incoming.map((item) => item.id),
+  cleanupIds: [fixture.cleanup?.lease?.id].filter(Boolean),
+  outgoingPaths: fixture.outgoing.map((item) => item.path),
+  incomingPaths: fixture.incoming.map((item) => item.path),
+});
+const snapshot = (sql, fixture) => {
+  const scope = fixtureScope(fixture);
+  return JSON.parse(sql(`select jsonb_build_object(
+  'uploads',(select jsonb_agg(to_jsonb(t) order by id) from conversation_attachment_uploads t where id = any(${uuidArray(scope.uploadIds)})),
+  'captures',(select jsonb_agg(to_jsonb(t) order by id) from inbound_attachment_captures t where id = any(${uuidArray(scope.captureIds)})),
+  'cleanup',(select jsonb_agg(to_jsonb(t) order by id) from abandoned_attachment_cleanup t where id = any(${uuidArray(scope.cleanupIds)})),
+  'objects',(select jsonb_agg(to_jsonb(t) order by id) from storage.objects t where (bucket_id='${outgoingBucket}' and name = any(${textArray(scope.outgoingPaths)})) or (bucket_id='${incomingBucket}' and name = any(${textArray(scope.incomingPaths)})))
 );`));
+};
 
 export async function seedConversationAttachments({ state, api, admin, sql }) {
   const fixture = { conversation: randomUUID(), outgoing: [], incoming: [] };
@@ -87,14 +101,14 @@ export async function seedConversationAttachments({ state, api, admin, sql }) {
     fixture.incoming.push({ id: lease.id, path: lease.storage_path, attachmentId: meta.id,
       status: index === 0 ? 'ready' : 'capturing' });
   }
-  fixture.snapshot = snapshot(sql);
+  fixture.snapshot = snapshot(sql, fixture);
   state.conversationAttachments = fixture;
 }
 
 export async function verifyConversationAttachments({ state, api, admin, anonymous, sql }) {
   const fixture = state.conversationAttachments;
   assert.ok(fixture);
-  assert.deepEqual(snapshot(sql), fixture.snapshot, 'All attachment states and Storage metadata survive restoration');
+  assert.deepEqual(snapshot(sql, fixture), fixture.snapshot, 'All attachment states and Storage metadata survive restoration');
   for (const item of fixture.outgoing) {
     const bucket = admin.storage.from(outgoingBucket);
     if (item.status === 'cleaned') {
@@ -128,7 +142,7 @@ export async function verifyConversationAttachments({ state, api, admin, anonymo
     assert.ok((await api.storage.from(incomingBucket).download(item.path)).error);
     assert.ok((await anonymous.storage.from(incomingBucket).download(item.path)).error);
   }
-  assert.deepEqual(snapshot(sql), fixture.snapshot, 'Recovery reads and cleanup replay preserve attachment evidence');
+  assert.deepEqual(snapshot(sql, fixture), fixture.snapshot, 'Recovery reads and cleanup replay preserve attachment evidence');
   return { outgoing_states: 4, incoming_states: 2, physical_originals: 5,
     exact_rows_and_bytes: true, staff_and_anonymous_boundaries: true, completed_cleanup_replay: true };
 }

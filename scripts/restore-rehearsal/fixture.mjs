@@ -525,10 +525,53 @@ end $$;
 rollback;`);
   }
   assertExactOutbox(sql,state.communications);
-  assert.equal(
-    sql("select count(*) from pg_extension where extname='pg_cron'"),
-    "0",
+  const expectedSchedulerJobs = [
+    "cleanup-abandoned-attachment",
+    "dispatch-outbox",
+    "process-inbound",
+    "process-stripe-events",
+    "queue-reminders",
+    "scheduler-reconcile",
+  ];
+  const schedulerContainment = JSON.parse(
+    sql(`with expected(name) as (
+  values ${expectedSchedulerJobs.map((name) => `('${name}')`).join(",")}
+)
+select jsonb_build_object(
+  'pg_cron_installed', exists(select 1 from pg_extension where extname='pg_cron'),
+  'pg_net_installed', exists(select 1 from pg_extension where extname='pg_net'),
+  'vault_scheduler_secret_count', (
+    select count(*) from vault.decrypted_secrets
+     where name in ('project_url','scheduler_worker_key')
+  ),
+  'cron_jobs', (
+    select coalesce(jsonb_agg(jobname order by jobname),'[]'::jsonb)
+      from cron.job
+     where jobname in (select name from expected)
+  ),
+  'unexpected_cron_jobs', (
+    select coalesce(jsonb_agg(jobname order by jobname),'[]'::jsonb)
+      from cron.job
+     where jobname not in (select name from expected)
+  )
+);`),
   );
+  assert.equal(schedulerContainment.pg_cron_installed, true);
+  assert.equal(schedulerContainment.pg_net_installed, true);
+  assert.equal(schedulerContainment.vault_scheduler_secret_count, 0);
+  assert.deepEqual(schedulerContainment.cron_jobs, expectedSchedulerJobs);
+  assert.deepEqual(schedulerContainment.unexpected_cron_jobs, []);
+  const schedulerDispatchProbe = JSON.parse(
+    sql("select public.scheduler_dispatch('dispatch-outbox');"),
+  );
+  assert.equal(schedulerDispatchProbe.outcome, "configuration_missing");
+  assert.match(schedulerDispatchProbe.missing, /project_url/);
+  assert.match(schedulerDispatchProbe.missing, /scheduler_worker_key/);
+  schedulerContainment.dispatch_probe = {
+    job: schedulerDispatchProbe.job,
+    outcome: schedulerDispatchProbe.outcome,
+    missing: schedulerDispatchProbe.missing,
+  };
   assert.deepEqual(
     snapshot(),
     state.snapshot,
@@ -564,7 +607,8 @@ rollback;`);
         ready_original_and_signed_history_immutable: true,
         outbox_empty: !state.communications,
         exact_reviewed_outbox_inventory_verified: true,
-        cron_absent: true,
+        scheduler_installed_but_contained_without_vault: true,
+        scheduler_containment: schedulerContainment,
         api_originals_restored: state.apiOriginals?.length ?? 0,
         approved_corrected_canceled_decisions_restored: state.apiDecisions?.length ?? 0,
         decision_replay_private_bytes_and_immutability_verified: Boolean(state.apiDecisions?.length),

@@ -48,9 +48,11 @@ def fixture_source_hashes():
 source_hashes = fixture_source_hashes()
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 versions = [p.name.split('_')[0] for p in migration_files]
-assert len(versions) == len(set(versions)) == 133, 'Review canonical restore migration inventory'
-assert {'20260916010000','20260916033310','20260916043949','20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000'} <= set(versions), 'Canonical identity, weight, resolution and native prescription migrations required'
+CURRENT_RESTORE_MIGRATION_COUNT = 148
+assert len(versions) == len(set(versions)) == CURRENT_RESTORE_MIGRATION_COUNT, 'Review canonical restore migration inventory'
+assert {'20260916010000','20260916020000','20260916033310','20260916043949','20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000'} <= set(versions), 'Canonical identity, weight, resolution and native prescription migrations required'
 assert {'20260916100001','20260916110001','20260916120000','20260916130000','20260916110000','20260916120716','20260916123017'} <= set(versions), 'Combined communication, finance and estimate migrations required'
+assert {'20260919120000','20260921120000','20260921130000','20260922120000','20260922170000','20260922183000','20260922190000','20260922203000','20260922210000','20260922213000','20260922220000','20260922223000','20260922224500','20260922230000'} <= set(versions), 'Current auth, scheduler, appointment, outbound delivery and contact-readiness migrations required'
 assert '20260916040000' not in versions, 'Alternate identity receipt migration is not canonical'
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 baseline_path = Path(__file__).with_name('staging-baseline-20260914.json')
@@ -63,15 +65,17 @@ if args.rehearse_staging_baseline:
     assert [p.name.split('_')[0] for p in initial_files] == versions, 'Baseline migrations missing locally'
     assert all(p.stem.split('_',1)[1] == m['name'] for p,m in zip(initial_files,baseline['migrations'])), 'Baseline migration names differ'
 missing_files = [p for p in migration_files if p not in initial_files]
-new_versions = ['20260914010000', '20260914020000', '20260914030000', '20260914040000', '20260914050000', '20260914060000', '20260914070000', '20260914080000', '20260914090000', '20260914100000', '20260914110000', '20260914120000', '20260914130000', '20260914140000', '20260914150000', '20260914160000', '20260914170000', '20260914180000', '20260914190000', '20260914200000', '20260914210000', '20260914220000', '20260914230000', '20260916000000', '20260916010000', '20260916033310', '20260916043949', '20260916055043', '20260916062136', '20260916063857', '20260916070108', '20260916072509', '20260916080105', '20260916083056', '20260916090000', '20260916093000', '20260916094500', '20260916100000', '20260916100001', '20260916110000', '20260916110001', '20260916120000', '20260916120716', '20260916123017', '20260916130000', '20260916144117']
+new_versions = ['20260914010000', '20260914020000', '20260914030000', '20260914040000', '20260914050000', '20260914060000', '20260914070000', '20260914080000', '20260914090000', '20260914100000', '20260914110000', '20260914120000', '20260914130000', '20260914140000', '20260914150000', '20260914160000', '20260914170000', '20260914180000', '20260914190000', '20260914200000', '20260914210000', '20260914220000', '20260914230000', '20260916000000', '20260916010000', '20260916020000', '20260916033310', '20260916043949', '20260916055043', '20260916062136', '20260916063857', '20260916070108', '20260916072509', '20260916080105', '20260916083056', '20260916090000', '20260916093000', '20260916094500', '20260916100000', '20260916100001', '20260916110000', '20260916110001', '20260916120000', '20260916120716', '20260916123017', '20260916130000', '20260916144117', '20260919120000', '20260921120000', '20260921130000', '20260922120000', '20260922170000', '20260922183000', '20260922190000', '20260922203000', '20260922210000', '20260922213000', '20260922220000', '20260922223000', '20260922224500', '20260922230000']
 if args.rehearse_staging_baseline:
-    assert len(migration_files) == 133
+    assert len(migration_files) == CURRENT_RESTORE_MIGRATION_COUNT
     assert [p.name.split('_')[0] for p in missing_files] == ['20260913650000','20260913690000','20260913700000'] + new_versions, 'Review changed staging upgrade inventory'
 if args.rehearse_observed_hosted_gaps:
     expected_missing = ['20260913280000','20260913290000','20260913320000'] + [f'20260913{v}0000' for v in range(35,64)] + ['20260913650000','20260913690000','20260913700000','20260913900000'] + new_versions
-    assert len(migration_files)==133 and len(initial_files)==51
+    assert len(migration_files)==CURRENT_RESTORE_MIGRATION_COUNT and len(initial_files)==51
     assert [p.name.split('_')[0] for p in missing_files]==expected_missing, 'Migration inventory changed; review the frozen rehearsal'
 if args.retained_hosted_migration:
+    if '20260916020000' in versions:
+        parser.error('The retained hosted migration is already present in the current migration inventory')
     retained = args.retained_hosted_migration.resolve()
     assert retained.name == '20260916020000_ezyvet_migration_weight_evidence.sql'
     receipt = json.loads((root/'docs/evidence/hosted-attachment-upgrade-rehearsal-20260916.json').read_text())
@@ -614,7 +618,7 @@ try:
     assert manifest==restored, 'Physical Storage inventory/hash mismatch'
     assert storage_metadata(destination)==metadata, 'Storage attributes changed during authorized verification'
     assert fixture_source_hashes()==source_hashes, 'Restore fixture sources changed during verification'
-    results={'source_hashes':source_hashes,'communications_restore':json.loads((run/'communications-verification.json').read_text()),'synthetic_only':True,'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, cron or SMTP delivery configured; local Auth uses mail catcher only.'}
+    results={'source_hashes':source_hashes,'communications_restore':json.loads((run/'communications-verification.json').read_text()),'synthetic_only':True,'vaccination_receipt_restore':vaccination_evidence,'source_project':source['id'],'destination_project':destination['id'],'git_commit':command(['git','rev-parse','HEAD']).strip(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'fixture_sha256':hashlib.sha256((root/'scripts/restore-rehearsal/fixture.mjs').read_bytes()).hexdigest(),'database_sha256':hashlib.sha256(dump).hexdigest(),'storage_files':manifest,'backup_seconds':round(backup_seconds,2) if backup_seconds is not None else None,'restore_and_verify_seconds':round(time.monotonic()-restore_started,2),'total_seconds':round(time.monotonic()-started,2),'verification':json.loads((run/'verification.json').read_text()),'sending_disabled':'No Edge runtime, provider credentials, scheduler Vault secrets or SMTP delivery configured; local Auth uses mail catcher only. The pg_cron timetable is installed, but the scheduler dispatch probe returned configuration_missing before any worker call.'}
 finally:
     cleanup_errors=[]
     for item in projects:

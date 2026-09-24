@@ -3,7 +3,7 @@
 This is an operational runbook, not a claim that production restoration has been rehearsed. A repeatable synthetic local rehearsal restores an actual database archive and separate physical private Storage files; see [the local procedure](../scripts/restore-rehearsal/README.md). Hosted backup coverage, recovery objectives and production restore acceptance remain launch gates.
 
 1. Identify the exact source project, backup timestamp, database backup coverage and private Storage object inventory. Set recovery objectives with the practice owner.
-2. Restore into an isolated destination with outgoing messages and scheduled jobs disabled. Do not restore over a live practice as an experiment.
+2. Restore into an isolated destination with outgoing messages disabled and scheduler/provider credentials absent or disabled. Do not restore over a live practice as an experiment.
 3. Apply required schema versions and restore application rows, preserving IDs and relationships. Restore Storage files separately and compare checksums/object counts; a database backup alone is not proof that file bytes were restored.
 4. Validate client/patient/encounter/document relationships, invoice totals, stock ledger, signed-note history, Auth identity mapping and RLS using dedicated test accounts.
 5. Reconfigure server secrets, Auth redirect/SMTP settings, provider webhooks and jobs. Do not copy live delivery enablement blindly.
@@ -32,17 +32,18 @@ Verified evidence:
 Protected evidence is retained outside Git in the operator's temporary `lrv-restore-synthetic-e4rdfqms` directory. Database archive SHA-256: `f3154b9e0228e17af91b84b1f2cc61cb954edb472dcecf6db3c484188376a4bf`. The result includes exact runner/fixture hashes so this pre-commit local run can be tied to the tested source. Earlier retained diagnostic artifacts preserve the initial partition-constraint failure and successful destination-only retry; neither the backup nor restore errors were filtered to manufacture a pass.
 
 
-### Current-stack rehearsal — September 13, 2026 UTC
+### Current-stack rehearsal — September 24, 2026 UTC
 
-A fresh rehearsal at `d26517703e6c9c2e3cb7687f5b0e67b9e34bebbe` completed source backup, separate destination restore, verification and checked cleanup successfully. The captured/restored migration ledger contains all65 repository migrations, latest `20260913450000`. Neither the existing foundation stack nor a hosted project was reset.
+A fresh rehearsal completed source backup, separate destination restore, verification and checked cleanup successfully. The captured/restored migration ledger contains all 148 repository migrations through `20260922230000`. Neither the existing foundation stack nor a hosted project was reset. See the sanitized launch evidence: [2026-09-24 current-stack restore rehearsal](launch-evidence/2026-09-24-current-stack-restore-rehearsal.md).
 
-Fresh local login, identical captured rows/IDs, signed SOAP/addendum,9000-cent invoice,500-cent credit,8-unit stock balance, private78-byte original checksum, anonymous/public denial and immutable-history checks all passed. The complete physical file inventory matched. Outbox remained empty and cron absent. Every generated container/volume was removed before PASS. This fixture does not populate the newer payment, scheduler-run or outbox-retry tables; full schema restoration is verified, while populated evidence for those workflows remains outside this rehearsal's claims.
+Fresh local login, identical captured rows/IDs, signed SOAP/addendum, 9000-cent invoice, 500-cent credit, 8-unit stock balance, private 78-byte original checksum, anonymous/public denial and immutable-history checks all passed. The complete physical file inventory contained 10 files and matched after restore. Outbox remained empty. The current scheduler timetable was present, but Vault values `project_url` and `scheduler_worker_key` were absent; a scheduler dispatch probe returned `configuration_missing` before any worker call. Every generated container/volume was removed before PASS.
 
-Backup took12.43seconds; restore/verification after destination startup took5.08seconds; total including starts and checked cleanup was116.88seconds. These tiny synthetic timings are not a promised production RTO/RPO. Protected artifacts remain outsideGit at the operator's temporary `lrv-restore-synthetic-ggu8etoj` directory; do not publish its credentials or database archive.
+Backup took 12.71 seconds; restore/verification after destination startup took 9.78 seconds; total including starts and checked cleanup was 129.74 seconds. These tiny synthetic timings are not a promised production RTO/RPO. Protected artifacts remain outside Git; do not publish their credentials, command log, Storage bytes or database archive.
 
-- Database archive SHA-256: `d7a61a54f983755f6e7ecc7079cc37b68549f080396dbf9c6f397ce091d3e3dd`.
-- Runner SHA-256: `3371c900e3d0ee34c31fe889d3c82211935169152adc766092f504c5afb72244`.
-- Fixture SHA-256: `31a761212e4aeddb17407b9bece6e31b826d4e94949b298e3b6fa8c9aa739d85`.
+- Database archive SHA-256: `0459afb56d678394810c0c992926d173a19e7e11cbaf0c9763bd482c5efeb485`.
+- Result JSON SHA-256: `d4d79695b21bf194ac5f9a55c1abb48b71bb1c50fd585aef0d83135be109163c`.
+- Runner SHA-256: `9937d6b9d0f73f863b653d0a7eba0f9cbd42c34ee012fae056b80e3054d0f1f4`.
+- Fixture SHA-256: `b8ab378c7d2b82d86b8ed176e5a2e9ca34d6b6d77810864fc6b742185f17a66f`.
 
 Hosted backup/PITR settings, physical Storage backup ownership, recovery objectives, provider reconfiguration and real incident cutover remain pending.
 
