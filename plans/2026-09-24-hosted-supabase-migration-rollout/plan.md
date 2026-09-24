@@ -3,6 +3,7 @@
 Date: 2026-09-24
 Target branch: `main`
 Target Supabase project: `mgadheotkdnrsatfivjy` / `livingroom-vet-care`
+Status: applied and validated 2026-09-24.
 
 ## Objective
 
@@ -10,13 +11,13 @@ Bring hosted Supabase migration history back to parity with merged `main` after 
 
 ## Current evidence
 
-- Local repo is clean on `main` at merge commit `6574baa`.
-- `npm run supabase:migration-drift` reports 123 matching, 0 remote-only, 25 local-only.
-- Plain `db push --dry-run` fails with `LegacyDbPushMissingRemoteError`; `--include-all --dry-run` succeeds and lists exactly the 25 local-only migrations.
-- Remote public schema pre-inventory succeeds: 200 tables, 550 functions, 242 policies, 278 triggers, 109 indexes.
+- Local repo is on `main` with rollout evidence committed locally after merge commit `6574baa`.
+- `npm run supabase:migration-drift` reports 148 matching, 0 remote-only, 0 local-only.
+- `npx supabase db push --linked --skip-vault --include-all --dry-run` reports the remote database is up to date.
+- Remote public schema post-inventory succeeds and includes the audited operating-loop dependencies.
 - Remote data-volume spot check is low-risk: 1 Auth user; 0 clients, pets, communication outbox rows, and contact submissions.
 - Remote Vault names `project_url` and `scheduler_worker_key` are absent, so the scheduler migration should not actively call Edge workers until later commissioning.
-- Remote `pg_cron`, `pg_net`, and `cron.job` are currently absent.
+- Remote `pg_cron`, `pg_net`, and the expected `cron.job` entries now exist. Scheduler Vault secrets remain absent, so database cron cannot call workers yet.
 
 ## Rollout phases
 
@@ -27,7 +28,7 @@ Bring hosted Supabase migration history back to parity with merged `main` after 
 
 ## Go / no-go summary
 
-Go only if:
+The 2026-09-24 apply is complete. For any future rerun, go only if:
 
 - The operator confirms hosted DB mutation.
 - The explicit target is `mgadheotkdnrsatfivjy`.

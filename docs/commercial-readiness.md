@@ -10,6 +10,24 @@ PR147–149 have passing CI for physical returns and shared quantity replay. [Dr
 
 The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves outstanding native estimates, dispense-linked credits/refunds, communications, reporting and unassessed parity workflows. Completion of the medication phase does not establish complete practice-software parity.
 
+## Current hosted readiness snapshot — September 24, 2026
+
+The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; current migration drift is 148 matching, 0 remote-only, and 0 local-only. The generated commercial-readiness summary records 4/5 gates passing:
+
+- Supabase/database operating loop: pass.
+- Hub/frontend workflow readiness: pass.
+- External services and deployment readiness: pass.
+- Verification/release control: pass.
+- Public website launch readiness: blocked only by owner public-contact content.
+
+Custom-domain HTTPS now smokes successfully on `https://thelivingroom.vet`, `https://www.thelivingroom.vet`, and `https://thelivingroom.vet/hub`. Scheduler jobs exist, but DB Vault names `project_url` and `scheduler_worker_key` remain absent, so database cron is contained until explicit scheduler/provider commissioning. CloudTalk and the public phone number remain deferred to the final owner/provider step.
+
+Current evidence:
+
+- [2026-09-24 commercial readiness summary](launch-evidence/2026-09-24-commercial-readiness-summary.json)
+- [2026-09-24 readiness refresh](launch-evidence/2026-09-24-readiness-refresh.json)
+- [2026-09-24 public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md)
+
 ## Current live status — September 15, 2026
 
 The [approved backend and domain rollout](live-backend-rollout-2026-09-14.md) is complete: `mgadheotkdnrsatfivjy` has 113 canonical migrations and 30 active Edge Functions. The published Lovable application uses this primary backend. Both `thelivingroom.vet` and `www.thelivingroom.vet` work over HTTPS, with www redirecting to the primary domain. Existing administrator identity/password and active role were preserved; authenticated access and anonymous denial were verified. The old Lovable Cloud backend is retained intact. Separate staging is also at 113 migrations after the [weight-evidence rollout](weight-evidence-rollout-20260915.md).
