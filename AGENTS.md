@@ -27,3 +27,12 @@ The existing GreenTree clinic credentials were verified on September 13, 2026 to
 ## Approved live backend rollout
 
 On September 14, 2026, the owner explicitly authorized completing the backend rollout and publishing the live Lovable site. The application backend is `mgadheotkdnrsatfivjy`; `ugpyjacqganaqtsiekay` is retained legacy Lovable Cloud, not the target for new application writes or generated migrations. The Lovable Cloud panel may still display the retained legacy database: verify the project reference before every deployment. Browser configuration contains only the selected project's public publishable key. Stripe stays sandbox-only and provider delivery gates remain disabled until separately commissioned.
+
+## Hub design direction — September 24, 2026
+
+The owner approved the phase-1 hub redesign combining the three exploration mockups in `docs/design-explorations/`: Direction A's warm brand look (cream/terracotta/forest tokens, Libre Baskerville display headings via the `font-display` utility, warm shadows), Direction B's status-color grammar, and Direction C's Guided mode as a per-user toggle.
+
+- `src/hub/components/shared/StatusChip.tsx` is the single source of truth for appointment status → label/color. Statuses use the real DB enum (`SCHEDULED` → "Booked" → info blue; `CONFIRMED` → "Confirmed" → terracotta as the checked-in/on-site state; `COMPLETED` → success green; `CANCELLED` → destructive; `NO_SHOW` → warning amber). New status surfaces must reuse `StatusChip`/`statusTone()` — do not invent local color mappings.
+- Guided mode persists in `localStorage["lrv:guided-mode"]` (default off) and toggles a `guided` class on `<html>`; the switch lives in the shared header (`src/hub/components/layout/guided-mode.tsx`). Guided mode adds the "Start your day" checklist on Home, helper lines, and 44px touch targets (`.guided-touch`).
+- Phase 1 restyled: shell (sidebar, tab bar, header), Home (`HubHomePage`), and Schedule day view. Other hub pages still carry the pre-redesign look — apply the same tokens/`StatusChip` when touching them; do not introduce gray-shadcn styling on new surfaces.
+- Nav labels were renamed (labels only, routes unchanged): "Communication" → "Messages", "Website inquiries" → "New inquiries".

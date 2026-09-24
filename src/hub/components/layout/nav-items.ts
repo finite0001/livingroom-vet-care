@@ -39,11 +39,11 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   // Workspace
   { path: "/hub", label: "Home", icon: Home, section: "workspace", exact: true, tab: true },
-  { path: "/hub/chats", label: "Communication", mobileLabel: "Comm", icon: MessageSquare, section: "workspace", tab: true },
+  { path: "/hub/chats", label: "Messages", mobileLabel: "Msgs", icon: MessageSquare, section: "workspace", tab: true },
   { path: "/hub/tickets", label: "Tickets", icon: Ticket, section: "workspace", tab: true },
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays, section: "workspace", tab: true },
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },
-  { path: "/hub/inquiries", label: "Website inquiries", icon: ClipboardList, section: "workspace" },
+  { path: "/hub/inquiries", label: "New inquiries", icon: ClipboardList, section: "workspace" },
   { path: "/hub/clients", label: "Clients", icon: Users, section: "workspace" },
   { path: "/hub/patients", label: "Patients", icon: PawPrint, section: "workspace" },
   { path: "/hub/time", label: "Time Clock", icon: Clock, section: "workspace" },

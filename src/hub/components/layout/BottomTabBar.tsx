@@ -49,7 +49,7 @@ export function BottomTabBar() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around bg-card/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border bg-card/95 shadow-[0_-2px_12px_-2px_hsl(var(--charcoal)/0.08)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
         aria-label="Hub navigation"
       >
         {tabItems.map((tab) => {
@@ -67,9 +67,9 @@ export function BottomTabBar() {
               }
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-3 transition-all duration-200",
+                "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-full px-3 transition-all duration-200",
                 active
-                  ? "text-primary bg-primary/10"
+                  ? "rounded-full bg-primary/15 text-terracotta-dark"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -103,9 +103,9 @@ export function BottomTabBar() {
           onClick={() => setMoreOpen(true)}
           aria-label="More"
           className={cn(
-            "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-3 transition-all duration-200",
+            "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-full px-3 transition-all duration-200",
             isMoreActive
-              ? "text-primary bg-primary/10"
+              ? "rounded-full bg-primary/15 text-terracotta-dark"
               : "text-muted-foreground hover:text-foreground",
           )}
         >

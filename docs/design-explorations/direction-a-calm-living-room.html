@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction A — Calm Living Room · LRV Hub concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5F1E8; --paper:#FFFDF7; --ink:#3A3A3A; --ink-soft:#6E675C;
+    --terra:#C97D60; --terra-deep:#A9613F; --forest:#1F4A38; --sage:#A8B8A5;
+    --gold:#D4AF76; --line:#E7DEC9; --red:#A31621;
+    --shadow:0 2px 6px rgba(58,45,32,.05),0 16px 36px rgba(58,45,32,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#EAE3D3;color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+  /* switcher */
+  .switcher{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;gap:14px;align-items:center;justify-content:center;
+    background:#241f18;color:#e8e0cf;padding:10px 16px;font-size:13px}
+  .switcher b{color:#fff;font-weight:600}
+  .switcher a{color:#d8c9a8;text-decoration:none;padding:4px 12px;border-radius:999px;border:1px solid #4a4234}
+  .switcher a:hover{background:#3a332a;color:#fff}
+  .switcher a.here{background:var(--terra);border-color:var(--terra);color:#fff}
+  .switcher .tag{position:absolute;left:16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a89a7d}
+
+  .screen{max-width:1160px;margin:64px auto 24px;background:var(--cream);border:1px solid #d9cfb8;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(50,40,25,.18)}
+  .screen-label{display:flex;align-items:center;gap:10px;padding:14px 28px;background:#241f18;color:#cfc4ab;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .screen-label .dot{width:9px;height:9px;border-radius:50%;background:var(--terra)}
+
+  .app{padding:26px 34px 40px}
+  .topbar{display:flex;align-items:center;gap:18px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .name{font-family:'Libre Baskerville',serif;font-size:19px;line-height:1.15}
+  .brand .name small{display:block;font-family:'Inter';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px}
+  .topnav{display:flex;gap:4px;margin-left:14px;background:#efe8d8;border-radius:999px;padding:4px}
+  .topnav a{padding:8px 16px;border-radius:999px;text-decoration:none;color:var(--ink-soft);font-weight:500;font-size:14px}
+  .topnav a.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(58,45,32,.12)}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .search{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:9px 16px;color:var(--ink-soft);font-size:13.5px;min-width:250px}
+  .search kbd{margin-left:auto;font-family:inherit;font-size:11px;background:#efe8d8;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--ink-soft)}
+  .clockpill{display:flex;align-items:center;gap:8px;background:#E7EFE4;color:var(--forest);font-weight:600;font-size:13px;border-radius:999px;padding:9px 15px}
+  .clockpill .pulse{width:8px;height:8px;border-radius:50%;background:#3E7C59}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--forest);color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px}
+
+  /* greeting */
+  .greeting{margin:30px 2px 22px}
+  .greeting h1{font-family:'Libre Baskerville',serif;font-size:38px;font-weight:400;letter-spacing:-.01em}
+  .greeting p{color:var(--ink-soft);margin-top:8px;font-size:15.5px}
+  .greeting p b{color:var(--terra-deep);font-weight:600}
+
+  .grid{display:grid;grid-template-columns:1.9fr 1fr;gap:22px;align-items:start}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+  .now{padding:24px 26px;position:relative;overflow:hidden}
+  .now::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:linear-gradient(var(--terra),var(--gold))}
+  .eyebrow{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--terra-deep);font-weight:600}
+  .now h2{font-family:'Libre Baskerville',serif;font-size:24px;margin:10px 0 4px;font-weight:400}
+  .now .meta{color:var(--ink-soft);font-size:14.5px}
+  .now .addr{margin-top:14px;display:flex;align-items:center;gap:10px;font-size:15px}
+  .addr .pin{width:30px;height:30px;border-radius:10px;background:#F6E9DF;display:grid;place-items:center;color:var(--terra-deep);font-weight:700;font-size:13px}
+  .now .actions{display:flex;gap:12px;margin-top:20px}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-size:14.5px;font-weight:600;border-radius:999px;padding:13px 26px}
+  .btn-primary{background:var(--terra);color:#fff}
+  .btn-primary:hover{background:var(--terra-deep)}
+  .btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--ink-soft)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .daylist{margin-top:22px;padding:6px 0 2px}
+  .row{display:grid;grid-template-columns:64px 44px 1fr auto;gap:14px;align-items:center;padding:13px 26px;border-top:1px solid #f0e9d8}
+  .row:first-child{border-top:none}
+  .time{font-weight:700;font-size:14.5px;font-variant-numeric:tabular-nums}
+  .time small{display:block;font-weight:500;color:var(--ink-soft);font-size:11px}
+  .face{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff}
+  .f1{background:#C97D60}.f2{background:#1F4A38}.f3{background:#D4AF76;color:#5c4a22}.f4{background:#7A9E8E}.f5{background:#A8B8A5;color:#2c4636}
+  .who b{font-size:15px}
+  .who span{display:block;color:var(--ink-soft);font-size:13px;margin-top:1px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:6px 13px;white-space:nowrap}
+  .chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .c-done{background:#E7EFE4;color:#2F5D43}.c-now{background:#F6E9DF;color:#A9613F}
+  .c-next{background:#EDF1EC;color:#3D6478}.c-wait{background:#F6ECD6;color:#8A6420}.c-unconf{background:#F1EFE9;color:#6E675C}
+  .c-late{background:#F7E3E1;color:var(--red)}
+
+  .rail{display:flex;flex-direction:column;gap:16px}
+  .railcard{padding:20px 22px}
+  .railcard h3{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px}
+  .railcard h3 .n{margin-left:auto;background:var(--terra);color:#fff;font-size:12px;border-radius:999px;padding:2px 9px}
+  .care{background:#FBF3E4;border:1px solid #EAD9AE}
+  .care h3 .n{background:#8A6420}
+  .item{display:flex;gap:12px;padding:13px 0;border-top:1px solid rgba(0,0,0,.06)}
+  .item:first-of-type{border-top:none;margin-top:8px}
+  .item .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:none;font-weight:700;font-size:13px}
+  .i-red{background:#F7E3E1;color:var(--red)}.i-gold{background:#F6ECD6;color:#8A6420}.i-sage{background:#E7EFE4;color:#2F5D43}.i-blue{background:#E4EBEF;color:#3D6478}
+  .item b{font-size:14px;display:block}
+  .item span{color:var(--ink-soft);font-size:12.8px}
+  .linkbtn{margin-top:4px;background:none;border:none;font:inherit;color:var(--terra-deep);font-weight:700;font-size:13px;cursor:pointer;padding:0}
+  .linkbtn:hover{text-decoration:underline}
+  .newhire{background:#EFE9DA;border-style:dashed}
+  .newhire h3{font-family:'Libre Baskerville',serif;font-weight:400;font-size:16.5px}
+  .newhire p{color:var(--ink-soft);font-size:13.5px;margin-top:8px}
+
+  /* schedule screen */
+  .sched-head{display:flex;align-items:baseline;gap:18px;margin:32px 2px 20px}
+  .sched-head h2{font-family:'Libre Baskerville',serif;font-size:30px;font-weight:400}
+  .sched-head .sub{color:var(--ink-soft)}
+  .seg{margin-left:auto;display:flex;background:#efe8d8;border-radius:999px;padding:4px}
+  .seg button{border:none;background:none;font:inherit;font-weight:600;font-size:13.5px;color:var(--ink-soft);padding:8px 18px;border-radius:999px;cursor:pointer}
+  .seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(58,45,32,.12)}
+  .daynav{display:flex;align-items:center;gap:10px;margin:0 2px 18px}
+  .daynav button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font-size:15px;cursor:pointer;color:var(--ink)}
+  .daynav .todaybtn{border-radius:999px;width:auto;padding:0 16px;font-weight:600;font-size:13px;height:36px}
+  .group-label{display:flex;align-items:center;gap:12px;margin:26px 2px 12px;color:var(--ink-soft);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  .group-label::after{content:"";flex:1;height:1px;background:var(--line)}
+  .appt{display:grid;grid-template-columns:74px 1fr auto;gap:18px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:16px 22px;margin-bottom:12px}
+  .appt .t{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  .appt .t small{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:500;margin-top:2px}
+  .appt .main b{font-size:15.5px}
+  .appt .main .desc{color:var(--ink-soft);font-size:13.5px;margin-top:2px}
+  .appt .foot{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .appt .acts{display:flex;gap:9px;align-items:center}
+  .divider{width:1px;height:22px;background:var(--line);margin:0 4px}
+
+  /* rationale */
+  .why{max-width:1160px;margin:0 auto 60px;background:#241f18;color:#cfc4ab;border-radius:20px;padding:26px 34px;font-size:14px}
+  .why h4{color:#fff;font-size:15px;margin-bottom:12px;font-family:'Libre Baskerville',serif;font-weight:400}
+  .why ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 32px}
+  .why li{padding-left:18px;position:relative}
+  .why li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--terra)}
+  .why b{color:#e8ddc4;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <span class="tag">Design exploration · not production code</span>
+  <b>Direction A — Calm Living Room</b>
+  <a class="here" href="direction-a-calm-living-room.html">A</a>
+  <a href="direction-b-day-board.html">B · Day Board</a>
+  <a href="direction-c-guided.html">C · Guided</a>
+</div>
+
+<!-- ============ SCREEN 1: TODAY ============ -->
+<div class="screen">
+  <div class="screen-label"><span class="dot"></span> Screen 1 of 2 — Home / “Today” &nbsp;·&nbsp; the morning briefing a new hire reads first</div>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="4" width="40" height="40" rx="12" fill="#1F4A38"/>
+          <path d="M14 30c0-7 4.5-11 10-11s10 4 10 11" stroke="#F5F1E8" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+          <path d="M12 30h24" stroke="#C97D60" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M15 30v4M33 30v4" stroke="#C97D60" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>
+        <div class="name">The Living Room Vet<small>Staff Hub</small></div>
+      </div>
+      <nav class="topnav">
+        <a class="on" href="#">Today</a><a href="#schedule">Schedule</a><a href="#">Messages</a><a href="#">Tickets</a><a href="#">Clients &amp; Pets</a><a href="#">Time Clock</a>
+      </nav>
+      <div class="right">
+        <div class="search">Search clients, pets, anything… <kbd>⌘K</kbd></div>
+        <div class="clockpill"><span class="pulse"></span>On shift · 8:02 AM</div>
+        <div class="avatar">SR</div>
+      </div>
+    </div>
+
+    <div class="greeting">
+      <h1>Good morning, Sam.</h1>
+      <p>Wednesday, September 23 · Five visits today, and <b>3 small things need your attention</b> before the first house call.</p>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card now">
+          <div class="eyebrow">Right now · 9:30 AM</div>
+          <h2>Biscuit’s vaccine visit</h2>
+          <div class="meta">Golden Retriever · 4 yrs · Rabies &amp; DHPP due today · with Dr. Edler</div>
+          <div class="addr"><span class="pin">MAP</span> 418 Maple Court, Glendale · 12 min from you · <u>Get directions</u></div>
+          <div class="actions">
+            <button class="btn btn-primary">Check in for this visit</button>
+            <button class="btn btn-ghost">Open Biscuit’s record</button>
+          </div>
+        </div>
+
+        <div class="card daylist">
+          <div class="row">
+            <div class="time">9:00<small>telehealth</small></div>
+            <div class="face f2">N</div>
+            <div class="who"><b>Nala — post-spay check</b><span>Kitten · 6 mo · video call with Maya Chen</span></div>
+            <span class="chip c-done">Completed</span>
+          </div>
+          <div class="row" style="background:#FBF7EC">
+            <div class="time">9:30<small>house call</small></div>
+            <div class="face f1">B</div>
+            <div class="who"><b>Biscuit — vaccines</b><span>418 Maple Court, Glendale</span></div>
+            <span class="chip c-now">Happening now</span>
+          </div>
+          <div class="row">
+            <div class="time">11:00<small>house call</small></div>
+            <div class="face f3">M</div>
+            <div class="who"><b>Miso — dental recheck</b><span>77 Juniper Lane, Silverlake</span></div>
+            <span class="chip c-next">Up next</span>
+          </div>
+          <div class="row">
+            <div class="time">1:15<small>house call</small></div>
+            <div class="face f4">W</div>
+            <div class="who"><b>Walter — arthritis injection + refill</b><span>220 Birchwood Drive · refill request waiting</span></div>
+            <span class="chip c-wait">Refill to approve</span>
+          </div>
+          <div class="row">
+            <div class="time">3:00<small>house call</small></div>
+            <div class="face f5">P</div>
+            <div class="who"><b>Poppy — wellness exam (rabbit)</b><span>9 Clover Avenue · confirmation not sent</span></div>
+            <span class="chip c-unconf">Unconfirmed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="card railcard care">
+          <h3>Needs a little care<span class="n">3</span></h3>
+          <div class="item">
+            <div class="ic i-red">SMS</div>
+            <div><b>2 messages failed to send</b><span>Hartman household — invoice &amp; reminder</span><br><button class="linkbtn">Review and resend →</button></div>
+          </div>
+          <div class="item">
+            <div class="ic i-gold">?</div>
+            <div><b>New inquiry, no client match</b><span>Jamie P. asked about Saturday appointments</span><br><button class="linkbtn">Match to a client →</button></div>
+          </div>
+          <div class="item">
+            <div class="ic i-sage">RX</div>
+            <div><b>Walter’s refill request</b><span>Carprofen 75 mg · requested by Maya Chen</span><br><button class="linkbtn">Approve refill →</button></div>
+          </div>
+        </div>
+        <div class="card railcard">
+          <h3>All clear<span class="n" style="background:#3E7C59">✓</span></h3>
+          <div class="item"><div class="ic i-blue">✓</div><div><b>Outbox is empty</b><span>Every message and invoice went out on time.</span></div></div>
+          <div class="item"><div class="ic i-blue">✓</div><div><b>No labs waiting</b><span>All results have been reviewed and filed.</span></div></div>
+        </div>
+        <div class="card railcard newhire">
+          <h3>New here?</h3>
+          <p>This page is your morning briefing: what’s happening now, what’s next, and what needs a hand. Everything else lives in the menu above — and ⌘K finds any client or pet by name.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 2: SCHEDULE ============ -->
+<div class="screen" id="schedule">
+  <div class="screen-label"><span class="dot"></span> Screen 2 of 2 — Schedule &nbsp;·&nbsp; the day board, redesigned for one-glance reading</div>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="4" width="40" height="40" rx="12" fill="#1F4A38"/>
+          <path d="M14 30c0-7 4.5-11 10-11s10 4 10 11" stroke="#F5F1E8" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+          <path d="M12 30h24" stroke="#C97D60" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M15 30v4M33 30v4" stroke="#C97D60" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>
+        <div class="name">The Living Room Vet<small>Staff Hub</small></div>
+      </div>
+      <nav class="topnav">
+        <a href="#">Today</a><a class="on" href="#schedule">Schedule</a><a href="#">Messages</a><a href="#">Tickets</a><a href="#">Clients &amp; Pets</a><a href="#">Time Clock</a>
+      </nav>
+      <div class="right">
+        <div class="search">Search clients, pets, anything… <kbd>⌘K</kbd></div>
+        <div class="clockpill"><span class="pulse"></span>On shift · 8:02 AM</div>
+        <div class="avatar">SR</div>
+      </div>
+    </div>
+
+    <div class="sched-head">
+      <h2>Wednesday, September 23</h2>
+      <div class="sub">5 house calls · 1 telehealth · Dr. Edler driving</div>
+      <div class="seg"><button class="on">Day</button><button>Week</button><button>Route</button></div>
+    </div>
+    <div class="daynav">
+      <button>‹</button><button>›</button><button class="todaybtn">Today</button>
+    </div>
+
+    <div class="group-label">Morning</div>
+    <div class="appt">
+      <div class="t">9:00<small>30 min · telehealth</small></div>
+      <div class="main">
+        <b>Nala — post-spay check</b>
+        <div class="desc">Kitten · spay incision photo review · with Maya Chen</div>
+        <div class="foot"><span class="chip c-done">Completed</span><span style="color:var(--ink-soft);font-size:12.5px">Notes signed · 9:24 AM</span></div>
+      </div>
+      <div class="acts"><button class="btn btn-ghost btn-sm">View notes</button></div>
+    </div>
+    <div class="appt" style="border-color:var(--terra);border-width:1.5px">
+      <div class="t">9:30<small>60 min · house call</small></div>
+      <div class="main">
+        <b>Biscuit — vaccines</b>
+        <div class="desc">418 Maple Court, Glendale · Rabies + DHPP due today · owner: Dana Ruiz</div>
+        <div class="foot"><span class="chip c-now">Checked in</span><span style="color:var(--ink-soft);font-size:12.5px">Dr. Edler on site since 9:38</span></div>
+      </div>
+      <div class="acts"><button class="btn btn-primary btn-sm">Complete visit</button><button class="btn btn-ghost btn-sm">Record treatment</button></div>
+    </div>
+    <div class="appt">
+      <div class="t">11:00<small>45 min · house call</small></div>
+      <div class="main">
+        <b>Miso — dental recheck</b>
+        <div class="desc">77 Juniper Lane, Silverlake · gingivitis follow-up · owner: Priya Nair</div>
+        <div class="foot"><span class="chip c-next">Booked</span><span style="color:var(--ink-soft);font-size:12.5px">Reminder sent yesterday</span></div>
+      </div>
+      <div class="acts"><button class="btn btn-ghost btn-sm">Check in</button><span class="divider"></span><button class="btn btn-ghost btn-sm">Edit</button></div>
+    </div>
+
+    <div class="group-label">Afternoon</div>
+    <div class="appt">
+      <div class="t">1:15<small>40 min · house call</small></div>
+      <div class="main">
+        <b>Walter — arthritis injection + refill</b>
+        <div class="desc">220 Birchwood Drive · Carprofen refill requested · owner: Tom Okafor</div>
+        <div class="foot"><span class="chip c-next">Booked</span><span class="chip c-wait" style="margin-left:8px">Refill waiting</span></div>
+      </div>
+      <div class="acts"><button class="btn btn-ghost btn-sm">Check in</button><span class="divider"></span><button class="btn btn-ghost btn-sm">Edit</button></div>
+    </div>
+    <div class="appt">
+      <div class="t">3:00<small>60 min · house call</small></div>
+      <div class="main">
+        <b>Poppy — wellness exam (rabbit)</b>
+        <div class="desc">9 Clover Avenue · new client, first visit · owner: Jamie Park</div>
+        <div class="foot"><span class="chip c-unconf">Unconfirmed</span><span style="color:var(--ink-soft);font-size:12.5px">Confirmation not sent — tap to send</span></div>
+      </div>
+      <div class="acts"><button class="btn btn-primary btn-sm" style="background:var(--gold);color:#5c4a22">Send confirmation</button></div>
+    </div>
+
+    <div class="card railcard" style="margin-top:26px;display:flex;gap:16px;align-items:center">
+      <div class="ic i-sage" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:700">RT</div>
+      <div style="flex:1"><b>Route is ready.</b> <span style="color:var(--ink-soft)">Maple Ct → Juniper Ln → Birchwood Dr → Clover Ave · 38 min total drive · </span><u style="cursor:pointer">Open in Google Maps</u></div>
+    </div>
+  </div>
+</div>
+
+<div class="why">
+  <h4>What Direction A changes, and why (from the swarm audit)</h4>
+  <ul>
+    <li><b>Brand tokens actually used:</b> cream, terracotta, forest, warm shadows — the audit found these existed in <code>index.css</code> but went unused; the hub read as generic shadcn.</li>
+    <li><b>“What do I do right now?” answered above the fold:</b> the current home shows six identical count cards; here the next visit, its address, and one primary action lead the page.</li>
+    <li><b>Urgent things look urgent:</b> failed messages and due items get warm color + one clear action instead of identical gray tiles. “All caught up” states say so explicitly.</li>
+    <li><b>Plain words:</b> “Messages” not “Communication,” “house call” labels, no UUIDs, no “outbox” jargon — day-one readable.</li>
+    <li><b>Schedule reads at a glance:</b> big 12-hour times, grouped Morning/Afternoon, colored status chips, one-tap Check in / Complete instead of the hidden status-dropdown edit dialog.</li>
+    <li><b>Search promises what it delivers</b> (clients <i>and</i> pets) with a visible ⌘K hint — the audit found the placeholder promises pets but the query only searches clients.</li>
+  </ul>
+</div>
+
+</body>
+</html>

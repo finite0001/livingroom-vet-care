@@ -12,6 +12,29 @@ export function denverLocal(instant: string | Date): string {
   const part = (kind: string) => parts.find((p) => p.type === kind)?.value;
   return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
 }
+
+/** Big 12-hour clock label ("9:30 AM") in the practice timezone. */
+export function formatDenverTime(instant: string | Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: practiceTimezone,
+    hour: "numeric",
+    minute: "2-digit",
+  }).formatToParts(new Date(instant));
+  const part = (kind: string) =>
+    parts.find((p) => p.type === kind)?.value ?? "";
+  return `${part("hour")}:${part("minute")} ${part("dayPeriod")}`;
+}
+
+/** Human day label for a YYYY-MM-DD practice day ("Wednesday, September 23"). */
+export function formatDenverDayLabel(day: string): string {
+  const [year, month, date] = day.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(Date.UTC(year, month - 1, date)));
+}
 /** Reject skipped and repeated wall-clock times rather than silently shifting an appointment. */
 export function denverInstant(local: string): string {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local))

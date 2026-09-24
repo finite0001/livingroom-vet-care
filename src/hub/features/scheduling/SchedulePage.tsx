@@ -1,8 +1,8 @@
-import { usePatientAlertReview } from "../clinical/alert-review";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
+import { usePatientAlertReview } from "../clinical/alert-review";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { denverInstant, denverLocal, reminderOffsets, shiftDay } from "./time";
+import { denverInstant, denverLocal, formatDenverDayLabel, formatDenverTime, reminderOffsets, shiftDay } from "./time";
 import type { Tables } from "@/integrations/supabase/types";
 import { HousecallDayRoute } from "./HousecallDayRoute";
-import { practiceBaseAddress } from "./housecall-route";
+import { drivingDirections, practiceBaseAddress, visitAddress } from "./housecall-route";
+import { useScheduleDay } from "./use-schedule-day";
+import { useAppointmentStatus } from "./use-appointment-status";
+import { StatusChip } from "@/hub/components/shared/StatusChip";
+import { cn } from "@/lib/utils";
 
 type Appointment = Tables<"appointments">;
 const statusLabels = {
@@ -30,36 +34,147 @@ const statusLabels = {
 const selectClass =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 const baseAddress = practiceBaseAddress;
+
+function visitTypeLabel(visitType: string): string {
+  return visitType === "housecall" ? "House call" : "Clinic";
+}
+
+/** Morning/Afternoon/Evening grouping for one-glance day reading. */
+function dayPart(scheduledAt: string): string {
+  const hour = Number(denverLocal(scheduledAt).slice(11, 13));
+  if (hour < 12) return "Morning";
+  if (hour < 17) return "Afternoon";
+  return "Evening";
+}
+
+function AppointmentCard({
+  row,
+  onEdit,
+}: {
+  row: Tables<"appointments"> & {
+    pets: { name: string | null; species: string | null } | null;
+    clients: { full_name: string | null } | null;
+    profiles: { full_name: string | null } | null;
+  };
+  onEdit: () => void;
+}) {
+  const update = useAppointmentStatus();
+  const busy = update.isPending;
+  const address = visitAddress(row.address_snapshot);
+  const directions = address
+    ? drivingDirections(practiceBaseAddress, address)
+    : null;
+  const subdued = row.status === "COMPLETED" || row.status === "CANCELLED" || row.status === "NO_SHOW";
+  const staffName =
+    row.profiles?.full_name?.trim() ||
+    (row.assigned_dvm_id ? `Staff ${row.assigned_dvm_id.slice(0, 8)}` : null);
+
+  return (
+    <div
+      className={cn(
+        "grid items-center gap-3 rounded-2xl border bg-card p-4 shadow-card md:grid-cols-[92px_1fr_auto] md:gap-5 md:px-5",
+        row.status === "CONFIRMED" && "border-primary/50",
+        subdued && "bg-muted/40 opacity-80",
+      )}
+    >
+      <div className="tabular-nums">
+        <p className="text-lg font-bold leading-none text-foreground">
+          {formatDenverTime(row.scheduled_at)}
+        </p>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          {row.duration_minutes} min · {visitTypeLabel(row.visit_type)}
+        </p>
+      </div>
+      <div className="min-w-0">
+        <p className="truncate font-semibold text-foreground">
+          {row.pets?.name ?? "Patient unavailable"}
+          <span className="font-normal text-muted-foreground">
+            {" "}
+            — {row.appointment_type}
+          </span>
+        </p>
+        <p className="truncate text-sm text-muted-foreground">
+          {[row.clients?.full_name, staffName].filter(Boolean).join(" · ")}
+        </p>
+        {address && (
+          <p className="truncate text-sm text-muted-foreground">
+            {address}
+            {directions && (
+              <>
+                {" · "}
+                <a
+                  className="font-medium text-terracotta-dark underline-offset-2 hover:underline"
+                  href={directions}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Get directions
+                </a>
+              </>
+            )}
+          </p>
+        )}
+        <div className="mt-2 flex items-center gap-2">
+          <StatusChip status={row.status} />
+          {row.status === "COMPLETED" && (
+            <span className="text-xs text-muted-foreground">
+              This visit is done
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        {row.status === "SCHEDULED" && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="guided-touch"
+            disabled={busy}
+            onClick={() =>
+              update.mutate({ appointment: row, status: "CONFIRMED" })
+            }
+          >
+            Check in
+          </Button>
+        )}
+        {row.status === "CONFIRMED" && (
+          <Button
+            size="sm"
+            className="guided-touch"
+            disabled={busy}
+            onClick={() =>
+              update.mutate({ appointment: row, status: "COMPLETED" })
+            }
+          >
+            Complete
+          </Button>
+        )}
+        <Button size="sm" variant="ghost" onClick={onEdit}>
+          Edit
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function SchedulePage() {
   usePageTitle("Schedule");
   const [day, setDay] = useState(() => denverLocal(new Date()).slice(0, 10));
   const [week, setWeek] = useState(false);
   const [editing, setEditing] = useState<Appointment | null | undefined>();
   const count = week ? 7 : 1;
-  const query = useQuery({
-    queryKey: ["schedule", day, count],
-    queryFn: async () => {
-      const { data, error, count: total } = await supabase
-        .from("appointments")
-        .select(
-          "*,pets(name),clients(full_name),profiles!appointments_assigned_dvm_id_fkey(full_name)",
-          { count: "exact" },
-        )
-        .gte("scheduled_at", denverInstant(`${day}T00:00`))
-        .lt("scheduled_at", denverInstant(`${shiftDay(day, count)}T00:00`))
-        .order("scheduled_at")
-        .order("id");
-      if (error) throw error;
-      return { appointments: data, total };
-    },
-  });
+  const query = useScheduleDay(day, count);
+  const today = denverLocal(new Date()).slice(0, 10);
   return (
     <main className="space-y-5 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Schedule</h1>
+          <h1 className="font-display text-2xl md:text-3xl">Schedule</h1>
           <p className="text-sm text-muted-foreground">
-            Clinic and housecalls · All times America/Denver
+            Clinic and house calls · All times America/Denver
+          </p>
+          <p className="guided-only mt-1 text-sm font-medium text-terracotta-dark">
+            Tap Check in when you arrive, Complete when you leave.
           </p>
         </div>
         <Button onClick={() => setEditing(null)}>Book appointment</Button>
@@ -84,6 +199,11 @@ export default function SchedulePage() {
         <Button variant="outline" onClick={() => setDay(shiftDay(day, count))}>
           Next
         </Button>
+        {day !== today && (
+          <Button variant="outline" onClick={() => setDay(today)}>
+            Today
+          </Button>
+        )}
         <Button
           variant={week ? "outline" : "default"}
           onClick={() => setWeek(false)}
@@ -111,7 +231,7 @@ export default function SchedulePage() {
       ) : (
         <div
           className={
-            week ? "grid gap-3 md:grid-cols-2 xl:grid-cols-3" : "space-y-3"
+            week ? "grid gap-3 md:grid-cols-2 xl:grid-cols-3" : "space-y-8"
           }
         >
           {Array.from({ length: count }, (_, index) => {
@@ -119,39 +239,95 @@ export default function SchedulePage() {
             const entries = query.data.appointments.filter((row) =>
               denverLocal(row.scheduled_at).startsWith(date),
             );
+            const housecalls = entries.filter(
+              (row) => row.visit_type === "housecall",
+            ).length;
+            if (week) {
+              return (
+                <section key={date} className="rounded-2xl border bg-card p-4 shadow-card">
+                  <h2 className="mb-3 font-semibold">{formatDenverDayLabel(date)}</h2>
+                  {!entries.length && (
+                    <p className="text-sm text-muted-foreground">
+                      No appointments
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {entries.map((row) => (
+                      <button
+                        className="w-full rounded-md border bg-card p-3 text-left hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                        key={row.id}
+                        onClick={() => setEditing(row)}
+                      >
+                        <p className="font-semibold">
+                          {formatDenverTime(row.scheduled_at)} ·{" "}
+                          {row.pets?.name ?? "Patient unavailable"}
+                        </p>
+                        <p className="text-sm">
+                          {row.clients?.full_name} · {row.appointment_type}
+                        </p>
+                        <p className="text-sm">
+                          {row.profiles?.full_name?.trim() || (row.assigned_dvm_id ? `Staff ${row.assigned_dvm_id.slice(0, 8)}` : "Unassigned")}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <StatusChip status={row.status} />
+                          <span className="text-sm text-muted-foreground">
+                            {row.duration_minutes} min · {visitTypeLabel(row.visit_type)}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  {query.data.total === query.data.appointments.length && (
+                    <HousecallDayRoute day={date} appointments={entries} refreshing={query.isFetching} />
+                  )}
+                </section>
+              );
+            }
+            const parts = ["Morning", "Afternoon", "Evening"]
+              .map((label) => ({
+                label,
+                entries: entries.filter((row) => dayPart(row.scheduled_at) === label),
+              }))
+              .filter((part) => part.entries.length > 0);
             return (
-              <section key={date} className="rounded-lg border p-4">
-                <h2 className="mb-3 font-semibold">{date}</h2>
-                {!entries.length && (
+              <section key={date} aria-label={formatDenverDayLabel(date)}>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <h2 className="font-display text-2xl md:text-3xl">
+                    {formatDenverDayLabel(date)}
+                  </h2>
+                  {date === today && (
+                    <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-terracotta-dark">
+                      Today
+                    </span>
+                  )}
                   <p className="text-sm text-muted-foreground">
-                    No appointments
+                    {entries.length
+                      ? `${entries.length} ${entries.length === 1 ? "visit" : "visits"} · ${housecalls} house ${housecalls === 1 ? "call" : "calls"}`
+                      : "Nothing scheduled"}
+                  </p>
+                </div>
+                {!entries.length && (
+                  <p className="mt-3 rounded-2xl border border-dashed bg-card p-6 text-sm text-muted-foreground shadow-card">
+                    No appointments this day. Book one with the button above.
                   </p>
                 )}
-                <div className="space-y-2">
-                  {entries.map((row) => (
-                    <button
-                      className="w-full rounded-md border bg-card p-3 text-left hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
-                      key={row.id}
-                      onClick={() => setEditing(row)}
-                    >
-                      <p className="font-semibold">
-                        {denverLocal(row.scheduled_at).slice(11)} ·{" "}
-                        {row.pets?.name ?? "Patient unavailable"}
-                      </p>
-                      <p className="text-sm">
-                        {row.clients?.full_name} · {row.appointment_type}
-                      </p>
-                      <p className="text-sm">
-                        {row.profiles?.full_name?.trim() || (row.assigned_dvm_id ? `Staff ${row.assigned_dvm_id.slice(0, 8)}` : "Unassigned")}
-                      </p>
-                      <p className="text-sm">
-                        {statusLabels[row.status]} · {row.duration_minutes}{" "}
-                        minutes · {row.visit_type}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {row.address_snapshot}
-                      </p>
-                    </button>
+                <div className="mt-4 space-y-6">
+                  {parts.map((part) => (
+                    <div key={part.label} className="space-y-3">
+                      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <span>{part.label}</span>
+                        <span className="h-px flex-1 bg-border" aria-hidden="true" />
+                      </div>
+                      <div className="space-y-3">
+                        {part.entries.map((row) => (
+                          <AppointmentCard
+                            key={row.id}
+                            row={row}
+                            onEdit={() => setEditing(row)}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
                 {query.data.total === query.data.appointments.length && (

@@ -102,6 +102,9 @@ export default {
         sans: ['Inter', 'sans-serif'],
         heading: ['Montserrat', 'sans-serif'],
         serif: ['Libre Baskerville', 'serif'],
+        // Marketing serif used for hub display headings (greetings, page
+        // titles) per the Direction A mockups. Loaded via marketing-fonts.css.
+        display: ['Libre Baskerville', 'Georgia', 'serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

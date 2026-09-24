@@ -164,6 +164,76 @@
     font-family: 'Libre Baskerville', Georgia, serif;
   }
 
+  /* Status color grammar (Direction B): same status = same color everywhere.
+     StatusChip applies .status-chip plus one tone class; tone classes are
+     also used on their own (attention icons, borders) so the grammar holds
+     outside chips too. */
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 999px;
+    padding: 6px 13px;
+    white-space: nowrap;
+  }
+
+  .status-chip::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+
+  .tone-neutral {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+
+  .tone-info {
+    background: hsl(var(--info) / 0.12);
+    color: hsl(var(--info));
+  }
+
+  .tone-terracotta {
+    background: hsl(var(--terracotta) / 0.15);
+    color: hsl(var(--terracotta-dark));
+  }
+
+  .tone-success {
+    background: hsl(var(--success) / 0.12);
+    color: hsl(var(--success));
+  }
+
+  .tone-warning {
+    background: hsl(var(--warning) / 0.15);
+    color: hsl(var(--warning));
+  }
+
+  .tone-destructive {
+    background: hsl(var(--destructive) / 0.12);
+    color: hsl(var(--destructive));
+  }
+
+  /* Guided mode (Direction C content, Direction A styling). The provider in
+     guided-mode.tsx toggles the `guided` class on <html>. */
+  .guided-only {
+    display: none;
+  }
+
+  html.guided .guided-only {
+    display: block;
+  }
+
+  /* Guided mode keeps every primary touch target at least 44px tall. */
+  html.guided .guided-touch {
+    min-height: 44px;
+  }
+
   .text-gradient-warm {
     color: hsl(var(--primary));
   }

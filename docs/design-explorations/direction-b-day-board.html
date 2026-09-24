@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction B — Day Board · LRV Hub concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1F4A38; --forest-deep:#153627; --cream:#F7F4EC; --paper:#FFFFFF;
+    --ink:#22302A; --ink-soft:#5F6E66;
+    --terra:#C97D60; --amber:#C77E2B; --red:#B3372F; --green:#2F7D4F; --blue:#3D6478;
+    --line:#E2DCCE; --shadow:0 1px 3px rgba(21,54,39,.07),0 10px 26px rgba(21,54,39,.07);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#DCD5C4;color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+
+  .switcher{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;gap:14px;align-items:center;justify-content:center;
+    background:#241f18;color:#e8e0cf;padding:10px 16px;font-size:13px}
+  .switcher b{color:#fff;font-weight:600}
+  .switcher a{color:#d8c9a8;text-decoration:none;padding:4px 12px;border-radius:999px;border:1px solid #4a4234}
+  .switcher a:hover{background:#3a332a;color:#fff}
+  .switcher a.here{background:var(--terra);border-color:var(--terra);color:#fff}
+  .switcher .tag{position:absolute;left:16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a89a7d}
+
+  .screen{max-width:1280px;margin:64px auto 24px;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(40,35,20,.25);border:1px solid #c9c0ab}
+  .screen-label{display:flex;align-items:center;gap:10px;padding:14px 28px;background:#241f18;color:#cfc4ab;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .screen-label .dot{width:9px;height:9px;border-radius:50%;background:var(--terra)}
+
+  .app{display:grid;grid-template-columns:232px 1fr;min-height:960px}
+
+  /* sidebar */
+  .side{background:var(--forest);color:#DCE7DF;display:flex;flex-direction:column;padding:20px 14px}
+  .logo{display:flex;align-items:center;gap:10px;padding:2px 8px 18px;border-bottom:1px solid rgba(255,255255,.08);border-bottom:1px solid rgba(255,255,255,.09)}
+  .logo b{color:#fff;font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+  .logo small{display:block;font-size:10px;letter-spacing:.2em;color:#9DB5A6;text-transform:uppercase}
+  .nav{margin-top:16px;display:flex;flex-direction:column;gap:18px;flex:1}
+  .grp-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8FA896;padding:0 10px;margin-bottom:6px;font-weight:700}
+  .ni{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:#C9D8CD;font:inherit;font-weight:500;font-size:13.5px;padding:9px 10px;border-radius:9px;cursor:pointer}
+  .ni:hover{background:rgba(255,255,255,.06);color:#fff}
+  .ni.on{background:var(--terra);color:#fff;font-weight:700}
+  .ni .sq{width:8px;height:8px;border-radius:3px;background:currentColor;opacity:.75;flex:none}
+  .ni .cnt{margin-left:auto;background:var(--red);color:#fff;font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 7px}
+  .ni.on .cnt{background:#fff;color:var(--terra)}
+  .searchbox{margin-top:auto;display:flex;align-items:center;gap:8px;background:var(--forest-deep);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:9px 12px;color:#9DB5A6;font-size:12.5px}
+  .searchbox kbd{margin-left:auto;font-family:inherit;font-size:10.5px;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:1px 6px}
+  .me{display:flex;align-items:center;gap:10px;padding:12px 8px 0;margin-top:12px;border-top:1px solid rgba(255,255,255,.09)}
+  .me .av{width:32px;height:32px;border-radius:50%;background:var(--terra);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+  .me b{color:#fff;font-size:13px;display:block}
+  .me span{font-size:11px;color:#9DB5A6}
+
+  /* main */
+  .main{background:var(--cream);padding:20px 26px 34px}
+  .mhead{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .mhead h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .mhead .date{color:var(--ink-soft);font-weight:600;font-size:13px}
+  .live{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;font-size:12.5px}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+  .clockbtn{border:none;cursor:pointer;font:inherit;font-weight:700;font-size:12.5px;background:var(--forest);color:#fff;border-radius:999px;padding:9px 16px}
+  .icobtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-weight:700;color:var(--ink-soft)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--kc,var(--blue))}
+  .kpi .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .kpi .val{font-size:30px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
+  .k-red{--kc:var(--red)}.k-red .val{color:var(--red)}
+  .k-amber{--kc:var(--amber)}.k-amber .val{color:var(--amber)}
+  .k-blue{--kc:var(--blue)}.k-blue .val{color:var(--blue)}
+  .k-green{--kc:var(--green)}.k-green .val{color:var(--green)}
+
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .col{background:#EFEBDF;border-radius:12px;padding:10px;min-height:420px}
+  .col-head{display:flex;align-items:center;gap:8px;padding:4px 6px 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--ink-soft)}
+  .col-head .pillc{margin-left:auto;background:var(--paper);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--ink)}
+  .col-head .cdot{width:9px;height:9px;border-radius:50%}
+  .pcard{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:9px;box-shadow:var(--shadow);cursor:grab}
+  .pcard:hover{border-color:var(--pc,var(--ink-soft))}
+  .pcard .top{display:flex;align-items:center;gap:7px}
+  .pcard .tm{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px}
+  .pcard .sp{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--pc,var(--ink-soft));background:color-mix(in srgb,var(--pc,var(--ink-soft)) 12%,white);border-radius:5px;padding:2px 6px}
+  .pcard b{font-size:14px;display:block;margin-top:7px}
+  .pcard .sv{color:var(--ink-soft);font-size:12px;margin-top:1px}
+  .pcard .ow{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:11.5px;color:var(--ink-soft)}
+  .pcard .ow .oav{width:19px;height:19px;border-radius:50%;background:var(--forest);color:#fff;display:grid;place-items:center;font-size:8.5px;font-weight:700}
+  .pcard .flag{display:inline-flex;gap:5px;align-items:center;margin-top:8px;font-size:10.5px;font-weight:700;border-radius:5px;padding:3px 7px}
+  .fl-amber{background:#F6ECD6;color:#8A6420}.fl-red{background:#F7E3E1;color:var(--red)}
+  .pc-done{--pc:var(--green)}.pc-book{--pc:var(--blue)}.pc-route{--pc:var(--amber)}.pc-site{--pc:var(--terra)}.pc-unconf{--pc:#8A8F8A}
+  .col-empty{border:1.5px dashed #C9C2B0;border-radius:11px;padding:16px;text-align:center;color:var(--ink-soft);font-size:12px}
+
+  /* right rail */
+  .rail{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .rail-head{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--line);font-weight:800;font-size:13px;letter-spacing:.02em}
+  .rail-head .rb{margin-left:auto;background:var(--red);color:#fff;font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px}
+  .q{padding:12px 16px;border-bottom:1px solid #F0EBDD;display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center}
+  .q:last-child{border-bottom:none}
+  .sev{width:10px;height:10px;border-radius:50%}
+  .s-red{background:var(--red);box-shadow:0 0 0 3px rgba(179,55,47,.15)}
+  .s-amber{background:var(--amber);box-shadow:0 0 0 3px rgba(199,126,43,.15)}
+  .s-green{background:var(--green);box-shadow:0 0 0 3px rgba(47,125,79,.15)}
+  .q b{font-size:13px;display:block}
+  .q span{font-size:11.5px;color:var(--ink-soft)}
+  .q button{border:1.5px solid var(--ink);background:var(--paper);border-radius:8px;font:inherit;font-size:11.5px;font-weight:800;padding:7px 12px;cursor:pointer}
+  .q button:hover{background:var(--ink);color:#fff}
+
+  .lower{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px}
+  .panel h3{font-size:13px;font-weight:800}
+  .panel .hint{font-size:11.5px;color:var(--ink-soft);margin-top:1px}
+  .bars{display:flex;align-items:flex-end;gap:10px;height:96px;margin-top:14px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .bar i{width:100%;border-radius:6px 6px 3px 3px;background:var(--forest);opacity:.85}
+  .bar.hot i{background:var(--terra)}
+  .bar span{font-size:10px;color:var(--ink-soft);font-weight:600}
+  .onduty{display:flex;gap:14px;margin-top:14px}
+  .od{display:flex;align-items:center;gap:10px;background:#F4F1E7;border-radius:11px;padding:10px 14px;flex:1}
+  .od .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+  .od b{font-size:13px;display:block}
+  .od span{font-size:11px;color:var(--ink-soft)}
+
+  /* schedule screen */
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:16px}
+  .wd{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:9px 10px;text-align:center}
+  .wd b{font-size:12px;display:block;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em}
+  .wd .d{font-size:17px;font-weight:800;margin-top:2px}
+  .wd .c{font-size:10.5px;color:var(--ink-soft);margin-top:2px;font-weight:600}
+  .wd.on{border:2px solid var(--forest)}
+  .wd.on .d{color:var(--forest)}
+  .wd.hot .c{color:var(--terra);font-weight:800}
+  .ghead{display:flex;align-items:center;gap:10px;margin:20px 2px 12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--ink-soft)}
+  .ghead::after{content:"";flex:1;height:1px;background:var(--line)}
+  .srow{display:grid;grid-template-columns:86px 1.4fr 1.6fr auto auto;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow)}
+  .srow .tm{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px}
+  .srow .tm small{display:block;font-family:'Inter';font-weight:500;font-size:10.5px;color:var(--ink-soft)}
+  .srow b{font-size:13.5px}
+  .srow .ds{font-size:11.5px;color:var(--ink-soft);margin-top:1px}
+  .status{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:4px 9px;white-space:nowrap}
+  .st-done{background:#E3EFE7;color:var(--green)}.st-book{background:#E4EBEF;color:var(--blue)}
+  .st-site{background:#F6E9DF;color:var(--terra)}.st-unconf{background:#EFEFEA;color:#6E726C}
+  .mini{display:flex;gap:6px}
+  .mini button{border:1px solid var(--line);background:var(--paper);border-radius:8px;font:inherit;font-size:11px;font-weight:700;padding:7px 11px;cursor:pointer}
+  .mini button.go{background:var(--forest);border-color:var(--forest);color:#fff}
+
+  .why{max-width:1280px;margin:0 auto 60px;background:#241f18;color:#cfc4ab;border-radius:20px;padding:26px 34px;font-size:14px}
+  .why h4{color:#fff;font-size:15px;margin-bottom:12px;font-weight:700}
+  .why ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 32px}
+  .why li{padding-left:18px;position:relative}
+  .why li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--terra)}
+  .why b{color:#e8ddc4;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <span class="tag">Design exploration · not production code</span>
+  <b>Direction B — Day Board</b>
+  <a href="direction-a-calm-living-room.html">A · Calm Living Room</a>
+  <a class="here" href="direction-b-day-board.html">B</a>
+  <a href="direction-c-guided.html">C · Guided</a>
+</div>
+
+<!-- ============ SCREEN 1: TODAY / LIVE BOARD ============ -->
+<div class="screen">
+  <div class="screen-label"><span class="dot"></span> Screen 1 of 2 — Home / live day board &nbsp;·&nbsp; a triage cockpit for the whole practice</div>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="4" width="40" height="40" rx="11" fill="#F5F1E8"/>
+          <path d="M14 30c0-7 4.5-11 10-11s10 4 10 11" stroke="#1F4A38" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+          <path d="M12 30h24M15 30v4M33 30v4" stroke="#C97D60" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+        <div><b>LRV Hub</b><small>Operations</small></div>
+      </div>
+      <nav class="nav">
+        <div>
+          <div class="grp-label">Today</div>
+          <button class="ni on"><span class="sq"></span>Day board</button>
+          <button class="ni"><span class="sq"></span>Schedule</button>
+          <button class="ni"><span class="sq"></span>Messages<span class="cnt">2</span></button>
+          <button class="ni"><span class="sq"></span>Tickets</button>
+          <button class="ni"><span class="sq"></span>Time clock</button>
+        </div>
+        <div>
+          <div class="grp-label">Records</div>
+          <button class="ni"><span class="sq"></span>Clients</button>
+          <button class="ni"><span class="sq"></span>Patients</button>
+          <button class="ni"><span class="sq"></span>Inquiries<span class="cnt">1</span></button>
+          <button class="ni"><span class="sq"></span>Inventory</button>
+        </div>
+        <div>
+          <div class="grp-label">Practice</div>
+          <button class="ni"><span class="sq"></span>Reports</button>
+          <button class="ni"><span class="sq"></span>Staff</button>
+          <button class="ni"><span class="sq"></span>Needs attention<span class="cnt">3</span></button>
+        </div>
+      </nav>
+      <div class="searchbox">Search everything… <kbd>⌘K</kbd></div>
+      <div class="me"><div class="av">SR</div><div><b>Sam Rivera</b><span>TECH · on shift since 8:02</span></div></div>
+    </aside>
+
+    <main class="main">
+      <div class="mhead">
+        <h1>Today</h1><span class="date">Wed · Sep 23 · 5 visits · Dr. Edler driving</span>
+        <span class="live"><i></i>3 NEED ATTENTION</span>
+        <button class="clockbtn">● ON SHIFT 8:02</button>
+        <button class="icobtn">SR</button>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi k-blue"><div class="lab">Visits</div><div class="val">6</div><div class="sub">1 done · 1 on site · 2 booked · 1 unconfirmed · 1 telehealth</div></div>
+        <div class="kpi k-amber"><div class="lab">Due now</div><div class="val">3</div><div class="sub">vaccines &amp; reminders due today</div></div>
+        <div class="kpi k-red"><div class="lab">Failed sends</div><div class="val">2</div><div class="sub">Hartman household · SMS</div></div>
+        <div class="kpi k-green"><div class="lab">Reply-time goal</div><div class="val">94%</div><div class="sub">messages answered &lt; 15 min</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start">
+        <div class="board">
+          <div class="col">
+            <div class="col-head"><span class="cdot" style="background:#8A8F8A"></span>Unconfirmed<span class="pillc">1</span></div>
+            <div class="pcard pc-unconf">
+              <div class="top"><span class="tm">15:00</span><span class="sp">House call</span></div>
+              <b>Poppy — wellness exam</b>
+              <div class="sv">Rabbit · new client · 9 Clover Ave</div>
+              <div class="ow"><span class="oav">JP</span> Jamie Park · first visit</div>
+              <div class="flag fl-amber">⚠ Confirmation not sent</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="col-head"><span class="cdot" style="background:var(--blue)"></span>Booked<span class="pillc">2</span></div>
+            <div class="pcard pc-book">
+              <div class="top"><span class="tm">11:00</span><span class="sp">House call</span></div>
+              <b>Miso — dental recheck</b>
+              <div class="sv">Cat · 77 Juniper Ln, Silverlake</div>
+              <div class="ow"><span class="oav">PN</span> Priya Nair</div>
+            </div>
+            <div class="pcard pc-book">
+              <div class="top"><span class="tm">13:15</span><span class="sp">House call</span></div>
+              <b>Walter — injection + refill</b>
+              <div class="sv">Dog · 220 Birchwood Dr</div>
+              <div class="ow"><span class="oav">TO</span> Tom Okafor</div>
+              <div class="flag fl-amber">RX Carprofen 75 mg waiting</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="col-head"><span class="cdot" style="background:var(--terra)"></span>On site<span class="pillc">1</span></div>
+            <div class="pcard pc-site" style="border-color:var(--terra);border-width:1.5px">
+              <div class="top"><span class="tm">09:30</span><span class="sp">House call</span></div>
+              <b>Biscuit — vaccines</b>
+              <div class="sv">Dog · 418 Maple Ct, Glendale</div>
+              <div class="ow"><span class="oav">DR</span> Dana Ruiz · Dr. Edler with patient</div>
+              <div class="flag fl-red">RABIES DUE TODAY</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="col-head"><span class="cdot" style="background:var(--green)"></span>Done<span class="pillc">1</span></div>
+            <div class="pcard pc-done">
+              <div class="top"><span class="tm">09:00</span><span class="sp">Telehealth</span></div>
+              <b>Nala — post-spay check</b>
+              <div class="sv">Kitten · video with Maya Chen</div>
+              <div class="ow"><span class="oav">✓</span> Notes signed 9:24 AM</div>
+            </div>
+            <div class="col-empty">Completed visits pile up here —<br>great for a quick end-of-day count.</div>
+          </div>
+        </div>
+
+        <aside class="rail">
+          <div class="rail-head">ATTENTION QUEUE<span class="rb">3</span></div>
+          <div class="q">
+            <span class="sev s-red"></span>
+            <div><b>2 SMS failed to send</b><span>Hartman household · invoice + reminder</span></div>
+            <button>Resend</button>
+          </div>
+          <div class="q">
+            <span class="sev s-amber"></span>
+            <div><b>Inquiry has no client match</b><span>Jamie P. · Saturday appointments</span></div>
+            <button>Assign</button>
+          </div>
+          <div class="q">
+            <span class="sev s-amber"></span>
+            <div><b>Refill awaiting approval</b><span>Walter · Carprofen 75 mg</span></div>
+            <button>Approve</button>
+          </div>
+          <div class="q">
+            <span class="sev s-green"></span>
+            <div><b>Outbox clear · labs filed</b><span>Nothing else needs you.</span></div>
+            <button disabled style="opacity:.45;cursor:default">—</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="lower">
+        <div class="panel">
+          <h3>Message volume — last 7 days</h3>
+          <div class="hint">SMS + email handled by the team</div>
+          <div class="bars">
+            <div class="bar"><i style="height:38%"></i><span>Thu</span></div>
+            <div class="bar"><i style="height:52%"></i><span>Fri</span></div>
+            <div class="bar"><i style="height:44%"></i><span>Sat</span></div>
+            <div class="bar"><i style="height:30%"></i><span>Sun</span></div>
+            <div class="bar"><i style="height:58%"></i><span>Mon</span></div>
+            <div class="bar"><i style="height:70%"></i><span>Tue</span></div>
+            <div class="bar hot"><i style="height:88%"></i><span>Today</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>On duty now</h3>
+          <div class="hint">Clocked in via time clock</div>
+          <div class="onduty">
+            <div class="od"><div class="av" style="background:var(--forest)">DE</div><div><b>Dr. Edler</b><span>DVM · with patient since 9:38</span></div></div>
+            <div class="od"><div class="av" style="background:var(--terra)">SR</div><div><b>Sam Rivera</b><span>TECH · driving support</span></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ SCREEN 2: SCHEDULE ============ -->
+<div class="screen">
+  <div class="screen-label"><span class="dot"></span> Screen 2 of 2 — Schedule &nbsp;·&nbsp; same color grammar as the board: status is always the same color</div>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="4" width="40" height="40" rx="11" fill="#F5F1E8"/>
+          <path d="M14 30c0-7 4.5-11 10-11s10 4 10 11" stroke="#1F4A38" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+          <path d="M12 30h24M15 30v4M33 30v4" stroke="#C97D60" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+        <div><b>LRV Hub</b><small>Operations</small></div>
+      </div>
+      <nav class="nav">
+        <div>
+          <div class="grp-label">Today</div>
+          <button class="ni"><span class="sq"></span>Day board</button>
+          <button class="ni on"><span class="sq"></span>Schedule</button>
+          <button class="ni"><span class="sq"></span>Messages<span class="cnt">2</span></button>
+          <button class="ni"><span class="sq"></span>Tickets</button>
+          <button class="ni"><span class="sq"></span>Time clock</button>
+        </div>
+        <div>
+          <div class="grp-label">Records</div>
+          <button class="ni"><span class="sq"></span>Clients</button>
+          <button class="ni"><span class="sq"></span>Patients</button>
+          <button class="ni"><span class="sq"></span>Inquiries<span class="cnt">1</span></button>
+          <button class="ni"><span class="sq"></span>Inventory</button>
+        </div>
+        <div>
+          <div class="grp-label">Practice</div>
+          <button class="ni"><span class="sq"></span>Reports</button>
+          <button class="ni"><span class="sq"></span>Staff</button>
+          <button class="ni"><span class="sq"></span>Needs attention<span class="cnt">3</span></button>
+        </div>
+      </nav>
+      <div class="searchbox">Search everything… <kbd>⌘K</kbd></div>
+      <div class="me"><div class="av">SR</div><div><b>Sam Rivera</b><span>TECH · on shift since 8:02</span></div></div>
+    </aside>
+
+    <main class="main">
+      <div class="mhead">
+        <h1>Schedule</h1><span class="date">Dr. Edler driving · 38 min total route</span>
+        <span class="live" style="margin-left:auto">WEEK OF SEP 21 – 27</span>
+        <button class="clockbtn">‹</button><button class="clockbtn">TODAY</button><button class="clockbtn">›</button>
+      </div>
+
+      <div class="week">
+        <div class="wd"><b>Mon</b><div class="d">21</div><div class="c">4 visits</div></div>
+        <div class="wd"><b>Tue</b><div class="d">22</div><div class="c">5 visits</div></div>
+        <div class="wd on hot"><b>Wed</b><div class="d">23</div><div class="c">6 today</div></div>
+        <div class="wd"><b>Thu</b><div class="d">24</div><div class="c">3 visits</div></div>
+        <div class="wd"><b>Fri</b><div class="d">25</div><div class="c">5 visits</div></div>
+        <div class="wd"><b>Sat</b><div class="d">26</div><div class="c">2 visits</div></div>
+        <div class="wd"><b>Sun</b><div class="d">27</div><div class="c">—</div></div>
+      </div>
+
+      <div class="ghead">Morning</div>
+      <div class="srow">
+        <div class="tm">09:00<small>Telehealth · 30m</small></div>
+        <div><b>Nala</b><div class="ds">Post-spay check · Maya Chen</div></div>
+        <div class="ds">Video call · notes signed 9:24 AM</div>
+        <span class="status st-done">Done</span>
+        <div class="mini"><button>Notes</button></div>
+      </div>
+      <div class="srow" style="border-left:4px solid var(--terra)">
+        <div class="tm">09:30<small>House call · 60m</small></div>
+        <div><b>Biscuit</b><div class="ds">Vaccines · Rabies + DHPP due · Dana Ruiz</div></div>
+        <div class="ds">418 Maple Ct, Glendale · Dr. Edler on site since 9:38</div>
+        <span class="status st-site">On site</span>
+        <div class="mini"><button class="go">Complete</button><button>Rx</button></div>
+      </div>
+      <div class="srow">
+        <div class="tm">11:00<small>House call · 45m</small></div>
+        <div><b>Miso</b><div class="ds">Dental recheck · Priya Nair</div></div>
+        <div class="ds">77 Juniper Ln, Silverlake · reminder sent</div>
+        <span class="status st-book">Booked</span>
+        <div class="mini"><button class="go">Check in</button><button>Edit</button></div>
+      </div>
+
+      <div class="ghead">Afternoon</div>
+      <div class="srow">
+        <div class="tm">13:15<small>House call · 40m</small></div>
+        <div><b>Walter</b><div class="ds">Arthritis injection · Tom Okafor</div></div>
+        <div class="ds">220 Birchwood Dr · RX Carprofen refill waiting</div>
+        <span class="status st-book">Booked</span>
+        <div class="mini"><button class="go">Check in</button><button>Edit</button></div>
+      </div>
+      <div class="srow" style="border-left:4px solid var(--amber)">
+        <div class="tm">15:00<small>House call · 60m</small></div>
+        <div><b>Poppy</b><div class="ds">Wellness · rabbit · new client · Jamie Park</div></div>
+        <div class="ds">9 Clover Ave · confirmation not sent</div>
+        <span class="status st-unconf">Unconfirmed</span>
+        <div class="mini"><button class="go">Confirm</button><button>Edit</button></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="why">
+  <h4>What Direction B changes, and why (from the swarm audit)</h4>
+  <ul>
+    <li><b>Color = status, everywhere:</b> booked is always blue, on site always terracotta, done always green — learnable in one shift, unlike today’s identical gray cards.</li>
+    <li><b>The day is a pipeline, not a dialog hunt:</b> check-in is a one-tap move between columns instead of opening a 15-field editor to change a status dropdown.</li>
+    <li><b>Failures shout:</b> the audit found failed sends and unmatched inquiries are nearly invisible (no nav badge, buried pages). Here they get a permanent severity-sorted queue with one button each.</li>
+    <li><b>Nav grouped by job-to-be-done:</b> “Today / Records / Practice” replaces the flat 10-item Workspace list the audit flagged as day-one-hostile.</li>
+    <li><b>Jargon translated:</b> “SLA compliance” becomes “Reply-time goal 94%”, counts come with plain sub-labels, no UUIDs or “outbox” vocabulary.</li>
+    <li><b>⌘K search up front:</b> visible in the sidebar, not a 32px mystery icon.</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction C — Guided · LRV Hub concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3EDE2; --paper:#FFFDF8; --ink:#423B32; --soft:#7C7364;
+    --green:#2E5E4E; --green-deep:#234A3D; --terra:#D07B58; --terra-deep:#B26040;
+    --peach:#F6DFCE; --mint:#DFEAE0; --butter:#F7EBCB; --rose:#F8DEDC;
+    --line:#EAE1CE; --shadow:0 2px 8px rgba(66,59,50,.05),0 14px 34px rgba(66,59,50,.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#E7DFCE;color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+  .switcher{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;gap:14px;align-items:center;justify-content:center;
+    background:#241f18;color:#e8e0cf;padding:10px 16px;font-size:13px}
+  .switcher b{color:#fff;font-weight:700}
+  .switcher a{color:#d8c9a8;text-decoration:none;padding:4px 12px;border-radius:999px;border:1px solid #4a4234;font-family:'Nunito'}
+  .switcher a:hover{background:#3a332a;color:#fff}
+  .switcher a.here{background:var(--terra);border-color:var(--terra);color:#fff}
+  .switcher .tag{position:absolute;left:16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a89a7d}
+
+  .screen{max-width:1240px;margin:64px auto 24px;border-radius:26px;overflow:hidden;box-shadow:0 30px 80px rgba(50,40,25,.2);border:1px solid #D4C8AD}
+  .screen-label{display:flex;align-items:center;gap:10px;padding:14px 28px;background:#241f18;color:#cfc4ab;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .screen-label .dot{width:9px;height:9px;border-radius:50%;background:var(--terra)}
+
+  .stage{display:grid;grid-template-columns:1fr 400px;gap:26px;background:var(--bg);padding:30px 34px 38px;align-items:start}
+
+  /* desktop frame */
+  .frame{background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+  .fbar{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line)}
+  .fbar .mk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px}
+  .fbar .bigsearch{flex:1;display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:12px 16px;color:var(--soft);font-weight:600;font-size:14px}
+  .fbar .bigsearch kbd{margin-left:auto;font-family:inherit;font-size:11px;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:3px 8px}
+  .hi{padding:24px 26px 8px}
+  .hi h1{font-size:30px;font-weight:900;letter-spacing:-.01em}
+  .hi p{color:var(--soft);font-weight:600;margin-top:4px}
+  .content{padding:16px 26px 26px}
+
+  .checklist{background:var(--paper);border:1.5px dashed #C9BC9C;border-radius:20px;padding:20px 22px;margin-bottom:18px}
+  .checklist h3{font-size:15px;font-weight:900}
+  .checklist .sub{color:var(--soft);font-weight:600;font-size:13.5px;margin-top:2px}
+  .step{display:flex;align-items:center;gap:14px;margin-top:14px;background:var(--bg);border-radius:16px;padding:14px 16px}
+  .step .ck{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:900;flex:none}
+  .ck-done{background:var(--green);color:#fff}.ck-todo{background:var(--butter);color:#8A6420}.ck-now{background:var(--terra);color:#fff;box-shadow:0 0 0 4px rgba(208,123,88,.2)}
+  .step .tx{flex:1}
+  .step .tx b{font-size:15px;display:block}
+  .step .tx span{color:var(--soft);font-size:13px;font-weight:600}
+  .step.done .tx b{text-decoration:line-through;color:var(--soft)}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px 20px}
+  .btn-now{background:var(--terra);color:#fff}.btn-now:hover{background:var(--terra-deep)}
+  .btn-soft{background:var(--green);color:#fff}.btn-soft:hover{background:var(--green-deep)}
+  .btn-line{background:transparent;border:2px solid var(--line);color:var(--ink)}
+  .btn-big{font-size:16.5px;padding:16px 30px;border-radius:16px}
+
+  .nextup{background:linear-gradient(135deg,#2E5E4E,#3A7260);color:#fff;border-radius:20px;padding:22px 24px;box-shadow:var(--shadow)}
+  .nextup .lab{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:900;color:#BFD8C8}
+  .nextup h2{font-size:23px;font-weight:900;margin-top:8px}
+  .nextup p{color:#DCEBE2;font-weight:600;font-size:14.5px;margin-top:4px}
+  .nextup .acts{display:flex;gap:12px;margin-top:16px}
+  .nextup .btn-ghostw{background:rgba(255,255,255,.14);color:#fff;border:2px solid rgba(255,255,255,.35)}
+  .nextup .btn-warm{background:var(--peach);color:var(--terra-deep)}
+
+  .vrow{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:15px 18px;margin-top:12px;box-shadow:var(--shadow)}
+  .face{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-weight:900;font-size:17px;color:#fff;flex:none}
+  .f1{background:var(--terra)}.f2{background:var(--green)}.f3{background:#D9A441}.f4{background:#7FA08C}.f5{background:#A8B8A5;color:#2c4636}
+  .vrow .tx{flex:1}
+  .vrow .tx b{font-size:15.5px}
+  .vrow .tx span{color:var(--soft);font-weight:600;font-size:13.5px;display:block;margin-top:1px}
+  .tagx{font-size:12px;font-weight:900;border-radius:999px;padding:7px 14px;white-space:nowrap}
+  .t-done{background:var(--mint);color:var(--green-deep)}.t-now{background:var(--peach);color:var(--terra-deep)}
+  .t-next{background:#E7EDF3;color:#3D6478}.t-wait{background:var(--butter);color:#8A6420}.t-unconf{background:#EFEDE6;color:var(--soft)}
+  .rowbtns{display:flex;gap:8px}
+  .rowbtns button{border:2px solid var(--line);background:var(--paper);border-radius:12px;font:inherit;font-weight:800;font-size:12.5px;padding:9px 14px;cursor:pointer;color:var(--ink)}
+
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 18px 18px;border-top:1px solid var(--line);background:var(--paper)}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 4px;border-radius:14px;font-weight:800;font-size:12.5px;color:var(--soft);cursor:pointer}
+  .tab .ti{width:26px;height:26px;border-radius:9px;background:currentColor;opacity:.35}
+  .tab.on{background:var(--mint);color:var(--green-deep)}
+  .tab .bdg{background:var(--terra);color:#fff;border-radius:999px;font-size:10px;padding:1px 7px;margin-top:-2px}
+
+  /* phone frame */
+  .phone-wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+  .phone{width:370px;background:var(--paper);border:10px solid #2b2620;border-radius:44px;overflow:hidden;box-shadow:0 30px 60px rgba(40,32,20,.35)}
+  .pnotch{height:34px;display:grid;place-items:center;background:var(--paper)}
+  .pnotch i{width:110px;height:26px;background:#2b2620;border-radius:999px;display:block}
+  .pbody{padding:8px 18px 18px}
+  .phi h1{font-size:22px;font-weight:900}
+  .phi p{color:var(--soft);font-weight:700;font-size:12.5px;margin-top:2px}
+  .pnext{background:linear-gradient(135deg,#2E5E4E,#3A7260);color:#fff;border-radius:18px;padding:16px 18px;margin-top:14px}
+  .pnext .lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:900;color:#BFD8C8}
+  .pnext h2{font-size:17.5px;font-weight:900;margin-top:5px}
+  .pnext p{font-size:12px;color:#DCEBE2;font-weight:600;margin-top:2px}
+  .pnext .acts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .pnext .btn{padding:13px;font-size:14.5px;border-radius:13px}
+  .pv{display:flex;align-items:center;gap:11px;background:var(--bg);border-radius:14px;padding:11px 13px;margin-top:10px}
+  .pv .face{width:38px;height:38px;border-radius:13px;font-size:14px}
+  .pv .tx{flex:1;min-width:0}
+  .pv .tx b{font-size:13.5px;display:block}
+  .pv .tx span{font-size:11.5px;color:var(--soft);font-weight:700}
+  .pv .tagx{font-size:10.5px;padding:5px 10px}
+  .ptabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);padding:10px 8px 14px;background:var(--paper)}
+  .ptab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:900;color:var(--soft)}
+  .ptab .ti{width:22px;height:22px;border-radius:8px;background:currentColor;opacity:.35}
+  .ptab.on{color:var(--green-deep)}
+  .pcap{font-size:12.5px;color:var(--soft);font-weight:700;text-align:center;max-width:340px}
+  .pcap b{color:var(--ink)}
+
+  .why{max-width:1240px;margin:0 auto 60px;background:#241f18;color:#cfc4ab;border-radius:20px;padding:26px 34px;font-size:14px}
+  .why h4{color:#fff;font-size:15px;margin-bottom:12px;font-weight:800}
+  .why ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 32px}
+  .why li{padding-left:18px;position:relative}
+  .why li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--terra)}
+  .why b{color:#e8ddc4;font-weight:700}
+  .why code{font-family:ui-monospace,monospace;font-size:12.5px;color:#E8C9A8}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <span class="tag">Design exploration · not production code</span>
+  <b>Direction C — Guided</b>
+  <a href="direction-a-calm-living-room.html">A · Calm Living Room</a>
+  <a href="direction-b-day-board.html">B · Day Board</a>
+  <a class="here" href="direction-c-guided.html">C</a>
+</div>
+
+<div class="screen">
+  <div class="screen-label"><span class="dot"></span> One design, every device — vets run the day from their phone, so the phone is a first-class citizen</div>
+  <div class="stage">
+
+    <!-- desktop -->
+    <div class="frame">
+      <div class="fbar">
+        <div class="mk">
+          <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
+            <rect x="4" y="4" width="40" height="40" rx="13" fill="#2E5E4E"/>
+            <path d="M14 30c0-7 4.5-11 10-11s10 4 10 11" stroke="#FFFDF8" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+            <path d="M12 30h24M15 30v4M33 30v4" stroke="#D07B58" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+          Living Room Vet
+        </div>
+        <div class="bigsearch">Search any client or pet by name… <kbd>⌘K</kbd></div>
+        <div class="avatar" style="width:42px;height:42px;border-radius:14px;background:var(--terra);color:#fff;display:grid;place-items:center;font-weight:900">SR</div>
+      </div>
+
+      <div class="hi">
+        <h1>Good morning, Sam</h1>
+        <p>Here’s your day, step by step. You’re 1 of 3 steps set up.</p>
+      </div>
+
+      <div class="content">
+        <div class="checklist">
+          <h3>Start your day</h3>
+          <div class="sub">Three small things, then you’re ready for the first house call.</div>
+          <div class="step done">
+            <span class="ck ck-done">✓</span>
+            <div class="tx"><b>Clock in</b><span>Done at 8:02 AM</span></div>
+          </div>
+          <div class="step">
+            <span class="ck ck-now">2</span>
+            <div class="tx"><b>Resend 2 messages that failed overnight</b><span>Hartman household — an invoice and an appointment reminder never arrived.</span></div>
+            <button class="btn btn-now">Resend both</button>
+          </div>
+          <div class="step">
+            <span class="ck ck-todo">3</span>
+            <div class="tx"><b>Say hello to a new client</b><span>Jamie P. asked about Saturday appointments and isn’t matched to a client yet.</span></div>
+            <button class="btn btn-soft">Match inquiry</button>
+          </div>
+        </div>
+
+        <div class="nextup">
+          <div class="lab">Up next · 9:30 AM</div>
+          <h2>Biscuit’s vaccine visit</h2>
+          <p>418 Maple Court, Glendale · Rabies &amp; DHPP due today · Dr. Edler is driving</p>
+          <div class="acts">
+            <button class="btn btn-warm btn-big">Check in for this visit</button>
+            <button class="btn btn-ghostw btn-big">Open directions</button>
+            <button class="btn btn-ghostw btn-big">Running late</button>
+          </div>
+        </div>
+
+        <div class="vrow">
+          <div class="face f2">N</div>
+          <div class="tx"><b>Nala — post-spay check</b><span>9:00 · video call with Maya Chen · notes signed 9:24 AM</span></div>
+          <span class="tagx t-done">All done</span>
+          <div class="rowbtns"><button>View notes</button></div>
+        </div>
+        <div class="vrow" style="border:2px solid var(--terra)">
+          <div class="face f1">B</div>
+          <div class="tx"><b>Biscuit — vaccines</b><span>9:30 · 418 Maple Court, Glendale · with Dana Ruiz</span></div>
+          <span class="tagx t-now">Happening now</span>
+          <div class="rowbtns"><button style="background:var(--terra);border-color:var(--terra);color:#fff">Complete visit</button></div>
+        </div>
+        <div class="vrow">
+          <div class="face f3">M</div>
+          <div class="tx"><b>Miso — dental recheck</b><span>11:00 · 77 Juniper Lane, Silverlake · with Priya Nair</span></div>
+          <span class="tagx t-next">Later today</span>
+          <div class="rowbtns"><button>Check in</button></div>
+        </div>
+        <div class="vrow">
+          <div class="face f4">W</div>
+          <div class="tx"><b>Walter — injection + refill</b><span>1:15 PM · 220 Birchwood Drive · Carprofen refill requested</span></div>
+          <span class="tagx t-wait">Refill waiting</span>
+          <div class="rowbtns"><button>Approve refill</button></div>
+        </div>
+        <div class="vrow">
+          <div class="face f5">P</div>
+          <div class="tx"><b>Poppy — wellness exam, a rabbit</b><span>3:00 PM · 9 Clover Avenue · first visit, confirmation not sent</span></div>
+          <span class="tagx t-unconf">Unconfirmed</span>
+          <div class="rowbtns"><button style="background:var(--green);border-color:var(--green);color:#fff">Send confirmation</button></div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab on"><span class="ti"></span>Home</div>
+        <div class="tab"><span class="ti"></span>Schedule</div>
+        <div class="tab"><span class="ti"></span>Clients</div>
+        <div class="tab"><span class="ti"></span>Messages<span class="bdg">2</span></div>
+        <div class="tab"><span class="ti"></span>More</div>
+      </div>
+    </div>
+
+    <!-- phone -->
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="pnotch"><i></i></div>
+        <div class="pbody">
+          <div class="phi">
+            <h1>Good morning, Sam</h1>
+            <p>Wed, Sep 23 · 2 quick things before 9:30</p>
+          </div>
+          <div class="pnext">
+            <div class="lab">Up next · 9:30 AM</div>
+            <h2>Biscuit’s vaccine visit</h2>
+            <p>418 Maple Court, Glendale · Dr. Edler driving</p>
+            <div class="acts">
+              <button class="btn btn-warm">Check in for this visit</button>
+              <button class="btn btn-ghostw">Running late</button>
+            </div>
+          </div>
+          <div class="pv">
+            <div class="face f2">N</div>
+            <div class="tx"><b>Nala — post-spay check</b><span>9:00 · done ✓ notes signed</span></div>
+            <span class="tagx t-done">Done</span>
+          </div>
+          <div class="pv">
+            <div class="face f3">M</div>
+            <div class="tx"><b>Miso — dental recheck</b><span>11:00 · 77 Juniper Ln</span></div>
+            <span class="tagx t-next">11:00</span>
+          </div>
+          <div class="pv">
+            <div class="face f4">W</div>
+            <div class="tx"><b>Walter — injection</b><span>1:15 PM · refill waiting</span></div>
+            <span class="tagx t-wait">Refill</span>
+          </div>
+        </div>
+        <div class="ptabs">
+          <div class="ptab on"><span class="ti"></span>Home</div>
+          <div class="ptab"><span class="ti"></span>Schedule</div>
+          <div class="ptab"><span class="ti"></span>Clients</div>
+          <div class="ptab"><span class="ti"></span>Msgs<span style="color:var(--terra)"> •2</span></div>
+          <div class="ptab"><span class="ti"></span>More</div>
+        </div>
+      </div>
+      <div class="pcap"><b>Same screen, pocket size.</b> Big tap targets, one job per row, and the actions a tech actually uses mid-house-call.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="why">
+  <h4>What Direction C changes, and why (from the swarm audit)</h4>
+  <ul>
+    <li><b>Onboarding is baked into the UI:</b> a morning checklist narrates the day (“resend 2 failed messages”) instead of expecting a new hire to already know what an outbox failure is.</li>
+    <li><b>One primary action per screen:</b> the audit found tasks buried under 15-field dialogs and three look-alike recovery buttons; here every card offers a single obvious next step.</li>
+    <li><b>Sentences, not system words:</b> “Refill waiting” beats “RX request pending approval”, “Match inquiry” beats “assign unmatched inbound” — day-one readable.</li>
+    <li><b>Phones are first-class:</b> the audit found 28–32px touch targets and Clients/Patients hidden behind “More”. This direction ships a real mobile layout with 44px+ targets everywhere.</li>
+    <li><b>Humane affordances:</b> “Running late” is a first-class button — house calls run late; software that admits it earns trust on day one.</li>
+    <li><b>Helpful empty/full states:</b> the checklist celebrates done steps, and every row explains itself, replacing the audit’s “dead-end empty states”.</li>
+  </ul>
+</div>
+
+</body>
+</html>

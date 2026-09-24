@@ -47,10 +47,10 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
             : undefined
         }
         className={cn(
-          "relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          "relative flex w-full items-center gap-3 rounded-full px-3 py-2 text-sm font-medium transition-colors",
           active
-            ? "bg-primary/10 text-primary font-semibold border-l-[3px] border-primary"
-            : "text-sidebar-foreground hover:bg-sidebar-accent/80 hover:translate-x-0.5 transition-all duration-150",
+            ? "bg-primary/15 text-terracotta-dark font-semibold"
+            : "text-sidebar-foreground hover:bg-gold/20 hover:text-foreground",
         )}
       >
         <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -60,7 +60,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
         )}
         {!(item.path === "/hub/chats" && unreadError) &&
           (item.badge ?? 0) > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-terracotta text-cream-light text-[10px] font-bold px-1.5">
               {item.badge! > 99 ? "99+" : item.badge}
             </span>
           )}
@@ -71,12 +71,20 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   if (collapsed) return null;
 
   return (
-    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r bg-sidebar-background">
-      <div className="flex h-14 items-center gap-2.5 border-b px-4">
-        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-          <span className="text-primary font-bold text-sm">LRV</span>
-        </div>
-        <span className="text-base font-bold text-primary">Hub</span>
+    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar-background">
+      <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4">
+        <img
+          src="/brand/living-room-medical-mark-v1.png"
+          alt=""
+          aria-hidden="true"
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 object-contain"
+        />
+        <span className="font-heading text-base font-bold text-terracotta-dark">
+          Hub
+        </span>
+        <span className="sr-only">The Living Room Vet staff hub</span>
       </div>
       <nav
         className="flex-1 overflow-y-auto p-3 space-y-2"

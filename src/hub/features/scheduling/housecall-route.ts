@@ -21,6 +21,16 @@ export function isPlannedVisit(row: RouteAppointment): boolean {
   return row.status === "SCHEDULED" || row.status === "CONFIRMED";
 }
 
+/**
+ * Address worth showing on a card: hides empty values and the clinic's own
+ * base address (clinic visits repeat it on every row, which reads as noise).
+ */
+export function visitAddress(address: string | null | undefined): string | null {
+  const value = (address ?? "").trim();
+  if (!value || value === practiceBaseAddress) return null;
+  return value;
+}
+
 export function dayRouteAppointments(rows: readonly RouteAppointment[], day: string, staffId: string): RouteAppointment[] {
   if (!staffId) return [];
   return rows.filter(row => isPlannedVisit(row) && row.assigned_dvm_id === staffId &&
