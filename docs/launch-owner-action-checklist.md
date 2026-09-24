@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-24.
 
-This checklist records the remaining actions that require owner, registrar, or practice-policy authority. Hub workflow readiness, Vercel Production deployment, custom-domain HTTPS, and release-control evidence are otherwise prepared for final verification. Current aggregate readiness is 3/5 gates passing. The generated blocker groups are the two local-only readiness migrations, `20260924120000` and `20260924130000`, and owner public-contact content. The Stage 2 pre-apply refresh is recorded in [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md), local disabled/test-mode delivery coverage is recorded in [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md), and the local integrated preventive/inventory/billing/payment/certificate workflow proof is recorded in [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md).
+This checklist records the remaining actions that require owner, registrar, or practice-policy authority. Hub workflow readiness, Vercel Production deployment, custom-domain HTTPS, and release-control evidence are otherwise prepared for final verification. Current aggregate readiness is 3/5 gates passing. The generated blocker groups are the two local-only readiness migrations, `20260924120000` and `20260924130000`, and owner public-contact content. The Stage 2 pre-apply refresh is recorded in [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md), local disabled/test-mode delivery coverage is recorded in [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md), the local integrated preventive/inventory/billing/payment/certificate workflow proof is recorded in [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md), and the reviewer package readiness receipt is recorded in [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
 
 ## 1. DNS and HTTPS at GoDaddy/Vercel — completed 2026-09-24
 
@@ -37,6 +37,8 @@ Current generated evidence records:
 Local database proof exists for the pending Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 
 Local integrated workflow proof exists for the pre-phone/CloudTalk synthetic clinical, inventory, billing, payment, delivery, and reconciliation loop: [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md). This is not hosted staff acceptance or clinical approval.
+
+Clinical/staff acceptance package readiness is documented in [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md). Reviewer decisions are still pending.
 
 Hosted dry-run proof exists for the pending apply set: `npx supabase db push --linked --dry-run --skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. After explicit owner approval, the exact hosted apply command is:
 

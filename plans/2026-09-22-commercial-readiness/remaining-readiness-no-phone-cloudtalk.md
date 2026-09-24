@@ -13,6 +13,7 @@ Scope: complete all software/evidence work that can be finished before public ph
 - Stage 2 pre-apply evidence has been refreshed without hosted SQL mutation: [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](../../docs/launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md).
 - Local disabled/test-mode delivery evidence exists: [2026-09-24 no-live-send local workflow drill](../../docs/launch-evidence/2026-09-24-no-live-send-local-drill.md).
 - Local integrated synthetic workflow evidence exists: [2026-09-24 integrated synthetic local workflow proof](../../docs/launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md).
+- Clinical/staff package-readiness evidence exists: [2026-09-24 clinical and staff acceptance package readiness](../../docs/launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
 - `/hub/schedule` is now the canonical appointment workspace.
 - Inventory, invoices, payment collection/reconciliation, certificates, care reminders, estimate publication, and delivery operations already have local implementation and tests. Do not restart Phase 3 from an empty-state assumption.
 - Scheduler Vault values are intentionally absent, so database cron is contained until explicit provider/scheduler commissioning.
@@ -136,7 +137,7 @@ Acceptance evidence:
 
 Goal: make owner/veterinarian review actionable before public launch.
 
-Current artifact: [pre-phone/CloudTalk clinical and staff acceptance checklist](../../docs/pre-phone-cloudtalk-acceptance-checklist.md).
+Current artifacts: [pre-phone/CloudTalk clinical and staff acceptance checklist](../../docs/pre-phone-cloudtalk-acceptance-checklist.md) and [2026-09-24 clinical and staff acceptance package readiness](../../docs/launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
 
 Steps:
 
@@ -159,6 +160,7 @@ Acceptance evidence:
 
 - Clinical review decisions are explicit and versioned.
 - Staff acceptance has named operator, date, environment, and known exceptions.
+- Package readiness is prepared; decisions remain pending until named reviewers record them.
 
 ### 6. Final deferred gates
 
