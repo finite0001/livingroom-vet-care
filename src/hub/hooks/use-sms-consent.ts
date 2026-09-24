@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 export interface SmsConsent {
   id: string | null;
   client_id: string;

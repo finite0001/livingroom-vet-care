@@ -35,7 +35,7 @@ Before Lovable rollout, either deploy the same migration through authorized acce
 - Fresh isolated local reset replays all 16 migrations. `supabase test db`: 52 clinical plus 19 staff pgTAP assertions pass, including actor spoofing, disabled-user/anonymous access, stale versions, immutable history, date boundaries and ownership protection. Tests roll back synthetic records.
 - Screenshots reviewed for desktop/mobile; signed-note contrast and important-history text contrast improved using a semantic clinical alert token. Existing typography is deferred to the branding phase; no hook suppressions were added.
 
-The existing Fast Refresh warning and large initial bundle warning remain. Dependency major-version findings from the foundation report are not resolved by this increment.
+At the time of the clinical-core increment, a Fast Refresh warning and large initial bundle warning remained. The Fast Refresh warning was resolved in the later commercial-readiness wave by splitting the auth hook/context from the provider component. The large initial bundle warning and dependency major-version findings from the foundation report remain performance/dependency follow-ups, not failed build gates.
 
 ## Still open in phase 2
 

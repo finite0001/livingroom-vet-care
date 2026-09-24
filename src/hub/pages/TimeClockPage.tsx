@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import { usePageTitle } from "@/hooks/use-page-title";
 import {

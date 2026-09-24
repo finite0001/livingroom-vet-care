@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { ImportedVaccinationEvidence } from "./ImportedVaccinationEvidence";
 import { VaccinationHistoryReview } from "./VaccinationHistoryReview";

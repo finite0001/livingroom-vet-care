@@ -150,18 +150,18 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Nunito Sans', 'Avenir Next', 'Trebuchet MS', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Bricolage Grotesque', 'Avenir Next', 'Trebuchet MS', sans-serif;
     @apply font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .tagline-serif {
-    font-family: 'Libre Baskerville', serif;
+    font-family: 'Libre Baskerville', Georgia, serif;
   }
 
   .text-gradient-warm {

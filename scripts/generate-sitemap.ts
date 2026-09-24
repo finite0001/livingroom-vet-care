@@ -3,7 +3,7 @@
 import { writeFileSync } from "fs";
 import { resolve } from "path";
 
-const BASE_URL = "https://livingroom-vet-care.lovable.app";
+const BASE_URL = "https://thelivingroom.vet";
 
 interface SitemapEntry {
   path: string;
@@ -24,6 +24,8 @@ const entries: SitemapEntry[] = [
   { path: "/services/vaccinations", changefreq: "monthly", priority: "0.7" },
   { path: "/about", changefreq: "monthly", priority: "0.8" },
   { path: "/contact", changefreq: "monthly", priority: "0.8" },
+  { path: "/privacy", changefreq: "yearly", priority: "0.3" },
+  { path: "/terms", changefreq: "yearly", priority: "0.3" },
 ];
 
 function generateSitemap(items: SitemapEntry[]) {

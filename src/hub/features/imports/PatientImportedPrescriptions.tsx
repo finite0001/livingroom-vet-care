@@ -2,7 +2,7 @@ import { PrescriptionHistoryReview } from "./PrescriptionHistoryReview";
 import type { ImportedPrescription } from "./prescription-review-state";
 import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { ImportedPrescriptionEvidence } from "./ImportedPrescriptionEvidence";
 import { listPatientImportedPrescriptions } from "./prescription-review-api";

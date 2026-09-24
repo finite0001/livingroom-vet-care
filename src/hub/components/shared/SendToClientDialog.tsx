@@ -1,5 +1,5 @@
 import { MessageRecoveryPanel } from "@/hub/components/conversations/MessageRecoveryPanel";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import type { MessageIntent } from "@/hub/features/communications/queue-intent";
 import { useMessageQueue } from "@/hub/hooks/use-message-queue";
 import { useEffect, useRef, useState } from "react";

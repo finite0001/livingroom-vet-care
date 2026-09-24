@@ -3,7 +3,7 @@ import type { ConversationEmailReview } from "@/hub/features/communications/conv
 import { useEffect, useRef, useState } from "react";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   QueueIntentStore,

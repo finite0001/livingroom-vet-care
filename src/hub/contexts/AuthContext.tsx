@@ -1,35 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearInvoiceEmailSession } from "./session-draft-retention";
 import { createAuthRequestState } from "./auth-request-state";
 import type { AuthRequest } from "./auth-request-state";
-
-interface Profile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  role: "ADMIN" | "DVM" | "TECH" | "STAFF";
-  is_active: boolean;
-}
-
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  profile: Profile | null;
-  loading: boolean;
-  roles: string[];
-  authError: string | null;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  hasRole: (role: string) => boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, type Profile } from "./auth-context";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
@@ -142,10 +118,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
 }

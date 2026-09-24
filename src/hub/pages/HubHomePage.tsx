@@ -7,7 +7,7 @@ import {
   Pill,
   Users,
 } from "lucide-react";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { PageShell } from "@/hub/components/shared/PageShell";
 import { PageHeader } from "@/hub/components/shared/PageHeader";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";

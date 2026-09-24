@@ -52,7 +52,6 @@ begin
   end loop;
 end
 $$;
-
 create function public.native_estpub_hash (v jsonb)
   returns void
   language plpgsql
@@ -1262,4 +1261,3 @@ begin
       end loop;
 end
 $$;
-

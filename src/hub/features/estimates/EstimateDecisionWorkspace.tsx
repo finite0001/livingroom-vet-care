@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {denverInstant,denverLocal} from '../scheduling/time';
 import {Button} from '@/components/ui/button';
 import {supabase} from '@/integrations/supabase/client';
-import {useAuth} from '@/hub/contexts/AuthContext';
+import {useAuth} from '@/hub/contexts/auth-context';
 import type {EstimateDraft} from './estimate-api';
 import type {PrescriptionRpc} from '../prescriptions/prescription-api';
 import {createEstimatePublicationApi,createEstimatePublicationEdge} from './publication-api';

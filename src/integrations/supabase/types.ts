@@ -83,6 +83,7 @@ export type Database = {
           assigned_dvm_id: string | null
           client_id: string
           created_at: string
+          created_by: string | null
           duration_minutes: number
           ezyvet_appointment_id: string | null
           id: string
@@ -105,6 +106,7 @@ export type Database = {
           assigned_dvm_id?: string | null
           client_id: string
           created_at?: string
+          created_by?: string | null
           duration_minutes?: number
           ezyvet_appointment_id?: string | null
           id?: string
@@ -127,6 +129,7 @@ export type Database = {
           assigned_dvm_id?: string | null
           client_id?: string
           created_at?: string
+          created_by?: string | null
           duration_minutes?: number
           ezyvet_appointment_id?: string | null
           id?: string
@@ -979,31 +982,58 @@ export type Database = {
       }
       contact_submissions: {
         Row: {
+          closed_at: string | null
+          closed_by: string | null
+          contacted_at: string | null
+          contacted_by: string | null
           created_at: string
           email: string
           id: string
           message: string
           name: string
           phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          staff_notes: string | null
           subject: string
+          triage_status: string
+          updated_at: string
         }
         Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          contacted_at?: string | null
+          contacted_by?: string | null
           created_at?: string
           email: string
           id?: string
           message: string
           name: string
           phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_notes?: string | null
           subject: string
+          triage_status?: string
+          updated_at?: string
         }
         Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          contacted_at?: string | null
+          contacted_by?: string | null
           created_at?: string
           email?: string
           id?: string
           message?: string
           name?: string
           phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_notes?: string | null
           subject?: string
+          triage_status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1447,6 +1477,131 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outbound_deliveries: {
+        Row: {
+          accepted_at: string | null
+          appointment_reminder_id: string | null
+          attempt_count: number
+          canceled_at: string | null
+          channel: Database["public"]["Enums"]["channel_type"]
+          client_id: string | null
+          conversation_id: string | null
+          created_at: string
+          delivered_at: string | null
+          failed_at: string | null
+          id: string
+          idempotency_key: string
+          last_error_text: string | null
+          lease_owner: string | null
+          leased_at: string | null
+          leased_until: string | null
+          max_attempts: number
+          message_id: string | null
+          next_attempt_at: string
+          payload: Json
+          provider: string | null
+          provider_message_id: string | null
+          recipient: string
+          requested_by: string | null
+          scheduled_at: string
+          status: Database["public"]["Enums"]["outbound_delivery_status"]
+          status_note: string | null
+          unknown_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          appointment_reminder_id?: string | null
+          attempt_count?: number
+          canceled_at?: string | null
+          channel: Database["public"]["Enums"]["channel_type"]
+          client_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          failed_at?: string | null
+          id?: string
+          idempotency_key: string
+          last_error_text?: string | null
+          lease_owner?: string | null
+          leased_at?: string | null
+          leased_until?: string | null
+          max_attempts?: number
+          message_id?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          requested_by?: string | null
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["outbound_delivery_status"]
+          status_note?: string | null
+          unknown_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          appointment_reminder_id?: string | null
+          attempt_count?: number
+          canceled_at?: string | null
+          channel?: Database["public"]["Enums"]["channel_type"]
+          client_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          failed_at?: string | null
+          id?: string
+          idempotency_key?: string
+          last_error_text?: string | null
+          lease_owner?: string | null
+          leased_at?: string | null
+          leased_until?: string | null
+          max_attempts?: number
+          message_id?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          requested_by?: string | null
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["outbound_delivery_status"]
+          status_note?: string | null
+          unknown_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outbound_deliveries_appointment_reminder_id_fkey"
+            columns: ["appointment_reminder_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_reminders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_deliveries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_deliveries_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outbound_deliveries_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -5544,6 +5699,79 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_appointment: {
+        Args: { p_expected_version: number; p_id: string }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_outbound_delivery: {
+        Args: {
+          p_delivery_id: string
+          p_expected_updated_at?: string | null
+          p_requested_at?: string | null
+        }
+        Returns: Database["public"]["Tables"]["outbound_deliveries"]["Row"]
+        SetofOptions: {
+          from: "*"
+          to: "outbound_deliveries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_due_outbound_deliveries: {
+        Args: {
+          p_batch_size?: number
+          p_claimed_at?: string
+          p_lease_duration?: string
+          p_lease_owner: string
+        }
+        Returns: Database["public"]["Tables"]["outbound_deliveries"]["Row"][]
+        SetofOptions: {
+          from: "*"
+          to: "outbound_deliveries"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      record_outbound_delivery_result: {
+        Args: {
+          p_delivery_id: string
+          p_error_text?: string | null
+          p_lease_owner: string
+          p_next_attempt_at?: string | null
+          p_provider?: string | null
+          p_provider_message_id?: string | null
+          p_recorded_at?: string
+          p_status: Database["public"]["Enums"]["outbound_delivery_status"]
+          p_status_note?: string | null
+        }
+        Returns: Database["public"]["Tables"]["outbound_deliveries"]["Row"]
+        SetofOptions: {
+          from: "*"
+          to: "outbound_deliveries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      retry_outbound_delivery: {
+        Args: {
+          p_delivery_id: string
+          p_expected_updated_at?: string | null
+          p_requested_at?: string | null
+        }
+        Returns: Database["public"]["Tables"]["outbound_deliveries"]["Row"]
+        SetofOptions: {
+          from: "*"
+          to: "outbound_deliveries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       prepare_ezyvet_history_approval: {
         Args: { p_id: string; p_payload: Json; p_pet_id: string }
         Returns: Json
@@ -6186,23 +6414,16 @@ export type Database = {
       }
       save_appointment: {
         Args: {
-          p_actor_id: string
-          p_address_snapshot: string
           p_appointment_type: string
-          p_assigned_dvm_id: string
+          p_assigned_dvm_id: string | null
           p_client_id: string
           p_duration_minutes: number
-          p_expected_version: number
-          p_id: string
-          p_notes: string
-          p_pet_id: string
-          p_reminder_offsets: number[]
-          p_resource_name: string
+          p_expected_version: number | null
+          p_id: string | null
+          p_notes: string | null
+          p_pet_id: string | null
           p_scheduled_at: string
           p_status: Database["public"]["Enums"]["appointment_status"]
-          p_travel_after_minutes: number
-          p_travel_before_minutes: number
-          p_visit_type: string
         }
         Returns: {
           address_snapshot: string
@@ -6210,6 +6431,7 @@ export type Database = {
           assigned_dvm_id: string | null
           client_id: string
           created_at: string
+          created_by: string | null
           duration_minutes: number
           ezyvet_appointment_id: string | null
           id: string
@@ -8286,6 +8508,14 @@ export type Database = {
         | "VOICEMAIL"
         | "SYSTEM"
         | "NOTE"
+      outbound_delivery_status:
+        | "QUEUED"
+        | "LEASED"
+        | "ACCEPTED"
+        | "DELIVERED"
+        | "FAILED"
+        | "CANCELED"
+        | "UNKNOWN"
       pet_sex: "MALE" | "FEMALE" | "UNKNOWN"
       refill_status: "REQUESTED" | "APPROVED" | "DENIED" | "READY" | "PICKED_UP"
       reminder_status: "PENDING" | "SENT" | "FAILED" | "SKIPPED"
@@ -8487,6 +8717,15 @@ export const Constants = {
         "VOICEMAIL",
         "SYSTEM",
         "NOTE",
+      ],
+      outbound_delivery_status: [
+        "QUEUED",
+        "LEASED",
+        "ACCEPTED",
+        "DELIVERED",
+        "FAILED",
+        "CANCELED",
+        "UNKNOWN",
       ],
       pet_sex: ["MALE", "FEMALE", "UNKNOWN"],
       refill_status: ["REQUESTED", "APPROVED", "DENIED", "READY", "PICKED_UP"],

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { parseIncomingAttachments, type IncomingAttachment } from "@/hub/features/communications/incoming-attachments";
 export function useIncomingAttachments(messageIds: string[]) {

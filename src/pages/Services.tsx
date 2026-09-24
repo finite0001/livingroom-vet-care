@@ -205,7 +205,7 @@ const Services = () => {
                 Not Sure What Your Pet Needs?
               </h2>
               <p className="text-primary-foreground/80 text-lg leading-relaxed mb-8">
-                Schedule a wellness consultation and we'll create a personalized care plan 
+                Schedule a wellness consultation and we'll create a personalized care plan
                 tailored to your pet's age, breed, and lifestyle.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

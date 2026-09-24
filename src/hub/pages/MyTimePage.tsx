@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
 import { AllStaffTimesheet } from "@/hub/components/timesheet/AllStaffTimesheet";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { useMyShiftsRange } from "@/hub/hooks/use-time-clock";
 
 function formatDuration(start: string, end: string | null) {

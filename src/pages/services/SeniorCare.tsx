@@ -1,8 +1,11 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Dog, Heart, Zap, Stethoscope } from "lucide-react";
 import seniorImage from "@/assets/service-senior.jpg";
 
 const SeniorCare = () => {
+  usePublicRouteMetadata("/services/senior-care");
+
   return (
     <ServiceDetailLayout
       title="Senior Care"

@@ -22,6 +22,8 @@ const Diagnostics = lazy(() => import("./pages/services/Diagnostics"));
 const IllnessCare = lazy(() => import("./pages/services/IllnessCare"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const Vaccinations = lazy(() => import("./pages/services/Vaccinations"));
 
 // Hub imports
@@ -86,6 +88,8 @@ const router = createBrowserRouter(createRoutesFromElements(
               <Route path="/services/vaccinations" element={<MarketingErrorBoundary><Vaccinations /></MarketingErrorBoundary>} />
               <Route path="/about" element={<MarketingErrorBoundary><About /></MarketingErrorBoundary>} />
               <Route path="/contact" element={<MarketingErrorBoundary><Contact /></MarketingErrorBoundary>} />
+              <Route path="/privacy" element={<MarketingErrorBoundary><Privacy /></MarketingErrorBoundary>} />
+              <Route path="/terms" element={<MarketingErrorBoundary><Terms /></MarketingErrorBoundary>} />
 
               {/* Hub public routes */}
               <Route path="/hub/login" element={<HubLoginPage />} />

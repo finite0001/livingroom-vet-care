@@ -1,0 +1,980 @@
+{
+  "generatedAt": "2026-09-23T03:40:14.929Z",
+  "mode": "apply",
+  "status": "ready",
+  "sourceRoot": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations",
+  "targetRoot": "supabase/migrations",
+  "summary": {
+    "remoteOnlyVersions": 96,
+    "planned": 96,
+    "restored": 96,
+    "alreadyPresent": 0,
+    "missingFromSource": 0
+  },
+  "missingFromSource": [],
+  "alreadyPresent": [],
+  "planned": [
+    {
+      "version": "20260912230000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260912230000_scheduling.sql",
+      "targetPath": "supabase/migrations/20260912230000_scheduling.sql"
+    },
+    {
+      "version": "20260913000000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913000000_inventory_billing.sql",
+      "targetPath": "supabase/migrations/20260913000000_inventory_billing.sql"
+    },
+    {
+      "version": "20260913010000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913010000_ezyvet_import.sql",
+      "targetPath": "supabase/migrations/20260913010000_ezyvet_import.sql"
+    },
+    {
+      "version": "20260913020000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913020000_communications_outbox.sql",
+      "targetPath": "supabase/migrations/20260913020000_communications_outbox.sql"
+    },
+    {
+      "version": "20260913030000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913030000_inventory_read_models.sql",
+      "targetPath": "supabase/migrations/20260913030000_inventory_read_models.sql"
+    },
+    {
+      "version": "20260913040000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913040000_ezyvet_review_import.sql",
+      "targetPath": "supabase/migrations/20260913040000_ezyvet_review_import.sql"
+    },
+    {
+      "version": "20260913050000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913050000_inbound_delivery.sql",
+      "targetPath": "supabase/migrations/20260913050000_inbound_delivery.sql"
+    },
+    {
+      "version": "20260913060000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913060000_care_charts.sql",
+      "targetPath": "supabase/migrations/20260913060000_care_charts.sql"
+    },
+    {
+      "version": "20260913070000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913070000_dental_chart.sql",
+      "targetPath": "supabase/migrations/20260913070000_dental_chart.sql"
+    },
+    {
+      "version": "20260913080000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913080000_vaccine_certificates.sql",
+      "targetPath": "supabase/migrations/20260913080000_vaccine_certificates.sql"
+    },
+    {
+      "version": "20260913095000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913095000_inbox_workspace.sql",
+      "targetPath": "supabase/migrations/20260913095000_inbox_workspace.sql"
+    },
+    {
+      "version": "20260913095500",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913095500_sms_consent_workspace.sql",
+      "targetPath": "supabase/migrations/20260913095500_sms_consent_workspace.sql"
+    },
+    {
+      "version": "20260913100000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913100000_lab_work.sql",
+      "targetPath": "supabase/migrations/20260913100000_lab_work.sql"
+    },
+    {
+      "version": "20260913110000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913110000_anesthesia_records.sql",
+      "targetPath": "supabase/migrations/20260913110000_anesthesia_records.sql"
+    },
+    {
+      "version": "20260913120000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913120000_message_recovery.sql",
+      "targetPath": "supabase/migrations/20260913120000_message_recovery.sql"
+    },
+    {
+      "version": "20260913130000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913130000_record_releases.sql",
+      "targetPath": "supabase/migrations/20260913130000_record_releases.sql"
+    },
+    {
+      "version": "20260913140000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913140000_care_reminders.sql",
+      "targetPath": "supabase/migrations/20260913140000_care_reminders.sql"
+    },
+    {
+      "version": "20260913150000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913150000_invoice_documents.sql",
+      "targetPath": "supabase/migrations/20260913150000_invoice_documents.sql"
+    },
+    {
+      "version": "20260913160000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913160000_record_release_charts.sql",
+      "targetPath": "supabase/migrations/20260913160000_record_release_charts.sql"
+    },
+    {
+      "version": "20260913170000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913170000_website_inquiries.sql",
+      "targetPath": "supabase/migrations/20260913170000_website_inquiries.sql"
+    },
+    {
+      "version": "20260913180000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913180000_reminder_outbox.sql",
+      "targetPath": "supabase/migrations/20260913180000_reminder_outbox.sql"
+    },
+    {
+      "version": "20260913190000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913190000_certificate_due_plans.sql",
+      "targetPath": "supabase/migrations/20260913190000_certificate_due_plans.sql"
+    },
+    {
+      "version": "20260913200000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913200000_record_release_history.sql",
+      "targetPath": "supabase/migrations/20260913200000_record_release_history.sql"
+    },
+    {
+      "version": "20260913210000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913210000_public_intake.sql",
+      "targetPath": "supabase/migrations/20260913210000_public_intake.sql"
+    },
+    {
+      "version": "20260913220000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913220000_release_email_delivery.sql",
+      "targetPath": "supabase/migrations/20260913220000_release_email_delivery.sql"
+    },
+    {
+      "version": "20260913230000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913230000_reviewed_weight_import.sql",
+      "targetPath": "supabase/migrations/20260913230000_reviewed_weight_import.sql"
+    },
+    {
+      "version": "20260913240000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913240000_disable_reminder_policy.sql",
+      "targetPath": "supabase/migrations/20260913240000_disable_reminder_policy.sql"
+    },
+    {
+      "version": "20260913250000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913250000_release_weight_provenance.sql",
+      "targetPath": "supabase/migrations/20260913250000_release_weight_provenance.sql"
+    },
+    {
+      "version": "20260913260000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913260000_treatment_alert_review.sql",
+      "targetPath": "supabase/migrations/20260913260000_treatment_alert_review.sql"
+    },
+    {
+      "version": "20260913270000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913270000_invoice_email.sql",
+      "targetPath": "supabase/migrations/20260913270000_invoice_email.sql"
+    },
+    {
+      "version": "20260913280000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913280000_document_links.sql",
+      "targetPath": "supabase/migrations/20260913280000_document_links.sql"
+    },
+    {
+      "version": "20260913290000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913290000_document_link_sms.sql",
+      "targetPath": "supabase/migrations/20260913290000_document_link_sms.sql"
+    },
+    {
+      "version": "20260913300000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913300000_payment_ledger.sql",
+      "targetPath": "supabase/migrations/20260913300000_payment_ledger.sql"
+    },
+    {
+      "version": "20260913310000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913310000_stripe_event_inbox.sql",
+      "targetPath": "supabase/migrations/20260913310000_stripe_event_inbox.sql"
+    },
+    {
+      "version": "20260913320000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913320000_document_link_history.sql",
+      "targetPath": "supabase/migrations/20260913320000_document_link_history.sql"
+    },
+    {
+      "version": "20260913330000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913330000_payment_reconciliation_observations.sql",
+      "targetPath": "supabase/migrations/20260913330000_payment_reconciliation_observations.sql"
+    },
+    {
+      "version": "20260913340000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913340000_payment_collection_access.sql",
+      "targetPath": "supabase/migrations/20260913340000_payment_collection_access.sql"
+    },
+    {
+      "version": "20260913350000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913350000_payment_reconciliation_resolution.sql",
+      "targetPath": "supabase/migrations/20260913350000_payment_reconciliation_resolution.sql"
+    },
+    {
+      "version": "20260913360000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913360000_payment_capability_persistence.sql",
+      "targetPath": "supabase/migrations/20260913360000_payment_capability_persistence.sql"
+    },
+    {
+      "version": "20260913370000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913370000_payment_link_delivery.sql",
+      "targetPath": "supabase/migrations/20260913370000_payment_link_delivery.sql"
+    },
+    {
+      "version": "20260913380000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913380000_payment_reconciliation_discovery.sql",
+      "targetPath": "supabase/migrations/20260913380000_payment_reconciliation_discovery.sql"
+    },
+    {
+      "version": "20260913390000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913390000_payment_delivery_history.sql",
+      "targetPath": "supabase/migrations/20260913390000_payment_delivery_history.sql"
+    },
+    {
+      "version": "20260913400000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913400000_stripe_event_retry_cycles.sql",
+      "targetPath": "supabase/migrations/20260913400000_stripe_event_retry_cycles.sql"
+    },
+    {
+      "version": "20260913410000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913410000_lab_result_provenance.sql",
+      "targetPath": "supabase/migrations/20260913410000_lab_result_provenance.sql"
+    },
+    {
+      "version": "20260913420000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913420000_external_record_provenance.sql",
+      "targetPath": "supabase/migrations/20260913420000_external_record_provenance.sql"
+    },
+    {
+      "version": "20260913430000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913430000_inbound_processing_recovery.sql",
+      "targetPath": "supabase/migrations/20260913430000_inbound_processing_recovery.sql"
+    },
+    {
+      "version": "20260913440000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913440000_operations_visibility.sql",
+      "targetPath": "supabase/migrations/20260913440000_operations_visibility.sql"
+    },
+    {
+      "version": "20260913450000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913450000_outbox_retry_recovery.sql",
+      "targetPath": "supabase/migrations/20260913450000_outbox_retry_recovery.sql"
+    },
+    {
+      "version": "20260913460000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913460000_explicit_staff_rpc_grants.sql",
+      "targetPath": "supabase/migrations/20260913460000_explicit_staff_rpc_grants.sql"
+    },
+    {
+      "version": "20260913470000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913470000_release_source_provenance.sql",
+      "targetPath": "supabase/migrations/20260913470000_release_source_provenance.sql"
+    },
+    {
+      "version": "20260913480000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913480000_release_source_byte_binding.sql",
+      "targetPath": "supabase/migrations/20260913480000_release_source_byte_binding.sql"
+    },
+    {
+      "version": "20260913490000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913490000_ezyvet_clinical_runs.sql",
+      "targetPath": "supabase/migrations/20260913490000_ezyvet_clinical_runs.sql"
+    },
+    {
+      "version": "20260913500000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913500000_reviewed_imported_history.sql",
+      "targetPath": "supabase/migrations/20260913500000_reviewed_imported_history.sql"
+    },
+    {
+      "version": "20260913510000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913510000_release_imported_history.sql",
+      "targetPath": "supabase/migrations/20260913510000_release_imported_history.sql"
+    },
+    {
+      "version": "20260913520000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913520000_consult_scoped_vaccination_import.sql",
+      "targetPath": "supabase/migrations/20260913520000_consult_scoped_vaccination_import.sql"
+    },
+    {
+      "version": "20260913530000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913530000_reviewed_imported_vaccinations.sql",
+      "targetPath": "supabase/migrations/20260913530000_reviewed_imported_vaccinations.sql"
+    },
+    {
+      "version": "20260913540000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913540000_record_release_vaccination_history.sql",
+      "targetPath": "supabase/migrations/20260913540000_record_release_vaccination_history.sql"
+    },
+    {
+      "version": "20260913550000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913550000_patient_scoped_prescription_import.sql",
+      "targetPath": "supabase/migrations/20260913550000_patient_scoped_prescription_import.sql"
+    },
+    {
+      "version": "20260913560000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913560000_parent_scoped_prescription_items.sql",
+      "targetPath": "supabase/migrations/20260913560000_parent_scoped_prescription_items.sql"
+    },
+    {
+      "version": "20260913570000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913570000_prescription_reference_reconciliation.sql",
+      "targetPath": "supabase/migrations/20260913570000_prescription_reference_reconciliation.sql"
+    },
+    {
+      "version": "20260913580000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913580000_prescription_source_review_context.sql",
+      "targetPath": "supabase/migrations/20260913580000_prescription_source_review_context.sql"
+    },
+    {
+      "version": "20260913590000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913590000_prescription_review_preparation.sql",
+      "targetPath": "supabase/migrations/20260913590000_prescription_review_preparation.sql"
+    },
+    {
+      "version": "20260913600000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913600000_prescription_interpretation_context.sql",
+      "targetPath": "supabase/migrations/20260913600000_prescription_interpretation_context.sql"
+    },
+    {
+      "version": "20260913610000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913610000_reviewed_imported_prescriptions.sql",
+      "targetPath": "supabase/migrations/20260913610000_reviewed_imported_prescriptions.sql"
+    },
+    {
+      "version": "20260913620000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913620000_prescription_review_discovery.sql",
+      "targetPath": "supabase/migrations/20260913620000_prescription_review_discovery.sql"
+    },
+    {
+      "version": "20260913630000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913630000_record_release_prescription_history.sql",
+      "targetPath": "supabase/migrations/20260913630000_record_release_prescription_history.sql"
+    },
+    {
+      "version": "20260913650000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913650000_prescription_release_reference_hardening.sql",
+      "targetPath": "supabase/migrations/20260913650000_prescription_release_reference_hardening.sql"
+    },
+    {
+      "version": "20260913690000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913690000_attachment_metadata_runs.sql",
+      "targetPath": "supabase/migrations/20260913690000_attachment_metadata_runs.sql"
+    },
+    {
+      "version": "20260913700000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913700000_attachment_original_capture.sql",
+      "targetPath": "supabase/migrations/20260913700000_attachment_original_capture.sql"
+    },
+    {
+      "version": "20260913900000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913900000_payment_immutable_search_path.sql",
+      "targetPath": "supabase/migrations/20260913900000_payment_immutable_search_path.sql"
+    },
+    {
+      "version": "20260914010000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql",
+      "targetPath": "supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql"
+    },
+    {
+      "version": "20260914020000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql",
+      "targetPath": "supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql"
+    },
+    {
+      "version": "20260914030000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914030000_canonical_api_review_history.sql",
+      "targetPath": "supabase/migrations/20260914030000_canonical_api_review_history.sql"
+    },
+    {
+      "version": "20260914040000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914040000_canonical_api_patient_chart.sql",
+      "targetPath": "supabase/migrations/20260914040000_canonical_api_patient_chart.sql"
+    },
+    {
+      "version": "20260914050000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914050000_canonical_reviewed_original_context.sql",
+      "targetPath": "supabase/migrations/20260914050000_canonical_reviewed_original_context.sql"
+    },
+    {
+      "version": "20260914060000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914060000_canonical_release_attachment_validation.sql",
+      "targetPath": "supabase/migrations/20260914060000_canonical_release_attachment_validation.sql"
+    },
+    {
+      "version": "20260914070000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914070000_canonical_api_release_preview.sql",
+      "targetPath": "supabase/migrations/20260914070000_canonical_api_release_preview.sql"
+    },
+    {
+      "version": "20260914080000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914080000_canonical_release_original_verification.sql",
+      "targetPath": "supabase/migrations/20260914080000_canonical_release_original_verification.sql"
+    },
+    {
+      "version": "20260914090000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914090000_canonical_api_release_confirmation.sql",
+      "targetPath": "supabase/migrations/20260914090000_canonical_api_release_confirmation.sql"
+    },
+    {
+      "version": "20260914100000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914100000_canonical_api_release_discovery.sql",
+      "targetPath": "supabase/migrations/20260914100000_canonical_api_release_discovery.sql"
+    },
+    {
+      "version": "20260914110000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914110000_document_link_retrieval_wait_authorization.sql",
+      "targetPath": "supabase/migrations/20260914110000_document_link_retrieval_wait_authorization.sql"
+    },
+    {
+      "version": "20260914120000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914120000_explicit_public_creation_privileges.sql",
+      "targetPath": "supabase/migrations/20260914120000_explicit_public_creation_privileges.sql"
+    },
+    {
+      "version": "20260914130000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914130000_ezyvet_migration_manifests.sql",
+      "targetPath": "supabase/migrations/20260914130000_ezyvet_migration_manifests.sql"
+    },
+    {
+      "version": "20260914140000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914140000_ezyvet_migration_bindings.sql",
+      "targetPath": "supabase/migrations/20260914140000_ezyvet_migration_bindings.sql"
+    },
+    {
+      "version": "20260914150000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914150000_ezyvet_migration_progress.sql",
+      "targetPath": "supabase/migrations/20260914150000_ezyvet_migration_progress.sql"
+    },
+    {
+      "version": "20260914160000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914160000_ezyvet_migration_attempt_events.sql",
+      "targetPath": "supabase/migrations/20260914160000_ezyvet_migration_attempt_events.sql"
+    },
+    {
+      "version": "20260914170000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914170000_ezyvet_claim_wait_authorization.sql",
+      "targetPath": "supabase/migrations/20260914170000_ezyvet_claim_wait_authorization.sql"
+    },
+    {
+      "version": "20260914180000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914180000_ezyvet_stage_failure_wait_authorization.sql",
+      "targetPath": "supabase/migrations/20260914180000_ezyvet_stage_failure_wait_authorization.sql"
+    },
+    {
+      "version": "20260914190000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914190000_ezyvet_migration_items.sql",
+      "targetPath": "supabase/migrations/20260914190000_ezyvet_migration_items.sql"
+    },
+    {
+      "version": "20260914200000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914200000_ezyvet_migration_capture_evidence.sql",
+      "targetPath": "supabase/migrations/20260914200000_ezyvet_migration_capture_evidence.sql"
+    },
+    {
+      "version": "20260914210000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914210000_ezyvet_migration_history_evidence.sql",
+      "targetPath": "supabase/migrations/20260914210000_ezyvet_migration_history_evidence.sql"
+    },
+    {
+      "version": "20260914220000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914220000_ezyvet_migration_vaccination_evidence.sql",
+      "targetPath": "supabase/migrations/20260914220000_ezyvet_migration_vaccination_evidence.sql"
+    },
+    {
+      "version": "20260914230000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914230000_ezyvet_migration_prescription_evidence.sql",
+      "targetPath": "supabase/migrations/20260914230000_ezyvet_migration_prescription_evidence.sql"
+    },
+    {
+      "version": "20260916000000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260916000000_ezyvet_migration_prescription_item_evidence.sql",
+      "targetPath": "supabase/migrations/20260916000000_ezyvet_migration_prescription_item_evidence.sql"
+    },
+    {
+      "version": "20260916010000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260916010000_ezyvet_migration_identity_evidence.sql",
+      "targetPath": "supabase/migrations/20260916010000_ezyvet_migration_identity_evidence.sql"
+    },
+    {
+      "version": "20260916020000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260916020000_ezyvet_migration_weight_evidence.sql",
+      "targetPath": "supabase/migrations/20260916020000_ezyvet_migration_weight_evidence.sql"
+    }
+  ],
+  "restored": [
+    {
+      "version": "20260912230000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260912230000_scheduling.sql",
+      "targetPath": "supabase/migrations/20260912230000_scheduling.sql"
+    },
+    {
+      "version": "20260913000000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913000000_inventory_billing.sql",
+      "targetPath": "supabase/migrations/20260913000000_inventory_billing.sql"
+    },
+    {
+      "version": "20260913010000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913010000_ezyvet_import.sql",
+      "targetPath": "supabase/migrations/20260913010000_ezyvet_import.sql"
+    },
+    {
+      "version": "20260913020000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913020000_communications_outbox.sql",
+      "targetPath": "supabase/migrations/20260913020000_communications_outbox.sql"
+    },
+    {
+      "version": "20260913030000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913030000_inventory_read_models.sql",
+      "targetPath": "supabase/migrations/20260913030000_inventory_read_models.sql"
+    },
+    {
+      "version": "20260913040000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913040000_ezyvet_review_import.sql",
+      "targetPath": "supabase/migrations/20260913040000_ezyvet_review_import.sql"
+    },
+    {
+      "version": "20260913050000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913050000_inbound_delivery.sql",
+      "targetPath": "supabase/migrations/20260913050000_inbound_delivery.sql"
+    },
+    {
+      "version": "20260913060000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913060000_care_charts.sql",
+      "targetPath": "supabase/migrations/20260913060000_care_charts.sql"
+    },
+    {
+      "version": "20260913070000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913070000_dental_chart.sql",
+      "targetPath": "supabase/migrations/20260913070000_dental_chart.sql"
+    },
+    {
+      "version": "20260913080000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913080000_vaccine_certificates.sql",
+      "targetPath": "supabase/migrations/20260913080000_vaccine_certificates.sql"
+    },
+    {
+      "version": "20260913095000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913095000_inbox_workspace.sql",
+      "targetPath": "supabase/migrations/20260913095000_inbox_workspace.sql"
+    },
+    {
+      "version": "20260913095500",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913095500_sms_consent_workspace.sql",
+      "targetPath": "supabase/migrations/20260913095500_sms_consent_workspace.sql"
+    },
+    {
+      "version": "20260913100000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913100000_lab_work.sql",
+      "targetPath": "supabase/migrations/20260913100000_lab_work.sql"
+    },
+    {
+      "version": "20260913110000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913110000_anesthesia_records.sql",
+      "targetPath": "supabase/migrations/20260913110000_anesthesia_records.sql"
+    },
+    {
+      "version": "20260913120000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913120000_message_recovery.sql",
+      "targetPath": "supabase/migrations/20260913120000_message_recovery.sql"
+    },
+    {
+      "version": "20260913130000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913130000_record_releases.sql",
+      "targetPath": "supabase/migrations/20260913130000_record_releases.sql"
+    },
+    {
+      "version": "20260913140000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913140000_care_reminders.sql",
+      "targetPath": "supabase/migrations/20260913140000_care_reminders.sql"
+    },
+    {
+      "version": "20260913150000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913150000_invoice_documents.sql",
+      "targetPath": "supabase/migrations/20260913150000_invoice_documents.sql"
+    },
+    {
+      "version": "20260913160000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913160000_record_release_charts.sql",
+      "targetPath": "supabase/migrations/20260913160000_record_release_charts.sql"
+    },
+    {
+      "version": "20260913170000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913170000_website_inquiries.sql",
+      "targetPath": "supabase/migrations/20260913170000_website_inquiries.sql"
+    },
+    {
+      "version": "20260913180000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913180000_reminder_outbox.sql",
+      "targetPath": "supabase/migrations/20260913180000_reminder_outbox.sql"
+    },
+    {
+      "version": "20260913190000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913190000_certificate_due_plans.sql",
+      "targetPath": "supabase/migrations/20260913190000_certificate_due_plans.sql"
+    },
+    {
+      "version": "20260913200000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913200000_record_release_history.sql",
+      "targetPath": "supabase/migrations/20260913200000_record_release_history.sql"
+    },
+    {
+      "version": "20260913210000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913210000_public_intake.sql",
+      "targetPath": "supabase/migrations/20260913210000_public_intake.sql"
+    },
+    {
+      "version": "20260913220000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913220000_release_email_delivery.sql",
+      "targetPath": "supabase/migrations/20260913220000_release_email_delivery.sql"
+    },
+    {
+      "version": "20260913230000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913230000_reviewed_weight_import.sql",
+      "targetPath": "supabase/migrations/20260913230000_reviewed_weight_import.sql"
+    },
+    {
+      "version": "20260913240000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913240000_disable_reminder_policy.sql",
+      "targetPath": "supabase/migrations/20260913240000_disable_reminder_policy.sql"
+    },
+    {
+      "version": "20260913250000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913250000_release_weight_provenance.sql",
+      "targetPath": "supabase/migrations/20260913250000_release_weight_provenance.sql"
+    },
+    {
+      "version": "20260913260000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913260000_treatment_alert_review.sql",
+      "targetPath": "supabase/migrations/20260913260000_treatment_alert_review.sql"
+    },
+    {
+      "version": "20260913270000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913270000_invoice_email.sql",
+      "targetPath": "supabase/migrations/20260913270000_invoice_email.sql"
+    },
+    {
+      "version": "20260913280000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913280000_document_links.sql",
+      "targetPath": "supabase/migrations/20260913280000_document_links.sql"
+    },
+    {
+      "version": "20260913290000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913290000_document_link_sms.sql",
+      "targetPath": "supabase/migrations/20260913290000_document_link_sms.sql"
+    },
+    {
+      "version": "20260913300000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913300000_payment_ledger.sql",
+      "targetPath": "supabase/migrations/20260913300000_payment_ledger.sql"
+    },
+    {
+      "version": "20260913310000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913310000_stripe_event_inbox.sql",
+      "targetPath": "supabase/migrations/20260913310000_stripe_event_inbox.sql"
+    },
+    {
+      "version": "20260913320000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913320000_document_link_history.sql",
+      "targetPath": "supabase/migrations/20260913320000_document_link_history.sql"
+    },
+    {
+      "version": "20260913330000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913330000_payment_reconciliation_observations.sql",
+      "targetPath": "supabase/migrations/20260913330000_payment_reconciliation_observations.sql"
+    },
+    {
+      "version": "20260913340000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913340000_payment_collection_access.sql",
+      "targetPath": "supabase/migrations/20260913340000_payment_collection_access.sql"
+    },
+    {
+      "version": "20260913350000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913350000_payment_reconciliation_resolution.sql",
+      "targetPath": "supabase/migrations/20260913350000_payment_reconciliation_resolution.sql"
+    },
+    {
+      "version": "20260913360000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913360000_payment_capability_persistence.sql",
+      "targetPath": "supabase/migrations/20260913360000_payment_capability_persistence.sql"
+    },
+    {
+      "version": "20260913370000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913370000_payment_link_delivery.sql",
+      "targetPath": "supabase/migrations/20260913370000_payment_link_delivery.sql"
+    },
+    {
+      "version": "20260913380000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913380000_payment_reconciliation_discovery.sql",
+      "targetPath": "supabase/migrations/20260913380000_payment_reconciliation_discovery.sql"
+    },
+    {
+      "version": "20260913390000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913390000_payment_delivery_history.sql",
+      "targetPath": "supabase/migrations/20260913390000_payment_delivery_history.sql"
+    },
+    {
+      "version": "20260913400000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913400000_stripe_event_retry_cycles.sql",
+      "targetPath": "supabase/migrations/20260913400000_stripe_event_retry_cycles.sql"
+    },
+    {
+      "version": "20260913410000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913410000_lab_result_provenance.sql",
+      "targetPath": "supabase/migrations/20260913410000_lab_result_provenance.sql"
+    },
+    {
+      "version": "20260913420000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913420000_external_record_provenance.sql",
+      "targetPath": "supabase/migrations/20260913420000_external_record_provenance.sql"
+    },
+    {
+      "version": "20260913430000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913430000_inbound_processing_recovery.sql",
+      "targetPath": "supabase/migrations/20260913430000_inbound_processing_recovery.sql"
+    },
+    {
+      "version": "20260913440000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913440000_operations_visibility.sql",
+      "targetPath": "supabase/migrations/20260913440000_operations_visibility.sql"
+    },
+    {
+      "version": "20260913450000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913450000_outbox_retry_recovery.sql",
+      "targetPath": "supabase/migrations/20260913450000_outbox_retry_recovery.sql"
+    },
+    {
+      "version": "20260913460000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913460000_explicit_staff_rpc_grants.sql",
+      "targetPath": "supabase/migrations/20260913460000_explicit_staff_rpc_grants.sql"
+    },
+    {
+      "version": "20260913470000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913470000_release_source_provenance.sql",
+      "targetPath": "supabase/migrations/20260913470000_release_source_provenance.sql"
+    },
+    {
+      "version": "20260913480000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913480000_release_source_byte_binding.sql",
+      "targetPath": "supabase/migrations/20260913480000_release_source_byte_binding.sql"
+    },
+    {
+      "version": "20260913490000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913490000_ezyvet_clinical_runs.sql",
+      "targetPath": "supabase/migrations/20260913490000_ezyvet_clinical_runs.sql"
+    },
+    {
+      "version": "20260913500000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913500000_reviewed_imported_history.sql",
+      "targetPath": "supabase/migrations/20260913500000_reviewed_imported_history.sql"
+    },
+    {
+      "version": "20260913510000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913510000_release_imported_history.sql",
+      "targetPath": "supabase/migrations/20260913510000_release_imported_history.sql"
+    },
+    {
+      "version": "20260913520000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913520000_consult_scoped_vaccination_import.sql",
+      "targetPath": "supabase/migrations/20260913520000_consult_scoped_vaccination_import.sql"
+    },
+    {
+      "version": "20260913530000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913530000_reviewed_imported_vaccinations.sql",
+      "targetPath": "supabase/migrations/20260913530000_reviewed_imported_vaccinations.sql"
+    },
+    {
+      "version": "20260913540000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913540000_record_release_vaccination_history.sql",
+      "targetPath": "supabase/migrations/20260913540000_record_release_vaccination_history.sql"
+    },
+    {
+      "version": "20260913550000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913550000_patient_scoped_prescription_import.sql",
+      "targetPath": "supabase/migrations/20260913550000_patient_scoped_prescription_import.sql"
+    },
+    {
+      "version": "20260913560000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913560000_parent_scoped_prescription_items.sql",
+      "targetPath": "supabase/migrations/20260913560000_parent_scoped_prescription_items.sql"
+    },
+    {
+      "version": "20260913570000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913570000_prescription_reference_reconciliation.sql",
+      "targetPath": "supabase/migrations/20260913570000_prescription_reference_reconciliation.sql"
+    },
+    {
+      "version": "20260913580000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913580000_prescription_source_review_context.sql",
+      "targetPath": "supabase/migrations/20260913580000_prescription_source_review_context.sql"
+    },
+    {
+      "version": "20260913590000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913590000_prescription_review_preparation.sql",
+      "targetPath": "supabase/migrations/20260913590000_prescription_review_preparation.sql"
+    },
+    {
+      "version": "20260913600000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913600000_prescription_interpretation_context.sql",
+      "targetPath": "supabase/migrations/20260913600000_prescription_interpretation_context.sql"
+    },
+    {
+      "version": "20260913610000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913610000_reviewed_imported_prescriptions.sql",
+      "targetPath": "supabase/migrations/20260913610000_reviewed_imported_prescriptions.sql"
+    },
+    {
+      "version": "20260913620000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913620000_prescription_review_discovery.sql",
+      "targetPath": "supabase/migrations/20260913620000_prescription_review_discovery.sql"
+    },
+    {
+      "version": "20260913630000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913630000_record_release_prescription_history.sql",
+      "targetPath": "supabase/migrations/20260913630000_record_release_prescription_history.sql"
+    },
+    {
+      "version": "20260913650000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913650000_prescription_release_reference_hardening.sql",
+      "targetPath": "supabase/migrations/20260913650000_prescription_release_reference_hardening.sql"
+    },
+    {
+      "version": "20260913690000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913690000_attachment_metadata_runs.sql",
+      "targetPath": "supabase/migrations/20260913690000_attachment_metadata_runs.sql"
+    },
+    {
+      "version": "20260913700000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913700000_attachment_original_capture.sql",
+      "targetPath": "supabase/migrations/20260913700000_attachment_original_capture.sql"
+    },
+    {
+      "version": "20260913900000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260913900000_payment_immutable_search_path.sql",
+      "targetPath": "supabase/migrations/20260913900000_payment_immutable_search_path.sql"
+    },
+    {
+      "version": "20260914010000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql",
+      "targetPath": "supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql"
+    },
+    {
+      "version": "20260914020000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql",
+      "targetPath": "supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql"
+    },
+    {
+      "version": "20260914030000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914030000_canonical_api_review_history.sql",
+      "targetPath": "supabase/migrations/20260914030000_canonical_api_review_history.sql"
+    },
+    {
+      "version": "20260914040000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914040000_canonical_api_patient_chart.sql",
+      "targetPath": "supabase/migrations/20260914040000_canonical_api_patient_chart.sql"
+    },
+    {
+      "version": "20260914050000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914050000_canonical_reviewed_original_context.sql",
+      "targetPath": "supabase/migrations/20260914050000_canonical_reviewed_original_context.sql"
+    },
+    {
+      "version": "20260914060000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914060000_canonical_release_attachment_validation.sql",
+      "targetPath": "supabase/migrations/20260914060000_canonical_release_attachment_validation.sql"
+    },
+    {
+      "version": "20260914070000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914070000_canonical_api_release_preview.sql",
+      "targetPath": "supabase/migrations/20260914070000_canonical_api_release_preview.sql"
+    },
+    {
+      "version": "20260914080000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914080000_canonical_release_original_verification.sql",
+      "targetPath": "supabase/migrations/20260914080000_canonical_release_original_verification.sql"
+    },
+    {
+      "version": "20260914090000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914090000_canonical_api_release_confirmation.sql",
+      "targetPath": "supabase/migrations/20260914090000_canonical_api_release_confirmation.sql"
+    },
+    {
+      "version": "20260914100000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914100000_canonical_api_release_discovery.sql",
+      "targetPath": "supabase/migrations/20260914100000_canonical_api_release_discovery.sql"
+    },
+    {
+      "version": "20260914110000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914110000_document_link_retrieval_wait_authorization.sql",
+      "targetPath": "supabase/migrations/20260914110000_document_link_retrieval_wait_authorization.sql"
+    },
+    {
+      "version": "20260914120000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914120000_explicit_public_creation_privileges.sql",
+      "targetPath": "supabase/migrations/20260914120000_explicit_public_creation_privileges.sql"
+    },
+    {
+      "version": "20260914130000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914130000_ezyvet_migration_manifests.sql",
+      "targetPath": "supabase/migrations/20260914130000_ezyvet_migration_manifests.sql"
+    },
+    {
+      "version": "20260914140000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914140000_ezyvet_migration_bindings.sql",
+      "targetPath": "supabase/migrations/20260914140000_ezyvet_migration_bindings.sql"
+    },
+    {
+      "version": "20260914150000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914150000_ezyvet_migration_progress.sql",
+      "targetPath": "supabase/migrations/20260914150000_ezyvet_migration_progress.sql"
+    },
+    {
+      "version": "20260914160000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914160000_ezyvet_migration_attempt_events.sql",
+      "targetPath": "supabase/migrations/20260914160000_ezyvet_migration_attempt_events.sql"
+    },
+    {
+      "version": "20260914170000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914170000_ezyvet_claim_wait_authorization.sql",
+      "targetPath": "supabase/migrations/20260914170000_ezyvet_claim_wait_authorization.sql"
+    },
+    {
+      "version": "20260914180000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914180000_ezyvet_stage_failure_wait_authorization.sql",
+      "targetPath": "supabase/migrations/20260914180000_ezyvet_stage_failure_wait_authorization.sql"
+    },
+    {
+      "version": "20260914190000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914190000_ezyvet_migration_items.sql",
+      "targetPath": "supabase/migrations/20260914190000_ezyvet_migration_items.sql"
+    },
+    {
+      "version": "20260914200000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914200000_ezyvet_migration_capture_evidence.sql",
+      "targetPath": "supabase/migrations/20260914200000_ezyvet_migration_capture_evidence.sql"
+    },
+    {
+      "version": "20260914210000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914210000_ezyvet_migration_history_evidence.sql",
+      "targetPath": "supabase/migrations/20260914210000_ezyvet_migration_history_evidence.sql"
+    },
+    {
+      "version": "20260914220000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914220000_ezyvet_migration_vaccination_evidence.sql",
+      "targetPath": "supabase/migrations/20260914220000_ezyvet_migration_vaccination_evidence.sql"
+    },
+    {
+      "version": "20260914230000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260914230000_ezyvet_migration_prescription_evidence.sql",
+      "targetPath": "supabase/migrations/20260914230000_ezyvet_migration_prescription_evidence.sql"
+    },
+    {
+      "version": "20260916000000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260916000000_ezyvet_migration_prescription_item_evidence.sql",
+      "targetPath": "supabase/migrations/20260916000000_ezyvet_migration_prescription_item_evidence.sql"
+    },
+    {
+      "version": "20260916010000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260916010000_ezyvet_migration_identity_evidence.sql",
+      "targetPath": "supabase/migrations/20260916010000_ezyvet_migration_identity_evidence.sql"
+    },
+    {
+      "version": "20260916020000",
+      "sourcePath": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations/20260916020000_ezyvet_migration_weight_evidence.sql",
+      "targetPath": "supabase/migrations/20260916020000_ezyvet_migration_weight_evidence.sql"
+    }
+  ]
+}

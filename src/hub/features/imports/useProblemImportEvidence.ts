@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { readProblemProvenance } from "./history-api";
 export function useProblemImportEvidence(petId: string, problemIds: string[]) {
   const { user } = useAuth();

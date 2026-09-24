@@ -16,6 +16,9 @@ verify_jwt = false
 [functions.dispatch-outbox]
 verify_jwt = false
 
+[functions.dispatch-outbound-deliveries]
+verify_jwt = false
+
 [functions.queue-reminders]
 verify_jwt = false
 
@@ -29,6 +32,16 @@ verify_jwt = false
 
 [functions.public-contact]
 verify_jwt = false
+
+[functions.resend-delivery-webhook]
+verify_jwt = false
+
+[functions.twilio-message-status-callback]
+verify_jwt = false
+
+[functions.twilio-inbound-sms]
+verify_jwt = false
+
 # Staff JWT required at the gateway; handler also verifies the user and every RPC authorizes staff.
 [functions.prepare-release-email]
 verify_jwt = true

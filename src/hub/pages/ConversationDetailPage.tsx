@@ -23,7 +23,7 @@ import {
 import { useClientConsent } from "@/hub/hooks/use-sms-consent";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ConversationDetailPage() {

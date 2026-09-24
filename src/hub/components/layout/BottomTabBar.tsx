@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import {
   Sheet,

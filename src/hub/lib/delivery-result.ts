@@ -2,6 +2,7 @@ import { FunctionsHttpError } from "@supabase/supabase-js";
 
 export interface DeliveryResult {
   accepted?: boolean;
+  queued?: boolean;
   success?: boolean;
   acceptance_unknown?: boolean;
   error?: string;
@@ -24,5 +25,6 @@ export async function deliveryErrorNote(error: unknown): Promise<string> {
 }
 
 export function isDeliveryAccepted(result: DeliveryResult | null | undefined): boolean {
-  return result?.accepted === true && result.success !== false && !result.acceptance_unknown;
+  if (!result || result.success === false || result.acceptance_unknown) return false;
+  return result.accepted === true || result.queued === true;
 }

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { parseMessageAttachments, type MessageAttachmentHistory } from "@/hub/features/communications/message-attachments";
 export function useMessageAttachments(messageIds: string[]) {

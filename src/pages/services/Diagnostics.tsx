@@ -1,20 +1,23 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Stethoscope, Dog, Heart, Zap, Scissors } from "lucide-react";
 import diagnosticsImage from "@/assets/service-diagnostics.jpg";
 
 const Diagnostics = () => {
+  usePublicRouteMetadata("/services/diagnostics");
+
   return (
     <ServiceDetailLayout
       title="Diagnostics"
       subtitle="Answers When You Need Them"
-      description="When your pet isn't feeling well, getting answers quickly matters. Our in-house diagnostic laboratory and imaging suite allow us to run tests and review results the same day—often within minutes—so we can start treatment sooner."
+      description="When your pet isn't feeling well, getting answers quickly matters. We are planning diagnostic workflows to support clear next steps, with final equipment, timing, and visit suitability to be confirmed before scheduling opens."
       heroImage={diagnosticsImage}
       heroImageAlt="Veterinarian reviewing diagnostic imaging results in a modern lab"
       icon={Stethoscope}
       benefits={[
-        "In-house lab for same-day results",
-        "Digital radiography with instant imaging",
-        "Ultrasound for detailed internal views",
+        "Planned lab workflows for timely answers",
+        "Imaging availability to be confirmed",
+        "Internal views when clinically appropriate and available",
         "Comprehensive bloodwork panels",
         "Faster diagnosis means faster treatment",
         "Reduced stress with fewer visits",
@@ -35,7 +38,7 @@ const Diagnostics = () => {
         {
           title: "Testing & Imaging",
           description:
-            "Samples are processed in our in-house lab, and digital images are captured and available for review within minutes.",
+            "Sample processing and imaging details will depend on the final launch equipment, visit type, and clinical plan.",
         },
         {
           title: "Results Review",
@@ -57,7 +60,7 @@ const Diagnostics = () => {
         {
           question: "How quickly will I get results?",
           answer:
-            "Most bloodwork and urinalysis results are available within 15–30 minutes thanks to our in-house lab. Some specialized tests may be sent to an outside laboratory, with results typically in 1–3 business days.",
+            "Result timing will be confirmed before appointments open. Some tests may be reviewed during a visit, while others may need outside-lab processing.",
         },
         {
           question: "Does my pet need to fast before blood work?",
@@ -67,7 +70,7 @@ const Diagnostics = () => {
         {
           question: "What is digital radiography?",
           answer:
-            "Digital X-rays produce high-resolution images instantly, with no waiting for film to develop. The images can be enhanced, zoomed, and easily shared with specialists if a second opinion is needed.",
+            "Digital X-rays produce high-resolution images without film development. When imaging is available and clinically appropriate, records can be reviewed and shared with specialists if a second opinion is needed.",
         },
         {
           question: "When would my pet need an ultrasound?",
@@ -77,7 +80,7 @@ const Diagnostics = () => {
         {
           question: "Can you send results to a specialist?",
           answer:
-            "Absolutely. All our digital images and lab results can be securely shared with veterinary specialists within minutes for consultations or referrals.",
+            "When specialist input or referral is appropriate, reviewed diagnostic records can be securely shared with the receiving veterinary team.",
         },
       ]}
       relatedServices={[
@@ -91,10 +94,10 @@ const Diagnostics = () => {
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Our Diagnostic Capabilities
+              Planned Diagnostic Capabilities
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Everything we need to find answers—right here, right now.
+              Diagnostic capabilities will be finalized before appointments open.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[

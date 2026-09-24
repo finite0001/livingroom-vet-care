@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { readMessageAttachment, type MessageAttachmentHistory } from "@/hub/features/communications/message-attachments";
 interface MessageAttachmentsProps { history: MessageAttachmentHistory }

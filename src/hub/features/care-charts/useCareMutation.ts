@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { care, type CareArgs, type CareMutation } from "./api";
 import { errorMessage, isDefinitiveRejection } from "../inventory/stock-policy";
 interface Pending {

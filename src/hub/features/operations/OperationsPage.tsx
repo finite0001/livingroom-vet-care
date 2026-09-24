@@ -7,7 +7,7 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import * as api from "./OperationsApi";
 import {
   displayTime,
