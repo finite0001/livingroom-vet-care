@@ -72,6 +72,16 @@ const steps = [
     allowedStatuses: [0, 1],
   },
   {
+    id: 'clinical-staff-acceptance',
+    command: [
+      'node',
+      'scripts/clinical-staff-acceptance-readiness.mjs',
+      '--output',
+      `${evidenceDirectory}/${evidenceDate}-clinical-staff-acceptance-readiness.json`,
+    ],
+    allowedStatuses: [0, 1],
+  },
+  {
     id: 'commercial-summary',
     command: ['node', 'scripts/commercial-readiness-summary.mjs', '--output', `${evidenceDirectory}/${evidenceDate}-commercial-readiness-summary.json`],
   },

@@ -13,6 +13,7 @@ The package gives Dr. Susan Edler, the owner/operator, and staff a concise way t
 ## Reviewer entry points
 
 - [Pre-phone/CloudTalk clinical and staff acceptance checklist](../pre-phone-cloudtalk-acceptance-checklist.md)
+- [Machine-readable clinical/staff acceptance register](../clinical-staff-acceptance-register.json)
 - [Dr. Susan Edler clinical acceptance review pack](../clinical-review/README.md)
 - [Clinical forms and decisions](../clinical-review/forms-and-decisions.md)
 - [Standalone clinical review examples](../clinical-review/review-examples.html)
@@ -26,6 +27,7 @@ The package gives Dr. Susan Edler, the owner/operator, and staff a concise way t
 - [2026-09-24 integrated synthetic local workflow proof](2026-09-24-integrated-synthetic-local-workflow.md)
 - [2026-09-24 hosted readiness inventory](2026-09-24-hosted-readiness-inventory.json)
 - [2026-09-24 commercial readiness summary](2026-09-24-commercial-readiness-summary.json)
+- [2026-09-24 clinical/staff acceptance readiness](2026-09-24-clinical-staff-acceptance-readiness.json)
 
 ## Review decisions still required
 
@@ -58,6 +60,7 @@ Prepared:
 - Local disabled/test-mode delivery/callback proof.
 - Local integrated synthetic clinical/inventory/billing/payment/certificate/delivery proof.
 - Clinical/staff acceptance checklist with explicit pending rows.
+- Machine-readable acceptance register for readiness automation.
 - Detailed clinical review pack and examples.
 
 Still pending:

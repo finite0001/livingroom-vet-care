@@ -5,6 +5,8 @@ Scope: acceptance package for the remaining commercial-readiness work that can b
 
 This checklist does not approve launch by itself. It gives Dr. Susan Edler, the owner/operator, and staff a concise way to record the acceptance decisions that are still required after the local database replay and before the final phone/CloudTalk gates.
 
+Machine-readable decision register: [clinical/staff acceptance register](clinical-staff-acceptance-register.json). Update that register when a row moves from `Pending` to an accepted, corrected, rejected, or out-of-scope decision so `npm run readiness:acceptance` and the aggregate readiness summary reflect the current state.
+
 ## Preconditions
 
 - Hosted backend selected: `mgadheotkdnrsatfivjy`.

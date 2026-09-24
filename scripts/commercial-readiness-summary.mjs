@@ -12,6 +12,7 @@ const evidenceFiles = {
   publicSite: latestEvidenceFile(/^\d{4}-\d{2}-\d{2}-public-site-readiness\.json$/),
   hub: latestEvidenceFile(/^\d{4}-\d{2}-\d{2}-hub-workflow-readiness\.json$/),
   noLiveSendPreflight: latestOptionalEvidenceFile(/^\d{4}-\d{2}-\d{2}-hosted-no-live-send-drill-preflight\.json$/),
+  acceptance: latestOptionalEvidenceFile(/^\d{4}-\d{2}-\d{2}-clinical-staff-acceptance-readiness\.json$/),
 };
 
 function latestEvidenceFile(pattern) {
@@ -60,6 +61,7 @@ const functionReview = readJson(evidenceFiles.functionReview);
 const publicSite = readJson(evidenceFiles.publicSite);
 const hub = readJson(evidenceFiles.hub);
 const noLiveSendPreflight = evidenceFiles.noLiveSendPreflight ? readJson(evidenceFiles.noLiveSendPreflight) : null;
+const acceptance = evidenceFiles.acceptance ? readJson(evidenceFiles.acceptance) : null;
 
 const migrationDrift = hosted.supabase?.migrationDrift;
 const supabaseBlockers = [];
@@ -150,6 +152,26 @@ const hubBlockers = [
     .map((finding) => `${finding.workflow}: ${finding.message}`),
 ];
 
+const acceptanceBlockers = [];
+const acceptanceWarnings = [];
+const acceptanceEvidence = evidenceFiles.acceptance ? [evidenceFiles.acceptance] : [];
+
+if (!acceptance) {
+  acceptanceBlockers.push('Clinical/staff acceptance readiness evidence is not present.');
+} else {
+  for (const blocker of acceptance.blockers ?? []) {
+    acceptanceBlockers.push(blocker.message);
+  }
+
+  for (const warning of acceptance.warnings ?? []) {
+    acceptanceWarnings.push(warning.message);
+  }
+
+  if (!['accepted', 'warning', 'blocked'].includes(acceptance.status)) {
+    acceptanceWarnings.push(`Clinical/staff acceptance readiness returned unexpected status ${acceptance.status}.`);
+  }
+}
+
 const verificationBlockers = [];
 
 if ((hub.summary?.blockers ?? 1) > 0) {
@@ -174,6 +196,14 @@ const gates = [
     statusFromBlockers(hubBlockers),
     hubBlockers,
     [evidenceFiles.hub],
+  ),
+  makeGate(
+    'clinical-staff-acceptance',
+    'Clinical and staff acceptance readiness',
+    statusFromBlockers(acceptanceBlockers),
+    acceptanceBlockers,
+    acceptanceEvidence,
+    acceptanceWarnings,
   ),
   makeGate(
     'external-services',

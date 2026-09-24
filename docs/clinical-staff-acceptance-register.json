@@ -1,0 +1,147 @@
+{
+  "updatedAt": "2026-09-24",
+  "scope": "pre-phone-cloudtalk-commercial-readiness",
+  "targetProjectRef": "mgadheotkdnrsatfivjy",
+  "allowedDecisions": [
+    "Pending",
+    "Accept",
+    "Accept after correction",
+    "Reject",
+    "Not in pilot scope"
+  ],
+  "clinicalDecisions": [
+    {
+      "id": "C-PILOT-01",
+      "reviewArea": "SOAP/signing/addenda for housecall visits",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Link exact patient/example/revision."
+    },
+    {
+      "id": "C-PILOT-02",
+      "reviewArea": "Serious alerts and critical history display",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm severity wording and correction path."
+    },
+    {
+      "id": "C-PILOT-03",
+      "reviewArea": "Vaccine/treatment administration records",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm required fields, correction policy, and source separation."
+    },
+    {
+      "id": "C-PILOT-04",
+      "reviewArea": "Preventive due/overdue/unknown/suppressed/completed states",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm no unapproved interval is hardcoded."
+    },
+    {
+      "id": "C-PILOT-05",
+      "reviewArea": "General vaccine/rabies certificate templates",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm exact wording, signature, issued snapshot, and reissue policy."
+    },
+    {
+      "id": "C-PILOT-06",
+      "reviewArea": "Record-release selection and client disclosure rules",
+      "reviewer": "Owner + Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm what can be sent, to whom, and with which attestation."
+    },
+    {
+      "id": "C-PILOT-07",
+      "reviewArea": "Invoice/payment language and client-facing balance/status wording",
+      "reviewer": "Owner/operator",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm refunds, voids, credits, and sandbox-vs-live disclosure."
+    },
+    {
+      "id": "C-PILOT-08",
+      "reviewArea": "Reminder wording and delivery-state labels",
+      "reviewer": "Owner/operator + Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm wording before provider commissioning."
+    }
+  ],
+  "staffAcceptanceRun": {
+    "operator": null,
+    "dateTime": null,
+    "frontendUrl": null,
+    "supabaseProject": "mgadheotkdnrsatfivjy",
+    "commitOrDeployment": null,
+    "outboundMode": "Disabled/test-only",
+    "knownExceptions": [
+      "Phone number and CloudTalk deferred"
+    ],
+    "steps": [
+      {
+        "id": "S-PILOT-01",
+        "workflow": "Staff account invite, password setup, sign-in, recovery, deactivation, and session loss",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-02",
+        "workflow": "Household, patient, housecall address, access notes, and cross-household denial",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-03",
+        "workflow": "Housecall scheduling through /hub/schedule with warnings and disabled/test reminders",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-04",
+        "workflow": "SOAP/care-chart draft, reopen, signing, addendum, stale-save, and navigation guard",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-05",
+        "workflow": "Synthetic stock, administration/dispense, invoice line, due-plan/certificate impact, and duplicate prevention",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-06",
+        "workflow": "Invoice, sandbox/test payment collection, webhook idempotency, refunds, credits, voids, and issued snapshots",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-07",
+        "workflow": "Certificate/document package and disabled/test delivery operations states",
+        "decision": "Pending",
+        "evidence": []
+      },
+      {
+        "id": "S-PILOT-08",
+        "workflow": "Synthetic Resend/Twilio callback and inbound STOP/START handling without CloudTalk/live phone dependency",
+        "decision": "Pending",
+        "evidence": []
+      }
+    ]
+  },
+  "deferredFinalGates": [
+    "Public practice phone",
+    "Public emergency phone/instructions",
+    "CloudTalk",
+    "Live SMS number/A2P activation",
+    "Live voice/voicemail",
+    "Final owner go/no-go"
+  ]
+}
