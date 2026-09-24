@@ -7,10 +7,18 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('38000000-0000-4000-8000-000000000001', 'appointment-staff@example.test', '{"first_name":"Appointment","last_name":"Staff"}'),
   ('38000000-0000-4000-8000-000000000002', 'appointment-inactive@example.test', '{"first_name":"Appointment","last_name":"Inactive"}'),
   ('38000000-0000-4000-8000-000000000003', 'appointment-dvm@example.test', '{"first_name":"Appointment","last_name":"DVM","role":"DVM"}');
+update public.profiles
+set is_active = true
+where id in (
+  '38000000-0000-4000-8000-000000000001',
+  '38000000-0000-4000-8000-000000000003'
+);
 update public.profiles set is_active = false where id = '38000000-0000-4000-8000-000000000002';
 update public.profiles set role = 'DVM' where id = '38000000-0000-4000-8000-000000000003';
 insert into public.user_roles (user_id, role)
-values ('38000000-0000-4000-8000-000000000003', 'DVM')
+values
+  ('38000000-0000-4000-8000-000000000001', 'STAFF'),
+  ('38000000-0000-4000-8000-000000000003', 'DVM')
 on conflict do nothing;
 
 insert into public.clients (
@@ -72,7 +80,7 @@ from public.save_appointment(
   null,
   '38100000-0000-4000-8000-000000000001',
   '38200000-0000-4000-8000-000000000001',
-  timestamptz '2026-09-25 16:00:00+00',
+  now() + interval '10 days',
   60,
   'Housecall visit',
   'SCHEDULED',
@@ -98,13 +106,13 @@ select is(
   'New scheduled appointment creates two pending reminders'
 );
 
-select lives_ok(
+select throws_ok(
   $$select public.save_appointment(
       null,
       null,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000002',
-      timestamptz '2026-09-26 16:00:00+00',
+      now() + interval '11 days',
       60,
       'Wrong-client patient',
       'SCHEDULED',
@@ -112,7 +120,7 @@ select lives_ok(
       null
     )$$,
   '23514',
-  'Appointment patient must belong to the selected client',
+  'Select an active patient belonging to this household',
   'Appointments cannot link a patient from another client'
 );
 
@@ -122,7 +130,7 @@ select throws_ok(
       null,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000003',
-      timestamptz '2026-09-26 16:00:00+00',
+      now() + interval '11 days',
       60,
       'Archived patient',
       'SCHEDULED',
@@ -130,7 +138,7 @@ select throws_ok(
       null
     )$$,
   '23514',
-  'Archived patients cannot be scheduled',
+  'Select an active patient belonging to this household',
   'Archived patients cannot be scheduled'
 );
 
@@ -140,7 +148,7 @@ select throws_ok(
       null,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000004',
-      timestamptz '2026-09-26 16:00:00+00',
+      now() + interval '11 days',
       60,
       'Deceased patient',
       'SCHEDULED',
@@ -148,17 +156,17 @@ select throws_ok(
       null
     )$$,
   '23514',
-  'Deceased patients cannot be scheduled',
+  'Select an active patient belonging to this household',
   'Deceased patients cannot be scheduled'
 );
 
-select throws_ok(
+select lives_ok(
   $$select public.save_appointment(
       null,
       null,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-26 16:00:00+00',
+      now() + interval '12 days',
       60,
       'Active staff assignment',
       'SCHEDULED',
@@ -174,7 +182,7 @@ select throws_ok(
       0,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-25 18:00:00+00',
+      now() + interval '10 days 2 hours',
       60,
       'Stale edit',
       'SCHEDULED',
@@ -182,7 +190,7 @@ select throws_ok(
       null
     )$$,
   '40001',
-  'Appointment changed or no longer exists; reload before saving',
+  'Appointment changed; reload before saving',
   'Stale appointment versions are rejected'
 );
 
@@ -192,7 +200,7 @@ select lives_ok(
       1,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-26 18:00:00+00',
+      now() + interval '13 days',
       90,
       'Rescheduled housecall',
       'CONFIRMED',
@@ -232,7 +240,7 @@ select throws_ok(
       null,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-26 18:30:00+00',
+      now() + interval '13 days 30 minutes',
       30,
       'Slim overlap',
       'SCHEDULED',
@@ -281,7 +289,7 @@ select lives_ok(
       2,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-27 16:00:00+00',
+      now() + interval '14 days',
       90,
       'Rescheduled again',
       'CONFIRMED',
@@ -314,11 +322,11 @@ select throws_ok(
       4,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-28 16:00:00+00',
+      now() + interval '15 days',
       60,
       'Reactivate',
       'SCHEDULED',
-      null,
+      '38000000-0000-4000-8000-000000000003',
       null
     )$$,
   '23514',
@@ -333,7 +341,7 @@ select throws_ok(
       null,
       '38100000-0000-4000-8000-000000000001',
       '38200000-0000-4000-8000-000000000001',
-      timestamptz '2026-09-29 16:00:00+00',
+      now() + interval '16 days',
       60,
       'Inactive staff',
       'SCHEDULED',

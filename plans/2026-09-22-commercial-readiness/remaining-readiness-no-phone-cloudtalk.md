@@ -8,6 +8,7 @@ Scope: complete all software/evidence work that can be finished before public ph
 - The selected hosted Supabase project is `mgadheotkdnrsatfivjy`.
 - PR #204 hosted rollout evidence recorded 148 matching migrations, 0 remote-only, and 0 local-only at that checkpoint.
 - Local Phase 2 has a later migration: `supabase/migrations/20260924120000_canonical_housecall_appointment_contract.sql`.
+- Local current-stack replay now has database evidence through that Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](../../docs/launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 - `/hub/schedule` is now the canonical appointment workspace.
 - Inventory, invoices, payment collection/reconciliation, certificates, care reminders, estimate publication, and delivery operations already have local implementation and tests. Do not restart Phase 3 from an empty-state assumption.
 - Scheduler Vault values are intentionally absent, so database cron is contained until explicit provider/scheduler commissioning.

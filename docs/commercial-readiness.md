@@ -12,7 +12,7 @@ The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves
 
 ## Current hosted readiness snapshot — September 24, 2026
 
-The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. Later local Phase 2 migrations must be applied and revalidated before treating this checkpoint as current for a launch decision. The generated commercial-readiness summary records 4/5 gates passing:
+The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. Later local Phase 2 migrations must be applied and revalidated before treating this checkpoint as current for a launch decision. The current local stack now replays through `20260924120000_canonical_housecall_appointment_contract.sql` with focused Phase 2 and Phase 3 pgTAP passing; that is local proof, not hosted apply evidence. The generated commercial-readiness summary records 4/5 gates passing:
 
 - Supabase/database operating loop: pass.
 - Hub/frontend workflow readiness: pass.
@@ -31,6 +31,7 @@ Current evidence:
 - [2026-09-24 Edge function inventory](launch-evidence/2026-09-24-edge-functions-inventory.json)
 - [2026-09-24 Hub workflow readiness](launch-evidence/2026-09-24-hub-workflow-readiness.json)
 - [2026-09-24 current-stack restore rehearsal](launch-evidence/2026-09-24-current-stack-restore-rehearsal.md)
+- [2026-09-24 current-stack DB replay and pgTAP](launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md)
 - [2026-09-24 public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md)
 - [2026-09-24 health Edge smoke](launch-evidence/2026-09-24-health-edge-smoke.md)
 
