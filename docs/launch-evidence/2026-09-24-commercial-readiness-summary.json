@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T08:27:11.344Z",
+  "generatedAt": "2026-09-24T08:38:03.143Z",
   "status": "blocked",
   "summary": {
     "gates": 5,
@@ -35,11 +35,14 @@
       "label": "External services and deployment readiness",
       "status": "pass",
       "blockers": [],
-      "warnings": [],
+      "warnings": [
+        "Hosted no-live-send drill preflight is waiting on the Supabase migration parity blocker already counted in the Supabase/database gate."
+      ],
       "evidence": [
         "docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
         "docs/launch-evidence/2026-09-24-remote-edge-function-review.json",
-        "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json"
+        "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",
+        "docs/launch-evidence/2026-09-24-hosted-no-live-send-drill-preflight.json"
       ]
     },
     {
@@ -68,7 +71,8 @@
         "docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
         "docs/launch-evidence/2026-09-24-remote-edge-function-review.json",
         "docs/launch-evidence/2026-09-24-public-site-readiness.json",
-        "docs/launch-evidence/2026-09-24-hub-workflow-readiness.json"
+        "docs/launch-evidence/2026-09-24-hub-workflow-readiness.json",
+        "docs/launch-evidence/2026-09-24-hosted-no-live-send-drill-preflight.json"
       ]
     }
   ]

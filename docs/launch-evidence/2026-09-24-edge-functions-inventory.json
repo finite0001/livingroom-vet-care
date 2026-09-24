@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T08:27:11.150Z",
+  "generatedAt": "2026-09-24T08:37:57.022Z",
   "note": "Read-only Supabase Edge Function inventory. Function hashes and source paths are intentionally omitted; this captures deployment shape, not code equivalence.",
   "projectRef": "mgadheotkdnrsatfivjy",
   "command": {

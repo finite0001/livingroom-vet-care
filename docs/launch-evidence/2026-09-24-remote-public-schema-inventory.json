@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T08:27:09.219Z",
+  "generatedAt": "2026-09-24T08:37:55.119Z",
   "note": "Read-only remote public schema inventory from Supabase CLI schema-only dump. Raw SQL is intentionally not written to the artifact.",
   "dump": {
     "command": "npx supabase db dump --linked --schema public --file [tempfile] --yes",
