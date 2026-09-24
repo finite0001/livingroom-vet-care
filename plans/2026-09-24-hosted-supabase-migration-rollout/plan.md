@@ -3,21 +3,24 @@
 Date: 2026-09-24
 Target branch: `main`
 Target Supabase project: `mgadheotkdnrsatfivjy` / `livingroom-vet-care`
-Status: applied and validated 2026-09-24.
+Status: PR #204 hosted rollout applied and validated 2026-09-24; current two-migration readiness apply is pending explicit owner approval.
 
 ## Objective
 
-Bring hosted Supabase migration history back to parity with merged `main` after PR #204, without accidentally commissioning CloudTalk, provider delivery, or live schedulers.
+Bring hosted Supabase migration history back to parity with current `main` after the post-PR #204 readiness work, without accidentally commissioning CloudTalk, provider delivery, or live schedulers.
 
 ## Current evidence
 
-- Local repo is on `main` with rollout evidence committed locally after merge commit `6574baa`.
-- `npm run supabase:migration-drift` reports 148 matching, 0 remote-only, 0 local-only.
-- `npx supabase db push --linked --skip-vault --include-all --dry-run` reports the remote database is up to date.
-- Remote public schema post-inventory succeeds and includes the audited operating-loop dependencies.
-- Remote data-volume spot check is low-risk: 1 Auth user; 0 clients, pets, communication outbox rows, and contact submissions.
+- PR #204 hosted rollout evidence recorded 148 matching migrations, 0 remote-only, and 0 local-only at that checkpoint.
+- Current local readiness stack reaches `20260924130000_inbound_sms_service_rpc_security.sql`.
+- `npx supabase db push --project-ref mgadheotkdnrsatfivjy --dry-run --skip-vault` currently reports exactly two local-only migrations:
+  - `20260924120000_canonical_housecall_appointment_contract.sql`
+  - `20260924130000_inbound_sms_service_rpc_security.sql`
+- Generated readiness evidence currently reports 3/5 gates passing, blocked by the two local-only migrations and owner public-contact content.
+- Local release-control proof at `e88b7a8` passed lint, TypeScript, 1078 Node tests, and production build.
+- Local no-live-send and integrated synthetic workflow evidence exists before hosted apply.
 - Remote Vault names `project_url` and `scheduler_worker_key` are absent, so the scheduler migration should not actively call Edge workers until later commissioning.
-- Remote `pg_cron`, `pg_net`, and the expected `cron.job` entries now exist. Scheduler Vault secrets remain absent, so database cron cannot call workers yet.
+- Remote `pg_cron`, `pg_net`, and the expected `cron.job` entries already exist from the PR #204 rollout. Scheduler Vault secrets remain absent, so database cron cannot call workers yet.
 
 ## Rollout phases
 
@@ -28,20 +31,20 @@ Bring hosted Supabase migration history back to parity with merged `main` after 
 
 ## Go / no-go summary
 
-The 2026-09-24 apply is complete. For any future rerun, go only if:
+Go only if:
 
 - The operator confirms hosted DB mutation.
 - The explicit target is `mgadheotkdnrsatfivjy`.
-- `--include-all --dry-run` still lists the same 25 migrations.
+- The dry run still lists exactly the same two migrations.
 - A managed backup/PITR checkpoint or private operator dump exists outside Git.
 - Scheduler Vault secrets remain absent, unless scheduler worker commissioning is intentionally included.
 
 No-go if:
 
 - Any remote-only migrations reappear.
-- `--include-all --dry-run` lists anything other than the known 25 files.
-- Existing storage buckets or singleton policy rows would conflict with migration inserts.
+- The dry run lists anything other than the two readiness migrations.
 - The operator cannot accept restore/PITR as the rollback path.
+- CloudTalk, live phone, live SMS, voice, voicemail, or public-contact publication is being folded into this apply.
 
 ## Apply command, only after explicit approval
 
@@ -49,16 +52,15 @@ No-go if:
 npx supabase db push \
   --project-ref mgadheotkdnrsatfivjy \
   --skip-vault \
-  --include-all \
   --yes
 ```
 
-Do not run this plan with `--include-seed`, `--include-roles`, or without `--skip-vault`.
+Do not run this plan with `--include-all`, `--include-seed`, `--include-roles`, or without `--skip-vault` unless a fresh dry run proves that broader scope is required and the owner explicitly approves it.
 
 ## Expected post-apply state
 
-- Migration drift: 148 matching, 0 remote-only, 0 local-only.
-- `pg_cron` and `pg_net` installed after `20260922120000_b1_scheduler.sql`.
+- Migration drift: 150 matching, 0 remote-only, 0 local-only.
+- `pg_cron`, `pg_net`, and scheduler jobs remain present from PR #204.
 - Scheduler jobs may exist, but without Vault `project_url` / `scheduler_worker_key` they should record bounded `configuration_missing` evidence instead of calling Edge workers.
 - Commercial readiness should remain 4/5 blocked only by owner public contact content.
 

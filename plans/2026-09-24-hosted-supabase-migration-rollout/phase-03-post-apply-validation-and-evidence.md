@@ -12,13 +12,12 @@ npm run supabase:migration-drift
 npx supabase db push \
   --project-ref mgadheotkdnrsatfivjy \
   --skip-vault \
-  --include-all \
   --dry-run
 ```
 
 Expected:
 
-- 148 matching migrations.
+- 150 matching migrations.
 - 0 remote-only.
 - 0 local-only.
 - Dry-run says database is up to date.
@@ -115,7 +114,7 @@ git status --short
 git diff -- docs/launch-evidence
 git add docs/launch-evidence
 git commit -m "docs(readiness): record hosted migration rollout"
-git push origin main
 ```
 
 Do not commit private dumps, raw schema SQL, local credentials, or provider secret values.
+Do not push unless the owner explicitly asks for a push.

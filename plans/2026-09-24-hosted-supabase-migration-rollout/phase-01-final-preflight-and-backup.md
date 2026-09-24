@@ -10,6 +10,9 @@ Critical. Run immediately before applying hosted migrations.
 - Deployment runbook: `/Users/davidedler/livingroom-vet-care/docs/deployment-runbook.md`
 - Restore runbook: `/Users/davidedler/livingroom-vet-care/docs/restore-runbook.md`
 - Prior drift evidence: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-23-supabase-link-and-migration-drift.md`
+- Current local DB replay proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md`
+- Current no-live-send proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-no-live-send-local-drill.md`
+- Current release-control proof: `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-local-release-control-check.md`
 
 ## Required checks
 
@@ -29,9 +32,10 @@ Expected drift:
 
 ```json
 {
-  "matching_count": 123,
+  "matching_count": 148,
   "remote_only_count": 0,
-  "local_only_count": 25
+  "local_only_count": 2,
+  "local_only": ["20260924120000", "20260924130000"]
 }
 ```
 
@@ -41,11 +45,10 @@ Run explicit dry-run:
 npx supabase db push \
   --project-ref mgadheotkdnrsatfivjy \
   --skip-vault \
-  --include-all \
   --dry-run
 ```
 
-Expected: exactly the 25 migration files listed in Phase 02. No seeds. No roles.
+Expected: exactly the two migration files listed in Phase 02. No seeds. No roles.
 
 ## Scheduler containment checks
 
@@ -64,30 +67,11 @@ Expected before apply:
 
 - no `project_url`
 - no `scheduler_worker_key`
-- `pg_cron_installed = false`
-- `pg_net_installed = false`
-- `cron_job_table_exists = false`
+- `pg_cron_installed = true`
+- `pg_net_installed = true`
+- `cron_job_table_exists = true`
 
 If Vault secrets are present, stop and decide whether scheduler worker commissioning is in scope.
-
-## Conflict prechecks
-
-```sh
-npx supabase db query --linked \
-  "select jsonb_build_object(
-    'storage_buckets', (
-      select coalesce(jsonb_agg(id order by id), '[]'::jsonb)
-      from storage.buckets
-      where id in ('conversation-attachment-uploads','inbound-attachment-originals')
-    ),
-    'native_return_policy_state', to_regclass('public.native_return_policy_state') is not null
-  ) as precheck;"
-```
-
-Expected:
-
-- `storage_buckets` does not include those two bucket IDs.
-- `native_return_policy_state` is false before this migration set.
 
 ## Backup / restore gate
 
@@ -111,6 +95,6 @@ Do not commit private dumps. A full data dump may contain PII; use a protected l
 
 - Target project verified.
 - Drift unchanged and understood.
-- Dry-run succeeds with exactly 25 files.
+- Dry-run succeeds with exactly two files.
 - Backup/PITR posture accepted.
 - Scheduler containment understood before apply.
