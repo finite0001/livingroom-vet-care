@@ -40,6 +40,8 @@ Local integrated workflow proof exists for the pre-phone/CloudTalk synthetic cli
 
 Clinical/staff acceptance package readiness is documented in [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md). Reviewer decisions are still pending.
 
+The latest local release-control check passed at the current readiness package checkpoint: [2026-09-24 local release-control check](launch-evidence/2026-09-24-local-release-control-check.md).
+
 Hosted dry-run proof exists for the pending apply set: `npx supabase db push --linked --dry-run --skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. After explicit owner approval, the exact hosted apply command is:
 
 ```bash

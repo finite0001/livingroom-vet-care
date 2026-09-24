@@ -30,6 +30,7 @@ Current evidence:
 - [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md)
 - [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md)
 - [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md)
+- [2026-09-24 local release-control check](launch-evidence/2026-09-24-local-release-control-check.md)
 - [2026-09-24 hosted readiness inventory](launch-evidence/2026-09-24-hosted-readiness-inventory.json)
 - [2026-09-24 remote public schema inventory](launch-evidence/2026-09-24-remote-public-schema-inventory.json)
 - [2026-09-24 Edge function inventory](launch-evidence/2026-09-24-edge-functions-inventory.json)

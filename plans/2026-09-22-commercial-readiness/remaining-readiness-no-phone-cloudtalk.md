@@ -14,6 +14,7 @@ Scope: complete all software/evidence work that can be finished before public ph
 - Local disabled/test-mode delivery evidence exists: [2026-09-24 no-live-send local workflow drill](../../docs/launch-evidence/2026-09-24-no-live-send-local-drill.md).
 - Local integrated synthetic workflow evidence exists: [2026-09-24 integrated synthetic local workflow proof](../../docs/launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md).
 - Clinical/staff package-readiness evidence exists: [2026-09-24 clinical and staff acceptance package readiness](../../docs/launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
+- Local release-control evidence exists: [2026-09-24 local release-control check](../../docs/launch-evidence/2026-09-24-local-release-control-check.md).
 - `/hub/schedule` is now the canonical appointment workspace.
 - Inventory, invoices, payment collection/reconciliation, certificates, care reminders, estimate publication, and delivery operations already have local implementation and tests. Do not restart Phase 3 from an empty-state assumption.
 - Scheduler Vault values are intentionally absent, so database cron is contained until explicit provider/scheduler commissioning.
