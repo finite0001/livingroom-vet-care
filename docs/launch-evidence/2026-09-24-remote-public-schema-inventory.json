@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T07:22:37.108Z",
+  "generatedAt": "2026-09-24T07:34:18.143Z",
   "note": "Read-only remote public schema inventory from Supabase CLI schema-only dump. Raw SQL is intentionally not written to the artifact.",
   "dump": {
     "command": "npx supabase db dump --linked --schema public --file [tempfile] --yes",
@@ -8,7 +8,7 @@
     "stderr": [
       "Initialising login role...",
       "Dumping schemas from remote database...",
-      "Dumped schema to /var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/livingroom-supabase-schema-fkMjNL/public-schema.sql.",
+      "Dumped schema to /var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/livingroom-supabase-schema-ZORxEp/public-schema.sql.",
       "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
     ]
   },

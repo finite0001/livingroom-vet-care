@@ -1,15 +1,15 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync } from 'node:child_process';
 
-const output = execFileSync("npx", ["supabase", "migration", "list"], {
-  encoding: "utf8",
-  stdio: ["ignore", "pipe", "pipe"],
+const output = execFileSync('npx', ['supabase', '--output-format', 'json', 'migration', 'list', '--linked'], {
+  encoding: 'utf8',
+  stdio: ['ignore', 'pipe', 'pipe'],
 });
 
-const jsonStart = output.indexOf("{");
-const jsonEnd = output.lastIndexOf("}");
+const jsonStart = output.indexOf('{');
+const jsonEnd = output.lastIndexOf('}');
 
 if (jsonStart === -1 || jsonEnd === -1) {
-  throw new Error("Could not find JSON in Supabase migration list output.");
+  throw new Error('Could not find JSON in Supabase migration list output.');
 }
 
 const { migrations } = JSON.parse(output.slice(jsonStart, jsonEnd + 1));

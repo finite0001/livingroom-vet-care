@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T07:22:38.914Z",
+  "generatedAt": "2026-09-24T07:34:20.033Z",
   "projectRef": "mgadheotkdnrsatfivjy",
   "inventoryPath": "docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
   "note": "Downloads remote-only Edge Function source into a temporary directory, records hashes/classification only, then deletes the downloaded source. Source bodies are intentionally not written to evidence.",

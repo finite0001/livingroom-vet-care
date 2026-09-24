@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 
 const projectName = 'livingroom-vet-care';
 const domains = ['thelivingroom.vet', 'www.thelivingroom.vet'];
+const apexDomain = 'thelivingroom.vet';
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -30,7 +31,18 @@ function parseJson(commandResult) {
   try {
     return JSON.parse(commandResult.stdout);
   } catch {
-    return null;
+    const jsonStart = commandResult.stdout.indexOf('{');
+    const jsonEnd = commandResult.stdout.lastIndexOf('}');
+
+    if (jsonStart === -1 || jsonEnd === -1) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(commandResult.stdout.slice(jsonStart, jsonEnd + 1));
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -70,25 +82,73 @@ function redactVercelEnvList(commandResult) {
   };
 }
 
-function collectDomainVerification(domain) {
-  const verification = run('npx', [
-    '--yes',
-    'vercel',
-    'domains',
-    'verify',
-    domain,
-    '--project',
-    projectName,
-    '--format',
-    'json',
-    '--non-interactive',
-  ]);
+function collectDomainInspection(domain, inspection) {
+  const parsed = parseJson(inspection);
+
+  if (!parsed) {
+    return {
+      domain,
+      result: redactCommandOutput(inspection),
+    };
+  }
+
+  const attachedProject = (parsed.projects ?? []).find(
+    (project) => project.name === projectName && (project.domains ?? []).includes(domain),
+  );
+  const configured = parsed.configuration?.misconfigured === false;
+  const attached = attachedProject !== undefined;
+  const ok = configured && attached;
 
   return {
     domain,
-    result: parseJson(verification) ?? redactCommandOutput(verification),
+    result: {
+      status: ok ? 'ok' : 'blocked',
+      reason: ok ? 'configured_attached_inspected' : configured ? 'not_attached_to_project' : 'misconfigured',
+      message: ok
+        ? `${domain} is configured and attached to project ${projectName}.`
+        : `${domain} is not launch-ready from passive Vercel domain inspection.`,
+      domain,
+      domainStatus: configured ? 'configured-inspected' : 'misconfigured',
+      configurationStatus: configured ? 'configured-inspected' : 'misconfigured',
+      ok,
+      issues: ok ? [] : [attached ? 'Domain configuration is misconfigured.' : `Domain is not attached to ${projectName}.`],
+      misconfigured: !configured,
+      project: {
+        idOrName: projectName,
+        attached,
+        verified: null,
+        verification: [],
+        verificationError: null,
+      },
+      inspection: {
+        command: inspection.command,
+        status: inspection.status,
+        ok: inspection.ok,
+        domainName: parsed.domain?.name ?? null,
+        edgeNetwork: parsed.domain?.edgeNetwork ?? null,
+        currentNameservers: parsed.nameservers?.current ?? [],
+        projectDomains: (parsed.projects ?? [])
+          .filter((project) => project.name === projectName)
+          .flatMap((project) => project.domains ?? [])
+          .sort((left, right) => left.localeCompare(right)),
+      },
+    },
   };
 }
+
+function inspectDomain(domain) {
+  return run('npx', [
+    '--yes',
+    'vercel',
+    'domains',
+    'inspect',
+    domain,
+    '--json',
+    '--non-interactive',
+  ]);
+}
+
+const apexDomainInspection = inspectDomain(apexDomain);
 
 const inventory = {
   generatedAt: new Date().toISOString(),
@@ -104,7 +164,7 @@ const inventory = {
   vercel: {
     projectInspect: redactCommandOutput(run('npx', ['--yes', 'vercel', 'project', 'inspect', projectName])),
     environmentNames: redactVercelEnvList(run('npx', ['--yes', 'vercel', 'env', 'ls'])),
-    domainVerification: domains.map(collectDomainVerification),
+    domainVerification: domains.map((domain) => collectDomainInspection(domain, apexDomainInspection)),
   },
   dns: {
     nameservers: redactCommandOutput(run('dig', ['+short', 'NS', 'thelivingroom.vet'])),
