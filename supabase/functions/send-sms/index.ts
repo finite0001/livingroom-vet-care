@@ -21,8 +21,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
-  let accepted = false;
-  let acceptanceUnknown = false;
   try {
     const authHeader = req.headers.get("Authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -106,74 +104,40 @@ serve(async (req) => {
       throw new DeliveryPolicyError("SMS delivery requires valid Twilio configuration.");
     }
 
-    const { data: inserted, error: msgError } = await supabase.from("messages").insert({
-      conversation_id,
-      content: body.trim(),
-      type: "SMS",
-      sender_type: "STAFF",
-      sender_id: user.id,
-      is_internal: false,
-    }).select("id").single();
-    if (msgError) throw msgError;
-
-    const { error: updateError } = await supabase.from("conversations").update({
-      last_message_at: new Date().toISOString(),
-      is_read: true,
-    }).eq("id", conversation_id);
-    if (updateError) throw updateError;
-
-    const delivered = false;
-    let statusNote = "";
-    let errorText: string | null = null;
-    try {
-      const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-        method: "POST",
-        headers: { Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`, "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ To: delivery.recipient, From: fromNumber, Body: body.trim() }).toString(),
-      });
-      accepted = resp.ok;
-      statusNote = accepted
-        ? "Twilio accepted the request; delivery is unconfirmed (callbacks are not configured)."
-        : "Twilio rejected the request; message was not accepted.";
-      if (!accepted) errorText = `Twilio HTTP ${resp.status}`;
-    } catch {
-      acceptanceUnknown = true;
-      errorText = "Provider request failed; acceptance is unknown.";
-      statusNote = "Provider acceptance is unknown after a connection failure. Check provider activity before retrying.";
-    }
-
-    const { error: logError } = await supabase.from("outbound_message_attempts").insert({
-      user_id: user.id,
-      conversation_id,
-      client_id: conversation.client_id,
-      message_id: inserted?.id ?? null,
-      channel: "SMS",
-      recipient: delivery.recipient,
-      delivered,
-      provider: "twilio",
-      status_note: statusNote,
-      error_text: errorText,
+    const { data: queuedRows, error: queueError } = await supabase.rpc("enqueue_staff_outbound_message", {
+      p_actor_id: user.id,
+      p_conversation_id: conversation_id,
+      p_channel: "SMS",
+      p_recipient: delivery.recipient,
+      p_subject: null,
+      p_body: body.trim(),
+      p_requested_at: new Date().toISOString(),
     });
-
-
-    if (logError) {
-      return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, delivered, retry_safe: false,
-        error: "Could not save the delivery audit record. Check provider activity before retrying.", note: statusNote }, 500);
-    }
-
+    if (queueError) throw queueError;
+    const queued = Array.isArray(queuedRows) ? queuedRows[0] : queuedRows;
     return jsonResponse({
-      success: accepted,
-      accepted,
-      acceptance_unknown: acceptanceUnknown,
+      success: true,
+      queued: true,
+      accepted: false,
+      acceptance_unknown: false,
       retry_safe: false,
-      delivered,
-      note: statusNote,
-      message_id: inserted?.id ?? null,
+      delivered: false,
+      note: "SMS queued for outbound delivery; provider delivery is not yet confirmed.",
+      message_id: queued?.message_id ?? null,
+      outbound_delivery_id: queued?.outbound_delivery_id ?? null,
     });
 
   } catch (e) {
-    if (e instanceof DeliveryPolicyError) return jsonResponse({ success: false, accepted: false, delivered: false, error: e.message }, e.status);
-    // Database/provider exceptions can contain personal data; do not return or log raw errors.
-    return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, retry_safe: false, delivered: false, error: "Unable to process this delivery request. Check provider activity before retrying if a send was attempted." }, 500);
+    if (e instanceof DeliveryPolicyError) return jsonResponse({ success: false, queued: false, accepted: false, delivered: false, error: e.message }, e.status);
+    // Database exceptions can contain personal data; do not return or log raw errors.
+    return jsonResponse({
+      success: false,
+      queued: false,
+      accepted: false,
+      acceptance_unknown: false,
+      retry_safe: true,
+      delivered: false,
+      error: "Unable to queue this delivery request. No provider request was made; your draft has been kept.",
+    }, 500);
   }
 });

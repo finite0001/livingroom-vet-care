@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { deliveryErrorNote, isDeliveryAccepted } from "../../src/hub/lib/delivery-result.ts";
 
-test("only confirmed provider acceptance clears a draft", () => {
+test("confirmed provider acceptance or durable queueing clears a draft", () => {
   assert.equal(isDeliveryAccepted({ accepted: true, success: true }), true);
-  for (const value of [null, undefined, {}, { accepted: false }, { accepted: true, success: false }, { accepted: true, acceptance_unknown: true }]) assert.equal(isDeliveryAccepted(value), false);
+  assert.equal(isDeliveryAccepted({ queued: true, success: true }), true);
+  for (const value of [null, undefined, {}, { accepted: false }, { queued: true, success: false }, { accepted: true, success: false }, { accepted: true, acceptance_unknown: true }]) assert.equal(isDeliveryAccepted(value), false);
 });
 
 test("HTTP audit failures and transport uncertainty warn before retrying", async () => {

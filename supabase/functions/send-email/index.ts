@@ -14,8 +14,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
-  let accepted = false;
-  let acceptanceUnknown = false;
   try {
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -55,54 +53,45 @@ serve(async (req) => {
       OUTBOUND_TEST_EMAILS: Deno.env.get("OUTBOUND_TEST_EMAILS"),
       OUTBOUND_TEST_PHONES: Deno.env.get("OUTBOUND_TEST_PHONES"),
     }, "EMAIL", to);
-    const emailConfig = requireEmailConfiguration({
+    requireEmailConfiguration({
       RESEND_API_KEY: Deno.env.get("RESEND_API_KEY"),
       RESEND_FROM: Deno.env.get("RESEND_FROM"),
       RESEND_REPLY_TO: Deno.env.get("RESEND_REPLY_TO"),
     });
 
-    const { data: inserted, error: msgError } = await supabase.from("messages").insert({
-      conversation_id, content: body.trim(), type: "EMAIL", sender_type: "STAFF", sender_id: user.id, is_internal: false,
-    }).select("id").single();
-    if (msgError) throw msgError;
-
-    const { error: updateError } = await supabase.from("conversations").update({ last_message_at: new Date().toISOString(), is_read: true }).eq("id", conversation_id);
-    if (updateError) throw updateError;
-
-    const delivered = false;
-    let statusNote = "";
-    let errorText: string | null = null;
-    try {
-      const resp = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${emailConfig.apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: emailConfig.from, reply_to: emailConfig.replyTo, to: [delivery.recipient], subject: String(subject), text: body.trim() }),
-      });
-      accepted = resp.ok;
-      statusNote = accepted
-        ? "Resend accepted the request; delivery is unconfirmed (callbacks are not configured)."
-        : "Resend rejected the request; message was not accepted.";
-      if (!accepted) errorText = `Resend HTTP ${resp.status}`;
-    } catch {
-      acceptanceUnknown = true;
-      errorText = "Provider request failed; acceptance is unknown.";
-      statusNote = "Provider acceptance is unknown after a connection failure. Check provider activity before retrying.";
-    }
-
-    const { error: logError } = await supabase.from("outbound_message_attempts").insert({
-      user_id: user.id, conversation_id, client_id: conversation.client_id, message_id: inserted?.id ?? null,
-      channel: "EMAIL", recipient: delivery.recipient, delivered, provider: "resend", status_note: statusNote, error_text: errorText,
+    const { data: queuedRows, error: queueError } = await supabase.rpc("enqueue_staff_outbound_message", {
+      p_actor_id: user.id,
+      p_conversation_id: conversation_id,
+      p_channel: "EMAIL",
+      p_recipient: delivery.recipient,
+      p_subject: String(subject),
+      p_body: body.trim(),
+      p_requested_at: new Date().toISOString(),
     });
-
-    if (logError) {
-      return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, delivered, retry_safe: false,
-        error: "Could not save the delivery audit record. Check provider activity before retrying.", note: statusNote }, 500);
-    }
-
-    return jsonResponse({ success: accepted, accepted, acceptance_unknown: acceptanceUnknown, retry_safe: false, delivered, note: statusNote, message_id: inserted?.id ?? null });
+    if (queueError) throw queueError;
+    const queued = Array.isArray(queuedRows) ? queuedRows[0] : queuedRows;
+    return jsonResponse({
+      success: true,
+      queued: true,
+      accepted: false,
+      acceptance_unknown: false,
+      retry_safe: false,
+      delivered: false,
+      note: "Email queued for outbound delivery; provider delivery is not yet confirmed.",
+      message_id: queued?.message_id ?? null,
+      outbound_delivery_id: queued?.outbound_delivery_id ?? null,
+    });
   } catch (e) {
-    if (e instanceof DeliveryPolicyError) return jsonResponse({ success: false, accepted: false, delivered: false, error: e.message }, e.status);
-    // Database/provider exceptions can contain personal data; do not return or log raw errors.
-    return jsonResponse({ success: false, accepted, acceptance_unknown: acceptanceUnknown, retry_safe: false, delivered: false, error: "Unable to process this delivery request. Check provider activity before retrying if a send was attempted." }, 500);
+    if (e instanceof DeliveryPolicyError) return jsonResponse({ success: false, queued: false, accepted: false, delivered: false, error: e.message }, e.status);
+    // Database exceptions can contain personal data; do not return or log raw errors.
+    return jsonResponse({
+      success: false,
+      queued: false,
+      accepted: false,
+      acceptance_unknown: false,
+      retry_safe: true,
+      delivered: false,
+      error: "Unable to queue this delivery request. No provider request was made; your draft has been kept.",
+    }, 500);
   }
 });

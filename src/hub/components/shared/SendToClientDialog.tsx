@@ -136,7 +136,7 @@ export function SendToClientDialog({
           toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
           return;
         }
-        toast.success("SMS accepted by provider; delivery is not yet confirmed");
+        toast.success(data?.queued ? "SMS queued for delivery" : "SMS accepted by provider; delivery is not yet confirmed");
       } else {
         if (!email) throw new Error("Client has no email address");
         const { data, error } = await supabase.functions.invoke("send-email", {
@@ -147,7 +147,7 @@ export function SendToClientDialog({
           toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
           return;
         }
-        toast.success("Email accepted by provider; delivery is not yet confirmed");
+        toast.success(data?.queued ? "Email queued for delivery" : "Email accepted by provider; delivery is not yet confirmed");
       }
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });

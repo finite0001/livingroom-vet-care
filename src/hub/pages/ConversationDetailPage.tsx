@@ -16,7 +16,7 @@ import {
 import { useClientConsent } from "@/hub/hooks/use-sms-consent";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function ConversationDetailPage() {
@@ -85,7 +85,7 @@ export default function ConversationDetailPage() {
         });
         if (error) throw error;
         if (isDeliveryAccepted(data)) {
-          toast.success("SMS accepted by provider; delivery is not yet confirmed");
+          toast.success(data?.queued ? "SMS queued for delivery" : "SMS accepted by provider; delivery is not yet confirmed");
           return true;
         }
         toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
@@ -98,7 +98,7 @@ export default function ConversationDetailPage() {
         });
         if (error) throw error;
         if (isDeliveryAccepted(data)) {
-          toast.success("Email accepted by provider; delivery is not yet confirmed");
+          toast.success(data?.queued ? "Email queued for delivery" : "Email accepted by provider; delivery is not yet confirmed");
           return true;
         }
         toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");

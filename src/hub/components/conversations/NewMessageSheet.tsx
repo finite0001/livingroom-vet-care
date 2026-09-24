@@ -81,7 +81,7 @@ export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
         toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
         return;
       }
-      toast.success("SMS accepted by provider; delivery is not yet confirmed");
+      toast.success(data?.queued ? "SMS queued for delivery" : "SMS accepted by provider; delivery is not yet confirmed");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       onOpenChange(false);
