@@ -46,6 +46,8 @@ The codebase is now closest to a controlled prelaunch lead-capture and staff-ops
 3. [Preventive care, inventory, billing](phase-03-preventive-inventory-billing.md) — P0 for any service offered in October.
 4. [Pilot, public launch, and full platform](phase-04-pilot-launch-and-full-platform.md) — P0 release gate and P1 follow-on scope.
 
+Continuation plan: [remaining commercial-readiness work before phone/CloudTalk](remaining-readiness-no-phone-cloudtalk.md). Use it for the next slices so completed native inventory/billing/payment/certificate work is verified, not rebuilt.
+
 ## Release boundaries
 
 ### Late-October housecall pilot

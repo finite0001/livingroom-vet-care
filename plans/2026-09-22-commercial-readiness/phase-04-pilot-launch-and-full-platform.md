@@ -1,6 +1,6 @@
 # Phase 4 — pilot, public launch, and full platform
 
-Priority: P0 for go/no-go; P1 for post-pilot scope. Depends on phases 1–3 and real owner/provider decisions.
+Priority: P0 for go/no-go; P1 for post-pilot scope. Depends on phases 1–3 and real owner/provider decisions. Public phone number, CloudTalk, live voice/voicemail, and emergency phone wording are intentionally deferred to the final owner/provider step.
 
 ## Pilot checklist
 
@@ -42,3 +42,5 @@ After the pilot proves reliability, implement only what the service menu require
 ## Required evidence
 
 Store dated artifacts under `/Users/davidedler/livingroom-vet-care/docs/launch-evidence/`: hosted test results, provider callback samples, migration reconciliation, restore report, clinician sign-off, content approval, pilot incident log, and final go/no-go decision.
+
+Before phone/CloudTalk are available, use [remaining-readiness-no-phone-cloudtalk.md](remaining-readiness-no-phone-cloudtalk.md) as the active pre-final-gate checklist. It keeps software proof, synthetic provider callbacks, inventory/billing/payment acceptance, and clinical/staff review moving while preserving the final owner/provider blockers.
