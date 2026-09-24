@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-24.
 
-This checklist records the remaining actions that require owner, registrar, or practice-policy authority. The hosted Supabase operating loop, Hub workflow readiness, Vercel Production deployment, custom-domain HTTPS, and release-control evidence are otherwise prepared for final verification. Current aggregate readiness is 4/5 gates passing; the only generated blocker group is owner public-contact content.
+This checklist records the remaining actions that require owner, registrar, or practice-policy authority. Hub workflow readiness, Vercel Production deployment, custom-domain HTTPS, and release-control evidence are otherwise prepared for final verification. Current aggregate readiness is 3/5 gates passing. The generated blocker groups are the one local-only Phase 2 migration, `20260924120000`, and owner public-contact content.
 
 ## 1. DNS and HTTPS at GoDaddy/Vercel — completed 2026-09-24
 
@@ -23,16 +23,18 @@ Verification completed:
 - Vercel domain verification returned `configured_correctly` for both `thelivingroom.vet` and `www.thelivingroom.vet`.
 - HTTPS smoke checks now return HTTP/2 200 from Vercel for `https://thelivingroom.vet`, `https://www.thelivingroom.vet`, and `https://thelivingroom.vet/hub`. See [2026-09-24 public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md).
 
-## 2. Hosted application/backend readiness — completed except deferred live providers
+## 2. Hosted application/backend readiness — local Phase 2 proof complete, hosted apply pending
 
 Current generated evidence records:
 
-- Supabase migration parity: 148 matching versions, 0 remote-only, 0 local-only.
-- Supabase/database operating-loop gate: pass.
+- Supabase migration parity: 148 matching hosted versions, 0 remote-only, 1 local-only (`20260924120000`).
+- Supabase/database operating-loop gate: blocked until the local Phase 2 migration is applied to hosted and readiness is refreshed.
 - Hub workflow readiness gate: pass.
 - External services/deployment readiness gate: pass.
 - Verification/release-control gate: pass.
 - Public website gate: blocked only by owner public-contact values.
+
+Local database proof exists for the pending Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 
 Scheduler jobs exist after the hosted migration rollout, but database Vault values `project_url` and `scheduler_worker_key` are intentionally absent. That means database-initiated scheduler calls remain contained until explicit scheduler/provider commissioning.
 

@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-24T06:29:56.242Z",
-  "startedAt": "2026-09-24T06:29:51.747Z",
-  "finishedAt": "2026-09-24T06:29:56.242Z",
+  "generatedAt": "2026-09-24T07:21:54.424Z",
+  "startedAt": "2026-09-24T07:21:49.722Z",
+  "finishedAt": "2026-09-24T07:21:54.424Z",
   "workspaceRoot": "/Users/davidedler/livingroom-vet-care",
   "status": "no-remote-only-receipts",
   "migrationCounts": {
     "matching": 148,
-    "localOnly": 0,
+    "localOnly": 1,
     "remoteOnly": 0,
     "remoteOnlyMatched": 0,
     "remoteOnlyStillMissing": 0
@@ -175,7 +175,7 @@
       },
       {
         "root": "/Users/davidedler/livingroom-vet-care",
-        "migrationFileCount": 148
+        "migrationFileCount": 149
       },
       {
         "root": "/Users/davidedler/livingroom-vet-care-charts",

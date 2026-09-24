@@ -1,17 +1,19 @@
 {
-  "generatedAt": "2026-09-24T06:30:45.205Z",
+  "generatedAt": "2026-09-24T07:22:39.050Z",
   "status": "blocked",
   "summary": {
     "gates": 5,
-    "passing": 4,
-    "blocked": 1
+    "passing": 3,
+    "blocked": 2
   },
   "gates": [
     {
       "id": "supabase-database",
       "label": "Supabase/database operating loop",
-      "status": "pass",
-      "blockers": [],
+      "status": "blocked",
+      "blockers": [
+        "1 local readiness migrations are not applied remotely."
+      ],
       "warnings": [],
       "evidence": [
         "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",

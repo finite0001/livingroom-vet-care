@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-24T06:29:41.199Z",
+  "generatedAt": "2026-09-24T07:21:39.297Z",
   "note": "Read-only hosted readiness inventory. Outputs intentionally avoid environment values and provider secrets.",
   "git": {
     "head": {
       "command": "git rev-parse HEAD",
       "status": 0,
       "ok": true,
-      "stdout": "9ac6bd53386a0a8b67d95dac098ed09d1d0b9753",
+      "stdout": "7ebe0748a54d53bb59d3935fa3d3c29f99516a68",
       "stderr": ""
     },
     "branch": {
@@ -28,8 +28,10 @@
     "migrationDrift": {
       "matching_count": 148,
       "remote_only_count": 0,
-      "local_only_count": 0,
-      "local_only": [],
+      "local_only_count": 1,
+      "local_only": [
+        "20260924120000"
+      ],
       "remote_only_first": [],
       "remote_only_last": []
     }
@@ -40,14 +42,14 @@
       "status": 0,
       "ok": true,
       "stdout": "",
-      "stderr": "Vercel CLI 59.26.0 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [329ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [10d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
+      "stderr": "Vercel CLI 59.26.0 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [441ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [10d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
     },
     "environmentNames": {
       "command": "npx --yes vercel env ls",
       "status": 0,
       "ok": true,
       "stdout": "name                               value                       type      environments        created    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Production          1d ago     \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Production          1d ago     \n VITE_SUPABASE_URL [redacted]         Config    Production          1d ago     \n VERCEL_ENV [redacted]                      Secret    Preview             10d ago    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Preview             10d ago    \n VITE_SUPABASE_URL [redacted]         Config    Preview             10d ago    \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Preview             10d ago",
-      "stderr": "Vercel [redacted] 59.26.0 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [100ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
+      "stderr": "Vercel [redacted] 59.26.0 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [105ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
     },
     "domainVerification": [
       {
@@ -71,8 +73,8 @@
           ],
           "current": {
             "nameservers": [
-              "ns08.domaincontrol.com",
-              "ns07.domaincontrol.com"
+              "ns07.domaincontrol.com",
+              "ns08.domaincontrol.com"
             ],
             "cnames": [],
             "aValues": [
@@ -159,8 +161,8 @@
               "1115926f442091d7.vercel-dns-016.com."
             ],
             "aValues": [
-              "216.150.1.129",
-              "216.150.16.129"
+              "216.150.1.193",
+              "216.150.16.193"
             ]
           },
           "recommended": {
@@ -216,7 +218,7 @@
       "command": "dig +short NS thelivingroom.vet",
       "status": 0,
       "ok": true,
-      "stdout": "ns08.domaincontrol.com.\nns07.domaincontrol.com.",
+      "stdout": "ns07.domaincontrol.com.\nns08.domaincontrol.com.",
       "stderr": ""
     },
     "apexA": {
