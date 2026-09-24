@@ -61,6 +61,6 @@ Do not run this plan with `--include-seed`, `--include-roles`, or without `--ski
 - Scheduler jobs may exist, but without Vault `project_url` / `scheduler_worker_key` they should record bounded `configuration_missing` evidence instead of calling Edge workers.
 - Commercial readiness should remain 4/5 blocked only by owner public contact content.
 
-## Separate cleanup found
+## Separate cleanup handled
 
-`npm run preflight:deployment` currently has a stale assertion: `scripts/deployment-preflight.sh` expects `build:deployment` to equal `npm run build`, while `package.json` now correctly routes it through `node scripts/build-deployment.mjs`. This is not a Supabase migration blocker, but should be fixed in a separate deployment-tooling cleanup.
+`npm run preflight:deployment` previously had a stale assertion for the deployment build script. It now verifies the guarded `node scripts/build-deployment.mjs` wrapper and the checked-in Vercel build command. The full preflight remains larger than the hosted DB rollout gate because it also runs browser tests and a deployment build.

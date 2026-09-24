@@ -90,7 +90,7 @@ npm run readiness:summary
 
 Expected: 4/5 gates passing, still blocked only by owner public contact content unless the owner details have been filled.
 
-Do not use `npm run preflight:deployment` as the hosted DB rollout gate until its stale build-contract assertion is fixed. It currently checks an older `build:deployment` value and can fail for deployment-tooling reasons unrelated to Supabase parity.
+`npm run preflight:deployment` is valid again after the build-contract assertion was aligned with the guarded deployment wrapper. Treat it as a broader deployment gate, not the minimal hosted DB rollout gate, because it also runs browser tests and a deployment build.
 
 Do not make the Supabase `health` Edge Function a hard gate unless deploying `health` is explicitly added to this rollout. Current remote function inventory does not show that slug deployed.
 
