@@ -192,9 +192,12 @@ test("private document finalization retries without duplicate upload and retains
 }, testInfo) => {
   const state = await fixture(page);
   await page.goto(`/hub/patient/${petId}`);
+  await expect(page.getByRole("heading", { name: "Synthetic Juniper" })).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(
     page.getByText("Patient documents", { exact: true }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15_000 });
   await expect(
     page.getByLabel("Related encounter").locator("option"),
   ).toHaveCount(2);

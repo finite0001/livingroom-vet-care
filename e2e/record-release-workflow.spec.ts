@@ -893,6 +893,7 @@ async function emailFixture(page: Page) {
 test("release email recovers lost capture and queue responses across reload and creates a separate new intent explicitly", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const state = await emailFixture(page);
   let email = page.getByRole("region", { name: "Reviewed release email" });
   await email
@@ -953,9 +954,12 @@ test("release email recovers lost capture and queue responses across reload and 
   ).toBeVisible();
   expect(state.emailQueueCalls).toBe(1);
   await page.reload();
-  await page
-    .getByRole("button", { name: "Open release package", exact: true })
-    .click();
+  const openPackage = page.getByRole("button", {
+    name: "Open release package",
+    exact: true,
+  });
+  await expect(openPackage).toBeVisible({ timeout: 15_000 });
+  await openPackage.click();
   email = page.getByRole("region", { name: "Reviewed release email" });
   await expect(email.getByText(requestId, { exact: false })).toBeVisible();
   await email

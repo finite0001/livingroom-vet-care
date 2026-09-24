@@ -33,6 +33,10 @@ fi
 npm run lint
 npm run typecheck
 npm test
-npm run build:deployment
+VERCEL_ENV="${VERCEL_ENV:-production}" \
+VITE_SUPABASE_PROJECT_ID="${VITE_SUPABASE_PROJECT_ID:-mgadheotkdnrsatfivjy}" \
+VITE_SUPABASE_URL="${VITE_SUPABASE_URL:-https://mgadheotkdnrsatfivjy.supabase.co}" \
+VITE_SUPABASE_PUBLISHABLE_KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-sb_publishable_synthetic_preflight_only}" \
+  npm run build:deployment
 npm run test:e2e
 git diff --check
