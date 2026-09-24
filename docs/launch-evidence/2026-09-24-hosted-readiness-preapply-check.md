@@ -3,7 +3,7 @@
 Date: 2026-09-24
 Scope: read-only hosted Supabase checks before the current two-migration readiness apply
 Target project: `mgadheotkdnrsatfivjy`
-Commit checked: `9291b6d`
+Commit checked: `53b9f17`
 
 ## Summary
 
@@ -14,6 +14,20 @@ The current hosted pre-apply checks confirm the same readiness boundary:
 - Scheduler Vault secrets `project_url` and `scheduler_worker_key` are absent.
 - `pg_cron`, `pg_net`, and the six expected cron jobs are present from the previous PR #204 rollout.
 - No hosted SQL was applied during this check.
+
+## Continuation refresh
+
+After PR #204 was merged and the hosted rollout plan was updated, the Phase 2 preflight was rechecked from `main` at `53b9f17`:
+
+- `git status --short --branch` reported `main...origin/main [ahead 28]`.
+- `supabase/config.toml` still identified `project_id = "mgadheotkdnrsatfivjy"`.
+- `npx supabase status --output json` still reported `linked_project_ref` as `mgadheotkdnrsatfivjy`.
+- `npm run supabase:migration-drift --silent` still reported 148 matching migrations, 0 remote-only migrations, and 2 local-only migrations: `20260924120000` and `20260924130000`.
+- `npx supabase db push --linked --dry-run --skip-vault` still listed only the two expected migration files and no seeds or roles.
+- Scheduler containment still held: no `project_url` or `scheduler_worker_key` Vault rows were present, while `pg_cron`, `pg_net`, and `cron.job` existed.
+- `npm run readiness:refresh` completed successfully and regenerated the dated readiness evidence.
+
+No hosted SQL was applied during this continuation refresh because the hosted DB mutation approval boundary was not crossed.
 
 ## Migration drift
 

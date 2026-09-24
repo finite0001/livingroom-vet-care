@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-24T08:08:46.586Z",
+  "generatedAt": "2026-09-24T08:16:49.982Z",
   "note": "Read-only hosted readiness inventory. Outputs intentionally avoid environment values and provider secrets.",
   "git": {
     "head": {
       "command": "git rev-parse HEAD",
       "status": 0,
       "ok": true,
-      "stdout": "cacae4ce5af0f2b540b912622dc315e4da588d4a",
+      "stdout": "53b9f170c73f762c1a8a028db2365754e807d9aa",
       "stderr": ""
     },
     "branch": {
@@ -47,14 +47,14 @@
       "status": 0,
       "ok": true,
       "stdout": "",
-      "stderr": "Vercel CLI 59.26.0 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [349ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [11d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
+      "stderr": "Vercel CLI 59.26.0 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [388ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [11d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
     },
     "environmentNames": {
       "command": "npx --yes vercel env ls",
       "status": 0,
       "ok": true,
       "stdout": "name                               value                       type      environments        created    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Production          1d ago     \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Production          1d ago     \n VITE_SUPABASE_URL [redacted]         Config    Production          1d ago     \n VERCEL_ENV [redacted]                      Secret    Preview             11d ago    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Preview             11d ago    \n VITE_SUPABASE_URL [redacted]         Config    Preview             11d ago    \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Preview             11d ago",
-      "stderr": "Vercel [redacted] 59.26.0 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [187ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
+      "stderr": "Vercel [redacted] 59.26.0 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [99ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
     },
     "domainVerification": [
       {
@@ -143,7 +143,7 @@
       "command": "dig +short A thelivingroom.vet",
       "status": 0,
       "ok": true,
-      "stdout": "216.150.1.1\n216.150.16.1",
+      "stdout": "216.150.16.1\n216.150.1.1",
       "stderr": ""
     },
     "wwwCname": {
