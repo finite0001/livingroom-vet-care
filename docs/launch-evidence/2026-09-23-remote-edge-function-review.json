@@ -1,0 +1,360 @@
+{
+  "generatedAt": "2026-09-23T05:05:20.422Z",
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "inventoryPath": "docs/launch-evidence/2026-09-23-edge-functions-inventory.json",
+  "note": "Downloads remote-only Edge Function source into a temporary directory, records hashes/classification only, then deletes the downloaded source. Source bodies are intentionally not written to evidence.",
+  "status": "reviewed-no-launch-blockers",
+  "summary": {
+    "remoteOnlyReviewed": 20,
+    "launchBlockers": 0,
+    "adjacentWorkflowReview": 19,
+    "reviewedNoLaunchSignal": 1,
+    "downloadFailures": 0
+  },
+  "launchBlockers": [],
+  "reviews": [
+    {
+      "slug": "capture-ezyvet-attachment",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 2,
+      "sourceSha256": "1e49da645a092da67ed219a31c375f62045b9c1422261590d63a09667b7decf4",
+      "matchedRiskPatterns": [
+        "service-role"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "ezyvet-import",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 6,
+      "sourceSha256": "2118ff6467dbecb288a8eb41fb6d8355facf00686edabc232f63f3dde3430f26",
+      "matchedRiskPatterns": [
+        "scheduler-or-worker",
+        "provider-webhook",
+        "service-role"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "invoice-checkout",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "ec0bd4d2f1a3a7956dbaa7ed49214e5c1ed699755be49077f0b6926cfed32530",
+      "matchedRiskPatterns": [
+        "provider-webhook"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "invoice-refund",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "ea79bb4a97c12686f235dfaea960d63cafb2c41402d195287618116e82ba9fe1",
+      "matchedRiskPatterns": [
+        "provider-webhook"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "payment-collection",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "317356110e6288b88e783762f78163a96fd7c014dba78e20efaf70c235a73704",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "payment-status",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "5610c2ebeb2a56ce9b4ab49f37fa78527cbc72c40ebc02e96a8c22ce4b61ac4e",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "prepare-document-link",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 2,
+      "sourceSha256": "5d3b6ae68075eff983ef7858acd8c275dd079bc874c2d6014b5aeeb6961594cb",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "prepare-external-record",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "5b5c6d4a5618ca3acbd90bd9aaac45827177ac5a2eb58c1f67e362da686f27e6",
+      "matchedRiskPatterns": [],
+      "classification": "reviewed-no-launch-signal",
+      "launchBlocker": false,
+      "reason": "Downloaded source did not match the launch-conflict slug list or high-risk source patterns."
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 2,
+      "sourceSha256": "5c76c1f75e681b818aa4ec498fcd6b81af0d5f1128cce518a445cb73427294b7",
+      "matchedRiskPatterns": [
+        "sends-message",
+        "service-role"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "prepare-lab-report",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "0451d98bc2d2f4d317d6254b0864a3248505e2c797f2cf4f6607a722c2ae208a",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "prepare-payment-collection",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "11f59ed87d014fe83193090d8b9034234586a780d7ace08ae5a180522b9bac54",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "a01569ec7956653e9afbaecc1c0a6e1b1f1cf188326e46850522cf736b9252a0",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "prepare-release-email",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "8bffb4b8ada64b0854fd6a213a0eb3e0f2079334879f4237b4e8ce2e762317ac",
+      "matchedRiskPatterns": [
+        "sends-message",
+        "service-role"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "process-stripe-events",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "6c62afe392a88ebcdb5379ed862c00876f609feb2aa0cb9d6daf1fc7e85913bc",
+      "matchedRiskPatterns": [
+        "scheduler-or-worker",
+        "provider-webhook"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "recover-document-link",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 2,
+      "sourceSha256": "d1ff4d8acc07bb67839890b22f68461b6d797e8c4af150fe4edb5fa792f40f6b",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "recover-payment-collection",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "9b0f6bfbbca5c4d85dff0795f3027cf68e9ebfd049e1ba9fcea27404d9ebd1fa",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "retrieve-document-link",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 2,
+      "sourceSha256": "7e2249aa09cc79bf32a4f490c115d6f4a62f6f13a6139a595f7123115340b5e5",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "retrieve-reviewed-ezyvet-original",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 2,
+      "sourceSha256": "80f706d799558d3009d9fbfe5a77cb69e692e7ce709ed9e1c00573c8fc39eb6d",
+      "matchedRiskPatterns": [
+        "service-role"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "stripe-webhook",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "517a66bbd480a56752eff4996db438896d4d484df28c1aeaf683d0c82c8fa863",
+      "matchedRiskPatterns": [
+        "provider-webhook"
+      ],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    },
+    {
+      "slug": "verify-payment-reconciliation",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "26b187b577f34553d25e3491279b2a0b0b2f24f3756cfb33adc130721ca6797d",
+      "matchedRiskPatterns": [],
+      "classification": "adjacent-workflow-review",
+      "launchBlocker": false,
+      "reason": "Remote-only function appears tied to payment, document, ezyVet, lab, attachment, or release workflows outside the current launch-critical operating loop."
+    }
+  ]
+}

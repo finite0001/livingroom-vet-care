@@ -1,0 +1,46 @@
+{
+  "recordedDate": "2026-09-23",
+  "status": "owner-content-required",
+  "blockingGates": [
+    "public-website"
+  ],
+  "completedGates": [
+    "external-services"
+  ],
+  "dns": {
+    "registrar": "GoDaddy",
+    "status": "completed-verified",
+    "current": {
+      "apexA": [
+        "216.150.1.1",
+        "216.150.16.1"
+      ],
+      "wwwCname": "1115926f442091d7.vercel-dns-016.com."
+    },
+    "verification": "Vercel reported configured_correctly for both thelivingroom.vet and www.thelivingroom.vet after the GoDaddy DNS update.",
+    "followUp": "HTTP served from Vercel immediately; re-run HTTPS smoke after Vercel certificate provisioning completes.",
+    "evidence": "docs/launch-evidence/2026-09-23-hosted-readiness-inventory.json"
+  },
+  "publicContent": {
+    "requiredOwnerApprovedFields": [
+      "practice phone",
+      "practice email",
+      "emergency phone/contact wording",
+      "opening hours"
+    ],
+    "evidence": "src/config/practice.ts"
+  },
+  "providerFollowUp": {
+    "status": "required-before-live-messaging",
+    "items": [
+      "Register Resend delivery webhook to the reviewed resend-delivery-webhook function.",
+      "Register Twilio status callback to twilio-message-status-callback.",
+      "Register Twilio inbound SMS webhook to twilio-inbound-sms.",
+      "Keep OUTBOUND_DELIVERY_MODE disabled until explicit provider round-trip tests are approved."
+    ]
+  },
+  "notes": [
+    "DNS was previously a blocker in this artifact, but was completed later on 2026-09-23.",
+    "No confirmed public phone, email, emergency contact, or hours were found in the repository; placeholders were intentionally removed rather than published."
+  ]
+}

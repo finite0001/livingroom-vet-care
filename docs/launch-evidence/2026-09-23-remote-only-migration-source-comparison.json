@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-23T05:04:11.028Z",
+  "status": "no-remote-only-receipts",
+  "primaryRoot": "/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations",
+  "comparisonRoot": "/Users/davidedler/Developer/livingroom-readiness-weight/supabase/migrations",
+  "summary": {
+    "remoteOnlyVersions": 0,
+    "missingFromPrimary": 0,
+    "missingFromComparison": 0,
+    "hashMismatches": 0
+  },
+  "missingFromPrimary": [],
+  "missingFromComparison": [],
+  "hashMismatches": [],
+  "comparisons": []
+}

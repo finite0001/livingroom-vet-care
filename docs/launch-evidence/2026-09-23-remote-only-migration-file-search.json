@@ -1,0 +1,832 @@
+{
+  "generatedAt": "2026-09-23T05:04:09.006Z",
+  "startedAt": "2026-09-23T05:04:04.944Z",
+  "finishedAt": "2026-09-23T05:04:09.006Z",
+  "workspaceRoot": "/Users/davidedler/livingroom-vet-care",
+  "status": "no-remote-only-receipts",
+  "migrationCounts": {
+    "matching": 123,
+    "localOnly": 0,
+    "remoteOnly": 0,
+    "remoteOnlyMatched": 0,
+    "remoteOnlyStillMissing": 0
+  },
+  "searchScope": {
+    "candidateParents": [
+      "/Users/davidedler",
+      "/Users/davidedler/Developer",
+      "/Users/davidedler/.codex/private"
+    ],
+    "ignoredDirectoryNames": [
+      ".git",
+      ".next",
+      ".supabase",
+      "Library",
+      "build",
+      "coverage",
+      "dist",
+      "node_modules"
+    ],
+    "candidateRootsChecked": 199,
+    "scannedRoots": [
+      {
+        "root": "/Users/davidedler/.codex/private/lrv-identity-rollout-20260915",
+        "migrationFileCount": 224
+      },
+      {
+        "root": "/Users/davidedler/.codex/private/lrv-item-rollout-primary-20260915",
+        "migrationFileCount": 111
+      },
+      {
+        "root": "/Users/davidedler/.codex/private/lrv-staging-20260915",
+        "migrationFileCount": 111
+      },
+      {
+        "root": "/Users/davidedler/.codex/private/lrv-staging-attachment-udvpgdq9",
+        "migrationFileCount": 119
+      },
+      {
+        "root": "/Users/davidedler/.codex/private/lrv-weight-rollout-20260915",
+        "migrationFileCount": 226
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-native-communications",
+        "migrationFileCount": 118
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-readiness-reconciliation",
+        "migrationFileCount": 113
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-readiness-security",
+        "migrationFileCount": 102
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-readiness-weight",
+        "migrationFileCount": 113
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-release-cleanup-fix",
+        "migrationFileCount": 111
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-stripe-runtime",
+        "migrationFileCount": 54
+      },
+      {
+        "root": "/Users/davidedler/Developer/livingroom-vet-care",
+        "migrationFileCount": 137
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-anesthesia",
+        "migrationFileCount": 31
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-antech-plan",
+        "migrationFileCount": 59
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-api-original-clinical-review",
+        "migrationFileCount": 89
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-api-original-release",
+        "migrationFileCount": 89
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-api-original-release-db",
+        "migrationFileCount": 89
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-api-original-release-runtime",
+        "migrationFileCount": 89
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-api-release-ui",
+        "migrationFileCount": 88
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-contract",
+        "migrationFileCount": 85
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-metadata-db",
+        "migrationFileCount": 86
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-original-capture",
+        "migrationFileCount": 87
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-original-db",
+        "migrationFileCount": 87
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-original-review",
+        "migrationFileCount": 88
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-original-review-db",
+        "migrationFileCount": 88
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-original-runtime",
+        "migrationFileCount": 86
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-original-ui",
+        "migrationFileCount": 86
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-parser",
+        "migrationFileCount": 84
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-plan",
+        "migrationFileCount": 84
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-review-ui",
+        "migrationFileCount": 87
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-runtime",
+        "migrationFileCount": 85
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-ui",
+        "migrationFileCount": 85
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-attachment-workflow",
+        "migrationFileCount": 86
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-billing-ui",
+        "migrationFileCount": 19
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-brand",
+        "migrationFileCount": 22
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-brand-integration",
+        "migrationFileCount": 41
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-care",
+        "migrationFileCount": 123
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-care-charts",
+        "migrationFileCount": 24
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-care-reminders",
+        "migrationFileCount": 34
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-certificate-due-plans",
+        "migrationFileCount": 35
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-chart-original-runtime",
+        "migrationFileCount": 87
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ci148-cleanup",
+        "migrationFileCount": 122
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-client-payment-ui",
+        "migrationFileCount": 53
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-clinical-acceptance-integration",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-clinical-review",
+        "migrationFileCount": 45
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-clinical-roundtrip",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-commissioned-navigation",
+        "migrationFileCount": 46
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-communications-restore",
+        "migrationFileCount": 132
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-communications-ui",
+        "migrationFileCount": 28
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-dental",
+        "migrationFileCount": 25
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-deployment-guard",
+        "migrationFileCount": 45
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-document-link-sms",
+        "migrationFileCount": 50
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-document-link-ui",
+        "migrationFileCount": 48
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-document-links",
+        "migrationFileCount": 48
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-document-sms-ui",
+        "migrationFileCount": 50
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-edge-build",
+        "migrationFileCount": 44
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-email-dns-review",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-email-dns-saved",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-estimate-decision-ui",
+        "migrationFileCount": 129
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-estimate-decisions",
+        "migrationFileCount": 129
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-estimate-publication",
+        "migrationFileCount": 128
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-explicit-rpc-grants",
+        "migrationFileCount": 66
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-external-record-acceptance",
+        "migrationFileCount": 62
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-external-record-provenance",
+        "migrationFileCount": 62
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-external-record-staff-acceptance",
+        "migrationFileCount": 62
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-external-record-ui",
+        "migrationFileCount": 61
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-external-verification",
+        "migrationFileCount": 61
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet",
+        "migrationFileCount": 22
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-clinical-adapter",
+        "migrationFileCount": 68
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-clinical-ingestion",
+        "migrationFileCount": 69
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-clinical-plan",
+        "migrationFileCount": 68
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-clinical-runs",
+        "migrationFileCount": 69
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-clinical-ui",
+        "migrationFileCount": 68
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-history-artifacts",
+        "migrationFileCount": 69
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-history-core",
+        "migrationFileCount": 71
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-history-ui",
+        "migrationFileCount": 69
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-ezyvet-reviewed-history",
+        "migrationFileCount": 71
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-hosted-backfill-rehearsal",
+        "migrationFileCount": 65
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-hosted-definition-preflight",
+        "migrationFileCount": 65
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-hosted-edge",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-hosted-schema",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-housecall-routes",
+        "migrationFileCount": 89
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-identity-reconciliation",
+        "migrationFileCount": 113
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound",
+        "migrationFileCount": 21
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-durable-state",
+        "migrationFileCount": 62
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-integration",
+        "migrationFileCount": 27
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-local-acceptance",
+        "migrationFileCount": 61
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-operator-acceptance",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-processing-recovery",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-processing-ui-acceptance",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-review-acceptance",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-review-ui",
+        "migrationFileCount": 62
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbound-sms-acceptance",
+        "migrationFileCount": 62
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inbox-ui",
+        "migrationFileCount": 28
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inquiries",
+        "migrationFileCount": 38
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-integration-tests",
+        "migrationFileCount": 18
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-inventory",
+        "migrationFileCount": 19
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-invoice-documents",
+        "migrationFileCount": 33
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-invoice-email",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-invoice-email-ui",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-lab-report-acceptance",
+        "migrationFileCount": 61
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-lab-result-provenance",
+        "migrationFileCount": 61
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-lab-result-ui",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-lab-staff-acceptance",
+        "migrationFileCount": 61
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-lab-verification",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-lab-work",
+        "migrationFileCount": 29
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-launch-settings",
+        "migrationFileCount": 37
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-mail-commissioning-plan",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-message-recovery",
+        "migrationFileCount": 32
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-migration-decisions",
+        "migrationFileCount": 114
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-native-estimates",
+        "migrationFileCount": 127
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-native-finance",
+        "migrationFileCount": 126
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-native-prescribing",
+        "migrationFileCount": 125
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-operations-acceptance",
+        "migrationFileCount": 64
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-operations-database",
+        "migrationFileCount": 64
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-operations-readiness-plan",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-operations-runtime",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-operations-ui",
+        "migrationFileCount": 63
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-outbox",
+        "migrationFileCount": 23
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-outbox-retry-acceptance",
+        "migrationFileCount": 65
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-outbox-retry-database",
+        "migrationFileCount": 65
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-outbox-retry-runtime",
+        "migrationFileCount": 64
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-outbox-retry-ui",
+        "migrationFileCount": 64
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-access",
+        "migrationFileCount": 54
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-access-db",
+        "migrationFileCount": 54
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-access-roundtrip",
+        "migrationFileCount": 54
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-access-staff",
+        "migrationFileCount": 54
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-collection-ui",
+        "migrationFileCount": 55
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-composer-integration",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-acceptance",
+        "migrationFileCount": 59
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-db",
+        "migrationFileCount": 58
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-reconciliation",
+        "migrationFileCount": 59
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-roundtrip",
+        "migrationFileCount": 57
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-runtime",
+        "migrationFileCount": 57
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-staff",
+        "migrationFileCount": 57
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-delivery-ui",
+        "migrationFileCount": 57
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-inbox-retry",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-inbox-retry-ui",
+        "migrationFileCount": 59
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-ledger",
+        "migrationFileCount": 50
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-link-review",
+        "migrationFileCount": 55
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-operations",
+        "migrationFileCount": 56
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-processing-acceptance",
+        "migrationFileCount": 60
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-reconciliation",
+        "migrationFileCount": 55
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-reconciliation-edge",
+        "migrationFileCount": 57
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-reconciliation-ui",
+        "migrationFileCount": 56
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-redaction",
+        "migrationFileCount": 55
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-rollout",
+        "migrationFileCount": 54
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payment-ui",
+        "migrationFileCount": 53
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-payments",
+        "migrationFileCount": 51
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-pilot-integration",
+        "migrationFileCount": 118
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-reconciliation",
+        "migrationFileCount": 85
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-reference-hardening",
+        "migrationFileCount": 85
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-release",
+        "migrationFileCount": 84
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-release-db",
+        "migrationFileCount": 84
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-release-staging",
+        "migrationFileCount": 84
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-release-ui",
+        "migrationFileCount": 83
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-renderer",
+        "migrationFileCount": 83
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-prescription-staging",
+        "migrationFileCount": 77
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-public-intake",
+        "migrationFileCount": 41
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-reconciliation-combined",
+        "migrationFileCount": 113
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-record-releases",
+        "migrationFileCount": 37
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-ci-fix",
+        "migrationFileCount": 120
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-delivery",
+        "migrationFileCount": 43
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-history",
+        "migrationFileCount": 40
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-original-preview",
+        "migrationFileCount": 89
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-provenance",
+        "migrationFileCount": 45
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-provenance-plan",
+        "migrationFileCount": 66
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-source-artifacts",
+        "migrationFileCount": 67
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-source-db",
+        "migrationFileCount": 67
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-source-ui",
+        "migrationFileCount": 66
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-release-source-v5",
+        "migrationFileCount": 68
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-reminder-dispatch",
+        "migrationFileCount": 39
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-reminder-policy-ui",
+        "migrationFileCount": 42
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-restore-fresh",
+        "migrationFileCount": 84
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-restore-rehearsal",
+        "migrationFileCount": 47
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-return-ci-fix",
+        "migrationFileCount": 122
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-reviewed-vaccinations",
+        "migrationFileCount": 74
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-router",
+        "migrationFileCount": 18
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-rpc-grant-rollout",
+        "migrationFileCount": 66
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-scheduling",
+        "migrationFileCount": 18
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-staff-payment-roundtrip",
+        "migrationFileCount": 55
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-staging-commissioning",
+        "migrationFileCount": 71
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-standalone-integration",
+        "migrationFileCount": 133
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-stock-ui",
+        "migrationFileCount": 20
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-toolchain",
+        "migrationFileCount": 17
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-treatment-alert-review",
+        "migrationFileCount": 46
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-ci-fix",
+        "migrationFileCount": 88
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-commissioning",
+        "migrationFileCount": 72
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-db",
+        "migrationFileCount": 72
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-intake",
+        "migrationFileCount": 72
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-review-db",
+        "migrationFileCount": 73
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-review-release",
+        "migrationFileCount": 73
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-review-ui",
+        "migrationFileCount": 72
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-runtime",
+        "migrationFileCount": 72
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccination-ui",
+        "migrationFileCount": 71
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-vaccine-certificates",
+        "migrationFileCount": 30
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-weight-import",
+        "migrationFileCount": 44
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-weight-reconciliation",
+        "migrationFileCount": 112
+      },
+      {
+        "root": "/Users/davidedler/livingroom-vet-worker-auth",
+        "migrationFileCount": 47
+      }
+    ]
+  },
+  "matchedRemoteOnlyVersions": [],
+  "missingRemoteOnlyVersions": []
+}

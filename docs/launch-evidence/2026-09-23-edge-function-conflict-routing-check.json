@@ -1,0 +1,38 @@
+{
+  "recordedDate": "2026-09-23",
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "scope": "Non-destructive routing risk check for remote-only Edge Function conflict slugs after reviewed launch functions were deployed.",
+  "conflictSlugs": [
+    "dispatch-outbox",
+    "enqueue-message",
+    "process-inbound",
+    "public-contact",
+    "queue-reminders",
+    "resend-webhook",
+    "twilio-webhook"
+  ],
+  "checks": {
+    "pgCronJobTable": {
+      "command": "npx supabase db query --linked \"select to_regclass('cron.job') is not null as cron_job_table_exists;\"",
+      "cronJobTableExists": false,
+      "conclusion": "No pg_cron job table is present on the linked hosted database, so these functions are not evidenced as scheduled from pg_cron."
+    }
+  },
+  "mitigation": {
+    "command": "npx supabase functions deploy dispatch-outbox enqueue-message process-inbound public-contact queue-reminders resend-webhook twilio-webhook --project-ref mgadheotkdnrsatfivjy --no-verify-jwt --use-api",
+    "strategy": "Deployed explicit disabled stubs for legacy conflict slugs. Stubs return HTTP 410 with a replacement route hint instead of executing legacy worker/webhook/contact behavior.",
+    "replacementRoutes": {
+      "dispatch-outbox": "dispatch-outbound-deliveries",
+      "enqueue-message": "send-email/send-sms",
+      "process-inbound": "twilio-inbound-sms",
+      "public-contact": "direct contact_submissions insert guarded by database trigger",
+      "queue-reminders": "appointment reminder database enqueueing",
+      "resend-webhook": "resend-delivery-webhook",
+      "twilio-webhook": "twilio-message-status-callback/twilio-inbound-sms"
+    }
+  },
+  "remainingRisk": [
+    "External provider dashboards or third-party callers may still point to legacy webhook URLs.",
+    "Any stale caller hitting a legacy slug should now receive HTTP 410; provider dashboards still need to be updated to the reviewed replacement webhook URLs before live provider use."
+  ]
+}

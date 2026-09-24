@@ -1,0 +1,237 @@
+{
+  "generatedAt": "2026-09-23T05:03:54.449Z",
+  "note": "Read-only hosted readiness inventory. Outputs intentionally avoid environment values and provider secrets.",
+  "git": {
+    "head": {
+      "command": "git rev-parse HEAD",
+      "status": 0,
+      "ok": true,
+      "stdout": "f23d534179d93cf4e1689617a3c533594c7a1ed5",
+      "stderr": ""
+    },
+    "branch": {
+      "command": "git branch --show-current",
+      "status": 0,
+      "ok": true,
+      "stdout": "codex/patient-documents",
+      "stderr": ""
+    },
+    "statusShort": {
+      "command": "git status --short",
+      "status": 0,
+      "ok": true,
+      "stdout": "D  .env\n M .env.example\n M .gitignore\n M docs/clinical-core.md\n M docs/commercial-readiness.md\n M docs/dependency-baseline.md\n M docs/deployment-runbook.md\n M docs/hub-smoke-tests.md\n M docs/messaging-environments.md\n M index.html\n M package.json\n M public/robots.txt\n M src/App.tsx\n M src/components/layout/Header.tsx\n M src/components/sections/experience/HowItWorks.tsx\n M src/components/sections/experience/VirtualTour.tsx\n M src/hooks/use-page-title.ts\n M src/hub/components/clients/ClientNotesCard.tsx\n M src/hub/components/clients/CreateClientSheet.tsx\n M src/hub/components/clients/EditClientDialog.tsx\n M src/hub/components/conversations/NewMessageSheet.tsx\n M src/hub/components/layout/BottomTabBar.tsx\n M src/hub/components/layout/ClockInOutButton.tsx\n M src/hub/components/layout/DesktopSidebar.tsx\n M src/hub/components/layout/ProtectedRoute.tsx\n M src/hub/components/layout/UserHeader.tsx\n M src/hub/components/shared/SendToClientDialog.tsx\n M src/hub/contexts/AuthContext.tsx\n M src/hub/features/clinical/ClinicalWorkspace.tsx\n M src/hub/features/clinical/PatientProblems.tsx\n M src/hub/features/documents/PatientDocuments.tsx\n M src/hub/features/patients/PatientFormDialog.tsx\n M src/hub/features/patients/WeightHistory.tsx\n M src/hub/hooks/use-signature.ts\n M src/hub/hooks/use-time-clock.ts\n M src/hub/lib/delivery-result.ts\n M src/hub/pages/AdminStaffPage.tsx\n M src/hub/pages/CampaignsPage.tsx\n M src/hub/pages/ConversationDetailPage.tsx\n M src/hub/pages/HubHomePage.tsx\n M src/hub/pages/LoginPage.tsx\n M src/hub/pages/MyTimePage.tsx\n M src/hub/pages/SettingsPage.tsx\n M src/hub/pages/SignupPage.tsx\n M src/hub/pages/SurveysPage.tsx\n M src/hub/pages/TemplatesPage.tsx\n M src/hub/pages/TimeClockPage.tsx\n M src/index.css\n M src/integrations/supabase/types.ts\n M src/pages/About.tsx\n M src/pages/Contact.tsx\n M src/pages/Experience.tsx\n M src/pages/Index.tsx\n M src/pages/NotFound.tsx\n M src/pages/Services.tsx\n M src/pages/services/Diagnostics.tsx\n M src/pages/services/IllnessCare.tsx\n M src/pages/services/LaserTherapy.tsx\n M src/pages/services/SeniorCare.tsx\n M src/pages/services/Surgery.tsx\n M src/pages/services/Vaccinations.tsx\n M src/pages/services/WellnessCare.tsx\n M supabase/config.toml\n M supabase/functions/send-email/index.ts\n M supabase/functions/send-sms/index.ts\n M tests/delivery/delivery-handlers.test.ts\n M tests/delivery/delivery-result.test.ts\n M vercel.json\n?? docs/environment-manifest.md\n?? docs/launch-evidence/\n?? docs/launch-owner-action-checklist.md\n?? plans/2026-09-22-commercial-readiness/\n?? public/og-living-room-vet.jpg\n?? public/sitemap.xml\n?? scripts/\n?? src/config/public-site.ts\n?? src/hub/contexts/auth-context.ts\n?? src/hub/hooks/use-appointments.ts\n?? src/hub/hooks/use-contact-submissions.ts\n?? src/hub/hooks/use-outbound-deliveries.ts\n?? src/hub/pages/AppointmentsPage.tsx\n?? src/hub/pages/ContactSubmissionsPage.tsx\n?? src/hub/pages/DeliveriesPage.tsx\n?? src/pages/Privacy.tsx\n?? src/pages/Terms.tsx\n?? supabase/functions/_shared/disabled-legacy-function.ts\n?? supabase/functions/dispatch-outbound-deliveries/\n?? supabase/functions/dispatch-outbox/\n?? supabase/functions/enqueue-message/\n?? supabase/functions/process-inbound/\n?? supabase/functions/public-contact/\n?? supabase/functions/queue-reminders/\n?? supabase/functions/resend-delivery-webhook/\n?? supabase/functions/resend-webhook/\n?? supabase/functions/twilio-inbound-sms/\n?? supabase/functions/twilio-message-status-callback/\n?? supabase/functions/twilio-webhook/\n?? supabase/migrations/20260912230000_scheduling.sql\n?? supabase/migrations/20260913000000_inventory_billing.sql\n?? supabase/migrations/20260913010000_ezyvet_import.sql\n?? supabase/migrations/20260913020000_communications_outbox.sql\n?? supabase/migrations/20260913030000_inventory_read_models.sql\n?? supabase/migrations/20260913040000_ezyvet_review_import.sql\n?? supabase/migrations/20260913050000_inbound_delivery.sql\n?? supabase/migrations/20260913060000_care_charts.sql\n?? supabase/migrations/20260913070000_dental_chart.sql\n?? supabase/migrations/20260913080000_vaccine_certificates.sql\n?? supabase/migrations/20260913095000_inbox_workspace.sql\n?? supabase/migrations/20260913095500_sms_consent_workspace.sql\n?? supabase/migrations/20260913100000_lab_work.sql\n?? supabase/migrations/20260913110000_anesthesia_records.sql\n?? supabase/migrations/20260913120000_message_recovery.sql\n?? supabase/migrations/20260913130000_record_releases.sql\n?? supabase/migrations/20260913140000_care_reminders.sql\n?? supabase/migrations/20260913150000_invoice_documents.sql\n?? supabase/migrations/20260913160000_record_release_charts.sql\n?? supabase/migrations/20260913170000_website_inquiries.sql\n?? supabase/migrations/20260913180000_reminder_outbox.sql\n?? supabase/migrations/20260913190000_certificate_due_plans.sql\n?? supabase/migrations/20260913200000_record_release_history.sql\n?? supabase/migrations/20260913210000_public_intake.sql\n?? supabase/migrations/20260913220000_release_email_delivery.sql\n?? supabase/migrations/20260913230000_reviewed_weight_import.sql\n?? supabase/migrations/20260913240000_disable_reminder_policy.sql\n?? supabase/migrations/20260913250000_release_weight_provenance.sql\n?? supabase/migrations/20260913260000_treatment_alert_review.sql\n?? supabase/migrations/20260913270000_invoice_email.sql\n?? supabase/migrations/20260913280000_document_links.sql\n?? supabase/migrations/20260913290000_document_link_sms.sql\n?? supabase/migrations/20260913300000_payment_ledger.sql\n?? supabase/migrations/20260913310000_stripe_event_inbox.sql\n?? supabase/migrations/20260913320000_document_link_history.sql\n?? supabase/migrations/20260913330000_payment_reconciliation_observations.sql\n?? supabase/migrations/20260913340000_payment_collection_access.sql\n?? supabase/migrations/20260913350000_payment_reconciliation_resolution.sql\n?? supabase/migrations/20260913360000_payment_capability_persistence.sql\n?? supabase/migrations/20260913370000_payment_link_delivery.sql\n?? supabase/migrations/20260913380000_payment_reconciliation_discovery.sql\n?? supabase/migrations/20260913390000_payment_delivery_history.sql\n?? supabase/migrations/20260913400000_stripe_event_retry_cycles.sql\n?? supabase/migrations/20260913410000_lab_result_provenance.sql\n?? supabase/migrations/20260913420000_external_record_provenance.sql\n?? supabase/migrations/20260913430000_inbound_processing_recovery.sql\n?? supabase/migrations/20260913440000_operations_visibility.sql\n?? supabase/migrations/20260913450000_outbox_retry_recovery.sql\n?? supabase/migrations/20260913460000_explicit_staff_rpc_grants.sql\n?? supabase/migrations/20260913470000_release_source_provenance.sql\n?? supabase/migrations/20260913480000_release_source_byte_binding.sql\n?? supabase/migrations/20260913490000_ezyvet_clinical_runs.sql\n?? supabase/migrations/20260913500000_reviewed_imported_history.sql\n?? supabase/migrations/20260913510000_release_imported_history.sql\n?? supabase/migrations/20260913520000_consult_scoped_vaccination_import.sql\n?? supabase/migrations/20260913530000_reviewed_imported_vaccinations.sql\n?? supabase/migrations/20260913540000_record_release_vaccination_history.sql\n?? supabase/migrations/20260913550000_patient_scoped_prescription_import.sql\n?? supabase/migrations/20260913560000_parent_scoped_prescription_items.sql\n?? supabase/migrations/20260913570000_prescription_reference_reconciliation.sql\n?? supabase/migrations/20260913580000_prescription_source_review_context.sql\n?? supabase/migrations/20260913590000_prescription_review_preparation.sql\n?? supabase/migrations/20260913600000_prescription_interpretation_context.sql\n?? supabase/migrations/20260913610000_reviewed_imported_prescriptions.sql\n?? supabase/migrations/20260913620000_prescription_review_discovery.sql\n?? supabase/migrations/20260913630000_record_release_prescription_history.sql\n?? supabase/migrations/20260913650000_prescription_release_reference_hardening.sql\n?? supabase/migrations/20260913690000_attachment_metadata_runs.sql\n?? supabase/migrations/20260913700000_attachment_original_capture.sql\n?? supabase/migrations/20260913900000_payment_immutable_search_path.sql\n?? supabase/migrations/20260914010000_reviewed_canonical_api_originals.sql\n?? supabase/migrations/20260914020000_canonical_api_approval_cancellation.sql\n?? supabase/migrations/20260914030000_canonical_api_review_history.sql\n?? supabase/migrations/20260914040000_canonical_api_patient_chart.sql\n?? supabase/migrations/20260914050000_canonical_reviewed_original_context.sql\n?? supabase/migrations/20260914060000_canonical_release_attachment_validation.sql\n?? supabase/migrations/20260914070000_canonical_api_release_preview.sql\n?? supabase/migrations/20260914080000_canonical_release_original_verification.sql\n?? supabase/migrations/20260914090000_canonical_api_release_confirmation.sql\n?? supabase/migrations/20260914100000_canonical_api_release_discovery.sql\n?? supabase/migrations/20260914110000_document_link_retrieval_wait_authorization.sql\n?? supabase/migrations/20260914120000_explicit_public_creation_privileges.sql\n?? supabase/migrations/20260914130000_ezyvet_migration_manifests.sql\n?? supabase/migrations/20260914140000_ezyvet_migration_bindings.sql\n?? supabase/migrations/20260914150000_ezyvet_migration_progress.sql\n?? supabase/migrations/20260914160000_ezyvet_migration_attempt_events.sql\n?? supabase/migrations/20260914170000_ezyvet_claim_wait_authorization.sql\n?? supabase/migrations/20260914180000_ezyvet_stage_failure_wait_authorization.sql\n?? supabase/migrations/20260914190000_ezyvet_migration_items.sql\n?? supabase/migrations/20260914200000_ezyvet_migration_capture_evidence.sql\n?? supabase/migrations/20260914210000_ezyvet_migration_history_evidence.sql\n?? supabase/migrations/20260914220000_ezyvet_migration_vaccination_evidence.sql\n?? supabase/migrations/20260914230000_ezyvet_migration_prescription_evidence.sql\n?? supabase/migrations/20260916000000_ezyvet_migration_prescription_item_evidence.sql\n?? supabase/migrations/20260916010000_ezyvet_migration_identity_evidence.sql\n?? supabase/migrations/20260916020000_ezyvet_migration_weight_evidence.sql\n?? supabase/migrations/20260922170000_outbound_deliveries.sql\n?? supabase/migrations/20260922183000_contact_submission_triage.sql\n?? supabase/migrations/20260922190000_appointment_reminder_outbound_deliveries.sql\n?? supabase/migrations/20260922203000_appointment_write_safety.sql\n?? supabase/migrations/20260922210000_outbound_delivery_worker_results.sql\n?? supabase/migrations/20260922213000_outbound_delivery_callbacks.sql\n?? supabase/migrations/20260922220000_inbound_sms_processing.sql\n?? supabase/migrations/20260922223000_staff_outbound_message_queue.sql\n?? supabase/migrations/20260922224500_outbound_delivery_staff_controls.sql\n?? supabase/migrations/20260922230000_contact_submission_abuse_controls.sql\n?? supabase/tests/appointments_write_safety.test.sql\n?? supabase/tests/contact_submissions_triage.test.sql\n?? supabase/tests/inbound_sms.test.sql\n?? supabase/tests/outbound_deliveries.test.sql\n?? supabase/tests/outbound_delivery_staff_controls.test.sql\n?? supabase/tests/staff_outbound_queue.test.sql",
+      "stderr": ""
+    }
+  },
+  "supabase": {
+    "migrationDrift": {
+      "matching_count": 123,
+      "remote_only_count": 0,
+      "local_only_count": 0,
+      "local_only": [],
+      "remote_only_first": [],
+      "remote_only_last": []
+    }
+  },
+  "vercel": {
+    "projectInspect": {
+      "command": "npx --yes vercel project inspect livingroom-vet-care",
+      "status": 0,
+      "ok": true,
+      "stdout": "",
+      "stderr": "Vercel CLI 59.25.4 (Node.js 26.7.0)\n> Found Project daves-projects-e0da43ba/livingroom-vet-care [287ms]\n\n  General\n\n    ID\t\t\t\tprj_Dn1g9AIBEth78S7V3pqhYHueICl7\n    Name\t\t\tlivingroom-vet-care\n    Owner\t\t\tDave's projects\n    Created At\t\t\t13 September 2026 12:34:49 [9d ago]\n    Root Directory\t\t.\n    Node.js Version\t\t24.x\n\n  Framework Settings\n\n    Framework Preset\t\tVite\n    Build Command\t\tnpm run build:deployment\n    Output Directory\t\tdist\n    Install Command\t\tnpm ci --ignore-scripts\n\n  Sandbox\n\n    Region\t\t\tiad1\n    Failover Regions\t\tNone"
+    },
+    "environmentNames": {
+      "command": "npx --yes vercel env ls",
+      "status": 0,
+      "ok": true,
+      "stdout": "name                               value                       type      environments        created    \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Production          1h ago     \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Production          1h ago     \n VITE_SUPABASE_URL [redacted]         Config    Production          1h ago     \n VERCEL_ENV [redacted]                      Secret    Preview             9d ago     \n VITE_SUPABASE_PUBLISHABLE_KEY [redacted]         Config    Preview             9d ago     \n VITE_SUPABASE_URL [redacted]         Config    Preview             9d ago     \n VITE_SUPABASE_PROJECT_ID [redacted]         Config    Preview             9d ago",
+      "stderr": "Vercel [redacted] 59.25.4 (Node.js 26.7.0)\nRetrieving project…\n> [redacted] Variables found for daves-projects-e0da43ba/livingroom-vet-care [147ms]\nNext steps:\n- [redacted] an Environment Variable:\n  vercel env add\n- [redacted] an Environment Variable:\n  vercel env rm\n- [redacted] Development Environment Variables into .env.local:\n  vercel env pull"
+    },
+    "domainVerification": [
+      {
+        "domain": "thelivingroom.vet",
+        "result": {
+          "status": "ok",
+          "reason": "configured_correctly",
+          "message": "thelivingroom.vet has a valid configuration and is verified for project livingroom-vet-care.",
+          "domain": "thelivingroom.vet",
+          "domainStatus": "configured-correctly",
+          "configurationStatus": "configured-correctly",
+          "ok": true,
+          "issues": [],
+          "misconfigured": false,
+          "configuredBy": "A",
+          "serviceType": "external",
+          "ipStatus": "no-change",
+          "dnssecEnabled": null,
+          "acceptedChallenges": [
+            "http-01"
+          ],
+          "current": {
+            "nameservers": [
+              "ns07.domaincontrol.com",
+              "ns08.domaincontrol.com"
+            ],
+            "cnames": [],
+            "aValues": [
+              "216.150.16.1",
+              "216.150.1.1"
+            ]
+          },
+          "recommended": {
+            "ipv4": [
+              {
+                "rank": 1,
+                "value": [
+                  "216.150.1.1",
+                  "216.150.16.1"
+                ]
+              },
+              {
+                "rank": 2,
+                "value": [
+                  "76.76.21.21"
+                ]
+              }
+            ],
+            "cname": [
+              {
+                "rank": 1,
+                "value": "1115926f442091d7.vercel-dns-016.com."
+              },
+              {
+                "rank": 2,
+                "value": "cname.vercel-dns.com."
+              }
+            ],
+            "records": [
+              {
+                "type": "A",
+                "name": "@",
+                "value": "216.150.1.1"
+              },
+              {
+                "type": "A",
+                "name": "@",
+                "value": "216.150.16.1"
+              }
+            ],
+            "nameservers": []
+          },
+          "conflicts": [],
+          "domainOwnership": "current-scope",
+          "project": {
+            "idOrName": "livingroom-vet-care",
+            "attached": true,
+            "verified": true,
+            "verification": [],
+            "verificationError": null
+          }
+        }
+      },
+      {
+        "domain": "www.thelivingroom.vet",
+        "result": {
+          "status": "ok",
+          "reason": "configured_correctly",
+          "message": "www.thelivingroom.vet has a valid configuration and is verified for project livingroom-vet-care.",
+          "domain": "www.thelivingroom.vet",
+          "domainStatus": "configured-correctly",
+          "configurationStatus": "configured-correctly",
+          "ok": true,
+          "issues": [],
+          "misconfigured": false,
+          "configuredBy": "CNAME",
+          "serviceType": "external",
+          "ipStatus": "no-change",
+          "dnssecEnabled": null,
+          "acceptedChallenges": [
+            "http-01"
+          ],
+          "current": {
+            "nameservers": [
+              "ns08.domaincontrol.com",
+              "ns07.domaincontrol.com"
+            ],
+            "cnames": [
+              "1115926f442091d7.vercel-dns-016.com."
+            ],
+            "aValues": [
+              "216.150.1.193",
+              "216.150.16.193"
+            ]
+          },
+          "recommended": {
+            "ipv4": [
+              {
+                "rank": 1,
+                "value": [
+                  "216.150.1.1",
+                  "216.150.16.1"
+                ]
+              },
+              {
+                "rank": 2,
+                "value": [
+                  "76.76.21.21"
+                ]
+              }
+            ],
+            "cname": [
+              {
+                "rank": 1,
+                "value": "1115926f442091d7.vercel-dns-016.com."
+              },
+              {
+                "rank": 2,
+                "value": "cname.vercel-dns.com."
+              }
+            ],
+            "records": [
+              {
+                "type": "CNAME",
+                "name": "www",
+                "value": "1115926f442091d7.vercel-dns-016.com."
+              }
+            ],
+            "nameservers": []
+          },
+          "conflicts": [],
+          "domainOwnership": "current-scope",
+          "project": {
+            "idOrName": "livingroom-vet-care",
+            "attached": true,
+            "verified": true,
+            "verification": [],
+            "verificationError": null
+          }
+        }
+      }
+    ]
+  },
+  "dns": {
+    "nameservers": {
+      "command": "dig +short NS thelivingroom.vet",
+      "status": 0,
+      "ok": true,
+      "stdout": "ns08.domaincontrol.com.\nns07.domaincontrol.com.",
+      "stderr": ""
+    },
+    "apexA": {
+      "command": "dig +short A thelivingroom.vet",
+      "status": 0,
+      "ok": true,
+      "stdout": "216.150.1.1\n216.150.16.1",
+      "stderr": ""
+    },
+    "wwwCname": {
+      "command": "dig +short CNAME www.thelivingroom.vet",
+      "status": 0,
+      "ok": true,
+      "stdout": "1115926f442091d7.vercel-dns-016.com.",
+      "stderr": ""
+    }
+  }
+}

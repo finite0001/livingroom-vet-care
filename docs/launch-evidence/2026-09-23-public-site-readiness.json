@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-09-23T05:05:20.479Z",
+  "status": "not-launch-ready",
+  "summary": {
+    "blockers": 4,
+    "warnings": 0,
+    "publicRoutes": 14,
+    "sitemapRoutes": 14
+  },
+  "findings": [
+    {
+      "severity": "blocker",
+      "area": "owner-content",
+      "message": "Practice phone is not configured for public launch.",
+      "evidence": "src/config/practice.ts: phone: null"
+    },
+    {
+      "severity": "blocker",
+      "area": "owner-content",
+      "message": "Practice email is not configured for public launch.",
+      "evidence": "src/config/practice.ts: email: null"
+    },
+    {
+      "severity": "blocker",
+      "area": "owner-content",
+      "message": "Practice emergencyPhone is not configured for public launch.",
+      "evidence": "src/config/practice.ts: emergencyPhone: null"
+    },
+    {
+      "severity": "blocker",
+      "area": "owner-content",
+      "message": "Practice hours is not configured for public launch.",
+      "evidence": "src/config/practice.ts: hours: null"
+    }
+  ]
+}

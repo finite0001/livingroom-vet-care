@@ -17,15 +17,20 @@ backend.
 
 ## Messaging (`send-sms` edge function)
 
-- [ ] **Recording a message inserts both rows.** Sending from a conversation creates a
-      row in `messages` AND a corresponding row in `outbound_message_attempts` with
-      `delivered = false` and a `status_note` mentioning Twilio.
-- [ ] **`delivered: false` until Twilio is configured.** Function response payload
-      contains `delivered: false`. UI toast says "Message recorded" — never "delivered".
+- [ ] **Queueing a message inserts both rows.** Sending from a conversation creates a
+      row in `messages` AND a corresponding row in `outbound_deliveries` with
+      `status = 'QUEUED'`, `channel = 'SMS'`, and a `message_id` pointing at the staff
+      message.
+- [ ] **Provider delivery is not implied by queueing.** Function response payload
+      contains `queued: true`, `accepted: false`, and `delivered: false`. UI toast says
+      "SMS queued for delivery" — never "delivered".
 - [ ] **Recipient mismatch is rejected.** Calling `send-sms` with a `to` phone that
       doesn't match the conversation client returns 403.
 - [ ] **Unauthorized callers blocked.** Calling `send-sms` without an auth header, or
       as a non-staff user, returns 401/403 and writes nothing.
+- [ ] **Outbound delivery controls are guarded.** `/hub/deliveries` shows retry only
+      for `FAILED`/`UNKNOWN` rows and cancel only for `QUEUED` rows. A stale row
+      action fails and asks staff to refresh instead of silently changing state.
 
 ## Smart replies (`suggest-replies` edge function)
 
