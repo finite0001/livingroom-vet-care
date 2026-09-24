@@ -1,5 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
+import { setTimeout } from 'node:timers/promises';
+
+const dryRunCommand = ['supabase', 'db', 'push', '--linked', '--dry-run', '--skip-vault'];
 
 function parseJsonFromOutput(output) {
   const jsonStart = output.indexOf('{');
@@ -12,22 +15,55 @@ function parseJsonFromOutput(output) {
   return JSON.parse(output.slice(jsonStart, jsonEnd + 1));
 }
 
+function runDryRun() {
+  return spawnSync('npx', dryRunCommand, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: 60_000,
+  });
+}
+
+function outputFor(result) {
+  return `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+}
+
+function isRetryableLoginRoleFailure(output) {
+  return output.includes('LegacyDbConnectError') || output.includes('cli_login_postgres');
+}
+
+function isRetryableDryRunFailure(result, output) {
+  return result.error?.code === 'ETIMEDOUT' || isRetryableLoginRoleFailure(output);
+}
+
 const localVersions = readdirSync('supabase/migrations')
   .map((name) => name.match(/^(\d{14})_.+\.sql$/)?.[1])
   .filter(Boolean)
   .sort((left, right) => left.localeCompare(right));
 
-const dryRun = spawnSync('npx', ['supabase', 'db', 'push', '--linked', '--dry-run', '--skip-vault'], {
-  encoding: 'utf8',
-  stdio: ['ignore', 'pipe', 'pipe'],
-  timeout: 60_000,
-});
+const maxAttempts = 2;
+let attempts = 0;
+let dryRun;
+let dryRunOutput = '';
+
+while (attempts < maxAttempts) {
+  attempts += 1;
+  dryRun = runDryRun();
+  dryRunOutput = outputFor(dryRun);
+
+  if (!dryRun.error && dryRun.status === 0) {
+    break;
+  }
+
+  if (attempts >= maxAttempts || !isRetryableDryRunFailure(dryRun, dryRunOutput)) {
+    break;
+  }
+
+  await setTimeout(1_500);
+}
 
 if (dryRun.error) {
   throw dryRun.error;
 }
-
-const dryRunOutput = `${dryRun.stdout}\n${dryRun.stderr}`;
 
 if (dryRun.status !== 0) {
   throw new Error(dryRunOutput.trim() || 'Supabase dry-run drift check failed.');
@@ -47,6 +83,7 @@ const report = {
   remote_only_last: [],
   source: {
     command: 'npx supabase db push --linked --dry-run --skip-vault',
+    attempts,
     message: dryRunJson.message,
   },
 };
