@@ -1,0 +1,61 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "4b57d71d2319b30630968fd3907425f45ae9c897",
+  "file_sha256": {
+    "e2e/record-release-workflow.spec.ts": "38630b3e792a68ee17fb18bf4958570feec20977feab8161100a894c0f3639b2",
+    "src/hub/features/record-releases/PatientRecordReleases.tsx": "e85ecfc4fdd7fffdef85c4979a68fbb2a597dcf482b3b571be60102d497a18f6",
+    "src/hub/features/record-releases/api.ts": "6a9b27fbdc2b2de764ba878829181244b91d7664dc3c604a5c3a0935b4e940f0",
+    "src/hub/features/record-releases/refresh.ts": "97317cef923cd769de63d041de4f7419e5cc646db492bd21d498c4f6f75d03d6",
+    "src/hub/features/record-releases/selection.ts": "85e7eef10f3e702d77cf392c586af201c4ddaf44b05a6b28a69db6973d7a991d",
+    "supabase/functions/_shared/document-link-artifacts.ts": "491213b3a900e529a7b80108191d59ffce731d21ef6c32b7a4689423e6f134fa",
+    "supabase/functions/_shared/record-release-imported-history.ts": "05a4530400559f0e27a3610a8ec82fe6a65f5b6cb0f4f7b6b7550bb99092a5bd",
+    "supabase/functions/_shared/record-release-imported-prescriptions.ts": "bfb2ee21d2e8c63195ffd429d16701cef7b5c2752480d33dee735d792472d15c",
+    "supabase/functions/_shared/record-release-imported-vaccinations.ts": "1e96791c1d3b6ac51dc35525a6671bf774e82fa6d47653661664f5cd33679e8f",
+    "supabase/functions/_shared/record-release-renderer.ts": "01b49ad15268dd3d6432547aad8400ce7f15d3d9f517af4d001164f5a429140d",
+    "supabase/functions/_shared/record-release-source-provenance.ts": "0ac7d831ad1f35ec16b7b3fd388d607f07782fc38a2307e942fe8026bf327009",
+    "supabase/functions/_shared/release-email-payload.ts": "bd732342e74b905aa03c6c369693a6712d2b92e95dd461ed26be4c9f562bc6d2",
+    "supabase/functions/_shared/record-release-api-attachments.ts": "67bec357438cf272b8fb340edce791a0ff74bfb8b461b592469a853055695425",
+    "tests/record-releases/api-attachment-fixture.ts": "d63401c682f2b084c9311f575009ef7f12bb29aa1b092ea0489a9b97eee89774",
+    "tests/record-releases/api-attachments.test.ts": "63e00a631d0d6050d09766947984f854c612570176464e7378bd70963f7fd09c"
+  },
+  "log_sha256": {
+    "lrv-schema9-check-final.log": "05a6a7dabd149870c5af47b8096a40f246f45138e9776b1cbdfa0cf955bd611d",
+    "lrv-schema9-browser-final.log": "ceff9ffd8e5510065134c711fe606280c9ad460d8d38f218457e0a2bdd4e9ffc",
+    "lrv-schema9-cache-browser.log": "c9e7a2179c32f8a373ca4d893d5d2b1271c56fe1e0be6ae08ecbd06501185136",
+    "lrv-schema9-deno.log": "399f6f4d25f9069e1b0c9e14bda10f164fea6bd33ed062f2ed0ffc13a881aaaf"
+  },
+  "unit_tests": 547,
+  "new_unit_tests": 19,
+  "release_browser_tests": 21,
+  "new_release_browser_tests": 1,
+  "post_cache_change_browser_checks": 3,
+  "count_note": "Three follow-up browser checks overlap the21 release tests; they are not additional distinct tests.",
+  "lint": "passed with existing AuthContext fast-refresh warning",
+  "typecheck": "passed",
+  "build": "passed with existing large-chunk warning",
+  "edge_typecheck": [
+    "prepare-release-email",
+    "prepare-document-link",
+    "recover-document-link",
+    "retrieve-document-link"
+  ],
+  "verified_behaviors": [
+    "Canonical v2 approval and capture-v1 provenance are validated with exact key sets, identity, source context and file descriptor",
+    "API file descriptors cannot be omitted, duplicated, downgraded or linked to another patient/capture",
+    "Renderer escapes source prose and excludes private object paths",
+    "Existing canonical prescription/vaccination/narrative/native-source validation extends through schema9",
+    "Positive mixed prescription/API render retains partial disclosure and rejects mismatched prescription selection",
+    "Email and document-link builders preserve mixed originals and reject changed API bytes",
+    "In-memory email builder assembles24 original files including20 distinct API originals; renderer rejects either overflow",
+    "Existing release controls use schema9 discovery/preview and enforce20API selection; schema9 policy acceptance remains required",
+    "Browser reviews API original and retries the exact confirmation after a simulated lost response",
+    "Candidate query and invalidation helpers share a new cache namespace"
+  ],
+  "limitations": [
+    "No hosted changes, policy activation or provider messages.",
+    "Browser requests and file downloads in unit package builders are synthetic; actual Supabase Storage release preparation/recovery still requires integrated acceptance.",
+    "Maximum file count is covered in renderer/email memory fixtures; SQL discovery pagination/overflow and maximum physical-file packages remain pending.",
+    "Schema9 document-link role/expiry waits and mapping mutation acceptance remain pending.",
+    "Populated upgrade/restore, coordinated hosted deployment and broader commercial gates remain outstanding."
+  ]
+}

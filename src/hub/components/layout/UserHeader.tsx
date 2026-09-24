@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { ClockInOutButton } from "./ClockInOutButton";
+import { GlobalSearch } from "@/hub/components/shared/GlobalSearch";
 
 interface UserHeaderProps {
   navHidden?: boolean;
@@ -38,7 +39,8 @@ export function UserHeader({ navHidden = false, onToggleNav }: UserHeaderProps) 
         <AvatarFallback className="text-xs font-medium">{initials}</AvatarFallback>
       </Avatar>
       <span className="text-sm font-medium text-foreground">{profile.full_name}</span>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-1">
+        <GlobalSearch />
         <ClockInOutButton />
       </div>
     </div>

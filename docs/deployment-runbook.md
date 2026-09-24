@@ -1,19 +1,44 @@
 # Living Room Vet deployment runbook
 
+## Current rollout direction — September 16, 2026
+
+This section supersedes the September12 commissioning snapshot below. Verify external state again before deployment; these repository receipts describe past checks, not a fresh live audit.
+
+- **Primary application backend:** `livingroom-vet-care` / `mgadheotkdnrsatfivjy`, per the owner's approved rollout and `AGENTS.md`. Legacy `ugpyjacqganaqtsiekay` is retained, not a target for new application writes. Verify the project reference before every CLI/MCP operation; Lovable's retained Cloud panel is not proof of the selected application backend.
+- **Recorded public release:** [September15 live readiness release](live-readiness-release-20260915.md) published `codex/lovable-publication` revision `c5cd483` through Lovable. Its recorded served bundle used the primary backend; `/hub` redirected unauthenticated visitors to login. This supersedes the historical claim that website cutover had not occurred.
+- **Staging is separate:** the [pilot staging receipt](pilot-staging-deployment-20260915.md) identifies backend `kothoqicubowyhwfsrte` and the protected Vercel preview. That receipt's migration count is historical. Inspect the current migration ledger, take the required backup and rehearse the actual upgrade path; never infer staging/primary parity from a count in an older document.
+- **Standalone practice platform:** [September16 direction](standalone-platform-direction-20260916.md) stops further ezyVet synchronization, write-back, registration and migration-report development. Preserve source evidence and existing credentials; provider import/write gates remain disabled. Historical ezyVet commissioning below is not a standalone launch requirement.
+- **Provider gates:** Stripe remains sandbox-only. Email/SMS delivery and new attachment capture/cleanup remain separately commissioned capabilities, not automatically enabled by a frontend publication. Production contact verification is still an open gate in the last recorded public release; do not bypass it.
+- **Attachment release status:** PRs150→152→153→156 are dependent candidates. PRs152/153 are ready for review, not merged/deployed. PR156 has verified incoming-file milestones, but its latest cleanup/discovery/concurrency candidate requires its own completed CI and hosted acceptance. See [attachment cleanup operations](attachment-cleanup-operations.md) and the [feature matrix](standalone-feature-matrix-20260916.md).
+
+For the next publication, resolve the dependency stack into the intended Lovable-synced branch, verify the resulting revision, back up and rehearse the exact target database upgrade, deploy compatible reviewed Edge handlers with gates disabled, run hosted authenticated/unauthenticated checks, and then publish and inspect the served frontend. Do not treat a green child PR as evidence that its parent chain is already published. Keep legacy data intact and preserve the clinical/provider acceptance gates in the comprehensive readiness tracker.
+
+September16 attachment preflight found identical primary/staging inventories at113 receipts. Hosted weight migration20260916020000 is distinct from canonical20260916033310; retain both rather than relabeling history. The exact schema and populated upgrades passed110 attachment SQL assertions and retained119 receipts. A subsequent synthetic database/private-file restore exposed destination default-privilege leakage; its corrected replay passed function, trigger, policy and privilege comparison. See [preflight](evidence/hosted-attachment-preflight-20260916.json), [populated upgrade](evidence/hosted-attachment-populated-upgrade-20260916.json) and [restore evidence](evidence/attachment-retained-history-restore-20260916.json). These are local synthetic receipts, not hosted backup/PITR or clinical/provider acceptance. The restore fixture does not yet populate the new conversation attachment lifecycle states.
+
+Latest staging update: the [September16 attachment rollout](evidence/staging-attachment-rollout-20260916.json) applied the six rehearsed migrations to `kothoqicubowyhwfsrte`, retaining119 receipts. Actual staging backup rehearsal passed213 SQL assertions. Hosted preexisting data and original bucket rows were unchanged, and full routine/access inventories match the rehearsed schema. Primary remains unmodified by this rollout. The five new attachment Edge handlers are deployed with byte-matched source; see [deployment evidence](evidence/staging-attachment-edge-20260916.json). Frontend integration and complete authenticated hosted workflows remain pending. The [expanded lifecycle restore](evidence/conversation-attachment-lifecycle-restore-20260916.json) separately verifies four outgoing and two incoming attachment states, eight physical files across the complete fixture, and completed cleanup replay; prepared conversation-email manifests and in-flight cleanup claims remain separate recovery cases.
+
+Latest authenticated staging check: [September16 access evidence](evidence/staging-attachment-authenticated-gates-20260916.json) records seven passing hosted checks and removal of the temporary test account. Email/password login was found disabled and restored; public signup and anonymous sign-in remain disabled, and email confirmation remains enabled. Managed worker authentication reaches the disabled cleanup response. No client sends or provider calls occurred. This establishes access checks only, not completed attachment upload/capture/send acceptance. CI run35112894055 passed frontend, database and Edge jobs at2dd8ae6.
+
+September16 hosted upload acceptance: [17-step synthetic workflow](evidence/staging-attachment-upload-acceptance-20260916.json) exercised staff login, household/conversation creation, private PDF upload, deployed byte verification, exact owner download, anonymous denial, attachment manifest preparation and identical-request recovery. Email payload capture returned503 with `RESEND_FROM` and `RESEND_REPLY_TO` absent; the request remains uncaptured. Independent database checks show zero conversation messages and zero outbox links. Retained synthetic evidence uses an inactive, Auth-banned actor. Sender/reply mailbox commissioning, complete payload capture, provider delivery and hosted UI acceptance remain unfinished.
+
+September16 worker alignment: [deployment receipt](evidence/staging-attachment-workers-20260916.json) records `process-inbound` version9 and `dispatch-outbox` version12 in staging. All24 bundled source files match the reviewed candidate. Anonymous POST requests return401, outbound delivery remains disabled, and attachment capture/cleanup gates remain absent/default-off. No authenticated worker invocation or provider processing was performed.
+
+September16 preview frontend: [deployment evidence](evidence/staging-attachment-frontend-20260916.json) records READY preview `dpl_6YwbA24U21GZ4Fs5yXj1ZRtH6wG1` frome629419. Its served entry bundle contains only the staging backend reference. Homepage and staff login render in Chrome. Stable staging alias remains unchanged pending CI35114824602; authenticated UI acceptance and public Lovable publication remain outstanding.
+
+## Historical commissioning snapshot
+
+The following September12 notes explain the original setup. Their environment states, counts, provider prerequisites and outstanding-work statements are historical and may be superseded by the current direction and later dated receipts above.
+
 ## Confirmed environments (2026-09-12)
 
 - Source: `finite0001/livingroom-vet-care`; foundation branch `codex/practice-foundation`.
-- Owned domain: `thelivingroom.vet`. Domain ownership is confirmed by the owner; GoDaddy DNS now points the apex and `www` records at Vercel. Email domain verification is not yet performed.
+- Owned domain: `thelivingroom.vet`. Domain ownership is confirmed by the owner; the three Resend sending records are saved and verified. Website cutover, receiving mailboxes and Auth SMTP remain uncommissioned.
 - New dedicated Supabase project: `mgadheotkdnrsatfivjy` / `livingroom-vet-care`, US West, in the owner-approved Camp Sequoia Lake organization. Its data/auth/storage are isolated from the camp projects; organization billing and administrators are shared. Owner approved the quoted $10/month project cost.
-- Original Lovable backend: `ugpyjacqganaqtsiekay`. The Supabase connector cannot access it; the Lovable connector was subsequently verified to have SQL access (see commercial-readiness.md). No data was copied or browser connection changed. The repository CLI target now points at the dedicated project `mgadheotkdnrsatfivjy`; frontend environments still require explicit cutover.
+- Original Lovable backend: `ugpyjacqganaqtsiekay`. The Supabase connector cannot access it; the Lovable connector was subsequently verified to have SQL access (see commercial-readiness.md). No data was copied or connection changed; current `.env` and `supabase/config.toml` still identify the original backend.
 - Local validation stack: `/private/tmp/livingroom-vet-foundation`, database port 56322, API port 56321. Disposable synthetic data only; never use its development keys in cloud environments.
-- Vercel CLI is authenticated as `finite0001`, and project `livingroom-vet-care` exists under `daves-projects-e0da43ba`. The Vercel project uses build command `npm run build:deployment`; the repository defines that as an alias for `npm run build`. Production browser env vars are set for dedicated Supabase project `mgadheotkdnrsatfivjy`. Production deployment `dpl_EnvwqCoXkakCik1Sd6A7yyq6kxAY` is ready and aliased at `https://livingroom-vet-care.vercel.app`. `thelivingroom.vet` and `www.thelivingroom.vet` are attached to this Vercel project and Vercel reports both domains configured correctly after the GoDaddy DNS update.
+- Vercel team is available; project deployment has not yet been commissioned. `vercel.json` provides npm build and SPA rewrites.
 
-The subsequent [clinical-core increment](clinical-core.md) adds migration `20260912210000` to the dedicated project. As of the 2026-09-23 readiness evidence, the restored historical receipts and the 10 commercial-readiness migrations are reconciled against the hosted project with 123 matching migrations, 0 remote-only receipts and 0 local-only migrations. Future migration drift still needs the same inspect-first reconciliation process before launch.
-
-See [environment-manifest.md](environment-manifest.md) for the current environment ownership matrix, required public variables, Supabase Edge Function secrets, provider credentials and launch blockers. Treat that manifest as the checklist for Vercel/Supabase commissioning; this runbook describes the procedure.
-
-For the remaining owner/practice actions, see [launch-owner-action-checklist.md](launch-owner-action-checklist.md). It records the completed GoDaddy DNS records, owner-approved public contact fields still required, and provider dashboard follow-up required before public launch.
+The [clinical-core increment](clinical-core.md) originally brought the dedicated project to 16 migrations. [Hosted schema commissioning](hosted-schema-commissioning.md) subsequently applied the remaining 31 migrations through invoice email: 47 total, with 120 RLS-enabled public tables. Compatible Edge handlers, hosted staff acceptance and the frontend/backend switch remain separate rollout steps.
 
 ## Local verification
 
@@ -23,42 +48,19 @@ The database test file is `supabase/tests/staff_access.test.sql`. Run it only on
 
 ## Vercel commissioning
 
-1. Import this GitHub repository into the selected Vercel team; use Vite preset, `npm ci --ignore-scripts`, `npm run build:deployment`, `dist`. Before relying on a remote build, ensure the local `package.json`/`vercel.json` changes that define `build:deployment` and the SPA fallback contract have been committed and deployed; the Vercel project already expects that command.
-2. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` explicitly for each environment. `VITE_SUPABASE_PROJECT_ID` is informational only. The tracked Lovable `.env` is not a production configuration template. Never add service-role/provider secrets to browser variables.
+1. Import this GitHub repository into the selected Vercel team; use Vite preset, `npm ci --ignore-scripts`, `npm run build:deployment`, `dist`. Keep the checked-in build command; the guarded command runs Vite only after configuration checks pass.
+2. Configure `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` explicitly for each environment. The tracked Lovable `.env` is not a production configuration template. Never add service-role/provider secrets to browser variables. See [deployment configuration checks](deployment-environment.md) for exact requirements and limitations.
 3. Use a separate staging backend for arbitrary previews, or the isolated local database. Do not point automatically generated previews at a populated production backend. Until a paid staging environment is approved, keep integration tests local and production sending disabled.
-4. Before promoting a deployment, run `npm run preflight:deployment` locally. Then test direct entry to `/hub/login`, `/hub/reset-password`, and protected routes. Verify unknown routes render the application 404. Check assets resolve and sign-out/account switches clear cached client records.
-5. For a repeatable read-only hosted evidence snapshot, run `npm run readiness:inventory -- --output docs/launch-evidence/<date>-hosted-readiness-inventory.json`. Review the artifact before committing; it redacts Vercel environment values and should not contain provider secrets.
-6. For a repeatable public website launch gate, run `npm run public:readiness -- --output docs/launch-evidence/<date>-public-site-readiness.json`. Before domain cutover, the report must have no blockers, and warnings must either be resolved or explicitly approved by the owner/veterinarian/legal reviewer.
-7. For a repeatable Hub workflow gate, run `npm run hub:readiness -- --output docs/launch-evidence/<date>-hub-workflow-readiness.json`. The local workflow status must be ready, and hosted dependencies must be ready before treating Hub pages as production-usable.
-8. To refresh the full evidence chain in order, run `npm run readiness:refresh`. It regenerates hosted inventory, remote-only migration file search, remote-only migration source comparison, remote schema inventory, Edge Function inventory, public-site readiness, Hub workflow readiness, and the aggregate summary for the current date.
-9. For the aggregate commercial-readiness gate, run `npm run readiness:summary -- --output docs/launch-evidence/<date>-commercial-readiness-summary.json`; use `node scripts/commercial-readiness-summary.mjs --fail-on-blockers` in release automation once every underlying evidence artifact has been refreshed.
-10. Configure the custom domain only after owner content and DNS review. Preview deployment is not the October clinical launch.
+4. Test direct entry to `/hub/login`, `/hub/reset-password`, and protected routes. Verify unknown routes render the application 404. Check assets resolve and sign-out/account switches clear cached client records.
+5. Configure the custom domain only after owner content and DNS review. Preview deployment is not the October clinical launch.
 
 ## Supabase commissioning
 
 Public self-signup is disabled on the new project. Site URL is `https://thelivingroom.vet`; the exact allowed recovery redirect is `https://thelivingroom.vet/hub/reset-password`. Anonymous sign-in remains disabled and email confirmation remains enabled. No staff accounts have been created.
 
-Apply checked-in migrations in chronological order. Prefer authenticated CLI deployment when available; always specify and verify the target project. The MCP migration tool generates receipt timestamps, so this initial empty-project commissioning reconciles each receipt to the exact repository migration version/name after successful execution. Never replay a migration merely because its receipt timestamp differs: inspect history first. Record any reconciliation in the commissioning report.
+Apply checked-in migrations in chronological order. Prefer authenticated CLI deployment when available; always specify and verify the target project. Run CLI database operations sequentially because concurrent temporary login-role initialization can invalidate another operation’s credentials. Use `--skip-vault` for schema-only commissioning. The MCP migration tool generates receipt timestamps, so this initial empty-project commissioning reconciles each receipt to the exact repository migration version/name after successful execution. Never replay a migration merely because its receipt timestamp differs: inspect history first. Record any reconciliation in the commissioning report.
 
-Before any hosted migration push or repair, run `npm run supabase:migration-drift` and reconcile remote-only receipts versus local-only files. As of the latest 2026-09-23 release-target evidence, the historical remote-only receipt files were recovered from `/Users/davidedler/Developer/livingroom-readiness-reconciliation/supabase/migrations` after SHA-256 comparison against `/Users/davidedler/Developer/livingroom-readiness-weight/supabase/migrations`; the 10 local commercial-readiness migrations were then pushed to hosted Supabase. The active worktree and hosted project now have 123 matching migrations, 0 remote-only receipts, and 0 local-only migrations. The restore evidence is `docs/launch-evidence/2026-09-23-remote-only-migration-restore.json`. For a non-secret object inventory, run `npm run supabase:schema-inventory -- --output docs/launch-evidence/<date>-remote-public-schema-inventory.json`; it records object names/counts and key readiness-object presence without committing raw schema SQL. Do not use `supabase migration repair` as a shortcut; any future drift needs the same receipt/source reconciliation process.
-
-The new project has reviewed launch functions deployed with the expected JWT settings: `invite-staff`, `send-email`, `send-sms`, `dispatch-outbound-deliveries`, `resend-delivery-webhook`, `twilio-message-status-callback`, and `twilio-inbound-sms`. `APP_URL=https://thelivingroom.vet`, `APP_ENV=staging`, and `OUTBOUND_DELIVERY_MODE=disabled` are saved. No live provider credentials were installed for launch sending. Deploy only reviewed Edge Functions. `invite-staff` requires fixed `APP_URL` and active-admin authentication. Auth SMTP and real invitations are a separate operational acceptance step; configure them using [staff-access.md](staff-access.md). Keep client/provider delivery disabled by default using [messaging-environments.md](messaging-environments.md).
-
-The repository now includes database migrations for a durable outbound queue, reminder-to-outbox enqueueing, staff client-message enqueueing, worker claiming, worker result recording, and the `dispatch-outbound-deliveries` Edge Function. Those migrations do not by themselves send messages. Staff `send-email`/`send-sms` requests create queued delivery rows after the new RPC and Edge Functions are deployed; the dispatcher must remain unscheduled or disabled until `OUTBOUND_DISPATCHER_TOKEN` is installed only in Supabase secrets and the scheduler, provider credentials are installed, provider callbacks are authenticated, and only one worker set is active for the chosen backend.
-
-When that dispatcher is commissioned, schedule it as a controlled worker call rather than a browser workflow. The call must present the configured dispatcher token before any claim, then the function claims due rows with `claim_due_outbound_deliveries(...)`, sends email/SMS through Resend/Twilio under the delivery-policy mode and test-recipient allowlists, and settles each claim with `record_outbound_delivery_result(...)`. Keep `OUTBOUND_DELIVERY_MODE=disabled` during deployment smoke checks unless using explicit synthetic recipients in `test` mode.
-
-The database also includes `record_outbound_delivery_callback(...)` for provider callback settlement by provider message ID, plus local `resend-delivery-webhook` and `twilio-message-status-callback` Edge Functions that verify provider signatures before recording terminal callback states. Do not mark provider callbacks commissioned until those functions are deployed to the chosen backend, `RESEND_WEBHOOK_SECRET` and `TWILIO_STATUS_CALLBACK_URL` are installed, provider dashboards point at the exact production URLs, duplicate/replay behavior is accepted, and synthetic callback round trips pass.
-
-The database and local functions now also include inbound SMS processing through `record_inbound_sms(...)` and `twilio-inbound-sms`. Do not mark two-way SMS commissioned until `twilio-inbound-sms` is deployed, `TWILIO_INBOUND_WEBHOOK_URL` is installed with the exact public function URL, the Twilio number's incoming-message webhook points at that URL, duplicate `MessageSid` replays stay idempotent, and synthetic HELP/STOP/START plus ordinary reply round trips pass against a test client. Keep Twilio Advanced Opt-Out semantics aligned with the practice policy before enabling production SMS.
-
-For a repeatable hosted Edge Function inventory, run `npm run supabase:functions-inventory -- --output docs/launch-evidence/<date>-edge-functions-inventory.json`; then run `npm run supabase:functions-review -- --inventory docs/launch-evidence/<date>-edge-functions-inventory.json --output docs/launch-evidence/<date>-remote-edge-function-review.json`. As of the latest 2026-09-23 inventory, reviewed launch functions are active remotely with expected JWT modes: `invite-staff`, `send-email`, `send-sms`, `dispatch-outbound-deliveries`, `resend-delivery-webhook`, `twilio-message-status-callback`, and `twilio-inbound-sms`. Seven former remote-only legacy conflict slugs were redeployed as explicit disabled stubs returning HTTP 410 with replacement-route hints: `dispatch-outbox`, `enqueue-message`, `process-inbound`, `public-contact`, `queue-reminders`, `resend-webhook`, and `twilio-webhook`. A non-destructive routing check found no hosted `cron.job` table, so they are not evidenced as pg_cron-scheduled; external provider dashboards/callers still need review and must point at the reviewed replacement webhook URLs before live provider use.
-
-GoDaddy DNS records applied for public domain cutover:
-
-- Apex `thelivingroom.vet`: `A 216.150.1.1` and `A 216.150.16.1`.
-- `www.thelivingroom.vet`: `CNAME 1115926f442091d7.vercel-dns-016.com.`.
-- 2026-09-23 verification: `dig` returned those values and `npx --yes vercel domains verify ... --project livingroom-vet-care` returned `configured_correctly` for both apex and `www`. HTTP served the Vercel site on both domains immediately; HTTPS returned an SSL handshake error during the same run and should be re-smoked after Vercel certificate provisioning catches up.
+The dedicated project now has [13 reviewed handlers deployed](hosted-edge-commissioning.md). The three server workers use managed secret API-key authentication; staff endpoints retain JWT verification. `send-email` and `send-sms` are retired 410 endpoints directing callers to the reviewed queue workflow. `APP_URL=https://thelivingroom.vet`, `APP_ENV=staging`, and `OUTBOUND_DELIVERY_MODE=disabled` are saved. No provider credentials were installed. Deploy only reviewed Edge Functions. `invite-staff` requires fixed `APP_URL` and active-admin authentication. Auth SMTP and real invitations are a separate operational acceptance step; configure them using [staff-access.md](staff-access.md). Keep client/provider delivery disabled by default using [messaging-environments.md](messaging-environments.md). Hosted probes verify unauthorized denial, disabled delivery/scheduling and an authenticated empty inbound queue. Provider round-trips and actual staff workflows remain unverified.
 
 `send-provider-email` still references provider contact/delivery tables absent from the baseline. Do not enable or deploy that endpoint until its schema contract is implemented and tested. `suggest-replies` requires its own AI provider configuration; it is not needed for the foundation release.
 
@@ -68,4 +70,31 @@ Inventory existing clients, pets, documents, auth users, secrets, scheduled jobs
 
 ## Provider setup still required
 
-Verify the practice's sending/receiving domain; establish the intended shared mailbox, e.g. `hello@thelivingroom.vet`, only after mailbox provisioning. The website does not currently publish an unconfigured mailbox. Provision Twilio, configure both status-callback and inbound-message webhooks, accept SMS consent/opt-out operating policy, set up Stripe account/test keys, and obtain authorized ezyVet API access in their respective services. Keep secrets out of chat and Git. ezyVet is confirmed as the requested API; no API credentials or live source records have been used.
+Follow the [mail commissioning proposal](mail-commissioning-plan.md): preserve verified sending DNS, establish private root-domain staff mailboxes, and commission isolated client receiving and Auth SMTP before publication. The website does not currently publish an unconfigured mailbox. Provision Twilio and SMS consent/opt-out, Stripe account/test keys, and authorized ezyVet API access in their respective services. Keep secrets out of chat and Git. ezyVet is confirmed as the requested API; no API credentials or live source records have been used.
+
+## Uptime monitoring
+
+The `health` Edge Function is a public liveness probe. Point a monitor at:
+
+```
+https://<project-ref>.supabase.co/functions/v1/health
+```
+
+- **Healthy:** HTTP 200 with `{"status":"ok","checked_at":"…"}`.
+- **Not healthy:** HTTP 503 with `{"status":"unavailable","checked_at":"…"}`. The
+  body never says why - a public endpoint's error text is reconnaissance, and the
+  regression test enforces that it stays absent.
+- It answers `GET` and `HEAD` (monitors use both) and refuses anything else with
+  405. The response is `no-store`, so a monitor is never shown a cached answer
+  from a healthier minute.
+
+**What a 200 proves:** the function is deployed and serving, and the database
+answered a query. **What it does not prove:** that providers are configured, that
+outbound delivery is enabled, or that the scheduler is running. Those are visible
+to administrators on `/hub/admin/operations`, which is where the practice's real
+operational state belongs.
+
+Deployed with `verify_jwt = false` on purpose: a monitor holds no credential. Do
+not add authentication to it, and do not make it report more than up or down.
+
+Suggested cadence: every minute, alerting after two consecutive failures.

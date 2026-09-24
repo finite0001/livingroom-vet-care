@@ -1,0 +1,79 @@
+{
+  "routine": {
+    "migration_versions_match": true,
+    "expected_routine_count": 473,
+    "observed_routine_count": 473,
+    "missing_routines": [],
+    "extra_routines": [],
+    "changed_routines": {},
+    "trigger_bindings_match": true,
+    "expected_trigger_count": 252,
+    "observed_trigger_count": 252,
+    "matches": true
+  },
+  "access": {
+    "migration_versions_match": true,
+    "relations": {
+      "expected_count": 191,
+      "observed_count": 191,
+      "missing": [],
+      "extra": [],
+      "changed": {
+        "[\"anesthesia_record_revisions_id_seq\"]": [
+          "grants"
+        ],
+        "[\"care_plan_revisions_id_seq\"]": [
+          "grants"
+        ],
+        "[\"communication_processing_history_id_seq\"]": [
+          "grants"
+        ],
+        "[\"lab_work_revisions_id_seq\"]": [
+          "grants"
+        ],
+        "[\"reminder_automation_policy_history_id_seq\"]": [
+          "grants"
+        ]
+      }
+    },
+    "policies": {
+      "expected_count": 235,
+      "observed_count": 235,
+      "missing": [],
+      "extra": [],
+      "changed": {}
+    },
+    "default_privileges": {
+      "expected_count": 6,
+      "observed_count": 6,
+      "missing": [],
+      "extra": [],
+      "changed": {
+        "[\"postgres\",\"public\",\"S\"]": [
+          "acl"
+        ],
+        "[\"postgres\",\"public\",\"f\"]": [
+          "acl"
+        ],
+        "[\"postgres\",\"public\",\"r\"]": [
+          "acl"
+        ]
+      }
+    },
+    "matches": false
+  },
+  "project": "kothoqicubowyhwfsrte",
+  "observed_on": "2026-09-14",
+  "read_only": true,
+  "inventory_sha256": {
+    "routine": {
+      "baseline": "4347985269ffd7861c1306c604881c30548dadff841b441d4ce21160ebb906e8",
+      "hosted": "8b75f1838ae4db7be0a8ee0c4b1b94640ffb5bb91b943d7106b437dbaf57aaf2"
+    },
+    "access": {
+      "baseline": "a4221aa64e3802cc260d1c559b802bb1121d5eeef261282c20707074a4721dc5",
+      "hosted": "c6388b839e3fe42db487bebdd1870268eb84d821e24ffc0f40d497b0cd81bccd"
+    }
+  },
+  "limitation": "Access comparison intentionally fails on known five sequence and three postgres/public default ACL differences. Migration1200 corrects them; hosted correction and final parity remain unproven."
+}

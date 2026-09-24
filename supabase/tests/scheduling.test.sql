@@ -1,0 +1,43 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into auth.users(id,email,raw_user_meta_data) values
+('41000000-0000-4000-8000-000000000001','schedule-staff@example.test','{"first_name":"Schedule","last_name":"Staff"}'),
+('41000000-0000-4000-8000-000000000002','schedule-inactive@example.test','{"first_name":"Schedule","last_name":"Inactive"}');
+update public.profiles set is_active = true where id in ('41000000-0000-4000-8000-000000000001','41000000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('41000000-0000-4000-8000-000000000001','STAFF'),('41000000-0000-4000-8000-000000000002','STAFF');
+
+update public.profiles set is_active=false where id='41000000-0000-4000-8000-000000000002';
+create temp table fixture_ids(kind text primary key,id uuid);
+grant all on fixture_ids to authenticated;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Schedule','Family',null,null,'EMAIL',null,'Housecall snapshot');
+insert into fixture_ids select 'pet',id from public.save_patient(null,(select id from fixture_ids where kind='client'),null,'Zero','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fixture_ids select 'appointment',id from public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24]);
+select is((select count(*) from public.schedule_clinicians() where id='41000000-0000-4000-8000-000000000001'),1::bigint,'Ordinary staff can list eligible clinicians');
+select is((select count(*) from public.schedule_clinicians() where id='41000000-0000-4000-8000-000000000002'),0::bigint,'Clinician picker excludes inactive staff');
+select is((select count(*) from public.appointment_reminders where status='PENDING'),2::bigint,'Booking creates two pending reminders');
+select throws_ok($$select public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days 40 minutes',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'23P01',null,'Overlapping clinician including buffer denied');
+select throws_ok($$select public.save_appointment('41000000-0000-4000-8000-000000000002',null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'42501',null,'Spoofed actor denied');
+select throws_ok($$select public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days',30,'Exam','SCHEDULED','41000000-0000-4000-8000-000000000002','housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'23514',null,'Inactive clinician denied');
+select throws_ok($$select public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[24,24])$$,'23514',null,'Duplicate reminder offsets denied');
+select throws_ok($$select public.save_appointment(auth.uid(),(select id from fixture_ids where kind='appointment'),0,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'40001',null,'Stale revision denied');
+select lives_ok($$select public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days 1 hour',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[]::integer[])$$,'Adjacent buffered appointment allowed');
+select lives_ok($$select public.save_appointment(auth.uid(),(select id from fixture_ids where kind='appointment'),1,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '11 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'Reschedule succeeds with current revision');
+select is((select count(*) from public.appointment_reminders where status='SKIPPED'),2::bigint,'Old reminder revision invalidated');
+select is((select count(*) from public.appointment_reminders where status='PENDING' and appointment_version=2),2::bigint,'Replacement reminders have new revision');
+update public.pets set archived_at=now() where id=(select id from fixture_ids where kind='pet');
+select is((select count(*) from public.appointment_reminders where status='PENDING'),0::bigint,'Patient archive immediately invalidates reminder jobs');
+select lives_ok($$select public.save_appointment(auth.uid(),(select id from fixture_ids where kind='appointment'),2,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '11 days',30,'Exam','CANCELLED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'Existing appointment can be canceled after patient archive');
+update public.pets set archived_at=null where id=(select id from fixture_ids where kind='pet');
+select is((select count(*) from public.appointment_reminders where status='PENDING'),0::bigint,'Cancel leaves no pending jobs');
+select throws_ok($$update public.appointments set notes='bypass'$$,'42501',null,'Direct appointment writes denied');
+select throws_ok($$update public.appointment_reminders set status='SENT'$$,'42501',null,'Staff cannot claim delivery');
+update public.pets set archived_at=now() where id=(select id from fixture_ids where kind='pet');
+select throws_ok($$select public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '20 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24])$$,'23514',null,'Archived patient cannot be booked');
+reset role;
+select ok(exists(select 1 from public.audit_logs where table_name='appointments' and user_id='41000000-0000-4000-8000-000000000001'),'Appointment audit captures actor');
+select * from finish();
+rollback;

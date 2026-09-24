@@ -1,0 +1,3 @@
+/* Public capability routes must not fetch third-party fonts. The public site keeps
+   the brand stack in index.css and falls back to local/system fonts when these
+   families are not already installed. */

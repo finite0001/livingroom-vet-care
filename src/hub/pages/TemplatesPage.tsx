@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/auth-context";
+import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import { usePageTitle } from "@/hooks/use-page-title";
 import {
   useTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate,
@@ -28,7 +29,7 @@ export default function TemplatesPage() {
   usePageTitle("Message Templates");
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
-  const { data: templates, isLoading } = useTemplates();
+  const { data: templates, isLoading, isError, refetch } = useTemplates();
   const createTemplate = useCreateTemplate();
   const updateTemplate = useUpdateTemplate();
   const deleteTemplate = useDeleteTemplate();
@@ -91,6 +92,8 @@ export default function TemplatesPage() {
 
         {isLoading ? (
           <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}</div>
+        ) : isError ? (
+          <LoadErrorState label="Message templates" onRetry={() => void refetch()} />
         ) : Object.keys(grouped).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <FileText className="mb-3 h-10 w-10 text-muted-foreground" />

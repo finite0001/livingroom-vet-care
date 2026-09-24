@@ -1,0 +1,26 @@
+{
+  "synthetic_only": true,
+  "command": "python3 supabase/tests/ezyvet_attachment_originals_concurrency.py --full-regression",
+  "schema_commit": "531926b61c6990a3e50b7ecda4b2c12badd33f20",
+  "harness_commit": "b9f3a2b",
+  "full_sql_files": 73,
+  "full_sql_assertions": 2704,
+  "new_original_sql_assertions": 56,
+  "canonical_child_sql_assertions": 468,
+  "canonical_child_checks": 162,
+  "original_harness_total_checks": 136,
+  "original_harness_sql_file_success_checks": 73,
+  "original_harness_setup_lock_race_cleanup_checks": 63,
+  "default_targeted_sql_files": 9,
+  "default_targeted_sql_assertions": 418,
+  "default_harness_checks": 72,
+  "owned_scratch_databases_removed": true,
+  "no_provider_calls": true,
+  "no_physical_storage_operations_in_sql_harness": true,
+  "actual_storage_restore_evidence": "attachment-originals-restore-local-20260913.json",
+  "sha256": {
+    "supabase/migrations/20260913700000_attachment_original_capture.sql": "a7bdad11bd33ddc708cc6f4d961d0dd4c54c441e3a5d6202ab89fe1a5c4ce851",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "d554c4090a85aab0c44688e2074a341b40960bc28bedfc04fd025d63cbe14235",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "71cf2e98d5cd9f0321c073feb0474d4a03210ed3cc3ae7c393673804202b30c2"
+  }
+}

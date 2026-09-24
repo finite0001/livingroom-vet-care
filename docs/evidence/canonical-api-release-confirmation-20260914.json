@@ -1,0 +1,42 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "effa255e96d66343ba67b1a3de64cd63aec3d9f6",
+  "file_sha256": {
+    "supabase/migrations/20260914090000_canonical_api_release_confirmation.sql": "6a04c3278fb2d586992e7184904bdbed0984e4a32e1615d38e1bd11247e9b076",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "4bb66e49fe44014e42aa3ceb802d12a3bf1a62f0128777f325c49397eee29821",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "b3a9f04a880d2c2756d4681e6494418bf02bd432d924de3da4027fa31027b23b",
+    "tests/ezyvet/attachment-metadata-disposable.py": "5d39533f250aa62d288f66e41899c48edb2135b6ab44f03b6f0f140d7631f389"
+  },
+  "migration_count": 96,
+  "sql_files": 73,
+  "full_sql_assertions": 2812,
+  "new_sql_assertions": 13,
+  "prescription_additional_sql_assertions": 468,
+  "prescription_harness_checks": 162,
+  "attachment_harness_checks": 241,
+  "new_attachment_harness_checks": 37,
+  "new_observed_wait_cases": 10,
+  "count_note": "Harness totals include setup, SQL-file success and cleanup assertions; they are not counts of distinct races. Nested prescription SQL overlaps the full regression scope.",
+  "owned_database_cleanup_verified": true,
+  "log_sha256": "25c85ba22d6b060b5e0332444deac6deb3582e8abd00473742c4eee59b02035a",
+  "actual_auth_storage_evidence": "canonical-api-auth-storage-96-20260914.json",
+  "verified_behaviors": [
+    "Public schema9 preview preserves canonical snapshot and requires staff identity",
+    "Confirmation requires explicit schema9 clinical policy acceptance; migration does not activate it",
+    "Exact receipt recovery survives source invalidation",
+    "Canonical Animal/attachment source changes and superseding approvals invalidate registered releases",
+    "Both source-revision/confirmation and correction/confirmation orderings tested with observed holder/waiter relations",
+    "Staff role loss during confirmation operation/source/object waits prevents insertion",
+    "Role loss during exact replay and saved-release read prevents return",
+    "Private email context accepts service JWT without staff subject and rechecks stored actor after original-object wait",
+    "Direct service access to private recovery and staff preview remains denied"
+  ],
+  "limitations": [
+    "No hosted changes, policy activation or provider messages.",
+    "96-migration HTTP/Storage acceptance covers capture/review/chart transport, not schema9 release packaging.",
+    "Document-link post-wait actor/expiry guards are included; schema9 link-specific wait acceptance remains pending.",
+    "Release chooser and TypeScript worker/rendering integration remain pending.",
+    "Positive mixed prescription/API and maximum-count physical release files remain pending.",
+    "Mapping-trigger mutation acceptance, populated upgrade/restore, clinician/provider acceptance and broader commercial gates remain outstanding."
+  ]
+}

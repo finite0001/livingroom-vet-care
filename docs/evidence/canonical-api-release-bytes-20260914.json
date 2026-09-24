@@ -1,0 +1,32 @@
+{
+  "synthetic_local_only": true,
+  "base_commit": "14ca348ccd975c679822994111e810e2a4bf099b",
+  "file_sha256": {
+    "supabase/migrations/20260914080000_canonical_release_original_verification.sql": "746be80a19ab71c76a437082c891bf0ce9d0e5319715c1772d6726d1cebe1f07",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "51dc640c2b4f841552f57788bd547f555f2a13452f304506d1da7315f2472db6",
+    "tests/ezyvet/attachment-metadata-disposable.py": "d22ccd3d2f4fc7821ee36acfad7d309058f026b422081612c34dfb0c6a1ad97f"
+  },
+  "sql_files": 73,
+  "full_sql_assertions": 2799,
+  "new_sql_assertions": 13,
+  "prescription_additional_sql_assertions": 468,
+  "prescription_harness_checks": 162,
+  "attachment_harness_checks": 204,
+  "count_note": "Harness check totals include SQL-file success, setup and cleanup assertions as well as observed contention; nested prescription SQL overlaps existing regression scope.",
+  "owned_database_cleanup_verified": true,
+  "log_sha256": "3665d311d57f7f2dda9555dd3f219e0e5fea071265688f8a86a8ec99a0e66f32",
+  "verified_behaviors": [
+    "Exact API bytes verify",
+    "Same-size corruption and null bytes rejected",
+    "Missing/duplicate file descriptors, unselected approvals and cross-patient packages rejected",
+    "API originals cannot be relabeled as native files",
+    "Native captured-source bytes verify inside schema9 and still reject tampering",
+    "Older schema verification preserved through cloned private helper"
+  ],
+  "limitations": [
+    "SQL byte-contract fixtures only; mixed physical-file release/worker acceptance remains pending.",
+    "Confirmation, invalidation, UI/worker dispatch and delivery are not yet integrated for schema9.",
+    "95-migration HTTP/Storage and populated upgrade/restore remain pending.",
+    "No hosted changes or provider messages."
+  ]
+}

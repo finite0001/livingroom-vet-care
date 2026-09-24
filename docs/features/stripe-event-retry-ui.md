@@ -1,0 +1,9 @@
+# Administrator payment processing retries
+
+The administrator dashboard lists the newest100 payment notifications with lifetime/per-cycle attempt counts. An explicit history review loads4000's safe receipt/work/cycles/history and exact work hash. Only an eligible exhausted notification offers a retry; the administrator selects the corrected processing problem and attests before submission.
+
+Each submission freezes a random resolution UUID, receipt ID, exact work hash, reason and attestation. Those nonsecret arguments use the existing auth-cleaned `invoice-payment-intent:` session-storage prefix. Lost responses recover by reading history and matching the full cycle receipt plus administrator identity; they never infer a retry from queued status alone. An explicit retry reuses all original arguments. A changed work hash with no matching receipt permits discarding the stale unsaved review, which does not cancel any server work.
+
+The panel is rendered only for active administrators and keyed by account identity. SQL independently checks roles, attribution, current work and financial context. The UI does not retrieve Stripe objects, change payment balances, clear financial blockers or invoke the worker. A recorded retry cycle is not evidence of processing success, payment or client delivery.
+
+Validation: four parser tests cover intent shape, receipt ownership/full-intent matching, lifetime/per-cycle counts and invalid bounds, completed/ignored jobs and digit-bearing event types. Three browser scenarios cover lost responses before/after recording, reload recovery, exact retry arguments, history display and ordinary-staff/ineligible denial. These browser responses are synthetic; the4000 database suite covers actual permissions and concurrency separately. Requires migration4000 before frontend rollout.

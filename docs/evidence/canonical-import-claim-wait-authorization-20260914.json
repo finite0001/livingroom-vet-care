@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-14",
+  "scope": "Import claim and terminal-recovery authorization after database waits",
+  "migration_count": 104,
+  "reproduction": {
+    "before_fix_waiting_claim_returned_run_after_actor_deactivation": true,
+    "synthetic_disposable_only": true,
+    "log_sha256": "b5eb97cf73a5ab4dd8b29fa8b1a8127d34f60e039fa05a49a4b58d2351f8b096"
+  },
+  "sql_assertions": 1035,
+  "concurrency_harness_checks": 278,
+  "runtime_checks": 369,
+  "runtime_checks_by_fixture": {
+    "metadata": 50,
+    "originals": 121,
+    "maximum": 137,
+    "migration": 61
+  },
+  "verified_cases": [
+    "Core source-gate wait rejects revoked administrator and leaves no run or attempt events",
+    "Core terminal recovery rechecks actor after row lock wait",
+    "Terminal operation-wait recovery denies revoked actor for healthstatus, consult, history, vaccination, prescription, prescriptionitem and attachment",
+    "Rejected scoped recovery preserves run and event rows",
+    "Latest attachment original-capture source interlock preserved",
+    "Existing cooldown, cursor and lease behavior preserved",
+    "Concurrency harness drains output while waiting to avoid a full response pipe retaining a lock",
+    "Actual local HTTP/Auth/Storage regression",
+    "Populated upgrade, restore and canonical routine/access comparison"
+  ],
+  "source_sha256": {
+    "supabase/migrations/20260914170000_ezyvet_claim_wait_authorization.sql": "8068210531712750907bc76b7c020529744a7451b59b2a24b61bdeaf370409b8",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "980601c22ba05365844abce65f6aa1ab3adb72b5ca04a4b657258b4deee6ba73",
+    "supabase/tests/ezyvet_migration_binding_adapters.test.sql": "439f7c033ba14ac2cf422cf170bae87516c7f0d62f682db6eed475ae4f81d848",
+    "scripts/restore-rehearsal/run.py": "4678993052e933a650620b5faf77a02bb70c247c4fcf714b4441b3f9ef4c7dfd",
+    "tests/ezyvet/attachment-metadata-disposable.py": "e2e2e4952e5ac49169bbc502583e11fafdc9527d38094f424a7ae50e2f137943"
+  },
+  "sql_log_sha256": "eb695743eacdd0fa84314a848d3705f943cfbfcd32a7596ccade576eb2f3aa94",
+  "runtime_result_sha256": "1489a231567d5939a0424b4174d1a86e229581ac485b54992d8c1f83906c64a0",
+  "runtime_cleanup_verified": true,
+  "restore": {
+    "result_sha256": "dc46683c24b59e8cfc6a6d8db0d7137ab78c5aedd7374b887a0d28cc0dd0c985",
+    "runner_sha256": "4678993052e933a650620b5faf77a02bb70c247c4fcf714b4441b3f9ef4c7dfd",
+    "physical_storage_files": 3,
+    "exact_rows_before_reads": true,
+    "cleanup_verified": true
+  },
+  "validation_notes": [
+    "Initial replacement regression caught an omitted later attachment interlock; corrected before final verification",
+    "An initial concurrent validation pass failed with a local database connection timeout and subprocess timeout; failed owned containers/volumes and scratch database were verified removed",
+    "Final SQL, HTTP and restore suites ran serially and all passed"
+  ],
+  "hosted_changes": false,
+  "remaining": [
+    "Audit staging and failure mutation authorization after waits separately",
+    "Complete migration reconciliation reports and operator UI",
+    "Provider, clinician, onboarding and cutover acceptance remain pending"
+  ]
+}

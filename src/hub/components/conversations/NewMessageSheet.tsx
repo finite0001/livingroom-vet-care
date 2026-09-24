@@ -1,132 +1,245 @@
-import { deliveryErrorNote, isDeliveryAccepted } from "@/hub/lib/delivery-result";
+import { useMessageQueue } from "@/hub/hooks/use-message-queue";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { useRef, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Search } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
-import { useClients, type ClientWithPets } from "@/hub/hooks/use-clients";
-import { cn } from "@/lib/utils";
-import { getAvatarColor, getInitial } from "@/hub/lib/avatar-colors";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-interface NewMessageSheetProps { open: boolean; onOpenChange: (open: boolean) => void; }
-
-export function NewMessageSheet({ open, onOpenChange }: NewMessageSheetProps) {
+import { MessageRecoveryPanel } from "./MessageRecoveryPanel";
+import type { MessageIntent } from "@/hub/features/communications/queue-intent";
+interface NewMessageSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+export function NewMessageSheet(props: NewMessageSheetProps) {
+  const { session } = useAuth();
+  return <NewMessageContent key={session?.user.id} {...props} />;
+}
+function NewMessageContent({ open, onOpenChange }: NewMessageSheetProps) {
+  const { session } = useAuth();
   const [recipient, setRecipient] = useState("");
   const [body, setBody] = useState("");
+  const [subject, setSubject] = useState("");
+  const [channel, setChannel] = useState<"SMS" | "EMAIL">("SMS");
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [restored, setRestored] = useState<MessageIntent>();
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [newFirstName, setNewFirstName] = useState("");
-  const [newLastName, setNewLastName] = useState("");
-  const queryClient = useQueryClient();
-  const { data: clients } = useClients();
-
-  const filteredClients = search.length >= 2 ? clients?.filter((c) => {
-    const s = search.toLowerCase();
-    return c.full_name.toLowerCase().includes(s) || c.primary_phone?.includes(s);
-  }).slice(0, 5) : [];
-
-  const selectClient = (client: ClientWithPets) => { setSelectedClientId(client.id); setRecipient(client.primary_phone || ""); setSearch(client.full_name); };
-
-  const isNewClient = !selectedClientId && recipient.trim().length > 0;
-
+  const queue = useMessageQueue("new-message", open);
+  const client = useQueryClient();
+  const lookup = useQuery({
+    queryKey: ["message-households", session?.user.id, search],
+    enabled: open && search.trim().length >= 2 && !selected,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase
+        .rpc("search_clients", { p_search: search.trim(), p_limit: 8 })
+        .abortSignal(signal);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const busy = sending || queue.pending;
+  const blocked =
+    !!queue.recovery && (queue.recovery.status !== "prepared" || !restored);
   const reset = () => {
-    setRecipient(""); setBody(""); setSearch(""); setSelectedClientId(null);
-    setNewFirstName(""); setNewLastName("");
+    setRecipient("");
+    setBody("");
+    setSubject("");
+    setSearch("");
+    setSelected(null);
+    setRestored(undefined);
+    setChannel("SMS");
   };
-
-  const handleSend = async () => {
-    if (!body.trim() || !recipient.trim() || sendingRef.current) return;
-    if (isNewClient && !newFirstName.trim()) {
-      toast.error("Please enter the client's first name");
+  const restore = async (saved: MessageIntent) => {
+    const { data: thread, error } = await supabase
+      .from("conversations")
+      .select("client_id")
+      .eq("id", saved.conversation_id)
+      .single();
+    if (error) throw error;
+    const { data: household, error: householdError } = await supabase
+      .from("clients")
+      .select("id,full_name")
+      .eq("id", thread.client_id)
+      .single();
+    if (householdError) throw householdError;
+    setSelected(household.id);
+    setSearch(household.full_name);
+    setRecipient(saved.to);
+    setChannel(saved.channel);
+    setSubject(saved.subject);
+    setBody(saved.body);
+    setRestored(saved);
+  };
+  const send = async () => {
+    if (
+      sendingRef.current ||
+      blocked ||
+      !selected ||
+      !recipient ||
+      !body.trim()
+    )
       return;
-    }
     sendingRef.current = true;
     setSending(true);
     try {
-      let clientId = selectedClientId;
-      if (!clientId) {
-        const first = newFirstName.trim();
-        const last = newLastName.trim();
-        const full = last ? `${first} ${last}` : first;
-        const { data: newClient, error: clientError } = await supabase
-          .from("clients")
-          .insert({ first_name: first, last_name: last || "", full_name: full, primary_phone: recipient, preferred_channel: "SMS" })
-          .select("id").single();
-        if (clientError) throw clientError;
-        clientId = newClient?.id;
-        // Preserve the newly created client across a blocked send, avoiding duplicates on retry.
-        if (clientId) setSelectedClientId(clientId);
+      let payload: MessageIntent;
+      if (restored && queue.recovery) payload = restored;
+      else {
+        const { data, error } = await supabase.rpc(
+          "ensure_active_conversation",
+          { p_client_id: selected },
+        );
+        if (error) throw error;
+        payload = {
+          conversation_id: data.id,
+          channel,
+          to: recipient,
+          subject: channel === "EMAIL" ? subject : "",
+          body,
+          attachment_ids: [],
+        };
       }
-      if (!clientId) throw new Error("Failed to resolve client");
-
-      const { data: existingConversation, error: findError } = await supabase.from("conversations").select("id").eq("client_id", clientId).eq("status", "ACTIVE").order("last_message_at", { ascending: false }).limit(1).maybeSingle();
-      if (findError) throw findError;
-      let conv = existingConversation;
-      if (!conv) {
-        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ client_id: clientId, status: "ACTIVE", is_read: true }).select("id").single();
-        if (convError) throw convError;
-        conv = newConv;
-      }
-      if (!conv) throw new Error("Failed to create conversation");
-
-      const { data, error } = await supabase.functions.invoke("send-sms", { body: { to: recipient, body, conversation_id: conv.id } });
-      if (error) throw error;
-      if (!isDeliveryAccepted(data)) {
-        toast.error(data?.note || data?.error || "Provider acceptance was not confirmed. Your draft has been kept.");
-        return;
-      }
-      toast.success(data?.queued ? "SMS queued for delivery" : "SMS accepted by provider; delivery is not yet confirmed");
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      const result = await queue.send(payload);
+      toast.success(`Message recorded: ${result.state}`);
+      await client.invalidateQueries({ queryKey: ["conversations"] });
       onOpenChange(false);
       reset();
-    } catch (err) {
-      toast.error(await deliveryErrorNote(err));
-    } finally { sendingRef.current = false; setSending(false); }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Queue confirmation unavailable. Recover the saved request.",
+      );
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
   };
-
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (sendingRef.current) return; onOpenChange(v); if (!v) reset(); }}>
-      <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
-        <SheetHeader><SheetTitle>New Message</SheetTitle></SheetHeader>
-        <div className="mt-4 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input disabled={sending} placeholder="Search existing client..." value={search} onChange={(e) => { setSearch(e.target.value); setSelectedClientId(null); }} className="pl-9 h-10" />
-            {filteredClients && filteredClients.length > 0 && !selectedClientId && (
-              <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover shadow-lg max-h-48 overflow-y-auto">
-                {filteredClients.map((client) => (
-                  <button disabled={sending} key={client.id} onClick={() => selectClient(client)} className="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-accent text-sm">
-                    <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold", getAvatarColor(client.full_name))}>{getInitial(client.first_name)}</div>
-                    <div className="min-w-0 flex-1"><p className="truncate font-medium">{client.full_name}</p><p className="truncate text-xs text-muted-foreground">{client.primary_phone}</p></div>
-                  </button>
-                ))}
-              </div>
-            )}
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        if (busy) return;
+        onOpenChange(v);
+        if (!v) reset();
+      }}
+    >
+      <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>New message</SheetTitle>
+          <SheetDescription>
+            Choose an existing household. SMS requires recorded consent.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mx-auto mt-4 max-w-xl space-y-4">
+          <MessageRecoveryPanel
+            queue={queue}
+            hasDraft={!!body || !!subject}
+            onRestore={restore}
+            onAcknowledged={(saved) => {
+              if (
+                saved &&
+                saved.body === body &&
+                saved.subject === subject &&
+                saved.channel === channel &&
+                saved.to === recipient
+              )
+                reset();
+            }}
+          />
+          <Label htmlFor="new-message-household">Household</Label>
+          <Input
+            id="new-message-household"
+            disabled={busy}
+            value={search}
+            placeholder="Search existing client..."
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setSelected(null);
+              setRecipient("");
+              setRestored(undefined);
+            }}
+          />
+          {!selected &&
+            lookup.data?.map((h) => (
+              <Button
+                key={h.id}
+                variant="outline"
+                className="h-auto w-full justify-start whitespace-normal text-left"
+                disabled={busy}
+                onClick={() => {
+                  setSelected(h.id);
+                  setSearch(h.full_name);
+                  setRecipient(h.primary_phone ?? "");
+                  setChannel("SMS");
+                  setSubject("");
+                  setRestored(undefined);
+                }}
+              >
+                {h.full_name} · {h.primary_phone ?? "No phone recorded"}
+              </Button>
+            ))}
+          {lookup.isError && (
+            <p role="alert" className="text-sm text-destructive">
+              Household search unavailable. Try again.
+            </p>
+          )}
+          <div>
+            <Label htmlFor="new-message-recipient">Recipient ({channel})</Label>
+            <Input id="new-message-recipient" value={recipient} readOnly />
           </div>
-          <Input disabled={sending} placeholder="Phone number (e.g. +14155551234)" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="h-10" type="tel" />
-
-          {isNewClient && (
-            <div className="space-y-2 rounded-lg border border-dashed p-3">
-              <p className="text-xs font-medium text-muted-foreground">New client — enter their name</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Input disabled={sending} placeholder="First name *" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="h-9" />
-                <Input disabled={sending} placeholder="Last name" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="h-9" />
-              </div>
+          {channel === "EMAIL" && (
+            <div>
+              <Label htmlFor="new-message-subject">Subject</Label>
+              <Input
+                id="new-message-subject"
+                value={subject}
+                disabled={busy}
+                onChange={(e) => {
+                  setSubject(e.target.value);
+                  setRestored(undefined);
+                }}
+              />
             </div>
           )}
-
-          <Textarea disabled={sending} placeholder="Type message..." value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
-          <Button onClick={handleSend} disabled={!body.trim() || !recipient.trim() || sending || (isNewClient && !newFirstName.trim())} className="w-full">
-            <MessageSquare className="h-4 w-4 mr-2" /> {sending ? "Sending..." : "Send SMS"}
+          <Label htmlFor="new-message-body">Message</Label>
+          <Textarea
+            id="new-message-body"
+            placeholder="Type message..."
+            disabled={busy}
+            value={body}
+            rows={4}
+            onChange={(e) => {
+              setBody(e.target.value);
+              setRestored(undefined);
+            }}
+          />
+          <Button
+            className="w-full"
+            disabled={
+              busy ||
+              blocked ||
+              !selected ||
+              !recipient ||
+              !body.trim() ||
+              (channel === "EMAIL" && !subject.trim())
+            }
+            onClick={() => void send()}
+          >
+            {sending ? "Queueing…" : `Send ${channel}`}
           </Button>
-
         </div>
       </SheetContent>
     </Sheet>

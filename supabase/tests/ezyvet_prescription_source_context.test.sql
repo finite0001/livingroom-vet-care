@@ -1,0 +1,46 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: owner-only synthetic source observations and reviewed mapping.
+insert into auth.users(id,email,raw_user_meta_data) values('db560000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db560000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db560000-0000-4000-8000-000000000001','db560000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db560000-0000-4000-8000-000000000001','STAFF'),('db560000-0000-4000-8000-000000000002','STAFF');
+
+insert into user_roles(user_id,role) values('db560000-0000-4000-8000-000000000001','ADMIN'),('db560000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Clinical','Import','+13035550199','clinical-import@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Scoped dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','mapping2','snapshot','snapshot2','legacy','terminal','run','history','other-run']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) select id,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='snapshot' then '77' else '88' end,jsonb_build_object('id',case when k='snapshot' then 77 else 88 end),k,'db560000-0000-4000-8000-000000000001' from fx where k in ('snapshot','snapshot2');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select id,gen_random_uuid(),k,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='mapping' then '77' else '88' end,(select id from fx where k=case when m.k='mapping' then 'snapshot' else 'snapshot2' end),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic approved mapping','db560000-0000-4000-8000-000000000001' from fx m where k in ('mapping','mapping2');
+insert into fx values('prescription-run',gen_random_uuid());
+insert into data select 'prescription-run',claim_ezyvet_prescription_import((select id from fx where k='prescription-run'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescription','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select stage_ezyvet_import_page((select id from fx where k='prescription-run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='prescription-run'),1,true,'[{"external_id":"101","payload":{"id":101,"animal_id":77,"instructions":"Source prescriptionation"}},{"external_id":"102","payload":{"id":102,"animal_id":77}}]');
+insert into data select 'prescription',list_ezyvet_prescription_candidates((select id from fx where k='mapping'),'prescription')->'candidates'->0;
+-- Choose external prescription 101 independent of creation-order ties.
+update data set v=(select c from jsonb_array_elements(list_ezyvet_prescription_candidates((select id from fx where k='mapping'),'prescription')->'candidates') c where c->>'external_id'='101') where k='prescription';
+insert into data values('items','[{"external_id":"501","payload":{"id":501,"prescription_id":101,"product_id":null,"date_start":null,"remaining":"unknown","qty":"outside units","serial_number":"outside author","instructions":"<script>outside prose</script>"}}]');
+insert into data select 'legacy',to_jsonb(claim_ezyvet_import_core((select id from fx where k='legacy'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescriptionitem','https://api.trial.ezyvet.com'));
+select stage_ezyvet_import_page_core((select id from fx where k='legacy'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='legacy'),1,false,(select v from data where k='items'));
+update ezyvet_import_runs set retry_after=null,lease_until=null;
+insert into data select 'terminal',to_jsonb(claim_ezyvet_import_core((select id from fx where k='terminal'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescriptionitem','https://api.trial.ezyvet.com'));
+select stage_ezyvet_import_page_core((select id from fx where k='terminal'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='terminal'),1,true,'[]');
+update ezyvet_import_runs set retry_after=null,lease_until=null;
+reset role;
+insert into data select 'review-run',claim_ezyvet_prescriptionitem_import((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescriptionitem','https://api.trial.ezyvet.com',(select id from fx where k='mapping'),(select (v->>'id')::uuid from data where k='prescription'),(select v->>'payload_hash' from data where k='prescription'),(select (v->>'observed_head_version')::integer from data where k='prescription'));
+select stage_ezyvet_import_page((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='review-run'),1,true,(select v from data where k='items'));
+insert into data select 'context',ezyvet_prescription_source_context((select id from fx where k='pet'),(select id from fx where k='run'));
+select is((select v#>>'{parent,external_id}' from data where k='context'),'101','Parent identity frozen from saved run');
+select is((select v#>>'{items,0,original,qty}' from data where k='context'),'outside units','Quantity remains original uninterpreted text');
+select is((select v#>>'{items,0,original,instructions}' from data where k='context'),'<script>outside prose</script>','Source instructions remain exact evidence');
+select is((select v#>>'{reconciliation,status}' from data where k='context'),'unresolved','Missing parent item list cannot be called matched');
+select is((select v#>>'{reconciliation,scanComplete}' from data where k='context'),'true','Terminal scan completion is reported separately');
+select is((select v#>>'{consult,status}' from data where k='context'),'not_supplied','Absent optional consult remains explicit');
+select throws_ok($$select ezyvet_prescription_source_context(gen_random_uuid(),(select id from fx where k='run'))$$,'42501',null,'Wrong patient rejected');
+select throws_ok($$select ezyvet_prescription_source_context((select id from fx where k='pet'),(select id from fx where k='legacy'))$$,'42501',null,'Generic item run cannot provide review evidence');
+select ok(not has_function_privilege('authenticated','ezyvet_prescription_source_context(uuid,uuid)','EXECUTE'),'Private collector not callable by browser');
+select ok(not has_function_privilege('service_role','ezyvet_prescription_source_context(uuid,uuid)','EXECUTE'),'Private collector not callable by service API');
+update ezyvet_identity_heads set version=version+2 where resource='prescriptionitem' and external_id='501';
+select throws_ok($$select ezyvet_prescription_source_context((select id from fx where k='pet'),(select id from fx where k='run'))$$,'40001','SOURCE_PRESCRIPTION_ITEM_STALE','Item revision change invalidates source context');
+select * from finish();rollback;

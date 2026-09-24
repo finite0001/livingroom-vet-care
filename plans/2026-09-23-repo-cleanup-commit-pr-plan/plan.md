@@ -1,8 +1,9 @@
 # Repo cleanup, commit and PR plan
 
-Date: 2026-09-23  
-Branch: `codex/patient-documents`  
+Date: 2026-09-23
+Branch: `codex/patient-documents`
 Baseline: `f23d534` (`feat(records): add private patient documents and retained history`)
+Post-merge baseline: merged current `origin/main` while resolving PR conflicts for #204.
 
 ## Objective
 
@@ -49,6 +50,16 @@ Open one reconciliation PR from `codex/patient-documents` once the commits are c
 - CloudTalk/public contact configuration is intentionally deferred.
 - Provider dashboards/schedulers are not commissioned for live delivery, even though reviewed worker/webhook functions are deployed.
 
+## Post-merge validation update
+
+After merging current `origin/main` into the PR branch on 2026-09-23/2026-09-24:
+
+- Conflict strategy kept newer `main` behavior for active scheduler/contact/communication surfaces and retained this branch's `.env` cleanup, launch-domain assets, SEO/legal routes, readiness scripts, and typography refresh.
+- `npm run check` passes after the merge: lint, typecheck, 1,075 Node tests, and production build.
+- `npm run test:e2e` passes after removing third-party font loading from the public CSS path: 452/452 Playwright tests.
+- `npm run readiness:summary` remains blocked at 4/5 gates. The only blocked gate is public website launch readiness for owner-approved phone, email, emergency phone, and hours.
+- `npm run supabase:migration-drift` now reports 123 matching, 0 remote-only, and 25 local-only migrations. The remote-only reconciliation problem is fixed; the new local-only set came from the merged `main` history and needs hosted rollout before claiming remote database parity.
+
 ## Immediate next step
 
-After this cleanup plan lands, stage and commit in the bucket order above, run the validation set, then create the PR. If validation fails, stop before pushing and add a failure note to the PR plan rather than burying it in a large mixed commit.
+After this cleanup plan lands, stage and commit in the bucket order above, run the validation set, then create the PR. If validation fails, stop before pushing and add a failure note to the PR plan rather than burying it in a large mixed commit. After the PR merge conflict resolution, push the merge commit and keep the PR body/status current with the local-only migration rollout note.

@@ -1,0 +1,97 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: synthetic scoped outside history and local actors.
+insert into auth.users(id,email,raw_user_meta_data) values('db490000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db490000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db490000-0000-4000-8000-000000000001','db490000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db490000-0000-4000-8000-000000000001','STAFF'),('db490000-0000-4000-8000-000000000002','STAFF');
+
+insert into user_roles(user_id,role) values('db490000-0000-4000-8000-000000000001','ADMIN'),('db490000-0000-4000-8000-000000000002','DVM');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Clinical','Import','+13035550199','clinical-import@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Scoped dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','mapping2','snapshot','snapshot2','legacy','terminal','run','history','other-run']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) select id,'https://api.trial.ezyvet.com','clinical-test-site','animal',case when k='snapshot' then '77' else '88' end,jsonb_build_object('id',case when k='snapshot' then 77 else 88 end),k,'db490000-0000-4000-8000-000000000001' from fx where k in ('snapshot','snapshot2');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select id,gen_random_uuid(),k,'https://api.trial.ezyvet.com','clinical-test-site','animal',case when k='mapping' then '77' else '88' end,(select id from fx where k=case when m.k='mapping' then 'snapshot' else 'snapshot2' end),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic approved mapping','db490000-0000-4000-8000-000000000001' from fx m where k in ('mapping','mapping2');
+insert into data values('items','[{"external_id":"101","payload":{"id":101,"animal_id":77,"comments":"<script>outside prose</script>","vet_id":"outside-user","history_system":"opaque"}}]');
+insert into fx select k,gen_random_uuid() from unnest(array['source-approval','extraction','linked','tombstone','second-extraction','later-source','discrepancy','release']) k;
+set local role service_role;
+insert into data select 'run',claim_ezyvet_clinical_import((select id from fx where k='run'),'db490000-0000-4000-8000-000000000001','clinical-test-site','history','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select stage_ezyvet_import_page((select id from fx where k='run'),'db490000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,true,(select v from data where k='items'));
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into data select 'candidate',list_ezyvet_clinical_candidates((select id from fx where k='mapping'),'history')#>'{candidates,0}';
+insert into data select 'source-payload',jsonb_build_object('animal_link_id',(select id from fx where k='mapping'),'snapshot_id',v->'id','payload_hash',v->'payload_hash','observed_head_version',v->'head_version','patient_version',1,'consult_mode','not_referenced','consult_snapshot_id',null,'consult_payload_hash',null,'consult_head_version',null,'reason','PRIVATE administrator source review') from data where k='candidate';
+insert into data select 'prepared-source',prepare_ezyvet_history_approval((select id from fx where k='source-approval'),(select id from fx where k='pet'),(select v from data where k='source-payload'));
+insert into data select 'source-receipt',approve_ezyvet_history((select id from fx where k='source-approval'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='prepared-source'),true);
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+insert into data select 'extraction-payload',jsonb_build_object('sources',jsonb_build_array(jsonb_build_object('id',v#>'{receipt,id}','version_hash',v#>'{receipt,version_hash}')),'patient_version',1,'action','create','problem_id',null,'problem_version',null,'fields',jsonb_build_object('title','Reviewed vaccine reaction','notes','DVM-authored reviewed finding','onset_date',null,'status','active','importance','high'),'duplicate_decision','distinct_finding','reason','PRIVATE DVM duplicate review') from data where k='source-receipt';
+insert into data select 'prepared-extraction',prepare_ezyvet_problem_extraction((select id from fx where k='extraction'),(select id from fx where k='pet'),(select v from data where k='extraction-payload'));
+insert into data select 'extraction-receipt',approve_ezyvet_problem_extraction((select id from fx where k='extraction'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='prepared-extraction'),true);
+insert into fx select 'problem',(v#>>'{receipt,problem_id}')::uuid from data where k='extraction-receipt';
+
+-- Additional scoped vaccination observation and explicit DVM review.
+insert into fx select k,gen_random_uuid() from unnest(array['vconsult-run','vaccine-run','vaccine-review','vaccine-correction','vaccine-release','mixed-release']) k;
+set local role service_role;
+insert into data select 'vconsult-run',claim_ezyvet_clinical_import((select id from fx where k='vconsult-run'),'db490000-0000-4000-8000-000000000001','clinical-test-site','consult','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select stage_ezyvet_import_page((select id from fx where k='vconsult-run'),'db490000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='vconsult-run'),1,true,'[{"external_id":"901","payload":{"id":901,"animal_id":77}}]');
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into data select 'vconsult',list_ezyvet_clinical_candidates((select id from fx where k='mapping'),'consult')#>'{candidates,0}';
+set local role service_role;
+insert into data select 'vaccine-run',claim_ezyvet_vaccination_import((select id from fx where k='vaccine-run'),'db490000-0000-4000-8000-000000000001','clinical-test-site','vaccination','https://api.trial.ezyvet.com',(select id from fx where k='mapping'),(v->>'id')::uuid,v->>'payload_hash',(v->>'head_version')::integer) from data where k='vconsult';
+select stage_ezyvet_import_page((select id from fx where k='vaccine-run'),'db490000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='vaccine-run'),1,true,'[{"external_id":"902","payload":{"id":"902","consult_id":"901","description":"Synthetic outside vaccine","date_of_administration":"ambiguous","date_of_next_administration":null,"active":"unknown"}}]');
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+insert into data select 'vaccine-candidate',list_ezyvet_vaccination_review_candidates((select id from fx where k='pet'),(select id from fx where k='mapping'))#>'{candidates,0}';
+insert into data select 'vaccine-payload',jsonb_build_object('animal_link_id',(select id from fx where k='mapping'),'patient_version',1,'snapshot_id',v->'id','payload_hash',v->'payload_hash','observed_head_version',v->'head_version','consult_snapshot_id',v->'consult_snapshot_id','consult_payload_hash',v->'consult_payload_hash','consult_observed_head_version',v->'consult_observed_head_version','product_id',null,'product_version',null,'administered_on',null,'administration_date_status','uninterpreted','source_next_due_on',null,'next_date_status','unknown','status','unknown','outside_author',null,'reason','Preserve unknown clinical source meanings','replaces_id',null,'expected_predecessor_hash',null) from data where k='vaccine-candidate';
+insert into data select 'vaccine-prepared',prepare_ezyvet_vaccination_review((select id from fx where k='vaccine-review'),(select id from fx where k='pet'),(select v from data where k='vaccine-payload'));
+insert into data select 'vaccine-approved',approve_ezyvet_vaccination_review((select id from fx where k='vaccine-review'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='vaccine-prepared'),true);
+-- FIXTURE_END
+insert into data select 'vaccine-selection',jsonb_build_object('imported_vaccination_ids',jsonb_build_array(v#>'{receipt,id}')) from data where k='vaccine-approved';
+insert into data select 'vaccine-preview',preview_record_release_v7((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='vaccine-selection'));
+select is((select v#>>'{snapshot,schema_version}' from data where k='vaccine-preview'),'7','Vaccination-only schema7 preview');
+select is((select jsonb_array_length(v#>'{snapshot,imported_histories}') from data where k='vaccine-preview'),0,'Vaccine-only selection omits unpublished narratives');
+select is((select v#>>'{snapshot,imported_vaccinations,0,original,date_of_administration}' from data where k='vaccine-preview'),'ambiguous','Raw source value preserved');
+select is((select v#>'{snapshot,imported_vaccinations,0,reviewed,administered_on}' from data where k='vaccine-preview'),'null'::jsonb,'No invented timestamp');
+select is((select v#>>'{snapshot,imported_vaccinations,0,correction_history,0,version_hash}' from data where k='vaccine-preview'),(select v#>>'{receipt,version_hash}' from data where k='vaccine-approved'),'Exact revision reference without another raw record');
+select throws_ok($$select confirm_record_release((select id from fx where k='vaccine-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='vaccine-selection'),(select v->'snapshot' from data where k='vaccine-preview'),(select v->>'source_hash' from data where k='vaccine-preview'),true)$$,'42501',null,'Schema7 requires explicit policy acceptance');
+reset role;
+insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic rollback reviewer',now(),'TEST ONLY',7);
+set local role authenticated;
+select confirm_record_release((select id from fx where k='vaccine-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='vaccine-selection'),(select v->'snapshot' from data where k='vaccine-preview'),(select v->>'source_hash' from data where k='vaccine-preview'),true);
+select is(read_record_release((select id from fx where k='vaccine-release'))->>'eligible','true','Current vaccine-only release eligible');
+select is(jsonb_array_length(list_record_release_sources_v7((select id from fx where k='pet'))->'imported_vaccination_ids'),1,'Discovery includes latest current review');
+select is((select count(*)::integer from jsonb_each(select_all_record_release_sources_v7((select id from fx where k='pet'))->'selection') where jsonb_typeof(value)='array'),16,'Select-all includes sixteen distinct source families');
+select throws_ok($$select preview_record_release_v7((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test','{}')$$,'23514',null,'Empty package remains invalid');
+insert into data select 'mixed-selection',v||jsonb_build_object('imported_history_ids',jsonb_build_array((select id from fx where k='source-approval')),'problem_ids',jsonb_build_array((select id from fx where k='problem'))) from data where k='vaccine-selection';
+insert into data select 'mixed-preview',preview_record_release_v7((select id from fx where k='pet'),(select id from fx where k='client'),'SMS','+13035550199',(select v from data where k='mixed-selection'));
+select is((select jsonb_array_length(v#>'{snapshot,imported_histories}') from data where k='mixed-preview'),1,'Mixed schema7 keeps narrative');
+select is((select v#>>'{snapshot,problem_source_extractions,0,sources,0,narrative_included}' from data where k='mixed-preview'),'true','Schema7 retains exact schema6 problem lineage');
+select confirm_record_release((select id from fx where k='mixed-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'SMS','+13035550199',(select v from data where k='mixed-selection'),(select v->'snapshot' from data where k='mixed-preview'),(select v->>'source_hash' from data where k='mixed-preview'),true);
+-- Correction invalidates both pending packages; immutable confirmed snapshots remain intact.
+insert into data select 'correction-payload',(select v from data where k='vaccine-payload')||jsonb_build_object('replaces_id',v#>'{receipt,id}','expected_predecessor_hash',v#>'{receipt,version_hash}','outside_author','Explicit outside reviewer attribution','reason','Correct reviewed attribution after clinical review') from data where k='vaccine-approved';
+insert into data select 'correction-prepared',prepare_ezyvet_vaccination_review((select id from fx where k='vaccine-correction'),(select id from fx where k='pet'),(select v from data where k='correction-payload'));
+insert into data select 'correction-approved',approve_ezyvet_vaccination_review((select id from fx where k='vaccine-correction'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='correction-prepared'),true);
+select is(read_record_release((select id from fx where k='vaccine-release'))->>'eligible','false','Reviewed supersession invalidates pending vaccine package');
+select is(read_record_release((select id from fx where k='mixed-release'))->>'eligible','false','Reviewed supersession invalidates pending mixed package');
+select is(read_record_release((select id from fx where k='vaccine-release'))#>'{release,snapshot}',(select v->'snapshot' from data where k='vaccine-preview'),'Supersession leaves captured release bytes/data immutable');
+select is((confirm_record_release((select id from fx where k='vaccine-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='vaccine-selection'),(select v->'snapshot' from data where k='vaccine-preview'),(select v->>'source_hash' from data where k='vaccine-preview'),true)).snapshot,(select v->'snapshot' from data where k='vaccine-preview'),'Exact terminal recovery survives reviewed supersession');
+select throws_ok($$select preview_record_release_v7((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='vaccine-selection'))$$,'40001',null,'Superseded review cannot start a fresh package');
+insert into fx values('corrected-release',gen_random_uuid());
+insert into data select 'corrected-selection',jsonb_build_object('imported_vaccination_ids',jsonb_build_array(v#>'{receipt,id}')) from data where k='correction-approved';
+insert into data select 'corrected-preview',preview_record_release_v7((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='corrected-selection'));
+select confirm_record_release((select id from fx where k='corrected-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='corrected-selection'),(select v->'snapshot' from data where k='corrected-preview'),(select v->>'source_hash' from data where k='corrected-preview'),true);
+select is(read_record_release((select id from fx where k='corrected-release'))->>'eligible','true','Fresh corrected review package eligible');
+
+reset role;update ezyvet_identity_heads set version=version+1 where source_site_uid='clinical-test-site' and resource='consult' and external_id='901';set local role authenticated;
+select is(read_record_release((select id from fx where k='corrected-release'))->>'eligible','false','Consult observed revision alone invalidates delivery');
+select is(read_record_release((select id from fx where k='corrected-release'))#>'{release,snapshot}',(select v->'snapshot' from data where k='corrected-preview'),'Consult head event never rewrites captured package');
+reset role;update ezyvet_identity_heads set version=version-1 where source_site_uid='clinical-test-site' and resource='consult' and external_id='901';set local role authenticated;
+select is(read_record_release((select id from fx where k='corrected-release'))->>'eligible','false','Observed consult change event survives restored values');
+insert into fx values('vaccine-head-release',gen_random_uuid());
+select confirm_record_release((select id from fx where k='vaccine-head-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','clinical-import@example.test',(select v from data where k='corrected-selection'),(select v->'snapshot' from data where k='corrected-preview'),(select v->>'source_hash' from data where k='corrected-preview'),true);
+select is(read_record_release((select id from fx where k='vaccine-head-release'))->>'eligible','true','Fresh package before isolated vaccine head change is eligible');
+reset role;update ezyvet_identity_heads set version=version+1 where source_site_uid='clinical-test-site' and resource='vaccination' and external_id='902';set local role authenticated;
+select is(read_record_release((select id from fx where k='vaccine-head-release'))->>'eligible','false','Vaccination observed revision alone invalidates delivery');
+select is(read_record_release((select id from fx where k='vaccine-head-release'))#>'{release,snapshot}',(select v->'snapshot' from data where k='corrected-preview'),'Vaccine head event never rewrites captured package');
+
+select * from finish();rollback;

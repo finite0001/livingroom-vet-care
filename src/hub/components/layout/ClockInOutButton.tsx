@@ -51,10 +51,10 @@ export function ClockInOutButton() {
     <div className="flex items-center gap-2">
       {onDuty && current && (
         <span
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success"
           title={`On duty since ${new Date(current.clock_in_at).toLocaleTimeString()}`}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
           <Clock className="h-3 w-3" />
           {formatElapsed(durationSeconds(current, now))}
         </span>
@@ -64,7 +64,7 @@ export function ClockInOutButton() {
         variant={onDuty ? "outline" : "default"}
         disabled={pending}
         onClick={handle}
-        className={cn("h-8", onDuty && "border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10 hover:text-emerald-700 dark:text-emerald-400")}
+        className={cn("h-8", onDuty && "border-success/40 text-success hover:bg-success/10 hover:text-success")}
       >
         {onDuty ? <LogOut className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
         <span className="ml-1.5">{onDuty ? "Clock Out" : "Clock In"}</span>

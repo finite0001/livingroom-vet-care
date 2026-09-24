@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/auth-context";
+import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import { usePageTitle } from "@/hooks/use-page-title";
 import {
   useCurrentShift, useClockIn, useClockOut, useMyShifts, useOnDutyStaff,
@@ -31,9 +32,9 @@ export default function TimeClockPage() {
   usePageTitle("Time Clock");
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
-  const { data: current, isLoading } = useCurrentShift();
-  const { data: shifts = [] } = useMyShifts(30);
-  const { data: onDuty = [] } = useOnDutyStaff(isAdmin);
+  const { data: current, isLoading, isError: currentFailed, refetch: refetchCurrent } = useCurrentShift();
+  const { data: shifts = [], isError: shiftsFailed, refetch: refetchShifts } = useMyShifts(30);
+  const { data: onDuty = [], isError: onDutyFailed, refetch: refetchOnDuty } = useOnDutyStaff(isAdmin);
   const clockIn = useClockIn();
   const clockOut = useClockOut();
 
@@ -78,6 +79,15 @@ export default function TimeClockPage() {
           <CardContent className="flex flex-col items-center gap-4 p-6">
             {isLoading ? (
               <Skeleton className="h-12 w-48" />
+            ) : currentFailed ? (
+              // Without this the card would say "Not clocked in" and offer a Clock in
+              // button to somebody who may already be on the clock.
+              <LoadErrorState
+                label="Your time clock"
+                className="py-2"
+                detail="We could not check whether you are clocked in. Do not clock in again until this loads — ask an admin to check the timesheet."
+                onRetry={() => void refetchCurrent()}
+              />
             ) : (
               <>
                 <div className="text-center">
@@ -105,10 +115,11 @@ export default function TimeClockPage() {
           </CardContent>
         </Card>
 
-        {/* Totals */}
+        {/* Totals. A dash, not 0m, when the shifts could not be read — a false
+            zero would say "you have worked nothing today". */}
         <div className="grid grid-cols-2 gap-3">
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Today</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmtHm(todaySeconds)}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Past 7 days</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmtHm(weekSeconds)}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Today</p><p className="mt-1 text-2xl font-bold tabular-nums">{shiftsFailed ? "—" : fmtHm(todaySeconds)}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Past 7 days</p><p className="mt-1 text-2xl font-bold tabular-nums">{shiftsFailed ? "—" : fmtHm(weekSeconds)}</p></CardContent></Card>
         </div>
 
         {/* Admin: on duty now */}
@@ -116,13 +127,15 @@ export default function TimeClockPage() {
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> On duty now</CardTitle></CardHeader>
             <CardContent>
-              {onDuty.length === 0 ? (
+              {onDutyFailed ? (
+                <LoadErrorState label="Who is on duty" className="py-4" onRetry={() => void refetchOnDuty()} />
+              ) : onDuty.length === 0 ? (
                 <p className="py-2 text-sm text-muted-foreground">No staff clocked in.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {onDuty.map((s) => (
                     <Badge key={s.id} variant="secondary" className="gap-1.5">
-                      <span className="inline-block h-2 w-2 rounded-full bg-green-500" />{s.full_name || "Staff"}
+                      <span className="inline-block h-2 w-2 rounded-full bg-success" />{s.full_name || "Staff"}
                     </Badge>
                   ))}
                 </div>
@@ -135,7 +148,9 @@ export default function TimeClockPage() {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Recent shifts</CardTitle></CardHeader>
           <CardContent className="p-0">
-            {shifts.length === 0 ? (
+            {shiftsFailed ? (
+              <LoadErrorState label="Your recent shifts" className="py-4" onRetry={() => void refetchShifts()} />
+            ) : shifts.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm text-muted-foreground">No shifts in the last 30 days.</p>
             ) : (
               <div className="divide-y">
@@ -148,7 +163,7 @@ export default function TimeClockPage() {
                       </p>
                     </div>
                     {isOpen(s)
-                      ? <Badge variant="secondary" className="gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse" />Active</Badge>
+                      ? <Badge variant="secondary" className="gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-success animate-pulse" />Active</Badge>
                       : <span className="tabular-nums text-muted-foreground">{fmtHm(durationSeconds(s, now))}</span>}
                   </div>
                 ))}

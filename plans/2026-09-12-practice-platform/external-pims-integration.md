@@ -1,16 +1,16 @@
 # External veterinary-software API connection
 
-Required by owner. Candidate adapter: ezyVet, based on vet-connect-hub at local snapshot `de3d530`. The actual connected practice/account, API authorization and desired ongoing sync mode are unconfirmed. Do not assume a third-party practice's records can be imported merely because credentials exist in another deployment.
+Confirmed by owner: Living Room Vet is the primary record system, with reviewed imports from ezyVet. The reference was vet-connect-hub at local snapshot `de3d530`. The actual authorized source practice/account and API entitlement remain unverified. Do not assume a third-party practice's records can be imported merely because credentials exist in another deployment.
 
 ## What the reference actually implements
 
 `supabase/functions/ezyvet-sync/index.ts` authenticates server-side using client credentials, then imports client contacts, pets and near-term appointments. It stores invoice-derived aggregates, not a full financial ledger. `ezyvet-proxy/index.ts` supplies read-only API calls used by `src/components/ezyvet/ClinicalTimeline.tsx` and `src/hooks/use-ezyvet.ts` for consults, prescriptions, vaccines and health status. API allowlist entries do not prove complete local ingestion. Live deployment and scheduled sync were not verified.
 
-The new Living Room repo currently has client `ezyvet_id` and a placeholder route, not that complete integration. Add the capability deliberately; do not copy reference migrations wholesale.
+The initial planning snapshot had only a client `ezyvet_id` and placeholder route. Current implementation adds staged imports and reviewed contact/patient/weight promotion; see [staging evidence](../../docs/ezyvet-staged-import.md) and [reviewed weights](../../docs/ezyvet-reviewed-weights.md). Historical clinical originals and structured history promotion remain separate work. Reference API allowlists do not establish validated clinical ingestion.
 
 ## Data authority
 
-| Data | Proposed initial ownership |
+| Data | Confirmed authority and import policy |
 |---|---|
 | Existing external clinical history | External source; preserve original IDs/content/read-only provenance; link or import with source attribution |
 | New Living Room SOAP, prescriptions, vaccines | Local signed clinical record; never overwritten by sync |
@@ -19,11 +19,11 @@ The new Living Room repo currently has client `ezyvet_id` and a placeholder rout
 | Historical invoices/balances | Source-labeled reference/import after reconciliation; do not recreate as Stripe charges |
 | New invoices/payments | Local invoice ledger and verified Stripe payment events |
 
-Default to read integration plus reviewed imports. Two-way writes are a later explicit contract, including source API permissions, conflict resolution and retry behavior. An external system can remain authoritative for its own practice without preventing locally created Living Room patients.
+Use read-only source access plus reviewed imports into the primary Living Room Vet record. Two-way writes are a later explicit contract, including source API permissions, conflict resolution and retry behavior. An external system can remain authoritative for its own practice without preventing locally created Living Room patients.
 
 ## Implementation tasks
 
-1. [ ] Confirm vendor, account ownership/authorization, API entitlement/scopes, rate limits, supported entities, attachments and available exports. Obtain synthetic/de-identified sample payloads. Confirm one-time migration versus continued read sync.
+1. [ ] Verify ezyVet account ownership/authorization, API entitlement/scopes, rate limits, supported entities, attachments and available exports. Obtain synthetic/de-identified sample payloads. Define migration completeness and any later reviewed refresh policy; do not make ezyVet the primary system.
 2. [ ] Define provider adapter for contact, patient, visit, appointment, vaccine, alert, document and financial-history reads, with capability flags for unsupported entities. Store credentials server-side; admin manages connection, authorized staff can view permitted patient records.
 3. [ ] Add external identity map unique on practice/provider/account/entity/external ID. Add source version/hash, sync cursor, run status, raw import snapshot, mapping exceptions and reviewed conflicts. Avoid embedding one vendor's IDs throughout new business logic.
 4. [ ] Fetch paginated data into staging with bounded retries/rate-limit backoff and resumable cursors. Mark partial/failed runs accurately. Compare fetched/staged/applied/rejected counts. Never delete local clients because a page or run omitted them.

@@ -3,6 +3,8 @@ import { Clock, CalendarIcon, Search, X, Download } from "lucide-react";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { cn } from "@/lib/utils";
+import { PageShell } from "@/hub/components/shared/PageShell";
+import { PageHeader } from "@/hub/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -118,13 +120,11 @@ export default function MyTimePage() {
   const showAll = isAdmin && view === "all";
 
   return (
-    <div className="container max-w-4xl py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Timesheet</h1>
-        <p className="text-sm text-muted-foreground">
-          {showAll ? "Clock-in/out history for all staff." : "Your clock-in/out history."}
-        </p>
-      </div>
+    <PageShell className="max-w-4xl space-y-6">
+      <PageHeader
+        title="Timesheet"
+        description={showAll ? "Clock-in/out history for all staff." : "Your clock-in/out history."}
+      />
 
       {isAdmin && (
         <Tabs value={view} onValueChange={(v) => setView(v as "mine" | "all")}>
@@ -270,7 +270,7 @@ export default function MyTimePage() {
                         <TableCell className="whitespace-nowrap">{formatDateTime(e.clock_in_at)}</TableCell>
                         <TableCell className="whitespace-nowrap">
                           {open ? (
-                            <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                            <Badge variant="outline" className="border-success/40 text-success">
                               On duty
                             </Badge>
                           ) : (
@@ -291,6 +291,6 @@ export default function MyTimePage() {
         </Card>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

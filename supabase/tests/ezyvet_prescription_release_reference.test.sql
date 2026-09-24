@@ -1,0 +1,95 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: owner-only synthetic source observations and reviewed mapping.
+insert into auth.users(id,email,raw_user_meta_data) values('db560000-0000-4000-8000-000000000001','clinical-import-admin@example.test','{}'),('db560000-0000-4000-8000-000000000002','clinical-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db560000-0000-4000-8000-000000000001','db560000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db560000-0000-4000-8000-000000000001','STAFF'),('db560000-0000-4000-8000-000000000002','STAFF');
+
+insert into user_roles(user_id,role) values('db560000-0000-4000-8000-000000000001','ADMIN'),('db560000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db560000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Clinical','Import','+13035550199','clinical-import@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Scoped dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','mapping2','snapshot','snapshot2','legacy','terminal','run','history','other-run']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) select id,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='snapshot' then '77' else '88' end,jsonb_build_object('id',case when k='snapshot' then 77 else 88 end),k,'db560000-0000-4000-8000-000000000001' from fx where k in ('snapshot','snapshot2');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select id,gen_random_uuid(),k,'https://api.trial.ezyvet.com','prescriptionitem-test-site','animal',case when k='mapping' then '77' else '88' end,(select id from fx where k=case when m.k='mapping' then 'snapshot' else 'snapshot2' end),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic approved mapping','db560000-0000-4000-8000-000000000001' from fx m where k in ('mapping','mapping2');
+insert into fx values('prescription-run',gen_random_uuid());
+insert into data select 'prescription-run',claim_ezyvet_prescription_import((select id from fx where k='prescription-run'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescription','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select stage_ezyvet_import_page((select id from fx where k='prescription-run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='prescription-run'),1,true,'[{"external_id":"101","payload":{"id":101,"animal_id":77,"instructions":"Source prescriptionation"}},{"external_id":"102","payload":{"id":102,"animal_id":77}}]');
+insert into data select 'prescription',list_ezyvet_prescription_candidates((select id from fx where k='mapping'),'prescription')->'candidates'->0;
+-- Choose external prescription 101 independent of creation-order ties.
+update data set v=(select c from jsonb_array_elements(list_ezyvet_prescription_candidates((select id from fx where k='mapping'),'prescription')->'candidates') c where c->>'external_id'='101') where k='prescription';
+insert into data values('items','[{"external_id":"501","payload":{"id":501,"prescription_id":101,"product_id":null,"date_start":null,"remaining":"unknown","qty":"outside units","serial_number":"outside author","instructions":"<script>outside prose</script>"}},{"external_id":"502","payload":{"id":502,"prescription_id":101,"qty":"unreviewed source amount","instructions":"Omitted original evidence"}}]');
+insert into data select 'legacy',to_jsonb(claim_ezyvet_import_core((select id from fx where k='legacy'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescriptionitem','https://api.trial.ezyvet.com'));
+select stage_ezyvet_import_page_core((select id from fx where k='legacy'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='legacy'),1,false,(select v from data where k='items'));
+update ezyvet_import_runs set retry_after=null,lease_until=null;
+insert into data select 'terminal',to_jsonb(claim_ezyvet_import_core((select id from fx where k='terminal'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescriptionitem','https://api.trial.ezyvet.com'));
+select stage_ezyvet_import_page_core((select id from fx where k='terminal'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='terminal'),1,true,'[]');
+update ezyvet_import_runs set retry_after=null,lease_until=null;
+reset role;
+insert into data select 'review-run',claim_ezyvet_prescriptionitem_import((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001','prescriptionitem-test-site','prescriptionitem','https://api.trial.ezyvet.com',(select id from fx where k='mapping'),(select (v->>'id')::uuid from data where k='prescription'),(select v->>'payload_hash' from data where k='prescription'),(select (v->>'observed_head_version')::integer from data where k='prescription'));
+select stage_ezyvet_import_page((select id from fx where k='run'),'db560000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='review-run'),1,true,(select v from data where k='items'));
+insert into data select 'context',ezyvet_prescription_source_context((select id from fx where k='pet'),(select id from fx where k='run'));
+
+insert into fx values('product',gen_random_uuid());
+insert into catalog_products(id,name,kind,unit,unit_price_cents,created_by) select id,'Synthetic medication','medication','tablet',1000,'db560000-0000-4000-8000-000000000001' from fx where k='product';
+insert into data select 'review',jsonb_build_object('reason','Historical interpretation only','outside_author',null,'prescribed_on',null,'prescription_date_status','uninterpreted','status','unknown','completeness','partial','partial_reason','Parent source list not supplied','replaces_id',null,'expected_predecessor_hash',null,'items',jsonb_build_array(jsonb_build_object('snapshot_id',v#>'{items,0,snapshot_id}','start_on',null,'start_date_status','unknown','product_id',(select id from fx where k='product'),'product_version',1,'note','No dose or refill inferred'))) from data where k='context';
+
+insert into user_roles(user_id,role) values('db560000-0000-4000-8000-000000000001','DVM'),('db560000-0000-4000-8000-000000000002','DVM');
+insert into fx select k,gen_random_uuid() from unnest(array['approval','duplicate','correction','competing','stale','abandon']) k;
+insert into data select 'payload',jsonb_build_object('item_run_id',(select id from fx where k='run'),'patient_version',(select version from pets where id=(select id from fx where k='pet')),'interpretation',v) from data where k='review';
+insert into data values('side-effects',jsonb_build_object('treatments',(select count(*) from patient_treatments),'invoices',(select count(*) from billing_invoices),'stock',(select count(*) from inventory_movements),'certificates',(select count(*) from vaccine_certificates),'reminders',(select count(*) from care_reminder_jobs),'outbox',(select count(*) from communication_outbox)));
+-- FIXTURE_END
+
+set local role authenticated;
+insert into data select 'prepared',prepare_ezyvet_prescription_review((select id from fx where k='approval'),(select id from fx where k='pet'),(select v from data where k='payload'));
+insert into data select 'approved',approve_ezyvet_prescription_review((select id from fx where k='approval'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='prepared'),true);
+reset role;
+insert into data select 'refs',jsonb_build_array(jsonb_build_object('id',v#>>'{receipt,id}','version_hash',v#>>'{receipt,version_hash}')) from data where k='approved';
+insert into data select 'export',ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v from data where k='refs'));
+select is((select v->0 from data where k='export'),(select v->'receipt' from data where k='approved'),'Export preserves the exact approved projection');
+select is((select v#>>'{0,items,0,source,original,qty}' from data where k='export'),'outside units','Export retains unconverted source quantity');
+select is((select v#>>'{0,context,reviewed,partial_reason}' from data where k='export'),'Parent source list not supplied','Partial disclosure remains attached to export');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions(null,(select v from data where k='refs'))$$,'23514',null,'Patient is mandatory');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions(gen_random_uuid(),(select v from data where k='refs'))$$,'40001',null,'Another patient cannot export this record');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),null)$$,'23514',null,'Null selection rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),'{}')$$,'23514',null,'Nonarray selection rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),'[]')$$,'23514',null,'Empty explicit selection rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),'[null]')$$,'23514',null,'Null reference rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),'["bad"]')$$,'23514',null,'Scalar reference rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),'[{"id":"bad","version_hash":null}]')$$,'23514',null,'Malformed reference rejected before casts');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select jsonb_set(v,'{0,extra}','true') from data where k='refs'))$$,'23514',null,'Unknown reference fields rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v||v from data where k='refs'))$$,'23514',null,'Duplicate UUID rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select jsonb_agg(v->0) from data cross join generate_series(1,21) where k='refs'))$$,'23514',null,'Oversized selection rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select jsonb_set(v,'{0,version_hash}',to_jsonb(repeat('0',64))) from data where k='refs'))$$,'40001',null,'Wrong frozen version hash rejected');
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select jsonb_set(v,'{0,id}',to_jsonb(gen_random_uuid())) from data where k='refs'))$$,'40001',null,'Missing reviewed record rejected');
+savepoint catalog_change;
+update catalog_products set version=version+1,name='New catalog label' where id=(select id from fx where k='product');
+select is(ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v from data where k='refs')),(select v from data where k='export'),'Later catalog edits preserve approved historical interpretation');
+rollback to catalog_change;
+savepoint source_change;
+update ezyvet_identity_heads set version=version+2 where resource='prescriptionitem' and external_id='501';
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v from data where k='refs'))$$,'40001',null,'Item revision change rejects even an identical current snapshot');
+rollback to source_change;
+select is((select v#>>'{0,context,omitted_items,0,external_id}' from data where k='export'),'502','Unselected observed item remains in partial evidence');
+savepoint omitted_change;
+update ezyvet_identity_heads set version=version+2 where resource='prescriptionitem' and external_id='502';
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v from data where k='refs'))$$,'40001',null,'Omitted item revision change also prevents a stale release');
+rollback to omitted_change;
+savepoint parent_change;
+update ezyvet_identity_heads set version=version+2 where resource='prescription' and external_id='101';
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v from data where k='refs'))$$,'40001',null,'Parent revision change rejects the selected version');
+rollback to parent_change;
+set local role authenticated;
+insert into data select 'correction-payload',jsonb_set(v,'{interpretation}',(v->'interpretation')||jsonb_build_object('reason','Corrected outside author after review','outside_author','Outside clinician','replaces_id',(select v#>>'{receipt,id}' from data where k='approved'),'expected_predecessor_hash',(select v#>>'{receipt,version_hash}' from data where k='approved'))) from data where k='payload';
+insert into data select 'correction-prepared',prepare_ezyvet_prescription_review((select id from fx where k='correction'),(select id from fx where k='pet'),(select v from data where k='correction-payload'));
+insert into data select 'corrected',approve_ezyvet_prescription_review((select id from fx where k='correction'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='correction-prepared'),true);
+reset role;
+select throws_ok($$select ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select v from data where k='refs'))$$,'40001',null,'Superseded clinical interpretation cannot enter a new release');
+select is(ezyvet_validate_reviewed_prescriptions((select id from fx where k='pet'),(select jsonb_build_array(jsonb_build_object('id',v#>>'{receipt,id}','version_hash',v#>>'{receipt,version_hash}')) from data where k='corrected'))->0,(select v->'receipt' from data where k='corrected'),'Latest correction exports with complete predecessor history');
+select ok(not has_function_privilege('anon','public.ezyvet_validate_reviewed_prescriptions(uuid,jsonb)','execute'),'Anonymous cannot call private validator');
+select ok(not has_function_privilege('authenticated','public.ezyvet_validate_reviewed_prescriptions(uuid,jsonb)','execute'),'Staff cannot bypass public release authorization');
+select ok(not has_function_privilege('service_role','public.ezyvet_validate_reviewed_prescriptions(uuid,jsonb)','execute'),'Service role cannot bypass public release authorization');
+select is(jsonb_build_object('treatments',(select count(*) from patient_treatments),'invoices',(select count(*) from billing_invoices),'stock',(select count(*) from inventory_movements),'certificates',(select count(*) from vaccine_certificates),'reminders',(select count(*) from care_reminder_jobs),'outbox',(select count(*) from communication_outbox)),(select v from data where k='side-effects'),'Validation creates no native clinical or delivery side effects');
+select * from finish();rollback;

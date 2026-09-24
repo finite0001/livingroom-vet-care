@@ -1,0 +1,196 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN
+insert into auth.users(id,email,raw_user_meta_data) values
+ ('a5510000-0000-4000-8000-000000000001','native-rx-dvm@example.test','{}'),
+ ('a5510000-0000-4000-8000-000000000002','native-rx-staff@example.test','{}'),
+ ('a5510000-0000-4000-8000-000000000003','native-rx-uncommissioned@example.test','{}'),
+ ('a5510000-0000-4000-8000-000000000004','native-rx-admin@example.test','{}');
+update public.profiles set is_active = true where id in ('a5510000-0000-4000-8000-000000000001','a5510000-0000-4000-8000-000000000002','a5510000-0000-4000-8000-000000000003','a5510000-0000-4000-8000-000000000004');
+insert into public.user_roles (user_id, role) values ('a5510000-0000-4000-8000-000000000001','STAFF'),('a5510000-0000-4000-8000-000000000002','STAFF'),('a5510000-0000-4000-8000-000000000003','STAFF'),('a5510000-0000-4000-8000-000000000004','STAFF');
+
+update profiles set full_name='Synthetic prescriber' where id='a5510000-0000-4000-8000-000000000001';
+insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000001','DVM'),('a5510000-0000-4000-8000-000000000001','ADMIN'),('a5510000-0000-4000-8000-000000000003','DVM'),('a5510000-0000-4000-8000-000000000004','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Native','Household','+13035550123','native-release@example.test','EMAIL','2619 Synthetic Street',null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Native Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic medication','medication','','tablet',100,true);
+insert into fx select k,gen_random_uuid() from unnest(array['config','save','draft','sign','save2','draft2']) k;
+insert into data values('config-request',jsonb_build_object('user_id',auth.uid(),'expected_version',null,'attest_review',true,'fields',jsonb_build_object('active',true,'license_number','SYNTHETIC','license_state','CO','license_expires_on','2099-12-31','practice_name','Synthetic practice','practice_address','2619 Synthetic Street','practice_phone',null,'clinical_review_note','Synthetic fixture only')));
+insert into data select 'fields',jsonb_build_object('encounter_id',null,'medication',jsonb_build_object('name','Synthetic medication','strength','Synthetic strength','form','Synthetic form','directions','Synthetic directions only','route','Synthetic route'),'quantity_per_fill','30','unit','tablet','refills_authorized',2,'fulfillment_mode','practice_stock','product_id',(select id from fx where k='product'),'starts_on',(now() at time zone 'America/Denver')::date,'expires_on','2099-12-31');
+insert into data select 'save-request',jsonb_build_object('draft_id',(select id from fx where k='draft'),'pet_id',(select id from fx where k='pet'),'client_id',(select id from fx where k='client'),'expected_version',null,'fields',v) from data where k='fields';
+-- FIXTURE_END
+select configure_native_prescriber((select id from fx where k='config'),(select v from data where k='config-request'));
+select save_native_prescription_draft((select id from fx where k='save'),(select v from data where k='save-request'));
+insert into data select 'sign-request',jsonb_build_object('draft_id',(select id from fx where k='draft'),'pet_id',(select id from fx where k='pet'),'expected_version',1,'expected_context_hash',preview_native_prescription_sign((select id from fx where k='draft'),1)->>'context_hash','signature_name','Synthetic prescriber','attest_review',true);
+insert into data select 'sign-receipt',sign_native_prescription((select id from fx where k='sign'),(select v from data where k='sign-request'));
+insert into fx select k,gen_random_uuid() from unnest(array['release','release-fill','release-pickup','release-cancel','stale','invoice','lot','dispense','pickup','cancel']) k;
+create function pg_temp.preview_native_release(selection jsonb) returns jsonb language sql as $$select preview_record_release_v10((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',selection)$$;
+create function pg_temp.confirm_native_release(id uuid,selection jsonb,preview jsonb) returns public.record_releases language sql as $$select confirm_record_release(id,(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','native-release@example.test',selection,preview->'snapshot',preview->>'source_hash',true)$$;
+insert into data select 'selection',jsonb_build_object('native_prescription_ids',jsonb_build_array(id)) from fx where k='sign';
+insert into data select 'preview',pg_temp.preview_native_release(v) from data where k='selection';
+select receive_inventory(gen_random_uuid(),(select id from fx where k='lot'),(select id from fx where k='product'),'CORRECTION-TEST',current_date+365,'Synthetic clinic',100,'Synthetic opening stock');
+insert into fx values('lot2',gen_random_uuid());
+select receive_inventory(gen_random_uuid(),(select id from fx where k='lot2'),(select id from fx where k='product'),'RETURN-SECOND',current_date+365,'Synthetic clinic',100,'Synthetic stock');
+select create_billing_invoice((select id from fx where k='invoice'),(select id from fx where k='client'));
+insert into data select 'target',jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'slot_index',0,'expected_slot_version',null,'invoice_id',(select id from fx where k='invoice'),'quantity','10','allocations',(select jsonb_agg(jsonb_build_object('lot_id',id,'quantity','5') order by id) from fx where k in('lot','lot2')),'refill',null);
+insert into data select 'dispense',record_native_dispense((select id from fx where k='dispense'),v||jsonb_build_object('expected_context_hash',preview_native_dispense(v)->>'context_hash','reason','Synthetic dispensing','attest_alert_review',true,'attest_dispense_review',true)) from data where k='target';
+reset role;
+insert into fx select 'allocation1',id from native_dispense_allocations where dispense_id=(select id from fx where k='dispense') and lot_id=(select id from fx where k='lot');
+insert into fx select 'allocation2',id from native_dispense_allocations where dispense_id=(select id from fx where k='dispense') and lot_id=(select id from fx where k='lot2');
+insert into data select 'original',jsonb_build_object('dispense',(select document from native_dispenses where id=(select id from fx where k='dispense')),'usage',native_rx_usage_context((select id from fx where k='sign')),'items',(select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i where invoice_id=(select id from fx where k='invoice')),'invoice',(select to_jsonb(i) from billing_invoices i where id=(select id from fx where k='invoice')));
+-- Finance fixture: immutable native dispense has a $10 item; an unrelated $10
+-- service leaves invoice capacity distinct from the selected dispense capacity.
+set local role authenticated;
+insert into fx select 'service-product',id from save_catalog_product(null,null,'Synthetic unrelated service','service','','service',1000,true);
+select add_invoice_service(gen_random_uuid(),(select id from fx where k='invoice'),(select id from fx where k='pet'),(select id from fx where k='service-product'),1);
+insert into data select 'finance-draft',read_native_dispense_finance((select id from fx where k='sign'),(select id from fx where k='pet'),(select id from fx where k='dispense'));
+select issue_billing_invoice((select id from fx where k='invoice'),(select version from billing_invoices where id=(select id from fx where k='invoice')));
+reset role;
+insert into data select 'finance-original',jsonb_build_object('dispense',(select document from native_dispenses where id=(select id from fx where k='dispense')),'usage',native_rx_usage_context((select id from fx where k='sign')),'items',(select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i where invoice_id=(select id from fx where k='invoice')),'stock',(select jsonb_agg(to_jsonb(m) order by id) from inventory_movements m where lot_id in(select id from fx where k in('lot','lot2'))));
+set local role authenticated;
+
+create function pg_temp.finance_intent(action text,cents text,credit uuid default null,payment uuid default null) returns jsonb language sql as $$select jsonb_build_object('target',jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'dispense_id',(select id from fx where k='dispense')),'action',action,'amount_cents',cents,'reason','Synthetic financial review','credit_id',credit,'payment_id',payment)$$;
+create function pg_temp.finance_request(intent jsonb) returns jsonb language sql as $$select jsonb_build_object('intent',intent,'expected_context_hash',preview_native_dispense_finance(intent)->'context_hash','attest_review',true)$$;
+create function pg_temp.finance_read() returns jsonb language sql as $$select read_native_dispense_finance((select id from fx where k='sign'),(select id from fx where k='pet'),(select id from fx where k='dispense'))$$;
+select is((select v#>'{snapshot,balance}' from data where k='finance-draft'),'null'::jsonb,'Draft financial read has no collectible balance');
+select ok((select v#>'{snapshot,blockers}' from data where k='finance-draft') ? 'invoice_not_issued','Draft financial read explicitly blocked');
+select is(pg_temp.finance_read()#>>'{snapshot,capacity,credit_capacity_cents}','1000','Exact native item charge bounds credit');
+select is(pg_temp.finance_read()#>>'{snapshot,capacity,invoice_credit_capacity_cents}','2000','Invoice capacity includes unrelated service');
+select is(pg_temp.finance_read()->'results','[]'::jsonb,'No invented financial attribution');
+select throws_ok(format('select preview_native_dispense_finance(%L::jsonb)',pg_temp.finance_intent('credit',bad)),'23514',null,'Reject noncanonical cents '||bad) from unnest(array['0','-1','01','1.0','1e1',' 1','9223372036854775808'])bad;
+select throws_ok(format('select preview_native_dispense_finance(%L::jsonb)',jsonb_set(pg_temp.finance_intent('credit','1'),'{reason}',to_jsonb(edge||'Synthetic review'||edge))),'23514',null,'Existing text validator rejects edge whitespace '||ascii(edge)) from unnest(array[chr(9),chr(10),chr(160),chr(8192),chr(65279)])edge;
+select throws_ok($$select preview_native_dispense_finance(jsonb_set(pg_temp.finance_intent('credit','1'),'{amount_cents}','1'))$$,'23514',null,'Reject numeric rather than string cents');
+select throws_ok($$select preview_native_dispense_finance(pg_temp.finance_intent('credit','1')||'{"invoice_id":null}')$$,'23514',null,'Invoice may not be supplied by browser');
+select throws_ok($$select preview_native_dispense_finance(jsonb_set(pg_temp.finance_intent('credit','1'),'{target,pet_id}',to_jsonb(gen_random_uuid())))$$,'23514',null,'Wrong patient cannot adjust native dispense');
+select ok(preview_native_dispense_finance(pg_temp.finance_intent('credit','1001'))->'blockers' ? 'credit_capacity_exceeded','Overcredit preview is explicitly blocked');
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),pg_temp.finance_request(pg_temp.finance_intent('credit','1001')))$$,'23514',null,'Blocked capacity cannot commit');
+insert into fx select key,gen_random_uuid() from unnest(array['checkout','generic-credit','native-credit','generic-refund','native-refund','failed-refund','second-refund'])key;
+-- Synthetic provider evidence only: no HTTP request or provider action.
+set local role service_role;select configure_payment_provider('acct_finance',false,'https://thelivingroom.vet');set local role authenticated;
+insert into data select 'payment-before',read_invoice_payment_state((select id from fx where k='invoice'),(select id from fx where k='client'));
+select prepare_invoice_checkout((select id from fx where k='checkout'),(select id from fx where k='invoice'),(select id from fx where k='client'),(select v->>'source_hash' from data where k='payment-before'),2000,'acct_finance',false,'https://thelivingroom.vet/payment/return','https://thelivingroom.vet/payment/cancel');
+select ok(preview_native_dispense_finance(pg_temp.finance_intent('credit','10'))->'blockers' ? 'checkout_unresolved','Open collection blocks new accounting credit');
+set local role service_role;
+select apply_checkout_evidence('evt_finance_paid',(select id from fx where k='checkout'),'acct_finance',false,'payment_succeeded','cs_finance','pi_finance',2000,'usd',(select v->>'source_hash' from data where k='payment-before'));
+set local role authenticated;
+insert into fx select 'payment',id from invoice_payments where invoice_id=(select id from fx where k='invoice');
+insert into data select 'stale-generic',pg_temp.finance_request(pg_temp.finance_intent('credit','300'));
+select credit_billing_invoice((select id from fx where k='generic-credit'),(select id from fx where k='invoice'),200,'Synthetic generic accounting adjustment');
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='stale-generic'))$$,'40001',null,'Generic credit invalidates reviewed financial hash');
+select is(pg_temp.finance_read()#>>'{snapshot,capacity,unallocated_credit_cents}','200','Generic credit stays unallocated');
+select is(pg_temp.finance_read()#>>'{snapshot,capacity,credit_capacity_cents}','800','Unallocated credit conservatively consumes item capacity');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='generic-credit'),pg_temp.finance_request(pg_temp.finance_intent('credit','200')))$$,'23514',null,'Existing generic credit ID cannot be adopted');
+insert into data select 'credit-request',pg_temp.finance_request(pg_temp.finance_intent('credit','300'));
+insert into data select 'credit',record_native_dispense_finance((select id from fx where k='native-credit'),v) from data where k='credit-request';
+select is(pg_temp.finance_read()#>>'{snapshot,capacity,linked_credit_cents}','300','Credit explicitly attributed to exact dispense');
+select is(pg_temp.finance_read()#>>'{snapshot,capacity,credit_capacity_cents}','500','Native plus unallocated credits bound remaining capacity');
+select is((select v#>>'{result,credit_id}' from data where k='credit'),(select id::text from fx where k='native-credit'),'Operation ID equals existing credit ledger ID');
+select is((select v#>'{result,refund_request_id}' from data where k='credit'),'null'::jsonb,'Accounting credit is not a refund');
+select is(recover_native_dispense_finance((select id from fx where k='native-credit')),(select v from data where k='credit'),'Exact saved receipt recovery');
+select is(record_native_dispense_finance((select id from fx where k='native-credit'),(select v from data where k='credit-request')),(select v from data where k='credit'),'Exact credit operation retry');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='native-credit'),jsonb_set((select v from data where k='credit-request'),'{intent,reason}','"Changed reason"'))$$,'23514',null,'Changed request cannot reuse operation');
+select throws_ok($$select preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='generic-credit'),(select id from fx where k='payment')))$$,'23514',null,'Generic credit cannot acquire native refund attribution');
+select throws_ok($$select preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),gen_random_uuid()))$$,'23514',null,'Unknown captured payment rejected');
+select prepare_invoice_refund((select id from fx where k='generic-refund'),(select id from fx where k='invoice'),(select id from fx where k='payment'),100,'Synthetic generic refund reservation');
+select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','150',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','300','Generic refunds consume cash without acquiring credit attribution');
+insert into data select 'refund-request',pg_temp.finance_request(pg_temp.finance_intent('refund','150',(select id from fx where k='native-credit'),(select id from fx where k='payment')));
+insert into data select 'refund',record_native_dispense_finance((select id from fx where k='native-refund'),v) from data where k='refund-request';
+select is((select v#>>'{result,refund_request_id}' from data where k='refund'),(select id::text from fx where k='native-refund'),'Operation ID preserves underlying refund request and provider idempotency');
+select is(pg_temp.finance_read()#>>'{snapshot,balance,refunded_cents}','0','Reservation is not money returned');
+select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','150','Pending request reserves linked credit once');
+select is(recover_native_dispense_finance((select id from fx where k='native-refund')),(select v from data where k='refund'),'Frozen refund preparation recoverable');
+select is(record_native_dispense_finance((select id from fx where k='native-refund'),(select v from data where k='refund-request')),(select v from data where k='refund'),'Exact reservation retry does not reserve twice');
+insert into data select 'failed-refund',record_native_dispense_finance((select id from fx where k='failed-refund'),pg_temp.finance_request(pg_temp.finance_intent('refund','100',(select id from fx where k='native-credit'),(select id from fx where k='payment'))));
+select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','50','Two prepared requests consume credit capacity');
+set local role service_role;
+select is((apply_refund_evidence('evt_finance_failed',(select id from fx where k='failed-refund'),'acct_finance',false,'re_financefailed','pi_finance',100,'usd','failed')).disposition,'accepted','Synthetic failed refund evidence accepted');
+set local role authenticated;
+select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','150','Confirmed failure without settlement releases capacity');
+select is(recover_native_dispense_finance((select id from fx where k='failed-refund')),(select v from data where k='failed-refund'),'Failure does not rewrite preparation receipt');
+insert into data select 'before-settlement',pg_temp.finance_request(pg_temp.finance_intent('refund','10',(select id from fx where k='native-credit'),(select id from fx where k='payment')));
+set local role service_role;
+select is((apply_refund_evidence('evt_finance_success',(select id from fx where k='native-refund'),'acct_finance',false,'re_financesuccess','pi_finance',150,'usd','succeeded')).disposition,'accepted','Synthetic settled refund evidence accepted');
+set local role authenticated;
+select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','150','Settled refund counted once, never as extra reservation');
+select is(pg_temp.finance_read()#>>'{snapshot,balance,refunded_cents}','150','Only provider ledger evidence changes completed refund amount');
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='before-settlement'))$$,'40001',null,'Provider state transition invalidates review even unchanged capacity');
+select is(recover_native_dispense_finance((select id from fx where k='native-refund')),(select v from data where k='refund'),'Settlement retains exact historical receipt');
+-- A clinical head change requires a fresh accounting review, without forcing a credit.
+insert into data select 'before-return',pg_temp.finance_request(pg_temp.finance_intent('credit','10'));
+insert into data select 'return-intent',jsonb_build_object('target',pg_temp.finance_intent('credit','10')->'target','action','intake','intake_id',null,'allocations',jsonb_build_array(jsonb_build_object('allocation_id',(select id from fx where k='allocation1'),'quantity','0.1')),'custody','client_returned','package_condition','unknown','storage_history','unknown','reason','Synthetic return custody','note','No implied financial adjustment');
+insert into data select 'return-preview',preview_native_dispense_return(v) from data where k='return-intent';
+select record_native_dispense_return(gen_random_uuid(),jsonb_build_object('intent',(select v from data where k='return-intent'),'expected_context_hash',(select v->'context_hash' from data where k='return-preview'),'expected_head',(select v#>'{context,head}' from data where k='return-preview'),'attest_review',true,'attest_restock',false));
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='before-return'))$$,'40001',null,'Clinical return head invalidates review');
+select is(recover_native_dispense_finance((select id from fx where k='native-credit')),(select v from data where k='credit'),'Clinical change does not invalidate exact historical credit receipt');
+set local role service_role;
+select record_payment_reconciliation('refund',(select id from fx where k='failed-refund'),'provider_reconciliation_required');
+set local role authenticated;
+select ok(preview_native_dispense_finance(pg_temp.finance_intent('credit','1'))->'blockers' ? 'payment_reconciliation','Open payment reconciliation blocks new accounting changes');
+select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','0','Uncertain failed refund is not treated as spendable capacity');
+select is(recover_native_dispense_finance((select id from fx where k='native-refund')),(select v from data where k='refund'),'Existing receipt remains recoverable during reconciliation');
+-- Resolve a lost-before-commit operation whose original review has since changed.
+insert into fx values('closed-operation',gen_random_uuid());
+select is(recover_native_dispense_finance((select id from fx where k='closed-operation')),null::jsonb,'Unrecorded original has no receipt');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'40001',null,'Original uncertain review is stale');
+insert into data select 'closure',close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'));
+select is((select v->>'status' from data where k='closure'),'closed_unrecorded','Stale uncertain operation can be durably closed');
+select is(close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return')),(select v from data where k='closure'),'Lost closure reply recovers exact durable closure');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'23514',null,'Delayed original write cannot commit after closure');
+select throws_ok($$select close_native_dispense_finance((select id from fx where k='closed-operation'),jsonb_set((select v from data where k='before-return'),'{intent,reason}','"Changed request"'))$$,'23514',null,'Closure binds exact original request');
+select is(close_native_dispense_finance((select id from fx where k='native-credit'),(select v from data where k='credit-request'))->'receipt',(select v from data where k='credit'),'Close recovers committed receipt rather than closing recorded effect');
+select is(close_native_dispense_finance((select id from fx where k='native-credit'),(select v from data where k='credit-request'))->>'status','recorded','Committed operation is explicitly distinguished');
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'42501',null,'Another actor cannot recover closure');
+select throws_ok($$select recover_native_dispense_finance((select id from fx where k='native-credit'))$$,'42501',null,'Other active staff cannot recover creator receipt');
+select lives_ok($$select pg_temp.finance_read()$$,'Active staff may read shared financial history');
+reset role;
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+update profiles set is_active=false where id='a5510000-0000-4000-8000-000000000002';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select throws_ok($$select pg_temp.finance_read()$$,'42501',null,'Inactive staff denied');
+reset role;
+select is((select document from native_dispenses where id=(select id from fx where k='dispense')),(select v->'dispense' from data where k='finance-original'),'Original signed dispense unchanged');
+select is(native_rx_usage_context((select id from fx where k='sign')),(select v->'usage' from data where k='finance-original'),'Prescription allowance unchanged');
+select is((select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i where invoice_id=(select id from fx where k='invoice')),(select v->'items' from data where k='finance-original'),'Original charge items unchanged');
+select is((select jsonb_agg(to_jsonb(m) order by id) from inventory_movements m where lot_id in(select id from fx where k in('lot','lot2'))),(select v->'stock' from data where k='finance-original'),'No inventory effects from accounting adjustments');
+select ok(not has_function_privilege('service_role','record_native_dispense_finance(uuid,jsonb)','execute'),'Service role cannot impersonate finance staff');
+select ok(not has_function_privilege('authenticated','native_finance_verified_operation(uuid)','execute'),'Private verifier is not a public access bypass');
+select ok(not has_table_privilege('authenticated','native_dispense_finance_operations','insert'),'Raw operation inserts denied');
+select throws_ok($$update native_dispense_finance_operations set request_hash=repeat('0',64)$$,'23514',null,'Finance receipts immutable even for table owner');
+-- A restored row with recomputed hashes must still satisfy the closed contract.
+-- The expected exception rolls back both trigger changes and the synthetic corruption.
+-- Verify and drain original deferred links before ALTER TABLE in the isolated probe.
+set constraints all immediate;
+create function pg_temp.corrupt_finance_context(p_path text[],p_value jsonb) returns void language plpgsql as $$
+declare op public.native_dispense_finance_operations;doc jsonb;patched_request jsonb;begin
+ select * into op from native_dispense_finance_operations where id=(select id from fx where k='native-credit');
+ doc:=jsonb_set(op.result,array['reviewed_context']||p_path,p_value,true);
+ doc:=jsonb_set(doc,'{reviewed_context_hash}',to_jsonb(native_fulfillment_hash(doc->'reviewed_context')));
+ doc:=jsonb_set(doc,'{record_hash}',to_jsonb(native_fulfillment_hash(doc-'record_hash')));
+ patched_request:=jsonb_set(op.request,'{expected_context_hash}',doc->'reviewed_context_hash');
+ alter table native_dispense_finance_operations disable trigger native_finance_immutable;
+ update native_dispense_finance_operations set result=doc,request=patched_request,request_hash=native_fulfillment_hash(jsonb_build_object('version',1,'actor_id',op.actor_id,'operation','record_native_dispense_finance','request',patched_request)) where id=op.id;
+ alter table native_dispense_finance_operations enable trigger native_finance_immutable;
+ perform native_finance_verified_operation(op.id);
+ raise exception 'Malformed restored finance receipt was accepted' using errcode='P0001';
+end $$;
+select throws_ok(format('select pg_temp.corrupt_finance_context(ARRAY[''eligible_amount_cents''],%L::jsonb)',bad::text),'23514',null,'Restored eligible amount rejects '||bad::text) from unnest(array['null'::jsonb,'-1'::jsonb,'"-1"'::jsonb,'"0300"'::jsonb,'"9223372036854775808"'::jsonb,'"1"'::jsonb])bad;
+select throws_ok($$select pg_temp.corrupt_finance_context(ARRAY['snapshot','extra'],'true')$$,'23514',null,'Restored snapshot rejects extra fields even after rehash');
+select throws_ok($$select pg_temp.corrupt_finance_context(ARRAY['snapshot','source_heads','returns'],'{"event_id":null,"version":1,"record_hash":null}')$$,'23514',null,'Restored nonempty head requires exact identity and hash');
+select is(native_finance_verified_operation((select id from fx where k='native-credit')),(select v from data where k='credit'),'Rejected restore corruption leaves original receipt exact');
+select ok(not has_function_privilege('service_role','close_native_dispense_finance(uuid,jsonb)','execute'),'Service role cannot close staff operations');
+select ok(not has_function_privilege('authenticated','native_finance_verified_closure(uuid)','execute'),'Closure verifier remains private');
+select ok(not has_table_privilege('authenticated','native_dispense_finance_closures','insert'),'Direct closure writes denied');
+select throws_ok($$update native_dispense_finance_closures set record_hash=repeat('0',64)$$,'23514',null,'Closure immutable');
+create function pg_temp.corrupt_finance_closure() returns void language plpgsql as $$begin
+ alter table native_dispense_finance_closures disable trigger native_finance_immutable;
+ update native_dispense_finance_closures set record_hash=repeat('0',64) where id=(select id from fx where k='closed-operation');
+ alter table native_dispense_finance_closures enable trigger native_finance_immutable;
+ perform native_finance_verified_closure((select id from fx where k='closed-operation'));
+ raise exception 'Malformed closure accepted' using errcode='P0001';
+end $$;
+select throws_ok($$select pg_temp.corrupt_finance_closure()$$,'23514',null,'Restored corrupt closure fails verification');
+select is(native_finance_verified_closure((select id from fx where k='closed-operation')),(select v->'closure' from data where k='closure'),'Rejected corruption leaves exact closure intact');
+select * from finish();rollback;

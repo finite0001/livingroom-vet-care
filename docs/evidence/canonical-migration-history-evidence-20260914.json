@@ -1,0 +1,89 @@
+{
+  "date": "2026-09-14",
+  "scope": "Read-only approved history evidence for exact owned migration observations; not clinical discrepancy resolution or migration acceptance",
+  "migration_count": 108,
+  "unit_tests": 575,
+  "lint_typecheck_build_passed": true,
+  "sql_assertions": 95,
+  "sql_by_suite": {
+    "migration_history_evidence": 27,
+    "reviewed_history_regression": 42,
+    "migration_source_items_regression": 26
+  },
+  "sql_disposable_cleanup_verified": true,
+  "browser_tests": 24,
+  "additional_final_copy_viewport_tests": 2,
+  "browser_workers": 1,
+  "browser_transport": "Synthetic RPC fixtures; actual Auth/PostgREST tested separately",
+  "viewports": [
+    390,
+    1440
+  ],
+  "screenshots_visually_inspected": true,
+  "runtime_checks": 92,
+  "runtime_result_sha256": "9bfdf42224161fc7b791810ccf21689b13f9ec306f051865f71d89db18fe682a",
+  "runtime_cleanup_verified": true,
+  "fresh_108_migration_runtime": true,
+  "populated_108_migration_restore_rerun": false,
+  "restore_inventory_modes_validated": [
+    "staging_baseline",
+    "observed_hosted_gaps"
+  ],
+  "hosted_staging_read": {
+    "project_id": "kothoqicubowyhwfsrte",
+    "migration_count": 99,
+    "last_version": "20260914120000"
+  },
+  "source_sha256": {
+    "supabase/migrations/20260914210000_ezyvet_migration_history_evidence.sql": "fd3ca27d247245fe1d6d4787de4da25145bdd79d26e07773b363aa2437669bdb",
+    "supabase/tests/ezyvet_migration_history_evidence.test.sql": "525b713de55f671400f386a428106e80095af4948454c4e432a9b5fbaf281666",
+    "src/hub/features/imports/migration-history-api.ts": "d843656dd520c918d9636d151a3ad4267a2ec8821a836845c0efc4adaadb1fa0",
+    "src/hub/features/imports/MigrationHistoryEvidence.tsx": "50527dd3994d67b11c3d463d46cb16a46014357db94f0436cef6ef877a9049c4",
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "0cf9a2e592181d4a0902a8a11fd8033591f8a38eb600d52ed9af2b908dd8ca81",
+    "tests/ezyvet/migration-history-api.test.ts": "b7eeb93aa5664e21092c81ecb1babaceb6923c5aae18cc516599d95e3e8b9c4a",
+    "tests/ezyvet/migration-local-roundtrip.ts": "27c88582952ff9745ffe38bab8369e54cc57242c4b0b3007d544147beba4d2cd",
+    "tests/ezyvet/attachment-metadata-disposable.py": "8edc9853717826660783403119522c52fcd2ed0dd1d74de5fc768dea439c39a6",
+    "e2e/migration-workspace.spec.ts": "7f83dbac4a137628f3b0a03ab25f06a2bf0394d110ffbb65b0f7a7d43b08dc06",
+    "scripts/restore-rehearsal/run.py": "2a10b96b97060e5fba7070b5cff23a316af3fa297f052ac0669c09f6f08ae01d"
+  },
+  "screenshots_sha256": {
+    "docs/evidence/migration-history-mobile-20260914.png": "8fe900b3942eddfc4ccb5caf44bc76693c135032cb3172ca83270e5bf0e0a70a",
+    "docs/evidence/migration-history-desktop-20260914.png": "f9c8742e8fbde88a2f1bc9f1af9722b08a7f3c27a3f402eb5e85d7a34eeffec2"
+  },
+  "logs_sha256": {
+    "check": "dede7d0d76c592b2ea09c180a96ab2ce0fbde67e47e6a25aad3a60637def26d6",
+    "sql": "a96b43afc664e2b1b8bc6796d180539e6938d1c395f66aeb684ac3dc908b9377",
+    "browser": "e4ec3637fff32432bfb310d4885702461e94a6d2faed5e8aed2686bac536693b",
+    "runtime": "8ad79f1e20b090fcc0ce125cd1441f4e2a4a9f3788677e8c660e1b0b6194f4a3",
+    "final_lint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime_lint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "final_viewports": "7d806e01688f40442be1c81eea1a2d01978cfc782452d0f18fca198d0f8ce14e"
+  },
+  "verified_cases": [
+    "Exact owned source observation/hash; other administrator and inactive owner denied",
+    "History approval versions remain separate from DVM local findings",
+    "Superseded approval retained; newer source approval does not inherit old extractions",
+    "A to B to A preserves old receipts and invalidates source currentness",
+    "Local problem edits reported without overwriting chart fields",
+    "Bounded descending version history, cursor and response identity checks",
+    "Clinical prose, private request payloads and pending other-staff work excluded",
+    "Browser read failure stays distinct from empty approval evidence; explicit refresh recovers"
+  ],
+  "validation_notes": [
+    "Initial browser fixture variable mistake corrected; final complete 24-case rerun passed with one worker after timeouts during heavy host load.",
+    "Default runtime port was occupied; alternate 63421 port group used without stopping other projects. First alternate startup failed database health checks and its generated containers/volumes were cleaned up; subsequent runtime retry passed.",
+    "The new history fixture adds a fourth manifest; the actual HTTP pagination assertion was updated to expect both original and clinical manifests on the terminal page, then the complete runtime reran.",
+    "Restore runner inventory updated and both inventory guards evaluated; no populated restore claim for migration108.",
+    "Final copy distinguishes stale source context from unresolved clinical discrepancy; two viewport cases reran after that text-only clarification.",
+    "Existing AuthContext Fast Refresh and build chunk-size warnings remain."
+  ],
+  "provider_requests": 0,
+  "hosted_changes": false,
+  "remaining": [
+    "Other clinical outcome adapters, globally deduplicated totals and discrepancy decisions",
+    "Operational resolutions, frozen reports and acceptance",
+    "Populated restore of expanded clinical projections",
+    "Coordinated staging/frontend rollout and supervised clinical/source acceptance",
+    "Mail/Auth SMTP, provider commissioning and other commercial-readiness gates"
+  ]
+}

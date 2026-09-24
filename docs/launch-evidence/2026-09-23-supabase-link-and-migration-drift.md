@@ -61,6 +61,16 @@ Bounded migration-file search captured in `2026-09-23-remote-only-migration-file
 
 The 10 local-only commercial-readiness migrations were subsequently applied to hosted Supabase. Current migration drift is 123 matching, 0 remote-only, and 0 local-only.
 
+### Post-main-merge drift note
+
+After resolving PR #204 against current `origin/main`, `npm run supabase:migration-drift` was rerun on 2026-09-24. The result changed to:
+
+- 123 matching migration versions.
+- 0 remote-only migration receipts.
+- 25 local-only migration files.
+
+The remote-only hosted-ledger reconciliation remains fixed: no hosted migration receipt is missing from Git. The 25 local-only versions are newly present in the merged `main` history and need hosted rollout before the hosted database can be described as matching the final PR branch.
+
 ## Official local DB test result
 
 `npx supabase test db` currently fails against the running local `mgadheotkdnrsatfivjy` stack because the database does not contain the newer local readiness migrations. Representative failures:

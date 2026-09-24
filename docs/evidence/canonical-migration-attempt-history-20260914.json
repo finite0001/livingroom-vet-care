@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-14",
+  "scope": "Transactional canonical import attempt history and owned migration recovery",
+  "migration_count": 103,
+  "sql_assertions": 1035,
+  "attempt_sql_assertions": 30,
+  "concurrency_harness_checks": 241,
+  "unit_tests": 554,
+  "application_checks_passed": true,
+  "runtime_checks": 369,
+  "migration_http_checks": 61,
+  "verified_cases": [
+    "Import creation, claim, failure and staged page recorded in the same transaction",
+    "History begins before child binding without a binding/source race",
+    "Concurrent failure and stage replays record one event each",
+    "A successful retry does not erase the earlier failure",
+    "Transaction rollback removes source mutation and event together",
+    "Per-child sequence provides bounded owner history independent of clock ties",
+    "No raw lease token, provider payload or credential stored in events",
+    "Current progress separates attempt counters from record observations",
+    "Existing pretracking run gets one baseline without changing its lease, cursor or error",
+    "Earlier history is not inferred from a migration baseline",
+    "Private table and owner/inactive/anonymous/service HTTP denial",
+    "Populated event history survives full database and physical Storage restore"
+  ],
+  "source_sha256": {
+    "supabase/migrations/20260914160000_ezyvet_migration_attempt_events.sql": "508bb76cdcfbfdc8c7c297f5668ea26b0a45ce0e6eb419f7a7024e5f01cbef0d",
+    "supabase/tests/ezyvet_migration_attempt_events.test.sql": "92714b5a91bbb28a5209a0594afb94a6d6e064eecb0665d2b9fb5375942a19c2",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "47c22261916b2728d06a61cabd64bda5fd8fa75859a6d53d30e97ee419e6f4c8",
+    "src/hub/features/imports/migration-run-api.ts": "5fb1278878baca7d8c86449d6d1eaa5f3ce61a134071f40ceb9daa28667852e2",
+    "tests/ezyvet/migration-run-api.test.ts": "cf8866f1a510a0dfb05095205e61dcbd8bd69420cf0d0be1794589c45aca99d9",
+    "tests/ezyvet/migration-local-roundtrip.ts": "3cc7333f3b6e03dd763fc9b5a676a225d9c122f8d0ccfd41fe9918142234debc",
+    "scripts/restore-rehearsal/run.py": "e76ea357bb5436c03db1874cdedc929a750da40f072c5db088eb3c42d04848c4"
+  },
+  "sql_log_sha256": "e6bc9b2b45f9446a50efa4dd7e9680d25af2594164f8dfdca7d8f73738a35cf9",
+  "app_log_sha256": "b9e0916e849daad014393a60b378bf176725c78c3f19d996415a150e116437d6",
+  "runtime": {
+    "result_sha256": "5a2d340b280bafd89de8ce4406d1046427543c74baea5f496b7616f37bb9b861",
+    "checks_by_fixture": {
+      "metadata": 50,
+      "originals": 121,
+      "maximum": 137,
+      "migration": 61
+    },
+    "cleanup_verified": true,
+    "provider_requests": 0
+  },
+  "restore": {
+    "result_sha256": "0d047a8509d054613085dd2dd073527b10a859c48addd52aa8a7c7729ee162b0",
+    "runner_sha256": "e76ea357bb5436c03db1874cdedc929a750da40f072c5db088eb3c42d04848c4",
+    "event_rows": 20,
+    "baseline": {
+      "existing_run_unchanged": true,
+      "baseline_rows": 1,
+      "origin": "migration_baseline",
+      "raw_lease_stored_in_events": false
+    },
+    "exact_rows_before_reads": true,
+    "only_expected_link_counter_changes_after_reads": true,
+    "physical_storage_files": 3,
+    "cleanup_verified": true
+  },
+  "hosted_changes": false,
+  "limitations": [
+    "Clinical/capture reconciliation, item drill-down, resolution records and frozen reports remain pending",
+    "No migration operator UI yet",
+    "Import core authorization after source-gate waits needs independent reproduction and review",
+    "No provider, clinician or cutover acceptance claimed"
+  ]
+}

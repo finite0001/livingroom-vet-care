@@ -104,11 +104,25 @@ export function usePublicRouteMetadata(path: PublicRoutePath) {
   usePageMetadata(getPublicRouteMetadata(path));
 }
 
-export function usePageTitle(title?: string) {
+export function usePageTitle(title?: string, description?: string) {
   useEffect(() => {
-    document.title = formatTitle(title);
+    const fullTitle = formatTitle(title);
+    const resolvedDescription = description ?? DEFAULT_DESCRIPTION;
+    const canonicalUrl = `${publicSiteOrigin}${window.location.pathname}`;
+
+    document.title = fullTitle;
+    setMeta("name", "description", resolvedDescription);
+    setMeta("property", "og:title", fullTitle);
+    setMeta("property", "og:description", resolvedDescription);
+    setMeta("property", "og:url", canonicalUrl);
+    setMeta("property", "og:site_name", BASE_TITLE);
+    setMeta("property", "og:type", "website");
+    setMeta("name", "twitter:title", fullTitle);
+    setMeta("name", "twitter:description", resolvedDescription);
+    setCanonical(canonicalUrl);
+
     return () => {
       document.title = BASE_TITLE;
     };
-  }, [title]);
+  }, [title, description]);
 }

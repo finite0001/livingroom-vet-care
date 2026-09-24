@@ -1,1 +1,132 @@
 project_id = "mgadheotkdnrsatfivjy"
+[functions.ezyvet-import]
+verify_jwt = true
+
+# Provider-signed webhooks authenticate their raw payloads, not Supabase JWTs.
+[functions.resend-webhook]
+verify_jwt = false
+
+[functions.twilio-webhook]
+verify_jwt = false
+
+# Service workers validate managed secret apikeys in the shared server-only handler.
+[functions.process-inbound]
+verify_jwt = false
+
+[functions.dispatch-outbox]
+verify_jwt = false
+
+[functions.dispatch-outbound-deliveries]
+verify_jwt = false
+
+[functions.queue-reminders]
+verify_jwt = false
+
+# Public liveness probe for an uptime monitor, which holds no credential. The
+# handler reports only whether the database answered and when it was asked: it
+# never returns an error text, a version or a count. See
+# _shared/health-ping.ts. The scheduler's real health is visible to administrators
+# on /hub/admin/operations instead.
+[functions.health]
+verify_jwt = false
+
+[functions.public-contact]
+verify_jwt = false
+
+[functions.resend-delivery-webhook]
+verify_jwt = false
+
+[functions.twilio-message-status-callback]
+verify_jwt = false
+
+[functions.twilio-inbound-sms]
+verify_jwt = false
+
+# Staff JWT required at the gateway; handler also verifies the user and every RPC authorizes staff.
+[functions.prepare-release-email]
+verify_jwt = true
+
+[functions.prepare-invoice-email]
+verify_jwt = true
+
+[functions.prepare-document-link]
+verify_jwt = true
+[functions.recover-document-link]
+verify_jwt = true
+[functions.retrieve-document-link]
+verify_jwt = false
+
+[functions.invoice-checkout]
+verify_jwt = true
+[functions.stripe-webhook]
+verify_jwt = false
+[functions.process-stripe-events]
+verify_jwt = false
+[functions.invoice-refund]
+verify_jwt = true
+
+# Capability-only public endpoints; handlers validate role-scoped HMAC and durable hashes.
+[functions.payment-collection]
+verify_jwt = false
+[functions.payment-status]
+verify_jwt = false
+
+# Staff JWT + actor RPC authorization; separate default-off staff capability capture switch.
+[functions.prepare-payment-collection]
+verify_jwt = true
+[functions.recover-payment-collection]
+verify_jwt = true
+
+[functions.verify-payment-reconciliation]
+verify_jwt = true
+
+[functions.prepare-payment-delivery]
+verify_jwt = true
+
+[functions.prepare-lab-report]
+verify_jwt = true
+
+[functions.prepare-external-record]
+verify_jwt = true
+
+# Staff JWT and active-owner checks also run inside the capture handler.
+[functions.capture-ezyvet-attachment]
+verify_jwt = true
+
+# Active-staff review identity is rechecked after the private byte read.
+[functions.retrieve-reviewed-ezyvet-original]
+verify_jwt = true
+
+# Staff JWT plus active-owner checks before capture and the final review receipt.
+[functions.verify-conversation-attachment]
+verify_jwt = true
+
+[functions.capture-conversation-email]
+verify_jwt = true
+
+# Staff JWT, active matched-inbound claim and current lease checks. Capture defaults off.
+[functions.capture-inbound-attachment]
+verify_jwt = true
+
+[functions.read-inbound-attachment]
+verify_jwt = true
+
+# Server-only worker credentials are checked explicitly; secret API keys are not JWTs.
+[functions.cleanup-abandoned-attachment]
+verify_jwt = false
+[functions.prepare-estimate-publication]
+verify_jwt = true
+[functions.recover-estimate-publication-preparation]
+verify_jwt = true
+[functions.read-estimate-publication-artifact]
+verify_jwt = true
+
+# Dedicated link capability is verified explicitly; it is not a Supabase JWT.
+[functions.estimate-decision]
+verify_jwt = false
+
+# Staff JWT is verified by the gateway and actual Auth before creator-scoped capture.
+[functions.prepare-estimate-decision-grant]
+verify_jwt = true
+[functions.recover-estimate-decision-grant]
+verify_jwt = true

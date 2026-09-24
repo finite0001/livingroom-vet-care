@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
@@ -12,13 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { encounterDraft, newEncounter, denverInstant, errorText, type EncounterDraft } from './editor-state';
 import { useClinicalEncounters } from './queries';
-import { useUnsavedChanges } from './use-unsaved-changes';
 import { PatientProblems } from './PatientProblems';
 
-interface ClinicalWorkspaceProps { petId: string; disabled?: boolean }
+interface ClinicalWorkspaceProps { petId: string; disabled?: boolean; onDirtyChange?: (dirty: boolean) => void }
 const dateTime = (value: string) => new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
-export function ClinicalWorkspace({ petId, disabled = false }: ClinicalWorkspaceProps) {
+export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: ClinicalWorkspaceProps) {
   const { session } = useAuth();
   const cache = useQueryClient();
   const encounters = useClinicalEncounters(petId);
@@ -33,7 +32,11 @@ export function ClinicalWorkspace({ petId, disabled = false }: ClinicalWorkspace
   const [error, setError] = useState('');
   const [confirmSign, setConfirmSign] = useState(false);
   const dirty = !!draft && JSON.stringify(draft) !== baseline;
-  const navigationGuard = useUnsavedChanges(dirty || !!addendum.trim() || problemDirty || busy);
+  const unsaved = dirty || !!addendum.trim() || problemDirty || busy;
+  useEffect(() => {
+    onDirtyChange?.(unsaved);
+    return () => onDirtyChange?.(false);
+  }, [onDirtyChange, unsaved]);
   const signed = record?.status === 'signed';
   const addenda = useQuery({ queryKey: ['clinical-addenda', record?.id], enabled: !!record, queryFn: async () => {
     const { data, error } = await supabase.from('clinical_addenda').select('*').eq('encounter_id', record!.id).order('created_at');
@@ -95,7 +98,6 @@ export function ClinicalWorkspace({ petId, disabled = false }: ClinicalWorkspace
     adopt(data); setAddendum(''); setMessage('Latest saved encounter loaded.');
   });
   return <section className="space-y-6" aria-label="Clinical records">
-    {navigationGuard}
     <PatientProblems petId={petId} disabled={disabled} onDirtyChange={setProblemDirty} />
     <Card><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-lg">Clinical encounters</CardTitle><Button disabled={disabled || busy} onClick={() => select(null)}>New encounter</Button></CardHeader><CardContent className="space-y-4">
       {disabled && <p className="text-sm text-muted-foreground">This patient is inactive. Existing drafts can be corrected; encounter history and signed-record addenda remain available.</p>}

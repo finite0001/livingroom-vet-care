@@ -1,0 +1,52 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: synthetic metadata and service captures; byte transport is tested separately.
+insert into auth.users(id,email,raw_user_meta_data) values('db470000-0000-4000-8000-000000000001','release-source-admin@example.test','{}'),('db470000-0000-4000-8000-000000000002','release-source-dvm@example.test','{}');
+update public.profiles set is_active = true where id in ('db470000-0000-4000-8000-000000000001','db470000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db470000-0000-4000-8000-000000000001','STAFF'),('db470000-0000-4000-8000-000000000002','STAFF');
+
+insert into user_roles(user_id,role) values('db470000-0000-4000-8000-000000000001','ADMIN'),('db470000-0000-4000-8000-000000000002','DVM');
+create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
+create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db470000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Release','Source','+13035550177','release-source@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Source dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select 'other',id from save_patient(null,(select id from fx where k='client'),null,'Other dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['doc','corrected-doc','external-doc','replacement-doc','plain-doc','mapping','snapshot','order','source','order-review','report','corrected-report','receipt','corrected-receipt','external-receipt','replacement-receipt','record','replacement-record','legacy-release','release','ack','external-ack']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) values((select id from fx where k='snapshot'),'https://api.trial.ezyvet.com','release-test-site','animal','77','{"id":77}','synthetic-hash','db470000-0000-4000-8000-000000000001');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by) values((select id from fx where k='mapping'),gen_random_uuid(),'mapping-hash','https://api.trial.ezyvet.com','release-test-site','animal','77',(select id from fx where k='snapshot'),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','PRIVATE mapping reason','db470000-0000-4000-8000-000000000001');
+create function pg_temp.ready_doc(p_id uuid) returns void language plpgsql security definer set search_path=public as $$declare d public.patient_documents;begin
+ d:=prepare_patient_document(p_id,(select id from fx where k='pet'),null,'synthetic.pdf','application/pdf',12,'medical_record','Synthetic source original',null,'client_shareable');
+ insert into storage.objects(bucket_id,name,metadata) values('patient-documents',d.file_path,'{"size":12,"mimetype":"application/pdf"}');perform finalize_patient_document(p_id);
+end $$;
+select pg_temp.ready_doc(id) from fx where k in ('doc','corrected-doc','external-doc','replacement-doc','plain-doc');
+insert into record_release_policy(id,enabled,accepted_by,accepted_at,acceptance_reference,accepted_schema_version) values(true,true,'Synthetic rollback reviewer',now(),'TEST ONLY',4);
+set local role authenticated;
+insert into data values('received',to_jsonb(now()));
+insert into data select 'legacy-selection',jsonb_build_object('document_ids',jsonb_build_array((select id from fx where k='doc')));
+insert into data select 'legacy-preview',preview_record_release_v4((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','release-source@example.test',(select v from data where k='legacy-selection'));
+insert into data select 'legacy-row',to_jsonb(confirm_record_release((select id from fx where k='legacy-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','release-source@example.test',(select v from data where k='legacy-selection'),(select v->'snapshot' from data where k='legacy-preview'),(select v->>'source_hash' from data where k='legacy-preview'),true));
+select save_patient_lab_order((select id from fx where k='order'),(select id from fx where k='pet'),null,'{"test_name":"Synthetic lab","status":"planned","notes":"PRIVATE native notes"}','');
+select review_lab_source_account((select id from fx where k='source'),'Synthetic Lab','Reviewed account','Training','PRIVATE account review');
+select review_lab_order_source((select id from fx where k='order-review'),(select id from fx where k='order'),(select id from fx where k='pet'),1,(select id from fx where k='source'),'patient-77','order-77',null,'PRIVATE source review',true);
+insert into data select 'receipt',to_jsonb(stage_lab_report_receipt((select id from fx where k='receipt'),(select id from fx where k='source'),(select id from fx where k='doc'),2,'patient-77','order-77','report-77',now()));
+insert into data select 'corrected-receipt',to_jsonb(stage_lab_report_receipt((select id from fx where k='corrected-receipt'),(select id from fx where k='source'),(select id from fx where k='corrected-doc'),2,'patient-77','order-77','report-78',now()));
+insert into data select 'external-receipt',to_jsonb(stage_external_record_receipt((select id from fx where k='external-receipt'),(select id from fx where k='mapping'),1,(select id from fx where k='external-doc'),2,'export-77',now(),null,'PRIVATE external review'));
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+insert into data select 'capture',to_jsonb(capture_lab_report_bytes((select id from fx where k='receipt'),'db470000-0000-4000-8000-000000000001',(select v->>'receipt_hash' from data where k='receipt'),2,repeat('a',64),12,'application/pdf'));
+insert into data select 'corrected-capture',to_jsonb(capture_lab_report_bytes((select id from fx where k='corrected-receipt'),'db470000-0000-4000-8000-000000000001',(select v->>'receipt_hash' from data where k='corrected-receipt'),2,repeat('b',64),12,'application/pdf'));
+insert into data select 'external-capture',to_jsonb(capture_external_record_bytes((select id from fx where k='external-receipt'),'db470000-0000-4000-8000-000000000001',(select v->>'receipt_hash' from data where k='external-receipt'),2,repeat('c',64),12,'application/pdf'));
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db470000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select link_lab_report_version((select id from fx where k='report'),(select id from fx where k='receipt'),(select v->>'receipt_hash' from data where k='receipt'),(select v->>'capture_hash' from data where k='capture'),(select id from fx where k='order'),(select id from fx where k='pet'),1,(select id from fx where k='order-review'),null,'original','PRIVATE link review',true);
+select approve_external_record_import((select id from fx where k='record'),(select id from fx where k='external-receipt'),(select v->>'receipt_hash' from data where k='external-receipt'),(select v->>'capture_hash' from data where k='external-capture'),true);
+insert into data select 'selection',jsonb_build_object('lab_report_ids',jsonb_build_array((select id from fx where k='report')),'external_record_ids',jsonb_build_array((select id from fx where k='record')),'document_ids',jsonb_build_array((select id from fx where k='doc'),(select id from fx where k='external-doc')));
+-- FIXTURE_END
+reset role;update record_release_policy set accepted_schema_version=6;set local role authenticated;
+insert into data select 'six-preview',preview_record_release_v6((select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','release-source@example.test',(select v from data where k='selection'));
+select confirm_record_release((select id from fx where k='release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','release-source@example.test',(select v from data where k='selection'),(select v->'snapshot' from data where k='six-preview'),(select v->>'source_hash' from data where k='six-preview'),true);
+select is(read_record_release((select id from fx where k='release'))->>'eligible','true','Schema6 retains verified lab/external originals');
+select set_config('request.jwt.claims','{"sub":"db470000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select acknowledge_lab_report((select id from fx where k='ack'),(select id from fx where k='report'),(select id from fx where k='pet'),(select v->>'capture_hash' from data where k='capture'),2,true);
+select ok(exists(select 1 from record_release_events where release_id=(select id from fx where k='release') and kind='source_changed'),'Lab acknowledgment appends immediate schema6 source-only invalidation');
+select is(read_record_release((select id from fx where k='release'))->>'eligible','false','Schema6 lab acknowledgment blocks existing delivery');
+select * from finish();rollback;

@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-14",
+  "project": "kothoqicubowyhwfsrte",
+  "verification_method": "Authenticated Supabase dashboard saved-state and rendered protected frontend",
+  "site_url": "https://livingroom-vet-care-daves-projects-e0da43ba.vercel.app",
+  "redirect_urls": [
+    "https://livingroom-vet-care-daves-projects-e0da43ba.vercel.app/hub/reset-password"
+  ],
+  "old_preview_redirect_removed": true,
+  "dashboard_success_toasts_observed": true,
+  "reset_route_without_token": "Shows expired/invalid link explanation and sign-in link; no password fields",
+  "custom_auth_smtp_configured": false,
+  "fastmail_session": "expired; owner sign-in still required",
+  "emails_sent": 0,
+  "staff_accounts_created": 0,
+  "limitations": [
+    "Saved URLs and missing-token UI do not prove email delivery or successful password reset.",
+    "Custom Auth SMTP, mailbox delivery, staff onboarding and clinical/provider acceptance remain pending."
+  ]
+}

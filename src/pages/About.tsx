@@ -1,5 +1,5 @@
 import { practiceLaunchSummary } from "@/config/practice";
-import { usePublicRouteMetadata } from "@/hooks/use-page-title";
+import { usePageTitle } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CTASection from "@/components/sections/CTASection";
@@ -61,7 +61,7 @@ const paymentInfo = [
 ];
 
 const About = () => {
-  usePublicRouteMetadata("/about");
+  usePageTitle("About Us", "Meet Dr. Susan Edler and the team behind The Living Room Vet — an independent, female-owned practice in Boulder built around low-stress handling.");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -99,7 +99,7 @@ const About = () => {
                   <div className="absolute -inset-4 bg-gradient-warm rounded-3xl opacity-20 blur-2xl" />
                   <img
                     src={aboutPracticeImage}
-                    alt="Concept image for a living room inspired veterinary clinic"
+                    alt="Concept of a living-room-style veterinary clinic"
                     className="relative w-full rounded-2xl shadow-elevated object-cover aspect-[16/10]"
                   />
                 </div>

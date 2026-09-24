@@ -1,43 +1,28 @@
 import { useState } from "react";
-import {
-  Home, MessageSquare, Phone, ClipboardList, MoreHorizontal,
-  Users, FileText, Megaphone, BarChart3, AlertTriangle,
-  Pill, Stethoscope, Settings, LayoutDashboard, Upload, X, Clock, History, Inbox, CalendarDays, Send,
-} from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  adminItems,
+  settingsItem,
+  tabItems,
+  toolItems,
+  workspaceItems,
+  type NavItem,
+} from "./nav-items";
 
-const tabs = [
-  { path: "/hub", label: "Home", icon: Home, exact: true },
-  { path: "/hub/chats", label: "Comm", icon: MessageSquare },
-  { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
-  { path: "/hub/call", label: "Call", icon: Phone },
-];
-
-const moreItems = [
-  { path: "/hub/appointments", label: "Appointments", icon: CalendarDays },
-  { path: "/hub/clients", label: "Clients", icon: Users },
-  { path: "/hub/contact-submissions", label: "Contact Inbox", icon: Inbox },
-  { path: "/hub/deliveries", label: "Deliveries", icon: Send },
-  { path: "/hub/time", label: "Time Clock", icon: Clock },
-  { path: "/hub/timesheet", label: "Timesheet", icon: History },
-  { path: "/hub/tools/templates", label: "Templates", icon: FileText },
-  { path: "/hub/tools/campaigns", label: "Campaigns", icon: Megaphone },
-  { path: "/hub/tools/surveys", label: "Surveys", icon: BarChart3 },
-  { path: "/hub/tools/alerts", label: "Alerts", icon: AlertTriangle },
-  { path: "/hub/tools/refills", label: "Refills", icon: Pill },
-  { path: "/hub/tools/ezyvet", label: "Clinic Browser", icon: Stethoscope },
-  { path: "/hub/settings", label: "Settings", icon: Settings },
-];
-
-const adminMoreItems = [
-  { path: "/hub/admin", label: "Admin Dashboard", icon: LayoutDashboard },
-  { path: "/hub/admin/import", label: "Import Clients", icon: Upload },
+const moreItems: NavItem[] = [
+  ...workspaceItems.filter((i) => !i.tab),
+  ...toolItems,
+  settingsItem,
 ];
 
 export function BottomTabBar() {
@@ -46,14 +31,20 @@ export function BottomTabBar() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const [moreOpen, setMoreOpen] = useState(false);
-  const { data: unreadCount } = useUnreadCount();
+  const {
+    data: unreadCount,
+    isError: unreadError,
+    isPending: unreadPending,
+  } = useUnreadCount();
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
-  const isMoreActive = [...moreItems, ...adminMoreItems].some((item) => isActive(item.path));
+  const isMoreActive = [...moreItems, ...adminItems].some((item) =>
+    isActive(item.path),
+  );
 
   return (
     <>
@@ -61,23 +52,45 @@ export function BottomTabBar() {
         className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around bg-card/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
         aria-label="Hub navigation"
       >
-        {tabs.map((tab) => {
+        {tabItems.map((tab) => {
           const active = isActive(tab.path, tab.exact);
           const badge = tab.path === "/hub/chats" ? (unreadCount ?? 0) : 0;
+          const label = tab.mobileLabel ?? tab.label;
           return (
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
-              aria-label={tab.label}
+              aria-label={
+                tab.path === "/hub/chats"
+                  ? `Inbox, ${unreadError ? "unread count unavailable" : unreadPending ? "loading unread count" : `${unreadCount} unread for you`}`
+                  : label
+              }
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-3 transition-all duration-200",
-                active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                active
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <tab.icon className={cn("h-5 w-5", active && "text-primary")} aria-hidden="true" />
-              <span className={cn("text-[11px]", active ? "font-semibold" : "font-medium")}>{tab.label}</span>
-              {badge > 0 && (
+              <tab.icon
+                className={cn("h-5 w-5", active && "text-primary")}
+                aria-hidden="true"
+              />
+              <span
+                className={cn(
+                  "text-[11px]",
+                  active ? "font-semibold" : "font-medium",
+                )}
+              >
+                {label}
+              </span>
+              {tab.path === "/hub/chats" && unreadError && (
+                <span className="absolute right-1 top-0.5 text-xs text-muted-foreground">
+                  ?
+                </span>
+              )}
+              {!(tab.path === "/hub/chats" && unreadError) && badge > 0 && (
                 <span className="absolute top-0.5 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
                   {badge > 99 ? "99+" : badge}
                 </span>
@@ -91,11 +104,20 @@ export function BottomTabBar() {
           aria-label="More"
           className={cn(
             "relative flex min-w-[44px] min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-3 transition-all duration-200",
-            isMoreActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+            isMoreActive
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-          <span className={cn("text-[11px]", isMoreActive ? "font-semibold" : "font-medium")}>More</span>
+          <span
+            className={cn(
+              "text-[11px]",
+              isMoreActive ? "font-semibold" : "font-medium",
+            )}
+          >
+            More
+          </span>
         </button>
       </nav>
 
@@ -108,31 +130,44 @@ export function BottomTabBar() {
             {moreItems.map((item) => (
               <button
                 key={item.path}
-                onClick={() => { navigate(item.path); setMoreOpen(false); }}
-                aria-current={isActive(item.path) ? "page" : undefined}
+                onClick={() => {
+                  navigate(item.path);
+                  setMoreOpen(false);
+                }}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
-                  isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
+                  isActive(item.path)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent",
                 )}
               >
-                <item.icon className="h-5 w-5" aria-hidden="true" />
-                <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
+                <item.icon className="h-5 w-5" />
+                <span className="text-[11px] font-medium text-center leading-tight">
+                  {item.mobileLabel ?? item.label}
+                </span>
               </button>
             ))}
-            {isAdmin && adminMoreItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => { navigate(item.path); setMoreOpen(false); }}
-                aria-current={isActive(item.path) ? "page" : undefined}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
-                  isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
-                )}
-              >
-                <item.icon className="h-5 w-5" aria-hidden="true" />
-                <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
-              </button>
-            ))}
+            {isAdmin &&
+              adminItems.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => {
+                    navigate(item.path);
+                    setMoreOpen(false);
+                  }}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
+                    isActive(item.path)
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent",
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-[11px] font-medium text-center leading-tight">
+                    {item.mobileLabel ?? item.label}
+                  </span>
+                </button>
+              ))}
           </div>
         </SheetContent>
       </Sheet>

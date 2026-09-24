@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import "./marketing-fonts.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,21 +7,24 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, createRoutesFromElements, RouterProvider, Outlet, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { MarketingErrorBoundary } from "./components/MarketingErrorBoundary";
-import Index from "./pages/Index";
-import Experience from "./pages/Experience";
-import Services from "./pages/Services";
-import WellnessCare from "./pages/services/WellnessCare";
-import SeniorCare from "./pages/services/SeniorCare";
-import LaserTherapy from "./pages/services/LaserTherapy";
-import Surgery from "./pages/services/Surgery";
-import Diagnostics from "./pages/services/Diagnostics";
-import IllnessCare from "./pages/services/IllnessCare";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Vaccinations from "./pages/services/Vaccinations";
 import NotFound from "./pages/NotFound";
+
+// Marketing pages are lazy so the marketing site stays out of the hub's main
+// bundle (matters on housecall mobile data). Each is its own code-split chunk.
+const Index = lazy(() => import("./pages/Index"));
+const Experience = lazy(() => import("./pages/Experience"));
+const Services = lazy(() => import("./pages/Services"));
+const WellnessCare = lazy(() => import("./pages/services/WellnessCare"));
+const SeniorCare = lazy(() => import("./pages/services/SeniorCare"));
+const LaserTherapy = lazy(() => import("./pages/services/LaserTherapy"));
+const Surgery = lazy(() => import("./pages/services/Surgery"));
+const Diagnostics = lazy(() => import("./pages/services/Diagnostics"));
+const IllnessCare = lazy(() => import("./pages/services/IllnessCare"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Vaccinations = lazy(() => import("./pages/services/Vaccinations"));
 
 // Hub imports
 import { AuthProvider } from "@/hub/contexts/AuthContext";
@@ -29,12 +33,21 @@ import { AppShell } from "@/hub/components/layout/AppShell";
 
 const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
+const UnavailableToolPage = lazy(() => import("@/hub/pages/UnavailableToolPage"));
 const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
-const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
+const HubNotFoundPage = lazy(() => import("@/hub/pages/HubNotFoundPage"));
+const WebsiteInquiriesPage = lazy(() => import("@/hub/features/inquiries/WebsiteInquiriesPage"));
+const ProcessingQueuePage = lazy(() => import("@/hub/features/inbound-review/ProcessingQueuePage"));
+const InboxReviewPage = lazy(() => import("@/hub/features/inbound-review/InboxReviewPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
-const AppointmentsPage = lazy(() => import("@/hub/pages/AppointmentsPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
+const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
+const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
+const OutboxRetryPage = lazy(() => import("@/hub/features/outbox-retry/OutboxRetryPage"));
+const OperationsPage = lazy(() => import("@/hub/features/operations/OperationsPage"));
+const CareRemindersPage = lazy(() => import("@/hub/features/care-reminders/CareRemindersPage").then(module => ({ default: module.CareRemindersPage })));
+const SchedulePage = lazy(() => import("./hub/features/scheduling/SchedulePage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
@@ -43,17 +56,10 @@ const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
 const TimeClockPage = lazy(() => import("@/hub/pages/TimeClockPage"));
 const TemplatesPage = lazy(() => import("@/hub/pages/TemplatesPage"));
 const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
-const CampaignsPage = lazy(() => import("@/hub/pages/CampaignsPage"));
-const CallPage = lazy(() => import("@/hub/pages/CallPage"));
-const VoicemailsPage = lazy(() => import("@/hub/pages/VoicemailsPage"));
-const ContactSubmissionsPage = lazy(() => import("@/hub/pages/ContactSubmissionsPage"));
-const DeliveriesPage = lazy(() => import("@/hub/pages/DeliveriesPage"));
 const TicketsPage = lazy(() => import("@/hub/pages/TicketsPage"));
 const TicketDetailPage = lazy(() => import("@/hub/pages/TicketDetailPage"));
 const RefillsPage = lazy(() => import("@/hub/pages/RefillsPage"));
-const SurveysPage = lazy(() => import("@/hub/pages/SurveysPage"));
-const AlertsPage = lazy(() => import("@/hub/pages/AlertsPage"));
-const ImportPage = lazy(() => import("@/hub/pages/ImportPage"));
+const PatientsPage = lazy(() => import("@/hub/pages/PatientsPage"));
 
 function HubLoader() {
   return (
@@ -93,35 +99,44 @@ const router = createBrowserRouter(createRoutesFromElements(
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route path="/hub" element={<HubHomePage />} />
+                  <Route path="/hub/inquiries" element={<WebsiteInquiriesPage />} />
                   <Route path="/hub/chats" element={<ConversationsPage />} />
+                  <Route path="/hub/inbox/review" element={<InboxReviewPage />} />
+                  <Route path="/hub/inbox/processing" element={<ProcessingQueuePage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
-                  <Route path="/hub/appointments" element={<AppointmentsPage />} />
+                  <Route path="/hub/schedule" element={<SchedulePage />} />
+                  <Route path="/hub/inventory" element={<InventoryPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />
+                  <Route path="/hub/patients" element={<PatientsPage />} />
                   <Route path="/hub/client/:id" element={<ClientProfilePage />} />
                   <Route path="/hub/patient/:id" element={<PatientPage />} />
                   <Route path="/hub/tickets" element={<TicketsPage />} />
                   <Route path="/hub/ticket/:id" element={<TicketDetailPage />} />
-                  <Route path="/hub/call" element={<CallPage />} />
-                  <Route path="/hub/voicemails" element={<VoicemailsPage />} />
-                  <Route path="/hub/contact-submissions" element={<ContactSubmissionsPage />} />
-                  <Route path="/hub/deliveries" element={<DeliveriesPage />} />
+                  <Route path="/hub/call" element={<UnavailableToolPage />} />
+                  <Route path="/hub/voicemails" element={<UnavailableToolPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />
+                  <Route path="/hub/tools/care-reminders" element={<CareRemindersPage />} />
                   <Route path="/hub/tools/templates" element={<TemplatesPage />} />
-                  <Route path="/hub/tools/campaigns" element={<CampaignsPage />} />
-                  <Route path="/hub/tools/surveys" element={<SurveysPage />} />
-                  <Route path="/hub/tools/alerts" element={<AlertsPage />} />
+                  <Route path="/hub/tools/campaigns" element={<UnavailableToolPage />} />
+                  <Route path="/hub/tools/surveys" element={<UnavailableToolPage />} />
+                  <Route path="/hub/tools/alerts" element={<UnavailableToolPage />} />
                   <Route path="/hub/tools/refills" element={<RefillsPage />} />
-                  <Route path="/hub/tools/ezyvet" element={<PlaceholderPage />} />
+                  {/* Unknown hub URL: keep the staff session and the shell, so a stale
+                      bookmark never lands on the public marketing 404. */}
+                  <Route path="/hub/*" element={<HubNotFoundPage />} />
                 </Route>
               </Route>
 
               {/* Hub admin routes */}
               <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
                 <Route element={<AppShell />}>
+                  <Route path="/hub/tools/ezyvet" element={<EzyVetImportPage />} />
                   <Route path="/hub/admin" element={<AdminDashboardPage />} />
-                  <Route path="/hub/admin/import" element={<ImportPage />} />
+                  <Route path="/hub/admin/operations" element={<OperationsPage />} />
+                  <Route path="/hub/admin/outbox/:id?" element={<OutboxRetryPage />} />
+                  <Route path="/hub/admin/import" element={<UnavailableToolPage />} />
                   <Route path="/hub/admin/staff" element={<AdminStaffPage />} />
                 </Route>
               </Route>
@@ -137,7 +152,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="top-right" closeButton />
         <RouterProvider router={router} />
       </AuthProvider>
     </TooltipProvider>

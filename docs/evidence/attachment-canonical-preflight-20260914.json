@@ -1,0 +1,93 @@
+{
+  "checked_date": "2026-09-14",
+  "refs": {
+    "tested_alternative": "f8c63ca48e2fcbab00e6210e3d001572d06850a4",
+    "canonical_capture": "74d0c0c1caa7c0f8a5ffdb25e2c6ab1294b2e148",
+    "staging_documentation": "d413bcca1333f23292bd77774565fd61152887cf"
+  },
+  "staging_project": "kothoqicubowyhwfsrte",
+  "staging_migration_count": 84,
+  "staging_counts": {
+    "auth_users": 0,
+    "clients": 0,
+    "pets": 0,
+    "storage_objects": 0,
+    "communication_outbox": 0
+  },
+  "staging_6300": {
+    "name": "record_release_prescription_history",
+    "statement_count": 15,
+    "statements_md5": "c1e1526f82da5107f2c315bb773799c8"
+  },
+  "hosted_schema8_exists": true,
+  "hosted_schema9_exists": false,
+  "hosted_attachment_captures_exists": false,
+  "same_version_differences": [
+    {
+      "version": "20260913630000",
+      "alternative": {
+        "path": "supabase/migrations/20260913630000_prescription_release_validation.sql",
+        "sha256": "bc9ba77f16747bc26e0f5ed043cca322568f0a6709f0096f692b745fec6ca165"
+      },
+      "canonical": {
+        "path": "supabase/migrations/20260913630000_record_release_prescription_history.sql",
+        "sha256": "493d5bd5fec3218b0cefe5b592b0e1f456afc7959b2c842922e10cd11db2ebac"
+      }
+    },
+    {
+      "version": "20260913650000",
+      "alternative": {
+        "path": "supabase/migrations/20260913650000_parent_scoped_attachment_intake.sql",
+        "sha256": "ccb314a38edb48a24d3ba821470268057344ea578e81afc36fce1ee858a890d2"
+      },
+      "canonical": {
+        "path": "supabase/migrations/20260913650000_prescription_release_reference_hardening.sql",
+        "sha256": "b65de6b1174a29697005b4712f6d8ea29a3232beade870b9d6d674e9f15b2314"
+      }
+    },
+    {
+      "version": "20260913690000",
+      "alternative": {
+        "path": "supabase/migrations/20260913690000_attachment_abandoned_cleanup.sql",
+        "sha256": "c958f8857b3dd49039dcf40f35459415f18dac64d5a53154b4e1c19e58c64153"
+      },
+      "canonical": {
+        "path": "supabase/migrations/20260913690000_attachment_metadata_runs.sql",
+        "sha256": "4bd2efe726b1a65e234789b6ed3e782119f18a8489f717d4fa23f8199e74f675"
+      }
+    },
+    {
+      "version": "20260913700000",
+      "alternative": {
+        "path": "supabase/migrations/20260913700000_attachment_operator_discovery.sql",
+        "sha256": "2d47035850ba17033d6d9f3d58d8e017e1d5a6882757ccd7c76f89e7cff8945e"
+      },
+      "canonical": {
+        "path": "supabase/migrations/20260913700000_attachment_original_capture.sql",
+        "sha256": "a7bdad11bd33ddc708cc6f4d961d0dd4c54c441e3a5d6202ab89fe1a5c4ce851"
+      }
+    }
+  ],
+  "alternative_only_versions": [
+    "20260913640000",
+    "20260913660000",
+    "20260913670000",
+    "20260913680000",
+    "20260913710000",
+    "20260913720000",
+    "20260913730000",
+    "20260913740000",
+    "20260913750000",
+    "20260913760000",
+    "20260913770000",
+    "20260913780000",
+    "20260913790000",
+    "20260913800000",
+    "20260913810000"
+  ],
+  "canonical_only_versions": [],
+  "limitations": [
+    "Read-only migration/function inventory, not full hosted schema equality or operational acceptance.",
+    "Earlier alternative-branch restore evidence does not establish compatibility with this deployed baseline."
+  ]
+}

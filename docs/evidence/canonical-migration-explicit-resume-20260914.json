@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-14",
+  "scope": "Explicit one-request continuation from an owned saved migration binding, with recovery and existing transport safeguards",
+  "source_sha256": {
+    "src/hub/features/imports/migration-resume-api.ts": "369acd5f5f6246f42fbc9f0644bd79f322c06d5c583d85a2c52ec8c3f545ae9d",
+    "src/hub/features/imports/MigrationResume.tsx": "4fccdcdaf7b8c99ef6873a80bbc0c6cb81edc694d8b1837f6e5895443d292f5f",
+    "src/hub/features/imports/EzyVetMigrationRuns.tsx": "8353d6b3e8ff8d8d3178aadf943c14d7207b2a8a112215c3114ca671b015c4e5",
+    "tests/ezyvet/migration-resume-api.test.ts": "a170a57a571a03aecb588a04c939b8be2348ca1ddfd05ae7a2ec1c15aa9ff664",
+    "tests/ezyvet/migration-local-roundtrip.ts": "862f9b47858236d9b41697b0e62834617193ce2c5c6046468777423663667758",
+    "tests/ezyvet/attachment-metadata-disposable.py": "e1fe408c24c669042dcd5079bd9fb0a36dc9f3cf24f3f514a73b7a74f5546813",
+    "e2e/migration-workspace.spec.ts": "0de4c85f2571925c2a4db47d7fff2f9ed853eaaf4435b211815c2e0b1bed48b6"
+  },
+  "full_unit_suite_tests": 570,
+  "focused_resume_tests_after_concurrency_case": 5,
+  "unique_unit_tests_covered": 571,
+  "lint_typecheck_build_passed": true,
+  "combined_browser_tests": 37,
+  "additional_mobile_desktop_resume_tests": 2,
+  "runtime_checks": 86,
+  "runtime_fixture": "migration",
+  "runtime_result_sha256": "0fcff163f6869f5ad5786643ca7ee0c711fb12467039c1c0ee9167d99a2216b9",
+  "runtime_cleanup_verified": true,
+  "provider_requests": 0,
+  "logs_sha256": {
+    "check": "a05832731a80ba75acf32f544c325f6fcc8a4e62fb3a66351da98feb81839ba6",
+    "browser": "89423a76558ef41b31720bc1ba1a69366080e428d2a00803d1708fa9111d7b2e",
+    "viewports": "ba04b8d83135234f07a193e41010570d944b0e89174feb9eb71c9e169fb522db",
+    "unit-final": "469d5597acb50dec8027661d770a0ad5d21ebfac2bce69dd6bd21db55ab71a0d",
+    "final-lint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime": "0bacddcc1d96bb08712eb294e3b25e9b0af5f75d41e57908da0d275213000d1c"
+  },
+  "screenshots_sha256": {
+    "docs/evidence/migration-resume-mobile-20260914.png": "d730bf128029da0566806bc00353f28566b7e2c637719cb2bb9d4e403f05d4b8",
+    "docs/evidence/migration-resume-desktop-20260914.png": "152cbaa7fc533031b0eb2053a7fac4cfdc893176cc9cbd037bc6afbdbef7979f"
+  },
+  "verified_cases": [
+    "Recover exact owner manifest, scope and binding before enabling continuation",
+    "Recheck current binding/source/mapping/household and child status before each explicit importer call",
+    "Block superseded binding, changed page, source drift, active lease, cooldown and ended traversal",
+    "Preserve exact child ID, resource, mapping and resource-specific parent fields; body construction checked for all nine resource types",
+    "Use existing owner-scoped recovery RPCs; generic reads select only safe status columns",
+    "Single in-flight gate rejects concurrent resume calls",
+    "Unmount/signout during preflight prevents invocation; late replies cannot restore private state",
+    "Every success or uncertain reply requires read recovery before another explicit request",
+    "Navigation and competing migration changes remain guarded during busy/uncertain work",
+    "Generic contact/animal scan breadth is disclosed separately from scoped reconciliation credit",
+    "390px and1440px controls exercised and visually inspected",
+    "Real Auth/PostgREST attachment recovery verifies lease/cooldown/completed states and zero attempted importer invocations"
+  ],
+  "validation_limits": [
+    "Browser importer responses are synthetic. Real runtime checks validate recovery and blocked states, not a newly commissioned provider call.",
+    "Request-body construction covers all nine families; this increment does not claim a new live end-to-end provider test for each family.",
+    "The existing server claims its permitted next page and remains authoritative for concurrency; the interface adds no background scanner or automatic retry."
+  ],
+  "database_changes": false,
+  "edge_function_changes": false,
+  "hosted_changes": false,
+  "backend_prerequisite": {
+    "migration_count": 107,
+    "restore_evidence": "canonical-migration-capture-evidence-20260914.json",
+    "restore_evidence_sha256": "ff5fece2adc0764693bec327687a59f7aacc59466648e5c6a015e7009ea919c1",
+    "runtime_migration_hashes_match_current": true
+  },
+  "remaining": [
+    "Other clinical outcome adapters and global reconciliation",
+    "Operational resolutions and frozen report generation/acceptance",
+    "Matching staging rollout and supervised signed-in staff/source acceptance",
+    "Mail/Auth SMTP and provider/clinical commercial commissioning",
+    "Full launch gates and public cutover"
+  ]
+}

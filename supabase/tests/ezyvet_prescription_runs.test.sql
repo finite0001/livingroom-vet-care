@@ -1,0 +1,44 @@
+begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- FIXTURE_BEGIN: owner-created legacy observations simulate a deployment predating4900.
+insert into auth.users(id,email,raw_user_meta_data) values('db550000-0000-4000-8000-000000000001','prescription-import-admin@example.test','{}'),('db550000-0000-4000-8000-000000000002','prescription-import-other@example.test','{}');
+update public.profiles set is_active = true where id in ('db550000-0000-4000-8000-000000000001','db550000-0000-4000-8000-000000000002');
+insert into public.user_roles (user_id, role) values ('db550000-0000-4000-8000-000000000001','STAFF'),('db550000-0000-4000-8000-000000000002','STAFF');
+
+insert into user_roles(user_id,role) values('db550000-0000-4000-8000-000000000001','ADMIN'),('db550000-0000-4000-8000-000000000002','ADMIN');
+create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
+set local role authenticated;select set_config('request.jwt.claims','{"sub":"db550000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Prescription','Import','+13035550199','prescription-import@example.test','EMAIL',null,null);
+insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Scoped dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
+insert into fx select k,gen_random_uuid() from unnest(array['mapping','mapping2','snapshot','snapshot2','legacy','terminal','run','history','other-run']) k;
+reset role;
+insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by) select id,'https://api.trial.ezyvet.com','prescription-test-site','animal',case when k='snapshot' then '77' else '88' end,jsonb_build_object('id',case when k='snapshot' then 77 else 88 end),k,'db550000-0000-4000-8000-000000000001' from fx where k in ('snapshot','snapshot2');
+insert into ezyvet_record_links(id,request_id,request_hash,source_origin,source_site_uid,resource,external_id,snapshot_id,head_version,client_id,pet_id,local_version,action,reason,approved_by)
+select id,gen_random_uuid(),k,'https://api.trial.ezyvet.com','prescription-test-site','animal',case when k='mapping' then '77' else '88' end,(select id from fx where k=case when m.k='mapping' then 'snapshot' else 'snapshot2' end),1,(select id from fx where k='client'),(select id from fx where k='pet'),1,'link','Synthetic approved mapping','db550000-0000-4000-8000-000000000001' from fx m where k in ('mapping','mapping2');
+insert into data values('items','[{"external_id":"101","payload":{"id":101,"animal_id":77,"comments":"<script>outside prose</script>","vet_id":"outside-user","history_system":"opaque"}}]');
+set local role service_role;
+select throws_ok($$select claim_ezyvet_import(gen_random_uuid(),'db550000-0000-4000-8000-000000000001','prescription-test-site','prescription','https://api.trial.ezyvet.com')$$,'23514',null,'Generic prescription claim denied');
+select throws_ok($$select claim_ezyvet_import(gen_random_uuid(),'db550000-0000-4000-8000-000000000001','prescription-test-site','prescriptionitem','https://api.trial.ezyvet.com')$$,'23514',null,'Generic item claim denied');
+insert into data select 'run',claim_ezyvet_prescription_import((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001','prescription-test-site','prescription','https://api.trial.ezyvet.com',(select id from fx where k='mapping'));
+select is((select v->>'animal_external_id' from data where k='run'),'77','Patient ID derived from mapping');
+select throws_ok($$select claim_ezyvet_prescription_import((select id from fx where k='run'),'db550000-0000-4000-8000-000000000002','prescription-test-site','prescription','https://api.trial.ezyvet.com',(select id from fx where k='mapping'))$$,'42501',null,'Actor cannot change');
+select throws_ok($$select claim_ezyvet_prescription_import((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001','prescription-test-site','prescription','https://api.trial.ezyvet.com',(select id from fx where k='mapping2'))$$,'42501',null,'Mapping cannot change');
+select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,true,'[{"external_id":"101","payload":{"id":101,"animal_id":88}}]')$$,'23514',null,'Wrong patient page denied');
+select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,true,'[{"external_id":"101","payload":{"id":101,"animal_id":77,"date_of_prescription":{}}}]')$$,'23514',null,'Nested date denied');
+select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,false,(select v from data where k='items'));
+select is((stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,1,false,(select v from data where k='items'))).next_page,2,'Committed exact retry recovers without lease');
+select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,1,true,(select v from data where k='items'))$$,'40001',null,'Changed completion denied');
+select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,2,true,'[]')$$,'40001',null,'Fresh page requires current lease');
+set local role authenticated;
+select is(recover_ezyvet_prescription_run((select id from fx where k='run'),(select id from fx where k='mapping'),'prescription')->>'next_page','2','Lost acknowledgement recovers cursor');
+select is(jsonb_array_length(list_ezyvet_prescription_runs((select id from fx where k='mapping'),'prescription')->'runs'),1,'Lost pointer run discoverable');
+select is(jsonb_array_length(list_ezyvet_prescription_candidates((select id from fx where k='mapping'),'prescription')->'candidates'),1,'Scoped source observation discoverable');
+select ok(not has_function_privilege('authenticated','claim_ezyvet_prescription_import(uuid,uuid,text,text,text,uuid)','EXECUTE'),'Browser cannot claim provider lease');
+select ok(not has_function_privilege('service_role','stage_ezyvet_import_page_pre_prescription(uuid,uuid,uuid,integer,boolean,jsonb)','EXECUTE'),'Service cannot bypass new guard');
+select ok(not has_table_privilege('authenticated','ezyvet_prescription_runs','SELECT'),'Direct scope table access denied');
+reset role;
+select is((select count(*)::integer from ezyvet_prescription_pages),1,'Single durable page receipt');
+select throws_ok($$delete from ezyvet_prescription_pages$$,'23514',null,'Receipt immutable');
+update ezyvet_identity_heads set version=version+2 where resource='prescription' and external_id='101';
+set local role authenticated;
+select is(list_ezyvet_prescription_candidates((select id from fx where k='mapping'),'prescription')#>>'{candidates,0,is_current}','false','Revision change prevents stale currentness');
+select * from finish();rollback;
