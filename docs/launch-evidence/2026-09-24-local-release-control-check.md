@@ -1,8 +1,8 @@
 # Local release-control check
 
-Date: 2026-09-24  
-Scope: local release-control verification after the Stage 4 integrated workflow proof, Stage 5 acceptance package, and generated readiness refresh commits  
-Commit checked: `89e591c`  
+Date: 2026-09-24
+Scope: local release-control verification after the Stage 4 integrated workflow proof, Stage 5 acceptance package, generated readiness refresh, local release-control evidence, and typography-token commits
+Commit checked: `e88b7a8`
 Environment: local repository workspace
 
 ## Summary
@@ -42,6 +42,18 @@ todo 0
 duration_ms 4648.480666
 ```
 
+After the typography-token commit, the Node test run reported:
+
+```text
+tests 1078
+pass 1078
+fail 0
+cancelled 0
+skipped 0
+todo 0
+duration_ms 4701.275083
+```
+
 ## Build result
 
 The production build completed successfully:
@@ -51,6 +63,15 @@ sitemap.xml written (14 entries)
 vite v7.3.6 building client environment for production...
 ✓ 3973 modules transformed.
 ✓ built in 4.32s
+```
+
+After the typography-token commit, the production build completed successfully:
+
+```text
+sitemap.xml written (14 entries)
+vite v7.3.6 building client environment for production...
+✓ 3973 modules transformed.
+✓ built in 4.30s
 ```
 
 Vite emitted the existing non-failing chunk-size warning for chunks larger than 500 kB after minification. This warning did not fail the build.
