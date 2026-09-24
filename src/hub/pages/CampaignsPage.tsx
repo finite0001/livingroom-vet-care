@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCampaigns, useCampaignAudience, useSendCampaign, type Campaign } from "@/hub/hooks/use-campaigns";
 

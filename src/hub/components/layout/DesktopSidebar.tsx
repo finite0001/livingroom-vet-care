@@ -2,12 +2,13 @@ import { useState } from "react";
 import {
   Home, MessageSquare, Users, Phone, Settings,
   ClipboardList, AudioWaveform, FileText, Megaphone,
-  AlertTriangle, BarChart3, Pill, Stethoscope,
-  LayoutDashboard, Upload, ChevronDown, LogOut, Clock, History,
+  AlertTriangle, BarChart3, Pill, Stethoscope, Inbox,
+  LayoutDashboard, Upload, ChevronDown, LogOut, Clock, History, CalendarDays, Send,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
+import { useContactSubmissionCount } from "@/hub/hooks/use-contact-submissions";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import { useUnreadVoicemailCount } from "@/hub/hooks/use-telephony";
 
@@ -15,9 +16,12 @@ const workspaceItems = [
   { path: "/hub", label: "Home", icon: Home, exact: true },
   { path: "/hub/chats", label: "Communication", icon: MessageSquare },
   { path: "/hub/tickets", label: "Tickets", icon: ClipboardList },
+  { path: "/hub/appointments", label: "Appointments", icon: CalendarDays },
   { path: "/hub/clients", label: "Clients", icon: Users },
   { path: "/hub/call", label: "Phone", icon: Phone },
   { path: "/hub/voicemails", label: "Voicemails", icon: AudioWaveform },
+  { path: "/hub/contact-submissions", label: "Contact Inbox", icon: Inbox },
+  { path: "/hub/deliveries", label: "Deliveries", icon: Send },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
 ];
@@ -43,6 +47,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const { data: unreadCount } = useUnreadCount();
+  const { data: newContactSubmissionCount } = useContactSubmissionCount("NEW");
   const { data: voicemailUnread } = useUnreadVoicemailCount();
 
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
@@ -92,16 +97,19 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
         <div className="border-b border-sidebar-border/50 pb-2">
           <button
             onClick={() => setWorkspaceOpen((v) => !v)}
+            aria-expanded={workspaceOpen}
+            aria-controls="hub-workspace-nav"
             className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
             Workspace
             <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", workspaceOpen && "rotate-180")} />
           </button>
           {workspaceOpen && (
-            <div className="mt-0.5 space-y-0.5">
+            <div id="hub-workspace-nav" className="mt-0.5 space-y-0.5">
               {workspaceItems.map((item) => {
                 if (item.path === "/hub/chats") return renderItem({ ...item, badge: unreadCount });
                 if (item.path === "/hub/voicemails") return renderItem({ ...item, badge: voicemailUnread });
+                if (item.path === "/hub/contact-submissions") return renderItem({ ...item, badge: newContactSubmissionCount });
                 return renderItem(item);
               })}
             </div>
@@ -111,13 +119,15 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
         <div className="border-b border-sidebar-border/50 pb-2">
           <button
             onClick={() => setToolsOpen((v) => !v)}
+            aria-expanded={toolsOpen}
+            aria-controls="hub-tools-nav"
             className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
             Tools
             <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", toolsOpen && "rotate-180")} />
           </button>
           {toolsOpen && (
-            <div className="mt-0.5 space-y-0.5">
+            <div id="hub-tools-nav" className="mt-0.5 space-y-0.5">
               {toolItems.map(renderItem)}
             </div>
           )}

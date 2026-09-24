@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import {
   MessageSquare, ClipboardList, Phone, Users,
-  AudioWaveform, FileText, Megaphone, BarChart3,
+  AudioWaveform, FileText, Megaphone, BarChart3, Inbox,
 } from "lucide-react";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useContactSubmissionCount } from "@/hub/hooks/use-contact-submissions";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -34,6 +35,7 @@ export default function HubHomePage() {
   usePageTitle("Hub Home");
 
   const { data: unreadCount } = useUnreadCount();
+  const { data: newContactSubmissionCount } = useContactSubmissionCount("NEW");
 
   const { data: activeCount } = useQuery({
     queryKey: ["active-conversation-count"],
@@ -105,7 +107,7 @@ export default function HubHomePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <button
           onClick={() => navigate("/hub/chats")}
           className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
@@ -126,6 +128,16 @@ export default function HubHomePage() {
         >
           <p className="text-2xl font-bold text-foreground">{openTicketCount ?? 0}</p>
           <p className="text-xs text-muted-foreground mt-0.5">Open tickets</p>
+        </button>
+        <button
+          onClick={() => navigate("/hub/contact-submissions")}
+          className="rounded-xl border bg-card p-4 text-left hover:shadow-md hover:border-primary/30 transition-all"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-2xl font-bold text-foreground">{newContactSubmissionCount ?? 0}</p>
+            <Inbox className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">New contacts</p>
         </button>
       </div>
 

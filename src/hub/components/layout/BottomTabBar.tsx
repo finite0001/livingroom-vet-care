@@ -2,11 +2,11 @@ import { useState } from "react";
 import {
   Home, MessageSquare, Phone, ClipboardList, MoreHorizontal,
   Users, FileText, Megaphone, BarChart3, AlertTriangle,
-  Pill, Stethoscope, Settings, LayoutDashboard, Upload, X, Clock, History,
+  Pill, Stethoscope, Settings, LayoutDashboard, Upload, X, Clock, History, Inbox, CalendarDays, Send,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -20,7 +20,10 @@ const tabs = [
 ];
 
 const moreItems = [
+  { path: "/hub/appointments", label: "Appointments", icon: CalendarDays },
   { path: "/hub/clients", label: "Clients", icon: Users },
+  { path: "/hub/contact-submissions", label: "Contact Inbox", icon: Inbox },
+  { path: "/hub/deliveries", label: "Deliveries", icon: Send },
   { path: "/hub/time", label: "Time Clock", icon: Clock },
   { path: "/hub/timesheet", label: "Timesheet", icon: History },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText },
@@ -106,12 +109,13 @@ export function BottomTabBar() {
               <button
                 key={item.path}
                 onClick={() => { navigate(item.path); setMoreOpen(false); }}
+                aria-current={isActive(item.path) ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
                   isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" aria-hidden="true" />
                 <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
               </button>
             ))}
@@ -119,12 +123,13 @@ export function BottomTabBar() {
               <button
                 key={item.path}
                 onClick={() => { navigate(item.path); setMoreOpen(false); }}
+                aria-current={isActive(item.path) ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
                   isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" aria-hidden="true" />
                 <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
               </button>
             ))}

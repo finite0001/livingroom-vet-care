@@ -17,6 +17,8 @@ import Diagnostics from "./pages/services/Diagnostics";
 import IllnessCare from "./pages/services/IllnessCare";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import Vaccinations from "./pages/services/Vaccinations";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +33,7 @@ const HubHomePage = lazy(() => import("@/hub/pages/HubHomePage"));
 const PlaceholderPage = lazy(() => import("@/hub/pages/PlaceholderPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
+const AppointmentsPage = lazy(() => import("@/hub/pages/AppointmentsPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
@@ -43,6 +46,8 @@ const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
 const CampaignsPage = lazy(() => import("@/hub/pages/CampaignsPage"));
 const CallPage = lazy(() => import("@/hub/pages/CallPage"));
 const VoicemailsPage = lazy(() => import("@/hub/pages/VoicemailsPage"));
+const ContactSubmissionsPage = lazy(() => import("@/hub/pages/ContactSubmissionsPage"));
+const DeliveriesPage = lazy(() => import("@/hub/pages/DeliveriesPage"));
 const TicketsPage = lazy(() => import("@/hub/pages/TicketsPage"));
 const TicketDetailPage = lazy(() => import("@/hub/pages/TicketDetailPage"));
 const RefillsPage = lazy(() => import("@/hub/pages/RefillsPage"));
@@ -77,6 +82,8 @@ const router = createBrowserRouter(createRoutesFromElements(
               <Route path="/services/vaccinations" element={<MarketingErrorBoundary><Vaccinations /></MarketingErrorBoundary>} />
               <Route path="/about" element={<MarketingErrorBoundary><About /></MarketingErrorBoundary>} />
               <Route path="/contact" element={<MarketingErrorBoundary><Contact /></MarketingErrorBoundary>} />
+              <Route path="/privacy" element={<MarketingErrorBoundary><Privacy /></MarketingErrorBoundary>} />
+              <Route path="/terms" element={<MarketingErrorBoundary><Terms /></MarketingErrorBoundary>} />
 
               {/* Hub public routes */}
               <Route path="/hub/login" element={<HubLoginPage />} />
@@ -88,6 +95,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub" element={<HubHomePage />} />
                   <Route path="/hub/chats" element={<ConversationsPage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
+                  <Route path="/hub/appointments" element={<AppointmentsPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />
                   <Route path="/hub/client/:id" element={<ClientProfilePage />} />
                   <Route path="/hub/patient/:id" element={<PatientPage />} />
@@ -95,6 +103,8 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/ticket/:id" element={<TicketDetailPage />} />
                   <Route path="/hub/call" element={<CallPage />} />
                   <Route path="/hub/voicemails" element={<VoicemailsPage />} />
+                  <Route path="/hub/contact-submissions" element={<ContactSubmissionsPage />} />
+                  <Route path="/hub/deliveries" element={<DeliveriesPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />

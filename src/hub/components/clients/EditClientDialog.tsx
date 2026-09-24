@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import type { ClientWithPets } from "@/hub/hooks/use-clients";
 import { ClientFormFields } from "./ClientFormFields";
 import { normalizeClientForm, type ClientFormValues } from "./client-form";

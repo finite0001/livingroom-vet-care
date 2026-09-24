@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { ClientFormFields } from "./ClientFormFields";
 import { emptyClientForm, normalizeClientForm, isPotentialDuplicate } from "./client-form";
 

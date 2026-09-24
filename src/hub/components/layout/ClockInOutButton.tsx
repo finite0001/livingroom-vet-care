@@ -3,7 +3,7 @@ import { Clock, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hub/contexts/AuthContext";
+import { useAuth } from "@/hub/contexts/auth-context";
 import { useCurrentShift, useClockIn, useClockOut, durationSeconds } from "@/hub/hooks/use-time-clock";
 
 // Header quick-action for clocking in/out. Shares the use-time-clock hook (and
