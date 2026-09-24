@@ -10,8 +10,8 @@ import fs from 'node:fs';
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const vercelJson = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
 
-if (packageJson.scripts?.['build:deployment'] !== 'npm run build') {
-  throw new Error('package.json must define scripts.build:deployment as "npm run build".');
+if (packageJson.scripts?.['build:deployment'] !== 'node scripts/build-deployment.mjs') {
+  throw new Error('package.json must define scripts.build:deployment as "node scripts/build-deployment.mjs".');
 }
 
 if (vercelJson.buildCommand !== 'npm run build:deployment') {
