@@ -17,6 +17,7 @@
     "readiness:refresh": "node scripts/refresh-readiness-evidence.mjs",
     "readiness:summary": "node scripts/commercial-readiness-summary.mjs",
     "readiness:inventory": "node scripts/hosted-readiness-inventory.mjs",
+    "readiness:no-live-send-preflight": "node scripts/hosted-no-live-send-drill-preflight.mjs",
     "supabase:functions-inventory": "node scripts/supabase-functions-inventory.mjs",
     "supabase:functions-review": "node scripts/review-remote-edge-functions.mjs",
     "supabase:migration-source-compare": "node scripts/compare-remote-only-migration-sources.mjs",

@@ -1,0 +1,321 @@
+{
+  "generatedAt": "2026-09-24T08:32:15.946Z",
+  "status": "blocked",
+  "scope": "Read-only preflight for the hosted no-live-send workflow drill. This command does not write hosted data, activate provider dashboards, configure CloudTalk, publish a phone number, or send live messages.",
+  "targetProjectRef": "mgadheotkdnrsatfivjy",
+  "drillCoverage": [
+    "anonymous contact submit to Hub triage/audit",
+    "staff email queueing through the outbox path",
+    "staff SMS queueing in disabled/test evidence mode",
+    "appointment reminder enqueue and dispatcher containment",
+    "Resend synthetic signed delivery callback",
+    "Twilio synthetic signed status callback and inbound SMS STOP/START",
+    "delivery operations visibility for queued, failed, retryable, canceled, and unknown states"
+  ],
+  "manualGates": [
+    "Explicit approval before applying hosted migrations",
+    "Explicit approval before creating hosted synthetic workflow records",
+    "No public phone, CloudTalk, live SMS, live voice, voicemail, or provider dashboard activation in this drill"
+  ],
+  "artifacts": {
+    "hostedInventory": "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",
+    "schemaInventory": "docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json",
+    "edgeFunctionInventory": "docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
+    "hubReadiness": "docs/launch-evidence/2026-09-24-hub-workflow-readiness.json",
+    "localNoLiveSendEvidence": "docs/launch-evidence/2026-09-24-no-live-send-local-drill.md"
+  },
+  "checks": [
+    {
+      "id": "migration-drift",
+      "label": "Hosted migration drift before no-live-send drill",
+      "status": "blocked",
+      "blockers": [
+        "Hosted database is still missing the two expected readiness migrations required before the hosted no-live-send drill."
+      ],
+      "warnings": [],
+      "evidence": {
+        "command": {
+          "command": "npm run supabase:migration-drift --silent",
+          "status": 0,
+          "ok": true,
+          "error": null,
+          "stderr": []
+        },
+        "expectedPendingMigrations": [
+          "20260924120000",
+          "20260924130000"
+        ],
+        "migrationDrift": {
+          "matching_count": 148,
+          "remote_only_count": 0,
+          "local_only_count": 2,
+          "local_only": [
+            "20260924120000",
+            "20260924130000"
+          ],
+          "remote_only_first": [],
+          "remote_only_last": [],
+          "source": {
+            "command": "npx supabase db push --linked --dry-run --skip-vault",
+            "attempts": 1,
+            "message": "Finished supabase db push."
+          }
+        }
+      }
+    },
+    {
+      "id": "hub-workflows",
+      "label": "Hub workflow readiness evidence",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "artifact": "docs/launch-evidence/2026-09-24-hub-workflow-readiness.json",
+        "status": "local-hub-ready",
+        "hostedStatus": "hosted-dependencies-ready",
+        "summary": {
+          "workflows": 3,
+          "blockers": 0,
+          "hostedBlockers": 0,
+          "warnings": 0
+        }
+      }
+    },
+    {
+      "id": "schema-objects",
+      "label": "Hosted schema objects required for the no-live-send drill",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "artifact": "docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json",
+        "presence": {
+          "tables": [
+            {
+              "name": "public.outbound_deliveries",
+              "present": true
+            }
+          ],
+          "functions": [
+            {
+              "name": "public.cancel_outbound_delivery",
+              "present": true
+            },
+            {
+              "name": "public.claim_due_outbound_deliveries",
+              "present": true
+            },
+            {
+              "name": "public.enqueue_staff_outbound_message",
+              "present": true
+            },
+            {
+              "name": "public.guard_contact_submission",
+              "present": true
+            },
+            {
+              "name": "public.record_inbound_sms",
+              "present": true
+            },
+            {
+              "name": "public.record_outbound_delivery_callback",
+              "present": true
+            },
+            {
+              "name": "public.record_outbound_delivery_result",
+              "present": true
+            },
+            {
+              "name": "public.retry_outbound_delivery",
+              "present": true
+            },
+            {
+              "name": "public.save_appointment",
+              "present": true
+            }
+          ],
+          "triggers": [
+            {
+              "name": "guard_contact_submission",
+              "present": true
+            },
+            {
+              "name": "trg_create_appointment_reminders",
+              "present": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "edge-functions",
+      "label": "Hosted Edge Functions required for the no-live-send drill",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "artifact": "docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
+        "presence": [
+          {
+            "slug": "public-contact",
+            "verifyJwt": false,
+            "purpose": "anonymous contact intake",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "send-email",
+            "verifyJwt": true,
+            "purpose": "staff email queueing endpoint",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": true,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "send-sms",
+            "verifyJwt": true,
+            "purpose": "staff SMS queueing endpoint",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": true,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "dispatch-outbound-deliveries",
+            "verifyJwt": false,
+            "purpose": "token-protected outbound dispatcher",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "resend-delivery-webhook",
+            "verifyJwt": false,
+            "purpose": "signed Resend delivery callback",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "twilio-message-status-callback",
+            "verifyJwt": false,
+            "purpose": "signed Twilio status callback",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "twilio-inbound-sms",
+            "verifyJwt": false,
+            "purpose": "signed Twilio inbound SMS and STOP/START callback",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "process-inbound",
+            "verifyJwt": false,
+            "purpose": "token-protected inbound review worker",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          },
+          {
+            "slug": "queue-reminders",
+            "verifyJwt": false,
+            "purpose": "token-protected reminder enqueue worker",
+            "remotePresent": true,
+            "remoteStatus": "ACTIVE",
+            "remoteVerifyJwt": false,
+            "verifyJwtMatches": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "scheduler-containment",
+      "label": "Scheduler containment before provider commissioning",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "schedulerSecrets": {
+          "command": {
+            "command": "npx supabase db query --linked select name from vault.secrets where name in ('project_url','scheduler_worker_key') order by name;",
+            "status": 0,
+            "ok": true,
+            "error": null,
+            "stderr": [
+              "Initialising login role...",
+              "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+            ]
+          },
+          "rows": []
+        },
+        "cronJobs": {
+          "command": {
+            "command": "npx supabase db query --linked select jobname, schedule from cron.job where jobname in ('cleanup-abandoned-attachment','dispatch-outbox','process-inbound','process-stripe-events','queue-reminders','scheduler-reconcile') order by jobname;",
+            "status": 0,
+            "ok": true,
+            "error": null,
+            "stderr": [
+              "Initialising login role...",
+              "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+            ]
+          },
+          "rows": [
+            {
+              "jobname": "cleanup-abandoned-attachment",
+              "schedule": "*/30 * * * *"
+            },
+            {
+              "jobname": "dispatch-outbox",
+              "schedule": "* * * * *"
+            },
+            {
+              "jobname": "process-inbound",
+              "schedule": "* * * * *"
+            },
+            {
+              "jobname": "process-stripe-events",
+              "schedule": "* * * * *"
+            },
+            {
+              "jobname": "queue-reminders",
+              "schedule": "*/15 * * * *"
+            },
+            {
+              "jobname": "scheduler-reconcile",
+              "schedule": "* * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "local-contract-evidence",
+      "label": "Local no-live-send contract evidence",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "artifact": "docs/launch-evidence/2026-09-24-no-live-send-local-drill.md"
+      }
+    }
+  ],
+  "blockers": [
+    {
+      "check": "migration-drift",
+      "message": "Hosted database is still missing the two expected readiness migrations required before the hosted no-live-send drill."
+    }
+  ],
+  "warnings": []
+}

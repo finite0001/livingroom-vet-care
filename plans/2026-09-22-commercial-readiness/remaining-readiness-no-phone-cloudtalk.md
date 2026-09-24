@@ -12,6 +12,7 @@ Scope: complete all software/evidence work that can be finished before public ph
 - Local current-stack replay now has database evidence through that Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](../../docs/launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 - Stage 2 pre-apply evidence has been refreshed without hosted SQL mutation: [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](../../docs/launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md).
 - Local disabled/test-mode delivery evidence exists: [2026-09-24 no-live-send local workflow drill](../../docs/launch-evidence/2026-09-24-no-live-send-local-drill.md).
+- Hosted no-live-send drill preflight now exists and is intentionally blocked only by the two pending hosted readiness migrations: [2026-09-24 hosted no-live-send drill preflight](../../docs/launch-evidence/2026-09-24-hosted-no-live-send-drill-preflight.md).
 - Local integrated synthetic workflow evidence exists: [2026-09-24 integrated synthetic local workflow proof](../../docs/launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md).
 - Clinical/staff package-readiness evidence exists: [2026-09-24 clinical and staff acceptance package readiness](../../docs/launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
 - Local release-control evidence exists: [2026-09-24 local release-control check](../../docs/launch-evidence/2026-09-24-local-release-control-check.md).
@@ -104,6 +105,7 @@ Acceptance evidence:
 - Outbound mode remains disabled or test-only.
 - Provider dashboard callback URLs are documented but not activated for live sends.
 - Local pre-hosted proof exists for the disabled/test-mode contracts, but it does not replace the hosted staff workflow drill.
+- Current read-only hosted preflight passes Hub/schema/function/scheduler/local-contract checks and blocks on the two pending hosted migrations. After hosted apply and readiness refresh, re-run `npm run readiness:no-live-send-preflight -- --output docs/launch-evidence/<date>-hosted-no-live-send-drill-preflight.json` before creating any hosted synthetic records.
 
 ### 4. Prove the native preventive/inventory/billing loop with synthetic data
 
