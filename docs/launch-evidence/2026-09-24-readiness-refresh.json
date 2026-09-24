@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-09-24T08:38:03.147Z",
+  "generatedAt": "2026-09-24T08:43:20.246Z",
   "evidenceDate": "2026-09-24",
   "status": "completed",
   "steps": [
     {
       "id": "hosted-readiness",
       "command": "node scripts/hosted-readiness-inventory.mjs --output docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",
-      "startedAt": "2026-09-24T08:37:00.806Z",
-      "finishedAt": "2026-09-24T08:37:09.499Z",
+      "startedAt": "2026-09-24T08:42:15.189Z",
+      "finishedAt": "2026-09-24T08:42:24.030Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -21,8 +21,8 @@
     {
       "id": "remote-only-migration-file-search",
       "command": "node scripts/find-remote-only-migrations.mjs --output docs/launch-evidence/2026-09-24-remote-only-migration-file-search.json",
-      "startedAt": "2026-09-24T08:37:09.499Z",
-      "finishedAt": "2026-09-24T08:37:13.050Z",
+      "startedAt": "2026-09-24T08:42:24.030Z",
+      "finishedAt": "2026-09-24T08:42:28.573Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -40,8 +40,8 @@
     {
       "id": "remote-only-migration-source-comparison",
       "command": "node scripts/compare-remote-only-migration-sources.mjs --output docs/launch-evidence/2026-09-24-remote-only-migration-source-comparison.json",
-      "startedAt": "2026-09-24T08:37:13.050Z",
-      "finishedAt": "2026-09-24T08:37:15.079Z",
+      "startedAt": "2026-09-24T08:42:28.573Z",
+      "finishedAt": "2026-09-24T08:42:30.717Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -59,8 +59,8 @@
     {
       "id": "remote-public-schema",
       "command": "node scripts/supabase-schema-inventory.mjs --output docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json",
-      "startedAt": "2026-09-24T08:37:15.079Z",
-      "finishedAt": "2026-09-24T08:37:55.125Z",
+      "startedAt": "2026-09-24T08:42:30.717Z",
+      "finishedAt": "2026-09-24T08:43:11.921Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -74,8 +74,8 @@
     {
       "id": "edge-functions",
       "command": "node scripts/supabase-functions-inventory.mjs --output docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
-      "startedAt": "2026-09-24T08:37:55.125Z",
-      "finishedAt": "2026-09-24T08:37:57.028Z",
+      "startedAt": "2026-09-24T08:43:11.921Z",
+      "finishedAt": "2026-09-24T08:43:13.801Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -89,8 +89,8 @@
     {
       "id": "remote-edge-function-review",
       "command": "node scripts/review-remote-edge-functions.mjs --inventory docs/launch-evidence/2026-09-24-edge-functions-inventory.json --output docs/launch-evidence/2026-09-24-remote-edge-function-review.json",
-      "startedAt": "2026-09-24T08:37:57.028Z",
-      "finishedAt": "2026-09-24T08:37:57.084Z",
+      "startedAt": "2026-09-24T08:43:13.801Z",
+      "finishedAt": "2026-09-24T08:43:13.851Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -108,8 +108,8 @@
     {
       "id": "public-site",
       "command": "node scripts/public-site-readiness.mjs --output docs/launch-evidence/2026-09-24-public-site-readiness.json",
-      "startedAt": "2026-09-24T08:37:57.084Z",
-      "finishedAt": "2026-09-24T08:37:57.131Z",
+      "startedAt": "2026-09-24T08:43:13.851Z",
+      "finishedAt": "2026-09-24T08:43:13.897Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -123,8 +123,8 @@
     {
       "id": "hub-workflows",
       "command": "node scripts/hub-workflow-readiness.mjs --schema-inventory docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json --functions-inventory docs/launch-evidence/2026-09-24-edge-functions-inventory.json --output docs/launch-evidence/2026-09-24-hub-workflow-readiness.json",
-      "startedAt": "2026-09-24T08:37:57.131Z",
-      "finishedAt": "2026-09-24T08:37:57.176Z",
+      "startedAt": "2026-09-24T08:43:13.897Z",
+      "finishedAt": "2026-09-24T08:43:13.944Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -138,8 +138,8 @@
     {
       "id": "hosted-no-live-send-preflight",
       "command": "node scripts/hosted-no-live-send-drill-preflight.mjs --output docs/launch-evidence/2026-09-24-hosted-no-live-send-drill-preflight.json",
-      "startedAt": "2026-09-24T08:37:57.176Z",
-      "finishedAt": "2026-09-24T08:38:03.095Z",
+      "startedAt": "2026-09-24T08:43:13.944Z",
+      "finishedAt": "2026-09-24T08:43:20.142Z",
       "status": 1,
       "ok": true,
       "allowedStatuses": [
@@ -152,10 +152,26 @@
       "stderr": []
     },
     {
+      "id": "clinical-staff-acceptance",
+      "command": "node scripts/clinical-staff-acceptance-readiness.mjs --output docs/launch-evidence/2026-09-24-clinical-staff-acceptance-readiness.json",
+      "startedAt": "2026-09-24T08:43:20.142Z",
+      "finishedAt": "2026-09-24T08:43:20.198Z",
+      "status": 1,
+      "ok": true,
+      "allowedStatuses": [
+        0,
+        1
+      ],
+      "stdout": [
+        "Wrote clinical/staff acceptance readiness to /Users/davidedler/livingroom-vet-care/docs/launch-evidence/2026-09-24-clinical-staff-acceptance-readiness.json"
+      ],
+      "stderr": []
+    },
+    {
       "id": "commercial-summary",
       "command": "node scripts/commercial-readiness-summary.mjs --output docs/launch-evidence/2026-09-24-commercial-readiness-summary.json",
-      "startedAt": "2026-09-24T08:38:03.095Z",
-      "finishedAt": "2026-09-24T08:38:03.147Z",
+      "startedAt": "2026-09-24T08:43:20.198Z",
+      "finishedAt": "2026-09-24T08:43:20.246Z",
       "status": 0,
       "ok": true,
       "allowedStatuses": [
@@ -170,9 +186,9 @@
   "summary": {
     "status": "blocked",
     "gates": {
-      "gates": 5,
+      "gates": 6,
       "passing": 3,
-      "blocked": 2
+      "blocked": 3
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T08:38:03.091Z",
+  "generatedAt": "2026-09-24T08:43:20.138Z",
   "status": "blocked",
   "scope": "Read-only preflight for the hosted no-live-send workflow drill. This command does not write hosted data, activate provider dashboards, configure CloudTalk, publish a phone number, or send live messages.",
   "targetProjectRef": "mgadheotkdnrsatfivjy",

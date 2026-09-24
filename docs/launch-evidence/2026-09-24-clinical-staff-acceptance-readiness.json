@@ -1,0 +1,127 @@
+{
+  "generatedAt": "2026-09-24T08:43:20.194Z",
+  "status": "blocked",
+  "scope": "Clinical and staff acceptance readiness before phone number and CloudTalk commissioning.",
+  "registerPath": "docs/clinical-staff-acceptance-register.json",
+  "targetProjectRef": "mgadheotkdnrsatfivjy",
+  "checks": [
+    {
+      "id": "register-shape",
+      "label": "Acceptance register shape and target",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "registerPath": "docs/clinical-staff-acceptance-register.json",
+        "targetProjectRef": "mgadheotkdnrsatfivjy",
+        "clinicalRows": 8,
+        "staffWorkflowRows": 8
+      }
+    },
+    {
+      "id": "clinical-decisions",
+      "label": "Clinical reviewer decisions",
+      "status": "blocked",
+      "blockers": [
+        "8 clinical review decisions are pending: C-PILOT-01, C-PILOT-02, C-PILOT-03, C-PILOT-04, C-PILOT-05, C-PILOT-06, C-PILOT-07, C-PILOT-08."
+      ],
+      "warnings": [],
+      "evidence": {
+        "counts": {
+          "pending": 8,
+          "accepted": 0,
+          "acceptedAfterCorrection": 0,
+          "rejected": 0,
+          "notInPilotScope": 0,
+          "invalid": 0
+        }
+      }
+    },
+    {
+      "id": "staff-run-metadata",
+      "label": "Staff acceptance run metadata",
+      "status": "blocked",
+      "blockers": [
+        "Staff acceptance operator is not recorded.",
+        "Staff acceptance date/time is not recorded.",
+        "Staff acceptance frontend URL is not recorded.",
+        "Staff acceptance commit/deployment is not recorded."
+      ],
+      "warnings": [],
+      "evidence": {
+        "operator": null,
+        "dateTime": null,
+        "frontendUrl": null,
+        "supabaseProject": "mgadheotkdnrsatfivjy",
+        "commitOrDeployment": null,
+        "outboundMode": "Disabled/test-only",
+        "knownExceptions": [
+          "Phone number and CloudTalk deferred"
+        ]
+      }
+    },
+    {
+      "id": "staff-workflow-decisions",
+      "label": "Staff workflow acceptance decisions",
+      "status": "blocked",
+      "blockers": [
+        "8 staff workflow steps are pending: S-PILOT-01, S-PILOT-02, S-PILOT-03, S-PILOT-04, S-PILOT-05, S-PILOT-06, S-PILOT-07, S-PILOT-08."
+      ],
+      "warnings": [],
+      "evidence": {
+        "counts": {
+          "pending": 8,
+          "accepted": 0,
+          "acceptedAfterCorrection": 0,
+          "rejected": 0,
+          "notInPilotScope": 0,
+          "invalid": 0
+        }
+      }
+    },
+    {
+      "id": "deferred-final-gates",
+      "label": "Deferred final phone and CloudTalk gates",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": {
+        "deferredFinalGates": [
+          "Public practice phone",
+          "Public emergency phone/instructions",
+          "CloudTalk",
+          "Live SMS number/A2P activation",
+          "Live voice/voicemail",
+          "Final owner go/no-go"
+        ]
+      }
+    }
+  ],
+  "blockers": [
+    {
+      "check": "clinical-decisions",
+      "message": "8 clinical review decisions are pending: C-PILOT-01, C-PILOT-02, C-PILOT-03, C-PILOT-04, C-PILOT-05, C-PILOT-06, C-PILOT-07, C-PILOT-08."
+    },
+    {
+      "check": "staff-run-metadata",
+      "message": "Staff acceptance operator is not recorded."
+    },
+    {
+      "check": "staff-run-metadata",
+      "message": "Staff acceptance date/time is not recorded."
+    },
+    {
+      "check": "staff-run-metadata",
+      "message": "Staff acceptance frontend URL is not recorded."
+    },
+    {
+      "check": "staff-run-metadata",
+      "message": "Staff acceptance commit/deployment is not recorded."
+    },
+    {
+      "check": "staff-workflow-decisions",
+      "message": "8 staff workflow steps are pending: S-PILOT-01, S-PILOT-02, S-PILOT-03, S-PILOT-04, S-PILOT-05, S-PILOT-06, S-PILOT-07, S-PILOT-08."
+    }
+  ],
+  "warnings": []
+}
