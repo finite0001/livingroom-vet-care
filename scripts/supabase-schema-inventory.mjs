@@ -63,6 +63,10 @@ function uniqueSorted(values) {
   return [...new Set(values)].sort((left, right) => left.localeCompare(right));
 }
 
+function redactDumpStderrLine(line) {
+  return line.replace(/^Dumped schema to .+public-schema\.sql\.$/, 'Dumped schema to [tempfile].');
+}
+
 function collectSchemaObjects(rawSql) {
   const sql = stripComments(rawSql);
 
@@ -187,6 +191,7 @@ const inventory = {
     stderr: dump.stderr
       .split('\n')
       .filter((line) => line.trim() && !line.includes('A new version of Supabase CLI is available'))
+      .map(redactDumpStderrLine)
       .slice(0, 20),
   },
   objects,

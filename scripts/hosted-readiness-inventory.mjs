@@ -56,6 +56,18 @@ function redactCommandOutput(commandResult) {
   };
 }
 
+function redactSortedShortOutput(commandResult) {
+  return {
+    ...redactCommandOutput(commandResult),
+    stdout: commandResult.stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .sort((left, right) => left.localeCompare(right))
+      .join('\n'),
+  };
+}
+
 function redactVercelEnvList(commandResult) {
   const redactRows = (text) =>
     text
@@ -167,9 +179,9 @@ const inventory = {
     domainVerification: domains.map((domain) => collectDomainInspection(domain, apexDomainInspection)),
   },
   dns: {
-    nameservers: redactCommandOutput(run('dig', ['+short', 'NS', 'thelivingroom.vet'])),
-    apexA: redactCommandOutput(run('dig', ['+short', 'A', 'thelivingroom.vet'])),
-    wwwCname: redactCommandOutput(run('dig', ['+short', 'CNAME', 'www.thelivingroom.vet'])),
+    nameservers: redactSortedShortOutput(run('dig', ['+short', 'NS', 'thelivingroom.vet'])),
+    apexA: redactSortedShortOutput(run('dig', ['+short', 'A', 'thelivingroom.vet'])),
+    wwwCname: redactSortedShortOutput(run('dig', ['+short', 'CNAME', 'www.thelivingroom.vet'])),
   },
 };
 
