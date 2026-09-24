@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-09-24T05:23:25.399Z",
+  "status": "blocked",
+  "summary": {
+    "gates": 5,
+    "passing": 3,
+    "blocked": 2
+  },
+  "gates": [
+    {
+      "id": "supabase-database",
+      "label": "Supabase/database operating loop",
+      "status": "blocked",
+      "blockers": [
+        "25 local readiness migrations are not applied remotely."
+      ],
+      "warnings": [],
+      "evidence": [
+        "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",
+        "docs/launch-evidence/2026-09-23-remote-public-schema-inventory.json"
+      ]
+    },
+    {
+      "id": "hub-frontend",
+      "label": "Hub/frontend workflow readiness",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": [
+        "docs/launch-evidence/2026-09-23-hub-workflow-readiness.json"
+      ]
+    },
+    {
+      "id": "external-services",
+      "label": "External services and deployment readiness",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": [
+        "docs/launch-evidence/2026-09-23-edge-functions-inventory.json",
+        "docs/launch-evidence/2026-09-23-remote-edge-function-review.json",
+        "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json"
+      ]
+    },
+    {
+      "id": "public-website",
+      "label": "Public website launch readiness",
+      "status": "blocked",
+      "blockers": [
+        "owner-content: Practice phone is not configured for public launch.",
+        "owner-content: Practice email is not configured for public launch.",
+        "owner-content: Practice emergencyPhone is not configured for public launch."
+      ],
+      "warnings": [],
+      "evidence": [
+        "docs/launch-evidence/2026-09-24-public-site-readiness.json"
+      ]
+    },
+    {
+      "id": "verification-release-control",
+      "label": "Verification/release control",
+      "status": "pass",
+      "blockers": [],
+      "warnings": [],
+      "evidence": [
+        "docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",
+        "docs/launch-evidence/2026-09-23-remote-public-schema-inventory.json",
+        "docs/launch-evidence/2026-09-23-edge-functions-inventory.json",
+        "docs/launch-evidence/2026-09-23-remote-edge-function-review.json",
+        "docs/launch-evidence/2026-09-24-public-site-readiness.json",
+        "docs/launch-evidence/2026-09-23-hub-workflow-readiness.json"
+      ]
+    }
+  ]
+}
