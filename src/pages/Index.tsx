@@ -5,10 +5,10 @@ import HeroSection from "@/components/sections/HeroSection";
 import WhyDifferentSection from "@/components/sections/WhyDifferentSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import CTASection from "@/components/sections/CTASection";
-import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 
 const Index = forwardRef<HTMLDivElement>((_props, ref) => {
-  usePageTitle("Housecall & Clinic Veterinary Care Coming to Boulder");
+  usePublicRouteMetadata("/");
   return (
     <div ref={ref} className="min-h-screen flex flex-col">
       <Header />

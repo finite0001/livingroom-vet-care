@@ -1,6 +1,6 @@
 import { practice, practiceAddress, practiceMapsUrl, practiceLaunchSummary } from "@/config/practice";
 import { useState } from "react";
-import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,7 +59,7 @@ interface ContactFormData {
 }
 
 const Contact = () => {
-  usePageTitle("Contact Us");
+  usePublicRouteMetadata("/contact");
   const { toast } = useToast();
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",

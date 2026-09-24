@@ -1,5 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { usePageMetadata } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,10 +8,14 @@ import { Home, ArrowLeft } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
+  usePageMetadata({
+    title: "Page Not Found",
+    description: "The requested page could not be found on The Living Room Vet website.",
+    noIndex: true,
+  });
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-    document.title = "Page Not Found — The Living Room Vet";
   }, [location.pathname]);
 
   return (

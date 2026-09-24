@@ -1,20 +1,23 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Activity, Heart, Dog, Stethoscope, Scissors } from "lucide-react";
 import diagnosticsImage from "@/assets/service-diagnostics.jpg";
 
 const IllnessCare = () => {
+  usePublicRouteMetadata("/services/illness-care");
+
   return (
     <ServiceDetailLayout
       title="Illness Care"
-      subtitle="Same-Day Care When Your Pet Isn't Feeling Well"
-      description="When something feels off with your pet, you need answers and a plan—without the long wait. Our illness visits combine careful listening, thorough exams, and in-house diagnostics so we can identify what's going on and get treatment started the same day."
+      subtitle="Thoughtful Care When Your Pet Isn't Feeling Well"
+      description="When something feels off with your pet, you need answers and a plan. Our planned illness visits will center on careful listening, thorough exams, and clear next steps, with availability and urgent-care boundaries confirmed before scheduling opens."
       heroImage={diagnosticsImage}
       heroImageAlt="Veterinarian gently examining a pet during a sick visit"
       icon={Activity}
       benefits={[
-        "Same-day appointments for sick pets when possible",
+        "Illness appointments for sick pets when availability allows",
         "Thoughtful, unhurried exams that let us listen first",
-        "In-house labs and imaging for fast answers",
+        "Planned lab and imaging options when clinically appropriate",
         "Clear treatment plans with tiered options",
         "Written estimates before any major treatment",
         "Low-stress handling throughout every visit",
@@ -35,7 +38,7 @@ const IllnessCare = () => {
         {
           title: "Targeted Diagnostics",
           description:
-            "Bloodwork, urinalysis, X-rays, or ultrasound as needed—run in-house so we can review results together the same visit.",
+            "Bloodwork, urinalysis, X-rays, or ultrasound may be recommended as available and clinically appropriate. Timing and location will be confirmed before appointments open.",
         },
         {
           title: "Treatment Plan with Options",
@@ -43,9 +46,9 @@ const IllnessCare = () => {
             "We'll explain what we found and walk through treatment options with written estimates so you can choose what fits your pet and your budget.",
         },
         {
-          title: "Same-Day Treatment When Possible",
+          title: "Treatment Guidance When Care Begins",
           description:
-            "Most plans start that day—medications, fluids, or supportive care—so your pet can begin feeling better right away.",
+            "When care can safely begin during the visit, we will explain the recommended medications, fluids, or supportive care and what to watch for at home.",
         },
         {
           title: "Follow-Up & Recheck",
@@ -57,7 +60,7 @@ const IllnessCare = () => {
         {
           question: "How quickly can I get a sick visit?",
           answer:
-            "We hold daily appointment slots for sick pets and do our best to see urgent concerns the same day. Call or text us as soon as you notice something off and we'll find the soonest opening.",
+            "Illness-care availability will be confirmed before launch. The public website form is not monitored for urgent or emergency requests.",
         },
         {
           question: "What should I bring to a sick visit?",
@@ -77,7 +80,7 @@ const IllnessCare = () => {
         {
           question: "Is this different from a wellness visit?",
           answer:
-            "Yes—wellness visits focus on prevention, while illness visits focus on identifying and treating a current concern. Both are unhurried, but illness visits often include same-day diagnostics and treatment.",
+            "Yes. Wellness visits focus on prevention, while illness visits focus on identifying and treating a current concern. Diagnostic and treatment timing will depend on the final service menu and appointment availability.",
         },
       ]}
       relatedServices={[

@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { practice } from "@/config/practice";
 import { Play, Expand } from "lucide-react";
+import { Link } from "react-router-dom";
 import ScrollReveal, { StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import heroImage from "@/assets/hero-living-room.jpg";
 import catRoomImage from "@/assets/experience-cat-room.jpg";
@@ -69,8 +71,10 @@ const VirtualTour = () => {
         </StaggerContainer>
 
         <ScrollReveal variant="fade" delay={0.2} className="text-center mt-12">
-          <p className="text-muted-foreground mb-4">Want to see it in person?</p>
-          <Button variant="default" size="lg">Schedule a Tour</Button>
+          <p className="text-muted-foreground mb-4">Want updates as the space gets closer to opening?</p>
+          <Link to={practice.contactPath}>
+            <Button variant="default" size="lg">Request Opening Updates</Button>
+          </Link>
         </ScrollReveal>
       </div>
     </section>

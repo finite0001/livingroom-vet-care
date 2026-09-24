@@ -74,6 +74,8 @@ const Header = React.forwardRef<HTMLElement>((_, ref) => {
           className="lg:hidden p-2 text-charcoal"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-main-navigation"
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -82,11 +84,12 @@ const Header = React.forwardRef<HTMLElement>((_, ref) => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-cream-light border-t border-border animate-fade-in">
-          <nav className="container py-6 flex flex-col gap-4">
+          <nav id="mobile-main-navigation" className="container py-6 flex flex-col gap-4" aria-label="Mobile main navigation">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
                 className={cn(
                   "text-base font-medium transition-colors py-2",
                   isActive(link.href)

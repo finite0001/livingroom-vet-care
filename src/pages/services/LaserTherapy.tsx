@@ -1,8 +1,11 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Zap, Dog, Heart, Stethoscope } from "lucide-react";
 import laserImage from "@/assets/service-laser.jpg";
 
 const LaserTherapy = () => {
+  usePublicRouteMetadata("/services/laser-therapy");
+
   return (
     <ServiceDetailLayout
       title="Laser Therapy"
@@ -125,49 +128,40 @@ const LaserTherapy = () => {
         </div>
       </section>
 
-      {/* Pricing/Packages */}
+      {/* Care planning */}
       <section className="py-20 bg-background">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Treatment Packages
+              Care Planning Options
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              We offer package pricing for laser therapy to make ongoing care more affordable.
+              Laser therapy pricing and package options will be confirmed before appointments open.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { name: "Single Session", sessions: "1 treatment", best: "Trial or minor issues" },
-                { name: "Starter Package", sessions: "6 treatments", best: "Acute injuries" },
-                { name: "Wellness Package", sessions: "10 treatments", best: "Chronic conditions", popular: true },
+                { name: "Initial Treatment", sessions: "Visit plan TBD", best: "Trial or minor issues" },
+                { name: "Treatment Series", sessions: "Frequency TBD", best: "Acute injuries" },
+                { name: "Maintenance Plan", sessions: "Cadence TBD", best: "Chronic conditions" },
               ].map((pkg) => (
                 <div 
                   key={pkg.name} 
-                  className={`rounded-2xl p-6 shadow-soft ${
-                    pkg.popular 
-                      ? "bg-gradient-warm text-primary-foreground ring-2 ring-primary" 
-                      : "bg-cream-light"
-                  }`}
+                  className="rounded-2xl bg-cream-light p-6 shadow-soft"
                 >
-                  {pkg.popular && (
-                    <span className="inline-block px-3 py-1 rounded-full bg-cream-light/20 text-xs font-medium mb-3">
-                      Most Popular
-                    </span>
-                  )}
-                  <h3 className={`font-heading font-bold text-lg mb-1 ${pkg.popular ? "text-primary-foreground" : "text-foreground"}`}>
+                  <h3 className="font-heading font-bold text-lg mb-1 text-foreground">
                     {pkg.name}
                   </h3>
-                  <p className={`text-sm font-medium mb-2 ${pkg.popular ? "text-primary-foreground/80" : "text-primary"}`}>
+                  <p className="text-sm font-medium mb-2 text-primary">
                     {pkg.sessions}
                   </p>
-                  <p className={`text-sm ${pkg.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  <p className="text-sm text-muted-foreground">
                     Best for: {pkg.best}
                   </p>
                 </div>
               ))}
             </div>
             <p className="text-muted-foreground text-sm mt-6">
-              Contact us for current pricing. Package sessions can be shared among pets in the same household.
+              Final visit cadence, pricing, and household policies require owner approval.
             </p>
           </div>
         </div>

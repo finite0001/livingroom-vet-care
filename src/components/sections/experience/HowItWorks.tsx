@@ -8,12 +8,12 @@ const steps = [
   {
     number: "01",
     icon: MessageCircle,
-    title: "Text When You Arrive",
-    description: "Pull into our parking lot and send a quick text. We'll immediately prepare your private exam room and let you know when it's ready.",
+    title: "Arrive With Less Waiting",
+    description: "Our clinic concept is designed around a calmer arrival, with final check-in details to be shared before opening.",
     details: [
       "No need to come inside and wait",
       "Your pet stays calm in familiar surroundings",
-      "We prepare the room specifically for your pet",
+      "Room preparation details will be confirmed before opening",
     ],
     image: textArrivalImage,
     imageAlt: "Pet parent texting from their car with happy dog",
@@ -22,7 +22,7 @@ const steps = [
     number: "02",
     icon: DoorOpen,
     title: "Walk Straight In",
-    description: "When we text you back, walk directly from your car to your assigned living room. Separate entrances for cats and dogs ensure no stressful encounters.",
+    description: "The planned flow helps pets move from arrival into a private living room-style space with less waiting-room stress.",
     details: [
       "Dedicated cat entrance on one side",
       "Dedicated dog entrance on the other",

@@ -1,8 +1,11 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Heart, Dog, Zap, Stethoscope } from "lucide-react";
 import wellnessImage from "@/assets/service-wellness.jpg";
 
 const WellnessCare = () => {
+  usePublicRouteMetadata("/services/wellness");
+
   return (
     <ServiceDetailLayout
       title="Wellness Care"
@@ -46,7 +49,7 @@ const WellnessCare = () => {
         },
         {
           question: "Do you offer wellness packages?",
-          answer: "Yes! We offer wellness packages that bundle common preventive services at a savings. Ask us about our puppy, adult, and senior wellness packages.",
+          answer: "Wellness package options and pricing will be confirmed before appointments open.",
         },
         {
           question: "What should I bring to the appointment?",
@@ -64,10 +67,10 @@ const WellnessCare = () => {
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Wellness Packages
+              Planned Wellness Options
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Save on preventive care with our bundled wellness packages, designed for every life stage.
+              Final package availability, contents, and pricing require owner approval before launch.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[

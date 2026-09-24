@@ -1,13 +1,16 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Scissors, Dog, Heart, Zap, Stethoscope } from "lucide-react";
 import surgeryImage from "@/assets/service-surgery.jpg";
 
 const Surgery = () => {
+  usePublicRouteMetadata("/services/surgery");
+
   return (
     <ServiceDetailLayout
       title="Surgery"
       subtitle="Compassionate Surgical Care"
-      description="When your pet needs surgery, you want a team that combines technical expertise with genuine compassion. Our surgical suite is equipped with modern monitoring technology, and every procedure is performed with the same care we'd give our own pets."
+      description="When your pet needs surgery, you want a team that combines technical expertise with genuine compassion. Surgical services, monitoring equipment, and clinic-only availability will be confirmed before appointments open."
       heroImage={surgeryImage}
       heroImageAlt="Veterinary surgical team in a modern, well-equipped operating suite"
       icon={Scissors}
@@ -50,7 +53,7 @@ const Surgery = () => {
         {
           title: "Going Home",
           description:
-            "We'll walk you through aftercare instructions, medications, and activity restrictions. We're always a phone call away.",
+            "We'll walk you through aftercare instructions, medications, activity restrictions, and the approved follow-up channels before your pet goes home.",
         },
       ]}
       faq={[
@@ -72,12 +75,12 @@ const Surgery = () => {
         {
           question: "When can I take my pet home?",
           answer:
-            "Most pets go home the same day once they're fully awake, comfortable, and eating. We'll call you as soon as your pet is ready and schedule a convenient pickup time.",
+            "Discharge timing and pickup communication will depend on the procedure, your pet's recovery, and the approved clinic workflow.",
         },
         {
           question: "What if there's an emergency after hours?",
           answer:
-            "We provide an after-hours contact number for post-surgical concerns. For true emergencies, we'll direct you to the nearest emergency hospital and coordinate care with their team.",
+            "After-hours and emergency referral instructions will be confirmed before surgical appointments open. For true emergencies, contact an open veterinary emergency hospital directly.",
         },
       ]}
       relatedServices={[
@@ -91,10 +94,10 @@ const Surgery = () => {
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Our Surgical Services
+              Planned Surgical Scope
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              From routine procedures to complex soft tissue surgeries, your pet is in experienced hands.
+              Final procedure availability will depend on owner-approved launch scope, staffing, equipment, and whether the visit requires the clinic setting.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[

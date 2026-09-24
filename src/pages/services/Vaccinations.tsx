@@ -1,8 +1,11 @@
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Syringe, Heart, Dog, Stethoscope } from "lucide-react";
 import vaccinationsImage from "@/assets/service-vaccinations.jpg";
 
 const Vaccinations = () => {
+  usePublicRouteMetadata("/services/vaccinations");
+
   return (
     <ServiceDetailLayout
       title="Vaccinations"
@@ -19,7 +22,7 @@ const Vaccinations = () => {
         "gentle handling injection techniques for comfort",
         "Bundled with wellness exams for convenience",
         "Puppy and kitten series guidance",
-        "Travel and boarding vaccine certificates",
+        "Certificate options to be confirmed before launch",
       ]}
       whatToExpect={[
         {
@@ -43,9 +46,9 @@ const Vaccinations = () => {
             "We'll observe your pet briefly afterward and explain what mild reactions to watch for at home, plus when to call us.",
         },
         {
-          title: "Schedule & Reminders",
+          title: "Planning & Reminders",
           description:
-            "You'll receive a clear vaccination schedule and we'll send friendly reminders when boosters are due so nothing slips through the cracks.",
+            "Reminder and certificate workflows will be confirmed before vaccination appointments open.",
         },
       ]}
       faq={[
@@ -62,7 +65,7 @@ const Vaccinations = () => {
         {
           question: "What is a titer test?",
           answer:
-            "A titer test measures the level of antibodies in your pet's blood for specific diseases. If antibody levels are adequate, your pet may not need a booster. We offer titers for distemper, parvovirus, and adenovirus.",
+            "A titer test measures the level of antibodies in your pet's blood for specific diseases. Titer availability and the specific panels offered will be confirmed before launch.",
         },
         {
           question: "Are there side effects?",
@@ -72,7 +75,7 @@ const Vaccinations = () => {
         {
           question: "My pet needs vaccines for boarding—can you help?",
           answer:
-            "Absolutely! We provide all standard boarding and daycare vaccines (Bordetella, canine influenza, etc.) and can issue official vaccination certificates. Just let us know your timeline so we can plan ahead.",
+            "Boarding, daycare, travel vaccines, and certificate options will be confirmed as part of the owner-approved launch service menu.",
         },
       ]}
       relatedServices={[
@@ -229,7 +232,7 @@ const Vaccinations = () => {
                 {
                   lifestyle: "Boarding & Travel",
                   icon: "✈️",
-                  vaccines: ["Bordetella", "Canine Influenza", "Rabies certificate"],
+                  vaccines: ["Bordetella", "Canine Influenza", "Documentation requirements TBD"],
                 },
                 {
                   lifestyle: "Indoor-Only Cat",

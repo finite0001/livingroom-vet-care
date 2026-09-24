@@ -5,10 +5,10 @@ import HowItWorks from "@/components/sections/experience/HowItWorks";
 import WhyItMatters from "@/components/sections/experience/WhyItMatters";
 import VirtualTour from "@/components/sections/experience/VirtualTour";
 import CTASection from "@/components/sections/CTASection";
-import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 
 const Experience = () => {
-  usePageTitle("The Experience");
+  usePublicRouteMetadata("/experience");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

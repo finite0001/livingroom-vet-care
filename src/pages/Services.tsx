@@ -1,5 +1,5 @@
 import { practice, practiceLaunchSummary } from "@/config/practice";
-import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -33,14 +33,14 @@ const featuredServices = [
   {
     icon: Activity,
     title: "Illness Care",
-    description: "Same-day care for sick pets with thoughtful workups, clear communication, and treatment plans tailored to your pet's condition and your budget.",
+    description: "Planned illness-care visits for sick pets with thoughtful workups, clear communication, and treatment plans tailored to your pet's condition and your budget.",
     href: "/services/illness-care",
     image: diagnosticsImage,
   },
   {
     icon: FlaskConical,
     title: "Diagnostics",
-    description: "In-house laboratory testing, digital radiography, and ultrasound services for same-day results so we can start treatment sooner.",
+    description: "Planned diagnostic workflows to support clear answers and timely treatment recommendations as equipment and visit types are confirmed.",
     href: "/services/diagnostics",
     image: diagnosticsImage,
   },
@@ -71,7 +71,7 @@ const additionalServices = [
 ];
 
 const Services = () => {
-  usePageTitle("Our Services");
+  usePublicRouteMetadata("/services");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -162,10 +162,10 @@ const Services = () => {
             <ScrollReveal variant="fadeUp" className="text-center max-w-2xl mx-auto mb-16">
               <p className="text-primary font-medium mb-3">More Services</p>
               <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                Complete Veterinary Care
+                Additional Planned Care
               </h2>
               <p className="text-muted-foreground text-lg">
-                Everything your pet needs under one roof.
+                More care areas under review for the owner-approved service menu.
               </p>
             </ScrollReveal>
 
@@ -205,8 +205,7 @@ const Services = () => {
                 Not Sure What Your Pet Needs?
               </h2>
               <p className="text-primary-foreground/80 text-lg leading-relaxed mb-8">
-                Schedule a wellness consultation and we'll create a personalized care plan 
-                tailored to your pet's age, breed, and lifestyle.
+                Share your interest in wellness care and we'll follow up as availability is confirmed.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to={practice.contactPath}>
@@ -214,7 +213,7 @@ const Services = () => {
                     size="xl" 
                     className="bg-cream-light text-charcoal hover:bg-cream-light/90 shadow-elevated font-semibold"
                   >
-                    Schedule a Consultation
+                    Ask About Wellness Care
                   </Button>
                 </Link>
                 <Link to={practice.contactPath}>
