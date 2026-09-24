@@ -130,6 +130,8 @@ Acceptance evidence:
 
 Goal: make owner/veterinarian review actionable before public launch.
 
+Current artifact: [pre-phone/CloudTalk clinical and staff acceptance checklist](../../docs/pre-phone-cloudtalk-acceptance-checklist.md).
+
 Steps:
 
 1. Prepare a short checklist for Dr. Susan Edler covering:
