@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-09-24T05:35:29.449Z",
+  "generatedAt": "2026-09-24T05:46:41.965Z",
   "evidenceDate": "2026-09-24",
   "status": "completed",
   "steps": [
     {
       "id": "hosted-readiness",
       "command": "node scripts/hosted-readiness-inventory.mjs --output docs/launch-evidence/2026-09-24-hosted-readiness-inventory.json",
-      "startedAt": "2026-09-24T05:33:53.469Z",
-      "finishedAt": "2026-09-24T05:34:14.213Z",
+      "startedAt": "2026-09-24T05:45:21.770Z",
+      "finishedAt": "2026-09-24T05:45:32.460Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -18,8 +18,8 @@
     {
       "id": "remote-only-migration-file-search",
       "command": "node scripts/find-remote-only-migrations.mjs --output docs/launch-evidence/2026-09-24-remote-only-migration-file-search.json",
-      "startedAt": "2026-09-24T05:34:14.213Z",
-      "finishedAt": "2026-09-24T05:34:20.994Z",
+      "startedAt": "2026-09-24T05:45:32.461Z",
+      "finishedAt": "2026-09-24T05:45:38.360Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -34,8 +34,8 @@
     {
       "id": "remote-only-migration-source-comparison",
       "command": "node scripts/compare-remote-only-migration-sources.mjs --output docs/launch-evidence/2026-09-24-remote-only-migration-source-comparison.json",
-      "startedAt": "2026-09-24T05:34:20.994Z",
-      "finishedAt": "2026-09-24T05:34:24.204Z",
+      "startedAt": "2026-09-24T05:45:38.360Z",
+      "finishedAt": "2026-09-24T05:45:41.211Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -50,8 +50,8 @@
     {
       "id": "remote-public-schema",
       "command": "node scripts/supabase-schema-inventory.mjs --output docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json",
-      "startedAt": "2026-09-24T05:34:24.204Z",
-      "finishedAt": "2026-09-24T05:35:20.311Z",
+      "startedAt": "2026-09-24T05:45:41.211Z",
+      "finishedAt": "2026-09-24T05:46:37.600Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -62,8 +62,8 @@
     {
       "id": "edge-functions",
       "command": "node scripts/supabase-functions-inventory.mjs --output docs/launch-evidence/2026-09-24-edge-functions-inventory.json",
-      "startedAt": "2026-09-24T05:35:20.311Z",
-      "finishedAt": "2026-09-24T05:35:28.462Z",
+      "startedAt": "2026-09-24T05:46:37.600Z",
+      "finishedAt": "2026-09-24T05:46:41.394Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -74,8 +74,8 @@
     {
       "id": "remote-edge-function-review",
       "command": "node scripts/review-remote-edge-functions.mjs --inventory docs/launch-evidence/2026-09-24-edge-functions-inventory.json --output docs/launch-evidence/2026-09-24-remote-edge-function-review.json",
-      "startedAt": "2026-09-24T05:35:28.462Z",
-      "finishedAt": "2026-09-24T05:35:28.699Z",
+      "startedAt": "2026-09-24T05:46:41.394Z",
+      "finishedAt": "2026-09-24T05:46:41.524Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -90,8 +90,8 @@
     {
       "id": "public-site",
       "command": "node scripts/public-site-readiness.mjs --output docs/launch-evidence/2026-09-24-public-site-readiness.json",
-      "startedAt": "2026-09-24T05:35:28.699Z",
-      "finishedAt": "2026-09-24T05:35:28.921Z",
+      "startedAt": "2026-09-24T05:46:41.524Z",
+      "finishedAt": "2026-09-24T05:46:41.659Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -102,8 +102,8 @@
     {
       "id": "hub-workflows",
       "command": "node scripts/hub-workflow-readiness.mjs --schema-inventory docs/launch-evidence/2026-09-24-remote-public-schema-inventory.json --functions-inventory docs/launch-evidence/2026-09-24-edge-functions-inventory.json --output docs/launch-evidence/2026-09-24-hub-workflow-readiness.json",
-      "startedAt": "2026-09-24T05:35:28.921Z",
-      "finishedAt": "2026-09-24T05:35:29.163Z",
+      "startedAt": "2026-09-24T05:46:41.659Z",
+      "finishedAt": "2026-09-24T05:46:41.800Z",
       "status": 0,
       "ok": true,
       "stdout": [
@@ -114,8 +114,8 @@
     {
       "id": "commercial-summary",
       "command": "node scripts/commercial-readiness-summary.mjs --output docs/launch-evidence/2026-09-24-commercial-readiness-summary.json",
-      "startedAt": "2026-09-24T05:35:29.163Z",
-      "finishedAt": "2026-09-24T05:35:29.444Z",
+      "startedAt": "2026-09-24T05:46:41.800Z",
+      "finishedAt": "2026-09-24T05:46:41.964Z",
       "status": 0,
       "ok": true,
       "stdout": [
