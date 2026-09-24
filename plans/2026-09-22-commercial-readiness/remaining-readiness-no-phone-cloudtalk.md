@@ -12,6 +12,7 @@ Scope: complete all software/evidence work that can be finished before public ph
 - Local current-stack replay now has database evidence through that Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](../../docs/launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
 - Stage 2 pre-apply evidence has been refreshed without hosted SQL mutation: [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](../../docs/launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md).
 - Local disabled/test-mode delivery evidence exists: [2026-09-24 no-live-send local workflow drill](../../docs/launch-evidence/2026-09-24-no-live-send-local-drill.md).
+- Local integrated synthetic workflow evidence exists: [2026-09-24 integrated synthetic local workflow proof](../../docs/launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md).
 - `/hub/schedule` is now the canonical appointment workspace.
 - Inventory, invoices, payment collection/reconciliation, certificates, care reminders, estimate publication, and delivery operations already have local implementation and tests. Do not restart Phase 3 from an empty-state assumption.
 - Scheduler Vault values are intentionally absent, so database cron is contained until explicit provider/scheduler commissioning.
@@ -125,7 +126,7 @@ Focus files already present:
 
 Acceptance evidence:
 
-- One integrated local or hosted-staging synthetic run.
+- One integrated local or hosted-staging synthetic run. Local pre-hosted proof is complete in [2026-09-24 integrated synthetic local workflow proof](../../docs/launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md); hosted/staff acceptance remains separate.
 - Expired/insufficient stock blocked.
 - Retry does not duplicate stock movement, charge, payment, certificate, or outbound delivery.
 - Stripe sandbox/test webhook replay is idempotent.

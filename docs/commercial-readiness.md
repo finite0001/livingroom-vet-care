@@ -28,6 +28,7 @@ Current evidence:
 - [2026-09-24 readiness refresh](launch-evidence/2026-09-24-readiness-refresh.json)
 - [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md)
 - [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md)
+- [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md)
 - [2026-09-24 hosted readiness inventory](launch-evidence/2026-09-24-hosted-readiness-inventory.json)
 - [2026-09-24 remote public schema inventory](launch-evidence/2026-09-24-remote-public-schema-inventory.json)
 - [2026-09-24 Edge function inventory](launch-evidence/2026-09-24-edge-functions-inventory.json)
