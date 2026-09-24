@@ -272,9 +272,7 @@ const Contact = () => {
                       Request a Visit or Ask a Question
                     </h2>
                     <p className="text-sm text-muted-foreground mb-6">
-                      Submitting this form requests follow-up; it does not
-                      reserve an appointment. Please avoid including medical
-                      records or sensitive payment information.
+                      Submitting this form requests follow-up; it is not a confirmed appointment. Please avoid including medical records or sensitive payment information.
                     </p>
                     <form onSubmit={handleSubmit} className="space-y-5">
                       {receiptNotice && <p role="status">{receiptNotice}</p>}

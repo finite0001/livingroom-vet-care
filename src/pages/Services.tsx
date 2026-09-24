@@ -33,14 +33,14 @@ const featuredServices = [
   {
     icon: Activity,
     title: "Illness Care",
-    description: "Same-day care for sick pets with thoughtful workups, clear communication, and treatment plans tailored to your pet's condition and your budget.",
+    description: "Illness care for sick pets when availability allows, with thoughtful workups, clear communication, and treatment plans tailored to your pet's condition and your budget.",
     href: "/services/illness-care",
     image: diagnosticsImage,
   },
   {
     icon: FlaskConical,
     title: "Diagnostics",
-    description: "In-house laboratory testing, digital radiography, and ultrasound services for same-day results so we can start treatment sooner.",
+    description: "Planned laboratory testing, digital radiography, and ultrasound services with result timing confirmed before appointments open.",
     href: "/services/diagnostics",
     image: diagnosticsImage,
   },
