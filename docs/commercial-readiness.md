@@ -27,6 +27,7 @@ Current evidence:
 - [2026-09-24 commercial readiness summary](launch-evidence/2026-09-24-commercial-readiness-summary.json)
 - [2026-09-24 readiness refresh](launch-evidence/2026-09-24-readiness-refresh.json)
 - [2026-09-24 public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md)
+- [2026-09-24 health Edge smoke](launch-evidence/2026-09-24-health-edge-smoke.md)
 
 ## Current live status — September 15, 2026
 
@@ -134,7 +135,7 @@ The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/pl
 | Unified inbox without Gmail dependence | Signed Resend/Twilio ingestion, reviewed sender-assignment UI/RPC, provider-processing review and audited retry UI, durable outbox, consent UI, personal read state and paginated inbox implemented | Controlled inbound/provider callbacks and hosted acceptance remain |
 | Standalone ezyVet feature parity and retained source evidence | Existing source records and reviewed provenance remain preserved; authorized access is read-only workflow reference | Complete native workflow gap assessment and dependency retirement; ezyVet integration commissioning is no longer a launch gate |
 | Logo/new visuals | PR12 approved armchair/dog/cat direction; PR33 medical-cross PNG with live descriptor integrated into public header/footer, responsive previews checked | Final owner acceptance and optimized/vector master; raster texture/fringe and print/monochrome reproduction review remain |
-| Supabase/Vercel + owned domain | Dedicated Supabase provisioned; Vercel config; domain known | Frontend environment parity, staff/Auth SMTP, DNS/HTTPS, backups/restore, monitoring and cutover |
+| Supabase/Vercel + owned domain | Dedicated Supabase provisioned; hosted migrations reconciled; Vercel Production and HTTPS custom domains verified | Public-contact content, provider commissioning, production Auth SMTP, backup/restore acceptance and final owner launch approval |
 
 ## Historical deployment inventory — 2026-09-12
 
@@ -142,7 +143,7 @@ The [clinical ezyVet migration plan](../plans/20260913-ezyvet-clinical-import/pl
 - The original backend is accessible through the Lovable connector, despite being inaccessible through the Supabase connector. Lovable project `7ea421c9-31d9-4bc4-acc7-d206c92b4b42` is associated with repository `livingroom-vet-care`, previews merged commit `56f8315`, and has a published `livingroom-vet-care.lovable.app` site.
 - Original database has 14 migrations, 1 Auth user, 1 profile, 1 role, 8 app settings; every other public table has zero rows and Storage has zero objects. These are exact count queries, not estimated statistics. No row contents or credentials were exported. Recheck immediately before cutover because counts can change.
 - Dedicated project `mgadheotkdnrsatfivjy` now has all 47 reviewed repository migrations through invoice email and 120 RLS-enabled public tables. Only the eight existing app settings rows are populated; Auth users and Storage objects remain zero. [The hosted commissioning report](hosted-schema-commissioning.md) records preflight, private exports and live checks. Outbound settings remain unchanged and disabled. [Reviewed Edge deployment and guarded hosted probes](hosted-edge-commissioning.md) are complete; actual staff and provider workflow acceptance remain pending.
-- The current tracked frontend connection still points at the original backend. Its missing clinical migration means environment parity remains an actual rollout task. No original-backend writes or public/DNS cutover were performed during this audit.
+- At this 2026-09-12 audit checkpoint, the tracked frontend connection still pointed at the original backend. Later dated evidence supersedes this environment-parity statement; use the September 24 hosted readiness snapshot for current backend/domain state.
 - The Vite/SWC toolchain update resolves Vite/esbuild findings. The user authorized patched React Router v7 while preserving routes and navigation; PR7 implements v7.18.3. The combined installed dependency audit reported zero vulnerabilities on 2026-09-12.
 
 ## Completion gates

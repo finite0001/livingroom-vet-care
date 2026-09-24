@@ -45,7 +45,7 @@ The worker records an attempt before transport and finalizes only under its leas
 
 Durable queueing, signed callbacks, inbound processing, consent/suppression, inbox review, clinical/invoice attachments and reminder bridges are implemented. Public document/payment capabilities have separate configuration and default-off gates. Their exact review paths must be used; the generic text composer cannot authorize arbitrary private attachments.
 
-Provider accounts/credentials, receiving routes, Auth SMTP, scheduling and real controlled round trips remain uncommissioned. Sending DNS is verified, but root-domain receiving remains off. See [domain setup](email-domain-setup.md), [inbound processing](inbound-communications.md), [reminder dispatch](reminder-dispatch.md), [record release email](release-email-delivery.md), [invoice email](invoice-email-delivery.md) and [payment delivery](features/staff-payment-delivery-ui.md). A passing local test does not enable any provider flag or authorize a send.
+Provider accounts/credentials, application receiving routes, production Auth SMTP, scheduling and real controlled round trips remain uncommissioned. Sending DNS is verified, and Fastmail root-domain human mail has separate evidence; client reply ingestion through the application remains a distinct commissioning gate. See [domain setup](email-domain-setup.md), [mail commissioning](mail-commissioning-plan.md), [inbound processing](inbound-communications.md), [reminder dispatch](reminder-dispatch.md), [record release email](release-email-delivery.md), [invoice email](invoice-email-delivery.md) and [payment delivery](features/staff-payment-delivery-ui.md). A passing local test does not enable any provider flag or authorize a send.
 
 ## Verification
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T05:46:41.381Z",
+  "generatedAt": "2026-09-24T06:22:47.278Z",
   "note": "Read-only Supabase Edge Function inventory. Function hashes and source paths are intentionally omitted; this captures deployment shape, not code equivalence.",
   "projectRef": "mgadheotkdnrsatfivjy",
   "command": {
@@ -12,7 +12,7 @@
   },
   "counts": {
     "localFunctions": 48,
-    "remoteFunctions": 34
+    "remoteFunctions": 35
   },
   "localSlugs": [
     "capture-conversation-email",
@@ -336,6 +336,13 @@
       "verifyJwt": false,
       "importMap": false,
       "updatedAt": "2026-09-23T03:47:02.934Z"
+    },
+    {
+      "slug": "health",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "updatedAt": "2026-09-24T06:21:30.896Z"
     }
   ],
   "readinessPresence": [
@@ -415,7 +422,6 @@
     "capture-inbound-attachment",
     "cleanup-abandoned-attachment",
     "estimate-decision",
-    "health",
     "prepare-estimate-decision-grant",
     "prepare-estimate-publication",
     "read-estimate-publication-artifact",

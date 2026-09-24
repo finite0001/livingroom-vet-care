@@ -4,6 +4,8 @@
 
 Resend domain `thelivingroom.vet` was created through the existing signed-in account on 2026-09-12. Domain ID: `d0425972-bcaa-4a5b-ba4a-5566bdec519c`; region: `us-east-1`. After the owner-approved DNS save and verification request, Resend now reports **Verified** and that the domain is ready to send emails. Sending is requested On; **receiving is saved Off**. The onboarding screen showed proposed receiving DNS but did not persist receiving activation.
 
+This document records the Resend sending-domain setup. It does not supersede the later [mail commissioning plan](mail-commissioning-plan.md), which records Fastmail root-domain mail verification and staging Auth delivery. Human root-domain mail and application client-reply ingestion are separate tracks: Fastmail can be verified for private staff mail while Resend receiving/webhook processing remains uncommissioned for client replies.
+
 The three sending-verification DNS records below are now saved and confirmed through authoritative DNS. Sending-domain verification has completed; no webhook was configured, API key created or message sent. Mailbox names remain unpublished. Domain registration in Resend alone does not establish working practice email or Supabase Auth SMTP.
 
 TLS was changed from Opportunistic to **Enforced** and visibly saved. Recipient servers that cannot negotiate TLS will fail delivery rather than receive an unencrypted message. No tracking subdomain was configured and the new tracking form was not submitted. No click/open tracking was enabled by this preparation; the exact effective tracking behavior remains a controlled-message verification gate, not an inferred Off flag. The account banner concerning shared tracking on two other domains was left unchanged.
@@ -52,7 +54,7 @@ The owner's `admin@` response was interpreted and stated as **`admin@thelivingro
 
 The earlier Resend root-MX candidate is superseded by the [mail commissioning proposal](mail-commissioning-plan.md). Reserve root-domain receiving for private staff/administrator mailboxes. Route only the explicit client reply subdomain into the practice inbox. Do not apply Resend receiving MX at `@` from an old setup screen.
 
-A fresh authoritative query on 2026-09-13 returned no root or `reply` MX answers; the existing DMARC quarantine policy remains present. This is evidence of missing receiving configuration, not permission to change routing. Recheck before any authorized write.
+A fresh authoritative query on 2026-09-13 returned no root or `reply` MX answers; later Fastmail root-mail setup is recorded in [mail commissioning](mail-commissioning-plan.md). Treat this subsection as historical Resend-receiving planning. Recheck current authoritative DNS before any authorized write.
 
 ## Verification and publication gates
 
@@ -63,4 +65,4 @@ A fresh authoritative query on 2026-09-13 returned no root or `reply` MX answers
 5. Review Supabase Auth SMTP separately, including invitation/password-reset sender and return URLs. Use server secret storage for all future API keys and webhook signing secrets; the public DKIM key above does not authorize API access.
 6. Perform root MX cutover only for the selected private mailbox provider, with its recovery workflow ready and an explicit operational decision. Publish mailbox names only after actual inbound/read-worker and controlled-delivery evidence is complete.
 
-See [messaging environments](messaging-environments.md), [inbound processing](inbound-communications.md), [deployment runbook](deployment-runbook.md) and [commercial-readiness tracker](commercial-readiness.md). The sending DNS additions are saved and authoritative values are confirmed. Resend sending-domain verification is complete; inboxes, Auth SMTP and application delivery have not been commissioned.
+See [messaging environments](messaging-environments.md), [inbound processing](inbound-communications.md), [deployment runbook](deployment-runbook.md) and [commercial-readiness tracker](commercial-readiness.md). The sending DNS additions are saved and authoritative values are confirmed. Resend sending-domain verification is complete; production client-reply ingestion, production Auth SMTP and application delivery have not been commissioned.

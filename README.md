@@ -14,7 +14,7 @@ npm ci
 npm run dev
 ```
 
-The tracked `.env` still points at the original Lovable backend. Override it before local integration work. Never use production data for browser tests, and never place service-role or provider secrets in `VITE_*` variables.
+The repository intentionally does not track a real `.env` file. Keep `.env` and `.env.local` ignored, derive local browser values from `.env.example`, and never place service-role or provider secrets in `VITE_*` variables.
 
 ## Verification
 
@@ -37,13 +37,13 @@ npx playwright test
 - A public header/footer medical-logo candidate with live readable text; owner approval and a final optimized/vector master remain pending.
 - Explicit database grants, CI checks and Vercel SPA configuration.
 
-Implementation status spans stacked review branches; this README does not mean those changes are deployed. Reviewed historical ezyVet weight promotion and schema-4 release provenance retain original source values, local reviewed measurements and discrepancy history; no live ezyVet credentials or import activation is implied. See the [readiness evidence tracker](docs/commercial-readiness.md) for branch-specific checks and open gates.
+Implementation status spans current hosted evidence and historical branch receipts. Reviewed historical ezyVet weight promotion and schema-4 release provenance retain original source values, local reviewed measurements and discrepancy history; no live ezyVet credentials or import activation is implied. See the [readiness evidence tracker](docs/commercial-readiness.md) for current checks and open gates.
 
-The new dedicated Supabase project is `mgadheotkdnrsatfivjy`; the original Lovable backend remains unchanged. Connection cutover, data migration, provider credentials and public deployment require the commissioning steps below.
+The selected dedicated Supabase project is `mgadheotkdnrsatfivjy`. Hosted migrations are at parity, Vercel Production targets that backend, and the original Lovable backend remains retained historical state. Provider credentials, public contact content and live commissioning still require the steps below.
 
 ## Clinical workspace and acceptance
 
-The patient workspace includes identity details, weight history, SOAP drafts/signing/addenda, important historical problems, dental and qualitative QOL/body-map charts, native anesthesia records, due plans and certificates. Household contacts and addresses can be edited with server search and duplicate review. These forms await Dr. Susan Edler’s acceptance through the [editable clinical review pack](docs/clinical-review/README.md) and [synthetic offline examples](docs/clinical-review/review-examples.html). Native manual anesthesia records do not imply automatic vendor import, and Antech selection does not imply an active lab connection. See [clinical workflow and deployment gates](docs/clinical-core.md); reconcile and apply the full relevant migration chain before frontend rollout. The original Lovable connection has not been switched.
+The patient workspace includes identity details, weight history, SOAP drafts/signing/addenda, important historical problems, dental and qualitative QOL/body-map charts, native anesthesia records, due plans and certificates. Household contacts and addresses can be edited with server search and duplicate review. These forms await Dr. Susan Edler’s acceptance through the [editable clinical review pack](docs/clinical-review/README.md) and [synthetic offline examples](docs/clinical-review/review-examples.html). Native manual anesthesia records do not imply automatic vendor import, and Antech selection does not imply an active lab connection. See [clinical workflow and deployment gates](docs/clinical-core.md); hosted migration parity does not replace clinical/provider acceptance.
 
 ## Working documents
 
@@ -53,7 +53,7 @@ The patient workspace includes identity details, weight history, SOAP drafts/sig
 - [Staff access and first-admin bootstrap](docs/staff-access.md)
 - [Commercial readiness and current CI evidence](docs/commercial-readiness.md)
 - [Clinical review register](docs/clinical-review/README.md) and [form-by-form decisions](docs/clinical-review/forms-and-decisions.md)
-- [Pending Resend domain and proposed GoDaddy records](docs/email-domain-setup.md)
+- [Email domain setup and commissioning status](docs/email-domain-setup.md)
 - [Messaging environments](docs/messaging-environments.md), [durable outbox](docs/communications-outbox.md), [inbound processing](docs/inbound-communications.md) and [reload recovery](docs/message-recovery.md)
 - [Care plans](docs/care-reminders.md) and [guarded reminder scheduler](docs/reminder-dispatch.md)
 - [Reminder policy controls](docs/features/reminder-delivery-settings.md)

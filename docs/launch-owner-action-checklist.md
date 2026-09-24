@@ -63,12 +63,12 @@ Expected result: public website gate has zero blockers.
 
 ## 4. Provider/dashboard follow-up before live messaging
 
-The launch-critical Supabase functions are deployed and the former conflict slugs now return disabled HTTP 410 responses. Before live provider use:
+The launch-critical Supabase functions are deployed. Before live provider use, configure dashboards only to the current launch slugs:
 
-- Resend delivery webhook should point to `resend-delivery-webhook`.
-- Twilio status callback should point to `twilio-message-status-callback`.
-- Twilio inbound SMS webhook should point to `twilio-inbound-sms`.
-- Legacy callback endpoints `enqueue-message`, `public-contact`, `resend-webhook`, and `twilio-webhook` should not be configured in provider dashboards.
+- Resend delivery webhook: `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/resend-delivery-webhook`.
+- Twilio status callback: `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/twilio-message-status-callback`.
+- Twilio inbound SMS webhook: `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/twilio-inbound-sms`.
+- Legacy callback endpoints `enqueue-message`, `public-contact`, `resend-webhook`, and `twilio-webhook` should not be configured in provider dashboards for the launch path.
 - Scheduler-capable worker slugs such as `dispatch-outbox`, `process-inbound`, and `queue-reminders` must remain unable to run from database cron until scheduler Vault values and provider gates are intentionally commissioned.
 
 Keep `OUTBOUND_DELIVERY_MODE=disabled` until explicit provider round-trip tests are approved.

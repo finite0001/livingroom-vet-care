@@ -20,4 +20,4 @@ Status: core database hardening implemented locally in `20260922203000_appointme
 
 ## Outbound operating-loop follow-up
 
-Appointment reminders now enqueue into `outbound_deliveries`, but staff-triggered `send-email` and `send-sms` still send synchronously through their Edge Functions. Commercial readiness requires one outbound path with shared idempotency, retry, lease ownership, and provider callback semantics before live messaging is enabled.
+Appointment reminders now enqueue into `outbound_deliveries`. The direct `send-email` and `send-sms` Edge Functions are retired HTTP 410 endpoints, so live messaging must use the reviewed durable queue/worker path with shared idempotency, retry, lease ownership and provider callback semantics. Keep provider delivery disabled until controlled round-trip acceptance is approved.
