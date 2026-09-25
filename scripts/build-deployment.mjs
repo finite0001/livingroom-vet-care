@@ -1,9 +1,12 @@
 import { build, loadEnv } from "vite";
-import { verifyDeploymentEnvironment } from "./deployment-environment.mjs";
+import {
+  stripVercelSystemPublicEnv,
+  verifyDeploymentEnvironment,
+} from "./deployment-environment.mjs";
 
 // Private payment/document routes do not opt into browser telemetry.
-// Vercel injects this setting even with automatic system-variable exposure off.
-delete process.env.VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG;
+// Vercel injects VITE_VERCEL_* metadata even though the app does not use it.
+stripVercelSystemPublicEnv(process.env);
 
 try {
   const configuration = verifyDeploymentEnvironment(

@@ -4,7 +4,10 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { verifyDeploymentEnvironment } from "../../scripts/deployment-environment.mjs";
+import {
+  stripVercelSystemPublicEnv,
+  verifyDeploymentEnvironment,
+} from "../../scripts/deployment-environment.mjs";
 
 const project = "mgadheotkdnrsatfivjy";
 const staging = "abcdefghijklmnopqrst";
@@ -81,6 +84,25 @@ test("contact configuration cannot route a new site's inquiries into another bac
     const env = { ...configured, ...delta };
     assert.throws(() => verifyDeploymentEnvironment(env, env));
   }
+});
+
+test("vercel system VITE metadata is stripped before public allowlist checks", () => {
+  const env = {
+    ...valid(),
+    VITE_VERCEL_BRANCH_URL: "livingroom-vet-care-git-main.example.vercel.app",
+    VITE_VERCEL_DEPLOYMENT_ID: "dpl_synthetic",
+    VITE_VERCEL_ENV: "production",
+    VITE_VERCEL_GIT_COMMIT_SHA: "46cb15e",
+    VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG: "synthetic-observability",
+    VITE_VERCEL_PROJECT_ID: "prj_synthetic",
+    VITE_VERCEL_URL: "livingroom-vet-care.example.vercel.app",
+  };
+  stripVercelSystemPublicEnv(env);
+  assert.deepEqual(
+    Object.keys(env).filter((name) => name.startsWith("VITE_VERCEL_")),
+    [],
+  );
+  assert.equal(verifyDeploymentEnvironment(env, env).target, "production");
 });
 
 test("actual deployment entry point ignores a complete .env fallback and exits without Vite building", () => {

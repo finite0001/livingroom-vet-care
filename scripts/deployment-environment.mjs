@@ -8,6 +8,17 @@ const publicNames = new Set([
   "VITE_CONTACT_TURNSTILE_SITE_KEY",
 ]);
 
+// Vercel can expose its system metadata with VITE_ names during build. The app
+// does not consume that metadata, and Vite would otherwise make it available to
+// browser code, so strip the reserved platform namespace before loading env.
+export function stripVercelSystemPublicEnv(env) {
+  for (const name of Object.keys(env)) {
+    if (name.startsWith("VITE_VERCEL_")) {
+      delete env[name];
+    }
+  }
+}
+
 // Configuration checks only: these do not authenticate the key or inspect a database.
 // Never interpolate environment values into errors, including malformed credentials.
 export function verifyDeploymentEnvironment(explicit, resolved) {
