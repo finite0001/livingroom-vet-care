@@ -12,11 +12,12 @@ The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves
 
 ## Current hosted readiness snapshot — September 24, 2026
 
-The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. The current local stack now reaches `20260924130000_inbound_sms_service_rpc_security.sql`; local verification includes focused Phase 2/3 pgTAP plus the no-live-send local drill. That is local proof, not hosted apply evidence. Stage 2 readiness evidence was refreshed before hosted apply, and the explicit linked dry run with `--skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. Hosted apply still requires explicit owner approval. The generated commercial-readiness summary now records 3/5 gates passing:
+The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. The current local stack now reaches `20260924130000_inbound_sms_service_rpc_security.sql`; local verification includes focused Phase 2/3 pgTAP plus the no-live-send local drill. That is local proof, not hosted apply evidence. Stage 2 readiness evidence was refreshed before hosted apply, and the explicit linked dry run with `--skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. Hosted apply still requires explicit owner approval. The generated commercial-readiness summary now records 3/6 gates passing:
 
 - Supabase/database operating loop: blocked by 2 local-only migrations, `20260924120000` and `20260924130000`.
 - Hub/frontend workflow readiness: pass.
-- External services and deployment readiness: pass.
+- Clinical and staff acceptance readiness: blocked until the 8 clinical review decisions, staff run metadata, and 8 staff workflow decisions are recorded.
+- External services and deployment readiness: pass, with the hosted no-live-send preflight warning tied to the Supabase migration-parity blocker already counted above.
 - Verification/release control: pass.
 - Public website launch readiness: blocked only by owner public-contact content.
 
@@ -30,6 +31,7 @@ Current evidence:
 - [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md)
 - [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md)
 - [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md)
+- [2026-09-24 clinical and staff acceptance readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-readiness.json)
 - [2026-09-24 local release-control check](launch-evidence/2026-09-24-local-release-control-check.md)
 - [2026-09-24 hosted readiness inventory](launch-evidence/2026-09-24-hosted-readiness-inventory.json)
 - [2026-09-24 remote public schema inventory](launch-evidence/2026-09-24-remote-public-schema-inventory.json)

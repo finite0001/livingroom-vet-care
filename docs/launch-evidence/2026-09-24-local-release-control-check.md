@@ -1,8 +1,9 @@
 # Local release-control check
 
 Date: 2026-09-24
-Scope: local release-control verification after the Stage 4 integrated workflow proof, Stage 5 acceptance package, generated readiness refresh, local release-control evidence, and typography-token commits
-Commit checked: `e88b7a8`
+Scope: local release-control verification after the Stage 4 integrated workflow proof, Stage 5 acceptance package, generated readiness refresh, local release-control evidence, typography-token commits, and clinical/staff acceptance gate integration
+Initial commit checked: `e88b7a8`
+Latest application commit checked: `aaa695d`
 Environment: local repository workspace
 
 ## Summary
@@ -54,6 +55,18 @@ todo 0
 duration_ms 4701.275083
 ```
 
+After the clinical/staff acceptance gate and readiness-summary integration commit, the Node test run reported:
+
+```text
+tests 1078
+pass 1078
+fail 0
+cancelled 0
+skipped 0
+todo 0
+duration_ms 4904.563208
+```
+
 ## Build result
 
 The production build completed successfully:
@@ -74,15 +87,24 @@ vite v7.3.6 building client environment for production...
 ✓ built in 4.30s
 ```
 
+After the clinical/staff acceptance gate and readiness-summary integration commit, the production build completed successfully:
+
+```text
+sitemap.xml written (14 entries)
+vite v7.3.6 building client environment for production...
+✓ 3973 modules transformed.
+✓ built in 4.88s
+```
+
 Vite emitted the existing non-failing chunk-size warning for chunks larger than 500 kB after minification. This warning did not fail the build.
 
 ## What this proves
 
-- ESLint passed for the current repository state.
+- ESLint passed for the checked application state.
 - TypeScript checking passed for both app and node configs.
 - The local Node test suite passed.
 - The production Vite build completed.
-- Generated site artifacts can be produced from the current readiness package state.
+- Generated site artifacts can be produced from the checked readiness package state.
 
 ## What this does not prove
 
