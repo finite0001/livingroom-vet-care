@@ -97,6 +97,7 @@ const quickActions: { label: string; icon: LucideIcon; path: string }[] = [
 
 interface AttentionItem {
   key: string;
+  accessibleLabel: string;
   title: string;
   detail: string;
   actionLabel: string;
@@ -105,6 +106,12 @@ interface AttentionItem {
   icon: LucideIcon;
   /** Positive phrasing used in the "All caught up" card when count is zero. */
   clearLabel: string;
+  query: {
+    data: number | undefined;
+    isPending: boolean;
+    isError: boolean;
+    refetch: () => unknown;
+  };
 }
 
 function AttentionRow({ item }: { item: AttentionItem }) {
@@ -119,7 +126,7 @@ function AttentionRow({ item }: { item: AttentionItem }) {
       >
         <Icon className="h-4 w-4" aria-hidden="true" />
       </span>
-      <div className="min-w-0">
+      <div className="min-w-0" role="region" aria-label={item.accessibleLabel}>
         <p className="text-sm font-semibold text-foreground">{item.title}</p>
         <p className="text-xs text-muted-foreground">{item.detail}</p>
         <Link
@@ -139,7 +146,27 @@ function CaughtUpRow({ item }: { item: AttentionItem }) {
       <span className="tone-info flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
         <Check className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
-      <p className="text-sm text-foreground">{item.clearLabel}</p>
+      <p className="text-sm text-foreground" role="region" aria-label={item.accessibleLabel}>{item.clearLabel}</p>
+    </li>
+  );
+}
+
+function CountStateRow({ item }: { item: AttentionItem }) {
+  return (
+    <li className="py-2.5">
+      <div role="region" aria-label={item.accessibleLabel}>
+        <p className="text-sm font-semibold text-foreground">{item.accessibleLabel}</p>
+        {item.query.isError ? (
+          <div role="alert">
+            <p className="text-xs text-muted-foreground">Unavailable. This count could not be checked.</p>
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => void item.query.refetch()}>
+              Retry {item.accessibleLabel.toLowerCase()}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground" role="status">Loading…</p>
+        )}
+      </div>
     </li>
   );
 }
@@ -322,7 +349,10 @@ export default function HubHomePage() {
   const inquiries = useCount("inquiries", !!actor, async () => {
     const { data, error } = await supabase.rpc("website_inquiry_open_count");
     if (error) throw error;
-    return Number(data ?? 0);
+    const count = Number(data);
+    if (data === null || !Number.isSafeInteger(count) || count < 0)
+      throw new Error("New inquiry count unavailable");
+    return count;
   });
 
   const attentionItems: AttentionItem[] = [
@@ -330,6 +360,7 @@ export default function HubHomePage() {
       ? [
           {
             key: "outbox",
+            accessibleLabel: "Outbox failures",
             title:
               (outbox.data ?? 0) === 1
                 ? "1 message failed to send"
@@ -340,11 +371,13 @@ export default function HubHomePage() {
             tone: "destructive" as StatusTone,
             icon: MailWarning,
             clearLabel: "Every message and invoice went out on time.",
+            query: outbox,
           },
         ]
       : []),
     {
       key: "unread",
+      accessibleLabel: "Unread conversations for you",
       title:
         (unread.data ?? 0) === 1
           ? "1 conversation is waiting for a reply"
@@ -355,9 +388,11 @@ export default function HubHomePage() {
       tone: "info",
       icon: MessageSquare,
       clearLabel: "Your inbox is clear.",
+      query: unread,
     },
     {
       key: "inquiries",
+      accessibleLabel: "New inquiries",
       title:
         (inquiries.data ?? 0) === 1
           ? "1 new inquiry to look at"
@@ -368,9 +403,11 @@ export default function HubHomePage() {
       tone: "warning",
       icon: ClipboardList,
       clearLabel: "No new inquiries waiting.",
+      query: inquiries,
     },
     {
       key: "refills",
+      accessibleLabel: "Open refill requests",
       title:
         (refills.data ?? 0) === 1
           ? "1 refill request is waiting for approval"
@@ -381,9 +418,11 @@ export default function HubHomePage() {
       tone: "success",
       icon: Pill,
       clearLabel: "No refills waiting for approval.",
+      query: refills,
     },
     {
       key: "reminders",
+      accessibleLabel: "Reminders due",
       title:
         (reminders.data ?? 0) === 1
           ? "1 vaccine or lab reminder is due"
@@ -394,9 +433,11 @@ export default function HubHomePage() {
       tone: "warning",
       icon: BellRing,
       clearLabel: "No reminders are due today.",
+      query: reminders,
     },
     {
       key: "unsigned",
+      accessibleLabel: "Unsigned notes",
       title:
         (unsigned.data ?? 0) === 1
           ? "1 note is still unsigned"
@@ -407,23 +448,20 @@ export default function HubHomePage() {
       tone: "warning",
       icon: FileText,
       clearLabel: "Every note is signed.",
+      query: unsigned,
     },
   ];
 
-  const counts: Record<string, number | undefined> = {
-    outbox: outbox.data,
-    unread: unread.data,
-    inquiries: inquiries.data,
-    refills: refills.data,
-    reminders: reminders.data,
-    unsigned: unsigned.data,
-  };
-  const countReady = (key: string) => typeof counts[key] === "number";
+  const countReady = (key: string) =>
+    attentionItems.some((item) => item.key === key && !item.query.isError && Number.isFinite(item.query.data));
   const problems = attentionItems.filter(
-    (item) => countReady(item.key) && (counts[item.key] ?? 0) > 0,
+    (item) => !item.query.isError && Number.isFinite(item.query.data) && item.query.data! > 0,
   );
   const caughtUp = attentionItems.filter(
-    (item) => countReady(item.key) && counts[item.key] === 0,
+    (item) => !item.query.isError && item.query.data === 0,
+  );
+  const unchecked = attentionItems.filter(
+    (item) => item.query.isError || !Number.isFinite(item.query.data),
   );
   const allCounted = attentionItems.every((item) => countReady(item.key));
 
@@ -697,6 +735,10 @@ export default function HubHomePage() {
               <p className="px-5 py-3 text-sm text-muted-foreground" role="status">
                 Loading…
               </p>
+            ) : schedule.isError ? (
+              <p className="px-5 py-3 text-sm text-muted-foreground">
+                Today's visits are unavailable. Retry in Right now.
+              </p>
             ) : restOfDay.length === 0 ? (
               <p className="px-5 py-3 text-sm text-muted-foreground">
                 {hero
@@ -749,6 +791,14 @@ export default function HubHomePage() {
 
         {/* Right rail */}
         <aside className="min-w-0 space-y-4">
+          {unchecked.length > 0 && (
+            <section aria-label="Counts to check" className="rounded-2xl border border-border bg-card p-5 shadow-card">
+              <h2 className="text-sm font-bold text-foreground">Counts to check</h2>
+              <ul className="mt-2 divide-y divide-border/60">
+                {unchecked.map((item) => <CountStateRow key={item.key} item={item} />)}
+              </ul>
+            </section>
+          )}
           {problems.length > 0 && (
             <section
               aria-label="Needs a little care"
