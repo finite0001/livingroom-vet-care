@@ -9,14 +9,15 @@ const phoneUrl = "https://phone.cloudtalk.io?partner=livingroom-vet-care";
 export function CloudTalkPhoneDock() {
   const { pathname } = useLocation();
   const { user, profile } = useAuth();
+  const inHub = pathname.startsWith("/hub/") || pathname === "/hub";
   const open = pathname === "/hub/call";
   const [mounted, setMounted] = useState(open);
   const [ringing, setRinging] = useState(false);
 
   useEffect(() => {
-    if (!user || !profile?.is_active) setMounted(false);
+    if (!inHub || !user || !profile?.is_active) setMounted(false);
     else if (open) setMounted(true);
-  }, [open, user, profile?.is_active]);
+  }, [inHub, open, user, profile?.is_active]);
   useEffect(() => {
     if (!mounted) return;
     const onMessage = (message: MessageEvent) => {

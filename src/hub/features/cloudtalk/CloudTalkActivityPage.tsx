@@ -112,6 +112,7 @@ export default function CloudTalkActivityPage({ voicemailOnly = false }: CloudTa
   usePageTitle(voicemailOnly ? "Voicemail" : "CloudTalk phone");
   const calls = useQuery({
     queryKey: ["cloudtalk-calls", voicemailOnly],
+    refetchInterval: 15_000,
     queryFn: async () => {
       let query = cloudtalkDb.from("cloudtalk_calls").select("*").not("ended_at", "is", null).order("last_event_at", { ascending: false }).limit(100);
       if (voicemailOnly) query = query.eq("is_voicemail", true);
@@ -123,6 +124,7 @@ export default function CloudTalkActivityPage({ voicemailOnly = false }: CloudTa
   const messages = useQuery({
     queryKey: ["cloudtalk-messages"],
     enabled: !voicemailOnly,
+    refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await cloudtalkDb.from("cloudtalk_messages").select("*").order("occurred_at", { ascending: false }).limit(50);
       if (error) throw error;
