@@ -8,16 +8,18 @@ const phoneUrl = "https://phone.cloudtalk.io?partner=livingroom-vet-care";
 
 export function CloudTalkPhoneDock() {
   const { pathname } = useLocation();
-  const { user, profile } = useAuth();
+  const { user, profile, roles } = useAuth();
   const inHub = pathname.startsWith("/hub/") || pathname === "/hub";
   const open = pathname === "/hub/call";
   const [mounted, setMounted] = useState(open);
   const [ringing, setRinging] = useState(false);
 
   useEffect(() => {
-    if (!inHub || !user || !profile?.is_active) setMounted(false);
-    else if (open) setMounted(true);
-  }, [inHub, open, user, profile?.is_active]);
+    if (!inHub || !user || !profile?.is_active || !roles.length) {
+      setMounted(false);
+      setRinging(false);
+    } else if (open) setMounted(true);
+  }, [inHub, open, user, profile?.is_active, roles.length]);
   useEffect(() => {
     if (!mounted) return;
     const onMessage = (message: MessageEvent) => {
@@ -32,7 +34,7 @@ export function CloudTalkPhoneDock() {
     return () => window.removeEventListener("message", onMessage);
   }, [mounted]);
 
-  if (!mounted || !user || !profile?.is_active) return null;
+  if (!mounted || !inHub || !user || !profile?.is_active || !roles.length) return null;
   return (
     <>
       {!open && ringing && (

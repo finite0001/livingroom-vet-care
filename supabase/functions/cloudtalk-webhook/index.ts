@@ -7,7 +7,9 @@ serve(async (request) => {
   const secret = Deno.env.get("CLOUDTALK_WEBHOOK_SECRET") ?? "";
   const companyId = Deno.env.get("CLOUDTALK_COMPANY_ID") ?? "";
   const allowedNumbers = (Deno.env.get("CLOUDTALK_ALLOWED_NUMBERS") ?? "").split(",").map((value) => value.trim()).filter(Boolean);
-  if (!secret || !allowedNumbers.length) return new Response("Webhook unavailable", { status: 503 });
+  if (!secret || !allowedNumbers.length || allowedNumbers.some((number) => !/^\+[1-9][0-9]{7,14}$/.test(number))) {
+    return new Response("Webhook unavailable", { status: 503 });
+  }
   try {
     const raw = await request.text();
     const event = await verifyCloudTalkWebhook(raw, request.headers, secret, companyId, allowedNumbers);
