@@ -1,6 +1,6 @@
 # September 25 repair progress and release contract
 
-Baseline: `7eccfaf0a1227358edb44e14cbb725e28fe97298`. This is local implementation evidence, not a deployable or commercially accepted release. The [independent audit](2026-09-25-independent-commercial-audit.md) and [machine snapshot](2026-09-25-independent-commercial-audit.json) provide the hosted observations. Re-read hosted state before any rollout.
+Audited baseline: `7eccfaf0a1227358edb44e14cbb725e28fe97298`. The repair code is on `codex/commercial-readiness-repair-20260925` in commits `bdbe7ff`, `204b48f`, and `60d2e4c`. This is local implementation evidence, not a deployable or commercially accepted release. The [independent audit](2026-09-25-independent-commercial-audit.md) and [machine snapshot](2026-09-25-independent-commercial-audit.json) provide the hosted observations. Re-read hosted state before any rollout.
 
 ## Completed locally
 
@@ -11,7 +11,7 @@ Baseline: `7eccfaf0a1227358edb44e14cbb725e28fe97298`. This is local implementati
 - Each summary gate now blocks on its own stale or missing evidence. Running the summary against the current artifact set reports all six gates blocked; it cannot call the old Hub snapshot a current pass.
 - The read-only Edge reviewer now downloads five required existing slugs as well as remote-only slugs. A fresh inventory and source review on September 25 Pacific / September 26 UTC found all five critical entrypoints mismatched and calling `serveDisabledLegacyFunction`; all downloads succeeded. See [function inventory](2026-09-26-edge-functions-inventory.json) and [source review](2026-09-26-remote-edge-function-review.json). The temporary downloaded source was deleted after hash/comparison capture.
 
-Local commands and results (working tree based on the SHA above, with uncommitted repairs): `npm run check` passed lint, typecheck, 1,085 unit tests, and build; `npx playwright test e2e/commissioned-navigation.spec.ts --reporter=line` passed 7/7; `supabase test db --workdir <isolated-project>` passed 118 SQL files and 4,725 assertions after full migration replay. The three initially failing SQL files also passed through `psql -v ON_ERROR_STOP=1` with the new migration prepended inside an outer transaction and final `ROLLBACK`. Browser tests use synthetic mocked network responses. No hosted CI run exists for these uncommitted changes.
+Local commands and results (the code tree in the three repair commits above): `npm run check` passed lint, typecheck, 1,085 unit tests, and build; `npx playwright test e2e/commissioned-navigation.spec.ts --reporter=line` passed 7/7; `supabase test db --workdir <isolated-project>` passed 118 SQL files and 4,725 assertions after full migration replay. The three initially failing SQL files also passed through `psql -v ON_ERROR_STOP=1` with the new migration prepended inside an outer transaction and final `ROLLBACK`. Browser tests use synthetic mocked network responses. No GitHub CI run exists for these local repair commits.
 
 ## Queue ownership for the candidate release
 
