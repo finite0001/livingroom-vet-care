@@ -31,6 +31,7 @@ import { AuthProvider } from "@/hub/contexts/AuthContext";
 import { ProtectedRoute } from "@/hub/components/layout/ProtectedRoute";
 import { AppShell } from "@/hub/components/layout/AppShell";
 import { CloudTalkPhoneDock } from "@/hub/features/cloudtalk/CloudTalkPhoneDock";
+import { cloudtalkEnabled } from "@/config/cloudtalk";
 
 const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
@@ -76,7 +77,7 @@ function HubLoader() {
 const queryClient = new QueryClient();
 
 function RootShell() {
-  return <><ScrollToTop /><Suspense fallback={<HubLoader />}><Outlet /></Suspense><CloudTalkPhoneDock /></>;
+  return <><ScrollToTop /><Suspense fallback={<HubLoader />}><Outlet /></Suspense>{cloudtalkEnabled && <CloudTalkPhoneDock />}</>;
 }
 
 // Data-router navigation supports the clinical editor's unsaved-change blocker,
@@ -123,8 +124,8 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/patient/:id" element={<PatientPage />} />
                   <Route path="/hub/tickets" element={<TicketsPage />} />
                   <Route path="/hub/ticket/:id" element={<TicketDetailPage />} />
-                  <Route path="/hub/call" element={<CloudTalkActivityPage />} />
-                  <Route path="/hub/voicemails" element={<CloudTalkActivityPage voicemailOnly />} />
+                  <Route path="/hub/call" element={cloudtalkEnabled ? <CloudTalkActivityPage /> : <UnavailableToolPage />} />
+                  <Route path="/hub/voicemails" element={cloudtalkEnabled ? <CloudTalkActivityPage voicemailOnly /> : <UnavailableToolPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />

@@ -3,6 +3,7 @@
 ## What this package implements
 
 - A persistent staff CloudTalk phone at `/hub/call`, with a separate-tab option on narrow screens and a ringing indicator when the embedded phone sends its event.
+- The staff phone and activity routes are gated by `VITE_CLOUDTALK_ENABLED=true`. The production build leaves this unset until provider acceptance; enabling it requires a new website deployment.
 - Signed CloudTalk account webhooks for completed calls, ready recordings, ready transcripts, AI analysis, and inbound/outbound SMS, MMS, or WhatsApp activity. Events are idempotent and scoped to configured practice numbers. Inbound SMS STOP records an opt-out and cancels queued sends.
 - Staff call/message history and voicemail markers. An AI summary is displayed as unverified assistance. Administrators can fetch recording audio or transcript pages on demand through an authenticated Edge Function. API credentials never enter the browser or database.
 
@@ -23,12 +24,19 @@ The existing staff SMS and reminder queues still use their Twilio provider contr
 2. Apply `20260926090000_cloudtalk_activity.sql` to staging; deploy `cloudtalk-webhook` and `cloudtalk-call-media` from that SHA. Verify their JWT flags (`false` for signed webhook, `true` for staff media). Repeat for production after staging proof.
 3. Configure the CloudTalk secrets above. Before using customer data, send signed CloudTalk test events and confirm one call appears once, an out-of-order AI event joins its call, a replay creates no duplicate, a wrong signature is rejected, and an unowned number is ignored.
 4. With a practice-owned test recipient and an authorized staff agent, complete inbound and outbound call round trips, voicemail, recording, and transcript/AI production. Confirm only administrators can fetch media. Exercise an SMS send/reply in CloudTalk Phone; verify its activity without claiming recipient delivery. Test opt-out only with a controlled number and confirm suppression in the app.
-5. Publish the verified practice number through `src/config/practice.ts` only after call routing and SMS capability work. Keep `OUTBOUND_DELIVERY_MODE` and payment gates at their existing safe settings until their separate provider acceptance is complete.
+5. Set `VITE_CLOUDTALK_ENABLED=true` in the website deployment environment and redeploy after the provider round trips pass. Publish the verified practice number through `src/config/practice.ts` only after call routing and SMS capability work. Keep `OUTBOUND_DELIVERY_MODE` and payment gates at their existing safe settings until their separate provider acceptance is complete.
 
 ## Local evidence
 
 - `npm run typecheck`, `npm run lint`, `npm test` (1,090 tests), `npm run build`, and `deno check` for both functions passed during implementation.
 - The migration applied to the local Supabase database. Rolled-back SQL probes confirmed AI-before-call merge, event replay idempotency, and SMS STOP suppression.
 - Hosted CloudTalk configuration, real media retrieval, the selected number, and provider round trips still require account inputs and live acceptance. A passing local check is not a production activation receipt.
+
+## Hosted deployment receipt
+
+- On September 26, 2026, the CloudTalk migration and both Edge Functions were deployed from the reviewed source package to staging (`kothoqicubowyhwfsrte`) and production (`mgadheotkdnrsatfivjy`), in that order.
+- Each project reports 152 migrations ending at source version `20260926090000_cloudtalk_activity`. The migration API initially assigned a timestamp of its own; its history entry was corrected to the repository version after the schema applied.
+- Both functions are active in each project. `cloudtalk-webhook` has JWT verification disabled so it can validate CloudTalk's signed requests itself; `cloudtalk-call-media` requires JWT verification. All three new tables have RLS enabled, and `anon` has no read grant. Unconfigured webhook requests return HTTP 503; unauthenticated media requests return HTTP 401.
+- The website phone stays gated by `VITE_CLOUDTALK_ENABLED` pending account configuration and controlled provider acceptance. No practice number has been published and no existing outbound send gate has been enabled.
 
 CloudTalk references: [webhook setup and event contract](https://developers.cloudtalk.io/guides/webhooks/overview), [signature scheme](https://developers.cloudtalk.io/guides/webhooks/verify-signatures), [message event limits](https://developers.cloudtalk.io/guides/webhooks/events/messages), [AI event contract](https://developers.cloudtalk.io/guides/webhooks/events/conversation-intelligence), [phone embedding](https://help.cloudtalk.io/en/articles/11791061-embedding-cloudtalk-phone-in-a-web-application).

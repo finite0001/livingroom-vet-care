@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+const cloudtalkEnabled = process.env.VITE_CLOUDTALK_ENABLED === "true";
 const backend = "http://127.0.0.1:54321";
 const staff = "11111111-1111-4111-8111-111111111111";
 const other = "11111111-1111-4111-8111-222222222222";
@@ -196,6 +197,7 @@ const unavailable = [
   ["/hub/tools/campaigns", "Campaigns"],
   ["/hub/tools/alerts", "Broadcast messages"],
   ["/hub/tools/surveys", "Surveys"],
+  ...(cloudtalkEnabled ? [] : [["/hub/call", "Voice calling"], ["/hub/voicemails", "Voicemail"]]),
   ["/hub/admin/import", "Legacy CSV import"],
 ];
 test("optional direct routes stay read-only and never mount their legacy data hooks", async ({
@@ -233,6 +235,7 @@ test("CloudTalk direct routes show staff activity without mounting legacy callin
   page,
   baseURL,
 }) => {
+  test.skip(!cloudtalkEnabled, "CloudTalk phone remains gated until provider acceptance");
   const state = await fixture(page, baseURL);
   for (const [path, heading] of [
     ["/hub/call", "CloudTalk phone"],
@@ -278,7 +281,8 @@ test("desktop home exposes today counts, implemented tools and personal unread s
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(
       0,
     );
-  await expect(page.getByRole("button", { name: "Phone", exact: true })).toBeVisible();
+  if (cloudtalkEnabled) await expect(page.getByRole("button", { name: "Phone", exact: true })).toBeVisible();
+  else await expect(page.getByRole("button", { name: "Phone", exact: true })).toHaveCount(0);
   for (const name of ["Messages", "Schedule", "Care reminders", "Templates"])
     await expect(
       page.locator("main").getByRole("link", { name, exact: true }),
@@ -396,7 +400,8 @@ test("mobile navigation keeps schedule and care reminders while hiding unavailab
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(
       0,
     );
-  await expect(page.getByRole("button", { name: "Phone", exact: true })).toBeVisible();
+  if (cloudtalkEnabled) await expect(page.getByRole("button", { name: "Phone", exact: true })).toBeVisible();
+  else await expect(page.getByRole("button", { name: "Phone", exact: true })).toHaveCount(0);
   await page
     .getByRole("button", { name: "Care reminders", exact: true })
     .click();
