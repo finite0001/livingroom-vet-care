@@ -1,0 +1,168 @@
+{
+  "generatedAt": "2026-09-26T03:26:59.463Z",
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "inventoryPath": "docs/launch-evidence/2026-09-26-edge-functions-inventory.json",
+  "note": "Downloads remote-only and required existing Edge Function source into a temporary directory, records hashes, entrypoint comparison and classification only, then deletes source bodies. Matching entrypoints alone do not prove shared dependencies or functional behavior.",
+  "status": "launch-conflicts-found",
+  "summary": {
+    "remoteOnlyReviewed": 0,
+    "requiredExistingReviewed": 5,
+    "launchBlockers": 5,
+    "adjacentWorkflowReview": 0,
+    "reviewedNoLaunchSignal": 0,
+    "downloadFailures": 0
+  },
+  "launchBlockers": [
+    {
+      "slug": "dispatch-outbox",
+      "classification": "required-existing-route",
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder.",
+      "matchedRiskPatterns": [
+        "scheduler-or-worker"
+      ]
+    },
+    {
+      "slug": "enqueue-message",
+      "classification": "required-existing-route",
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder.",
+      "matchedRiskPatterns": [
+        "sends-message"
+      ]
+    },
+    {
+      "slug": "process-inbound",
+      "classification": "required-existing-route",
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder.",
+      "matchedRiskPatterns": [
+        "scheduler-or-worker",
+        "provider-webhook",
+        "sends-message"
+      ]
+    },
+    {
+      "slug": "public-contact",
+      "classification": "required-existing-route",
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder.",
+      "matchedRiskPatterns": [
+        "public-contact"
+      ]
+    },
+    {
+      "slug": "queue-reminders",
+      "classification": "required-existing-route",
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder.",
+      "matchedRiskPatterns": [
+        "scheduler-or-worker"
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "slug": "dispatch-outbox",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "5fb2894387fd7bd6c65c93e85523ca868039c24badfa49c3a22f524d8900a2e3",
+      "entrypointMatches": false,
+      "disabledPlaceholder": true,
+      "remoteOnly": false,
+      "matchedRiskPatterns": [
+        "scheduler-or-worker"
+      ],
+      "classification": "required-existing-route",
+      "launchBlocker": true,
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder."
+    },
+    {
+      "slug": "enqueue-message",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "c9f4e0009ee566e796cfb5cfa27e2209769587d6e951d28949014b4e1b23702d",
+      "entrypointMatches": false,
+      "disabledPlaceholder": true,
+      "remoteOnly": false,
+      "matchedRiskPatterns": [
+        "sends-message"
+      ],
+      "classification": "required-existing-route",
+      "launchBlocker": true,
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder."
+    },
+    {
+      "slug": "process-inbound",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "103681bbaf09140653c2fdfc09ef7b8037e7893c8579159044fd43c1af38ed13",
+      "entrypointMatches": false,
+      "disabledPlaceholder": true,
+      "remoteOnly": false,
+      "matchedRiskPatterns": [
+        "scheduler-or-worker",
+        "provider-webhook",
+        "sends-message"
+      ],
+      "classification": "required-existing-route",
+      "launchBlocker": true,
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder."
+    },
+    {
+      "slug": "public-contact",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "1f556be88b14dca1eccb9b467a5d25d9000f5539d230bd02b00c55713ea8acd1",
+      "entrypointMatches": false,
+      "disabledPlaceholder": true,
+      "remoteOnly": false,
+      "matchedRiskPatterns": [
+        "public-contact"
+      ],
+      "classification": "required-existing-route",
+      "launchBlocker": true,
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder."
+    },
+    {
+      "slug": "queue-reminders",
+      "download": {
+        "ok": true,
+        "status": 0,
+        "stderr": [
+          "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+        ]
+      },
+      "fileCount": 1,
+      "sourceSha256": "44d6864782a3d19a76851def0c0fcb43c32f584208ae4aab07fe97882d7a8c38",
+      "entrypointMatches": false,
+      "disabledPlaceholder": true,
+      "remoteOnly": false,
+      "matchedRiskPatterns": [
+        "scheduler-or-worker"
+      ],
+      "classification": "required-existing-route",
+      "launchBlocker": true,
+      "reason": "Deployed entrypoint calls the disabled legacy placeholder."
+    }
+  ]
+}

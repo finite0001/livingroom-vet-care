@@ -1,5 +1,9 @@
 # Commercial-readiness evidence tracker
 
+## September 25 correction
+
+The [independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md) supersedes the September 24 gate summary below. Commercial operation remains blocked: deployed messaging/contact functions do not match current callers, direct anonymous inquiry inserts bypass verified intake, production lacks two audited migrations, staging lacks 31, scheduler outcomes report missing configuration, and the latest audited CI failed. This repair branch adds a forward intake migration and tightens release reporting; those local changes are not hosted deployment or acceptance evidence. CloudTalk remains deferred.
+
 ## Standalone direction — September 16, 2026
 
 The owner and Dr. Edler no longer want ongoing ezyVet integration. After packaging the current local phase, the next step is native ezyVet feature parity plus Vet Connect Hub communications in an independent Living Room Vet platform. [The recorded direction](standalone-platform-direction-20260916.md) supersedes historical integration commissioning and migration-report launch gates below. Existing ezyVet access may inform a read-only feature/workflow audit; the current source setup remains unchanged. Clinical review, other provider commissioning and complete native hosted staff acceptance are still required.

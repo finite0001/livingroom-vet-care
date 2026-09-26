@@ -1,0 +1,363 @@
+{
+  "auditedAtUtc": "2026-09-26T01:33:46.698Z",
+  "head": "7eccfaf0a1227358edb44e14cbb725e28fe97298",
+  "projectRefs": {
+    "primary": "mgadheotkdnrsatfivjy",
+    "staging": "kothoqicubowyhwfsrte",
+    "legacyExcluded": "ugpyjacqganaqtsiekay"
+  },
+  "migrations": {
+    "localCount": 150,
+    "primaryCount": 148,
+    "primaryMissing": [
+      "20260924120000",
+      "20260924130000"
+    ],
+    "primaryRemoteOnly": [],
+    "stagingCount": 119,
+    "stagingMissing": [
+      "20260916055043",
+      "20260916062136",
+      "20260916063857",
+      "20260916070108",
+      "20260916072509",
+      "20260916080105",
+      "20260916083056",
+      "20260916090000",
+      "20260916093000",
+      "20260916094500",
+      "20260916100001",
+      "20260916110001",
+      "20260916120716",
+      "20260916123017",
+      "20260916144117",
+      "20260919120000",
+      "20260921120000",
+      "20260921130000",
+      "20260922120000",
+      "20260922170000",
+      "20260922183000",
+      "20260922190000",
+      "20260922203000",
+      "20260922210000",
+      "20260922213000",
+      "20260922220000",
+      "20260922223000",
+      "20260922224500",
+      "20260922230000",
+      "20260924120000",
+      "20260924130000"
+    ],
+    "stagingRemoteOnly": []
+  },
+  "database": {
+    "cron_jobs": [
+      {
+        "name": "dispatch-outbox",
+        "active": true,
+        "schedule": "* * * * *"
+      },
+      {
+        "name": "process-inbound",
+        "active": true,
+        "schedule": "* * * * *"
+      },
+      {
+        "name": "process-stripe-events",
+        "active": true,
+        "schedule": "* * * * *"
+      },
+      {
+        "name": "queue-reminders",
+        "active": true,
+        "schedule": "*/15 * * * *"
+      },
+      {
+        "name": "cleanup-abandoned-attachment",
+        "active": true,
+        "schedule": "*/30 * * * *"
+      },
+      {
+        "name": "scheduler-reconcile",
+        "active": true,
+        "schedule": "* * * * *"
+      }
+    ],
+    "storage_buckets": [
+      {
+        "name": "voicemails",
+        "public": false
+      },
+      {
+        "name": "message-attachments",
+        "public": false
+      },
+      {
+        "name": "client-files",
+        "public": false
+      },
+      {
+        "name": "patient-documents",
+        "public": false
+      },
+      {
+        "name": "ezyvet-attachment-originals",
+        "public": false
+      },
+      {
+        "name": "conversation-attachment-uploads",
+        "public": false
+      },
+      {
+        "name": "inbound-attachment-originals",
+        "public": false
+      }
+    ],
+    "inbound_rpc_access": [
+      {
+        "anon": false,
+        "signature": "record_inbound_sms(text,text,text,text,text,timestamp with time zone)",
+        "service_role": true,
+        "authenticated": false,
+        "security_definer": false
+      }
+    ],
+    "public_table_count": 254,
+    "tables_without_rls": [],
+    "scheduler_secret_names": []
+  },
+  "contactColumnInsertGrants": [
+    {
+      "grantee": "anon",
+      "column_name": "email",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "anon",
+      "column_name": "message",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "anon",
+      "column_name": "name",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "anon",
+      "column_name": "phone",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "anon",
+      "column_name": "subject",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "column_name": "email",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "column_name": "message",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "column_name": "name",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "column_name": "phone",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "column_name": "subject",
+      "privilege_type": "INSERT"
+    }
+  ],
+  "contactInsertPolicy": [
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "contact_submissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Anon insert contact_submissions",
+      "schemaname": "public",
+      "with_check": "((triage_status = 'NEW'::text) AND (staff_notes IS NULL) AND (reviewed_at IS NULL) AND (reviewed_by IS NULL) AND (contacted_at IS NULL) AND (contacted_by IS NULL) AND (closed_at IS NULL) AND (closed_by IS NULL))"
+    }
+  ],
+  "schedulerResultsLastDay": [
+    {
+      "job": "cleanup-abandoned-attachment",
+      "outcome": "configuration_missing",
+      "count": 18,
+      "latest": "2026-09-26 00:30:00.366314+00"
+    },
+    {
+      "job": "dispatch-outbox",
+      "outcome": "configuration_missing",
+      "count": 24,
+      "latest": "2026-09-26 00:58:00.137854+00"
+    },
+    {
+      "job": "process-inbound",
+      "outcome": "configuration_missing",
+      "count": 24,
+      "latest": "2026-09-26 00:58:00.142089+00"
+    },
+    {
+      "job": "process-stripe-events",
+      "outcome": "configuration_missing",
+      "count": 24,
+      "latest": "2026-09-26 00:59:00.072434+00"
+    },
+    {
+      "job": "queue-reminders",
+      "outcome": "configuration_missing",
+      "count": 20,
+      "latest": "2026-09-26 00:30:00.378316+00"
+    }
+  ],
+  "runtime": {
+    "cron_runs_last_day": 5904,
+    "cron_failed_last_day": 0,
+    "service_insert_messages": true,
+    "service_insert_conversations": false
+  },
+  "functions": {
+    "remoteCount": 35,
+    "localCount": 48,
+    "localOnly": [
+      "capture-conversation-email",
+      "capture-inbound-attachment",
+      "cleanup-abandoned-attachment",
+      "estimate-decision",
+      "prepare-estimate-decision-grant",
+      "prepare-estimate-publication",
+      "read-estimate-publication-artifact",
+      "read-inbound-attachment",
+      "recover-estimate-decision-grant",
+      "recover-estimate-publication-preparation",
+      "send-provider-email",
+      "suggest-replies",
+      "verify-conversation-attachment"
+    ],
+    "remoteOnly": [],
+    "comparedEntries": [
+      {
+        "slug": "send-email",
+        "version": 8,
+        "entryMatches": false,
+        "remoteDisabled": false
+      },
+      {
+        "slug": "send-sms",
+        "version": 8,
+        "entryMatches": false,
+        "remoteDisabled": false
+      },
+      {
+        "slug": "public-contact",
+        "version": 6,
+        "entryMatches": false,
+        "remoteDisabled": true
+      },
+      {
+        "slug": "enqueue-message",
+        "version": 6,
+        "entryMatches": false,
+        "remoteDisabled": true
+      },
+      {
+        "slug": "dispatch-outbox",
+        "version": 7,
+        "entryMatches": false,
+        "remoteDisabled": true
+      },
+      {
+        "slug": "dispatch-outbound-deliveries",
+        "version": 1,
+        "entryMatches": true,
+        "remoteDisabled": false
+      },
+      {
+        "slug": "queue-reminders",
+        "version": 7,
+        "entryMatches": false,
+        "remoteDisabled": true
+      }
+    ],
+    "additionalDisabled": [
+      "process-inbound"
+    ]
+  },
+  "securityAdvisors": [
+    {
+      "name": "rls_enabled_no_policy",
+      "level": "INFO",
+      "count": 130,
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "extension_in_public",
+      "level": "WARN",
+      "count": 1,
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public"
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "level": "WARN",
+      "count": 8,
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "level": "WARN",
+      "count": 389,
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "count": 1,
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+    }
+  ],
+  "liveHttp": {
+    "health": 200,
+    "apex": 200,
+    "wwwHub": 200,
+    "publicContact": 410,
+    "publicContactResponse": "Legacy Edge Function disabled before launch cutover",
+    "bundleBackend": "https://mgadheotkdnrsatfivjy.supabase.co",
+    "contactBundle": "Contact-C2L79WyR.js",
+    "contactFormEnabled": false
+  },
+  "ci": {
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/36082301466",
+    "status": "failure",
+    "unitTestsPassed": 1081,
+    "browserPassed": 448,
+    "browserFailed": 4,
+    "sqlFiles": 118,
+    "sqlAssertionsReported": 4720,
+    "sqlFailedFiles": [
+      "public_intake.test.sql",
+      "staff_access.test.sql",
+      "website_inquiries.test.sql"
+    ]
+  },
+  "limits": [
+    "No hosted writes, live message sends, payment attempts, or migrations performed.",
+    "Read-only catalog queries and downloaded source comparisons; no real customer rows downloaded.",
+    "Security advisor categories are observations, not individually proven vulnerabilities.",
+    "Provider credentials, hosted recovery settings, and authenticated staff/clinical acceptance not fully verified."
+  ]
+}

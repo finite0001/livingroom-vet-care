@@ -1,5 +1,9 @@
 # Living Room Vet deployment runbook
 
+## September 25 correction
+
+The [independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md) supersedes the September 24 readiness claims below. The deployed staff-message and public-contact endpoints return 410 despite ACTIVE inventory entries, the production contact form is disabled, direct anonymous inquiry insertion is open through column grants, scheduler workers are unconfigured or disabled, and audited CI failed. Use the [repair progress and release order](launch-evidence/2026-09-25-repair-progress.md) before any staging or production deployment. The older 3/6 gate summary is historical evidence.
+
 ## Current rollout direction — September 24, 2026
 
 This section supersedes the September 12 and September 16 commissioning snapshots below. Verify external state again before any production-affecting action; dated receipts are evidence, not permission to skip a fresh check.
