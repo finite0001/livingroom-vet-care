@@ -1,4 +1,7 @@
 project_id = "mgadheotkdnrsatfivjy"
+[functions.enqueue-message]
+verify_jwt = true
+
 [functions.ezyvet-import]
 verify_jwt = true
 

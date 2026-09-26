@@ -1,6 +1,6 @@
 # Staged deployment hold — September 26, 2026 UTC
 
-Repair implementation: `f5a6cd0be3e54663f85d89ceae91e93366356c58` on `codex/commercial-readiness-repair-20260925`, packaged with later evidence and safeguards in [PR #205](https://github.com/finite0001/livingroom-vet-care/pull/205). The Vercel preview built. Its URL requires Vercel SSO, so a browser smoke was not completed. No hosted SQL, Edge function, provider setting, or production frontend was changed during this rollout attempt.
+Repair implementation: `f5a6cd0be3e54663f85d89ceae91e93366356c58` on `codex/commercial-readiness-repair-20260925`, packaged with later evidence and safeguards in [PR #205](https://github.com/finite0001/livingroom-vet-care/pull/205). This document records the initial staging hold and rehearsal. The subsequent staging and primary backend rollout is recorded in the [hosted deployment receipt](2026-09-26-hosted-repair-deployment.md). The Vercel preview requires SSO, so a remote browser smoke remains outstanding.
 
 ## Fresh read-only state
 
@@ -24,8 +24,8 @@ A private read-only staging backup captured the application/Auth/Storage rows, m
 
 Separately, the full synthetic restore runner replayed all 151 migrations, backed up populated clinical, communications, Auth, and private Storage fixtures, restored them into a second isolated project, and passed its routine/access and original-byte checks with cleanup verified. The native prescribing disposable suite passed its populated restore and browser checks, and the attachment suite passed its Auth/Storage checks. These establish local recovery behavior for the canonical tree; they do not restore the actual hosted staging backup or test its existing rows through the 32-file upgrade. Staging has completed daily physical backups but no PITR enabled in the CLI backup inventory.
 
-## Release decision and next sequence
+## Resolution of this hold
 
-Do not run the hosted staging push before re-versioning the two proven conversation receipts in one guarded transaction. The private backup and populated local upgrade are complete. Re-check the raw ledger and the CLI's exact 32-file plan immediately before any hosted apply. Then apply the staged plan and verify live effective grants, policies, triggers, records, and workflows from the [repair progress contract](2026-09-25-repair-progress.md). Only then deploy the explicit matching Edge manifest, test controlled provider round trips, and proceed to the primary project and frontend. Keep payment and live-send gates disabled throughout this release candidate.
+The guarded receipt correction and exact 32-file plan were applied to hosted staging after a populated rehearsal and an exact-SHA green CI run. Live migration, schema, grant, row-digest, and private-byte checks passed. The three primary migrations and explicit Edge set were then applied as described in the [deployment receipt](2026-09-26-hosted-repair-deployment.md). Controlled provider round trips, scheduler configuration, hosted recovery arrangements, and clinical/staff acceptance are still pending. Keep payment and live-send gates disabled throughout this release candidate.
 
-The draft PR remains one review unit. A successful code CI run or Vercel build does not clear this hosted schema hold.
+The draft PR remains one review unit. The hosted schema hold is resolved; commercial readiness is not.

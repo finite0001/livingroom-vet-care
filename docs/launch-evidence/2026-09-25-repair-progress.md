@@ -1,6 +1,6 @@
 # September 25 repair progress and release contract
 
-Audited baseline: `7eccfaf0a1227358edb44e14cbb725e28fe97298`. The repair code is on `codex/commercial-readiness-repair-20260925` in commits `bdbe7ff`, `204b48f`, and `60d2e4c`. This is local implementation evidence, not a deployable or commercially accepted release. The [independent audit](2026-09-25-independent-commercial-audit.md) and [machine snapshot](2026-09-25-independent-commercial-audit.json) provide the hosted observations. Re-read hosted state before any rollout.
+Audited baseline: `7eccfaf0a1227358edb44e14cbb725e28fe97298`. The repair package is on `codex/commercial-readiness-repair-20260925` in [PR #205](https://github.com/finite0001/livingroom-vet-care/pull/205). This document records the implementation plan and earlier local evidence. The [independent audit](2026-09-25-independent-commercial-audit.md), [machine snapshot](2026-09-25-independent-commercial-audit.json), and later [hosted deployment receipt](2026-09-26-hosted-repair-deployment.md) separate audited baseline, applied backend repairs, and remaining commercial acceptance.
 
 ## Completed locally
 
@@ -33,4 +33,4 @@ The separate queues are retained for this candidate because the staff outbox has
 6. Obtain a successful GitHub CI run on the integrated SHA, then capture fresh readiness evidence. The expected CI JSON file is `docs/launch-evidence/YYYY-MM-DD-github-ci.json`, from `gh run view <run-id> --json headSha,status,conclusion,updatedAt,jobs`; the summary requires completed successful `frontend`, `edge`, and `database` jobs.
 7. Confirm hosted backup retention, actual private Storage byte recovery, operator access and alert delivery. Carry out named clinical/staff decisions and provider round trips before considering production rollout. Production payment and live send gates remain disabled; CloudTalk/public phone are deferred.
 
-Production deployment, scheduler configuration, provider sends, human acceptance, and hosted recovery remain unverified. No hosted SQL, function, credential, or provider setting was changed by this local repair.
+Staging and primary database migrations plus the explicit Edge manifest were deployed and verified as recorded in the [hosted deployment receipt](2026-09-26-hosted-repair-deployment.md). Production frontend publication, scheduler configuration, provider sends, human acceptance, and hosted recovery remain unverified. No credential or provider setting was changed by this repair.
