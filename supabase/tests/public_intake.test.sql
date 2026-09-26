@@ -2,6 +2,18 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+select ok(
+  not has_table_privilege('anon', 'public.contact_submissions', 'INSERT')
+  and not has_table_privilege('authenticated', 'public.contact_submissions', 'INSERT')
+  and not has_table_privilege('service_role', 'public.contact_submissions', 'INSERT'),
+  'Direct table inserts are denied for public and service clients'
+);
+select ok(
+  not has_any_column_privilege('anon', 'public.contact_submissions', 'INSERT')
+  and not has_any_column_privilege('authenticated', 'public.contact_submissions', 'INSERT')
+  and not has_any_column_privilege('service_role', 'public.contact_submissions', 'INSERT'),
+  'No column-level insert grant bypasses verified intake'
+);
 set local role anon;
 select throws_ok($$insert into contact_submissions(name,email,subject,message) values('Name','email@example.test','Subject','Message')$$,'42501',null,'Direct anonymous insert bypass closed');
 select throws_ok($$select accept_contact_intake(gen_random_uuid(),repeat('a',64),repeat('b',64),'{}')$$,'42501',null,'Anonymous cannot call trusted accept RPC');
