@@ -195,6 +195,8 @@ if (!migrationDriftCommand.ok || !migrationDrift) {
   migrationBlockers.push('Could not refresh migration drift with the linked dry-run helper.');
 } else if ((migrationDrift.remote_only_count ?? 0) > 0) {
   migrationBlockers.push('Remote-only migrations are present; do not run the hosted drill until drift is reconciled.');
+} else if ((migrationDrift.name_mismatch_count ?? 0) > 0) {
+  migrationBlockers.push('Hosted migration versions have different SQL names; reconcile the ledger before the hosted drill.');
 } else if (localOnly.length > 0) {
   if (expectedLocalOnly) {
     migrationBlockers.push('Hosted database is still missing the two expected readiness migrations required before the hosted no-live-send drill.');

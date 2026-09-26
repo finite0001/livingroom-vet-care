@@ -85,6 +85,10 @@ if (!migrationDrift) {
   if (migrationDrift.local_only_count > 0) {
     supabaseBlockers.push(`${migrationDrift.local_only_count} local readiness migrations are not applied remotely.`);
   }
+
+  if (migrationDrift.name_mismatch_count > 0) {
+    supabaseBlockers.push(`${migrationDrift.name_mismatch_count} hosted migration versions have different SQL names and need ledger reconciliation.`);
+  }
 }
 
 const missingSchemaReadiness = [
