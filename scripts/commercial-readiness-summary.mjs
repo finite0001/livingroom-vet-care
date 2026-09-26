@@ -2,6 +2,8 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { ciBlockers, edgeFunctionBlockers, freshnessBlocker } from './release-evidence-checks.mjs';
 
 const evidenceDirectory = 'docs/launch-evidence';
 const evidenceFiles = {
@@ -13,6 +15,7 @@ const evidenceFiles = {
   hub: latestEvidenceFile(/^\d{4}-\d{2}-\d{2}-hub-workflow-readiness\.json$/),
   noLiveSendPreflight: latestOptionalEvidenceFile(/^\d{4}-\d{2}-\d{2}-hosted-no-live-send-drill-preflight\.json$/),
   acceptance: latestOptionalEvidenceFile(/^\d{4}-\d{2}-\d{2}-clinical-staff-acceptance-readiness\.json$/),
+  ci: latestOptionalEvidenceFile(/^\d{4}-\d{2}-\d{2}-github-ci\.json$/),
 };
 
 function latestEvidenceFile(pattern) {
@@ -62,9 +65,15 @@ const publicSite = readJson(evidenceFiles.publicSite);
 const hub = readJson(evidenceFiles.hub);
 const noLiveSendPreflight = evidenceFiles.noLiveSendPreflight ? readJson(evidenceFiles.noLiveSendPreflight) : null;
 const acceptance = evidenceFiles.acceptance ? readJson(evidenceFiles.acceptance) : null;
+const ci = evidenceFiles.ci ? readJson(evidenceFiles.ci) : null;
+const reviewedSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 
 const migrationDrift = hosted.supabase?.migrationDrift;
 const supabaseBlockers = [];
+for (const [label, artifact] of [['hosted', hosted], ['schema', schema]]) {
+  const blocker = freshnessBlocker(artifact, label);
+  if (blocker) supabaseBlockers.push(blocker);
+}
 
 if (!migrationDrift) {
   supabaseBlockers.push('Supabase migration drift summary is missing.');
@@ -88,8 +97,11 @@ for (const item of missingSchemaReadiness) {
   supabaseBlockers.push(`Hosted schema missing ${item.name}.`);
 }
 
-const missingFunctions = (functions.readinessPresence ?? []).filter((item) => !item.remotePresent);
-const functionBlockers = missingFunctions.map((item) => `Hosted Edge Function missing ${item.slug}.`);
+const functionBlockers = edgeFunctionBlockers(functions, functionReview);
+for (const [label, artifact] of [['functions', functions], ['functionReview', functionReview]]) {
+  const blocker = freshnessBlocker(artifact, label);
+  if (blocker) functionBlockers.push(blocker);
+}
 
 const functionReviewLaunchBlockers = functionReview.launchBlockers ?? [];
 
@@ -138,6 +150,8 @@ if (!noLiveSendPreflight) {
 const publicBlockers = (publicSite.findings ?? [])
   .filter((finding) => finding.severity === 'blocker')
   .map((finding) => `${finding.area}: ${finding.message}`);
+const publicEvidenceBlocker = freshnessBlocker(publicSite, 'publicSite');
+if (publicEvidenceBlocker) publicBlockers.push(publicEvidenceBlocker);
 
 const publicWarnings = (publicSite.findings ?? [])
   .filter((finding) => finding.severity === 'warning')
@@ -151,8 +165,12 @@ const hubBlockers = [
     .filter((finding) => finding.severity === 'hosted-blocker')
     .map((finding) => `${finding.workflow}: ${finding.message}`),
 ];
+const hubEvidenceBlocker = freshnessBlocker(hub, 'hub');
+if (hubEvidenceBlocker) hubBlockers.push(hubEvidenceBlocker);
 
 const acceptanceBlockers = [];
+const acceptanceEvidenceBlocker = freshnessBlocker(acceptance, 'acceptance');
+if (acceptanceEvidenceBlocker) acceptanceBlockers.push(acceptanceEvidenceBlocker);
 const acceptanceWarnings = [];
 const acceptanceEvidence = evidenceFiles.acceptance ? [evidenceFiles.acceptance] : [];
 
@@ -173,6 +191,16 @@ if (!acceptance) {
 }
 
 const verificationBlockers = [];
+verificationBlockers.push(...ciBlockers(ci, reviewedSha));
+
+for (const [key, artifact] of Object.entries({ hosted, schema, functions, functionReview, publicSite, hub, acceptance, ci })) {
+  const blocker = freshnessBlocker(artifact, key);
+  if (blocker) verificationBlockers.push(blocker);
+}
+
+if (hosted.git?.head?.stdout?.trim() !== reviewedSha) {
+  verificationBlockers.push('Hosted inventory was captured for a different commit.');
+}
 
 if ((hub.summary?.blockers ?? 1) > 0) {
   verificationBlockers.push('Local Hub readiness has blockers.');
