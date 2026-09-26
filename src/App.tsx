@@ -30,6 +30,7 @@ const Vaccinations = lazy(() => import("./pages/services/Vaccinations"));
 import { AuthProvider } from "@/hub/contexts/AuthContext";
 import { ProtectedRoute } from "@/hub/components/layout/ProtectedRoute";
 import { AppShell } from "@/hub/components/layout/AppShell";
+import { CloudTalkPhoneDock } from "@/hub/features/cloudtalk/CloudTalkPhoneDock";
 
 const HubLoginPage = lazy(() => import("@/hub/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/hub/pages/ResetPasswordPage"));
@@ -43,6 +44,7 @@ const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
 const ContactSubmissionsPage = lazy(() => import("@/hub/pages/ContactSubmissionsPage"));
 const DeliveriesPage = lazy(() => import("@/hub/pages/DeliveriesPage"));
+const CloudTalkActivityPage = lazy(() => import("@/hub/features/cloudtalk/CloudTalkActivityPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
 const EzyVetImportPage = lazy(() => import("./hub/features/imports/EzyVetImportPage").then(module => ({ default: module.EzyVetImportPage })));
 const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage").then(module => ({ default: module.InventoryPage })));
@@ -73,10 +75,14 @@ function HubLoader() {
 
 const queryClient = new QueryClient();
 
+function RootShell() {
+  return <><ScrollToTop /><Suspense fallback={<HubLoader />}><Outlet /></Suspense><CloudTalkPhoneDock /></>;
+}
+
 // Data-router navigation supports the clinical editor's unsaved-change blocker,
 // including back/forward navigation, while retaining the existing route tree.
 const router = createBrowserRouter(createRoutesFromElements(
-  <Route element={<><ScrollToTop /><Suspense fallback={<HubLoader />}><Outlet /></Suspense></>}>
+  <Route element={<RootShell />}>
               {/* Marketing site routes */}
               <Route path="/" element={<MarketingErrorBoundary><Index /></MarketingErrorBoundary>} />
               <Route path="/experience" element={<MarketingErrorBoundary><Experience /></MarketingErrorBoundary>} />
@@ -117,8 +123,8 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/patient/:id" element={<PatientPage />} />
                   <Route path="/hub/tickets" element={<TicketsPage />} />
                   <Route path="/hub/ticket/:id" element={<TicketDetailPage />} />
-                  <Route path="/hub/call" element={<UnavailableToolPage />} />
-                  <Route path="/hub/voicemails" element={<UnavailableToolPage />} />
+                  <Route path="/hub/call" element={<CloudTalkActivityPage />} />
+                  <Route path="/hub/voicemails" element={<CloudTalkActivityPage voicemailOnly />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />

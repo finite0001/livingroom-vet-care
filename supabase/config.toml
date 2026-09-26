@@ -12,6 +12,12 @@ verify_jwt = false
 [functions.twilio-webhook]
 verify_jwt = false
 
+[functions.cloudtalk-webhook]
+verify_jwt = false
+
+[functions.cloudtalk-call-media]
+verify_jwt = true
+
 # Service workers validate managed secret apikeys in the shared server-only handler.
 [functions.process-inbound]
 verify_jwt = false

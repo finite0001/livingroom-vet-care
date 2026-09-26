@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Package,
+  Phone,
   PawPrint,
   Pill,
   Settings,
@@ -40,6 +41,7 @@ export const navItems: NavItem[] = [
   // Workspace
   { path: "/hub", label: "Home", icon: Home, section: "workspace", exact: true, tab: true },
   { path: "/hub/chats", label: "Messages", mobileLabel: "Msgs", icon: MessageSquare, section: "workspace", tab: true },
+  { path: "/hub/call", label: "Phone", icon: Phone, section: "workspace" },
   { path: "/hub/tickets", label: "Tickets", icon: Ticket, section: "workspace", tab: true },
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays, section: "workspace", tab: true },
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },

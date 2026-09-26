@@ -15,6 +15,8 @@ const expectedHostedFunctions = [
   { slug: 'resend-delivery-webhook', verifyJwt: false, purpose: 'signed Resend delivery callback' },
   { slug: 'twilio-message-status-callback', verifyJwt: false, purpose: 'signed Twilio delivery status callback' },
   { slug: 'twilio-inbound-sms', verifyJwt: false, purpose: 'signed Twilio inbound SMS webhook' },
+  { slug: 'cloudtalk-webhook', verifyJwt: false, purpose: 'signed CloudTalk call, SMS, and AI event webhook' },
+  { slug: 'cloudtalk-call-media', verifyJwt: true, purpose: 'administrator-only CloudTalk recording and transcript proxy' },
 ];
 
 const intentionallyNotCommissioned = [
