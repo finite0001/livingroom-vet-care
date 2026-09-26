@@ -23,6 +23,7 @@ interface CloudTalkCall {
   transcript_ready: boolean;
   ai_summary: string | null;
   ai_language: string | null;
+  trusted_number: boolean;
   last_event_at: string;
 }
 

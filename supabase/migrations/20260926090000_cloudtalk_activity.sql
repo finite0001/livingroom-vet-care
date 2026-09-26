@@ -21,6 +21,7 @@ create table public.cloudtalk_calls (
   transcript_ready boolean not null default false,
   ai_summary text,
   ai_language text,
+  trusted_number boolean not null default false,
   last_event_at timestamptz not null
 );
 create index cloudtalk_calls_recent_idx on public.cloudtalk_calls(last_event_at desc);
@@ -42,7 +43,7 @@ alter table public.cloudtalk_messages enable row level security;
 revoke all on public.cloudtalk_events, public.cloudtalk_calls, public.cloudtalk_messages from public, anon, authenticated, service_role;
 grant select on public.cloudtalk_calls, public.cloudtalk_messages to authenticated;
 create policy "Active staff read CloudTalk calls" on public.cloudtalk_calls
-  for select to authenticated using (public.is_active_staff(auth.uid()));
+  for select to authenticated using (trusted_number and public.is_active_staff(auth.uid()));
 create policy "Active staff read CloudTalk messages" on public.cloudtalk_messages
   for select to authenticated using (public.is_active_staff(auth.uid()));
 
@@ -77,7 +78,7 @@ begin
     insert into public.cloudtalk_calls(
       call_uuid, call_id, direction, external_number, internal_number,
       started_at, ended_at, duration_seconds, is_voicemail, recording_ready,
-      transcript_ready, ai_summary, ai_language, last_event_at
+      transcript_ready, ai_summary, ai_language, trusted_number, last_event_at
     ) values (
       call_key, p_data->>'call_id', p_data->>'direction', number_external, number_internal,
       nullif(p_data->>'started_at', '')::timestamptz,
@@ -88,6 +89,7 @@ begin
       p_event_type = 'transcript.ready',
       case when p_event_type = 'cidata.ready' then left(p_data#>>'{summary,summary}', 10000) end,
       case when p_event_type in ('transcript.ready', 'cidata.ready') then left(p_data->>'language', 20) end,
+      p_event_type = 'call.ended',
       p_occurred_at
     ) on conflict(call_uuid) do update set
       call_id = coalesce(excluded.call_id, cloudtalk_calls.call_id),
@@ -102,6 +104,7 @@ begin
       transcript_ready = excluded.transcript_ready or cloudtalk_calls.transcript_ready,
       ai_summary = coalesce(excluded.ai_summary, cloudtalk_calls.ai_summary),
       ai_language = coalesce(excluded.ai_language, cloudtalk_calls.ai_language),
+      trusted_number = excluded.trusted_number or cloudtalk_calls.trusted_number,
       last_event_at = greatest(excluded.last_event_at, cloudtalk_calls.last_event_at);
   else
     message_key := p_data->>'id';
