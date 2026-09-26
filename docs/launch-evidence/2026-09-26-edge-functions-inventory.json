@@ -1,0 +1,446 @@
+{
+  "generatedAt": "2026-09-26T03:25:53.590Z",
+  "note": "Read-only Supabase Edge Function inventory. Function hashes and source paths are intentionally omitted; this captures deployment shape, not code equivalence.",
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "command": {
+    "command": "npx supabase functions list --project-ref mgadheotkdnrsatfivjy",
+    "status": 0,
+    "ok": true,
+    "stderr": [
+      "We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli"
+    ]
+  },
+  "counts": {
+    "localFunctions": 48,
+    "remoteFunctions": 35
+  },
+  "localSlugs": [
+    "capture-conversation-email",
+    "capture-ezyvet-attachment",
+    "capture-inbound-attachment",
+    "cleanup-abandoned-attachment",
+    "dispatch-outbound-deliveries",
+    "dispatch-outbox",
+    "enqueue-message",
+    "estimate-decision",
+    "ezyvet-import",
+    "health",
+    "invite-staff",
+    "invoice-checkout",
+    "invoice-refund",
+    "payment-collection",
+    "payment-status",
+    "prepare-document-link",
+    "prepare-estimate-decision-grant",
+    "prepare-estimate-publication",
+    "prepare-external-record",
+    "prepare-invoice-email",
+    "prepare-lab-report",
+    "prepare-payment-collection",
+    "prepare-payment-delivery",
+    "prepare-release-email",
+    "process-inbound",
+    "process-stripe-events",
+    "public-contact",
+    "queue-reminders",
+    "read-estimate-publication-artifact",
+    "read-inbound-attachment",
+    "recover-document-link",
+    "recover-estimate-decision-grant",
+    "recover-estimate-publication-preparation",
+    "recover-payment-collection",
+    "resend-delivery-webhook",
+    "resend-webhook",
+    "retrieve-document-link",
+    "retrieve-reviewed-ezyvet-original",
+    "send-email",
+    "send-provider-email",
+    "send-sms",
+    "stripe-webhook",
+    "suggest-replies",
+    "twilio-inbound-sms",
+    "twilio-message-status-callback",
+    "twilio-webhook",
+    "verify-conversation-attachment",
+    "verify-payment-reconciliation"
+  ],
+  "remoteFunctions": [
+    {
+      "slug": "send-email",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-23T03:46:54.568Z"
+    },
+    {
+      "slug": "send-sms",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-23T03:46:54.568Z"
+    },
+    {
+      "slug": "invite-staff",
+      "status": "ACTIVE",
+      "version": 7,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "ezyvet-import",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "enqueue-message",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "dispatch-outbox",
+      "status": "ACTIVE",
+      "version": 7,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "process-inbound",
+      "status": "ACTIVE",
+      "version": 7,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "queue-reminders",
+      "status": "ACTIVE",
+      "version": 7,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "prepare-release-email",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true,
+      "importMap": true,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "resend-webhook",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "twilio-webhook",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "public-contact",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T04:02:05.102Z"
+    },
+    {
+      "slug": "invoice-checkout",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "invoice-refund",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "stripe-webhook",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "process-stripe-events",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "payment-collection",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "payment-status",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "capture-ezyvet-attachment",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "prepare-document-link",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": true,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "prepare-external-record",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "prepare-lab-report",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "prepare-payment-collection",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "recover-document-link",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": true,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "recover-payment-collection",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "retrieve-document-link",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "importMap": true,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "retrieve-reviewed-ezyvet-original",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "verify-payment-reconciliation",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": true,
+      "importMap": false,
+      "updatedAt": "2026-09-15T02:12:54.583Z"
+    },
+    {
+      "slug": "dispatch-outbound-deliveries",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T03:47:02.934Z"
+    },
+    {
+      "slug": "resend-delivery-webhook",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T03:47:02.934Z"
+    },
+    {
+      "slug": "twilio-message-status-callback",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T03:47:02.934Z"
+    },
+    {
+      "slug": "twilio-inbound-sms",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "importMap": false,
+      "updatedAt": "2026-09-23T03:47:02.934Z"
+    },
+    {
+      "slug": "health",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "updatedAt": "2026-09-24T06:21:30.896Z"
+    }
+  ],
+  "readinessPresence": [
+    {
+      "slug": "invite-staff",
+      "verifyJwt": true,
+      "purpose": "staff bootstrap/invitations",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": true,
+      "verifyJwtMatches": true
+    },
+    {
+      "slug": "send-email",
+      "verifyJwt": true,
+      "purpose": "staff client email enqueue endpoint",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": true,
+      "verifyJwtMatches": true
+    },
+    {
+      "slug": "send-sms",
+      "verifyJwt": true,
+      "purpose": "staff client SMS enqueue endpoint",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": true,
+      "verifyJwtMatches": true
+    },
+    {
+      "slug": "dispatch-outbound-deliveries",
+      "verifyJwt": false,
+      "purpose": "token-protected outbound delivery worker",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": false,
+      "verifyJwtMatches": true
+    },
+    {
+      "slug": "resend-delivery-webhook",
+      "verifyJwt": false,
+      "purpose": "signed Resend delivery callback",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": false,
+      "verifyJwtMatches": true
+    },
+    {
+      "slug": "twilio-message-status-callback",
+      "verifyJwt": false,
+      "purpose": "signed Twilio delivery status callback",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": false,
+      "verifyJwtMatches": true
+    },
+    {
+      "slug": "twilio-inbound-sms",
+      "verifyJwt": false,
+      "purpose": "signed Twilio inbound SMS webhook",
+      "localPresent": true,
+      "remotePresent": true,
+      "remoteStatus": "ACTIVE",
+      "remoteVerifyJwt": false,
+      "verifyJwtMatches": true
+    }
+  ],
+  "localOnly": [
+    "capture-conversation-email",
+    "capture-inbound-attachment",
+    "cleanup-abandoned-attachment",
+    "estimate-decision",
+    "prepare-estimate-decision-grant",
+    "prepare-estimate-publication",
+    "read-estimate-publication-artifact",
+    "read-inbound-attachment",
+    "recover-estimate-decision-grant",
+    "recover-estimate-publication-preparation",
+    "send-provider-email",
+    "suggest-replies",
+    "verify-conversation-attachment"
+  ],
+  "remoteOnly": [],
+  "intentionallyNotCommissioned": [
+    {
+      "slug": "send-provider-email",
+      "reason": "references provider delivery tables outside the launch baseline"
+    },
+    {
+      "slug": "suggest-replies",
+      "reason": "requires AI provider configuration and is not needed for foundation launch"
+    }
+  ]
+}

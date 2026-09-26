@@ -94,6 +94,7 @@ async function fixture(page: Page, baseURL: string | undefined, actor = staff) {
         "/rest/v1/rpc/inbox_unread_totals",
         "/rest/v1/rpc/list_inbox_workspace",
         "/rest/v1/rpc/list_native_refills",
+        "/rest/v1/appointments",
       ].includes(path) ||
       (method === "HEAD" &&
         ["/rest/v1/conversations", "/rest/v1/tickets", "/rest/v1/appointments", "/rest/v1/clinical_encounters", "/rest/v1/patient_vaccine_due_plans", "/rest/v1/patient_lab_orders", "/rest/v1/communication_outbox"].includes(path));
@@ -254,7 +255,7 @@ test("desktop home exposes today counts, implemented tools and personal unread s
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(
       0,
     );
-  for (const name of ["Inbox", "Schedule", "Care reminders", "Templates"])
+  for (const name of ["Messages", "Schedule", "Care reminders", "Templates"])
     await expect(
       page.locator("main").getByRole("link", { name, exact: true }),
     ).toBeVisible();
@@ -309,7 +310,6 @@ test("home distinguishes loading and failed reads from zero and supports retry",
   state.hold = null;
   for (const label of [
     "Unread conversations for you",
-    "Today's appointments",
     "Open refill requests",
     "Reminders due",
     "Unsigned notes",
@@ -318,10 +318,11 @@ test("home distinguishes loading and failed reads from zero and supports retry",
     await expect(
       page.getByRole("region", { name: label, exact: true }),
     ).toContainText("Unavailable", { timeout: 15000 });
+  await expect(page.getByRole("region", { name: "Right now" })).toContainText("unavailable");
+  await expect(page.getByRole("region", { name: "The rest of your day" })).toContainText("unavailable");
   state.fail = false;
   for (const label of [
     "Unread conversations for you",
-    "Today's appointments",
     "Open refill requests",
     "Reminders due",
     "Unsigned notes",
@@ -330,6 +331,7 @@ test("home distinguishes loading and failed reads from zero and supports retry",
     await page
       .getByRole("button", { name: `Retry ${label.toLowerCase()}`, exact: true })
       .click();
+  await page.getByRole("region", { name: "Right now" }).getByRole("button", { name: "Retry" }).click();
   await expect(
     page.getByRole("region", {
       name: "Unread conversations for you",

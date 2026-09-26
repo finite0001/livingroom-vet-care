@@ -65,9 +65,9 @@ try:
         migration_hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     assert {'20260916100001','20260916110001','20260916120000','20260916130000','20260916123017'} <= versions, 'Combined communication attachment migrations required'
-    # 137 since 20260922120000_b1_scheduler.sql. This count is a tripwire:
+    # 151 through 20260926031324_restore_verified_contact_intake_boundary.sql. This count is a tripwire:
     # review it deliberately whenever the migration inventory changes.
-    assert len(versions) == 137 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 151 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117','20260924120000','20260924130000','20260926031324'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521

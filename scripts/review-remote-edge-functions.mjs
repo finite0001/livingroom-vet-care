@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { requiredEdgeSlugs, requiredEdgeSourceReview } from './release-evidence-checks.mjs';
 
 const evidenceDate = new Date().toISOString().slice(0, 10);
 const projectRef = 'mgadheotkdnrsatfivjy';
@@ -23,6 +24,7 @@ const launchConflictSlugs = new Set([
   'resend-webhook',
   'twilio-webhook',
 ]);
+const requiredExistingSlugs = new Set(requiredEdgeSlugs);
 
 const adjacentWorkflowPatterns = [
   /stripe/i,
@@ -128,23 +130,34 @@ function classifySlug(slug, matchedRiskPatterns) {
 
 const inventory = JSON.parse(readFileSync(inventoryPath, 'utf8'));
 const remoteOnlySlugs = inventory.remoteOnly ?? [];
+const remoteOnlySet = new Set(remoteOnlySlugs);
+const remoteSlugs = new Set((inventory.remoteFunctions ?? []).map((entry) => entry.slug));
+const reviewSlugs = [...new Set([...remoteOnlySlugs, ...requiredExistingSlugs])].sort();
 const tempDirectory = mkdtempSync(join(tmpdir(), 'livingroom-remote-functions-'));
 const reviews = [];
 
 try {
-  for (const slug of remoteOnlySlugs) {
-    const download = run(
+  for (const slug of reviewSlugs) {
+    const isRequiredExisting = requiredExistingSlugs.has(slug);
+    const download = remoteSlugs.has(slug) ? run(
       'npx',
       ['supabase', 'functions', 'download', slug, '--project-ref', projectRef, '--use-api'],
       tempDirectory,
-    );
+    ) : { ok: false, status: null, stderr: ['Slug absent from hosted inventory.'] };
     const functionDirectory = join(tempDirectory, 'supabase', 'functions', slug);
-    const files = download.ok ? readAllFiles(functionDirectory) : [];
+    const files = download.ok && existsSync(functionDirectory) ? readAllFiles(functionDirectory) : [];
     const contents = files.map((file) => readFileSync(file, 'utf8')).join('\n');
+    const remoteEntry = join(functionDirectory, 'index.ts');
+    const localEntry = resolve('supabase', 'functions', slug, 'index.ts');
+    const entrypointMatches = isRequiredExisting && existsSync(remoteEntry) && existsSync(localEntry)
+      ? readFileSync(remoteEntry).equals(readFileSync(localEntry))
+      : null;
     const matchedRiskPatterns = riskPatterns
       .filter(({ pattern }) => pattern.test(contents) || pattern.test(slug))
       .map(({ id }) => id);
-    const classification = classifySlug(slug, matchedRiskPatterns);
+    const classification = isRequiredExisting
+      ? requiredEdgeSourceReview(download.ok, entrypointMatches, contents)
+      : classifySlug(slug, matchedRiskPatterns);
 
     reviews.push({
       slug,
@@ -155,6 +168,8 @@ try {
       },
       fileCount: files.length,
       sourceSha256: contents ? hashSource(contents) : null,
+      entrypointMatches,
+      remoteOnly: remoteOnlySet.has(slug),
       matchedRiskPatterns,
       ...classification,
     });
@@ -168,10 +183,11 @@ const report = {
   generatedAt: new Date().toISOString(),
   projectRef,
   inventoryPath,
-  note: 'Downloads remote-only Edge Function source into a temporary directory, records hashes/classification only, then deletes the downloaded source. Source bodies are intentionally not written to evidence.',
+  note: 'Downloads remote-only and required existing Edge Function source into a temporary directory, records hashes, entrypoint comparison and classification only, then deletes source bodies. Matching entrypoints alone do not prove shared dependencies or functional behavior.',
   status: launchBlockers.length === 0 ? 'reviewed-no-launch-blockers' : 'launch-conflicts-found',
   summary: {
-    remoteOnlyReviewed: reviews.length,
+    remoteOnlyReviewed: reviews.filter((review) => review.remoteOnly).length,
+    requiredExistingReviewed: reviews.filter((review) => requiredExistingSlugs.has(review.slug)).length,
     launchBlockers: launchBlockers.length,
     adjacentWorkflowReview: reviews.filter((review) => review.classification === 'adjacent-workflow-review').length,
     reviewedNoLaunchSignal: reviews.filter((review) => review.classification === 'reviewed-no-launch-signal').length,

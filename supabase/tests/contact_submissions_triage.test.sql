@@ -37,7 +37,7 @@ select is(
 select ok(has_column_privilege('authenticated', 'public.contact_submissions', 'triage_status', 'UPDATE'), 'Authenticated staff have explicit triage status update grant');
 select ok(has_column_privilege('authenticated', 'public.contact_submissions', 'staff_notes', 'UPDATE'), 'Authenticated staff have explicit staff notes update grant');
 select ok(not has_column_privilege('authenticated', 'public.contact_submissions', 'name', 'UPDATE'), 'Authenticated staff cannot edit submitted contact names');
-select ok(has_column_privilege('anon', 'public.contact_submissions', 'message', 'INSERT'), 'Anonymous callers can insert public contact form fields');
+select ok(not has_any_column_privilege('anon', 'public.contact_submissions', 'INSERT'), 'Anonymous callers cannot bypass verified intake through column grants');
 select ok(not has_column_privilege('anon', 'public.contact_submissions', 'staff_notes', 'INSERT'), 'Anonymous callers cannot insert staff notes');
 select ok(not has_table_privilege('anon', 'public.contact_submissions', 'UPDATE'), 'Anonymous callers have no contact submission update grant');
 
@@ -118,49 +118,17 @@ select ok(
 );
 
 set local role anon;
-select lives_ok(
+select throws_ok(
   $$insert into public.contact_submissions(name,email,subject,message) values ('Public', 'public@example.test', 'Hello', 'Public insert still works')$$,
-  'Public contact form can still insert after triage columns were added'
+  '42501',
+  null,
+  'Public contact form cannot insert directly after triage columns were added'
 );
 select throws_ok(
   $$insert into public.contact_submissions(name,email,subject,message,staff_notes) values ('Public', 'public@example.test', 'Hello', 'Nope', 'Forged note')$$,
   '42501',
   null,
   'Anonymous callers cannot forge contact triage metadata on insert'
-);
-select throws_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('', 'not-an-email', '', '')$$,
-  '23514',
-  null,
-  'Public contact submission guard rejects invalid website fields'
-);
-select lives_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('Rate One', 'limit@example.test', 'One', 'First allowed message')$$,
-  'First contact submission from an email is accepted'
-);
-select lives_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('Rate Two', 'limit@example.test', 'Two', 'Second allowed message')$$,
-  'Second contact submission from an email is accepted'
-);
-select lives_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('Rate Three', 'limit@example.test', 'Three', 'Third allowed message')$$,
-  'Third contact submission from an email is accepted'
-);
-select throws_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('Rate Four', 'limit@example.test', 'Four', 'Fourth blocked message')$$,
-  '23514',
-  'Too many contact submissions from this email address; please try again later',
-  'Public contact submissions are rate-limited by email'
-);
-select lives_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('Duplicate', 'duplicate@example.test', 'Same', 'Same message')$$,
-  'Initial public contact submission for duplicate check is accepted'
-);
-select throws_ok(
-  $$insert into public.contact_submissions(name,email,subject,message) values ('Duplicate', 'duplicate@example.test', 'Same', 'Same message')$$,
-  '23514',
-  'Duplicate contact submission received too recently; please try again later',
-  'Duplicate public contact submissions are blocked'
 );
 select throws_ok(
   $$update public.contact_submissions set triage_status = 'CLOSED' where id = '37000000-0000-4000-8000-000000000001'$$,
@@ -170,5 +138,36 @@ select throws_ok(
 );
 
 reset role;
+select throws_ok(
+  $$insert into public.contact_submissions(name,email,subject,message) values ('', 'not-an-email', '', '')$$,
+  '23514',
+  null,
+  'Contact submission guard still rejects invalid website fields for trusted inserts'
+);
+set local role service_role;
+select is(
+  (accept_contact_intake(
+    '38000000-0000-4000-8000-000000000001',
+    repeat('a', 64),
+    repeat('c', 64),
+    '{"name":"Verified visitor","email":"verified@example.test","phone":null,"subject":"Verified triage","message":"Please call"}'
+  )->>'received'),
+  'true',
+  'Verified intake still accepts after triage columns were added'
+);
+select throws_ok(
+  $$insert into public.contact_submissions(name,email,subject,message) values ('Service', 'service@example.test', 'Bypass', 'No challenge')$$,
+  '42501',
+  null,
+  'Service client cannot bypass the trusted intake RPC'
+);
+reset role;
+select is(
+  (select count(*) from public.website_inquiry_triage t
+   join public.contact_submissions s on s.id = t.inquiry_id
+   where s.subject = 'Verified triage'),
+  1::bigint,
+  'Verified intake creates one staff triage row atomically'
+);
 select * from finish();
 rollback;
