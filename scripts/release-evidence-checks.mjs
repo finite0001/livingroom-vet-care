@@ -1,5 +1,5 @@
 const requiredJobs = ['frontend', 'edge', 'database'];
-export const requiredEdgeSlugs = ['enqueue-message', 'public-contact', 'dispatch-outbox', 'process-inbound', 'queue-reminders'];
+export const requiredEdgeSlugs = ['enqueue-message', 'public-contact', 'dispatch-outbox', 'process-inbound', 'queue-reminders', 'cloudtalk-webhook', 'cloudtalk-call-media'];
 const optionalEdgeSlugs = new Set(['send-provider-email', 'suggest-replies']);
 
 export function requiredEdgeSourceReview(downloadOk, entrypointMatches, contents) {

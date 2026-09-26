@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Package,
+  Phone,
   PawPrint,
   Pill,
   Settings,
@@ -18,6 +19,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { cloudtalkEnabled } from "../../../config/cloudtalk.ts";
 
 /**
  * Single source of truth for hub navigation. Both DesktopSidebar and
@@ -40,6 +42,7 @@ export const navItems: NavItem[] = [
   // Workspace
   { path: "/hub", label: "Home", icon: Home, section: "workspace", exact: true, tab: true },
   { path: "/hub/chats", label: "Messages", mobileLabel: "Msgs", icon: MessageSquare, section: "workspace", tab: true },
+  ...(cloudtalkEnabled ? [{ path: "/hub/call", label: "Phone", icon: Phone, section: "workspace" as const }] : []),
   { path: "/hub/tickets", label: "Tickets", icon: Ticket, section: "workspace", tab: true },
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays, section: "workspace", tab: true },
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },

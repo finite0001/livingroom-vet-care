@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+const cloudtalkEnabled = process.env.VITE_CLOUDTALK_ENABLED === "true";
 const backend = "http://127.0.0.1:54321";
 const staff = "11111111-1111-4111-8111-111111111111";
 const other = "11111111-1111-4111-8111-222222222222";
@@ -196,8 +197,7 @@ const unavailable = [
   ["/hub/tools/campaigns", "Campaigns"],
   ["/hub/tools/alerts", "Broadcast messages"],
   ["/hub/tools/surveys", "Surveys"],
-  ["/hub/call", "Voice calling"],
-  ["/hub/voicemails", "Voicemail"],
+  ...(cloudtalkEnabled ? [] : [["/hub/call", "Voice calling"], ["/hub/voicemails", "Voicemail"]]),
   ["/hub/admin/import", "Legacy CSV import"],
 ];
 test("optional direct routes stay read-only and never mount their legacy data hooks", async ({
@@ -231,6 +231,33 @@ test("optional direct routes stay read-only and never mount their legacy data ho
   ).toBe(true);
 });
 
+test("CloudTalk direct routes show staff activity without mounting legacy calling hooks", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(!cloudtalkEnabled, "CloudTalk phone remains gated until provider acceptance");
+  const state = await fixture(page, baseURL);
+  for (const [path, heading] of [
+    ["/hub/call", "CloudTalk phone"],
+    ["/hub/voicemails", "Voicemail"],
+  ]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+    await expect(page.getByText("No calls recorded yet.")).toBeVisible();
+  }
+  expect(state.requests.some((r) => r.path === "/rest/v1/cloudtalk_calls")).toBe(true);
+  expect(
+    state.requests.filter((r) =>
+      /call_log|voicemail|functions\/v1/.test(r.path),
+    ),
+  ).toEqual([]);
+  expect(
+    state.requests
+      .filter((r) => r.path.startsWith("/rest/v1/cloudtalk_"))
+      .every((r) => r.method === "GET"),
+  ).toBe(true);
+});
+
 test("desktop home exposes today counts, implemented tools and personal unread state, never shared is_read", async ({
   page,
   baseURL,
@@ -245,7 +272,6 @@ test("desktop home exposes today counts, implemented tools and personal unread s
     }),
   ).toContainText("7");
   for (const name of [
-    "Phone",
     "Voicemails",
     "Campaigns",
     "Surveys",
@@ -255,6 +281,8 @@ test("desktop home exposes today counts, implemented tools and personal unread s
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(
       0,
     );
+  if (cloudtalkEnabled) await expect(page.getByRole("button", { name: "Phone", exact: true })).toBeVisible();
+  else await expect(page.getByRole("button", { name: "Phone", exact: true })).toHaveCount(0);
   for (const name of ["Messages", "Schedule", "Care reminders", "Templates"])
     await expect(
       page.locator("main").getByRole("link", { name, exact: true }),
@@ -362,7 +390,6 @@ test("mobile navigation keeps schedule and care reminders while hiding unavailab
   await page.getByRole("button", { name: "More", exact: true }).click();
   for (const name of [
     "Call",
-    "Phone",
     "Voicemails",
     "Campaigns",
     "Surveys",
@@ -373,6 +400,8 @@ test("mobile navigation keeps schedule and care reminders while hiding unavailab
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(
       0,
     );
+  if (cloudtalkEnabled) await expect(page.getByRole("button", { name: "Phone", exact: true })).toBeVisible();
+  else await expect(page.getByRole("button", { name: "Phone", exact: true })).toHaveCount(0);
   await page
     .getByRole("button", { name: "Care reminders", exact: true })
     .click();

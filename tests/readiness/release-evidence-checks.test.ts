@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { ciBlockers, edgeFunctionBlockers, freshnessBlocker, requiredEdgeSourceReview } from '../../scripts/release-evidence-checks.mjs';
+import { ciBlockers, edgeFunctionBlockers, freshnessBlocker, requiredEdgeSourceReview, requiredEdgeSlugs } from '../../scripts/release-evidence-checks.mjs';
 
 const sha = 'a'.repeat(40);
 const successfulCi = {
@@ -28,8 +28,7 @@ test('release evidence rejects missing, stale, and future timestamps', () => {
 
 test('enabled Edge routes need matching implementation and behavior proof', () => {
   const functions = { readinessPresence: [], localOnly: ['capture-conversation-email', 'suggest-replies'] };
-  const slugs = ['enqueue-message', 'public-contact', 'dispatch-outbox', 'process-inbound', 'queue-reminders'];
-  const reviews = slugs.map((slug) => ({ slug, sourceMatchesReviewedRelease: true, behaviorVerified: true }));
+  const reviews = requiredEdgeSlugs.map((slug) => ({ slug, sourceMatchesReviewedRelease: true, behaviorVerified: true }));
   assert.deepEqual(edgeFunctionBlockers({ ...functions, localOnly: ['suggest-replies'] }, { reviews }), []);
   assert.ok(edgeFunctionBlockers(functions, { reviews }).some((blocker) => blocker.includes('capture-conversation-email')));
   assert.ok(edgeFunctionBlockers({ ...functions, localOnly: [] }, { reviews: [{ ...reviews[0], behaviorVerified: false }, ...reviews.slice(1)] }).some((blocker) => blocker.includes('enqueue-message')));
