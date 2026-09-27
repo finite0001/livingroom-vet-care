@@ -19,7 +19,7 @@ Modern `sb_publishable_` keys are accepted. Legacy JWT keys must declare `role=a
 
 Only the five currently reviewed `VITE_` variable names are allowed: the three Supabase settings above, `VITE_CONTACT_INTAKE_URL` and `VITE_CONTACT_TURNSTILE_SITE_KEY`. Adding another browser setting requires updating this allowlist. This reduces accidental browser exposure; it does not inspect hardcoded source secrets or prove that arbitrary values assigned to public names are safe.
 
-Contact settings must both be unset (intake explicitly remains disabled), or both configured. The intake URL must be exactly the selected backend origin followed by `/functions/v1/public-contact`. Actual Turnstile hostname/action configuration, server secrets, deployment and accepted submission/recovery testing remain commissioning tasks. A configured string does not establish a working contact form.
+Contact settings have three valid shapes: both unset (intake explicitly remains disabled), both configured (Turnstile verification), or `VITE_CONTACT_INTAKE_URL` alone (the owner-approved no-challenge mode; the `public-contact` function must run with `CONTACT_VERIFICATION=none`, see [public intake](features/public-intake.md#verification-mode)). A site key without an intake URL is rejected. The build log reports which mode was configured. The intake URL must be exactly the selected backend origin followed by `/functions/v1/public-contact`. Actual Turnstile hostname/action configuration, server secrets, deployment and accepted submission/recovery testing remain commissioning tasks. A configured string does not establish a working contact form.
 
 ## Verification
 

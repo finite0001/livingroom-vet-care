@@ -11,6 +11,7 @@ import Footer from "@/components/layout/Footer";
 import { TurnstileChallenge } from "@/features/contact/TurnstileChallenge";
 import {
   contactRequest,
+  contactVerification,
   clearContactPointer,
   saveContactPointer,
   newContactPointer,
@@ -103,6 +104,10 @@ const Contact = () => {
   const [locked, setLocked] = useState(false);
   const [receiptNotice, setReceiptNotice] = useState("");
   const endpoint = import.meta.env.VITE_CONTACT_INTAKE_URL ?? "";
+  const verification = contactVerification(
+    endpoint,
+    import.meta.env.VITE_CONTACT_TURNSTILE_SITE_KEY ?? "",
+  );
   const [checking, setChecking] = useState(
     () => !!readContactPointer(),
   );
@@ -225,7 +230,7 @@ const Contact = () => {
             phone: result.data.phone || null,
             sms_consent: result.data.sms_consent,
           },
-          token,
+          verification === "turnstile" ? token : undefined,
         ))
       )
         throw new Error("Receipt not confirmed");
@@ -495,11 +500,13 @@ const Contact = () => {
                           )}
                         </div>
                       </fieldset>
-                      <TurnstileChallenge
-                        key={`${pointer.request_id}:${challengeVersion}`}
-                        requestId={pointer.request_id}
-                        onToken={setToken}
-                      />
+                      {verification !== "none" && (
+                        <TurnstileChallenge
+                          key={`${pointer.request_id}:${challengeVersion}`}
+                          requestId={pointer.request_id}
+                          onToken={setToken}
+                        />
+                      )}
                       {hasPending && (
                         <Button
                           type="button"
@@ -514,7 +521,10 @@ const Contact = () => {
                         type="submit"
                         size="lg"
                         disabled={
-                          isSubmitting || checking || !token || !endpoint
+                          isSubmitting ||
+                          checking ||
+                          verification === "unavailable" ||
+                          (verification === "turnstile" && !token)
                         }
                         className="w-full sm:w-auto"
                       >

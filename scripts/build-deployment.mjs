@@ -13,7 +13,7 @@ try {
     process.env,
     loadEnv("production", process.cwd(), "VITE_"),
   );
-  console.log(`Verified ${configuration.target} backend configuration. Contact intake ${configuration.contactEnabled ? "configured" : "disabled"}.`);
+  console.log(`Verified ${configuration.target} backend configuration. Contact intake ${configuration.contactEnabled ? `configured (verification: ${configuration.contactVerification})` : "disabled"}.`);
   await build({ mode: "production" });
 } catch (error) {
   console.error(error instanceof Error ? error.message : "Deployment build failed.");

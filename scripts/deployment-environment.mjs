@@ -76,11 +76,18 @@ export function verifyDeploymentEnvironment(explicit, resolved) {
   }
   const endpoint = resolved.VITE_CONTACT_INTAKE_URL || "";
   const siteKey = resolved.VITE_CONTACT_TURNSTILE_SITE_KEY || "";
-  if (Boolean(endpoint) !== Boolean(siteKey)) {
-    throw new Error("Configure both contact intake and Turnstile, or leave both unset for disabled intake.");
+  // Intake without a site key is the owner-approved no-challenge mode; the edge
+  // function must then run with CONTACT_VERIFICATION=none. A key alone is a mistake.
+  if (siteKey && !endpoint) {
+    throw new Error("A Turnstile site key requires the contact intake URL; set both, the intake URL alone, or neither.");
   }
   if (endpoint && endpoint !== `${explicit.VITE_SUPABASE_URL}/functions/v1/public-contact`) {
     throw new Error("Contact intake must use the selected backend's public-contact function.");
   }
-  return { target, project, contactEnabled: Boolean(endpoint) };
+  return {
+    target,
+    project,
+    contactEnabled: Boolean(endpoint),
+    contactVerification: endpoint ? (siteKey ? "turnstile" : "none") : "disabled",
+  };
 }
