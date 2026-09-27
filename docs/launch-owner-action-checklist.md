@@ -58,7 +58,7 @@ npm run readiness:refresh --silent
 npm run readiness:summary -- --fail-on-blockers
 ```
 
-Scheduler jobs exist after the hosted migration rollout, but database Vault values `project_url` and `scheduler_worker_key` are intentionally absent. That means database-initiated scheduler calls remain contained until explicit scheduler/provider commissioning.
+Scheduler jobs exist after the hosted migration rollout, but database Vault values `project_url` and `scheduler_worker_key` are intentionally absent. That means database-initiated scheduler calls remain contained until explicit scheduler/provider commissioning. The owner-run procedure, a dry-run-capable idempotent SQL script and a read-only per-job status check are in [scheduler commissioning](scheduler.md).
 
 ## 3. Confirm public contact content
 

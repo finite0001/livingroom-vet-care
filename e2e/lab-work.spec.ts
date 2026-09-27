@@ -139,3 +139,18 @@ test('unsaved lab plan participates in the shared patient navigation guard',asyn
  await dialog.getByRole('button',{name:/keep editing|stay/i}).click();
  await expect(page.getByLabel('Test name',{exact:true})).toHaveValue('Unsaved synthetic plan');
 });
+test('lab reminders are an explicit per-order opt-in for open orders with a due date',async({page})=>{
+ const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);
+ await page.getByRole('button',{name:'New lab order',exact:true}).click();
+ const reminders=page.getByLabel('Enable due reminders for this lab order');
+ await expect(reminders).not.toBeChecked();await expect(reminders).toBeDisabled();
+ await page.getByLabel('Test name',{exact:true}).fill('Synthetic recheck panel');
+ await page.getByLabel('Lab due date',{exact:true}).fill('2026-10-15');
+ await expect(reminders).toBeEnabled();await reminders.check();
+ await page.getByRole('button',{name:'Save lab work',exact:true}).click();
+ await expect(page.getByRole('status').filter({hasText:'Lab work saved.'})).toBeVisible();
+ expect(state.row?.reminders_enabled).toBe(true);
+ await expect(page.getByText(/Reminders on/)).toBeVisible();
+ await page.getByLabel('Lab status',{exact:true}).selectOption('cancelled');
+ await expect(reminders).not.toBeChecked();await expect(reminders).toBeDisabled();
+});

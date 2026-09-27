@@ -4511,6 +4511,7 @@ export type Database = {
           notes: string
           override_reason: string
           pet_id: string
+          reminders_enabled: boolean
           result_date: string | null
           result_document_id: string | null
           status: string
@@ -4533,6 +4534,7 @@ export type Database = {
           notes?: string
           override_reason?: string
           pet_id: string
+          reminders_enabled?: boolean
           result_date?: string | null
           result_document_id?: string | null
           status: string
@@ -4555,6 +4557,7 @@ export type Database = {
           notes?: string
           override_reason?: string
           pet_id?: string
+          reminders_enabled?: boolean
           result_date?: string | null
           result_document_id?: string | null
           status?: string

@@ -29,7 +29,7 @@ set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae0
 insert into reminder_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Reminder','+13035550111','synthetic-reminder@example.test','EMAIL',null,null);
 insert into reminder_fixture select 'pet',id from public.save_patient(null,(select id from reminder_fixture where kind='client'),null,'Juniper','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 select lives_ok($$select public.save_care_message_template('ae100000-0000-4000-8000-000000000001',null,'Reviewed reminder','email',0,'{{patient_name}}: {{care_name}} due {{due_date}}',true,'Clinical wording reviewed')$$,'Approved care wording exists before policy');
-select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000001',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Synthetic lab','status','planned','due_date',(now() at time zone 'America/Denver')::date),'')$$,'Eligible native source exists');
+select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000001',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Synthetic lab','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'')$$,'Eligible native source exists');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select is((public.queue_due_reminders(25)->>'queued')::integer,0,'No seeded enabled policy means no automatic queue');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -62,7 +62,7 @@ set local role service_role;select set_config('request.jwt.claims','{"role":"ser
 select lives_ok($$select public.claim_communication()$$,'Retry may be claimed');
 select is((select state from public.start_communication_attempt((select id from reminder_fixture where kind='outbox'),(select lease_token from public.communication_outbox where id=(select id from reminder_fixture where kind='outbox')),'{"from":"verified@example.test","reply_to":"reply@example.test"}')),'failed','Retry cannot revive invalidated reminder');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000002',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Second synthetic lab','status','planned','due_date',(now() at time zone 'America/Denver')::date),'')$$,'Second reviewed source can enqueue independently');
+select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000002',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Second synthetic lab','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'')$$,'Second reviewed source can enqueue independently');
 select lives_ok($$select public.suppress_communication(auth.uid(),'EMAIL','synthetic-reminder@example.test','Synthetic suppression test')$$,'Explicit suppression recorded');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select is((public.queue_due_reminders(25)->>'blocked')::integer,1,'Suppressed source becomes terminal blocked without outbox');

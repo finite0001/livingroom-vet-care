@@ -72,7 +72,7 @@
       "reviewer": "Owner/operator + Dr. Susan Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm wording before provider commissioning."
+      "requestedChange": "Confirm wording before provider commissioning, including email appointment reminders (subject + body) and when staff should turn on per-order lab reminders (docs/reminder-dispatch.md)."
     }
   ],
   "staffAcceptanceRun": {

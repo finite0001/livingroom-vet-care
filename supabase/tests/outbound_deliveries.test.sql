@@ -550,13 +550,25 @@ select is(
 reset role;
 select set_config('request.jwt.claims', '{}', true);
 
+-- 20260928150000: appointment reminders are queued only by queue_due_reminders()
+-- into communication_outbox. The outbound_deliveries enqueue is retired and inert.
 select ok(
-  has_function_privilege(
+  not has_function_privilege(
     'service_role',
     to_regprocedure('public.enqueue_due_appointment_reminders(integer,timestamp with time zone)'),
     'EXECUTE'
   ),
-  'Service role can execute the appointment reminder enqueue RPC'
+  'Retired appointment reminder enqueue RPC is not executable by the service role'
+);
+select ok(
+  not has_function_privilege('service_role', 'public.process_due_reminders()', 'EXECUTE'),
+  'Retired Lovable reminder reader is not executable by the service role'
+);
+select throws_ok(
+  $$select * from public.enqueue_due_appointment_reminders(1, now())$$,
+  '0A000',
+  'Deprecated: appointment reminders are queued by queue_due_reminders() into communication_outbox',
+  'Retired appointment reminder enqueue raises even for its owner'
 );
 select ok(
   not has_function_privilege(
@@ -699,114 +711,59 @@ insert into public.outbound_deliveries (
   '37300000-0000-4000-8000-000000000007'
 );
 
-create temp table appointment_enqueue_results (
-  reminder_id uuid,
-  outbound_delivery_id uuid,
-  action text,
-  reminder_status public.reminder_status,
-  status_note text
+-- Legacy rows from the retired path keep their callback settlement. Recreate the
+-- state that path left behind directly rather than through the inert RPC.
+insert into public.outbound_deliveries (
+  id,
+  idempotency_key,
+  channel,
+  recipient,
+  payload,
+  client_id,
+  appointment_reminder_id
+) values (
+  '37400000-0000-4000-8000-000000000001',
+  'appointment-reminder:37300000-0000-4000-8000-000000000001',
+  'SMS',
+  '+13035552001',
+  '{"kind":"appointment_reminder","template_key":"appointment_reminder","legacy":true}',
+  '37000000-0000-4000-8000-000000000001',
+  '37300000-0000-4000-8000-000000000001'
 );
-grant all on appointment_enqueue_results to service_role;
+update public.appointment_reminders
+set status = 'QUEUED',
+  outbound_delivery_id = '37400000-0000-4000-8000-000000000001',
+  enqueued_at = timestamptz '2026-09-22 18:00:00+00'
+where id = '37300000-0000-4000-8000-000000000001';
 
 set local role service_role;
-insert into appointment_enqueue_results
-select *
-from public.enqueue_due_appointment_reminders(20, timestamptz '2026-09-22 18:00:00+00');
+select throws_ok(
+  $$select * from public.enqueue_due_appointment_reminders(20, timestamptz '2026-09-22 18:00:00+00')$$,
+  '42501',
+  null,
+  'Service role cannot run the retired appointment reminder enqueue'
+);
 reset role;
-
-select is((select count(*) from appointment_enqueue_results), 7::bigint, 'Due appointment reminder enqueue worker processes only due pending reminders');
 select is(
-  (select action from appointment_enqueue_results where reminder_id = '37300000-0000-4000-8000-000000000001'),
-  'ENQUEUED',
-  'Eligible SMS reminder is enqueued'
+  (select count(*) from public.appointment_reminders where id in (
+    '37300000-0000-4000-8000-000000000002',
+    '37300000-0000-4000-8000-000000000003',
+    '37300000-0000-4000-8000-000000000004',
+    '37300000-0000-4000-8000-000000000005',
+    '37300000-0000-4000-8000-000000000006',
+    '37300000-0000-4000-8000-000000000007',
+    '37300000-0000-4000-8000-000000000008'
+  ) and status = 'PENDING' and outbound_delivery_id is null),
+  7::bigint,
+  'Due reminders are left for the canonical communication_outbox queue, not outbound_deliveries'
 );
 select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000001'),
-  'QUEUED',
-  'Eligible reminder is marked queued, not sent'
-);
-select is(
-  (select status::text from public.outbound_deliveries where appointment_reminder_id = '37300000-0000-4000-8000-000000000001'),
-  'QUEUED',
-  'Appointment reminder enqueue creates a queued outbound delivery only'
-);
-select is(
-  (select count(*) from public.outbound_deliveries where appointment_reminder_id = '37300000-0000-4000-8000-000000000001' and provider is null and provider_message_id is null),
-  1::bigint,
-  'Appointment reminder enqueue does not record a provider send'
-);
-select is(
-  (select payload->>'template_key' from public.outbound_deliveries where appointment_reminder_id = '37300000-0000-4000-8000-000000000001'),
-  'appointment_reminder',
-  'Queued reminder carries durable appointment reminder payload metadata'
-);
-select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000003'),
-  'QUEUED',
-  'Email reminder with an address can be queued'
-);
-select is(
-  (select recipient from public.outbound_deliveries where appointment_reminder_id = '37300000-0000-4000-8000-000000000003'),
-  'email-reminder@example.test',
-  'Email reminder uses the primary email recipient'
-);
-select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000002'),
-  'SKIPPED',
-  'SMS reminder without exact opt-in consent is skipped'
-);
-select is(
-  (select error_message from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000002'),
-  'SMS consent is unavailable for the primary phone',
-  'Skipped SMS reminder records the consent reason'
-);
-select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000004'),
-  'SKIPPED',
-  'Canceled appointment reminder is skipped'
-);
-select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000005'),
-  'FAILED',
-  'Unsupported reminder channel is marked failed without creating an outbound delivery'
-);
-select is(
-  (select count(*) from public.outbound_deliveries where appointment_reminder_id = '37300000-0000-4000-8000-000000000005'),
+  (select count(*) from public.outbound_deliveries where appointment_reminder_id = '37300000-0000-4000-8000-000000000003'),
   0::bigint,
-  'Unsupported reminder channel does not create outbound delivery work'
-);
-select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000006'),
-  'SKIPPED',
-  'Deceased patient reminder is skipped'
-);
-select is(
-  (select action from appointment_enqueue_results where reminder_id = '37300000-0000-4000-8000-000000000007'),
-  'ALREADY_QUEUED',
-  'Existing outbound delivery idempotency key is reused after a partial prior enqueue'
-);
-select is(
-  (select outbound_delivery_id from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000007'),
-  '37400000-0000-4000-8000-000000000007'::uuid,
-  'Idempotent recovery links the reminder to the existing outbound delivery'
-);
-select is(
-  (select count(*) from public.outbound_deliveries where idempotency_key = 'appointment-reminder:37300000-0000-4000-8000-000000000007'),
-  1::bigint,
-  'Idempotent recovery does not duplicate outbound delivery rows'
-);
-select is(
-  (select status::text from public.appointment_reminders where id = '37300000-0000-4000-8000-000000000008'),
-  'PENDING',
-  'Future reminders are left pending'
+  'No outbound delivery is created for a due email reminder'
 );
 
 set local role service_role;
-select is(
-  (select count(*) from public.enqueue_due_appointment_reminders(20, timestamptz '2026-09-22 18:00:00+00')),
-  0::bigint,
-  'Second enqueue run is idempotent after reminders are marked'
-);
 update public.outbound_deliveries
 set status = 'ACCEPTED',
   provider = 'twilio',

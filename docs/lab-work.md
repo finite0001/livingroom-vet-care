@@ -15,3 +15,15 @@ Every successful change appends an immutable snapshot with actor, time, version 
 The component is mounted in PatientPage and reports unsaved/pending edits to its single navigation guard. Global generated types include the lab schema. `model.ts` provides a narrowly scoped typed view of the existing Supabase client; no second client or secrets are introduced.
 
 Synthetic unit, pgTAP and browser tests cover date arithmetic, empty defaults, role boundaries, cross-patient links, stale revisions, retry deduplication, template override/retirement, preserved result corrections, reopen, and mobile editing. Browser tests exercise the actual PatientPage mount, including shared navigation protection. No actual patient information or live laboratory requests were used. Dr. Susan Edler's clinical form review and production commissioning remain required before practice use.
+
+## Per-order reminder switch
+
+`patient_lab_orders.reminders_enabled` mirrors `patient_vaccine_due_plans.reminders_enabled` (migration `20260928150000`). It defaults **off**; staff turn it on per order with the "Enable due reminders for this lab order" checkbox, which `save_patient_lab_order` records as a normal versioned revision with history. Rules enforced on the server:
+
+- only `planned`/`ordered` orders keep it on; any other status clears it;
+- turning it on requires a due date;
+- a save that omits the key keeps the stored value;
+- changing it invalidates any pending care job, and the provider preflight refuses a handoff that was queued before it was turned off.
+
+Candidate discovery, `enqueue_care_reminder` and `reminder_delivery_context` all require it. Which orders should be reminded is a practice decision for Dr. Edler (`C-PILOT-08`); the software does not turn it on for any order. Lab reminder delivery itself belongs to [reminder dispatch](reminder-dispatch.md).
+
