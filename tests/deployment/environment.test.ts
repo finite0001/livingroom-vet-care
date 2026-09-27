@@ -31,6 +31,18 @@ test("explicit production and isolated preview configuration pass", () => {
   assert.equal(verifyDeploymentEnvironment(legacy, legacy).project, project);
 });
 
+test("the CloudTalk switch is public only as exactly true or false", () => {
+  for (const value of ["true", "false"]) {
+    const env = { ...valid(), VITE_CLOUDTALK_ENABLED: value };
+    assert.equal(verifyDeploymentEnvironment(env, env).target, "production");
+  }
+  for (const value of ["1", "TRUE", "true ", "sk_live_secret"]) {
+    const env = { ...valid(), VITE_CLOUDTALK_ENABLED: value };
+    assert.throws(() => verifyDeploymentEnvironment(env, env), (error: Error) =>
+      /must be exactly true or false/.test(error.message) && !error.message.includes("sk_live_secret"));
+  }
+});
+
 test("repository fallback and unknown deployment targets fail before building", () => {
   for (const name of ["VITE_SUPABASE_PROJECT_ID", "VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"]) {
     const env: Record<string, string> = valid();
