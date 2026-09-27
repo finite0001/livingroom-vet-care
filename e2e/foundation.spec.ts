@@ -74,7 +74,7 @@ test("contact CTA reaches a working form with accurate launch and domain informa
   await page.getByLabel("Name", { exact: false }).fill("Synthetic Browser Check");
   await page.getByLabel("Email", { exact: false }).fill("browser-check@example.test");
   await page.getByLabel("Subject", { exact: false }).fill("Housecall opening");
-  await page.getByLabel("Message", { exact: false }).fill("Synthetic request intercepted by the browser test.");
+  await page.getByRole("textbox", { name: /^Message/ }).fill("Synthetic request intercepted by the browser test.");
   let requests = 0;
   await page.route(`${backend}/functions/v1/public-contact`, (route) => {
     requests++;

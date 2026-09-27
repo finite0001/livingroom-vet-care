@@ -42,7 +42,7 @@ async function fill(page: Page) {
   await page.getByLabel("Name", { exact: false }).fill("Private Visitor");
   await page.getByLabel("Email", { exact: false }).fill("private@example.test");
   await page.getByLabel("Subject", { exact: false }).fill("Private subject");
-  await page.getByLabel("Message", { exact: false }).fill("Private message");
+  await page.getByRole("textbox", { name: /^Message/ }).fill("Private message");
 }
 test("lost accepted response recovers after reload with opaque receipt only", async ({
   page,
@@ -163,4 +163,42 @@ test("storage failure on retry preserves uncertainty about the earlier request",
   await page.getByRole("button", { name: "Check request receipt" }).click();
   await expect(page.getByText("Request received. This is not a confirmed appointment.", { exact: true })).toBeVisible();
   expect(s.submitIds).toHaveLength(1);
+});
+
+test("text consent is optional, unchecked, needs a phone and is sent as a boolean", async ({ page }) => {
+  const s = await fixture(page);
+  s.lose = false;
+  const payloads: Record<string, unknown>[] = [];
+  page.on("request", (request) => {
+    if (request.url().endsWith("/functions/v1/public-contact") && request.postDataJSON()?.action === "submit")
+      payloads.push(request.postDataJSON().payload);
+  });
+  await page.goto("/contact");
+  const consent = page.getByRole("checkbox", { name: /I agree to receive text messages/ });
+  await expect(consent).not.toBeChecked();
+  const form = page.locator("#contact-form");
+  await expect(form.getByRole("link", { name: "Privacy Policy", exact: true })).toHaveAttribute("href", "/privacy#text-messages");
+  await expect(form.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms#text-message-program");
+  await fill(page);
+  await consent.click();
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect(page.getByText("Enter a mobile number to receive texts", { exact: true })).toBeVisible();
+  expect(s.submitIds).toHaveLength(0);
+  await page.getByRole("textbox", { name: /^Phone/ }).fill("720-555-0100");
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect(page.getByText("Request received. This is not a confirmed appointment.", { exact: true })).toBeVisible();
+  expect(payloads[0]).toMatchObject({ phone: "720-555-0100", sms_consent: true });
+  await expect(consent).not.toBeChecked();
+  await fill(page);
+  await page.getByRole("button", { name: "Send Message" }).click();
+  await expect.poll(() => payloads.length).toBe(2);
+  expect(payloads[1]).toMatchObject({ phone: null, sms_consent: false });
+});
+
+test("policy anchors from the consent disclosure land on the text message sections", async ({ page }) => {
+  await fixture(page);
+  for (const [path, heading] of [["/privacy#text-messages", "Text Messages"], ["/terms#text-message-program", "Text Message Program"]]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeInViewport();
+  }
 });

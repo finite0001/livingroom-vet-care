@@ -17,6 +17,7 @@ const fields = {
   phone: null,
   subject: "Question",
   message: "A private request",
+  sms_consent: false,
 };
 const config = {
   secret: "synthetic-secret",
@@ -189,4 +190,54 @@ test("network ambiguity fails closed without blind provider retry", async () => 
   assert.equal((await h(request())).status, 503);
   assert.equal(calls, 1);
   assert.equal(f.writes(), 0);
+});
+test("text consent is a strict boolean that needs a phone and joins exact replay", async () => {
+  for (const payload of [
+    { ...fields, sms_consent: "true" },
+    { ...fields, sms_consent: 1 },
+    { ...fields, sms_consent: null },
+    { ...fields, sms_consent: true },
+    { ...fields, sms_consent: true, phone: "" },
+    { ...fields, sms_consent: true, phone: "   " },
+    { ...fields, sms_consent_text: "Client-chosen disclosure" },
+    { ...fields, sms_consent_at: "2026-09-27T00:00:00Z" },
+  ]) {
+    const f = fixture();
+    assert.equal((await f.handler(request({ payload }))).status, 400);
+    assert.equal(f.fetches(), 0);
+    assert.equal(f.writes(), 0);
+  }
+  const f = fixture();
+  const accepted: ContactPayload[] = [];
+  const accept = f.backend.accept;
+  f.backend.accept = async (...args) => {
+    accepted.push(args[3]);
+    return accept(...args);
+  };
+  const consenting = { ...fields, phone: "720-555-0100", sms_consent: true };
+  assert.equal((await f.handler(request({ payload: consenting }))).status, 200);
+  assert.deepEqual(accepted[0], consenting);
+  assert.equal(
+    (await f.handler(request({ payload: { ...consenting, sms_consent: false } })))
+      .status,
+    503,
+  );
+  assert.equal(f.writes(), 1);
+});
+test("pages built before the consent box submit without it and never imply consent", async () => {
+  const f = fixture();
+  const accepted: ContactPayload[] = [];
+  const accept = f.backend.accept;
+  f.backend.accept = async (...args) => {
+    accepted.push(args[3]);
+    return accept(...args);
+  };
+  const { sms_consent: _omitted, ...legacy } = fields;
+  assert.equal((await f.handler(request({ payload: legacy }))).status, 200);
+  assert.equal(accepted[0].sms_consent, false);
+  assert.equal(
+    (await f.handler(request({ payload: { ...legacy, phone: "720-555-0100" } })))
+      .status,
+    503,
+  );
 });

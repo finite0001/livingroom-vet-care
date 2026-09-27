@@ -4,6 +4,7 @@ export interface ContactFields {
   phone: string | null;
   subject: string;
   message: string;
+  sms_consent: boolean;
 }
 export interface ContactPointer {
   request_id: string;

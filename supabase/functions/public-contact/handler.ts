@@ -20,6 +20,7 @@ export interface ContactPayload {
   phone: string | null;
   subject: string;
   message: string;
+  sms_consent: boolean;
 }
 const uuid =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -106,8 +107,16 @@ function payload(value: unknown): ContactPayload {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error("Invalid fields");
   const p = value as Record<string, unknown>;
-  if (Object.keys(p).sort().join(",") !== "email,message,name,phone,subject")
+  // sms_consent may be absent only for pages built before the text consent box;
+  // absence means no consent. The database stores the disclosure text itself.
+  const keys = Object.keys(p).sort().join(",");
+  if (
+    keys !== "email,message,name,phone,sms_consent,subject" &&
+    keys !== "email,message,name,phone,subject"
+  )
     throw new Error("Invalid fields");
+  const smsConsent = "sms_consent" in p ? p.sms_consent : false;
+  if (typeof smsConsent !== "boolean") throw new Error("Invalid fields");
   for (const [key, max] of [
     ["name", 100],
     ["email", 255],
@@ -124,7 +133,11 @@ function payload(value: unknown): ContactPayload {
   if (
     typeof p.email !== "string" ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email) ||
-    !(p.phone === null || (typeof p.phone === "string" && p.phone.length <= 20))
+    !(
+      p.phone === null ||
+      (typeof p.phone === "string" && p.phone.length <= 20)
+    ) ||
+    (smsConsent && !(typeof p.phone === "string" && p.phone.trim()))
   )
     throw new Error("Invalid fields");
   return {
@@ -133,6 +146,7 @@ function payload(value: unknown): ContactPayload {
     phone: p.phone as string | null,
     subject: p.subject as string,
     message: p.message as string,
+    sms_consent: smsConsent,
   };
 }
 export function createContactHandler(

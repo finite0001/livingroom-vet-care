@@ -21,6 +21,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  SMS_CONSENT_LEAD,
+  SMS_CONSENT_PRIVACY_LABEL,
+  SMS_CONSENT_PRIVACY_PATH,
+  SMS_CONSENT_TERMS_LABEL,
+  SMS_CONSENT_TERMS_PATH,
+  smsConsentPhoneError,
+} from "@/features/contact/sms-consent";
 import { useToast } from "@/hooks/use-toast";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Link } from "react-router-dom";
@@ -54,6 +63,7 @@ const contactSchema = z.object({
     .trim()
     .min(1, "Message is required")
     .max(2000, "Message must be under 2000 characters"),
+  sms_consent: z.boolean(),
 });
 
 interface ContactFormData {
@@ -62,18 +72,22 @@ interface ContactFormData {
   phone: string;
   subject: string;
   message: string;
+  sms_consent: boolean;
 }
+
+const emptyForm: ContactFormData = {
+  name: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
+  sms_consent: false,
+};
 
 const Contact = () => {
   usePageTitle("Contact Us", "Get in touch with The Living Room Vet in Boulder, Colorado about housecalls, appointments, and our clinic at 2619 Spruce Street.");
   const { toast } = useToast();
-  const [formData, setFormData] = useState<ContactFormData>({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState<ContactFormData>(emptyForm);
   const [errors, setErrors] = useState<
     Partial<Record<keyof ContactFormData, string>>
   >({});
@@ -98,7 +112,7 @@ const Contact = () => {
     setToken("");
     setHasPending(false);
     setLocked(false);
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    setFormData(emptyForm);
     setReceiptNotice("Request received. This is not a confirmed appointment.");
   };
   useEffect(() => {
@@ -160,17 +174,27 @@ const Contact = () => {
     }
   };
 
+  const handleSmsConsent = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, sms_consent: checked }));
+    if (!checked && errors.phone)
+      setErrors((prev) => ({ ...prev, phone: undefined }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     const result = contactSchema.safeParse(formData);
-    if (!result.success) {
+    const consentPhoneError = smsConsentPhoneError(formData);
+    if (!result.success || consentPhoneError) {
       const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0] as keyof ContactFormData;
-        if (!fieldErrors[field]) fieldErrors[field] = issue.message;
-      });
+      if (!result.success)
+        result.error.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof ContactFormData;
+          if (!fieldErrors[field]) fieldErrors[field] = issue.message;
+        });
+      if (consentPhoneError && !fieldErrors.phone)
+        fieldErrors.phone = consentPhoneError;
       setErrors(fieldErrors);
       setIsSubmitting(false);
       return;
@@ -199,6 +223,7 @@ const Contact = () => {
             subject: result.data.subject!,
             message: result.data.message!,
             phone: result.data.phone || null,
+            sms_consent: result.data.sms_consent,
           },
           token,
         ))
@@ -211,7 +236,7 @@ const Contact = () => {
         description:
           "Your request has been saved for our team. This is not a confirmed appointment.",
       });
-      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+      setFormData(emptyForm);
       setErrors({});
     } catch {
       setToken("");
@@ -347,17 +372,6 @@ const Contact = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-2">
-                            <Label htmlFor="phone">Phone (optional)</Label>
-                            <Input
-                              id="phone"
-                              name="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={handleChange}
-                              placeholder="Your phone number"
-                            />
-                          </div>
-                          <div className="space-y-2">
                             <Label htmlFor="subject">
                               Subject{" "}
                               <span className="text-destructive">*</span>
@@ -386,6 +400,69 @@ const Contact = () => {
                               </p>
                             )}
                           </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone (optional)</Label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              type="tel"
+                              autoComplete="tel"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              placeholder="Your phone number"
+                              aria-invalid={!!errors.phone}
+                              aria-describedby={
+                                errors.phone ? "phone-error" : undefined
+                              }
+                              className={
+                                errors.phone ? "border-destructive" : ""
+                              }
+                            />
+                            {errors.phone && (
+                              <p
+                                id="phone-error"
+                                className="text-destructive text-xs"
+                                role="alert"
+                              >
+                                {errors.phone}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id="sms_consent"
+                            checked={formData.sms_consent}
+                            onCheckedChange={(checked) =>
+                              handleSmsConsent(checked === true)
+                            }
+                            className="mt-0.5"
+                          />
+                          <Label
+                            htmlFor="sms_consent"
+                            className="text-xs font-normal leading-relaxed text-muted-foreground"
+                          >
+                            {SMS_CONSENT_LEAD}
+                            <Link
+                              to={SMS_CONSENT_PRIVACY_PATH}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary underline underline-offset-2"
+                            >
+                              {SMS_CONSENT_PRIVACY_LABEL}
+                            </Link>{" "}
+                            and{" "}
+                            <Link
+                              to={SMS_CONSENT_TERMS_PATH}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary underline underline-offset-2"
+                            >
+                              {SMS_CONSENT_TERMS_LABEL}
+                            </Link>
+                            .
+                          </Label>
                         </div>
 
                         <div className="space-y-2">

@@ -994,6 +994,9 @@ export type Database = {
           phone: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          sms_consent: boolean
+          sms_consent_at: string | null
+          sms_consent_text: string | null
           staff_notes: string | null
           subject: string
           triage_status: string
@@ -1012,6 +1015,9 @@ export type Database = {
           phone?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sms_consent?: boolean
+          sms_consent_at?: string | null
+          sms_consent_text?: string | null
           staff_notes?: string | null
           subject: string
           triage_status?: string
@@ -1030,6 +1036,9 @@ export type Database = {
           phone?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sms_consent?: boolean
+          sms_consent_at?: string | null
+          sms_consent_text?: string | null
           staff_notes?: string | null
           subject?: string
           triage_status?: string
