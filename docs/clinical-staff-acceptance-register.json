@@ -97,6 +97,14 @@
       "decision": "Pending",
       "evidence": [],
       "requestedChange": "Confirm category wording/source citation, sign/addendum policy, and whether any reference total or wording may be displayed (none is configured by default)."
+    },
+    {
+      "id": "C-PILOT-ANES-01",
+      "reviewArea": "Anesthesia drugs charged from stock (lot debit + invoice line) and signed-record lock",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm required fields and wording, the block-after-signing policy (Treatments + addendum), and correction path. No dose/drug defaults are supplied; DEA controlled-substance logs are out of scope."
     }
   ],
   "staffAcceptanceRun": {

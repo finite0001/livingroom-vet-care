@@ -1,6 +1,6 @@
 # Native anesthesia records
 
-`PatientAnesthesiaRecords({ petId, onDirtyChange? })` stores documentary anesthesia records. It records a procedure name, Denver start/end time, named team/roles, preanesthetic assessment and plan notes, recovery notes, monitoring observations and medication/procedure events. This is a blank documentation form: no normal values, default observation schedule, drug choices, dose calculations, safety interpretations or treatment recommendations are supplied. Documentary medication entries do not dispense inventory or create billing transactions.
+`PatientAnesthesiaRecords({ petId, clientId, onDirtyChange? })` stores documentary anesthesia records. It records a procedure name, Denver start/end time, named team/roles, preanesthetic assessment and plan notes, recovery notes, monitoring observations and medication/procedure events. This is a blank documentation form: no normal values, default observation schedule, drug choices, dose calculations, safety interpretations or treatment recommendations are supplied. Documentary medication events do not dispense inventory or create billing transactions; stock drugs are recorded separately (see *Anesthesia drugs from stock*).
 
 Each monitoring observation requires a timestamp, parameter label, finite numeric value, explicit unit and optional notes. Zero and negative values are preserved as documented rather than assigned physiological meaning. The numerical magnitude bound is a technical input limit, not a reference range. Events require timestamp, kind and descriptive text; administered amounts and units are documented by staff in the narrative. Monitoring/event timestamps must fall within the procedure, and future/nonfinite procedure times are rejected. Time entry uses Denver local time, rejecting skipped/repeated daylight-saving times.
 
@@ -8,10 +8,37 @@ The source is either manually recorded or manually transcribed from a private or
 
 Active staff write through authenticated, security-definer RPCs. Actor identity is stamped from the session; client payloads cannot set patient ownership, authors, signatures or versions. Direct table writes/deletes are not granted to browser or service roles. Drafts use expected-version checks and stable UUID retry semantics. Every save and signature appends an immutable snapshot. Signing requires a saved reviewed version, end time, assessment and plan. This minimum is a documentation gate, not proof of clinical completeness. Signed records cannot be edited; subsequent authored corrections are appended and retry-idempotent. Prior values and original-file references remain in history.
 
+## Anesthesia drugs from stock
+
+A saved **draft** anesthesia record shows an *Anesthesia drugs from stock* panel (`AnesthesiaDrugAdministrations`). Staff choose an active, unexpired, in-stock **medication** lot, the household's draft invoice, the stock quantity used, the documented dose, route, optional site, veterinarian/license and the Denver administration time, then acknowledge the current patient alerts. `record_anesthesia_drug_administration(p_id, p_record_id, p_pet_id, p_request)` (migration `20260928140000_anesthesia_drug_administrations.sql`) then, in one transaction:
+
+1. validates the anesthesia context: the record exists, belongs to `p_pet_id`, is still `draft`, and the administration time falls within the saved procedure start/end (or no later than now + 5 minutes while the end is blank); the lot's product must be a `medication`;
+2. calls the existing `record_patient_treatment` RPC with a server-built request (`pet_id` from the call, `source` = `Anesthesia record <id>`). That RPC is unchanged and remains the only writer of the dispense movement, invoice line (catalog unit price), invoice version bump and treatment alert review. Its existing guards apply: draft invoice required, household (client) match, active patient, expired-lot block, insufficient-stock block, stale alert-review rejection;
+3. appends a row to `anesthesia_drug_administrations` linking the treatment (same UUID) to the anesthesia record.
+
+Any failure rolls back the stock debit, charge and link together. The client cannot send `pet_id`, `source`, `historical`, `kind` or product/lot text. The stable request UUID makes lost-response retries idempotent (a changed retry is rejected), and a retry of an entry made before signing still confirms after the record is signed. The link table is select-only for active staff and append-only (update/delete/truncate blocked even for the owner role). A draft save may not move the procedure start/end so that an already-charged drug falls outside it.
+
+**Locked-record decision.** Signed records are locked for drug entries: the RPC rejects a new entry on a signed record, and the panel shows the policy instead of the form. Drugs given after signing are recorded in the patient's Treatments panel (which still debits stock and charges the draft invoice) and explained in an anesthesia addendum. We chose blocking over addendum-linked entries so a signed record's contents never change after signature. While a drug entry's outcome is unconfirmed, signing and switching records are blocked.
+
+**Corrections.** A mistaken entry is corrected through the existing Treatments correction (`correct_patient_treatment`), which the panel displays. As elsewhere, a correction does not return stock or credit the invoice; use inventory adjustment and invoice credit/void separately.
+
+**Out of scope.** Controlled-substance (DEA) logs — running balances, witness/waste records, biennial inventory and registrant details — are not kept by this module, and nothing here satisfies DEA recordkeeping. No drug list, dose calculation, dose default, quantity default or route default is supplied; staff enter every value. The panel wording, required fields and correction policy are pending review by Dr. Susan Edler (`C-PILOT-ANES-01` in `docs/clinical-staff-acceptance-register.json`).
+
+## Monitor/device import (not built)
+
+The anesthesia monitor vendor is undecided, so no adapter exists. A future import adapter would need:
+
+- **Source and transport:** the chosen device/vendor export (for example HL7 v2 ORU, a vendor cloud API or a file export), its authentication and whether data is pushed or pulled; a server-side (Edge Function or worker) receiver with its own secrets, never browser credentials.
+- **Patient and record matching:** an explicit staff-confirmed mapping from the device case/session to one patient and one draft anesthesia record; no automatic matching by name.
+- **Mapping:** each vendor parameter mapped to an observation `label` and explicit `unit`, with timestamps converted to UTC and required to fall within the procedure; values kept exactly as reported with no interpretation or reference ranges.
+- **Provenance and immutability:** the original payload stored as a private patient document (reusing `original_document_id`/`transcribed_from_document` semantics or a new `device_import` source), a payload hash for replay/idempotency, and writes only through `save_patient_anesthesia_record` so the version/snapshot history and signed-record lock still apply.
+- **Review gate:** imported observations land in a draft that staff review before signing; drugs reported by the device are **not** debited or charged automatically — staff still record stock drugs through the panel above.
+- **Validation:** vendor-specific acceptance with synthetic cases and Dr. Edler's approval before clinical use.
+
 ## Integration and clinical review
 
 PatientPage mounts the component with a patient-specific key and registers its dirty callback with the existing single patient navigation guard. Generated schema types include the anesthesia tables and RPCs. The local schema interface narrows the existing Supabase client; it creates no second connection or browser credentials. The component protects browser unload and in-panel switching; the callback is required for SPA navigation protection.
 
 Dr. Susan Edler must review and approve the form, monitoring fields, documentation workflow and staff signature policy before clinical use. No AAHA compliance or official form endorsement is claimed. Vendor import, required monitoring frequency, anesthesia-specific device validation and any automatic clinical judgment remain outside this module.
 
-Synthetic validation covers blank defaults, units/finite numbers, Denver timestamps, cross-patient attachments/writes/signatures/addenda, stale drafts/signatures, retry deduplication, immutable history, inactive staff, desktop reopen and corrections, and mobile source-file transcription. Browser verification exercises the mounted component on PatientPage. No production patient records were used.
+Synthetic validation covers blank defaults, stock drug debit/charge/link, expired-lot, household-mismatch, cross-patient, non-medication, out-of-window, stale-alert and signed-record rejections, retry idempotency, append-only drug links, units/finite numbers, Denver timestamps, cross-patient attachments/writes/signatures/addenda, stale drafts/signatures, retry deduplication, immutable history, inactive staff, desktop reopen and corrections, and mobile source-file transcription. Browser verification exercises the mounted component on PatientPage. No production patient records were used.

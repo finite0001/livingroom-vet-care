@@ -61,7 +61,7 @@ async function fixture(page: Page) {
     (value) => localStorage.setItem("sb-127-auth-token", JSON.stringify(value)),
     session,
   );
- const state={row:null as Record<string,unknown>|null,revisions:[] as Record<string,unknown>[],addenda:[] as Record<string,unknown>[],failNext:false,saves:0};
+ const state={row:null as Record<string,unknown>|null,revisions:[] as Record<string,unknown>[],addenda:[] as Record<string,unknown>[],failNext:false,saves:0,drugCalls:[] as Record<string,unknown>[],treatments:[] as Record<string,unknown>[]};
  await page.route('**/*',route=>new URL(route.request().url()).origin==='http://127.0.0.1:8080'?route.continue():route.abort());
  await page.route(`${backend}/**`,async route=>{
   const url=new URL(route.request().url());const path=url.pathname;
@@ -90,6 +90,19 @@ async function fixture(page: Page) {
    const body=route.request().postDataJSON();expect(body.p_pet_id).toBe(petId);expect(body.p_expected_version).toBe(state.row?.version);
    state.row={...state.row!,status:'signed',version:Number(state.row!.version)+1,signed_by:staffId,signed_at:'2026-01-02T18:00:00Z'};
    state.revisions.push({id:state.revisions.length+1,record_id:state.row.id,version:state.row.version,snapshot:{...state.row},actor_id:staffId,recorded_at:'2026-01-02T18:00:00Z'});return route.fulfill({json:state.row});
+  }
+  if(path==='/rest/v1/rpc/read_patient_treatment_alerts')return route.fulfill({json:{source_hash:'a'.repeat(64),snapshot:{schema_version:1,pet_id:petId,patient_version:1,important_problems:[],legacy_allergies:{text:null,provenance:'Synthetic record'}}}});
+  if(path==='/rest/v1/rpc/inventory_lot_balances')return route.fulfill({json:[
+   {id:'66666666-6666-4666-8666-666666666661',product_id:'77777777-7777-4777-8777-777777777771',product_name:'Synthetic induction agent',kind:'medication',unit:'mL',active:true,lot_number:'ANES-1',expires_on:'2999-01-01',location:'Housecall bag',balance:20},
+   {id:'66666666-6666-4666-8666-666666666662',product_id:'77777777-7777-4777-8777-777777777772',product_name:'Synthetic vaccine',kind:'vaccine',unit:'dose',active:true,lot_number:'VAX-1',expires_on:'2999-01-01',location:'Housecall bag',balance:5},
+   {id:'66666666-6666-4666-8666-666666666663',product_id:'77777777-7777-4777-8777-777777777771',product_name:'Synthetic induction agent',kind:'medication',unit:'mL',active:true,lot_number:'ANES-EXPIRED',expires_on:'2000-01-01',location:'Housecall bag',balance:5}]});
+  if(path==='/rest/v1/billing_invoices')return route.fulfill({json:[{id:'88888888-8888-4888-8888-888888888881',created_at:'2026-01-01T15:00:00Z'}]});
+  if(path==='/rest/v1/anesthesia_drug_administrations')return route.fulfill({json:state.treatments.map(t=>({id:t.id,record_id:state.row?.id,pet_id:petId,request:{},created_by:staffId,created_at:'2026-01-02T17:30:00Z'}))});
+  if(path==='/rest/v1/patient_treatments')return route.fulfill({json:state.treatments});
+  if(path==='/rest/v1/rpc/record_anesthesia_drug_administration') {
+   const body=route.request().postDataJSON();state.drugCalls.push(body);
+   const r=body.p_request;const row={id:body.p_id,pet_id:petId,product_id:'77777777-7777-4777-8777-777777777771',lot_id:r.lot_id,invoice_id:r.invoice_id,kind:'medication',historical:false,product_name:'Synthetic induction agent',manufacturer:'Synthetic',lot_number:'ANES-1',expires_on:'2999-01-01',quantity:r.quantity,dose:r.dose,route:r.route,site:r.site,veterinarian:r.veterinarian,veterinarian_license:r.veterinarian_license,administered_at:r.administered_at,next_due_on:null,source:`Anesthesia record ${body.p_record_id}`,request:r,created_by:staffId,created_at:'2026-01-02T17:30:00Z'};
+   state.treatments.push(row);return route.fulfill({json:row});
   }
   if(path==='/rest/v1/rpc/add_anesthesia_record_addendum') {
    const body=route.request().postDataJSON();expect(body.p_pet_id).toBe(petId);const row={id:body.p_id,record_id:body.p_record_id,content:body.p_content,actor_id:staffId,recorded_at:'2026-01-02T19:00:00Z'};state.addenda.push(row);return route.fulfill({json:row});
@@ -149,4 +162,44 @@ test('mobile manual transcription links a private source without claiming automa
  expect(state.row?.source).toBe('transcribed_from_document');expect(state.row?.original_document_id).toBe('55555555-5555-4555-8555-555555555555');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await expect(page.getByText(/Automatic vendor import is not configured/)).toBeVisible();
+});
+test('stock anesthesia drug debits a lot and charges the household draft, then locks on signature',async({page})=>{
+ const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);await basicDraft(page);
+ await expect(page.getByRole('region',{name:'Anesthesia drugs from stock'})).toHaveCount(0);
+ await page.getByRole('button',{name:'Save anesthesia draft',exact:true}).click();
+ await expect(page.getByRole('status').filter({hasText:'Anesthesia draft saved.'})).toBeVisible();
+ const panel=page.getByRole('region',{name:'Anesthesia drugs from stock'});
+ await expect(panel.getByText(/Controlled-substance \(DEA\) logs are not kept here/)).toBeVisible();
+ const lot=panel.getByLabel('Drug lot administered');
+ await expect(lot.locator('option',{hasText:'ANES-1'})).toHaveCount(1);
+ await expect(lot.locator('option',{hasText:'VAX-1'})).toHaveCount(0);
+ await expect(lot.locator('option',{hasText:'ANES-EXPIRED'})).toHaveCount(0);
+ await expect(panel.getByLabel('Stock quantity used')).toHaveValue('');
+ await expect(panel.getByLabel('Clinical dose (as documented)')).toHaveValue('');
+ await lot.selectOption('66666666-6666-4666-8666-666666666661');
+ await panel.getByLabel('Household draft invoice').selectOption('88888888-8888-4888-8888-888888888881');
+ await panel.getByLabel('Stock quantity used').fill('1.5');
+ await panel.getByLabel('Clinical dose (as documented)').fill('Documented by clinician');
+ await panel.getByLabel('Route',{exact:true}).fill('IV');
+ await panel.getByLabel('Veterinarian',{exact:true}).fill('Synthetic veterinarian');
+ await panel.getByLabel('Administered at (America/Denver)').fill('2026-01-01T09:40');
+ await panel.getByRole('checkbox').check();
+ await panel.getByRole('button',{name:'Record anesthesia drug & charge',exact:true}).click();
+ await expect(panel.getByRole('alert').filter({hasText:'within the recorded procedure'})).toBeVisible();
+ expect(state.drugCalls).toHaveLength(0);
+ await panel.getByLabel('Administered at (America/Denver)').fill('2026-01-01T09:10');
+ await panel.getByRole('button',{name:'Record anesthesia drug & charge',exact:true}).click();
+ await expect(panel.getByRole('status').filter({hasText:'Drug recorded, stock debited and invoice line added.'})).toBeVisible();
+ expect(state.drugCalls).toHaveLength(1);
+ const call=state.drugCalls[0] as {p_record_id:string;p_pet_id:string;p_request:Record<string,unknown>};
+ expect(call.p_record_id).toBe(state.row?.id);expect(call.p_pet_id).toBe(petId);
+ expect(call.p_request).toMatchObject({lot_id:'66666666-6666-4666-8666-666666666661',invoice_id:'88888888-8888-4888-8888-888888888881',quantity:1.5,route:'IV',administered_at:'2026-01-01T16:10:00.000Z',alert_review:{source_hash:'a'.repeat(64),acknowledged:true}});
+ expect(Object.keys(call.p_request)).not.toContain('pet_id');expect(Object.keys(call.p_request)).not.toContain('source');
+ await expect(panel.getByText(/Synthetic induction agent · 1.5 · lot ANES-1/)).toBeVisible();
+ await page.getByRole('button',{name:'Review and sign anesthesia record',exact:true}).click();
+ await page.getByRole('button',{name:'Sign saved anesthesia record',exact:true}).click();
+ await expect(page.getByRole('status').filter({hasText:'Anesthesia record signed.'})).toBeVisible();
+ await expect(panel.getByText(/Signed anesthesia records are locked/)).toBeVisible();
+ await expect(panel.getByRole('button',{name:'Record anesthesia drug & charge'})).toHaveCount(0);
+ await expect(panel.getByText(/Synthetic induction agent · 1.5 · lot ANES-1/)).toBeVisible();
 });
