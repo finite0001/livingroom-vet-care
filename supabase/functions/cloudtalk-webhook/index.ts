@@ -10,8 +10,9 @@ serve(async (request) => {
   if (!secret || !allowedNumbers.length || allowedNumbers.some((number) => !/^\+[1-9][0-9]{7,14}$/.test(number))) {
     return new Response("Webhook unavailable", { status: 503 });
   }
+  let raw = "";
   try {
-    const raw = await request.text();
+    raw = await request.text();
     const event = await verifyCloudTalkWebhook(raw, request.headers, secret, companyId, allowedNumbers);
     if (!event) return new Response("Ignored", { status: 200 });
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -26,6 +27,13 @@ serve(async (request) => {
   } catch (error) {
     // Invalid signatures and malformed events must not become trusted evidence.
     const invalid = error instanceof SyntaxError || (error instanceof Error && error.message.startsWith("Invalid CloudTalk"));
+    // Log only the reason and the envelope's field types, never the secret or payload values.
+    let shape: Record<string, string> | string = "unparsed";
+    try {
+      const parsed = JSON.parse(raw);
+      shape = Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, key === "version" ? `${typeof value}:${value}` : typeof value]));
+    } catch { /* body was not JSON */ }
+    console.warn("cloudtalk-webhook rejected", { reason: error instanceof Error ? error.message : String(error), shape });
     return new Response(invalid ? "Invalid webhook" : "Webhook unavailable", { status: invalid ? 401 : 503 });
   }
 });
