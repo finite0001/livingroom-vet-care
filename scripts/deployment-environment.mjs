@@ -6,6 +6,7 @@ const publicNames = new Set([
   "VITE_SUPABASE_PUBLISHABLE_KEY",
   "VITE_CONTACT_INTAKE_URL",
   "VITE_CONTACT_TURNSTILE_SITE_KEY",
+  "VITE_CLOUDTALK_ENABLED",
 ]);
 
 // Vercel can expose its system metadata with VITE_ names during build. The app
@@ -41,6 +42,10 @@ export function verifyDeploymentEnvironment(explicit, resolved) {
   if (unexpectedNames.length) {
     const labels = unexpectedNames.map((name) => /^[A-Z0-9_]{1,100}$/.test(name) ? name : "[invalid variable name]").sort();
     throw new Error(`An unreviewed VITE_ variable would be exposed to browsers: ${labels.join(", ")}. Review the public configuration allowlist.`);
+  }
+  // A feature switch only: never let this public name carry any other value.
+  if ("VITE_CLOUDTALK_ENABLED" in resolved && !["true", "false"].includes(resolved.VITE_CLOUDTALK_ENABLED)) {
+    throw new Error("VITE_CLOUDTALK_ENABLED must be exactly true or false.");
   }
   const project = explicit.VITE_SUPABASE_PROJECT_ID;
   if (!/^[a-z]{20}$/.test(project) || project === originalProject) {
