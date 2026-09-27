@@ -17,6 +17,7 @@ import {
   type QolArgs,
 } from "./api";
 import { useCareMutation } from "./useCareMutation";
+import { QolScaleCard } from "./QolScaleCharts";
 import { coordinate, measurement, moveCoordinate } from "./policy";
 interface PatientCareChartsProps {
   petId: string;
@@ -888,6 +889,7 @@ export function PatientCareCharts({
             )}
           </CardContent>
         </Card>
+        <QolScaleCard petId={petId} />
         <Card>
           <CardHeader>
             <CardTitle>Mass / lesion body map</CardTitle>

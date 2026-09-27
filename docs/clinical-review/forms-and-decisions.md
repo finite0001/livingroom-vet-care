@@ -37,6 +37,16 @@ Fields: observation date/time (America/Denver), observer/source, Appetite, Drink
 - [ ] Decide whether a named, licensed or validated instrument is separately required; no such instrument is claimed here.
 - [ ] Verify signed observations and addenda preserve meaning without implying an automatic end-of-life recommendation.
 
+## C03b — HHHHHMM quality-of-life scale
+
+Source: `src/hub/features/care-charts/QolScaleCharts.tsx`, `qol-scale.ts`; `docs/care-charts.md` (includes the Villalobos citation).
+
+Fields: assessment date/time (America/Denver), assessor, seven categories (Hurt, Hunger, Hydration, Hygiene, Happiness, Mobility, More good days than bad) each scored 0–10 with an optional note, overall notes, automatic total 0–70. Signing requires every category; signed assessments are read-only and corrected by addendum. The trend charts signed assessments only. No cut-off, classification or recommendation is shown. An optional reference line is disabled with no value by default and, if an administrator configures one, is labelled as pending your review.
+
+- [ ] Confirm category wording and the source citation/attribution.
+- [ ] Decide whether a reference total and wording should be displayed at all; if so, supply the exact value and wording.
+- [ ] Verify a signed example and its addendum preserve meaning without implying an automatic end-of-life recommendation.
+
 ## C04 — Body maps and lesion history
 
 Source: `src/hub/features/care-charts/PatientCareCharts.tsx`, `policy.ts`.
