@@ -68,9 +68,12 @@ test("contact CTA reaches a working form with accurate launch and domain informa
   await expect(page.getByText(/Housecalls: targeting late october 2026/).first()).toBeVisible();
   await expect(page.getByText(/Clinic: targeting early 2027/).first()).toBeVisible();
   await expect(page.getByText("2619 Spruce Street, Boulder, CO", { exact: true }).first()).toBeVisible();
-  await expect(page.locator('a[href="tel:+17207646677"]')).toHaveText("(720) 764-6677");
-  await expect(page.locator('a[href="mailto:admin@thelivingroom.vet"]')).toHaveText("admin@thelivingroom.vet");
-  await expect(page.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(2);
+  const contactLinks = page.locator("#main-content");
+  await expect(contactLinks.locator('a[href="tel:+17207646677"]')).toHaveText("(720) 764-6677");
+  await expect(contactLinks.locator('a[href="mailto:admin@thelivingroom.vet"]')).toHaveText("admin@thelivingroom.vet");
+  await expect(contactLinks.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(2);
+  await expect(page.locator('footer a[href="tel:+17207646677"]')).toHaveCount(1);
+  await expect(page.getByText("© 2026 The Living Room Vet PLLC. All rights reserved.")).toBeVisible();
   await page.getByRole("button", { name: "Send Message" }).click();
   await expect(page.getByText("Name is required", { exact: true })).toBeVisible();
   await page.getByLabel("Name", { exact: false }).fill("Synthetic Browser Check");

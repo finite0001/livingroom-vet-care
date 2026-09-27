@@ -2,7 +2,7 @@ import { Logo } from "@/components/Logo";
 import { practice, practiceAddress, practiceMapsUrl, practiceLaunchSummary } from "@/config/practice";
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
-import { MapPin } from "lucide-react";
+import { MapPin, Phone, Mail } from "lucide-react";
 
 const Footer = forwardRef<HTMLElement>((_, ref) => {
   return (
@@ -80,6 +80,18 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 <span>{practiceAddress}<br />Future clinic home base</span>
               </a>
 
+              {practice.phone && (
+                <a href={`tel:+1${practice.phone.replace(/\D/g, "")}`} className="flex items-center gap-3 hover:text-cream-light transition-colors">
+                  <Phone className="h-5 w-5 shrink-0" />
+                  <span>{practice.phone}</span>
+                </a>
+              )}
+              {practice.email && (
+                <a href={`mailto:${practice.email}`} className="flex items-center gap-3 hover:text-cream-light transition-colors break-all">
+                  <Mail className="h-5 w-5 shrink-0" />
+                  <span>{practice.email}</span>
+                </a>
+              )}
 
               <div className="pt-2 text-sm text-cream-light/70">
                 <p className="font-medium text-cream-light mb-1">{practice.launchStages.some((stage) => stage.status === "open") ? "Hours" : "Planned hours"}</p>
@@ -96,7 +108,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
       <div className="border-t border-cream-light/10">
         <div className="container py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-cream-light/50">
-            © 2026 The Living Room Vet. All rights reserved.
+            © 2026 The Living Room Vet PLLC. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <Link to="/privacy" className="text-sm text-cream-light/50 hover:text-cream-light transition-colors">

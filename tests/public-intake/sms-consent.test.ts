@@ -26,7 +26,7 @@ test("disclosure links resolve to the published policy sections", () => {
   assert.match(read("src/pages/Privacy.tsx"), /title: "Text Messages"/);
   const terms = read("src/pages/Terms.tsx");
   assert.match(terms, /title: "Text Message Program"/);
-  assert.match(terms, /check the text message consent box/);
+  assert.match(terms, /checking the optional text message consent box/);
 });
 test("consent without a phone number is a phone-field error; no consent needs no phone", () => {
   assert.equal(smsConsentPhoneError({ phone: "", sms_consent: true }), SMS_CONSENT_PHONE_REQUIRED);
