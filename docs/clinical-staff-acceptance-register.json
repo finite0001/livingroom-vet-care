@@ -73,6 +73,22 @@
       "decision": "Pending",
       "evidence": [],
       "requestedChange": "Confirm wording before provider commissioning, including email appointment reminders (subject + body) and when staff should turn on per-order lab reminders (docs/reminder-dispatch.md)."
+    },
+    {
+      "id": "C-VACCINE-01",
+      "reviewArea": "Patient vaccine status summary (last given / next due / state per vaccine group)",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm source precedence (current reviewed due plan over recorded next due date; proposed plans never supply a date), outside-record labelling, and the due-soon display window (built-in display default 30 days until set in Settings)."
+    },
+    {
+      "id": "C-VACCINE-02",
+      "reviewArea": "Vaccine catalog metadata, due-date pre-fill, and rabies certificate serial number",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Enter or approve per-product group, species, labeled duration and default booster interval (none are seeded); confirm the explicit pre-fill button and the separate rabies serial-number field and its 'not recorded' wording."
     }
   ],
   "staffAcceptanceRun": {

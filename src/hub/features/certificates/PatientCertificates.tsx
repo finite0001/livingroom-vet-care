@@ -632,6 +632,7 @@ export function PatientCertificates({
                   [
                     "administrator",
                     "rabies_tag_number",
+                    "vaccine_serial_number",
                     "vaccine_type",
                     "size_description",
                     "owner_business_phone",
@@ -643,6 +644,8 @@ export function PatientCertificates({
                         {
                           administrator: "Actual administrator",
                           rabies_tag_number: "Rabies tag number",
+                          vaccine_serial_number:
+                            "Vaccine serial number (separate from lot; blank if none)",
                           vaccine_type: "Vaccine formulation / type",
                           size_description: "Reviewed size or weight",
                           owner_business_phone: "Owner business phone",
@@ -651,7 +654,7 @@ export function PatientCertificates({
                     </Label>
                     <Input
                       id={`${petId}-${key}`}
-                      maxLength={1000}
+                      maxLength={key === "vaccine_serial_number" ? 200 : 1000}
                       value={details[key] || ""}
                       onChange={(e) => setDetail(key, e.target.value)}
                     />

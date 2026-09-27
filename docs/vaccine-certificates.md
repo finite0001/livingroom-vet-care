@@ -35,6 +35,7 @@ Rabies requires a known/estimated birth date explicitly labeled with its precisi
 
 - `administrator`: actual administering person's name, distinct from the data-entry actor.
 - `rabies_tag_number`: required for dogs; available for other species.
+- `vaccine_serial_number` (optional, added 2026-09-28 by `20260928121000_rabies_certificate_serial_number.sql`): the vaccine serial number as reviewed on the vial/label, recorded **separately from the stock lot number**. String up to 200 characters, trimmed; blank or omitted is stored as `null`. It is never copied or inferred from `lot_number`. The serial-aware `preview_vaccine_certificate` wrapper strips this key before the existing validation (`preview_vaccine_certificate_v2_internal`, not executable by browsers) and then always writes `details.vaccine_serial_number` (string or `null`) into new rabies snapshots, so the reviewed preview, the signed snapshot and lost-response retries all carry the same value. General history certificates reject it.
 - `usda_duration`: `1 year`, `3 years`, or `other licensed duration` as reviewed against the actual product. This label never calculates the clinical due date; provide the specific duration in `vaccine_type` when using the third option.
 - `vaccine_type`: reviewed vaccine formulation/type, with actual licensed duration if nonstandard.
 - `size_description`: reviewed weight or size description, never silently taken from an old weight.
@@ -43,6 +44,10 @@ Rabies requires a known/estimated birth date explicitly labeled with its precisi
 - Boolean `supervision_attested: true` requires the signer to confirm the named administrator and relevant supervision/training in the displayed signature attestation.
 
 General certificates include **all uncorrected vaccine records in the reviewed snapshot**, preserving all their recorded due dates and clearly identifying imported history. A missing historical due date prints “Not recorded — no due date certified.” These are history certificates, not an inferred current vaccine-status/antigen schedule, and not rabies certificates. A later vaccine administration does not retroactively change a prior history snapshot. A product/antigen model and clinician-approved current-due selection remain separate work.
+
+### Lot versus serial on printed certificates
+
+Rabies snapshots that contain `details.vaccine_serial_number` print **Lot number** (from the stock lot) and **Vaccine serial number** as separate fields; a `null` serial prints “Not recorded — no separate serial number certified.” Snapshots issued before this change (no such key) and general history certificates keep their original combined “Lot / serial number” wording, because an issued copy is re-rendered only from its frozen snapshot. Golden HTML snapshots live in `tests/certificates/snapshots/` (`tests/certificates/serial-snapshot.test.ts`; regenerate deliberately with `UPDATE_CERTIFICATE_SNAPSHOTS=1`). Dr. Edler should confirm the serial wording (clinical register row C-VACCINE-02).
 
 ## Acceptance and integration still required
 

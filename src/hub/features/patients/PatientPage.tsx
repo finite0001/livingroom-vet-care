@@ -28,6 +28,7 @@ import { PatientDentalChart } from "@/hub/features/dental/PatientDentalChart";
 import { ClinicalWorkspace } from "@/hub/features/clinical/ClinicalWorkspace";
 import { useUnsavedChanges } from "@/hub/features/clinical/use-unsaved-changes";
 import { PatientAlerts } from "@/hub/features/clinical/PatientAlerts";
+import { PatientVaccineStatus } from "@/hub/features/vaccines/PatientVaccineStatus";
 
 export default function PatientPage() {
   const { id } = useParams<{ id: string }>();
@@ -78,6 +79,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     {inactive && <div className="flex flex-wrap items-center gap-2 rounded-md border p-3"><Badge variant="secondary">{patient.deceased_at ? `Deceased ${patient.deceased_at}` : "Archived"}</Badge><p className="text-sm">History is retained. New visits and weights are disabled.</p></div>}
     <PatientAlerts petId={petId} />
     {patient.allergies?.trim() && <div role="note" className="flex gap-3 rounded-md border border-destructive bg-destructive/10 p-4 text-clinical-alert"><AlertTriangle className="h-5 w-5 shrink-0" /><div><h2 className="font-semibold">Allergy information from existing record</h2><p className="whitespace-pre-wrap text-sm">{patient.allergies}</p><p className="mt-1 text-xs">Review alongside the structured problem list below.</p></div></div>}
+    <PatientVaccineStatus key={`vaccine-status-${petId}`} petId={petId} />
     <div className="grid items-start gap-5 lg:grid-cols-2"><Card><CardHeader><CardTitle className="text-lg">Patient details</CardTitle></CardHeader><CardContent><dl className="grid grid-cols-2 gap-4">{details.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-muted-foreground">{label}{label === "Age" && patient.deceased_at ? " at death" : ""}</dt><dd className="break-words text-sm">{value}</dd></div>)}</dl></CardContent></Card><WeightHistory petId={petId} legacyWeight={patient.weight_lbs} disabled={inactive} /></div>
     <PatientPrescriptions petId={petId} clientId={patient.client_id} inactive={inactive} disabled={importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty} onDirtyChange={setNativePrescriptionDirty} />
     <PatientTreatments petId={petId} clientId={patient.client_id} />

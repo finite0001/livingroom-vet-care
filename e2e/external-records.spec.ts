@@ -526,8 +526,11 @@ test("ADMIN recovers lost verification and approval with unchanged source intent
     }),
   ).toHaveCount(0);
   expect(
-    state.calls.some((c) =>
-      /save_patient|save_clinical|vaccine|billing/.test(c.path),
+    state.calls.some(
+      (c) =>
+        /save_patient|save_clinical|vaccine|billing/.test(c.path) &&
+        // The patient header's read-only vaccine status summary is not a side effect.
+        c.path !== "/rest/v1/rpc/patient_vaccine_status_summary",
     ),
   ).toBe(false);
 });
