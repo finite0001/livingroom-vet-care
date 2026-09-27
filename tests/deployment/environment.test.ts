@@ -88,14 +88,28 @@ test("secret, service-role, mismatched and malformed keys never appear in errors
 test("contact configuration cannot route a new site's inquiries into another backend", () => {
   const configured = { ...valid(), VITE_CONTACT_INTAKE_URL: `${valid().VITE_SUPABASE_URL}/functions/v1/public-contact`, VITE_CONTACT_TURNSTILE_SITE_KEY: "synthetic_public_site_key" };
   assert.equal(verifyDeploymentEnvironment(configured, configured).contactEnabled, true);
+  assert.equal(verifyDeploymentEnvironment(configured, configured).contactVerification, "turnstile");
   for (const delta of [
-    { VITE_CONTACT_TURNSTILE_SITE_KEY: "" },
     { VITE_CONTACT_INTAKE_URL: "" },
+    { VITE_CONTACT_INTAKE_URL: "https://other.example/intake", VITE_CONTACT_TURNSTILE_SITE_KEY: "" },
     { VITE_CONTACT_INTAKE_URL: "https://other.example/intake" },
   ]) {
     const env = { ...configured, ...delta };
     assert.throws(() => verifyDeploymentEnvironment(env, env));
   }
+});
+
+test("intake URL without a site key is the explicit no-challenge mode; neither is disabled", () => {
+  const noWidget = { ...valid(), VITE_CONTACT_INTAKE_URL: `${valid().VITE_SUPABASE_URL}/functions/v1/public-contact` };
+  const result = verifyDeploymentEnvironment(noWidget, noWidget);
+  assert.equal(result.contactEnabled, true);
+  assert.equal(result.contactVerification, "none");
+  const empty = { ...noWidget, VITE_CONTACT_TURNSTILE_SITE_KEY: "" };
+  assert.equal(verifyDeploymentEnvironment(empty, empty).contactVerification, "none");
+  assert.equal(verifyDeploymentEnvironment(valid(), valid()).contactVerification, "disabled");
+  assert.equal(verifyDeploymentEnvironment(valid(), valid()).contactEnabled, false);
+  const keyOnly = { ...valid(), VITE_CONTACT_TURNSTILE_SITE_KEY: "synthetic_public_site_key" };
+  assert.throws(() => verifyDeploymentEnvironment(keyOnly, keyOnly), /requires the contact intake URL/);
 });
 
 test("vercel system VITE metadata is stripped before public allowlist checks", () => {

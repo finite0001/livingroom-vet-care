@@ -12,6 +12,7 @@ const list = (key: string) =>
 Deno.serve(
   createContactHandler(
     {
+      verification: Deno.env.get("CONTACT_VERIFICATION") || undefined,
       secret: Deno.env.get("CONTACT_TURNSTILE_SECRET") ?? "",
       emailHashSecret: Deno.env.get("CONTACT_EMAIL_HASH_SECRET") ?? "",
       allowedOrigins: list("CONTACT_ALLOWED_ORIGINS"),

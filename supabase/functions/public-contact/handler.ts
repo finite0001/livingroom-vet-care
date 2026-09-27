@@ -1,4 +1,7 @@
 export interface IntakeConfig {
+  // Unset means "turnstile" so a missing setting never weakens intake. "none" is
+  // an explicit owner decision: budgets are then the only abuse control.
+  verification?: string;
   secret: string;
   emailHashSecret: string;
   allowedOrigins: string[];
@@ -166,11 +169,13 @@ export function createContactHandler(
     };
     const respond = (status: number, value: unknown) =>
       new Response(JSON.stringify(value), { status, headers });
+    const mode = config.verification ?? "turnstile";
     if (
-      !config.secret ||
+      !["turnstile", "none"].includes(mode) ||
       config.emailHashSecret.length < 32 ||
       !config.allowedOrigins.length ||
-      !config.allowedHostnames.length
+      (mode === "turnstile" &&
+        (!config.secret || !config.allowedHostnames.length))
     )
       return respond(503, { error: "Intake is not configured" });
     if (!config.allowedOrigins.includes(origin))
@@ -216,10 +221,15 @@ export function createContactHandler(
         throw new Error();
       if (input.action === "submit") {
         fields = payload(input.payload);
+        // In "none" mode a token (e.g. from a page built with a widget) is
+        // tolerated if well-formed but never verified or stored.
         if (
-          typeof input.token !== "string" ||
-          input.token.length < 1 ||
-          input.token.length > 2048
+          mode === "none"
+            ? input.token !== undefined &&
+              (typeof input.token !== "string" || input.token.length > 2048)
+            : typeof input.token !== "string" ||
+              input.token.length < 1 ||
+              input.token.length > 2048
         )
           throw new Error();
       }
@@ -232,42 +242,44 @@ export function createContactHandler(
       if (input.action === "receipt")
         return respond(200, await backend.receipt(id, capabilityHash));
       // Do not turn a prior receipt into success for changed content. accept() compares exact payload.
-      const proofResponse = await fetcher(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            secret: config.secret,
-            response: input.token,
-            idempotency_key: await verificationKey(input.token as string),
-          }),
-          redirect: "error",
-          signal: AbortSignal.timeout(10000),
-        },
-      );
-      if (!proofResponse.ok)
-        return respond(503, {
-          error: "Verification unavailable; retry this request",
-        });
-      const proof = JSON.parse(
-        await boundedText(proofResponse, 8192),
-      ) as Record<string, unknown>;
-      const challengeAt =
-        typeof proof.challenge_ts === "string"
-          ? Date.parse(proof.challenge_ts)
-          : NaN;
-      if (
-        proof.success !== true ||
-        typeof proof.hostname !== "string" ||
-        !config.allowedHostnames.includes(proof.hostname) ||
-        proof.action !== "contact_intake" ||
-        proof.cdata !== id ||
-        !Number.isFinite(challengeAt) ||
-        Date.now() - challengeAt > 300000 ||
-        challengeAt - Date.now() > 30000
-      )
-        return respond(403, { error: "Complete a new verification challenge" });
+      if (mode === "turnstile") {
+        const proofResponse = await fetcher(
+          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              secret: config.secret,
+              response: input.token,
+              idempotency_key: await verificationKey(input.token as string),
+            }),
+            redirect: "error",
+            signal: AbortSignal.timeout(10000),
+          },
+        );
+        if (!proofResponse.ok)
+          return respond(503, {
+            error: "Verification unavailable; retry this request",
+          });
+        const proof = JSON.parse(
+          await boundedText(proofResponse, 8192),
+        ) as Record<string, unknown>;
+        const challengeAt =
+          typeof proof.challenge_ts === "string"
+            ? Date.parse(proof.challenge_ts)
+            : NaN;
+        if (
+          proof.success !== true ||
+          typeof proof.hostname !== "string" ||
+          !config.allowedHostnames.includes(proof.hostname) ||
+          proof.action !== "contact_intake" ||
+          proof.cdata !== id ||
+          !Number.isFinite(challengeAt) ||
+          Date.now() - challengeAt > 300000 ||
+          challengeAt - Date.now() > 30000
+        )
+          return respond(403, { error: "Complete a new verification challenge" });
+      }
       const result = await backend.accept(
         id,
         capabilityHash,

@@ -10,6 +10,15 @@ export interface ContactPointer {
   request_id: string;
   capability: string;
 }
+// A site key means the widget must produce a token. An intake URL alone is the
+// owner-approved no-challenge mode (edge CONTACT_VERIFICATION=none); neither
+// keeps the form unavailable.
+export function contactVerification(
+  endpoint: string,
+  siteKey: string,
+): "turnstile" | "none" | "unavailable" {
+  return !endpoint ? "unavailable" : siteKey ? "turnstile" : "none";
+}
 export function newContactPointer(): ContactPointer {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return {

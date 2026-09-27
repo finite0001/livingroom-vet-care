@@ -68,7 +68,9 @@ test("contact CTA reaches a working form with accurate launch and domain informa
   await expect(page.getByText(/Housecalls: targeting late october 2026/).first()).toBeVisible();
   await expect(page.getByText(/Clinic: targeting early 2027/).first()).toBeVisible();
   await expect(page.getByText("2619 Spruce Street, Boulder, CO", { exact: true }).first()).toBeVisible();
-  await expect(page.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(0);
+  await expect(page.locator('a[href="tel:+17207646677"]')).toHaveText("(720) 764-6677");
+  await expect(page.locator('a[href="mailto:admin@thelivingroom.vet"]')).toHaveText("admin@thelivingroom.vet");
+  await expect(page.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(2);
   await page.getByRole("button", { name: "Send Message" }).click();
   await expect(page.getByText("Name is required", { exact: true })).toBeVisible();
   await page.getByLabel("Name", { exact: false }).fill("Synthetic Browser Check");
