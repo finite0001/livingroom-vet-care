@@ -1624,6 +1624,8 @@ export type Database = {
           id: string
           is_internal: boolean
           ivr_path: string | null
+          provider: string | null
+          provider_message_id: string | null
           sender_id: string | null
           sender_type: Database["public"]["Enums"]["sender_type"]
           transcription: string | null
@@ -1640,6 +1642,8 @@ export type Database = {
           id?: string
           is_internal?: boolean
           ivr_path?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
           sender_id?: string | null
           sender_type: Database["public"]["Enums"]["sender_type"]
           transcription?: string | null
@@ -1656,6 +1660,8 @@ export type Database = {
           id?: string
           is_internal?: boolean
           ivr_path?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
           sender_id?: string | null
           sender_type?: Database["public"]["Enums"]["sender_type"]
           transcription?: string | null
@@ -4037,7 +4043,8 @@ export type Database = {
           channel: string
           client_id: string | null
           conversation_id: string | null
-          event_id: string
+          direction: string
+          event_id: string | null
           html_body: string | null
           id: string
           message_id: string | null
@@ -4059,7 +4066,8 @@ export type Database = {
           channel: string
           client_id?: string | null
           conversation_id?: string | null
-          event_id: string
+          direction?: string
+          event_id?: string | null
           html_body?: string | null
           id?: string
           message_id?: string | null
@@ -4081,7 +4089,8 @@ export type Database = {
           channel?: string
           client_id?: string | null
           conversation_id?: string | null
-          event_id?: string
+          direction?: string
+          event_id?: string | null
           html_body?: string | null
           id?: string
           message_id?: string | null

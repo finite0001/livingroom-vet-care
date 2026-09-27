@@ -7,7 +7,7 @@ import {
 } from "./InboundReviewState";
 // Project plain text at the server boundary, including the mutation response. Never fetch raw HTML or attachment payloads.
 export const inboundFields =
-  "id,channel,sender,recipient,subject,body,occurred_at,received_at,client_id,conversation_id,message_id,review_reason,version" as const;
+  "id,channel,direction,sender,recipient,subject,body,occurred_at,received_at,client_id,conversation_id,message_id,review_reason,version" as const;
 export interface Cursor {
   at: string;
   id: string;
