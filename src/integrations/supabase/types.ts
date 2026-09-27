@@ -1030,6 +1030,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cloudtalk_capability_redactions: {
+        Row: {
+          field: string
+          id: number
+          redacted_at: string
+          redacted_by: string
+          source: string
+        }
+        Insert: {
+          field: string
+          id?: never
+          redacted_at?: string
+          redacted_by?: string
+          source: string
+        }
+        Update: {
+          field?: string
+          id?: never
+          redacted_at?: string
+          redacted_by?: string
+          source?: string
+        }
+        Relationships: []
+      }
       cloudtalk_projection_failures: {
         Row: {
           attempts: number
@@ -6174,6 +6198,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      cloudtalk_app_send_text: { Args: { p_body: string }; Returns: string }
       cloudtalk_duration_text: { Args: { p_seconds: number }; Returns: string }
       communication_sms_provider: {
         Args: Record<PropertyKey, never>
@@ -6266,6 +6291,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      redact_private_capabilities: {
+        Args: { p_text: string }
+        Returns: string
+      }
+      redact_stored_cloudtalk_capabilities: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       retry_cloudtalk_projections: {
         Args: { p_limit?: number }

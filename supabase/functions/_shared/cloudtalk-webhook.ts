@@ -1,3 +1,5 @@
+import { redactPrivateCapabilitiesDeep } from "./private-capability-redaction.ts";
+
 interface CloudTalkEnvelope {
   event_id: string;
   type: string;
@@ -63,5 +65,7 @@ export async function verifyCloudTalkWebhook(
       (typeof number !== "string" || !allowedNumbers.includes(number))) {
     return null;
   }
-  return event;
+  // message.sent echoes app-sent document and payment links in full. Redact
+  // every capability before the event reaches the database or any log.
+  return { ...event, data: redactPrivateCapabilitiesDeep(event.data) as Record<string, unknown> };
 }

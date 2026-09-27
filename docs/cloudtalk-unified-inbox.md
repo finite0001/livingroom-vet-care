@@ -28,9 +28,25 @@ Inbound texts and calls mark the conversation unread; outbound CloudTalk Phone a
 ## Immutability, failures and privacy
 
 - `cloudtalk_messages` and `cloudtalk_events` cannot be updated or deleted; `cloudtalk_calls` cannot be deleted or re-keyed (lifecycle merges continue). CloudTalk `communication_inbound` rows and their thread messages are immutable.
-- If a projection cannot be written (for example text that trips the document-capability guard), the webhook still succeeds, the original is kept and `cloudtalk_projection_failures` records only the resource id and SQLSTATE. `/hub/call` shows the count; an administrator can press **Retry adding to inbox** (`retry_cloudtalk_projections`), which re-runs only the recorded failures, oldest first.
+- If a projection cannot be written (for example a database error), the webhook still succeeds, the original is kept and `cloudtalk_projection_failures` records only the resource id and SQLSTATE. `/hub/call` shows the count; an administrator can press **Retry adding to inbox** (`retry_cloudtalk_projections`), which re-runs only the recorded failures, oldest first.
 - No phone numbers or message bodies are logged by the projection; the webhook's existing log line (reason and field types only) is unchanged.
 - The migration backfills everything recorded since CloudTalk went live on 2026-09-26.
+
+## Private links in CloudTalk text (`20260928160000_cloudtalk_capability_redaction.sql`)
+
+App SMS goes through CloudTalk, so CloudTalk's `message.sent` webhook repeats a reviewed document-link or payment-link text in full, including its bearer token (`https://<origin>/shared/<grant>#v1.…`, `/pay/<grant>#p1.…`, `/payment/return|cancel/<grant>#s1.…`, `/estimate/<grant>#e1.…`). Before this migration that token was stored in `cloudtalk_messages.body`, readable by every active staff session, and the projection refused it forever.
+
+Now capabilities never reach storage:
+
+1. `cloudtalk-webhook` redacts every string in the verified event (`_shared/private-capability-redaction.ts`) before calling `ingest_cloudtalk_event`.
+2. `redact_cloudtalk_capabilities` triggers redact `cloudtalk_messages.body` on insert and `cloudtalk_calls.ai_summary` on insert and update, whatever the write path.
+3. `reject_persisted_document_capability` now also guards both tables, so a token that escaped redaction fails closed rather than being stored.
+
+Recognition is the guard's own token shape, `(v1|p1|s1)\.[A-Za-z0-9_-]{43}`, plus the estimate `e1.` shape. When the token is a URL fragment the whole URL goes, so the grant id is not kept either. Placeholders: `[secure document link]`, `[secure payment link]`, `[secure estimate link]`. A grant URL with no token grants nothing and is left alone. `public.redact_private_capabilities(text)` and the TypeScript module implement the same rule; change them together.
+
+The echo of an app send is matched to its outbox (or `outbound_deliveries`) row after mapping the stored template (`{{document_link}}`, `{{payment_link}}`) to its placeholder (`cloudtalk_app_send_text`), so it is absorbed like any other app send. A link text typed in CloudTalk Phone, or one outside the send window, projects as a normal outbound entry showing the placeholder. It is never recorded as a failure.
+
+**Existing rows.** CloudTalk originals stay immutable. `guard_cloudtalk_original` allows exactly one change to a stored message: replacing `body` with `redact_private_capabilities(body)`, every other column unchanged. That change can only remove a capability, and each one writes a row (source, field, time, database role, no content) to the append-only `cloudtalk_capability_redactions`. No guard is disabled, not even during the migration. The migration runs the owner-only `redact_stored_cloudtalk_capabilities()` once. It redacts stored bodies and AI summaries, audits each, and re-projects the affected texts, which clears the failures their tokens caused. It is idempotent and returns the number of rows it changed. `messages`, `communication_inbound` and `cloudtalk_projection_failures` need no redaction: the first two always refused tokens and the third stores no content. Any document or payment link texted before the migration was stored in plaintext, so treat those grants as exposed to staff readers and revoke or reissue them if that matters.
 
 ## `/hub/call`
 
@@ -49,10 +65,12 @@ App-originated sends (reply composer, reminders, outbox dispatch) are owned by t
 ## Verification
 
 - `supabase/tests/cloudtalk_unified_inbox.test.sql` (66 assertions): matching, review queue, replay idempotency, missed/answered/voicemail/internal/withheld calls, immutability, RLS reads, admin-only retry, projection-failure path, app-send echo absorption, forged-entry guard.
+- `supabase/tests/cloudtalk_capability_redaction.test.sql` (43 assertions): recognition and placeholders, redaction on ingest, placeholder projection, app document-link echo absorbed (not a failure), AI summary redaction, the guards still blocking raw tokens, redaction-only mutation of originals, backfill with audit and idempotency.
+- `tests/cloudtalk/capability-redaction.test.ts`: edge redaction rules, nested event data, and a signed `message.sent` document-link echo coming out of `verifyCloudTalkWebhook` redacted.
 - `tests/cloudtalk/thread-entry.test.ts`, `tests/inbound-review/state.test.ts`: UI mapping and review labels.
 - `e2e/communications-queue.spec.ts` "CloudTalk texts and calls render in the household thread without widening media access".
 
 ## Owner actions
 
-1. Apply `20260928110000_cloudtalk_unified_inbox.sql` to staging, then production (backfill runs in the migration). No Edge Function redeploy is required.
+1. Apply `20260928110000_cloudtalk_unified_inbox.sql` and `20260928160000_cloudtalk_capability_redaction.sql` to staging, then production (backfills run in the migrations), then redeploy `cloudtalk-webhook`.
 2. With the live number: text the practice from a phone saved as a household's primary phone and confirm it lands in that thread; repeat from an unknown number and confirm it lands in review; place a missed call and a voicemail; send a text from CloudTalk Phone; send a reply from `/hub/chats` (once CloudTalk outbound is live) and confirm it appears once.

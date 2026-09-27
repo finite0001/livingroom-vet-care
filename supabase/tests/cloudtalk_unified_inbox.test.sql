@@ -133,9 +133,15 @@ reset role;
 select results_eq($$select type::text, sender_type::text, provider, created_at from public.messages where provider_message_id = 'message:ct-msg-4'$$,
   $$values ('SMS', 'CLIENT', 'cloudtalk', timestamptz '2026-09-27 15:11:00+00')$$, 'Assigned CloudTalk text keeps its provider key and time');
 
--- A projection that cannot be written does not reject the webhook.
+-- A projection that cannot be written does not reject the webhook. Capability
+-- text no longer blocks projection (20260928160000 redacts it at ingest), so a
+-- test-only thread guard forces the failure here; it is rolled back with the test.
+create function public.test_block_cloudtalk_projection() returns trigger language plpgsql as $$
+begin raise exception 'Blocked for test' using errcode = '23514'; end $$;
+create trigger test_block_cloudtalk_projection before insert on public.messages
+  for each row when (NEW.content = 'Projection blocked for test') execute function public.test_block_cloudtalk_projection();
 select ok(pg_temp.ingest('evt-sms-5', 'message.received', '2026-09-27 19:00:00+00',
-  jsonb_build_object('id', 'ct-msg-5', 'channel', 'sms', 'body', 'link v1.' || repeat('A', 43), 'external_number', '+17205550101', 'internal_number', jsonb_build_object('number_e164', '+17207646677'))),
+  jsonb_build_object('id', 'ct-msg-5', 'channel', 'sms', 'body', 'Projection blocked for test', 'external_number', '+17205550101', 'internal_number', jsonb_build_object('number_e164', '+17207646677'))),
   'Webhook still succeeds when projection is blocked');
 select is((select count(*) from public.cloudtalk_messages where message_id = 'ct-msg-5'), 1::bigint, 'Original is preserved when projection fails');
 select results_eq($$select sqlstate, attempts from public.cloudtalk_projection_failures where resource_id = 'message:ct-msg-5'$$,

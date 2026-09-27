@@ -16,7 +16,7 @@ Rules for every step:
 | Item | State |
 | --- | --- |
 | Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
-| Repository migrations after this train | 160. There are **8 pending**: `20260927120000` (contact SMS consent, already on main) plus the 7 from this train (§3). |
+| Repository migrations after this train | 161. There are **9 pending**: `20260927120000` (contact SMS consent, already on main) plus the 8 from this train (§3). |
 | Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
 | Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
@@ -34,7 +34,7 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
 
 - [ ] **C1: functions not deployed.** These local entrypoints are outside the deployed set (the 2026-09-26 set of 23 plus the two CloudTalk functions): `invite-staff`, `invoice-checkout`, `invoice-refund`, `payment-collection`, `payment-status`, `prepare-payment-collection`, `recover-payment-collection`, `verify-payment-reconciliation`, `process-stripe-events`, `stripe-webhook`, `prepare-payment-delivery`, `prepare-document-link`, `recover-document-link`, `retrieve-document-link`, `prepare-release-email`, `prepare-invoice-email`, `prepare-external-record`, `prepare-lab-report`, `capture-ezyvet-attachment`, `retrieve-reviewed-ezyvet-original`, `ezyvet-import`, `send-provider-email`, `suggest-replies`.
   - Check what is live: `supabase functions list --project-ref mgadheotkdnrsatfivjy`.
-  - The nine train functions in §4 are among them. Deploy the rest only when the UI that calls them is enabled (payments in §11, `invite-staff` for staff onboarding). Leave optional ones (`send-provider-email`, `suggest-replies`, ezyVet import) undeployed and shown as unavailable.
+  - Nine of the ten train functions in §4 are among them (`cloudtalk-webhook` is already deployed and is redeployed in §4). Deploy the rest only when the UI that calls them is enabled (payments in §11, `invite-staff` for staff onboarding). Leave optional ones (`send-provider-email`, `suggest-replies`, ezyVet import) undeployed and shown as unavailable.
   - Never deploy `send-email` or `send-sms`. They are retired 410 stubs, and production v8 of both still enqueues into `outbound_deliveries`, so they should be **deleted** from both projects: `supabase functions delete send-email --project-ref <ref>`, and the same for `send-sms`, after confirming nothing calls them.
 - [ ] **C3: readiness summary trusts stale evidence.** After §3–§4, run `npm run readiness:refresh --silent && npm run readiness:summary -- --fail-on-blockers`. Treat a pass as meaningful only when it names the merged SHA and a green CI run for it.
 - [ ] **W2: scheduler routes.** The scheduler targets `dispatch-outbox`, `process-inbound`, `queue-reminders`, `process-stripe-events` and `cleanup-abandoned-attachment`. `process-stripe-events` is not deployed yet (see C1). `dispatch-outbound-deliveries` has no cron job. After this train, the `enqueue_due_appointment_reminders()` path that fed it is retired, so it only settles legacy rows and needs no schedule.
@@ -44,7 +44,7 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
 
 ## 3. Apply database migrations (staging, then primary)
 
-These are the 8 pending migrations, applied in this order:
+These are the 9 pending migrations, applied in this order:
 
 | Version | What it does | Must land before |
 | --- | --- | --- |
@@ -56,6 +56,7 @@ These are the 8 pending migrations, applied in this order:
 | `20260928130000_qol_hhhhhmm_scale` | Adds QOL assessments, addenda and the reference-line setting | the frontend |
 | `20260928140000_anesthesia_drug_administrations` | Adds `record_anesthesia_drug_administration` and the append-only link table | the frontend |
 | `20260928150000_reminder_pipeline_readiness` | Makes one appointment reminder path, adds email reminder channel choice and per-order lab reminders | **the frontend**. The old `save_patient_lab_order` rejects the new `reminders_enabled` key. |
+| `20260928160000_cloudtalk_capability_redaction` | Redacts document-link and payment-link capabilities from CloudTalk message bodies and AI summaries at ingest, redacts any already stored (audited in `cloudtalk_capability_redactions`), re-projects the texts they had blocked, and matches app-sent link texts to their outbox row | **enabling live CloudTalk SMS** (§7). Apply it before any document or payment link is texted. Redeploy `cloudtalk-webhook` (§4) right after it. |
 
 ```sh
 cd ~/Developer/livingroom-vet-care && git switch main && git pull --ff-only
@@ -63,7 +64,7 @@ git rev-parse HEAD                      # must equal the merged SHA from §1
 
 # Staging
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault --dry-run
-#   expect exactly the 8 files above and nothing else. Stop if the list differs.
+#   expect exactly the 9 files above and nothing else. Stop if the list differs.
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault
 
 # Primary: only after the staging probes below pass
@@ -74,7 +75,9 @@ npx supabase db push --project-ref mgadheotkdnrsatfivjy --skip-vault
 Read-only probes to run after each push (SQL editor or `psql "$LRV_DB_URL"`):
 
 ```sql
-select count(*) from supabase_migrations.schema_migrations;          -- 160
+select count(*) from supabase_migrations.schema_migrations;          -- 161
+select count(*) from public.cloudtalk_messages
+ where body ~ '(v1|p1|s1|e1)\.[A-Za-z0-9_-]{43}';                -- 0
 select provider from public.communication_sms_provider_setting;       -- cloudtalk
 select to_regclass('public.patient_qol_scale_assessments'),
        to_regclass('public.anesthesia_drug_administrations'),
@@ -85,7 +88,7 @@ select column_name from information_schema.columns
 
 ## 4. Deploy Edge functions from the merged SHA (staging, then primary)
 
-The train changes these 9 function bundles, either directly or through `_shared`. Deploy exactly this list in one command, never a blanket deploy:
+The train changes these 10 function bundles, either directly or through `_shared`. Deploy exactly this list in one command, never a blanket deploy:
 
 | Function | `verify_jwt` | Why |
 | --- | --- | --- |
@@ -98,9 +101,10 @@ The train changes these 9 function bundles, either directly or through `_shared`
 | `prepare-invoice-email` | true | shared payload/outbox modules |
 | `prepare-release-email` | true | the renderer prints the rabies serial number separately |
 | `capture-conversation-email` | true | shared outbox module |
+| `cloudtalk-webhook` | false (CloudTalk signature) | redacts document and payment link capabilities before ingest |
 
 ```sh
-F="dispatch-outbox dispatch-outbound-deliveries prepare-payment-delivery prepare-document-link recover-document-link retrieve-document-link prepare-invoice-email prepare-release-email capture-conversation-email"
+F="dispatch-outbox dispatch-outbound-deliveries prepare-payment-delivery prepare-document-link recover-document-link retrieve-document-link prepare-invoice-email prepare-release-email capture-conversation-email cloudtalk-webhook"
 npx supabase functions deploy $F --project-ref kothoqicubowyhwfsrte
 npx supabase functions list --project-ref kothoqicubowyhwfsrte   # check the JWT column against the table
 # then the same two commands with --project-ref mgadheotkdnrsatfivjy
