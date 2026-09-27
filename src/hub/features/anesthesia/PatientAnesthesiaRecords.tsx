@@ -1,4 +1,5 @@
 import { AnesthesiaHistorySnapshot } from "./AnesthesiaHistorySnapshot";
+import { AnesthesiaDrugAdministrations } from "./AnesthesiaDrugAdministrations";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -31,6 +32,7 @@ import {
 const db = supabase as unknown as SupabaseClient<AnesthesiaDatabase>;
 interface PatientAnesthesiaRecordsProps {
   petId: string;
+  clientId: string;
   onDirtyChange?: (dirty: boolean) => void;
 }
 const selectClass =
@@ -43,6 +45,7 @@ const when = (value: string) =>
   }).format(new Date(value));
 export function PatientAnesthesiaRecords({
   petId,
+  clientId,
   onDirtyChange,
 }: PatientAnesthesiaRecordsProps) {
   const { session } = useAuth();
@@ -58,9 +61,10 @@ export function PatientAnesthesiaRecords({
   const [message, setMessage] = useState("");
   const [confirmSign, setConfirmSign] = useState(false);
   const [addendum, setAddendum] = useState("");
+  const [drugPending, setDrugPending] = useState(false);
   const addendumId = useRef<string>(crypto.randomUUID());
   const draftDirty = Boolean(form && JSON.stringify(form) !== baseline);
-  const dirty = draftDirty || Boolean(addendum.trim()) || busy;
+  const dirty = draftDirty || Boolean(addendum.trim()) || busy || drugPending;
   useEffect(() => {
     onDirtyChange?.(dirty);
     return () => onDirtyChange?.(false);
@@ -242,8 +246,10 @@ export function PatientAnesthesiaRecords({
         <CardTitle>Anesthesia records</CardTitle>
         <p className="text-sm text-muted-foreground">
           Manually recorded or transcribed from an original patient file.
-          Automatic vendor import is not configured. Monitoring entries do not
-          calculate doses, interpret findings or create inventory charges.
+          Automatic vendor import is not configured. Monitoring and documentary
+          entries do not calculate doses, interpret findings or create inventory
+          charges; record stock drugs in “Anesthesia drugs from stock” on a
+          saved draft to debit the lot and charge the draft invoice.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -523,7 +529,7 @@ export function PatientAnesthesiaRecords({
                 <p className="text-sm text-muted-foreground">
                   Document what occurred, including any administered amount and
                   unit in your description. These entries do not dispense stock
-                  or create charges.
+                  or create charges; use “Anesthesia drugs from stock” for that.
                 </p>
                 {form.events.map((event, index) => (
                   <fieldset
@@ -615,6 +621,15 @@ export function PatientAnesthesiaRecords({
                 </Button>
               </div>
             </fieldset>
+            {record && (
+              <AnesthesiaDrugAdministrations
+                key={record.id}
+                petId={petId}
+                clientId={clientId}
+                record={record}
+                onPendingChange={setDrugPending}
+              />
+            )}
             {!signed && (
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -627,7 +642,7 @@ export function PatientAnesthesiaRecords({
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={busy || draftDirty || !record}
+                  disabled={busy || draftDirty || drugPending || !record}
                   onClick={() => setConfirmSign(true)}
                 >
                   Review and sign anesthesia record

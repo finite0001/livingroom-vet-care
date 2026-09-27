@@ -92,7 +92,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
     <PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} />
     <PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} />
     <PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} />
-    <PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} onDirtyChange={setAnesthesiaDirty} />
+    <PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} clientId={patient.client_id} onDirtyChange={setAnesthesiaDirty} />
     <PatientRecordReleases key={`release-${petId}`} petId={petId} onDirtyChange={setReleaseDirty} />
     <ClinicalWorkspace petId={petId} disabled={inactive || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty} onDirtyChange={setClinicalDirty} />
   </div></section>;

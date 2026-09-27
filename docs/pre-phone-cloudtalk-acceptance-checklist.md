@@ -34,6 +34,7 @@ Record each row as `Accept`, `Accept after correction`, `Reject`, or `Not in pil
 | C-PILOT-06 | Record-release selection and client disclosure rules | Owner + Dr. Susan Edler | Pending | Confirm what can be sent, to whom, and with which attestation. |
 | C-PILOT-07 | Invoice/payment language and client-facing balance/status wording | Owner/operator | Pending | Confirm refunds, voids, credits, and sandbox-vs-live disclosure. |
 | C-PILOT-08 | Reminder wording and delivery-state labels | Owner/operator + Dr. Susan Edler | Pending | Confirm wording before provider commissioning. |
+| C-PILOT-ANES-01 | Anesthesia drugs charged from stock and signed-record lock | Dr. Susan Edler | Pending | Confirm fields/wording, block-after-signing policy (Treatments + addendum) and correction path; no dose/drug defaults; DEA logs out of scope. |
 
 Reference the detailed pack when a row needs deeper review: [Dr. Susan Edler clinical acceptance review pack](clinical-review/README.md).
 
