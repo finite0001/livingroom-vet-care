@@ -26,7 +26,7 @@ export function safePaymentDelivery(value:unknown,actor:string,id:string) {
  let capture=null;
  if(value.capture!==null){
  const c=value.capture;if(!object(c)||c.request_id!==id||!object(c.sender_config)||typeof c.message_hash!=="string"||!hash.test(c.message_hash)||typeof c.payload_hash!=="string"||!hash.test(c.payload_hash)||typeof c.captured_at!=="string")unavailable();
- const keys=r.channel==="EMAIL"?["from","reply_to"]:["from","account_sid"];
+ const keys=r.channel==="EMAIL"?["from","reply_to"]:(c.sender_config as Record<string,unknown>).provider==="cloudtalk"?["from","provider"]:["from","account_sid"];
  if(Object.keys(c.sender_config).sort().join()!==keys.sort().join()||!keys.every(k=>typeof (c.sender_config as Record<string,unknown>)[k]==="string"))unavailable();
  capture={request_id:id,sender_config:Object.fromEntries(keys.map(k=>[k,(c.sender_config as Record<string,unknown>)[k]])),message_hash:c.message_hash,payload_hash:c.payload_hash,captured_at:c.captured_at};
  }

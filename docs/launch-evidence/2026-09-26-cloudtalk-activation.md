@@ -1,5 +1,7 @@
 # CloudTalk integration activation — September 26, 2026
 
+> **Superseded in part (2026-09-28):** the owner decided on 2026-09-27 that all text messaging runs through CloudTalk. The "do not switch those queues to CloudTalk" guidance below is replaced by [CloudTalk outbound SMS](2026-09-28-cloudtalk-outbound-sms.md). Everything else here (webhooks, call media, staff phone) still applies.
+
 ## What this package implements
 
 - A persistent staff CloudTalk phone at `/hub/call`, with a separate-tab option on narrow screens and a ringing indicator when the embedded phone sends its event.

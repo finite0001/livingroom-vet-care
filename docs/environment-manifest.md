@@ -46,7 +46,11 @@ Set these per Supabase project with the Supabase dashboard/CLI secret store.
 | `RESEND_FROM` | Email provider tests/live | Must use a verified sender/domain. |
 | `RESEND_REPLY_TO` | Email provider tests/live | Must route to an owned monitored mailbox. |
 | `RESEND_WEBHOOK_SECRET` | Resend delivery webhook | Svix signing secret for the configured Resend webhook endpoint. |
-| `TWILIO_ACCOUNT_SID` | SMS provider tests/live | Requires owned Twilio account and number. |
+| `SMS_PROVIDER` | `dispatch-outbox`, `dispatch-outbound-deliveries`, `prepare-payment-delivery` | `cloudtalk` (default when unset) or `twilio`; any other value fails closed. Must match the database setting `communication_sms_provider_setting`. |
+| `CLOUDTALK_API_KEY_ID` / `CLOUDTALK_API_KEY_SECRET` | CloudTalk SMS send, call media | Server-only HTTP Basic key pair. |
+| `CLOUDTALK_ALLOWED_NUMBERS` | CloudTalk webhook and SMS sender | Exact E.164 practice numbers (`+17207646677`). |
+| `CLOUDTALK_SMS_SENDER` | CloudTalk SMS sender (optional) | Needed only when more than one allowed number exists; must be one of them. |
+| `TWILIO_ACCOUNT_SID` | SMS provider tests/live (retained, not selected) | Requires owned Twilio account and number. |
 | `TWILIO_AUTH_TOKEN` | SMS provider tests/live | Server-only. |
 | `TWILIO_FROM_NUMBER` | SMS provider tests/live | Must be E.164 and consent/opt-out compliant. |
 | `TWILIO_STATUS_CALLBACK_URL` | Twilio delivery status webhook | Exact public URL configured in Twilio for message status callbacks; required for signature validation behind proxies/custom domains. |

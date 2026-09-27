@@ -15,7 +15,11 @@ Set these as Supabase Edge Function secrets per project, never Vite variables or
 | `RESEND_API_KEY` | Resend credential used only by server-side dispatch and receiving. |
 | `RESEND_FROM` | Bare email or `Practice Name <email>` on a sending domain verified in Resend. |
 | `RESEND_REPLY_TO` | Required bare practice mailbox receiving client/provider replies. |
-| `TWILIO_ACCOUNT_SID` | Twilio account SID beginning with `AC` and 32 hexadecimal characters. |
+| `SMS_PROVIDER` | `cloudtalk` (default when unset) or `twilio`. Any other value stops the SMS workers with HTTP 503 before anything is claimed. See [CloudTalk outbound SMS](launch-evidence/2026-09-28-cloudtalk-outbound-sms.md). |
+| `CLOUDTALK_API_KEY_ID` / `CLOUDTALK_API_KEY_SECRET` | CloudTalk API key pair (HTTP Basic). Server-only; shared with the call-media function. |
+| `CLOUDTALK_ALLOWED_NUMBERS` | Comma-separated exact E.164 practice numbers. The SMS sender must be one of them. |
+| `CLOUDTALK_SMS_SENDER` | Optional exact E.164 sender; required only when `CLOUDTALK_ALLOWED_NUMBERS` lists more than one number. |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID beginning with `AC` and 32 hexadecimal characters. Retained; used only when `SMS_PROVIDER=twilio`. |
 | `TWILIO_AUTH_TOKEN` | Twilio credential. |
 | `TWILIO_FROM_NUMBER` | Twilio sending number with explicit country code. |
 
