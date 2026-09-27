@@ -145,5 +145,47 @@ select set_config('request.jwt.claims', '{"sub":"62000000-0000-4000-8000-0000000
 select results_eq($$select projected, still_failing from public.retry_cloudtalk_projections(10)$$, $$values (0, 1)$$, 'Admin retry reports the still-blocked source');
 reset role;
 
+-- Retry covers recorded failures only; non-contact sources (internal call-4,
+-- recorded earlier than ct-msg-5) never use up the retry batch.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"62000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+select results_eq($$select projected, still_failing from public.retry_cloudtalk_projections(1)$$, $$values (0, 1)$$, 'Retry batch reaches the failure past earlier internal legs');
+reset role;
+
+-- Texts the app sent through CloudTalk are not duplicated by their message.sent echo.
+insert into public.messages(id, conversation_id, type, sender_type, sender_id, content, is_internal, created_at) values
+('62200000-0000-4000-8000-000000000001', (select conversation_id from public.messages where provider_message_id = 'message:ct-msg-1'), 'SMS', 'STAFF',
+ '62000000-0000-4000-8000-000000000001', 'Your visit is confirmed for Tuesday.', false, '2026-09-26 20:00:00+00'),
+('62200000-0000-4000-8000-000000000002', (select conversation_id from public.messages where provider_message_id = 'message:ct-msg-1'), 'SMS', 'STAFF',
+ '62000000-0000-4000-8000-000000000001', 'Queued reminder text.', false, '2026-09-26 21:00:00+00');
+insert into public.communication_outbox(request_id, conversation_id, client_id, message_id, created_by, channel, recipient, body, provider, state, first_attempt_at, created_at)
+select gen_random_uuid(), m.conversation_id, '62100000-0000-4000-8000-000000000001', m.id, '62000000-0000-4000-8000-000000000001', 'SMS', '+17205550101', m.content, 'twilio', 'accepted', '2026-09-26 20:00:05+00', '2026-09-26 20:00:00+00'
+from public.messages m where m.id = '62200000-0000-4000-8000-000000000001';
+insert into public.outbound_deliveries(idempotency_key, channel, recipient, payload, client_id, conversation_id, message_id, status, accepted_at, created_at)
+select 'staff:sms:test-echo', 'SMS', '+1 720 555 0101', jsonb_build_object('kind', 'staff_message', 'body', m.content), '62100000-0000-4000-8000-000000000001', m.conversation_id, m.id, 'ACCEPTED', '2026-09-26 21:00:03+00', '2026-09-26 21:00:00+00'
+from public.messages m where m.id = '62200000-0000-4000-8000-000000000002';
+select ok(pg_temp.ingest('evt-echo-1', 'message.sent', '2026-09-26 20:00:09+00',
+  '{"id":"ct-echo-1","channel":"sms","body":"Your visit is confirmed for Tuesday.","external_number":"+17205550101","internal_number":{"number_e164":"+17207646677"}}'), 'Echo of an app outbox send accepted');
+select is((select count(*) from public.communication_inbound where resource_id = 'message:ct-echo-1'), 0::bigint, 'Outbox send echo is not projected');
+select is((select count(*) from public.messages where content = 'Your visit is confirmed for Tuesday.'), 1::bigint, 'Outbox send appears once in the thread');
+select is((select count(*) from public.cloudtalk_projection_failures where resource_id = 'message:ct-echo-1'), 0::bigint, 'Absorbed echo is not a failure');
+select ok(pg_temp.ingest('evt-echo-2', 'message.sent', '2026-09-26 21:00:07+00',
+  '{"id":"ct-echo-2","channel":"sms","body":"Queued reminder text.","external_number":"+17205550101","internal_number":{"number_e164":"+17207646677"}}'), 'Echo of an outbound delivery accepted');
+select is((select count(*) from public.messages where content = 'Queued reminder text.'), 1::bigint, 'Outbound delivery echo is not duplicated');
+select ok(pg_temp.ingest('evt-echo-3', 'message.sent', '2026-09-26 20:10:00+00',
+  '{"id":"ct-echo-3","channel":"sms","body":"Your visit is confirmed for Tuesday.","external_number":"+17205550101","internal_number":{"number_e164":"+17207646677"}}'), 'Identical text typed in CloudTalk Phone accepted');
+select is((select count(*) from public.messages where provider_message_id = 'message:ct-echo-3'), 1::bigint, 'A second identical CloudTalk Phone text is still shown');
+select ok(pg_temp.ingest('evt-echo-4', 'message.sent', '2026-09-26 23:30:00+00',
+  '{"id":"ct-echo-4","channel":"sms","body":"Your visit is confirmed for Tuesday.","external_number":"+17205550101","internal_number":{"number_e164":"+17207646677"}}'), 'Same text hours later accepted');
+select is((select count(*) from public.messages where provider_message_id = 'message:ct-echo-4'), 1::bigint, 'Text outside the send window is shown');
+
+-- Staff sessions cannot forge or squat CloudTalk thread entries.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"62000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+select throws_ok($$insert into public.messages(conversation_id, type, sender_type, content, is_internal, provider, provider_message_id)
+  values ((select conversation_id from public.messages where provider_message_id = 'message:ct-msg-1'), 'SMS', 'CLIENT', 'forged', false, 'cloudtalk', 'message:ct-future')$$,
+  '42501', null, 'Staff cannot insert a CloudTalk-keyed thread entry');
+reset role;
+
 select * from finish();
 rollback;

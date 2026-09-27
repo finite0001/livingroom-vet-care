@@ -60,6 +60,22 @@ end $$;
 create trigger guard_cloudtalk_inbound before update or delete on public.communication_inbound for each row execute function public.guard_cloudtalk_inbound();
 revoke all on function public.guard_cloudtalk_inbound() from public, anon, authenticated, service_role;
 
+-- Thread entries keyed as CloudTalk are written only by the projection and
+-- review assignment (security definer, running as the function owner). Staff
+-- sessions keep their general messages insert policy but cannot forge a
+-- CloudTalk-labelled entry or squat on a key a real webhook will need.
+create function public.guard_cloudtalk_thread_message() returns trigger language plpgsql set search_path = public as $$
+begin
+  if (NEW.provider = 'cloudtalk' or (TG_OP = 'UPDATE' and OLD.provider = 'cloudtalk'))
+    and current_user in ('anon', 'authenticated', 'service_role') then
+    raise exception 'CloudTalk thread entries are written only by CloudTalk ingestion' using errcode = '42501';
+  end if;
+  return NEW;
+end $$;
+create trigger guard_cloudtalk_thread_message before insert or update on public.messages
+  for each row execute function public.guard_cloudtalk_thread_message();
+revoke all on function public.guard_cloudtalk_thread_message() from public, anon, authenticated, service_role;
+
 -- A projection that cannot be written (for example text that trips the
 -- document-capability guard) must not make CloudTalk retry the webhook
 -- forever. The original is kept; the failure is recorded without content.
@@ -121,6 +137,8 @@ declare
   v_message uuid;
   matches integer;
   answered_seconds integer;
+  app_sends integer;
+  echo_rank integer;
 begin
   if p_resource_id is null or p_resource_id !~ '^(message|call):.{1,200}$' then return null; end if;
   if p_resource_id like 'message:%' then
@@ -130,6 +148,32 @@ begin
     v_channel := 'SMS';
     v_external := public.communication_recipient('SMS', v_msg.external_number);
     v_internal := public.communication_recipient('SMS', v_msg.internal_number);
+    -- Texts the app itself sent through CloudTalk already have their staff
+    -- message (with outbox delivery state) in the thread; CloudTalk's
+    -- message.sent echo of them must not add a second copy. There is no shared
+    -- identifier, so an echo is matched on recipient, exact body and a send
+    -- window, and at most one echo is absorbed per app send (so an identical
+    -- text typed in CloudTalk Phone within the window still appears).
+    if v_direction = 'outbound' and v_external is not null then
+      select count(*) into app_sends from (
+        select 1 from public.communication_outbox o
+        where o.channel = 'SMS' and o.message_id is not null and o.recipient = v_external and o.body = v_msg.body
+          and coalesce(o.first_attempt_at, o.created_at) between v_msg.occurred_at - interval '1 hour' and v_msg.occurred_at + interval '10 minutes'
+        union all
+        select 1 from public.outbound_deliveries d
+        where d.channel = 'SMS'::public.channel_type and d.message_id is not null
+          and public.communication_recipient('SMS', d.recipient) = v_external and d.payload->>'body' = v_msg.body
+          and coalesce(d.leased_at, d.accepted_at, d.created_at) between v_msg.occurred_at - interval '1 hour' and v_msg.occurred_at + interval '10 minutes'
+      ) app;
+      if app_sends > 0 then
+        select count(*) into echo_rank from public.cloudtalk_messages m
+        where m.direction = 'outbound' and m.body = v_msg.body
+          and public.communication_recipient('SMS', m.external_number) = v_external
+          and m.occurred_at between v_msg.occurred_at - interval '70 minutes' and v_msg.occurred_at
+          and (m.occurred_at, m.message_id) <= (v_msg.occurred_at, v_msg.message_id);
+        if echo_rank <= app_sends then return null; end if;
+      end if;
+    end if;
     v_body := case when btrim(v_msg.body) = '' then '[' || upper(v_msg.channel) || ' with no text. Open CloudTalk to view attachments.]' else v_msg.body end;
     v_at := v_msg.occurred_at;
   else
@@ -199,9 +243,12 @@ end $$;
 
 create function public.project_cloudtalk_source_safely(p_resource_id text) returns uuid
 language plpgsql security definer set search_path = public as $$
-declare state text;
+declare state text; projected uuid;
 begin
-  return public.project_cloudtalk_source(p_resource_id);
+  projected := public.project_cloudtalk_source(p_resource_id);
+  -- Not client contact (for example an absorbed app-send echo): nothing is left to retry.
+  if projected is null then delete from public.cloudtalk_projection_failures where resource_id = p_resource_id; end if;
+  return projected;
 exception when others then
   get stacked diagnostics state = returned_sqlstate;
   insert into public.cloudtalk_projection_failures(resource_id, sqlstate) values (p_resource_id, state)
@@ -225,6 +272,9 @@ create trigger project_cloudtalk_call after insert or update on public.cloudtalk
   for each row when (NEW.ended_at is not null and NEW.trusted_number) execute function public.project_cloudtalk_call_trigger();
 
 -- Administrators can re-run projection after a recorded failure is fixed.
+-- Every CloudTalk original is projected by trigger (or the backfill below), so
+-- the recorded failures are the complete set to retry. Sources that are simply
+-- not client contact (internal legs, app-sent echoes) are never rescanned.
 create function public.retry_cloudtalk_projections(p_limit integer default 100)
 returns table(projected integer, still_failing integer)
 language plpgsql security definer set search_path = public as $$
@@ -234,15 +284,8 @@ begin
   if not public.has_role(actor, 'ADMIN') then raise exception 'Administrator access required' using errcode = '42501'; end if;
   if p_limit is null or p_limit not between 1 and 500 then raise exception 'Invalid retry limit' using errcode = '23514'; end if;
   for source in
-    select s.resource_id from (
-      select 'message:' || m.message_id resource_id, m.occurred_at occurred from public.cloudtalk_messages m
-      union all
-      select 'call:' || c.call_uuid, c.last_event_at occurred from public.cloudtalk_calls c where c.ended_at is not null and c.trusted_number
-    ) s
-    where not exists (select 1 from public.communication_inbound i where i.provider = 'cloudtalk' and i.resource_id = s.resource_id)
-    order by s.occurred limit p_limit
+    select f.resource_id from public.cloudtalk_projection_failures f order by f.first_failed_at, f.resource_id limit p_limit
   loop
-    -- Null without a recorded failure means not client contact (for example an internal leg).
     if public.project_cloudtalk_source_safely(source) is not null then ok_count := ok_count + 1;
     elsif exists (select 1 from public.cloudtalk_projection_failures f where f.resource_id = source) then fail_count := fail_count + 1;
     end if;

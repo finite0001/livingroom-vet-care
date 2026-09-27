@@ -20,6 +20,7 @@ import {
 import {
   assignmentIntent,
   assignmentOutcome,
+  inboundCounterpart,
   inboundLabel,
   inboundPreview,
   type AssignmentIntent,
@@ -366,7 +367,7 @@ function InboundReview({ actor }: { actor: string }) {
           {rows.map((r) => (
             <li key={r.id} className="rounded-md border p-3">
               <p>
-                {inboundLabel(r)} · {r.sender} · {date(r.received_at)} Denver
+                {inboundLabel(r)} · {inboundCounterpart(r)} · {date(r.received_at)} Denver
               </p>
               <p>{inboundPreview(r)}</p>
               <Button

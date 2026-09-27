@@ -118,13 +118,15 @@ test("review projection drops raw HTML, attachment URLs and unrelated provider m
 });
 
 test("CloudTalk review entries parse with direction and readable labels", async () => {
-  const { inboundSchema, inboundLabel, inboundPreview } = await import("../../src/hub/features/inbound-review/InboundReviewState.ts");
+  const { inboundSchema, inboundLabel, inboundPreview, inboundCounterpart } = await import("../../src/hub/features/inbound-review/InboundReviewState.ts");
   const call = inboundSchema.parse({ ...inbound, channel: "CALL_INBOUND", direction: "inbound", subject: "", body: "Missed incoming call" });
   assert.equal(inboundLabel(call), "Incoming call");
   assert.equal(inboundPreview(call), "Missed incoming call");
   const sent = inboundSchema.parse({ ...inbound, channel: "SMS", direction: "outbound", subject: "", body: "See you   Tuesday" });
   assert.equal(inboundLabel(sent), "Text sent from CloudTalk Phone");
   assert.equal(inboundPreview(sent), "See you Tuesday");
+  assert.equal(inboundCounterpart({ ...sent, sender: "+17207646677", recipient: "+17205550199" }), "to +17205550199");
+  assert.equal(inboundCounterpart({ ...call, sender: "+17205550199", recipient: "+17207646677" }), "+17205550199");
   assert.equal(inboundSchema.parse(inbound).direction, "inbound");
   assert.equal(inboundPreview(inboundSchema.parse(inbound)), "Original");
   assert.equal(inboundPreview({ channel: "SMS", subject: "", body: "x".repeat(200) }).length, 160);

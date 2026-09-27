@@ -28,7 +28,7 @@ Inbound texts and calls mark the conversation unread; outbound CloudTalk Phone a
 ## Immutability, failures and privacy
 
 - `cloudtalk_messages` and `cloudtalk_events` cannot be updated or deleted; `cloudtalk_calls` cannot be deleted or re-keyed (lifecycle merges continue). CloudTalk `communication_inbound` rows and their thread messages are immutable.
-- If a projection cannot be written (for example text that trips the document-capability guard), the webhook still succeeds, the original is kept and `cloudtalk_projection_failures` records only the resource id and SQLSTATE. `/hub/call` shows the count; an administrator can press **Retry adding to inbox** (`retry_cloudtalk_projections`).
+- If a projection cannot be written (for example text that trips the document-capability guard), the webhook still succeeds, the original is kept and `cloudtalk_projection_failures` records only the resource id and SQLSTATE. `/hub/call` shows the count; an administrator can press **Retry adding to inbox** (`retry_cloudtalk_projections`), which re-runs only the recorded failures, oldest first.
 - No phone numbers or message bodies are logged by the projection; the webhook's existing log line (reason and field types only) is unchanged.
 - The migration backfills everything recorded since CloudTalk went live on 2026-09-26.
 
@@ -36,17 +36,23 @@ Inbound texts and calls mark the conversation unread; outbound CloudTalk Phone a
 
 Still gated by `VITE_CLOUDTALK_ENABLED` (embedded phone and activity pages). Each call and text there now links to "Open household thread" or "Needs household review". Thread entries render whenever data exists, regardless of the flag; the "Phone activity" link inside a call entry is only shown when the flag is on.
 
+## Texts the app sends through CloudTalk
+
+When the outbound workstream sends a reply, reminder or queued staff message through CloudTalk, the thread already holds that staff message (with its outbox delivery state), and CloudTalk also fires `message.sent` for it. CloudTalk returns no identifier the app can store at send time, so the projection absorbs an outbound echo when a `communication_outbox` or `outbound_deliveries` SMS with a thread message has the same normalized recipient and exact body and was attempted between 1 hour before and 10 minutes after the echo. At most one echo is absorbed per app send, so an identical text typed in CloudTalk Phone inside that window still appears. Absorbed echoes stay in `cloudtalk_messages` and are not failures. This is a heuristic: if CloudTalk rewrites the body (for example appends opt-out text), echoes will show as a second "Sent from CloudTalk Phone" entry; confirm during the live check.
+
+Staff sessions keep their general `messages` insert policy but cannot insert or change a `provider = 'cloudtalk'` entry (trigger `guard_cloudtalk_thread_message`); only the projection and review assignment write them.
+
 ## Out of scope here
 
 App-originated sends (reply composer, reminders, outbox dispatch) are owned by the outbound workstream (`supabase/functions/_shared/outbox-dispatch.ts`, `dispatch-outbound-deliveries`).
 
 ## Verification
 
-- `supabase/tests/cloudtalk_unified_inbox.test.sql` (54 assertions): matching, review queue, replay idempotency, missed/answered/voicemail/internal/withheld calls, immutability, RLS reads, admin-only retry, projection-failure path.
+- `supabase/tests/cloudtalk_unified_inbox.test.sql` (66 assertions): matching, review queue, replay idempotency, missed/answered/voicemail/internal/withheld calls, immutability, RLS reads, admin-only retry, projection-failure path, app-send echo absorption, forged-entry guard.
 - `tests/cloudtalk/thread-entry.test.ts`, `tests/inbound-review/state.test.ts`: UI mapping and review labels.
 - `e2e/communications-queue.spec.ts` "CloudTalk texts and calls render in the household thread without widening media access".
 
 ## Owner actions
 
 1. Apply `20260928110000_cloudtalk_unified_inbox.sql` to staging, then production (backfill runs in the migration). No Edge Function redeploy is required.
-2. With the live number: text the practice from a phone saved as a household's primary phone and confirm it lands in that thread; repeat from an unknown number and confirm it lands in review; place a missed call and a voicemail; send a text from CloudTalk Phone.
+2. With the live number: text the practice from a phone saved as a household's primary phone and confirm it lands in that thread; repeat from an unknown number and confirm it lands in review; place a missed call and a voicemail; send a text from CloudTalk Phone; send a reply from `/hub/chats` (once CloudTalk outbound is live) and confirm it appears once.

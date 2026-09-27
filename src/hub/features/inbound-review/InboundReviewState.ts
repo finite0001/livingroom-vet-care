@@ -110,6 +110,10 @@ export function inboundLabel(r: Pick<Inbound, "channel" | "direction">): string 
   const label = channelLabels[r.channel];
   return r.direction === "outbound" && r.channel === "SMS" ? `${label} sent from CloudTalk Phone` : label;
 }
+/** The outside party: staff-started CloudTalk activity is recorded from the practice number, so show who it went to. */
+export function inboundCounterpart(r: Pick<Inbound, "direction" | "sender" | "recipient">): string {
+  return r.direction === "outbound" ? `to ${r.recipient}` : r.sender;
+}
 /** One-line preview: email subject, otherwise the plain text recorded for the entry. */
 export function inboundPreview(r: Pick<Inbound, "channel" | "subject" | "body">): string {
   if (r.channel === "EMAIL") return r.subject || "No subject";
