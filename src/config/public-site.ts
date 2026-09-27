@@ -172,6 +172,8 @@ function getPracticeStructuredData(): JsonLdObject {
     url: publicSiteOrigin,
     image: defaultOgImageUrl,
     description: publicRoutes[0].description,
+    ...(practice.phone ? { telephone: practice.phone } : {}),
+    ...(practice.email ? { email: practice.email } : {}),
     address: {
       "@type": "PostalAddress",
       streetAddress: practice.address.street,
