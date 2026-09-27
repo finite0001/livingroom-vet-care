@@ -7,7 +7,7 @@ export interface PracticeLaunchStage {
 
 export interface PracticeSettings {
   name: string;
-  address: { street: string; city: string; state: string };
+  address: { street: string; city: string; state: string; postalCode: string };
   timezone: string;
   phone: string | null;
   email: string | null;
@@ -22,7 +22,7 @@ export interface PracticeSettings {
 // Target windows are planning estimates, not confirmed appointment availability.
 export const practice: PracticeSettings = {
   name: "The Living Room Vet",
-  address: { street: "2619 Spruce Street", city: "Boulder", state: "CO" },
+  address: { street: "2619 Spruce Street", city: "Boulder", state: "CO", postalCode: "80302" },
   timezone: "America/Denver",
   phone: "(720) 764-6677",
   email: "admin@thelivingroom.vet",

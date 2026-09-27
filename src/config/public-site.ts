@@ -179,6 +179,7 @@ function getPracticeStructuredData(): JsonLdObject {
       streetAddress: practice.address.street,
       addressLocality: practice.address.city,
       addressRegion: practice.address.state,
+      postalCode: practice.address.postalCode,
       addressCountry: "US",
     },
     areaServed: {
