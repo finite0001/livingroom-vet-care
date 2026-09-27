@@ -161,6 +161,7 @@ test("bounded inquiry list, reviewed household retained across search, no implic
   expect(state.cursor).toBe(true);
   await page.getByRole("button", { name: /Request 0 Unverified/ }).click();
   await expect(page.getByText("A private website request")).toBeVisible();
+  await expect(page.getByText("Text consent: no", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Queue reviewed reply" }),
   ).toHaveCount(0);

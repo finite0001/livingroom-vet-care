@@ -26,6 +26,14 @@ const privacySections: readonly LegalSection[] = [
     ],
   },
   {
+    title: "Text Messages",
+    body: [
+      "If you agree to receive text messages from {practiceName}, we collect your mobile phone number and use it to send the messages you asked for, such as appointment confirmations and reminders, visit follow-ups, prescription and refill notices, and replies to your questions.",
+      "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent will not be shared with any third parties. We share it only with the service providers that deliver our messages on our behalf.",
+      "You can opt out at any time by replying STOP. Reply HELP for help. Message frequency varies. Message and data rates may apply. See our Terms for the full text message program terms.",
+    ],
+  },
+  {
     title: "How We Use Information",
     body: [
       "We use submitted information to respond to requests, prepare for launch, understand service interest, and maintain the public website.",
@@ -58,7 +66,7 @@ const Privacy = () => {
               This privacy policy explains how {practice.name} handles information submitted through this public website while the practice prepares to open.
             </p>
             <p className="text-sm text-muted-foreground mt-6">
-              Last updated September 22, 2026
+              Last updated September 27, 2026
             </p>
           </div>
         </section>
@@ -72,7 +80,7 @@ const Privacy = () => {
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   {section.body.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
+                    <p key={paragraph}>{paragraph.replace("{practiceName}", practice.name)}</p>
                   ))}
                 </div>
               </section>

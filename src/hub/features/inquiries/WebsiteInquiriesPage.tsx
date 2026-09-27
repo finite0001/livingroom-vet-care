@@ -32,6 +32,8 @@ const detailSchema = z.object({
     subject: z.string(),
     message: z.string(),
     created_at: z.string(),
+    sms_consent: z.boolean().default(false),
+    sms_consent_at: z.string().nullable().default(null),
   }),
   triage: z.object({
     version: z.number(),
@@ -294,6 +296,12 @@ function InquiryDetail({ id, actor }: DetailProps) {
         <p>Unverified submission from {s.name}</p>
         <p>
           {s.email} · {s.phone || "No phone provided"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Text consent: {s.sms_consent ? "yes" : "no"}
+          {s.sms_consent && s.sms_consent_at
+            ? ` (${new Date(s.sms_consent_at).toLocaleString()})`
+            : ""}
         </p>
         <p className="mt-3 whitespace-pre-wrap break-words">{s.message}</p>
       </article>
