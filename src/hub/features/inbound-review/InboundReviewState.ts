@@ -4,7 +4,9 @@ const id = z.string().uuid(),
   date = z.string().datetime({ offset: true });
 export const inboundSchema = z.object({
   id,
-  channel: z.enum(["EMAIL", "SMS"]),
+  channel: z.enum(["EMAIL", "SMS", "CALL_INBOUND", "CALL_OUTBOUND", "VOICEMAIL"]),
+  // CloudTalk Phone activity can be staff-started; older rows omit the column.
+  direction: z.enum(["inbound", "outbound"]).default("inbound"),
   sender: z.string(),
   recipient: z.string(),
   subject: z.string(),
@@ -95,4 +97,22 @@ export function assignmentOutcome(
     r.conversation_id === intent.p_conversation_id
     ? "assigned"
     : "conflict";
+}
+const channelLabels: Record<Inbound["channel"], string> = {
+  EMAIL: "Email",
+  SMS: "Text",
+  CALL_INBOUND: "Incoming call",
+  CALL_OUTBOUND: "Outgoing call",
+  VOICEMAIL: "Voicemail",
+};
+/** Queue label; CloudTalk Phone activity started by staff is named as such. */
+export function inboundLabel(r: Pick<Inbound, "channel" | "direction">): string {
+  const label = channelLabels[r.channel];
+  return r.direction === "outbound" && r.channel === "SMS" ? `${label} sent from CloudTalk Phone` : label;
+}
+/** One-line preview: email subject, otherwise the plain text recorded for the entry. */
+export function inboundPreview(r: Pick<Inbound, "channel" | "subject" | "body">): string {
+  if (r.channel === "EMAIL") return r.subject || "No subject";
+  const text = r.body.replace(/\s+/g, " ").trim();
+  return text.length > 160 ? `${text.slice(0, 159)}…` : text || "No text";
 }

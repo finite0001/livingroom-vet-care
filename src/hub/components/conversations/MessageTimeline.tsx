@@ -7,6 +7,9 @@ import React, { useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { MessageSquare, Mail, PhoneIncoming, PhoneOutgoing, AudioWaveform, StickyNote, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { cloudtalkCallIds, cloudtalkEntryLabel, cloudtalkRef } from "@/hub/features/cloudtalk/thread-entry";
+import { useThreadCalls } from "@/hub/features/cloudtalk/use-cloudtalk-thread";
+import { CloudTalkCallEntry } from "@/hub/features/cloudtalk/CloudTalkCallEntry";
 
 interface Message {
   id: string;
@@ -22,6 +25,8 @@ interface Message {
   triage_priority?: string | null;
   triage_confidence?: number | null;
   triage_reason?: string | null;
+  provider?: string | null;
+  provider_message_id?: string | null;
 }
 
 interface ConversationBoundary {
@@ -70,7 +75,9 @@ function SessionDivider({ date }: { date: Date }) {
 }
 
 export function MessageTimeline({ messages, conversationBoundaries }: MessageTimelineProps) {
-  const outgoingIds = messages.filter((message) => message.sender_type === "STAFF" && !message.is_internal && ["SMS", "EMAIL"].includes(message.type)).map((message) => message.id);
+  // CloudTalk Phone activity has no app outbox record; its status line is shown separately.
+  const outgoingIds = messages.filter((message) => message.sender_type === "STAFF" && !message.is_internal && ["SMS", "EMAIL"].includes(message.type) && !cloudtalkRef(message.provider, message.provider_message_id)).map((message) => message.id);
+  const threadCalls = useThreadCalls(useMemo(() => cloudtalkCallIds(messages), [messages]));
   const outbox = useOutboxStatus(outgoingIds);
   const attachments = useMessageAttachments(messages.filter(message => message.sender_type === "STAFF" && !message.is_internal && message.type === "EMAIL").map(message => message.id));
   const incoming = useIncomingAttachments(messages.filter(message => message.sender_type === "CLIENT" && !message.is_internal && message.type === "EMAIL").map(message => message.id));
@@ -105,6 +112,8 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
         const config = channelConfig[msg.type] || channelConfig.SYSTEM;
         const Icon = config.icon;
         const isClient = msg.sender_type === "CLIENT";
+        const cloudtalk = cloudtalkRef(msg.provider, msg.provider_message_id);
+        const cloudtalkLabel = cloudtalkEntryLabel(cloudtalk, msg.sender_type);
         return (
           <React.Fragment key={msg.id}>
             {dividerInfo.sessionDividerAt.has(idx) && <SessionDivider date={new Date(dividerInfo.sessionDividerAt.get(idx)!)} />}
@@ -112,7 +121,7 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
             <div className={cn("rounded-lg p-3 max-w-[85%]", msg.is_internal && "border border-dashed border-warning", isClient ? "self-start rounded-bl-sm border-l-[3px] border-l-primary bg-card" : "self-end rounded-br-sm border-r-[3px] border-r-primary bg-primary/10")}>
               <div className="flex items-center gap-2 mb-1">
                 <Icon className={cn("h-4 w-4", config.iconColor)} />
-                <span className="text-[12px] font-medium text-muted-foreground">{msg.is_internal ? "Internal Note" : isClient ? "Client" : "Staff"} · {msg.type.replace("_", " ")}</span>
+                <span className="text-[12px] font-medium text-muted-foreground">{msg.is_internal ? "Internal Note" : isClient ? "Client" : "Staff"} · {msg.type.replace("_", " ")}{cloudtalkLabel && ` · ${cloudtalkLabel}`}</span>
                 <span className="ml-auto text-[12px] text-muted-foreground">{format(new Date(msg.created_at), "h:mm a")}</span>
               </div>
               {msg.type === "VOICEMAIL" && msg.audio_url ? (
@@ -121,7 +130,9 @@ export function MessageTimeline({ messages, conversationBoundaries }: MessageTim
                   {msg.transcription && <p className="text-sm leading-relaxed bg-background/60 rounded-md p-2">{msg.transcription}</p>}
                 </div>
               ) : msg.content && <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>}
-              {!isClient && !msg.is_internal && ["SMS", "EMAIL"].includes(msg.type) && (
+              {cloudtalk?.kind === "call" && <CloudTalkCallEntry call={threadCalls.data?.get(cloudtalk.id)} loading={threadCalls.isLoading} failed={threadCalls.isError} />}
+              {cloudtalk?.kind === "message" && !isClient && <p className="mt-2 text-xs text-muted-foreground" role="status">Sent from CloudTalk Phone. CloudTalk reports carrier submission only, not handset delivery.</p>}
+              {!cloudtalk && !isClient && !msg.is_internal && ["SMS", "EMAIL"].includes(msg.type) && (
                 <p className="mt-2 text-xs text-muted-foreground" role="status">
                   {outbox.data?.[msg.id] ? outboxStateLabel(outbox.data[msg.id].state) : outbox.isError ? "Delivery status unavailable" : outbox.isLoading ? "Checking delivery status…" : "No tracked delivery receipt"}
                   {outbox.data?.[msg.id]?.delivery_failure_kind && ` · ${outbox.data[msg.id].delivery_failure_kind}`}

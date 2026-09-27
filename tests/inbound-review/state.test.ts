@@ -116,3 +116,17 @@ test("review projection drops raw HTML, attachment URLs and unrelated provider m
     recovery({ inbound: { ...inbound, id: id(8) }, assignments: [] }, id(2)),
   );
 });
+
+test("CloudTalk review entries parse with direction and readable labels", async () => {
+  const { inboundSchema, inboundLabel, inboundPreview } = await import("../../src/hub/features/inbound-review/InboundReviewState.ts");
+  const call = inboundSchema.parse({ ...inbound, channel: "CALL_INBOUND", direction: "inbound", subject: "", body: "Missed incoming call" });
+  assert.equal(inboundLabel(call), "Incoming call");
+  assert.equal(inboundPreview(call), "Missed incoming call");
+  const sent = inboundSchema.parse({ ...inbound, channel: "SMS", direction: "outbound", subject: "", body: "See you   Tuesday" });
+  assert.equal(inboundLabel(sent), "Text sent from CloudTalk Phone");
+  assert.equal(inboundPreview(sent), "See you Tuesday");
+  assert.equal(inboundSchema.parse(inbound).direction, "inbound");
+  assert.equal(inboundPreview(inboundSchema.parse(inbound)), "Original");
+  assert.equal(inboundPreview({ channel: "SMS", subject: "", body: "x".repeat(200) }).length, 160);
+  assert.throws(() => inboundSchema.parse({ ...inbound, direction: "sideways" }));
+});
