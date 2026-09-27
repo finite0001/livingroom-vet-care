@@ -33,7 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Link } from "react-router-dom";
-import { MapPin, Clock, Send, Car, ArrowRight } from "lucide-react";
+import { MapPin, Clock, Send, Car, ArrowRight, Phone, Mail } from "lucide-react";
 import { z } from "zod";
 
 const contactSchema = z.object({
@@ -573,10 +573,33 @@ const Contact = () => {
                       {practice.hours ??
                         "Opening hours will be announced before launch."}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-4">
-                      Phone and email details will be published once confirmed.
-                      Please use the request form to reach the practice.
-                    </p>
+                    {practice.phone || practice.email ? (
+                      <div className="mt-4 space-y-2 text-sm">
+                        {practice.phone && (
+                          <a
+                            href={`tel:+1${practice.phone.replace(/\D/g, "")}`}
+                            className="flex items-center gap-2 font-medium text-foreground hover:text-primary"
+                          >
+                            <Phone className="h-4 w-4 text-sage-dark" />
+                            {practice.phone}
+                          </a>
+                        )}
+                        {practice.email && (
+                          <a
+                            href={`mailto:${practice.email}`}
+                            className="flex items-center gap-2 font-medium text-foreground hover:text-primary break-all"
+                          >
+                            <Mail className="h-4 w-4 text-sage-dark" />
+                            {practice.email}
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-4">
+                        Phone and email details will be published once confirmed.
+                        Please use the request form to reach the practice.
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground mt-4">
                       This form is not monitored for emergencies. For urgent
                       care, contact an open veterinary emergency hospital

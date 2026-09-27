@@ -44,7 +44,7 @@ const privacySections: readonly LegalSection[] = [
     title: "Updates",
     body: [
       "This policy may be updated as the practice opens, confirms contact channels, and adds owner-approved services.",
-      "Questions about this policy can be sent through the contact form until phone and email details are published.",
+      "Questions about this policy can be sent to {email}, by phone at {phone}, or through the contact form.",
     ],
   },
 ];
@@ -80,7 +80,7 @@ const Privacy = () => {
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   {section.body.map((paragraph) => (
-                    <p key={paragraph}>{paragraph.replace("{practiceName}", practice.name)}</p>
+                    <p key={paragraph}>{paragraph.replace("{practiceName}", practice.name).replace("{email}", practice.email ?? "the practice").replace("{phone}", practice.phone ?? "the number on our contact page")}</p>
                   ))}
                 </div>
               </section>
