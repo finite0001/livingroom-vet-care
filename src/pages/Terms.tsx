@@ -64,7 +64,7 @@ const Terms = () => {
               Terms
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              These terms explain the limits of the public website for {practice.name}. {practiceLaunchSummary}. Targets are subject to change.
+              These terms cover the public website and text message program for {practice.name}. {practiceLaunchSummary}. Targets are subject to change.
             </p>
             <p className="text-sm text-muted-foreground mt-6">
               Last updated September 27, 2026

@@ -23,7 +23,7 @@ const services = [
   {
     icon: Activity,
     title: "Illness Care",
-    description: "Same-day care for sick pets with thoughtful workups and clear treatment plans tailored to your pet and budget.",
+    description: "Planned care for sick pets with thoughtful workups and clear treatment plans tailored to your pet and budget.",
     href: "/services/illness-care",
     featured: true,
   },
