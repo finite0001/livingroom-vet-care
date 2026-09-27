@@ -69,7 +69,7 @@ export const outboxSchema = z.object({
     "failed",
     "uncertain",
   ]),
-  provider: z.enum(["resend", "twilio"]),
+  provider: z.enum(["resend", "twilio", "cloudtalk"]),
   created_at: time,
   updated_at: time,
   revision: count,

@@ -274,6 +274,7 @@ async function workerFixture(channel: "EMAIL" | "SMS" = "EMAIL") {
     TWILIO_ACCOUNT_SID: smsSender.account_sid,
     TWILIO_AUTH_TOKEN: "fixture",
     TWILIO_FROM_NUMBER: smsSender.from,
+    SMS_PROVIDER: "twilio",
     PAYMENT_DELIVERY_ENABLED: "true",
     PAYMENT_ACCESS_ORIGIN: config.origin,
     PAYMENT_ACCESS_ACTIVE_KEY_VERSION: config.activeKeyVersion,
@@ -353,5 +354,23 @@ test("worker refuses changed review, disabled access and final database rejectio
     if (change === "final") f.block();
     await dispatchOne(f.db, f.env, f.transport);
     assert.equal(f.transports.length, 0, change);
+  }
+});
+test("CloudTalk payment SMS freezes the exact JSON request and rejects mixed sender shapes", async () => {
+  const context = await fixture("SMS");
+  const sender = { from: "+17207646677", provider: "cloudtalk" };
+  const a = await materializePaymentDelivery(context, config, sender);
+  assert.deepEqual(JSON.parse(a.payload_text), {
+    recipient: "+13035550102",
+    message: a.message,
+    sender: "+17207646677",
+  });
+  assert.equal(a.payload_hash, hash(a.payload_text));
+  for (const bad of [
+    { from: "+17207646677", provider: "cloudtalk", account_sid: smsSender.account_sid },
+    { from: "+17207646677", provider: "other" },
+    { from: "720-764-6677", provider: "cloudtalk" },
+  ]) {
+    await assert.rejects(materializePaymentDelivery(context, config, bad));
   }
 });

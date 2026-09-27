@@ -210,7 +210,9 @@ export function parsePaymentDelivery(
     const keys =
       args.p_channel === "EMAIL"
         ? ["from", "reply_to"]
-        : ["from", "account_sid"];
+        : c.sender_config.provider === "cloudtalk"
+          ? ["from", "provider"]
+          : ["from", "account_sid"];
     if (Object.keys(c.sender_config).sort().join(",") !== keys.sort().join(","))
       return invalid();
     for (const key of keys) sender[key] = text(c.sender_config[key], 500);

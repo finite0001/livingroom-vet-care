@@ -1,4 +1,6 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+-- This file exercises the retained Twilio SMS contract; CloudTalk is covered by cloudtalk_outbound_sms.test.sql.
+update public.communication_sms_provider_setting set provider='twilio';
 
 -- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
 create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
