@@ -33,6 +33,15 @@ const termsSections: readonly LegalSection[] = [
     ],
   },
   {
+    title: "Text Message Program",
+    body: [
+      "{practiceName} sends text messages to clients who agree to receive them. Messages cover appointment confirmations and reminders, visit follow-ups, prescription and refill notices, and replies to questions you send us. We do not send marketing messages through this program.",
+      "You can agree to receive text messages when you give us your mobile number and check the text message consent box, or when you tell our team you would like texts. Consent to receive text messages is not a condition of any purchase or service.",
+      "Message frequency varies. Message and data rates may apply. Reply STOP to any message to opt out; you will receive one confirmation and no further messages. Reply HELP for help, or call us at (720) 764-6677.",
+      "Mobile carriers are not liable for delayed or undelivered messages. Your mobile information is handled as described in our Privacy Policy and is never shared with third parties or affiliates for marketing purposes.",
+    ],
+  },
+  {
     title: "Content and Links",
     body: [
       "Website content is provided for general planning and informational purposes. It should not replace individualized veterinary advice.",
@@ -58,7 +67,7 @@ const Terms = () => {
               These terms explain the limits of the public website for {practice.name}. {practiceLaunchSummary}. Targets are subject to change.
             </p>
             <p className="text-sm text-muted-foreground mt-6">
-              Last updated September 22, 2026
+              Last updated September 27, 2026
             </p>
           </div>
         </section>
