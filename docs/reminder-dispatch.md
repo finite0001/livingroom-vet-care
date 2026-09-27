@@ -1,5 +1,27 @@
 # Reviewed reminder automation through the durable outbox
 
+## Canonical pipeline
+
+As of migration `20260928150000_reminder_pipeline_readiness.sql` there is exactly one reminder path, for appointments, vaccines and labs:
+
+```
+save_appointment / vaccine due plan / lab order (reminders_enabled)
+  -> appointment_reminders / care_reminder_jobs
+  -> queue-reminders (pg_cron, every 15 min) -> queue_due_reminders()
+  -> reminder_outbox_links + communication_outbox
+  -> dispatch-outbox (pg_cron, every minute) -> start_communication_attempt preflight -> provider
+```
+
+- **Retired:** `enqueue_due_appointment_reminders()` → `outbound_deliveries` → `dispatch-outbound-deliveries` (migration `20260922190000`). It never had a caller or schedule. The function now raises `0A000` and no client role can execute it; `process_due_reminders()` (original Lovable reader) is likewise not executable. No table, column or row was dropped: `appointment_reminders.outbound_delivery_id`/`enqueued_at` and existing `outbound_deliveries` rows stay as history, and callbacks for any legacy row still settle. `dispatch-outbound-deliveries` remains for its other queue work and is not scheduled.
+- **Appointment channel:** each appointment revision's reminders use one channel from `appointment_reminder_channel(client)` — the preferred channel if reachable and consented, else the other consented channel; with neither, the preferred channel is kept and blocked at queue time unless consent arrives first. `queue_due_reminders()` only picks up a reminder whose channel has an enabled appointment policy, so enable an **appointment EMAIL** policy (reviewed subject + email wording) as well as the SMS one if email-preferring households should be reminded. Email wording comes from the existing care message templates with `channel = email`.
+- **Lab switch:** lab orders are reminded only when `reminders_enabled` is on for that order ([lab work](lab-work.md#per-order-reminder-switch)), matching vaccine due plans.
+- **Scheduling:** both cron jobs exist but make no calls until the Vault secrets are commissioned; see [scheduler commissioning](scheduler.md).
+- **Providers:** text messages are planned to go through CloudTalk; the SMS provider selection in `queue_reminder_outbox`/`dispatch-outbox` belongs to the provider workstream and is unchanged here.
+
+Tests: `supabase/tests/reminder_pipeline_readiness.test.sql` (canonical handoff, email selection, lab switch), plus the updated `outbound_deliveries`, `reminder_outbox`, `care_reminders` and `operations_*` suites.
+
+## Original increment
+
 This increment adds a disabled-by-default queue scheduler. It does not configure cron, deploy functions, enable messaging or contact providers. Existing `dispatch-outbox` remains the only delivery worker; its verified sender configuration, deployment policy, consent checks and uncertain-outcome handling still apply.
 
 ## Activation and server contract

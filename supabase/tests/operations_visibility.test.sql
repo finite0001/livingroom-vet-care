@@ -13,7 +13,7 @@ set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae0
 insert into reminder_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Reminder','+13035550111','synthetic-reminder@example.test','EMAIL',null,null);
 insert into reminder_fixture select 'pet',id from public.save_patient(null,(select id from reminder_fixture where kind='client'),null,'Juniper','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 select lives_ok($$select public.save_care_message_template('ae100000-0000-4000-8000-000000000001',null,'Reviewed reminder','email',0,'{{patient_name}}: {{care_name}} due {{due_date}}',true,'Clinical wording reviewed')$$,'Approved care wording exists before policy');
-select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000001',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Synthetic lab','status','planned','due_date',(now() at time zone 'America/Denver')::date),'')$$,'Eligible native source exists');
+select lives_ok($$select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000001',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Synthetic lab','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'')$$,'Eligible native source exists');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select is((public.queue_due_reminders(25)->>'queued')::integer,0,'No seeded enabled policy means no automatic queue');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ae000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -76,7 +76,7 @@ select ok(operations_overview()#>>'{reminders,last_completed_at}' is not null,'L
 select is(operations_scheduler_runs(null,null,1)->>'has_more','true','Run history bounded with continuation');
 select is(operations_outbox('pending')#>>'{items,0,state}','pending','Global pending outbox visibility');
 select ok(not(operations_outbox('pending')#>'{items,0}' ?| array['recipient','body','lease_token','provider_config']),'Outbox projection excludes private content and credentials');
-select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000003',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Future separate candidate','status','planned','due_date',(now() at time zone 'America/Denver')::date),'');
+select public.save_patient_lab_order('ae200000-0000-4000-8000-000000000003',(select id from reminder_fixture where kind='pet'),null,jsonb_build_object('test_name','Future separate candidate','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'');
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select is(execute_reminder_scheduler_run((select id from fx where k='run')),(select v from data where k='complete'),'Exact completed replay never queues newly eligible work');

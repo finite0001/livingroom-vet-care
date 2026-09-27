@@ -244,7 +244,7 @@ try {
     },null,'Synthetic reviewed reminder','email',0,'{{patient_name}}: {{care_name}} due {{due_date}}',true,'Synthetic review');
  select public.save_patient_lab_order(${
       quote(source)
-    },(select id from owned where kind='pet'),null,jsonb_build_object('test_name','Synthetic lab','status','planned','due_date',(now() at time zone 'America/Denver')::date),'');
+    },(select id from owned where kind='pet'),null,jsonb_build_object('test_name','Synthetic lab','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'');
  select public.save_reminder_automation_policy(${
       quote(policy)
     },null,'lab','EMAIL',${

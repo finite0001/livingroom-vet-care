@@ -48,7 +48,7 @@ select is((select status from public.care_reminder_jobs where id='ac400000-0000-
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select throws_ok($$select public.enqueue_care_reminder(gen_random_uuid(),'vaccine','ac200000-0000-4000-8000-000000000001',3,'ac300000-0000-4000-8000-000000000001',1)$$,'40001',null,'Disabled plan cannot enqueue');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ac000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select lives_ok($$select public.save_patient_lab_order('ac500000-0000-4000-8000-000000000001',(select id from care_fixture where kind='pet'),null,'{"test_name":"Synthetic lab","status":"planned","due_date":"2026-10-01"}','')$$,'Uses existing lab due order without duplicate interval catalog');
+select lives_ok($$select public.save_patient_lab_order('ac500000-0000-4000-8000-000000000001',(select id from care_fixture where kind='pet'),null,'{"test_name":"Synthetic lab","status":"planned","reminders_enabled":true,"due_date":"2026-10-01"}','')$$,'Uses existing lab due order without duplicate interval catalog');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok($$select public.enqueue_care_reminder('ac400000-0000-4000-8000-000000000003','lab','ac500000-0000-4000-8000-000000000001',1,'ac300000-0000-4000-8000-000000000001',1)$$,'Existing lab order enqueues');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ac000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
