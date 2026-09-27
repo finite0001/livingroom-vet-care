@@ -76,10 +76,11 @@ try:
     sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','operations-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
     client=sql('begin;'+staff+f"select (public.save_client(auth.uid(),null,null,'Synthetic','Operations',null,'{actor}@example.test','EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(client)
     pet=sql('begin;'+staff+f"select (public.save_patient(null,'{client}',null,'Synthetic','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(pet)
+    # Lab reminders are an explicit per-order staff opt-in (20260928150000_reminder_pipeline_readiness).
     template,policy,order=[str(uuid.uuid4()) for _ in range(3)];ids.extend([template,policy,order])
     sql('begin;'+staff+f"""select public.save_care_message_template('{template}',null,'Synthetic reminder','email',0,'{{{{patient_name}}}}: {{{{care_name}}}} due {{{{due_date}}}}',true,'Synthetic reviewed wording');
     select public.save_reminder_automation_policy('{policy}',null,'lab','EMAIL','{template}',1,'Synthetic reminder',true,'Synthetic local fixture');
-    select public.save_patient_lab_order('{order}','{pet}',null,jsonb_build_object('test_name','Synthetic lab','status','planned','due_date',(now() at time zone 'America/Denver')::date),'');commit;""")
+    select public.save_patient_lab_order('{order}','{pet}',null,jsonb_build_object('test_name','Synthetic lab','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'');commit;""")
     run=str(uuid.uuid4());ids.append(run)
     contended(service+f"select public.start_reminder_scheduler_run('{run}',25);",service+f"select public.start_reminder_scheduler_run('{run}',24);",lambda code,out,err:code!=0 and 'another limit' in err)
     check(sql(f"select count(*) from public.reminder_scheduler_runs where run_id='{run}';").stdout.strip()=='1','Concurrent start preserves one immutable request')
@@ -89,7 +90,7 @@ try:
     check(sql(f"select count(*) from public.reminder_scheduler_results where run_id='{run}';").stdout.strip()=='1','Only one terminal receipt recorded')
     # A read during uncommitted completion must remain unresolved, never invent zero or rerun.
     run2,order2=[str(uuid.uuid4()) for _ in range(2)];ids.extend([run2,order2])
-    sql('begin;'+staff+f"select public.save_patient_lab_order('{order2}','{pet}',null,jsonb_build_object('test_name','Second synthetic','status','planned','due_date',(now() at time zone 'America/Denver')::date),'');commit;")
+    sql('begin;'+staff+f"select public.save_patient_lab_order('{order2}','{pet}',null,jsonb_build_object('test_name','Second synthetic','status','planned','reminders_enabled',true,'due_date',(now() at time zone 'America/Denver')::date),'');commit;")
     sql('begin;'+service+f"select public.start_reminder_scheduler_run('{run2}',25);commit;")
     tag='lrv_operations_'+uuid.uuid4().hex;owned_sessions.append(tag)
     holder=subprocess.Popen(COMMAND,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
