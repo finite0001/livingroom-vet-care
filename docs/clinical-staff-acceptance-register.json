@@ -73,6 +73,14 @@
       "decision": "Pending",
       "evidence": [],
       "requestedChange": "Confirm wording before provider commissioning."
+    },
+    {
+      "id": "C-PILOT-09",
+      "reviewArea": "HHHHHMM quality-of-life scale assessments, trend and optional reference line",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm category wording/source citation, sign/addendum policy, and whether any reference total or wording may be displayed (none is configured by default)."
     }
   ],
   "staffAcceptanceRun": {

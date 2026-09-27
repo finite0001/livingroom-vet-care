@@ -66,6 +66,83 @@ export interface LesionCorrection {
   created_by: string;
   created_at: string;
 }
+export interface QolScaleAssessment {
+  id: string;
+  pet_id: string;
+  scale_version: string;
+  assessed_at: string;
+  assessor: string;
+  hurt: number | null;
+  hunger: number | null;
+  hydration: number | null;
+  hygiene: number | null;
+  happiness: number | null;
+  mobility: number | null;
+  more_good_days: number | null;
+  hurt_note: string;
+  hunger_note: string;
+  hydration_note: string;
+  hygiene_note: string;
+  happiness_note: string;
+  mobility_note: string;
+  more_good_days_note: string;
+  notes: string;
+  total: number | null;
+  status: string;
+  version: number;
+  created_by: string;
+  created_at: string;
+  updated_by: string;
+  updated_at: string;
+  signed_by: string | null;
+  signed_at: string | null;
+}
+export interface QolScaleAddendum {
+  id: string;
+  assessment_id: string;
+  content: string;
+  created_by: string;
+  created_at: string;
+}
+export interface QolScaleReference {
+  id: string;
+  enabled: boolean;
+  reference_total: number | null;
+  reference_label: string;
+  review_note: string;
+  version: number;
+  updated_by: string | null;
+  updated_at: string;
+}
+export interface QolScaleArgs {
+  p_id: string;
+  p_pet_id: string;
+  p_expected_version: number | null;
+  p_assessed_at: string;
+  p_assessor: string;
+  p_hurt: number | null;
+  p_hunger: number | null;
+  p_hydration: number | null;
+  p_hygiene: number | null;
+  p_happiness: number | null;
+  p_mobility: number | null;
+  p_more_good_days: number | null;
+  p_hurt_note: string;
+  p_hunger_note: string;
+  p_hydration_note: string;
+  p_hygiene_note: string;
+  p_happiness_note: string;
+  p_mobility_note: string;
+  p_more_good_days_note: string;
+  p_notes: string;
+}
+export interface QolReferenceArgs {
+  p_expected_version: number;
+  p_enabled: boolean;
+  p_reference_total: number | null;
+  p_reference_label: string;
+  p_review_note: string;
+}
 interface Table<Row> {
   Row: { [K in keyof Row]: Row[K] };
   Insert: Partial<Row>;
@@ -110,6 +187,9 @@ interface CareDatabase {
       patient_lesions: Table<Lesion>;
       patient_lesion_observations: Table<LesionObservation>;
       patient_lesion_corrections: Table<LesionCorrection>;
+      patient_qol_scale_assessments: Table<QolScaleAssessment>;
+      patient_qol_scale_addenda: Table<QolScaleAddendum>;
+      qol_scale_reference_settings: Table<QolScaleReference>;
     };
     Views: Record<never, never>;
     Functions: {
@@ -132,6 +212,22 @@ interface CareDatabase {
       correct_lesion_observation: {
         Args: { p_id: string; p_observation_id: string; p_reason: string };
         Returns: LesionCorrection;
+      };
+      save_patient_qol_scale: {
+        Args: { [K in keyof QolScaleArgs]: QolScaleArgs[K] };
+        Returns: QolScaleAssessment;
+      };
+      sign_patient_qol_scale: {
+        Args: { p_id: string; p_expected_version: number };
+        Returns: QolScaleAssessment;
+      };
+      add_patient_qol_scale_addendum: {
+        Args: { p_id: string; p_assessment_id: string; p_content: string };
+        Returns: QolScaleAddendum;
+      };
+      save_qol_scale_reference: {
+        Args: { [K in keyof QolReferenceArgs]: QolReferenceArgs[K] };
+        Returns: QolScaleReference;
       };
     };
     Enums: Record<never, never>;
