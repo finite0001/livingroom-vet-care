@@ -29,7 +29,7 @@ const privacySections: readonly LegalSection[] = [
     title: "Text Messages",
     body: [
       "If you agree to receive text messages from {practiceName}, we collect your mobile phone number and use it to send the messages you asked for, such as appointment confirmations and reminders, visit follow-ups, prescription and refill notices, and replies to your questions.",
-      "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent will not be shared with any third parties. We share it only with the service providers that deliver our messages on our behalf.",
+      "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent will not be shared with any third parties.",
       "You can opt out at any time by replying STOP. Reply HELP for help. Message frequency varies. Message and data rates may apply. See our Terms for the full text message program terms.",
     ],
   },
