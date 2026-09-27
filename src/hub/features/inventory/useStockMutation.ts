@@ -56,6 +56,7 @@ export function useStockMutation(scope = "inventory") {
       setSuccess("Saved.");
       void queryClient.invalidateQueries({ queryKey: ["inventory"] });
       void queryClient.invalidateQueries({ queryKey: ["treatments"] });
+      void queryClient.invalidateQueries({ queryKey: ["vaccine-status"] });
       void queryClient.invalidateQueries({ queryKey: ["billing"] });
       for (const prefix of ["household-invoices", "invoice", "invoice-details"])
         void queryClient.invalidateQueries({ queryKey: [prefix] });

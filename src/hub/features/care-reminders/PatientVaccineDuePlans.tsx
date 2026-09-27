@@ -561,6 +561,9 @@ export function PatientVaccineDuePlans({
                     cache.invalidateQueries({
                       queryKey: ["vaccine-due-history", data.id],
                     }),
+                    cache.invalidateQueries({
+                      queryKey: ["vaccine-status", petId],
+                    }),
                   ]);
                 })
               }

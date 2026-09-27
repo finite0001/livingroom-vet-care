@@ -1,7 +1,7 @@
 import { NativeReturnPolicySettings } from "@/hub/features/prescriptions/NativeReturnPolicySettings";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Pen, Database, Clock } from "lucide-react";
+import { Pen, Database, Clock, Syringe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,13 @@ import {
   useAppSettings,
   useUpdateAppSetting,
 } from "@/hub/hooks/use-app-settings";
+import {
+  DEFAULT_DUE_SOON_DAYS,
+  DUE_SOON_DEFAULT_REVIEW_NOTE,
+  DUE_SOON_SETTING_KEY,
+  dueSoonWindow,
+  validateDueSoonDays,
+} from "@/hub/features/vaccines/vaccine-status";
 
 export default function SettingsPage() {
   usePageTitle("Settings");
@@ -96,8 +103,10 @@ function ClinicSettings() {
   // Local mirror of the editable numeric fields (booleans toggle immediately).
   const [archiveDays, setArchiveDays] = useState("365");
   const [purgeDays, setPurgeDays] = useState("730");
+  const [dueSoonDays, setDueSoonDays] = useState(String(DEFAULT_DUE_SOON_DAYS));
   useEffect(() => {
     if (!settings) return;
+    setDueSoonDays(String(dueSoonWindow(settings[DUE_SOON_SETTING_KEY]).days));
     if (settings.retention_archive_days)
       setArchiveDays(settings.retention_archive_days);
     if (settings.retention_purge_days)
@@ -227,6 +236,60 @@ function ClinicSettings() {
           </p>
           <Button asChild variant="outline">
             <Link to="/hub/tools/care-reminders">Open Care reminders</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Syringe className="h-4 w-4 text-primary" /> Vaccine status display
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Vaccines due within this many days show as “Due soon” on the
+            patient summary. Display only — it does not change any due date or
+            reminder.{" "}
+            {dueSoonWindow(settings?.[DUE_SOON_SETTING_KEY]).configured
+              ? "Practice value saved."
+              : `Using the ${DEFAULT_DUE_SOON_DAYS}-day ${DUE_SOON_DEFAULT_REVIEW_NOTE.toLowerCase()}`}
+          </p>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="vaccine-due-soon-days" className="text-sm text-muted-foreground">
+              Due soon window
+            </Label>
+            <div className="flex items-center gap-1.5">
+              <Input
+                id="vaccine-due-soon-days"
+                type="number"
+                min={1}
+                max={365}
+                value={dueSoonDays}
+                onChange={(e) => setDueSoonDays(e.target.value)}
+                className="h-8 w-20 text-right text-sm"
+              />
+              <span className="text-xs text-muted-foreground">days</span>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            disabled={update.isPending}
+            onClick={() => {
+              try {
+                saveValue(
+                  DUE_SOON_SETTING_KEY,
+                  validateDueSoonDays(dueSoonDays),
+                  "Due soon window",
+                );
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Invalid window");
+              }
+            }}
+          >
+            Save due soon window
           </Button>
         </CardContent>
       </Card>

@@ -48,7 +48,7 @@ def fixture_source_hashes():
 source_hashes = fixture_source_hashes()
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 versions = [p.name.split('_')[0] for p in migration_files]
-CURRENT_RESTORE_MIGRATION_COUNT = 153
+CURRENT_RESTORE_MIGRATION_COUNT = 155
 assert len(versions) == len(set(versions)) == CURRENT_RESTORE_MIGRATION_COUNT, 'Review canonical restore migration inventory'
 assert {'20260916010000','20260916020000','20260916033310','20260916043949','20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000'} <= set(versions), 'Canonical identity, weight, resolution and native prescription migrations required'
 assert {'20260916100001','20260916110001','20260916120000','20260916130000','20260916110000','20260916120716','20260916123017'} <= set(versions), 'Combined communication, finance and estimate migrations required'
