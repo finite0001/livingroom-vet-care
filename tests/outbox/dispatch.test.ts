@@ -31,6 +31,7 @@ function fixture(channel: "EMAIL" | "SMS" = "EMAIL") {
     TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
     TWILIO_AUTH_TOKEN: "synthetic",
     TWILIO_FROM_NUMBER: "+13035550199",
+    SMS_PROVIDER: "twilio",
   };
   let startState = "claimed";
   let failFinish = false;

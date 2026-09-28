@@ -2,6 +2,8 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+-- This file exercises the retained Twilio SMS contract; CloudTalk is covered by cloudtalk_outbound_sms.test.sql.
+update public.communication_sms_provider_setting set provider='twilio';
 
 -- The compatibility fixtures use the same mandatory prepare path as the browser.
 create function pg_temp.queue_prepared(p_actor_id uuid,p_request_id uuid,p_conversation_id uuid,p_channel text,p_recipient text,p_subject text,p_body text,p_attachment_ids uuid[] default '{}') returns public.communication_outbox language plpgsql as $$

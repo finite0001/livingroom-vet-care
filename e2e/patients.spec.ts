@@ -272,6 +272,7 @@ test("mobile household adds two patients, retains identity fields and dated weig
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
   const reviewed = page.getByRole("region", { name: "Reviewed API attachments", exact: true });
   await expect(reviewed.getByText("Reviewed API original · Version 2")).toBeVisible();
   await expect(reviewed.getByText(/Latest saved approval/)).toBeVisible();

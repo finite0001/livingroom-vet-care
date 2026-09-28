@@ -414,7 +414,7 @@ try {
   );
   const page = await context.newPage();
   page.setDefaultTimeout(20000);
-  await page.goto(`${baseUrl}/hub/patient/${patient.id}`);
+  await page.goto(`${baseUrl}/hub/patient/${patient.id}?tab=medical&section=prescriptions`);
   await page
     .getByRole("button", { name: "View signed snapshot", exact: true })
     .click();
@@ -575,6 +575,8 @@ try {
     (await api.read())?.usage.fulfillment_head.version === 1,
     "Pickup does not consume another fill allowance",
   );
+  // Record releases live on the Patient 360 Documents tab.
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
   const releasePanel = page.getByRole("region", {
     name: "Patient medical-record releases",
     exact: true,
@@ -707,6 +709,8 @@ try {
   const originalPickup = sql(
     `select document::text from native_pickups where id=${quote(pickups[0].id)}`,
   );
+  // Prescription fulfillment returns to the Medical tab; the release panel stays mounted.
+  await page.getByRole("tab", { name: "Medical", exact: true }).click();
   await page
     .getByRole("button", {
       name: "Review annotations and pickup amendments",
@@ -862,6 +866,7 @@ try {
   await corrections
     .getByRole("button", { name: "Close annotation panel", exact: true })
     .click();
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await releasePanel
     .getByRole("button", {
       name: "Select all shown: Signed practice prescriptions",
@@ -947,6 +952,7 @@ try {
     ).eligible === true,
     "New correction-aware release is eligible while its exact context remains current",
   );
+  await page.getByRole("tab", { name: "Medical", exact: true }).click();
   await page
     .getByRole("button", {
       name: "Review physical returns and disposition",

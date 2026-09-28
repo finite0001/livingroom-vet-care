@@ -44,9 +44,18 @@ Set these per Supabase project with the Supabase dashboard/CLI secret store.
 | `SUPABASE_SERVICE_ROLE_KEY` | Admin/worker functions | Server-only. Never expose to browser, logs, chat, or Vercel public env. |
 | `RESEND_API_KEY` | Email provider tests/live | Requires verified sending domain before real sends. |
 | `RESEND_FROM` | Email provider tests/live | Must use a verified sender/domain. |
-| `RESEND_REPLY_TO` | Email provider tests/live | Must route to an owned monitored mailbox. |
-| `RESEND_WEBHOOK_SECRET` | Resend delivery webhook | Svix signing secret for the configured Resend webhook endpoint. |
-| `TWILIO_ACCOUNT_SID` | SMS provider tests/live | Requires owned Twilio account and number. |
+| `RESEND_REPLY_TO` | Legacy (optional) | Superseded by `AGENTMAIL_INBOX_ADDRESS`. If still set it must equal that address, or every email send fails closed. Test/disabled modes fall back to it only while `AGENTMAIL_INBOX_ADDRESS` is unset. |
+| `RESEND_DELIVERY_WEBHOOK_SECRET` | `resend-delivery-webhook` | Svix signing secret of the single Resend webhook endpoint (delivery/bounce/complaint/failure). Not shared with any other slug. |
+| `RESEND_WEBHOOK_SECRET`, `RESEND_INBOUND_ADDRESSES` | Retired 2026-09-27 | Resend receiving is retired (`resend-webhook` is an inert 410 stub). Unset them after `RESEND_DELIVERY_WEBHOOK_SECRET` is in place. |
+| `AGENTMAIL_API_KEY` | `process-inbound`, `capture-inbound-attachment` | Server-only AgentMail API key used to fetch received messages and attachments. Least privilege: read access to the one inbox. |
+| `AGENTMAIL_WEBHOOK_SECRET` | `agentmail-inbound-webhook` | Svix signing secret (`whsec_…`) of the AgentMail webhook endpoint. |
+| `AGENTMAIL_INBOX_ID` | `agentmail-inbound-webhook`, `process-inbound`, `capture-inbound-attachment` | Exact `inbox_id` of the app's receiving inbox as AgentMail reports it. Webhooks for any other inbox are refused. |
+| `AGENTMAIL_INBOX_ADDRESS` | Every email-sending function (`dispatch-outbox`, `dispatch-outbound-deliveries`, `capture-conversation-email`, `prepare-invoice-email`, `prepare-release-email`, `prepare-payment-delivery`) and the webhooks | Bare address of that inbox. It is the **Reply-To on every app email**, so client replies reach the app. Required in live mode (sends fail closed without it). See [AgentMail inbound](agentmail-inbound.md). |
+| `SMS_PROVIDER` | `dispatch-outbox`, `dispatch-outbound-deliveries`, `prepare-payment-delivery` | `cloudtalk` (default when unset) or `twilio`; any other value fails closed. Must match the database setting `communication_sms_provider_setting`. |
+| `CLOUDTALK_API_KEY_ID` / `CLOUDTALK_API_KEY_SECRET` | CloudTalk SMS send, call media | Server-only HTTP Basic key pair. |
+| `CLOUDTALK_ALLOWED_NUMBERS` | CloudTalk webhook and SMS sender | Exact E.164 practice numbers (`+17207646677`). |
+| `CLOUDTALK_SMS_SENDER` | CloudTalk SMS sender (optional) | Needed only when more than one allowed number exists; must be one of them. |
+| `TWILIO_ACCOUNT_SID` | SMS provider tests/live (retained, not selected) | Requires owned Twilio account and number. |
 | `TWILIO_AUTH_TOKEN` | SMS provider tests/live | Server-only. |
 | `TWILIO_FROM_NUMBER` | SMS provider tests/live | Must be E.164 and consent/opt-out compliant. |
 | `TWILIO_STATUS_CALLBACK_URL` | Twilio delivery status webhook | Exact public URL configured in Twilio for message status callbacks; required for signature validation behind proxies/custom domains. |

@@ -15,13 +15,26 @@ import {
   normalizePhone,
   requireEmailConfiguration,
 } from "./delivery-policy.ts";
+import {
+  assertCloudTalkMessage,
+  classifyCloudTalkSmsResponse,
+  CLOUDTALK_SMS_ENDPOINT,
+  cloudTalkAcceptanceReference,
+  cloudTalkRequestInit,
+  cloudTalkSenderMetadata,
+  cloudTalkSmsBody,
+  cloudTalkSmsConfig,
+  type CloudTalkSmsConfig,
+  selectSmsProvider,
+  type SmsProvider,
+} from "./cloudtalk-sms.ts";
 export interface OutboxRow {
   id: string;
   channel: "EMAIL" | "SMS";
   recipient: string;
   subject: string;
   body: string;
-  provider: "resend" | "twilio";
+  provider: "resend" | "twilio" | "cloudtalk";
   state: string;
   lease_token: string;
   provider_config: Record<string, string> | null;
@@ -40,9 +53,15 @@ export interface OutboxEnvironment extends DeliveryPolicyEnvironment {
   RESEND_API_KEY?: string;
   RESEND_FROM?: string;
   RESEND_REPLY_TO?: string;
+  AGENTMAIL_INBOX_ADDRESS?: string;
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_FROM_NUMBER?: string;
+  SMS_PROVIDER?: string;
+  CLOUDTALK_API_KEY_ID?: string;
+  CLOUDTALK_API_KEY_SECRET?: string;
+  CLOUDTALK_ALLOWED_NUMBERS?: string;
+  CLOUDTALK_SMS_SENDER?: string;
 }
 export interface OutboxDatabase {
   rpc(
@@ -75,6 +94,9 @@ export async function dispatchOne(
   ) {
     return { processed: false, disabled: true };
   }
+  // An unknown SMS provider is a deployment error. Stop before claiming anything;
+  // the worker entrypoint reports it as 503.
+  const smsProvider: SmsProvider = selectSmsProvider(env.SMS_PROVIDER);
   const row = (await call(db, "claim_communication")) as OutboxRow | null;
   if (!row?.id) return { processed: false };
   let metadata: Record<string, string>;
@@ -83,6 +105,7 @@ export async function dispatchOne(
   let frozenEmailPayload: string | null = null;
   let materializedSms: string | null = null;
   let paymentPayload: string | null = null;
+  let cloudTalk: CloudTalkSmsConfig | null = null;
   try {
     authorizeDelivery(env, row.channel, row.recipient);
     if (row.channel === "EMAIL") {
@@ -90,6 +113,14 @@ export async function dispatchOne(
       metadata = { from: config.from, reply_to: config.replyTo };
       authorization = `Bearer ${config.apiKey}`;
       endpoint = "https://api.resend.com/emails";
+    } else if (row.provider !== smsProvider) {
+      // The row's provider was fixed at enqueue time. Never send it through the other provider.
+      throw new Error("SMS provider mismatch");
+    } else if (smsProvider === "cloudtalk") {
+      cloudTalk = cloudTalkSmsConfig(env);
+      metadata = cloudTalkSenderMetadata(cloudTalk.from);
+      authorization = "";
+      endpoint = CLOUDTALK_SMS_ENDPOINT;
     } else {
       const from = normalizePhone(env.TWILIO_FROM_NUMBER);
       if (
@@ -220,11 +251,16 @@ export async function dispatchOne(
         metadata.conversation_payload_hash = frozen.payload_hash;
       }
     }
-  } catch {
+    if (cloudTalk && !paymentPayload) {
+      assertCloudTalkMessage(row.recipient, materializedSms ?? row.body);
+    }
+  } catch (error) {
     await call(db, "release_communication_claim", {
       p_id: row.id,
       p_lease_token: row.lease_token,
-      p_error_code: "delivery_policy_or_configuration_blocked",
+      p_error_code: error instanceof Error && error.message === "SMS provider mismatch"
+        ? "sms_provider_mismatch"
+        : "delivery_policy_or_configuration_blocked",
     });
     return { processed: true, outbox_id: row.id, state: "failed" };
   }
@@ -238,7 +274,15 @@ export async function dispatchOne(
   }
   // Provider request data is reconstructed exclusively from immutable outbox fields.
   let outcome: Outcome;
-  try {
+  if (cloudTalk) {
+    outcome = await sendCloudTalk(
+      transport,
+      cloudTalk,
+      row,
+      paymentPayload ??
+        cloudTalkSmsBody(cloudTalk.from, row.recipient, materializedSms ?? row.body),
+    );
+  } else try {
     const response = await transport(endpoint, {
       method: "POST",
       redirect: "error",
@@ -303,6 +347,41 @@ export async function dispatchOne(
       errorCode: "provider_transport_unknown",
     };
   }
+  return await finish(db, row, outcome);
+}
+async function sendCloudTalk(
+  transport: typeof fetch,
+  config: CloudTalkSmsConfig,
+  row: OutboxRow,
+  body: string,
+): Promise<Outcome> {
+  // CloudTalk has no idempotency key. The outbox lease and the "uncertain"
+  // state are the double-send guard: ambiguous results are never retried here.
+  try {
+    const result = await classifyCloudTalkSmsResponse(
+      await transport(CLOUDTALK_SMS_ENDPOINT, cloudTalkRequestInit(config, body)),
+    );
+    if (result.kind === "accepted") {
+      return {
+        outcome: "accepted",
+        providerId: cloudTalkAcceptanceReference(row.id, result.reference),
+        errorCode: null,
+      };
+    }
+    return {
+      outcome: result.kind === "rejected" ? "failed" : "uncertain",
+      providerId: null,
+      errorCode: result.code,
+    };
+  } catch {
+    return {
+      outcome: "uncertain",
+      providerId: null,
+      errorCode: "provider_transport_unknown",
+    };
+  }
+}
+async function finish(db: OutboxDatabase, row: OutboxRow, outcome: Outcome) {
   // If persistence fails after acceptance, leave the lease for reconciliation. Never resend here.
   await call(db, "finish_communication_attempt", {
     p_id: row.id,

@@ -1,4 +1,4 @@
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { denverDateTime, denverInstant } from "../clinical/editor-state.ts";
 export interface MonitoringObservation {
   at: string;
@@ -53,6 +53,14 @@ export interface AnesthesiaAddendum {
   actor_id: string;
   recorded_at: string;
 }
+export interface AnesthesiaDrugAdministration {
+  id: string;
+  record_id: string;
+  pet_id: string;
+  request: Json;
+  created_by: string;
+  created_at: string;
+}
 interface Table<Row> {
   Row: { [K in keyof Row]: Row[K] };
   Insert: never;
@@ -65,6 +73,7 @@ export interface AnesthesiaDatabase {
       patient_anesthesia_records: Table<AnesthesiaRecord>;
       anesthesia_record_revisions: Table<AnesthesiaRevision>;
       anesthesia_record_addenda: Table<AnesthesiaAddendum>;
+      anesthesia_drug_administrations: Table<AnesthesiaDrugAdministration>;
     };
     Views: Database["public"]["Views"];
     Enums: Database["public"]["Enums"];
@@ -91,6 +100,15 @@ export interface AnesthesiaDatabase {
           p_content: string;
         };
         Returns: AnesthesiaAddendum;
+      };
+      record_anesthesia_drug_administration: {
+        Args: {
+          p_id: string;
+          p_record_id: string;
+          p_pet_id: string;
+          p_request: Json;
+        };
+        Returns: Tables<"patient_treatments">;
       };
     };
   };

@@ -414,7 +414,7 @@ async function fixture(page: Page, role = "STAFF") {
   return { state, lab };
 }
 async function openResults(page: Page) {
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await page
     .getByRole("button", { name: "Open lab order", exact: true })
     .click();

@@ -67,13 +67,37 @@ export function authorizeDelivery(
   return { recipient: normalized, mode: env.OUTBOUND_DELIVERY_MODE };
 }
 
+export interface EmailReplyToEnvironment {
+  /** The AgentMail receiving inbox: client replies must land there to reach the app. */
+  AGENTMAIL_INBOX_ADDRESS?: string;
+  /** Legacy name. When set alongside AGENTMAIL_INBOX_ADDRESS it must match it. */
+  RESEND_REPLY_TO?: string;
+  OUTBOUND_DELIVERY_MODE?: string;
+}
+/**
+ * Reply-To for every app email sent through Resend. Resend is outbound only;
+ * replies are received by AgentMail, so the Reply-To is the AgentMail inbox.
+ * Fails closed (empty string, which every sender validator rejects) when:
+ *  - live mode has no valid AGENTMAIL_INBOX_ADDRESS, or
+ *  - RESEND_REPLY_TO is also set and names a different mailbox (conflict).
+ * Test/disabled modes may still fall back to RESEND_REPLY_TO so existing
+ * allowlisted commissioning keeps working until AgentMail is configured.
+ */
+export function resolveEmailReplyTo(env: EmailReplyToEnvironment): string {
+  const inbox = normalizeEmail(env.AGENTMAIL_INBOX_ADDRESS);
+  const legacy = env.RESEND_REPLY_TO?.trim() ? normalizeEmail(env.RESEND_REPLY_TO) : undefined;
+  if (inbox) return legacy === undefined || legacy === inbox ? inbox : "";
+  if (env.AGENTMAIL_INBOX_ADDRESS?.trim()) return "";
+  if (env.OUTBOUND_DELIVERY_MODE === "live") return "";
+  return legacy ?? "";
+}
+
 export function requireEmailConfiguration(env: {
   RESEND_API_KEY?: string;
   RESEND_FROM?: string;
-  RESEND_REPLY_TO?: string;
-}): { apiKey: string; from: string; replyTo: string } {
+} & EmailReplyToEnvironment): { apiKey: string; from: string; replyTo: string } {
   // Requiring a reply mailbox for test sends too exercises the production routing contract.
-  const replyTo = normalizeEmail(env.RESEND_REPLY_TO);
+  const replyTo = normalizeEmail(resolveEmailReplyTo(env));
   const from = env.RESEND_FROM?.trim();
   const fromMailbox = from?.match(/^[^<>\r\n]+<([^<>]+)>$/)?.[1] ?? from;
   if (!env.RESEND_API_KEY?.trim() || !from || !normalizeEmail(fromMailbox) || !replyTo) {

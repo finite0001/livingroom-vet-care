@@ -39,7 +39,7 @@ function ConversationDetailContent() {
   const { data: messages, isLoading: msgsLoading } = messageQuery;
   const { data: conversation, isLoading: convLoading } = useConversation(id);
   // Strict opt-in: SMS is blocked unless the client has an explicit opted_in=true
-  // record, matching the server's send-sms gate. Gate on consentFetched so we stay
+  // record, matching the server's enqueue-message consent gate. Gate on consentFetched so we stay
   // optimistic (SMS enabled) while consent is still loading — otherwise the empty
   // composer would auto-switch off SMS before we know an opted-in client is fine.
   const { data: consent, isFetched: consentFetched } = useClientConsent(

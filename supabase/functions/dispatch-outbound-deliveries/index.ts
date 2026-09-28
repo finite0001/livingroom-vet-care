@@ -1,6 +1,8 @@
 import { authorizeDelivery, DeliveryPolicyError, normalizePhone, requireEmailConfiguration } from "../_shared/delivery-policy.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SmsProviderConfigurationError, selectSmsProvider } from "../_shared/cloudtalk-sms.ts";
+import { dispatchOutboundSms, type OutboundSmsDatabase } from "../_shared/outbound-delivery-sms.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +34,7 @@ interface PreparedMessage {
 
 interface ProviderResult {
   status: "ACCEPTED" | "FAILED" | "QUEUED" | "UNKNOWN";
-  provider: "resend" | "twilio";
+  provider: "resend" | "twilio" | "cloudtalk";
   providerMessageId: string | null;
   statusNote: string;
   errorText: string | null;
@@ -190,6 +192,8 @@ async function sendEmail(delivery: OutboundDelivery, message: PreparedMessage): 
     RESEND_API_KEY: Deno.env.get("RESEND_API_KEY"),
     RESEND_FROM: Deno.env.get("RESEND_FROM"),
     RESEND_REPLY_TO: Deno.env.get("RESEND_REPLY_TO"),
+    AGENTMAIL_INBOX_ADDRESS: Deno.env.get("AGENTMAIL_INBOX_ADDRESS"),
+    OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE"),
   });
 
   try {
@@ -228,7 +232,27 @@ async function sendEmail(delivery: OutboundDelivery, message: PreparedMessage): 
   }
 }
 
-async function sendSms(delivery: OutboundDelivery, message: PreparedMessage): Promise<ProviderResult> {
+// SMS_PROVIDER selects CloudTalk (default) or Twilio; consent is re-checked in the database first.
+function sendSms(
+  delivery: OutboundDelivery,
+  message: PreparedMessage,
+  db: OutboundSmsDatabase,
+  leaseOwner: string,
+): Promise<ProviderResult> {
+  return dispatchOutboundSms(delivery, message.body, {
+    APP_ENV: Deno.env.get("APP_ENV"),
+    OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE"),
+    OUTBOUND_TEST_EMAILS: Deno.env.get("OUTBOUND_TEST_EMAILS"),
+    OUTBOUND_TEST_PHONES: Deno.env.get("OUTBOUND_TEST_PHONES"),
+    SMS_PROVIDER: Deno.env.get("SMS_PROVIDER"),
+    CLOUDTALK_API_KEY_ID: Deno.env.get("CLOUDTALK_API_KEY_ID"),
+    CLOUDTALK_API_KEY_SECRET: Deno.env.get("CLOUDTALK_API_KEY_SECRET"),
+    CLOUDTALK_ALLOWED_NUMBERS: Deno.env.get("CLOUDTALK_ALLOWED_NUMBERS"),
+    CLOUDTALK_SMS_SENDER: Deno.env.get("CLOUDTALK_SMS_SENDER"),
+  }, { db, leaseOwner, sendTwilio: () => sendTwilioSms(delivery, message), retryDelayMs: RETRY_DELAY_MS });
+}
+
+async function sendTwilioSms(delivery: OutboundDelivery, message: PreparedMessage): Promise<ProviderResult> {
   const permission = authorizeDelivery({
     APP_ENV: Deno.env.get("APP_ENV"),
     OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE"),
@@ -272,7 +296,11 @@ async function sendSms(delivery: OutboundDelivery, message: PreparedMessage): Pr
   }
 }
 
-async function dispatchDelivery(delivery: OutboundDelivery): Promise<ProviderResult> {
+async function dispatchDelivery(
+  delivery: OutboundDelivery,
+  db: OutboundSmsDatabase,
+  leaseOwner: string,
+): Promise<ProviderResult> {
   if (delivery.channel !== "EMAIL" && delivery.channel !== "SMS") {
     return {
       status: "FAILED",
@@ -286,10 +314,10 @@ async function dispatchDelivery(delivery: OutboundDelivery): Promise<ProviderRes
 
   const message = prepareMessage(delivery);
   if (delivery.channel === "EMAIL") return sendEmail(delivery, message);
-  return sendSms(delivery, message);
+  return sendSms(delivery, message, db, leaseOwner);
 }
 
-function deliveryPolicyFailure(provider: "resend" | "twilio", error: DeliveryPolicyError): ProviderResult {
+function deliveryPolicyFailure(provider: ProviderResult["provider"], error: DeliveryPolicyError): ProviderResult {
   return {
     status: "FAILED",
     provider,
@@ -309,6 +337,8 @@ serve(async (req) => {
   try {
     assertDispatcherToken(req);
     assertClaimableDeliveryMode();
+    // Unknown SMS_PROVIDER fails closed before any row is leased.
+    const smsProvider = selectSmsProvider(Deno.env.get("SMS_PROVIDER"));
 
     const body = await readBody(req);
     const batchSize = parseBatchSize(body.batch_size);
@@ -328,11 +358,11 @@ serve(async (req) => {
     counters.claimed = claimed.length;
 
     for (const delivery of claimed) {
-      const provider = delivery.channel === "SMS" ? "twilio" : "resend";
+      const provider = delivery.channel === "SMS" ? smsProvider : "resend";
       let result: ProviderResult;
 
       try {
-        result = await dispatchDelivery(delivery);
+        result = await dispatchDelivery(delivery, supabase, leaseOwner);
       } catch (error) {
         if (error instanceof DeliveryPolicyError) {
           result = deliveryPolicyFailure(provider, error);
@@ -380,6 +410,9 @@ serve(async (req) => {
   } catch (error) {
     if (error instanceof DeliveryPolicyError) {
       return jsonResponse({ success: false, error: error.message, ...counters }, error.status);
+    }
+    if (error instanceof SmsProviderConfigurationError) {
+      return jsonResponse({ success: false, error: "SMS provider configuration unavailable.", ...counters }, 503);
     }
     return jsonResponse({
       success: false,

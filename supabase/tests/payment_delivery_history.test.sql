@@ -2,6 +2,8 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+-- This file exercises the retained Twilio SMS contract; CloudTalk is covered by cloudtalk_outbound_sms.test.sql.
+update public.communication_sms_provider_setting set provider='twilio';
 insert into auth.users(id,email,raw_user_meta_data) values
  ('73700000-0000-4000-8000-000000000001','payment-staff@example.test','{}'),
  ('73700000-0000-4000-8000-000000000002','payment-other@example.test','{}'),

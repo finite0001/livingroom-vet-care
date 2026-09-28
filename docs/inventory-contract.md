@@ -8,6 +8,8 @@ All mutations require an active staff session and derive `created_by` from `auth
 - `receive_inventory(p_id uuid, p_lot_id uuid, p_product_id uuid, p_lot_number text, p_expires_on date, p_location text, p_quantity numeric, p_reason text)` → `inventory_movements` row. Creates lot if necessary. Existing lot metadata must match. Positive quantity only. Expired receipts are allowed to reconcile physical stock, but cannot dispense.
 - `adjust_inventory(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text)` → `inventory_movements` row. Signed nonzero adjustment; balance cannot become negative. Required reason documents count corrections, waste, loss or physically verified returns. Does not alter any treatment or invoice.
 
+- `save_catalog_vaccine_profile(...)` → optional vaccine metadata for a `kind='vaccine'` product (group key, labeled species, vaccine type, labeled duration, default booster interval). Stored in `catalog_vaccine_profiles`; nothing is seeded. See [vaccine-status-and-catalog.md](vaccine-status-and-catalog.md).
+
 Client-generated operation UUIDs must be retained through retries. Reusing a receipt/adjustment UUID returns the original only when actor and exact request match. Do not create a fresh ID after a network timeout without reconciling the existing operation.
 
 ## Invoices

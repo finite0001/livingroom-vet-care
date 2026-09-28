@@ -7,6 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { products, lots, type Product, type LotBalance } from "./api";
 import { useStockMutation } from "./useStockMutation";
+import { readVaccineProfiles } from "../vaccines/api";
+import { VaccineProfileForm } from "../vaccines/VaccineProfileForm";
+import {
+  vaccineProfileQueryKey,
+  vaccineProfileSummary,
+} from "../vaccines/profile-display";
 import {
   centsValue,
   quantityValue,
@@ -361,6 +367,12 @@ export function InventoryPage() {
     },
   });
   const rows = catalog.data?.slice(0, 100) ?? [];
+  const vaccineIds = rows.filter((p) => p.kind === "vaccine").map((p) => p.id);
+  const vaccineProfiles = useQuery({
+    queryKey: vaccineProfileQueryKey(vaccineIds),
+    enabled: vaccineIds.length > 0,
+    queryFn: () => readVaccineProfiles(vaccineIds),
+  });
   const lotRows = stock.data?.slice(0, 100) ?? [];
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
@@ -406,6 +418,13 @@ export function InventoryPage() {
                     {p.kind} · ${(p.unit_price_cents / 100).toFixed(2)} /{" "}
                     {p.unit}
                   </p>
+                  {p.kind === "vaccine" && vaccineProfiles.isSuccess && (
+                    <p className="text-xs text-muted-foreground">
+                      {vaccineProfileSummary(
+                        vaccineProfiles.data.find((v) => v.product_id === p.id),
+                      )}
+                    </p>
+                  )}
                 </div>
                 <Button
                   variant="outline"
@@ -430,6 +449,13 @@ export function InventoryPage() {
               setFormKey((k) => k + 1);
             }}
           />
+          {editing?.kind === "vaccine" && (
+            <VaccineProfileForm
+              key={editing.id}
+              productId={editing.id}
+              productName={editing.name}
+            />
+          )}
         </CardContent>
       </Card>
       <Card>

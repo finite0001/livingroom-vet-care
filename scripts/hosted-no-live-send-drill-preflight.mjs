@@ -10,10 +10,10 @@ const expectedPendingMigrations = ['20260924120000', '20260924130000'];
 
 const requiredEdgeFunctions = [
   { slug: 'public-contact', verifyJwt: false, purpose: 'anonymous contact intake' },
-  { slug: 'send-email', verifyJwt: true, purpose: 'staff email queueing endpoint' },
-  { slug: 'send-sms', verifyJwt: true, purpose: 'staff SMS queueing endpoint' },
+  { slug: 'enqueue-message', verifyJwt: true, purpose: 'staff email/SMS queueing endpoint' },
   { slug: 'dispatch-outbound-deliveries', verifyJwt: false, purpose: 'token-protected outbound dispatcher' },
   { slug: 'resend-delivery-webhook', verifyJwt: false, purpose: 'signed Resend delivery callback' },
+  { slug: 'agentmail-inbound-webhook', verifyJwt: false, purpose: 'signed AgentMail inbound email webhook' },
   { slug: 'twilio-message-status-callback', verifyJwt: false, purpose: 'signed Twilio status callback' },
   { slug: 'twilio-inbound-sms', verifyJwt: false, purpose: 'signed Twilio inbound SMS and STOP/START callback' },
   { slug: 'process-inbound', verifyJwt: false, purpose: 'token-protected inbound review worker' },

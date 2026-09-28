@@ -339,7 +339,7 @@ async function fixture(
       });
     return r.fulfill({ json: [] });
   });
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await expect(
     page.getByRole("heading", {
       name: "Outside prescription history",

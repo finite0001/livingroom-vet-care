@@ -167,6 +167,7 @@ export function VaccinationHistoryReview({
       void cache.invalidateQueries({
         queryKey: ["patient-imported-vaccinations", actor, petId],
       });
+      void cache.invalidateQueries({ queryKey: ["vaccine-status", petId] });
       void refreshPatientReleases(cache, petId);
     }
     void requests.refetch();

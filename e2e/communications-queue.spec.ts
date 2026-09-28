@@ -386,7 +386,7 @@ test("consent records server version and preserves stale entry without bypassing
     });
   });
   await page.goto(`/hub/client/${client}`);
-  await page.getByRole("tab", { name: "Consent & notes", exact: true }).click();
+  await page.getByRole("tab", { name: "Communication", exact: true }).click();
   const panel = page.getByRole("region", { name: "SMS consent" });
   await expect(panel).toContainText("SMS is blocked");
   await panel
@@ -1003,3 +1003,59 @@ for (const scenario of ['capture-unavailable', 'changed-bytes']) {
     expect(downloads).toBe(0);
   });
 }
+
+test("CloudTalk texts and calls render in the household thread without widening media access", async ({ page }) => {
+  await fixture(page, "rejected");
+  const entry = (index: number, fields: Record<string, unknown>) => ({
+    id: `77777777-7777-4777-8777-${String(index).padStart(12, "0")}`,
+    conversation_id: conversation,
+    is_internal: false,
+    audio_url: null,
+    transcription: null,
+    provider: "cloudtalk",
+    ...fields,
+  });
+  const rows = [
+    entry(4, { type: "CALL_OUTBOUND", sender_type: "STAFF", content: "Outgoing call · 2m 05s", provider_message_id: "call:call-answered", created_at: "2026-09-27T17:00:00Z" }),
+    entry(3, { type: "CALL_INBOUND", sender_type: "CLIENT", content: "Missed incoming call", provider_message_id: "call:call-missed", created_at: "2026-09-27T16:00:00Z" }),
+    entry(2, { type: "SMS", sender_type: "STAFF", content: "Yes, see you Tuesday.", provider_message_id: "message:ct-2", created_at: "2026-09-27T15:05:00Z" }),
+    entry(1, { type: "SMS", sender_type: "CLIENT", content: "Is Luna due for her visit?", provider_message_id: "message:ct-1", created_at: "2026-09-27T15:00:00Z" }),
+  ];
+  const outboxLookups: string[] = [];
+  await page.route(`${backend}/rest/v1/communication_outbox*`, (route) => {
+    outboxLookups.push(route.request().url());
+    return route.fulfill({ json: [] });
+  });
+  await page.route(`${backend}/rest/v1/messages*`, (route) =>
+    route.request().method() === "HEAD"
+      ? route.fulfill({ headers: { "content-range": "0-0/4" }, body: "" })
+      : route.fulfill({ json: rows }),
+  );
+  const call = (fields: Record<string, unknown>) => ({
+    call_id: "101", external_number: "+13035550123", internal_number: "+17207646677", started_at: "2026-09-27T16:00:00Z",
+    ended_at: "2026-09-27T16:01:00Z", is_voicemail: false, recording_ready: false, transcript_ready: false, ai_summary: null,
+    ai_language: null, trusted_number: true, last_event_at: "2026-09-27T16:01:00Z", ...fields,
+  });
+  await page.route(`${backend}/rest/v1/cloudtalk_calls*`, (route) =>
+    route.fulfill({
+      json: [
+        call({ call_uuid: "call-missed", direction: "incoming", duration_seconds: 44, talking_seconds: 0 }),
+        call({ call_uuid: "call-answered", direction: "outgoing", duration_seconds: 130, talking_seconds: 125, recording_ready: true, ai_summary: "Confirmed Tuesday visit." }),
+      ],
+    }),
+  );
+  await page.goto(`/hub/conversation/${conversation}`);
+  const history = page.getByRole("region", { name: "Conversation messages" });
+  await expect(history.getByText("Client · SMS · Text via CloudTalk")).toBeVisible();
+  await expect(history.getByText("Staff · SMS · Sent from CloudTalk Phone")).toBeVisible();
+  await expect(history.getByText("Sent from CloudTalk Phone. CloudTalk reports carrier submission only, not handset delivery.")).toBeVisible();
+  await expect(history.getByText("Missed incoming call", { exact: true })).toBeVisible();
+  await expect(history.getByText("Incoming", { exact: true })).toBeVisible();
+  await expect(history.getByText("Outgoing · Duration 2m 05s · Recording available")).toBeVisible();
+  await expect(history.getByText("AI summary: Confirmed Tuesday visit.")).toBeVisible();
+  await expect(history.getByText("Recordings and transcripts open for administrators only.")).toBeVisible();
+  // Staff (non-admin) sessions never get a playback control; the Edge Function also refuses them.
+  await expect(history.getByRole("button", { name: "Play recording" })).toHaveCount(0);
+  await expect(history.getByText("No tracked delivery receipt")).toHaveCount(0);
+  expect(outboxLookups.filter((url) => url.includes("77777777"))).toEqual([]);
+});

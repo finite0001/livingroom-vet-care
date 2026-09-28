@@ -13,6 +13,7 @@ export interface LabValues {
   interval_days: number | null;
   interval_anchor: string | null;
   override_reason: string;
+  reminders_enabled: boolean;
 }
 export interface LabOrder extends LabValues {
   id: string;
@@ -98,11 +99,28 @@ export const emptyLab = (): LabValues => ({
   interval_days: null,
   interval_anchor: null,
   override_reason: "",
+  reminders_enabled: false,
 });
 export function labValues(row: LabOrder): LabValues {
-  return Object.fromEntries(
+  const values = Object.fromEntries(
     Object.keys(emptyLab()).map((key) => [key, row[key as keyof LabValues]]),
   ) as unknown as LabValues;
+  return { ...values, reminders_enabled: row.reminders_enabled === true };
+}
+/** Only open orders with a due date can carry an automated due reminder. */
+export function labRemindersAvailable(
+  values: Pick<LabValues, "status" | "due_date">,
+): boolean {
+  return (
+    (values.status === "planned" || values.status === "ordered") &&
+    Boolean(values.due_date)
+  );
+}
+export function labReminderLabel(
+  values: Pick<LabValues, "status" | "due_date" | "reminders_enabled">,
+): string {
+  if (!labRemindersAvailable(values)) return "Reminders not applicable";
+  return values.reminders_enabled ? "Reminders on" : "Reminders off";
 }
 export function dueFromInterval(anchor: string, days: number): string {
   if (

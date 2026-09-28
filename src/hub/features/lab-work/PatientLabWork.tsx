@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   emptyLab,
   labValues,
+  labReminderLabel,
+  labRemindersAvailable,
   dueFromInterval,
   type LabDatabase,
   type LabOrder,
@@ -141,8 +143,18 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
     setError("");
     setMessage("");
   }
-  function update(key: keyof LabValues, value: string | number | null) {
-    setForm((previous) => previous && { ...previous, [key]: value });
+  function update(
+    key: keyof LabValues,
+    value: string | number | boolean | null,
+  ) {
+    setForm((previous) => {
+      if (!previous) return previous;
+      const next = { ...previous, [key]: value } as LabValues;
+      // Mirrors the server: only open orders with a due date keep reminders on.
+      return labRemindersAvailable(next)
+        ? next
+        : { ...next, reminders_enabled: false };
+    });
   }
   async function run(action: () => Promise<void>) {
     if (busyRef.current || resultDirty) return;
@@ -252,7 +264,8 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
                 <p className="font-medium">{row.test_name}</p>
                 <p className="text-sm">
                   {row.status} · Due {row.due_date || "not set"} · Result{" "}
-                  {row.result_date || "not recorded"}
+                  {row.result_date || "not recorded"} ·{" "}
+                  {labReminderLabel(labValues(row))}
                 </p>
               </div>
               <Button
@@ -372,6 +385,28 @@ export function PatientLabWork({ petId, onDirtyChange }: PatientLabWorkProps) {
                   onChange={(e) => update("due_date", e.target.value || null)}
                 />
               </div>
+            </div>
+            <div className="space-y-1">
+              <Label
+                className="flex items-center gap-2"
+                htmlFor="lab-reminders"
+              >
+                <input
+                  id="lab-reminders"
+                  type="checkbox"
+                  checked={form.reminders_enabled}
+                  disabled={!labRemindersAvailable(form)}
+                  onChange={(e) =>
+                    update("reminders_enabled", e.target.checked)
+                  }
+                />{" "}
+                Enable due reminders for this lab order
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {labRemindersAvailable(form)
+                  ? "Off by default. When on, this order joins the practice's reviewed lab reminder automation; consent is checked again before anything is sent."
+                  : "Available for planned or ordered lab work with a due date."}
+              </p>
             </div>
             {form.template_id && (
               <div className="space-y-3 rounded-md border p-3">

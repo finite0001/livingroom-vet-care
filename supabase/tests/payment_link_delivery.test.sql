@@ -2,6 +2,8 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+-- This file exercises the retained Twilio SMS contract; CloudTalk is covered by cloudtalk_outbound_sms.test.sql.
+update public.communication_sms_provider_setting set provider='twilio';
 
 -- Test-only rollback probe exercises the real ADMIN preview on a pre-provider failure.
 create function pg_temp.retry_source_probe(p_id uuid,p_change text default null) returns jsonb language plpgsql security definer as $$
@@ -100,6 +102,21 @@ select set_config('request.jwt.claims','{"sub":"73700000-0000-4000-8000-00000000
 insert into fx select 'attached-outbox',id from public.enqueue_payment_delivery((select id from fx where k='attached-delivery'),repeat('e',64),repeat('f',64),true);
 select public.record_sms_consent(auth.uid(),(select id from fx where k='client'),'+13035550404',true,'WRITTEN','Synthetic test only',null);
 select lives_ok($$select public.prepare_payment_delivery((select id from fx where k='sms-delivery'),(select id from fx where k='grant'),(select id from fx where k='conversation'),'SMS','+13035550404','','Pay: {{payment_link}}')$$,'Consenting current SMS recipient supported');
+set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+-- CloudTalk capture contract (the configured provider): probes are rolled back so the Twilio flow below is unchanged.
+reset role;
+update public.communication_sms_provider_setting set provider='cloudtalk';
+set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select throws_ok($$select public.capture_payment_delivery((select id from fx where k='sms-delivery'),'73700000-0000-4000-8000-000000000001',jsonb_build_object('from','+13035550999','account_sid','AC'||repeat('a',32)),repeat('1',64),repeat('2',64))$$,'23514',null,'CloudTalk setting rejects a Twilio-shaped frozen payment sender');
+select throws_ok($$select public.capture_payment_delivery((select id from fx where k='sms-delivery'),'73700000-0000-4000-8000-000000000001',jsonb_build_object('from','+13035550999','provider','cloudtalk','account_sid','AC'||repeat('a',32)),repeat('1',64),repeat('2',64))$$,'23514',null,'CloudTalk payment sender carries no extra keys');
+select throws_ok($$select public.capture_payment_delivery((select id from fx where k='sms-delivery'),'73700000-0000-4000-8000-000000000001',jsonb_build_object('from','+13035550999','provider','twilio'),repeat('1',64),repeat('2',64))$$,'23514',null,'CloudTalk payment sender must name CloudTalk');
+select throws_ok($$select public.capture_payment_delivery((select id from fx where k='sms-delivery'),'73700000-0000-4000-8000-000000000001',jsonb_build_object('from','303-555-0999','provider','cloudtalk'),repeat('1',64),repeat('2',64))$$,'23514',null,'CloudTalk payment sender must be exact E.164');
+select throws_ok($q$do $probe$ begin perform public.capture_payment_delivery((select id from fx where k='sms-delivery'),'73700000-0000-4000-8000-000000000001',jsonb_build_object('from','+13035550999','provider','cloudtalk'),repeat('1',64),repeat('2',64)); raise exception 'cloudtalk capture accepted' using errcode='P0001'; end $probe$ $q$,'P0001','cloudtalk capture accepted','Exact CloudTalk sender shape is captured under the CloudTalk setting');
+reset role;
+select is((select count(*)::int from public.payment_delivery_captures where request_id=(select id from fx where k='sms-delivery')),0,'CloudTalk capture probe left no capture behind');
+update public.communication_sms_provider_setting set provider='twilio';
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select public.capture_payment_delivery((select id from fx where k='sms-delivery'),'73700000-0000-4000-8000-000000000001',jsonb_build_object('from','+13035550999','account_sid','AC'||repeat('a',32)),repeat('1',64),repeat('2',64));

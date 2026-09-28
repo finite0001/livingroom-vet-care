@@ -510,7 +510,7 @@ test("DVM authored reaction recovers lost approval once and refreshes native ale
 }) => {
   const state = await fixture(page);
   state.loseApprove = true;
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await draftFinding(page);
   await approveFinding(page);
   const p = extraction(page);
@@ -550,7 +550,7 @@ test("DVM links existing fields unchanged and discovers its saved receipt after 
   const state = await fixture(page);
   state.problems.push(existingClinicalProblem());
   const before = structuredClone(state.problems[0]);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   const p = extraction(page);
   await p.getByLabel("Use history 71 version 1", { exact: true }).check();
   await p.getByLabel("Compare existing patient problems").fill("reaction");
@@ -590,7 +590,7 @@ test("stale approval stays recoverable, abandonment is durable, and drafts use t
 }) => {
   const state = await fixture(page);
   state.stale = true;
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await draftFinding(page);
   await page.getByRole("button", { name: "Home", exact: true }).click();
   await expect(
@@ -622,7 +622,7 @@ test("mismatched frozen source blocks recovered approval and signout clears oper
 }) => {
   const state = await fixture(page);
   state.wrongContext = true;
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await draftFinding(page);
   const p = extraction(page);
   await p
@@ -654,7 +654,7 @@ test("DVM reviews later approved source evidence without rewriting the local pro
   page,
 }) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await draftFinding(page);
   await approveFinding(page);
   const finding = extraction(page);

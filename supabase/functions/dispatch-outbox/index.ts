@@ -5,6 +5,7 @@ import {
   dispatchOne,
   type OutboxEnvironment,
 } from "../_shared/outbox-dispatch.ts";
+import { SmsProviderConfigurationError } from "../_shared/cloudtalk-sms.ts";
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -37,14 +38,24 @@ serve(async (req) => {
       "RESEND_API_KEY",
       "RESEND_FROM",
       "RESEND_REPLY_TO",
+      "AGENTMAIL_INBOX_ADDRESS",
       "TWILIO_ACCOUNT_SID",
       "TWILIO_AUTH_TOKEN",
       "TWILIO_FROM_NUMBER",
+      "SMS_PROVIDER",
+      "CLOUDTALK_API_KEY_ID",
+      "CLOUDTALK_API_KEY_SECRET",
+      "CLOUDTALK_ALLOWED_NUMBERS",
+      "CLOUDTALK_SMS_SENDER",
     ] as const)
       env[name] = Deno.env.get(name);
     const db = createClient(Deno.env.get("SUPABASE_URL")!, key);
     return json(await dispatchOne(db, env));
-  } catch {
+  } catch (error) {
+    // Nothing was claimed: an unknown SMS_PROVIDER stops the worker before any row is touched.
+    if (error instanceof SmsProviderConfigurationError) {
+      return json({ error: "SMS provider configuration unavailable", retry_safe: true }, 503);
+    }
     return json(
       {
         error:

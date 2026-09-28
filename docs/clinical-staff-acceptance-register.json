@@ -72,7 +72,39 @@
       "reviewer": "Owner/operator + Dr. Susan Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm wording before provider commissioning."
+      "requestedChange": "Confirm wording before provider commissioning, including email appointment reminders (subject + body) and when staff should turn on per-order lab reminders (docs/reminder-dispatch.md)."
+    },
+    {
+      "id": "C-VACCINE-01",
+      "reviewArea": "Patient vaccine status summary (last given / next due / state per vaccine group)",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm source precedence (current reviewed due plan over recorded next due date; proposed plans never supply a date), outside-record labelling, and the due-soon display window (built-in display default 30 days until set in Settings)."
+    },
+    {
+      "id": "C-VACCINE-02",
+      "reviewArea": "Vaccine catalog metadata, due-date pre-fill, and rabies certificate serial number",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Enter or approve per-product group, species, labeled duration and default booster interval (none are seeded); confirm the explicit pre-fill button and the separate rabies serial-number field and its 'not recorded' wording."
+    },
+    {
+      "id": "C-PILOT-09",
+      "reviewArea": "HHHHHMM quality-of-life scale assessments, trend and optional reference line",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm category wording/source citation, sign/addendum policy, and whether any reference total or wording may be displayed (none is configured by default)."
+    },
+    {
+      "id": "C-PILOT-ANES-01",
+      "reviewArea": "Anesthesia drugs charged from stock (lot debit + invoice line) and signed-record lock",
+      "reviewer": "Dr. Susan Edler",
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm required fields and wording, the block-after-signing policy (Treatments + addendum), and correction path. No dose/drug defaults are supplied; DEA controlled-substance logs are out of scope."
     }
   ],
   "staffAcceptanceRun": {

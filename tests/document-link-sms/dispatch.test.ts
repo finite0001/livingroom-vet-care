@@ -23,6 +23,7 @@ async function fixture() {
     TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
     TWILIO_AUTH_TOKEN: "synthetic",
     TWILIO_FROM_NUMBER: "+13035550199",
+    SMS_PROVIDER: "twilio",
     DOCUMENT_LINK_ORIGIN: grant.origin,
     DOCUMENT_LINK_ACTIVE_KEY_VERSION: "test",
     DOCUMENT_LINK_KEYS: JSON.stringify({ test: btoa("a".repeat(32)) }),

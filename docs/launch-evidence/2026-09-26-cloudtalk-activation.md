@@ -1,5 +1,7 @@
 # CloudTalk integration activation — September 26, 2026
 
+> **Superseded in part (2026-09-28):** the owner decided on 2026-09-27 that all text messaging runs through CloudTalk. The "do not switch those queues to CloudTalk" guidance below is replaced by [CloudTalk outbound SMS](2026-09-28-cloudtalk-outbound-sms.md). Everything else here (webhooks, call media, staff phone) still applies.
+
 ## What this package implements
 
 - A persistent staff CloudTalk phone at `/hub/call`, with a separate-tab option on narrow screens and a ringing indicator when the embedded phone sends its event.
@@ -9,7 +11,7 @@
 
 CloudTalk can produce recordings without a transcript. In that case the audio player has no captions; the transcript action is shown only after CloudTalk reports `transcript.ready`.
 
-The existing staff SMS and reminder queues still use their Twilio provider contract and remain behind the existing disabled live-send gate. CloudTalk's documented SMS API does not guarantee a provider message ID in its success response, and its `message.sent` webhook is carrier submission without delivered/failed status. Do not switch those queues to CloudTalk or claim handset delivery from these events without a controlled provider round trip and a reviewed correlation design. CloudTalk Phone itself can send one-to-one texts after messaging is activated on the account and number; those texts appear in CloudTalk activity, not the native conversation thread. Public phone display stays unset until the selected number is verified.
+The existing staff SMS and reminder queues still use their Twilio provider contract and remain behind the existing disabled live-send gate. CloudTalk's documented SMS API does not guarantee a provider message ID in its success response, and its `message.sent` webhook is carrier submission without delivered/failed status. Do not switch those queues to CloudTalk or claim handset delivery from these events without a controlled provider round trip and a reviewed correlation design. CloudTalk Phone itself can send one-to-one texts after messaging is activated on the account and number. Since `20260928110000_cloudtalk_unified_inbox.sql`, those texts, inbound texts, calls and voicemails also appear in the matching household conversation thread (see `docs/cloudtalk-unified-inbox.md`); they are still not app-queued sends and carry no delivery receipt. Public phone display stays unset until the selected number is verified.
 
 ## Account inputs needed
 

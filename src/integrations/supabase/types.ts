@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      anesthesia_drug_administrations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          pet_id: string
+          record_id: string
+          request: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id: string
+          pet_id: string
+          record_id: string
+          request: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          pet_id?: string
+          record_id?: string
+          request?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anesthesia_drug_administrations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anesthesia_drug_administrations_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "patient_treatments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anesthesia_drug_administrations_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anesthesia_drug_administrations_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "patient_anesthesia_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           key: string
@@ -609,6 +665,63 @@ export type Database = {
         }
         Relationships: []
       }
+      catalog_vaccine_profiles: {
+        Row: {
+          default_booster_interval_days: number | null
+          group_key: string | null
+          id: string
+          labeled_duration: string | null
+          product_id: string
+          review_note: string
+          species: string[]
+          updated_at: string
+          updated_by: string
+          vaccine_type: string | null
+          version: number
+        }
+        Insert: {
+          default_booster_interval_days?: number | null
+          group_key?: string | null
+          id?: string
+          labeled_duration?: string | null
+          product_id: string
+          review_note: string
+          species?: string[]
+          updated_at?: string
+          updated_by: string
+          vaccine_type?: string | null
+          version?: number
+        }
+        Update: {
+          default_booster_interval_days?: number | null
+          group_key?: string | null
+          id?: string
+          labeled_duration?: string | null
+          product_id?: string
+          review_note?: string
+          species?: string[]
+          updated_at?: string
+          updated_by?: string
+          vaccine_type?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_vaccine_profiles_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_vaccine_profiles_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_files: {
         Row: {
           category: Database["public"]["Enums"]["file_category"]
@@ -859,6 +972,129 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cloudtalk_calls: {
+        Row: {
+          ai_language: string | null
+          ai_summary: string | null
+          call_id: string | null
+          call_uuid: string
+          direction: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          external_number: string | null
+          internal_number: string | null
+          is_voicemail: boolean
+          last_event_at: string
+          recording_ready: boolean
+          started_at: string | null
+          talking_seconds: number | null
+          transcript_ready: boolean
+          trusted_number: boolean
+        }
+        Insert: {
+          ai_language?: string | null
+          ai_summary?: string | null
+          call_id?: string | null
+          call_uuid: string
+          direction?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          external_number?: string | null
+          internal_number?: string | null
+          is_voicemail?: boolean
+          last_event_at: string
+          recording_ready?: boolean
+          started_at?: string | null
+          talking_seconds?: number | null
+          transcript_ready?: boolean
+          trusted_number?: boolean
+        }
+        Update: {
+          ai_language?: string | null
+          ai_summary?: string | null
+          call_id?: string | null
+          call_uuid?: string
+          direction?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          external_number?: string | null
+          internal_number?: string | null
+          is_voicemail?: boolean
+          last_event_at?: string
+          recording_ready?: boolean
+          started_at?: string | null
+          talking_seconds?: number | null
+          transcript_ready?: boolean
+          trusted_number?: boolean
+        }
+        Relationships: []
+      }
+      cloudtalk_capability_redactions: {
+        Row: {
+          field: string
+          id: number
+          redacted_at: string
+          redacted_by: string
+          source: string
+        }
+        Insert: {
+          field: string
+          id?: never
+          redacted_at?: string
+          redacted_by?: string
+          source: string
+        }
+        Update: {
+          field?: string
+          id?: never
+          redacted_at?: string
+          redacted_by?: string
+          source?: string
+        }
+        Relationships: []
+      }
+      cloudtalk_projection_failures: {
+        Row: {
+          attempts: number
+          first_failed_at: string
+          last_failed_at: string
+          resource_id: string
+          sqlstate: string
+        }
+        Insert: {
+          attempts?: number
+          first_failed_at?: string
+          last_failed_at?: string
+          resource_id: string
+          sqlstate: string
+        }
+        Update: {
+          attempts?: number
+          first_failed_at?: string
+          last_failed_at?: string
+          resource_id?: string
+          sqlstate?: string
+        }
+        Relationships: []
+      }
+      communication_sms_provider_setting: {
+        Row: {
+          provider: string
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          provider: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          provider?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       consent_form_templates: {
         Row: {
@@ -1624,6 +1860,8 @@ export type Database = {
           id: string
           is_internal: boolean
           ivr_path: string | null
+          provider: string | null
+          provider_message_id: string | null
           sender_id: string | null
           sender_type: Database["public"]["Enums"]["sender_type"]
           transcription: string | null
@@ -1640,6 +1878,8 @@ export type Database = {
           id?: string
           is_internal?: boolean
           ivr_path?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
           sender_id?: string | null
           sender_type: Database["public"]["Enums"]["sender_type"]
           transcription?: string | null
@@ -1656,6 +1896,8 @@ export type Database = {
           id?: string
           is_internal?: boolean
           ivr_path?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
           sender_id?: string | null
           sender_type?: Database["public"]["Enums"]["sender_type"]
           transcription?: string | null
@@ -1913,6 +2155,142 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "patient_problems_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_qol_scale_addenda: {
+        Row: {
+          assessment_id: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+        }
+        Insert: {
+          assessment_id: string
+          content: string
+          created_at?: string
+          created_by: string
+          id: string
+        }
+        Update: {
+          assessment_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_qol_scale_addenda_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "patient_qol_scale_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_qol_scale_assessments: {
+        Row: {
+          assessed_at: string
+          assessor: string
+          created_at: string
+          created_by: string
+          happiness: number | null
+          happiness_note: string
+          hunger: number | null
+          hunger_note: string
+          hurt: number | null
+          hurt_note: string
+          hydration: number | null
+          hydration_note: string
+          hygiene: number | null
+          hygiene_note: string
+          id: string
+          mobility: number | null
+          mobility_note: string
+          more_good_days: number | null
+          more_good_days_note: string
+          notes: string
+          pet_id: string
+          scale_version: string
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          total: number | null
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          assessed_at: string
+          assessor: string
+          created_at?: string
+          created_by: string
+          happiness?: number | null
+          happiness_note?: string
+          hunger?: number | null
+          hunger_note?: string
+          hurt?: number | null
+          hurt_note?: string
+          hydration?: number | null
+          hydration_note?: string
+          hygiene?: number | null
+          hygiene_note?: string
+          id: string
+          mobility?: number | null
+          mobility_note?: string
+          more_good_days?: number | null
+          more_good_days_note?: string
+          notes?: string
+          pet_id: string
+          scale_version?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string
+          total?: never
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          assessed_at?: string
+          assessor?: string
+          created_at?: string
+          created_by?: string
+          happiness?: number | null
+          happiness_note?: string
+          hunger?: number | null
+          hunger_note?: string
+          hurt?: number | null
+          hurt_note?: string
+          hydration?: number | null
+          hydration_note?: string
+          hygiene?: number | null
+          hygiene_note?: string
+          id?: string
+          mobility?: number | null
+          mobility_note?: string
+          more_good_days?: number | null
+          more_good_days_note?: string
+          notes?: string
+          pet_id?: string
+          scale_version?: string
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string
+          total?: never
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_qol_scale_assessments_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
@@ -2337,6 +2715,39 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      qol_scale_reference_settings: {
+        Row: {
+          enabled: boolean
+          id: string
+          reference_label: string
+          reference_total: number | null
+          review_note: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          enabled?: boolean
+          id?: string
+          reference_label?: string
+          reference_total?: number | null
+          review_note?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          reference_label?: string
+          reference_total?: number | null
+          review_note?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
         }
         Relationships: []
       }
@@ -4037,7 +4448,8 @@ export type Database = {
           channel: string
           client_id: string | null
           conversation_id: string | null
-          event_id: string
+          direction: string
+          event_id: string | null
           html_body: string | null
           id: string
           message_id: string | null
@@ -4059,7 +4471,8 @@ export type Database = {
           channel: string
           client_id?: string | null
           conversation_id?: string | null
-          event_id: string
+          direction?: string
+          event_id?: string | null
           html_body?: string | null
           id?: string
           message_id?: string | null
@@ -4081,7 +4494,8 @@ export type Database = {
           channel?: string
           client_id?: string | null
           conversation_id?: string | null
-          event_id?: string
+          direction?: string
+          event_id?: string | null
           html_body?: string | null
           id?: string
           message_id?: string | null
@@ -4113,11 +4527,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "communication_inbound_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_workspace_rows"
+            referencedColumns: ["conversation_id"]
+          },
+          {
             foreignKeyName: "communication_inbound_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "communication_provider_events"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_inbound_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_workspace_rows"
+            referencedColumns: ["latest_message_id"]
           },
           {
             foreignKeyName: "communication_inbound_message_id_fkey"
@@ -4502,6 +4930,7 @@ export type Database = {
           notes: string
           override_reason: string
           pet_id: string
+          reminders_enabled: boolean
           result_date: string | null
           result_document_id: string | null
           status: string
@@ -4524,6 +4953,7 @@ export type Database = {
           notes?: string
           override_reason?: string
           pet_id: string
+          reminders_enabled?: boolean
           result_date?: string | null
           result_document_id?: string | null
           status: string
@@ -4546,6 +4976,7 @@ export type Database = {
           notes?: string
           override_reason?: string
           pet_id?: string
+          reminders_enabled?: boolean
           result_date?: string | null
           result_document_id?: string | null
           status?: string
@@ -5708,6 +6139,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_patient_qol_scale_addendum: {
+        Args: { p_assessment_id: string; p_content: string; p_id: string }
+        Returns: {
+          assessment_id: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_qol_scale_addenda"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      appointment_reminder_channel: {
+        Args: { p_client_id: string }
+        Returns: string
+      }
       cancel_appointment: {
         Args: { p_expected_version: number; p_id: string }
         Returns: Database["public"]["Tables"]["appointments"]["Row"]
@@ -5747,6 +6198,80 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      cloudtalk_app_send_text: { Args: { p_body: string }; Returns: string }
+      cloudtalk_duration_text: { Args: { p_seconds: number }; Returns: string }
+      communication_sms_provider: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      contact_sms_consent_disclosure: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      outbound_delivery_sms_permitted: {
+        Args: { p_delivery_id: string; p_lease_owner: string }
+        Returns: boolean
+      }
+      patient_vaccine_status_summary: {
+        Args: { p_pet_id: string }
+        Returns: Json
+      }
+      preview_vaccine_certificate_v2_internal: {
+        Args: {
+          p_details: Json
+          p_kind: string
+          p_pet_id: string
+          p_rabies_treatment_id: string
+        }
+        Returns: Json
+      }
+      project_cloudtalk_source: {
+        Args: { p_resource_id: string }
+        Returns: string
+      }
+      project_cloudtalk_source_safely: {
+        Args: { p_resource_id: string }
+        Returns: string
+      }
+      record_anesthesia_drug_administration: {
+        Args: {
+          p_id: string
+          p_pet_id: string
+          p_record_id: string
+          p_request: Json
+        }
+        Returns: {
+          administered_at: string
+          created_at: string
+          created_by: string
+          dose: string
+          expires_on: string | null
+          historical: boolean
+          id: string
+          invoice_id: string | null
+          kind: string
+          lot_id: string | null
+          lot_number: string
+          manufacturer: string
+          next_due_on: string | null
+          pet_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          request: Json
+          route: string
+          site: string
+          source: string
+          veterinarian: string
+          veterinarian_license: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_treatments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       record_outbound_delivery_result: {
         Args: {
           p_delivery_id: string
@@ -5766,6 +6291,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      redact_private_capabilities: {
+        Args: { p_text: string }
+        Returns: string
+      }
+      redact_stored_cloudtalk_capabilities: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      retry_cloudtalk_projections: {
+        Args: { p_limit?: number }
+        Returns: {
+          projected: number
+          still_failing: number
+        }[]
       }
       retry_outbound_delivery: {
         Args: {
@@ -5843,6 +6383,16 @@ export type Database = {
         }
         Returns: Json
       }
+      list_household_timeline: {
+        Args: {
+          p_before_at?: string
+          p_before_key?: string
+          p_client_id: string
+          p_kinds?: string[]
+          p_limit?: number
+        }
+        Returns: Json
+      }
       list_patient_imported_histories: {
         Args: {
           p_before_at?: string
@@ -5851,6 +6401,133 @@ export type Database = {
           p_pet_id: string
         }
         Returns: Json
+      }
+      list_patient_timeline: {
+        Args: {
+          p_before_at?: string
+          p_before_key?: string
+          p_kinds?: string[]
+          p_limit?: number
+          p_patient_id: string
+        }
+        Returns: Json
+      }
+      save_catalog_vaccine_profile: {
+        Args: {
+          p_default_booster_interval_days: number
+          p_expected_version: number
+          p_group_key: string
+          p_labeled_duration: string
+          p_product_id: string
+          p_review_note: string
+          p_species: string[]
+          p_vaccine_type: string
+        }
+        Returns: {
+          default_booster_interval_days: number | null
+          group_key: string | null
+          id: string
+          labeled_duration: string | null
+          product_id: string
+          review_note: string
+          species: string[]
+          updated_at: string
+          updated_by: string
+          vaccine_type: string | null
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "catalog_vaccine_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_patient_qol_scale: {
+        Args: {
+          p_assessed_at: string
+          p_assessor: string
+          p_expected_version: number
+          p_happiness: number
+          p_happiness_note: string
+          p_hunger: number
+          p_hunger_note: string
+          p_hurt: number
+          p_hurt_note: string
+          p_hydration: number
+          p_hydration_note: string
+          p_hygiene: number
+          p_hygiene_note: string
+          p_id: string
+          p_mobility: number
+          p_mobility_note: string
+          p_more_good_days: number
+          p_more_good_days_note: string
+          p_notes: string
+          p_pet_id: string
+        }
+        Returns: {
+          assessed_at: string
+          assessor: string
+          created_at: string
+          created_by: string
+          happiness: number | null
+          happiness_note: string
+          hunger: number | null
+          hunger_note: string
+          hurt: number | null
+          hurt_note: string
+          hydration: number | null
+          hydration_note: string
+          hygiene: number | null
+          hygiene_note: string
+          id: string
+          mobility: number | null
+          mobility_note: string
+          more_good_days: number | null
+          more_good_days_note: string
+          notes: string
+          pet_id: string
+          scale_version: string
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          total: number | null
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_qol_scale_assessments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_qol_scale_reference: {
+        Args: {
+          p_enabled: boolean
+          p_expected_version: number
+          p_reference_label: string
+          p_reference_total: number
+          p_review_note: string
+        }
+        Returns: {
+          enabled: boolean
+          id: string
+          reference_label: string
+          reference_total: number | null
+          review_note: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "qol_scale_reference_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       search_patient_problems: {
         Args: { p_limit?: number; p_pet_id: string; p_search: string }
@@ -5875,6 +6552,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      read_household_360: { Args: { p_client_id: string }; Returns: Json }
+      read_patient_360: { Args: { p_patient_id: string }; Returns: Json }
       read_patient_problem_import_provenance: {
         Args: { p_pet_id: string; p_problem_ids: string[] }
         Returns: Json
@@ -6703,6 +7382,46 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      sign_patient_qol_scale: {
+        Args: { p_expected_version: number; p_id: string }
+        Returns: {
+          assessed_at: string
+          assessor: string
+          created_at: string
+          created_by: string
+          happiness: number | null
+          happiness_note: string
+          hunger: number | null
+          hunger_note: string
+          hurt: number | null
+          hurt_note: string
+          hydration: number | null
+          hydration_note: string
+          hygiene: number | null
+          hygiene_note: string
+          id: string
+          mobility: number | null
+          mobility_note: string
+          more_good_days: number | null
+          more_good_days_note: string
+          notes: string
+          pet_id: string
+          scale_version: string
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          total: number | null
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patient_qol_scale_assessments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       void_billing_invoice: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: {
@@ -7485,7 +8204,8 @@ export type Database = {
           channel: string
           client_id: string | null
           conversation_id: string | null
-          event_id: string
+          direction: string
+          event_id: string | null
           html_body: string | null
           id: string
           message_id: string | null
@@ -7558,7 +8278,8 @@ export type Database = {
           channel: string
           client_id: string | null
           conversation_id: string | null
-          event_id: string
+          direction: string
+          event_id: string | null
           html_body: string | null
           id: string
           message_id: string | null
@@ -7834,6 +8555,7 @@ export type Database = {
           notes: string
           override_reason: string
           pet_id: string
+          reminders_enabled: boolean
           result_date: string | null
           result_document_id: string | null
           status: string

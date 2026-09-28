@@ -19,6 +19,9 @@ import {
   quantityValue,
   practiceTimestamp,
 } from "../inventory/stock-policy";
+import { readVaccineProfiles } from "../vaccines/api";
+import { vaccineProfileQueryKey } from "../vaccines/profile-display";
+import { suggestedDueDate } from "../vaccines/vaccine-status";
 interface PatientTreatmentsProps {
   petId: string;
   clientId: string;
@@ -80,6 +83,11 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
   const [lotSearch, setLotSearch] = useState("");
   const [page, setPage] = useState(0);
   const [validation, setValidation] = useState("");
+  // Controlled only so a clinician can explicitly pre-fill from the catalog default.
+  const [lotId, setLotId] = useState("");
+  const [administered, setAdministered] = useState("");
+  const [due, setDue] = useState("");
+  const [prefilledFrom, setPrefilledFrom] = useState<number | null>(null);
   const state = useStockMutation(`treatment:${petId}`);
   const alerts = usePatientAlertReview(petId);
   const [acknowledgedHash, setAcknowledgedHash] = useState<string | null>(null);
@@ -100,6 +108,23 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
     queryKey: ["inventory", "treatment-lots", lotSearch],
     queryFn: () => lots(lotSearch),
   });
+  const selectedLot = stock.data?.find((l) => l.id === lotId);
+  const vaccineProductId =
+    !historical && selectedLot?.kind === "vaccine" ? selectedLot.product_id : null;
+  const vaccineProfile = useQuery({
+    queryKey: vaccineProfileQueryKey(vaccineProductId ? [vaccineProductId] : []),
+    enabled: Boolean(vaccineProductId),
+    queryFn: () => readVaccineProfiles([vaccineProductId!]),
+  });
+  const defaultInterval =
+    vaccineProfile.data?.[0]?.default_booster_interval_days ?? null;
+  const suggestion = suggestedDueDate(administered, defaultInterval);
+  const resetControlled = () => {
+    setLotId("");
+    setAdministered("");
+    setDue("");
+    setPrefilledFrom(null);
+  };
   const invoices = useQuery({
     queryKey: ["billing", "drafts", clientId],
     queryFn: async () => {
@@ -157,6 +182,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
       const form = e.currentTarget;
       if (await state.retry()) {
         form.reset();
+        resetControlled();
         setAcknowledgedHash(null);
       }
       return;
@@ -180,7 +206,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
         veterinarian: String(v.get("veterinarian")),
         veterinarian_license: String(v.get("license")),
         administered_at: at,
-        next_due_on: String(v.get("due")) || null,
+        next_due_on: due || null,
         ...(historical
           ? {
               kind: String(v.get("kind")),
@@ -206,6 +232,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
         })
       ) {
         form.reset();
+        resetControlled();
         setAcknowledgedHash(null);
       } else if (!historical) {
         setAcknowledgedHash(null);
@@ -351,7 +378,16 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
               ) : (
                 <>
                   <StockField label="Lot to dispense">
-                    <select name="lot_id" className={selectClass} required>
+                    <select
+                      name="lot_id"
+                      className={selectClass}
+                      required
+                      value={lotId}
+                      onChange={(e) => {
+                        setLotId(e.target.value);
+                        setPrefilledFrom(null);
+                      }}
+                    >
                       <option value="">Choose available stock</option>
                       {stock.data
                         ?.slice(0, 100)
@@ -405,11 +441,53 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
                 <Input name="license" maxLength={100} />
               </StockField>
               <StockField label="Administration date/time (America/Denver)">
-                <Input name="administered" type="datetime-local" required />
+                <Input
+                  name="administered"
+                  type="datetime-local"
+                  required
+                  value={administered}
+                  onChange={(e) => setAdministered(e.target.value)}
+                />
               </StockField>
               <StockField label="Next due date (clinician chosen, optional)">
-                <Input name="due" type="date" />
+                <Input
+                  name="due"
+                  type="date"
+                  value={due}
+                  onChange={(e) => {
+                    setDue(e.target.value);
+                    setPrefilledFrom(null);
+                  }}
+                />
               </StockField>
+              {!historical && defaultInterval !== null && (
+                <div className="space-y-1 text-sm md:col-span-2">
+                  <p className="text-muted-foreground">
+                    Catalog default booster interval for this product:{" "}
+                    {defaultInterval} days (catalog value pending clinical
+                    review). It is a suggestion only.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!suggestion}
+                    onClick={() => {
+                      setDue(suggestion!);
+                      setPrefilledFrom(defaultInterval);
+                    }}
+                  >
+                    {suggestion
+                      ? `Pre-fill next due date: ${suggestion}`
+                      : "Enter the administration date to pre-fill"}
+                  </Button>
+                  {prefilledFrom !== null && (
+                    <p role="status" className="text-clinical-alert">
+                      Pre-filled from the catalog default ({prefilledFrom}{" "}
+                      days). Confirm or change the date before saving.
+                    </p>
+                  )}
+                </div>
+              )}
               {!historical && (
                 <label className="flex items-center gap-2 text-sm md:col-span-2">
                   <input

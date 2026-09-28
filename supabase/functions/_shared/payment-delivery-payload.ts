@@ -9,6 +9,7 @@ import {
   sha256Hex,
   verifyFrozenEmailPayload,
 } from "./release-email-payload.ts";
+import { cloudTalkSmsBody, isCloudTalkSender } from "./cloudtalk-sms.ts";
 
 export interface PaymentDeliveryRequest {
   grant_id: string;
@@ -84,15 +85,22 @@ export async function materializePaymentDelivery(
       r.invoice_payload_hash !== null ||
       context.invoice_payload_text !== null ||
       !/^\+[1-9][0-9]{7,14}$/.test(r.recipient) ||
-      !/^\+[1-9][0-9]{7,14}$/.test(sender.from) ||
-      !/^AC[0-9a-f]{32}$/i.test(sender.account_sid) ||
-      Object.keys(sender).sort().join() !== "account_sid,from"
+      !/^\+[1-9][0-9]{7,14}$/.test(sender.from)
     ) unavailable();
-    payload_text = new URLSearchParams({
-      From: sender.from,
-      To: r.recipient,
-      Body: message,
-    }).toString();
+    // The frozen sender shape selects the provider payload: CloudTalk JSON or Twilio form.
+    if (isCloudTalkSender(sender)) {
+      payload_text = cloudTalkSmsBody(sender.from, r.recipient, message);
+    } else {
+      if (
+        !/^AC[0-9a-f]{32}$/i.test(sender.account_sid) ||
+        Object.keys(sender).sort().join() !== "account_sid,from"
+      ) unavailable();
+      payload_text = new URLSearchParams({
+        From: sender.from,
+        To: r.recipient,
+        Body: message,
+      }).toString();
+    }
   } else {
     if (
       Object.keys(sender).sort().join() !== "from,reply_to" || !sender.from ||

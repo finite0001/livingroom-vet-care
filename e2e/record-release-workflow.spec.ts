@@ -555,7 +555,7 @@ async function fixture(
     }
     return route.fulfill({ json: [] });
   });
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
   await expect(
     page.getByRole("heading", {
       name: "Medical-record release packages",
@@ -765,7 +765,7 @@ test("malformed release sources show a local retry error without crashing the pa
     page.getByRole("button", { name: "Retry release data", exact: true }),
   ).toBeVisible({ timeout: 15000 });
   await expect(
-    page.getByRole("region", { name: "Clinical records", exact: true }),
+    page.getByRole("tablist", { name: "Patient record sections" }),
   ).toBeVisible();
   state.malformedSources = false;
   await page

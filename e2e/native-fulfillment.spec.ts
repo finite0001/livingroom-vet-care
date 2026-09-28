@@ -650,7 +650,7 @@ async function fixture(
     }
     return r.fulfill({ json: [] });
   });
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await page
     .getByRole("button", { name: "View signed snapshot", exact: true })
     .click();

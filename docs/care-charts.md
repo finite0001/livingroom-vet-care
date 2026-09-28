@@ -19,3 +19,31 @@ A linked photo must be a ready JPEG/PNG document belonging to the same patient. 
 - `correct_lesion_observation(p_id, p_observation_id, p_reason)` appends one reasoned correction per observation.
 
 `40001` indicates a stale record; preserve local form data and explicitly reload the current version. `23514` indicates invalid clinical metadata, transition or mismatched retry. `42501` indicates inactive/nonstaff/anonymous access. Draft JSON contains no calculated clinical interpretation.
+
+## HHHHHMM quality-of-life scale (migration `20260928130000_qol_hhhhhmm_scale.sql`)
+
+Requested by Dr. Susan Edler as a structured companion to the free-text template above, which remains unchanged. Named UI export: `QolScaleCard({ petId })`, mounted inside `PatientCareCharts` so its editors report into the same dirty-state guard.
+
+**Source.** The HHHHHMM Quality of Life Scale was developed by Dr. Alice Villalobos: Villalobos AE, Kaplan L. *Canine and Feline Geriatric Oncology: Honoring the Human-Animal Bond*. Ames, IA: Blackwell Publishing; 2007 (scale first published by Villalobos in 2004 and later revised). The seven categories are Hurt, Hunger, Hydration, Hygiene, Happiness, Mobility and More good days than bad, each scored 0–10 (total 0–70). This implementation reproduces only the category names and score ranges; it does not reproduce the published scoring guidance or interpretation. Dr. Edler should confirm the citation and any licensing/attribution expectations before practice use.
+
+**No clinical interpretation.** The software sums scores; it does not classify a total, suggest a prognosis, or make any end-of-life or treatment recommendation. The published "acceptable" cut-off is deliberately **not** displayed. An optional practice reference line exists only as an administrator setting (`qol_scale_reference_settings`), which ships **disabled with no total and no wording**. When an administrator enables it (a total 0–70, wording and a review note are all required), the trend shows a dashed line and a notice that it is a configured setting, pending Dr. Susan Edler's clinical review, and not a recommendation for the patient. It is never applied as a per-assessment label. Chart gridlines are neutral decades (0, 10, …, 70). Tracked as `C-PILOT-09` in `docs/clinical-staff-acceptance-register.json`.
+
+**Workflow.** A new assessment records date/time (America/Denver), assessor, a score and optional note (≤2000 chars) per category, and overall notes. Drafts may be partial; the total is `null` ("not available until all 7 categories are scored") until every category has a score. Signing requires all seven scores, freezes that version and stamps the signer from the session; corrections are appended addenda. Signed assessments reopen read-only. Drafts use optimistic revisions and client UUID retry keys exactly like the free-text QOL records (`useCareMutation`).
+
+**Trend.** The card charts totals (0–70) or any single category (0–10) for up to the 100 most recent **signed, fully scored** assessments in chronological order, reports the change since the previous signed assessment, and lists a per-category history table. Drafts are excluded from the trend. Pure helpers live in `src/hub/features/care-charts/qol-scale.ts`.
+
+### Database contract
+
+- `patient_qol_scale_assessments`: seven `smallint` categories with `CHECK (0–10)`, generated stored `total` (sum; null while any category is null), `qol_scale_signed_requires_all_categories` CHECK, `scale_version='hhhhhmm-villalobos'`. The `qol_scale_guard` trigger requires active staff, stamps authorship/versions, rejects deletes, and rejects any update of a signed row (`23514`).
+- `patient_qol_scale_addenda`: append-only; signed assessments only.
+- `qol_scale_reference_settings`: single row (fixed UUID); ADMIN-only via RPC; revision-stamped and audited.
+- Authenticated/service users have SELECT only (active-staff RLS); all writes use security-definer RPCs; all three tables are audited by `audit_trigger_fn`.
+
+RPCs (errors: `40001` stale version, `23514` invalid data/transition/replay mismatch, `42501` inactive/nonstaff/non-admin):
+
+- `save_patient_qol_scale(p_id, p_pet_id, p_expected_version, p_assessed_at, p_assessor, p_hurt, p_hunger, p_hydration, p_hygiene, p_happiness, p_mobility, p_more_good_days, p_hurt_note, p_hunger_note, p_hydration_note, p_hygiene_note, p_happiness_note, p_mobility_note, p_more_good_days_note, p_notes)` — scores are integers 0–10 or null (draft); notes are text (empty string when blank).
+- `sign_patient_qol_scale(p_id, p_expected_version)` — idempotent for the same signer.
+- `add_patient_qol_scale_addendum(p_id, p_assessment_id, p_content)` — idempotent by ID.
+- `save_qol_scale_reference(p_expected_version, p_enabled, p_reference_total, p_reference_label, p_review_note)` — ADMIN only.
+
+Tests: `supabase/tests/qol_scale.test.sql` (pgTAP: ranges, required categories at signing, immutability, addenda, reference setting permissions, RLS, audit), `tests/care-charts/qol-scale.test.ts` (totals, trend ordering, chart geometry, reference gating, no hardcoded thresholds), `e2e/qol-scale.spec.ts` (live total, partial-draft sign block, sign → read-only, trend/series switch, addendum, reference line only when configured).
