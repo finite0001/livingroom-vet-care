@@ -55,3 +55,23 @@ test('lost finalization reply recovers committed evidence on the next request', 
   assert.equal((await handler(request())).status, 503); assert.equal((await handler(request())).status, 200);
   assert.deepEqual(f.counts().slice(0, 2), [1, 1]);
 });
+test('AgentMail leases hand the database-issued provider identity to retrieval', async () => {
+  const f = fixture();
+  Object.assign(f.lease, { provider: 'agentmail', provider_message_id: '<m@example.test>', provider_inbox_id: 'inbox_x' });
+  let seen: InboundCaptureLease | undefined;
+  f.deps.retrieve = async (_email, _metadata, lease) => { seen = lease; return { bytes: new TextEncoder().encode('%PDF-'), filename: 'file.pdf', mimeType: 'application/pdf', sha256: f.ready.sha256 }; };
+  const response = await createInboundAttachmentCaptureHandler(f.deps)(request());
+  assert.equal(response.status, 200);
+  assert.equal(seen?.provider_message_id, '<m@example.test>');
+  assert.equal(seen?.provider_inbox_id, 'inbox_x');
+});
+test('unknown provider or incomplete AgentMail lease prevents provider retrieval', async () => {
+  for (const change of [{ provider: 'gmail' }, { provider: 'agentmail', provider_message_id: null, provider_inbox_id: 'inbox_x' },
+    { provider: 'agentmail', provider_message_id: '<m@example.test>' }]) {
+    const f = fixture();
+    Object.assign(f.lease, change);
+    const response = await createInboundAttachmentCaptureHandler(f.deps)(request());
+    assert.equal(response.status, 503);
+    assert.deepEqual(f.counts(), [0, 0, 0]);
+  }
+});

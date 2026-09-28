@@ -1,6 +1,6 @@
 # Outbound messaging environments
 
-Current sending uses reviewed durable queue intents and the `dispatch-outbox` worker. `send-email` and `send-sms` are retired HTTP410 endpoints; do not use them for commissioning. `send-provider-email` is not commissioned. Missing credentials or settings cannot create a successful delivery. Browser settings cannot override server policy. See [the outbox contract](communications-outbox.md) and [managed worker authentication](service-worker-authentication.md).
+Current sending uses reviewed durable queue intents and the `dispatch-outbox` worker (email through Resend, SMS through CloudTalk). The legacy `send-email` and `send-sms` functions were deleted from the repository on 2026-09-27 and must be deleted from both hosted projects (see the [go-live runbook](go-live-runbook-2026-09.md) §2). Resend is outbound only; client replies are received by AgentMail ([AgentMail inbound](agentmail-inbound.md)). `send-provider-email` is not commissioned. Missing credentials or settings cannot create a successful delivery. Browser settings cannot override server policy. See [the outbox contract](communications-outbox.md) and [managed worker authentication](service-worker-authentication.md).
 
 ## Server configuration
 
@@ -12,9 +12,10 @@ Set these as Supabase Edge Function secrets per project, never Vite variables or
 | `OUTBOUND_DELIVERY_MODE` | `disabled`, `test`, or `live`. Missing means disabled. Unknown values reject requests. |
 | `OUTBOUND_TEST_EMAILS` | Comma-separated exact bare mailboxes for email test sends. No wildcards or domain rules. |
 | `OUTBOUND_TEST_PHONES` | Comma-separated phone numbers with explicit `+` country codes for SMS test sends. |
-| `RESEND_API_KEY` | Resend credential used only by server-side dispatch and receiving. |
+| `RESEND_API_KEY` | Resend credential used only by server-side dispatch (and capture of historical Resend inbound attachments). |
 | `RESEND_FROM` | Bare email or `Practice Name <email>` on a sending domain verified in Resend. |
-| `RESEND_REPLY_TO` | Required bare practice mailbox receiving client/provider replies. |
+| `AGENTMAIL_INBOX_ADDRESS` | Bare address of the AgentMail receiving inbox. Used as Reply-To on every app email. Required in live mode. |
+| `RESEND_REPLY_TO` | Legacy. Optional; if set it must equal `AGENTMAIL_INBOX_ADDRESS`, otherwise every email send fails closed. |
 | `SMS_PROVIDER` | `cloudtalk` (default when unset) or `twilio`. Any other value stops the SMS workers with HTTP 503 before anything is claimed. See [CloudTalk outbound SMS](launch-evidence/2026-09-28-cloudtalk-outbound-sms.md). |
 | `CLOUDTALK_API_KEY_ID` / `CLOUDTALK_API_KEY_SECRET` | CloudTalk API key pair (HTTP Basic). Server-only; shared with the call-media function. |
 | `CLOUDTALK_ALLOWED_NUMBERS` | Comma-separated exact E.164 practice numbers. The SMS sender must be one of them. |
@@ -33,7 +34,7 @@ Test mode never reroutes a client message to an allowlisted inbox or phone. Crea
 
 ## Reply routing
 
-Configure an owned domain and a working practice mailbox before enabling email. Verify DNS/sending-domain ownership in Resend, and test that replies reach the practice's intended inbox. `RESEND_REPLY_TO` is validated syntactically and added to every email, including provider emails with attachments. The function cannot prove mailbox ownership, inbox readiness, or delivery through syntax validation; those require operational verification. It is deliberately required in test mode as well so tests exercise the real reply route. No Gmail dependency is introduced.
+Configure an owned domain and the AgentMail receiving inbox before enabling email. Verify DNS/sending-domain ownership in Resend, and test that replies reach the app through AgentMail. The Reply-To comes from `resolveEmailReplyTo` (`_shared/delivery-policy.ts`): `AGENTMAIL_INBOX_ADDRESS`, required in live mode, with a conflicting `RESEND_REPLY_TO` failing closed. It is validated syntactically and added to every email, including provider emails with attachments. Prepared payloads freeze the Reply-To, so an email prepared before the address changes fails its frozen-payload check and must be prepared again. The function cannot prove mailbox ownership, inbox readiness, or delivery through syntax validation; those require operational verification. It is deliberately required in test mode as well so tests exercise the real reply route. No Gmail dependency is introduced.
 
 ## Durable result and retry contract
 

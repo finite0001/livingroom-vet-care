@@ -1,8 +1,11 @@
 export class WebhookError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** Database SQLSTATE behind a 503, when known. Never sent to the caller. */
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 export async function boundedBody(
@@ -36,7 +39,8 @@ export async function boundedBody(
 export interface ResendVerifier {
   (payload: string, headers: Record<string, string>): unknown;
 }
-export function verifiedResend(
+/** Svix proof (Resend and AgentMail both deliver webhooks through Svix). */
+export function verifiedSvix(
   raw: string,
   headers: Headers,
   verify: ResendVerifier,
@@ -117,3 +121,5 @@ export async function digestMetadata(value: unknown): Promise<string> {
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 }
+/** Historical name: Resend was the first Svix provider. */
+export const verifiedResend = verifiedSvix;

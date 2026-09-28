@@ -192,6 +192,8 @@ async function sendEmail(delivery: OutboundDelivery, message: PreparedMessage): 
     RESEND_API_KEY: Deno.env.get("RESEND_API_KEY"),
     RESEND_FROM: Deno.env.get("RESEND_FROM"),
     RESEND_REPLY_TO: Deno.env.get("RESEND_REPLY_TO"),
+    AGENTMAIL_INBOX_ADDRESS: Deno.env.get("AGENTMAIL_INBOX_ADDRESS"),
+    OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE"),
   });
 
   try {

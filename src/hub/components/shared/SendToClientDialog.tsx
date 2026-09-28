@@ -76,9 +76,9 @@ function SendToClientContent({
   const queryClient = useQueryClient();
   const queue = useMessageQueue(`client-dialog:${clientId}`, isOpen);
   const { data: client, isFetched: clientFetched } = useClient(clientId);
-  // Strict opt-in, matching the server's send-sms gate: SMS is offered only once
-  // consent has actually been fetched AND there is an explicit opted_in=true row
-  // for the client's primary phone (per-phone match, like the edge function).
+  // Strict opt-in, matching the server's enqueue-message consent gate: SMS is
+  // offered only once consent has actually been fetched AND there is an explicit
+  // opted_in=true row for the client's primary phone (per-phone match).
   const { data: consent, isFetched: consentFetched } =
     useClientConsent(clientId);
 

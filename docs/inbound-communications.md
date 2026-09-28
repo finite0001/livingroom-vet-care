@@ -2,14 +2,17 @@
 
 This increment supplies provider-signed webhook handlers, durable event processing, conservative household/thread matching, STOP/START ordering and per-staff inbox reads. It does not configure provider dashboards, send messages, modify DNS, automatically download attachments, or publish a public contact address.
 
+> **2026-09-27 owner decision:** client email is received through **AgentMail**, not Resend. Resend is outbound only. See [AgentMail inbound](agentmail-inbound.md) for the webhook, processing, threading and attachment contract. The Resend receiving sections below describe the retained historical path: `resend-webhook` is now an inert 410 stub, and existing Resend inbound rows and captures keep working.
+
 ## Endpoint commissioning
 
-- Resend delivery/status callbacks: POST JSON to `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/resend-delivery-webhook`; configure `RESEND_WEBHOOK_SECRET`. Register the supported delivery events needed for receipts, bounces, complaints and failures.
+- AgentMail inbound email: POST JSON (Svix-signed) to `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/agentmail-inbound-webhook`; configure `AGENTMAIL_WEBHOOK_SECRET`, `AGENTMAIL_INBOX_ID`, `AGENTMAIL_INBOX_ADDRESS` and, for `process-inbound`/`capture-inbound-attachment`, `AGENTMAIL_API_KEY`. Subscribe only `message.received`.
+- Resend delivery/status callbacks: POST JSON to `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/resend-delivery-webhook`; configure `RESEND_DELIVERY_WEBHOOK_SECRET` (this endpoint's own secret). Register `email.delivered`, `email.bounced`, `email.complained` and `email.failed`. Receipts settle the canonical outbox; an id the outbox does not know may settle a legacy `outbound_deliveries` row, otherwise the callback fails for provider retry. `email.received` is refused with 410.
 - Twilio delivery status callbacks: POST form data to `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/twilio-message-status-callback`; configure `TWILIO_STATUS_CALLBACK_URL` to exactly that externally registered URL, plus `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_FROM_NUMBER`.
 - Twilio inbound SMS: POST form data to `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/twilio-inbound-sms`; configure `TWILIO_INBOUND_WEBHOOK_URL` to exactly that externally registered URL. Enable Advanced Opt-Out to obtain provider `OptOutType` metadata.
 - `process-inbound`: POST with managed server-key authentication (see [worker authentication](service-worker-authentication.md)); configure provider read credentials (`RESEND_API_KEY`, Twilio account/token). Each invocation handles one durable event. Schedule repeated invocations after controlled commissioning.
 
-Do not configure provider dashboards to call legacy slugs such as `resend-webhook` or `twilio-webhook` for the launch path. Keep old slugs unreferenced unless a later migration plan explicitly retires or reuses them.
+Do not configure provider dashboards to call legacy slugs such as `resend-webhook` (inert since 2026-09-27) or `twilio-webhook` for the launch path. Keep old slugs unreferenced unless a later migration plan explicitly retires or reuses them.
 
 The two provider webhook functions use `verify_jwt=false`, because providers do not send Supabase user tokens. Each requires valid provider proof before its first database operation. `process-inbound` also uses `verify_jwt=false` with managed server authentication; this does not grant staff or public callers worker access. Processing and database receipt/processing RPCs are service-only. No handler logs raw payloads or credentials.
 

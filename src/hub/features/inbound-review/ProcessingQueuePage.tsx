@@ -373,7 +373,7 @@ function ProcessingQueue({ actor, admin }: { actor: string; admin: boolean }) {
         {data?.events.map((e) => (
           <li key={e.id} className="space-y-2 rounded-md border p-3">
             <p className="font-medium">
-              {e.provider === "resend" ? "Resend" : "Twilio"} · {e.event_type} ·{" "}
+              {e.provider === "agentmail" ? "AgentMail" : e.provider === "resend" ? "Resend" : "Twilio"} · {e.event_type} ·{" "}
               {e.state}
             </p>
             <p>{failureLabel(e.last_error)}</p>

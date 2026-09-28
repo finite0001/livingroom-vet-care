@@ -1,5 +1,7 @@
 # Practice mail commissioning plan
 
+> **Superseded for receiving (owner decision 2026-09-27):** Resend is outbound only. Client replies are received by an **AgentMail** inbox, recommended as `care@reply.thelivingroom.vet` on an AgentMail custom domain for the `reply` subdomain, and not by Resend receiving. The Resend receiving steps below are historical. See [AgentMail inbound](agentmail-inbound.md) and the [go-live runbook](go-live-runbook-2026-09.md) §8.
+
 Status: Fastmail root-domain setup verified on 2026-09-13 after the owner created the trial account and authorized completing setup. One Resend team remains selected for automated client communications and authentication/security mail. Purchases are not authorized. Do not create or purchase a second Resend team. Existing sending verification remains intact.
 
 ## Verified setup checkpoint — 2026-09-13

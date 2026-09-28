@@ -1,6 +1,6 @@
 # Client message queue integration
 
-All five client SMS/email send paths now call `enqueue-message` with a stable request UUID. The old `send-email`, `send-sms` and `send-provider-email` endpoints return 410 without database or provider access. New messages use the authenticated `ensure_active_conversation` RPC; household creation and consent recording happen in the household workflow.
+All five client SMS/email send paths now call `enqueue-message` with a stable request UUID. The old `send-email` and `send-sms` functions are deleted (2026-09-27); `send-provider-email` still returns 410 without database or provider access. Bulk campaigns have no canonical queue path and stay unavailable (`/hub/tools/campaigns` renders the unavailable page; the unused `use-campaigns` hook that inserted `SENDING` campaigns was removed). New messages use the authenticated `ensure_active_conversation` RPC; household creation and consent recording happen in the household workflow.
 
 The composer clears only after durable queue confirmation or an actor-scoped outbox lookup recovers a lost response. Concurrent clicks share one promise. An uncertain request keeps its original UUID and exact payload, and editing cannot silently create another request. Timeline states distinguish queued, preparing, provider acceptance, delivery, failed and uncertain; inbound delivery-failure annotations are shown separately.
 

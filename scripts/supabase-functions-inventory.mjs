@@ -9,15 +9,18 @@ const functionsDirectory = resolve('supabase/functions');
 
 const expectedHostedFunctions = [
   { slug: 'invite-staff', verifyJwt: true, purpose: 'staff bootstrap/invitations' },
-  { slug: 'send-email', verifyJwt: true, purpose: 'staff client email enqueue endpoint' },
-  { slug: 'send-sms', verifyJwt: true, purpose: 'staff client SMS enqueue endpoint' },
+  { slug: 'enqueue-message', verifyJwt: true, purpose: 'staff client email/SMS enqueue into communication_outbox' },
   { slug: 'dispatch-outbound-deliveries', verifyJwt: false, purpose: 'token-protected outbound delivery worker' },
-  { slug: 'resend-delivery-webhook', verifyJwt: false, purpose: 'signed Resend delivery callback' },
+  { slug: 'resend-delivery-webhook', verifyJwt: false, purpose: 'signed Resend delivery/status callback (own secret)' },
+  { slug: 'agentmail-inbound-webhook', verifyJwt: false, purpose: 'signed AgentMail inbound email webhook' },
   { slug: 'twilio-message-status-callback', verifyJwt: false, purpose: 'signed Twilio delivery status callback' },
   { slug: 'twilio-inbound-sms', verifyJwt: false, purpose: 'signed Twilio inbound SMS webhook' },
   { slug: 'cloudtalk-webhook', verifyJwt: false, purpose: 'signed CloudTalk call, SMS, and AI event webhook' },
   { slug: 'cloudtalk-call-media', verifyJwt: true, purpose: 'administrator-only CloudTalk recording and transcript proxy' },
 ];
+
+// Retired 2026-09-27. They must be deleted from hosted projects, not redeployed.
+const retiredMustBeAbsent = ['send-email', 'send-sms'];
 
 const intentionallyNotCommissioned = [
   { slug: 'send-provider-email', reason: 'references provider delivery tables outside the launch baseline' },
@@ -124,6 +127,8 @@ const inventory = {
     .filter((slug) => !localSlugSet.has(slug))
     .sort((left, right) => left.localeCompare(right)),
   intentionallyNotCommissioned,
+  retiredMustBeAbsent,
+  retiredStillDeployed: retiredMustBeAbsent.filter((slug) => remoteSlugSet.has(slug)),
 };
 
 const json = `${JSON.stringify(inventory, null, 2)}\n`;
