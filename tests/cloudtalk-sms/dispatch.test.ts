@@ -26,6 +26,29 @@ const ok = (success: unknown = true, data: unknown = {}) =>
 const status = (code: number) =>
   new Response(JSON.stringify({ responseData: { status: code, message: "x" } }), { status: code });
 
+const live = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
+
+test("live CloudTalk one-item array envelope is accepted (observed 2026-09-28)", async () => {
+  const outcome = await classifyCloudTalkSmsResponse(live({
+    responseData: [{ success: true, data: { recipient: "+18059076214", message: "m", sender: practice } }],
+  }));
+  assert.deepEqual(outcome, { kind: "accepted", reference: null });
+});
+
+test("one-item array envelope carries rejections through", async () => {
+  const outcome = await classifyCloudTalkSmsResponse(live({ responseData: [{ success: false, data: "Unknown number" }] }));
+  assert.deepEqual(outcome, { kind: "rejected", retryable: false, code: "cloudtalk_unknown_number" });
+});
+
+test("empty or multi-item array envelopes stay ambiguous and are never resent", async () => {
+  for (const responseData of [[], [{ success: true, data: {} }, { success: true, data: {} }]]) {
+    assert.deepEqual(await classifyCloudTalkSmsResponse(live({ responseData })), {
+      kind: "ambiguous",
+      code: "cloudtalk_response_unreadable",
+    });
+  }
+});
+
 function cloudTalkEnv(): OutboxEnvironment {
   return {
     APP_ENV: "staging",

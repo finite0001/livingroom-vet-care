@@ -138,7 +138,7 @@ const knownFailures: Record<string, string> = {
 
 /**
  * Maps a CloudTalk HTTP response to an outcome. Documented: 200 with
- * responseData.success; 400/401/403/406 client errors; 429 throttling; 500.
+ * responseData.success (live responses wrap it in a one-item array); 400/401/403/406 client errors; 429 throttling; 500.
  * Unverified and handled conservatively: whether `success` is a boolean or the
  * string "true" (the published example shows a string placeholder), and whether
  * any message id is ever present in `data` (captured only if it is).
@@ -158,9 +158,14 @@ export async function classifyCloudTalkSmsResponse(response: Response): Promise<
   } catch {
     return { kind: "ambiguous", code: "cloudtalk_response_unreadable" };
   }
-  const envelope = payload && typeof payload === "object" && !Array.isArray(payload)
+  const raw = payload && typeof payload === "object" && !Array.isArray(payload)
     ? (payload as Record<string, unknown>).responseData
     : null;
+  // Live CloudTalk (observed 2026-09-28) wraps the single result in a one-item
+  // array: {"responseData":[{"success":true,"data":{...}}]}. The published spec
+  // shows a bare object. Accept exactly one result either way; anything else
+  // (empty or multi-item arrays) stays ambiguous and is never resent.
+  const envelope = Array.isArray(raw) ? (raw.length === 1 ? raw[0] : null) : raw;
   if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) {
     return { kind: "ambiguous", code: "cloudtalk_response_unreadable" };
   }
