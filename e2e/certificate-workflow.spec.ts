@@ -158,7 +158,7 @@ async function fixture(page: Page, verified = true) {
         return route.fulfill({
           status: 409,
           json: {
-            code: "40001",
+            code: "PT409",
             message:
               "Certificate details changed; reload and review before issuing",
           },

@@ -375,7 +375,7 @@ test("consent records server version and preserves stale entry without bypassing
       return route.fulfill({
         status: 409,
         json: {
-          code: "40001",
+          code: "PT409",
           message: "Consent changed; reload before saving",
         },
       });

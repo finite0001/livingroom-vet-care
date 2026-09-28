@@ -379,7 +379,7 @@ export function createStaffPaymentAccessHandler(
       if (!prepared) {
         // Only SQL can confirm exact timestamp/intent equality, including microseconds.
         const code = object(error) ? error.code : undefined;
-        if (["23505", "23514", "22023", "40001"].includes(String(code)))
+        if (["23505", "23514", "22023", "PT409"].includes(String(code)))
           return denied(409);
         if (code === "42501") return denied(404);
       } else {

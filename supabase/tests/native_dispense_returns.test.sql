@@ -90,7 +90,7 @@ reset role;insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-
 insert into data select 'policy',configure_native_return_policy((select id from fx where k='policy'),v) from data where k='policy-request';
 select is(configure_native_return_policy((select id from fx where k='policy'),(select v from data where k='policy-request')),(select v from data where k='policy'),'Policy exact UUID retry');
 select is(recover_native_return_policy((select id from fx where k='policy')),(select v from data where k='policy'),'Policy recovery exact');
-select throws_ok($$select record_native_dispense_return((select id from fx where k='restock'),(select v from data where k='disabled-restock-request'))$$,'40001','Return review context changed','Policy update requires fresh restock review');
+select throws_ok($$select record_native_dispense_return((select id from fx where k='restock'),(select v from data where k='disabled-restock-request'))$$,'PT409','Return review context changed','Policy update requires fresh restock review');
 select save_catalog_product((select id from fx where k='product'),1,'Synthetic medication','medication','','tablet',100,false);
 select ok(preview_native_dispense_return((select v from data where k='restock-intent'))->'blockers' ? 'product_inactive','Inactive catalog blocks available stock return');
 select save_catalog_product((select id from fx where k='product'),2,'Synthetic medication','medication','','tablet',100,true);
@@ -112,7 +112,7 @@ select throws_ok($test$do $body$declare s text;begin
  s:=pg_get_functiondef('public.native_return_policy_verified(integer)'::regprocedure);
  s:=replace(s,'return d.document;','return jsonb_set(d.document,''{reviewed_at}'',''"2099-12-31T00:00:00Z"''::jsonb);');execute s;
  perform record_native_dispense_return(gen_random_uuid(),pg_temp.return_request((select v from data where k='restock-intent')));
-end$body$$test$,'40001','Return observation clock moved backwards','Regressed event clock cannot predate policy review');
+end$body$$test$,'PT409','Return observation clock moved backwards','Regressed event clock cannot predate policy review');
 set local role authenticated;
 select is(preview_native_dispense_return((select v from data where k='restock-intent'))->'allowed','true'::jsonb,'Reviewed retained sealed controlled quantities may restock');
 insert into data select 'restock-request',pg_temp.return_request(v) from data where k='restock-intent';

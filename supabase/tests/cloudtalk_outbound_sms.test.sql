@@ -91,7 +91,7 @@ select throws_ok($$select public.outbound_delivery_sms_permitted('52800000-0000-
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
-select throws_ok($$select public.outbound_delivery_sms_permitted('52800000-0000-4000-8000-000000000010','worker-b')$$,'40001',null,'Consent check requires the active lease');
+select throws_ok($$select public.outbound_delivery_sms_permitted('52800000-0000-4000-8000-000000000010','worker-b')$$,'PT409',null,'Consent check requires the active lease');
 select is(public.outbound_delivery_sms_permitted('52800000-0000-4000-8000-000000000010','worker-a'),false,'STOP blocks the legacy delivery queue at send time');
 select is(public.outbound_delivery_sms_permitted('52800000-0000-4000-8000-000000000011','worker-a'),false,'A delivery without a household consent record is not sent');
 reset role;

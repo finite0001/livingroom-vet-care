@@ -17,7 +17,7 @@ select lives_ok($$select public.save_patient_qol('39000000-0000-4000-8000-000000
 select lives_ok($$select public.save_patient_qol('39000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),null,now(),'Caregiver','Eating normally','','','','','','Qualitative only')$$,'Retry QOL creation preserves one draft');
 select is((select count(*) from public.patient_qol_records),1::bigint,'No duplicate QOL draft');
 select throws_ok($$select public.save_patient_qol('39000000-0000-4000-8000-000000000001',(select id from fx where k='other'),1,now(),'Caregiver','Eating normally','','','','','','Qualitative only')$$,'23514','Patient does not match chart','Cannot reparent QOL');
-select throws_ok($$select public.save_patient_qol('39000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),0,now(),'Caregiver','Changed','','','','','','Qualitative only')$$,'40001',null,'Stale QOL edit rejected');
+select throws_ok($$select public.save_patient_qol('39000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),0,now(),'Caregiver','Changed','','','','','','Qualitative only')$$,'PT409',null,'Stale QOL edit rejected');
 select throws_ok($$select public.save_patient_qol(gen_random_uuid(),(select id from fx where k='pet'),null,'-infinity','Caregiver','','','','','','','')$$,'23514',null,'Infinite QOL date rejected');
 select lives_ok($$select public.sign_patient_qol('39000000-0000-4000-8000-000000000001',1)$$,'Sign observed chart');
 select lives_ok($$select public.sign_patient_qol('39000000-0000-4000-8000-000000000001',1)$$,'Signing retry is idempotent');
@@ -29,7 +29,7 @@ select lives_ok($$select public.record_lesion_observation('39000000-0000-4000-80
 select lives_ok($$select public.record_lesion_observation('39000000-0000-4000-8000-000000000003','39000000-0000-4000-8000-000000000004',(select id from fx where k='pet'),null,now(),'Shoulder mass','dorsal',0.4,0.3,10,8,null,'Initial measurement',null)$$,'Observation retry uses stable operation');
 select is((select count(*) from public.patient_lesion_observations),1::bigint,'Retry does not duplicate observation');
 select throws_ok($$select public.record_lesion_observation(gen_random_uuid(),'39000000-0000-4000-8000-000000000004',(select id from fx where k='other'),1,now(),'Wrong patient','dorsal',0.4,0.3,10,8,null,'',null)$$,'23514',null,'Lesion cannot move to another patient');
-select throws_ok($$select public.record_lesion_observation(gen_random_uuid(),'39000000-0000-4000-8000-000000000004',(select id from fx where k='pet'),0,now(),'Stale label','dorsal',0.4,0.3,10,8,null,'',null)$$,'40001',null,'Stale map update rejected');
+select throws_ok($$select public.record_lesion_observation(gen_random_uuid(),'39000000-0000-4000-8000-000000000004',(select id from fx where k='pet'),0,now(),'Stale label','dorsal',0.4,0.3,10,8,null,'',null)$$,'PT409',null,'Stale map update rejected');
 select lives_ok($$select public.record_lesion_observation('39000000-0000-4000-8000-000000000005','39000000-0000-4000-8000-000000000004',(select id from fx where k='pet'),1,now(),'Shoulder mass','left',0.45,0.3,12,9,0,'Recheck',null)$$,'Reopen stable lesion and append recheck');
 select is((select version from public.patient_lesions where id='39000000-0000-4000-8000-000000000004'),2,'Map revision increments');
 select is((select length_mm from public.patient_lesion_observations where id='39000000-0000-4000-8000-000000000003'),10::numeric,'Original measurement retained');

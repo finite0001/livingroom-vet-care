@@ -26,8 +26,8 @@ select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='r
 select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,true,'[{"external_id":"101","payload":{"id":101,"animal_id":77,"date_of_prescription":{}}}]')$$,'23514',null,'Nested date denied');
 select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',(select (v->>'lease_id')::uuid from data where k='run'),1,false,(select v from data where k='items'));
 select is((stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,1,false,(select v from data where k='items'))).next_page,2,'Committed exact retry recovers without lease');
-select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,1,true,(select v from data where k='items'))$$,'40001',null,'Changed completion denied');
-select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,2,true,'[]')$$,'40001',null,'Fresh page requires current lease');
+select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,1,true,(select v from data where k='items'))$$,'PT409',null,'Changed completion denied');
+select throws_ok($$select stage_ezyvet_import_page((select id from fx where k='run'),'db550000-0000-4000-8000-000000000001',null,2,true,'[]')$$,'PT409',null,'Fresh page requires current lease');
 set local role authenticated;
 select is(recover_ezyvet_prescription_run((select id from fx where k='run'),(select id from fx where k='mapping'),'prescription')->>'next_page','2','Lost acknowledgement recovers cursor');
 select is(jsonb_array_length(list_ezyvet_prescription_runs((select id from fx where k='mapping'),'prescription')->'runs'),1,'Lost pointer run discoverable');

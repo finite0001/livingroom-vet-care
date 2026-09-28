@@ -18,7 +18,7 @@ function failureMessage(error: unknown): string {
     typeof error === "object" && error !== null && "code" in error
       ? (error as { code?: string }).code
       : null;
-  if (code === "40001")
+  if (code === "PT409")
     return "This appointment changed. Refresh and review before trying again.";
   return (
     (error as { message?: string })?.message ??

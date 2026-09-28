@@ -75,7 +75,7 @@ test("history preserves microsecond pagination and rejects duplicate or substitu
 });
 
 test("invalid requests fail before transport and database rejection retains its code", async () => {
-  const f = fixture(); let calls = 0; const error = { code: "40001", message: "Evidence changed" };
+  const f = fixture(); let calls = 0; const error = { code: "PT409", message: "Evidence changed" };
   const api = createMigrationResolutionApi({ async rpc() { calls++; return { data: null, error }; } }, f.actor, f.manifest);
   await assert.rejects(() => api.save({ ...f.request, page: 1 }));
   await assert.rejects(() => api.save({ ...f.request, action: "reopen" }));

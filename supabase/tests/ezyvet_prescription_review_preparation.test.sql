@@ -39,7 +39,7 @@ reset role;
 insert into user_roles(user_id,role) values('db560000-0000-4000-8000-000000000001','DVM'),('db560000-0000-4000-8000-000000000002','DVM');
 set local role authenticated;
 select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),'{}')$$,'23514',null,'Missing context rejected');
-select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v||'{"patient_version":9999999999}' from data where k='payload'))$$,'40001','Patient version changed','Stale patient version rejected without overflow');
+select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v||'{"patient_version":9999999999}' from data where k='payload'))$$,'PT409','Patient version changed','Stale patient version rejected without overflow');
 select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v||'{"interpretation":{}}' from data where k='payload'))$$,'23514','Exact prescription interpretation required','New preparation enforces clinical interpretation shape');
 insert into data select 'prepared',prepare_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),(select v from data where k='payload'));
 select is((select v#>>'{request,status}' from data where k='prepared'),'prepared','Review preparation retained');
@@ -60,7 +60,7 @@ update ezyvet_identity_heads set version=version+2 where resource='prescriptioni
 set local role authenticated;
 select is(recover_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet')),(select v from data where k='prepared'),'Original evidence recoverable after source revision change');
 select is(prepare_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),(select v from data where k='payload')),(select v from data where k='prepared'),'Committed preparation retry precedes mutable eligibility');
-select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v from data where k='payload'))$$,'40001','SOURCE_PRESCRIPTION_ITEM_STALE','New preparation cannot use stale evidence');
+select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select v from data where k='payload'))$$,'PT409','SOURCE_PRESCRIPTION_ITEM_STALE','New preparation cannot use stale evidence');
 select throws_ok($$select abandon_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),false)$$,'23514',null,'Abandonment requires explicit confirmation');
 select is(abandon_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'),true)#>>'{request,status}','abandoned','Original draft explicitly abandoned');
 select is(recover_ezyvet_prescription_review((select id from fx where k='review'),(select id from fx where k='pet'))#>'{request,review_context}',(select v#>'{request,review_context}' from data where k='prepared'),'Abandonment preserves original evidence');

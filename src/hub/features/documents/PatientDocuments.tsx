@@ -94,7 +94,7 @@ export function PatientDocuments({ petId }: PatientDocumentsProps) {
         failure &&
         typeof failure === "object" &&
         "code" in failure &&
-        failure.code === "40001"
+        failure.code === "PT409"
       )
         await refresh();
       setError(

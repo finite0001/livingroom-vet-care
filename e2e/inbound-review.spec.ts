@@ -165,7 +165,7 @@ async function fixture(page: Page) {
       if (state.race)
         return route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Other staff assigned" },
+          json: { code: "PT409", message: "Other staff assigned" },
         });
       if (state.failAfter) {
         state.failAfter = false;

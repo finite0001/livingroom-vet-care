@@ -52,7 +52,7 @@ reset role;
 update public.record_release_policy set accepted_schema_version=2;
 set local role authenticated;
 select public.add_patient_qol_addendum('69000000-0000-4000-8000-000000000015','69000000-0000-4000-8000-000000000001','Correction since preview');
-select throws_ok($$select pg_temp.confirm_charts('69000000-0000-4000-8000-000000000007',(select v from data where k='preview'))$$,'40001',null,'New chart addendum invalidates a stale preview');
+select throws_ok($$select pg_temp.confirm_charts('69000000-0000-4000-8000-000000000007',(select v from data where k='preview'))$$,'PT409',null,'New chart addendum invalidates a stale preview');
 update data set v=pg_temp.preview_charts((select v from data where k='selection')) where k='preview';
 select lives_ok($$select pg_temp.confirm_charts('69000000-0000-4000-8000-000000000007',(select v from data where k='preview'))$$,'Confirm extended package');
 select is((select count(*) from public.record_release_sources),4::bigint,'Every extended source linked');

@@ -76,7 +76,7 @@ export function createReconciliationHandler(deps:ReconciliationDependencies){ret
   if(context.id!==args.p_request_id||context.invoice_id!==args.p_invoice_id||context[args.p_family==="checkout"?"session_id":"refund_id"]!==args.p_provider_object_id||typeof context.livemode!=="boolean"||context.currency!=="usd")invalid();
   return {context,public:{invoice_id:str(args.p_invoice_id,uuid),family:str(args.p_family,/^(checkout|refund)$/),request_id:str(args.p_request_id,uuid),provider_object_id:String(args.p_provider_object_id),amount_cents:str(context.amount_cents,/^[1-9][0-9]{0,7}$/),currency:"usd",account_id:str(context.account_id,/^acct_[A-Za-z0-9]+$/),livemode:context.livemode,blocker_refs:refs(target.blocker_refs),snapshot_hash:str(target.snapshot_hash,hash)}};
  };
- if(action==="preview"){try{return reply(200,(await preview()).public);}catch(error){return deny(code(error)==="42501"?404:["23514","22023","40001"].includes(code(error))?409:503);}}
+ if(action==="preview"){try{return reply(200,(await preview()).public);}catch(error){return deny(code(error)==="42501"?404:["23514","22023","PT409"].includes(code(error))?409:503);}}
  let prepared=false;
  try{
   // This authenticated SQL RPC is the authority for exact case-argument equality.
@@ -84,7 +84,7 @@ export function createReconciliationHandler(deps:ReconciliationDependencies){ret
   if(!saved)invalid();prepared=true;
   if(saved.capture||saved.resolution)return reply(200,saved);
   if(!deps.providerEnabled)return deny(503);
-  const current=await preview();if(current.public.snapshot_hash!==saved.case.snapshot_hash)throw {code:"40001"};
+  const current=await preview();if(current.public.snapshot_hash!==saved.case.snapshot_hash)throw {code:"PT409"};
   const checkout=args.p_family==="checkout";
   const value=checkout?await deps.retrieveCheckout(String(args.p_provider_object_id),current.public.account_id,current.public.livemode):await deps.retrieveRefund(String(args.p_provider_object_id),current.public.account_id,current.public.livemode);
   if(value.id!==args.p_provider_object_id)throw {code:"23514"};
@@ -97,7 +97,7 @@ export function createReconciliationHandler(deps:ReconciliationDependencies){ret
   const captured=await read();if(!captured?.capture)invalid();return reply(200,captured);
  }catch(error){
   if(prepared){try{const recovered=await read();if(recovered?.capture)return reply(200,recovered);}catch{/* Capture remains uncertain. */}}
-  if(["23505","23514","22023","40001"].includes(code(error)))return deny(409);
+  if(["23505","23514","22023","PT409"].includes(code(error)))return deny(409);
   if(code(error)==="42501")return deny(404);
   return reply(202,{error:"Reconciliation proof unconfirmed",case_id:caseId,retry_requires_recovery:true});
  }

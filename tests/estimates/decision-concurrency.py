@@ -266,7 +266,7 @@ try:
         return publish(str(uuid.uuid4()), publishing(prep))
 
     g = ready(); operation_id = str(uuid.uuid4()); replacement_query = replacement(g)
-    contended(replacement_query, client_write(g, operation_id), rejected('40001'))
+    contended(replacement_query, client_write(g, operation_id), rejected('PT409'))
     check(outcome(g, operation_id)['status'] == 'unrecorded', 'Replacement-first invalidates waiting old-publication decision')
     g = ready(); operation_id = str(uuid.uuid4()); replacement_query = replacement(g)
     contended(client_write(g, operation_id), replacement_query, success)
@@ -279,7 +279,7 @@ try:
             reason='Synthetic withdrawal', attest_review=True))
 
     g = ready(); operation_id = str(uuid.uuid4())
-    contended(withdrawal(g), client_write(g, operation_id), rejected('40001'))
+    contended(withdrawal(g), client_write(g, operation_id), rejected('PT409'))
     check(outcome(g, operation_id)['status'] == 'unrecorded', 'Withdrawal-first prevents waiting decision')
     g = ready(); operation_id = str(uuid.uuid4())
     contended(client_write(g, operation_id), withdrawal(g), success)

@@ -214,7 +214,7 @@ try {
 const stalePickup = confirmArgs(reviewed, selection);
 const handoff = await api.previewPickup(dispenseId, null);
 await api.execute({ id: randomUUID(), kind: 'pickup', payload: { authorization_id: authorization.id, pet_id: patient.id, dispense_id: dispenseId, expected_context_hash: handoff.context_hash, recipient_name: 'Synthetic recipient', recipient_relationship: 'Synthetic household', reason: 'Synthetic handoff', attest_handoff: true, refill_close: null } });
-await denied('confirm_record_release', stalePickup, '40001');
+await denied('confirm_record_release', stalePickup, 'PT409');
 await denied('capture_release_email_payload', staleTransports.emailCapture, '42501', service);
 await denied('capture_document_link', staleTransports.linkCapture, '42501', service);
 check(sql(`select count(*) from release_email_payloads where request_id=${quote(staleTransports.emailId)}`) === '0' && sql(`select count(*) from document_link_payloads where grant_id=${quote(staleTransports.linkId)}`) === '0', 'Source change before capture saves no stale email or link artifacts');
@@ -229,7 +229,7 @@ const beforeCancelSaved = await rpc('confirm_record_release', cancelArgs);
 const cancel = await doctorApi.previewCancel(authorization);
 await doctorApi.execute({ id: randomUUID(), kind: 'cancel', payload: { authorization_id: authorization.id, pet_id: patient.id, expected_event_id: cancel.context.head.id, expected_context_hash: cancel.context_hash, reason: 'Synthetic release invalidation', attest_review: true } });
 check((await rpc('read_record_release', { p_id: beforeCancelSaved.id })).eligible === false, 'Cancellation invalidates selected authorization and nested dispense context');
-await denied('confirm_record_release', { ...cancelArgs, p_id: randomUUID() }, '40001');
+await denied('confirm_record_release', { ...cancelArgs, p_id: randomUUID() }, 'PT409');
 const cancelled = await preview(selection);
 check(cancelled.snapshot.native_prescriptions[0].status.state === 'cancelled' && renderRecordRelease({ preview: cancelled }).includes('cancelled'), 'Fresh historical package clearly discloses cancellation');
 check(effects() === baseline, 'Pickup/cancellation and release workflows do not debit stock, bill or send again');

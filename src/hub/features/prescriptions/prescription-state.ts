@@ -45,7 +45,7 @@ function belongs(state: PrescriptionOperationState, reply: PrescriptionOperation
 export function prescriptionOperationFailed(state: PrescriptionOperationState, reply: PrescriptionOperationReply, failure: unknown): PrescriptionOperationState {
   if (state.phase !== "committing" || !belongs(state, reply)) return state;
   const code = failure && typeof failure === "object" && "code" in failure ? String(failure.code) : null;
-  if (!state.priorUncertainty && code && ["23514", "40001", "42501"].includes(code)) return emptyPrescriptionOperation(state.actor, state.patientId);
+  if (!state.priorUncertainty && code && ["23514", "PT409", "42501"].includes(code)) return emptyPrescriptionOperation(state.actor, state.patientId);
   return { ...state, phase: "uncertain", priorUncertainty: true };
 }
 export function recoverPrescriptionOperation(state: PrescriptionOperationState): PrescriptionOperationState {

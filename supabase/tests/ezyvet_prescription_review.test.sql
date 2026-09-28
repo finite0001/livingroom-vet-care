@@ -59,7 +59,7 @@ select is(approve_ezyvet_prescription_review((select id from fx where k='approva
 select is(abandon_ezyvet_prescription_review((select id from fx where k='approval'),(select id from fx where k='pet'),true),(select v from data where k='approved'),'Late abandonment cannot undo approved record');
 insert into data select 'duplicate-prepared',prepare_ezyvet_prescription_review((select id from fx where k='duplicate'),(select id from fx where k='pet'),(select v from data where k='payload'));
 select is(approve_ezyvet_prescription_review((select id from fx where k='duplicate'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='duplicate-prepared'),true)#>>'{receipt,id}',(select id::text from fx where k='approval'),'Equivalent new request reuses approved history');
-select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select jsonb_set(v,'{interpretation,reason}','"Changed interpretation rationale"') from data where k='payload'))$$,'40001',null,'Changed interpretation requires expected latest predecessor');
+select throws_ok($$select prepare_ezyvet_prescription_review(gen_random_uuid(),(select id from fx where k='pet'),(select jsonb_set(v,'{interpretation,reason}','"Changed interpretation rationale"') from data where k='payload'))$$,'PT409',null,'Changed interpretation requires expected latest predecessor');
 insert into data select 'correction-payload',jsonb_set(v,'{interpretation}',(v->'interpretation')||jsonb_build_object('reason','Corrected outside author after review','outside_author','Outside clinician','replaces_id',(select v#>>'{receipt,id}' from data where k='approved'),'expected_predecessor_hash',(select v#>>'{receipt,version_hash}' from data where k='approved'))) from data where k='payload';
 insert into data select 'correction-prepared',prepare_ezyvet_prescription_review((select id from fx where k='correction'),(select id from fx where k='pet'),(select v from data where k='correction-payload'));
 insert into data select 'competing-prepared',prepare_ezyvet_prescription_review((select id from fx where k='competing'),(select id from fx where k='pet'),(select jsonb_set(v,'{interpretation,outside_author}','"Different outside clinician"') from data where k='correction-payload'));
@@ -67,7 +67,7 @@ insert into data select 'corrected',approve_ezyvet_prescription_review((select i
 select is((select v#>>'{receipt,version}' from data where k='corrected'),'2','Correction appends next historical version');
 select is((select v#>>'{receipt,replaces_id}' from data where k='corrected'),(select id::text from fx where k='approval'),'Correction links exact predecessor');
 select is(jsonb_array_length((select v#>'{receipt,correction_history}' from data where k='corrected')),2,'Projection retains correction chain');
-select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='competing'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='competing-prepared'),true)$$,'40001',null,'Competing correction cannot overwrite newer version');
+select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='competing'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='competing-prepared'),true)$$,'PT409',null,'Competing correction cannot overwrite newer version');
 select is(recover_ezyvet_prescription_review((select id from fx where k='approval'),(select id from fx where k='pet'))#>>'{receipt,current,is_latest}','false','Original receipt identifies superseding correction');
 select is(list_patient_imported_prescriptions((select id from fx where k='pet'),null,null,1)->>'has_more','true','Chart discovery paginates versions');
 select is(jsonb_array_length(list_patient_imported_prescriptions(gen_random_uuid())->'prescriptions'),0,'Another patient has no imported record');
@@ -82,11 +82,11 @@ select throws_ok($$update ezyvet_imported_prescriptions set reason='Rewrite hist
 select throws_ok($$update ezyvet_imported_prescription_items set evidence='{}'$$,'23514',null,'Approved item evidence is immutable');
 update catalog_products set version=version+1 where id=(select id from fx where k='product');
 set local role authenticated;
-select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='stale'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='stale-prepared'),true)$$,'40001','Catalog medication changed; review again','Catalog change after preparation blocks fresh approval');
+select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='stale'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='stale-prepared'),true)$$,'PT409','Catalog medication changed; review again','Catalog change after preparation blocks fresh approval');
 reset role;
 update ezyvet_identity_heads set version=version+2 where resource='prescriptionitem' and external_id='501';
 set local role authenticated;
-select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='stale'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='stale-prepared'),true)$$,'40001','SOURCE_PRESCRIPTION_ITEM_STALE','Source change after preparation blocks fresh approval');
+select throws_ok($$select approve_ezyvet_prescription_review((select id from fx where k='stale'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='stale-prepared'),true)$$,'PT409','SOURCE_PRESCRIPTION_ITEM_STALE','Source change after preparation blocks fresh approval');
 select is(approve_ezyvet_prescription_review((select id from fx where k='correction'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='correction-prepared'),true)#>>'{receipt,id}',(select id::text from fx where k='correction'),'Committed approval still recoverable after source/catalog change');
 select is(recover_ezyvet_prescription_review((select id from fx where k='correction'),(select id from fx where k='pet'))#>>'{receipt,current,is_current}','false','Changed source revision visible in chart receipt');
 reset role;

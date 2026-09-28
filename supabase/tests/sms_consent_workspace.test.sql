@@ -15,7 +15,7 @@ select is(public.current_sms_consent((select id from fixture_ids where kind='cli
 select is(public.current_sms_consent((select id from fixture_ids where kind='client'))->>'phone_number','+13035550166','Display uses normalized current household number');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+13035550166',true,'WRITTEN','Synthetic signed form',null)$$,'Staff records supported consent evidence');
 select is(public.current_sms_consent((select id from fixture_ids where kind='client'))->>'can_message','true','Recorded affirmative consent is eligible');
-select throws_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+13035550166',false,'VERBAL','Synthetic withdrawal',null)$$,'40001',null,'Stale consent snapshot cannot overwrite current record');
+select throws_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+13035550166',false,'VERBAL','Synthetic withdrawal',null)$$,'PT409',null,'Stale consent snapshot cannot overwrite current record');
 reset role;
 insert into public.communication_suppressions(channel,recipient,reason) values ('SMS','+13035550166','provider_complaint');
 set local role authenticated;

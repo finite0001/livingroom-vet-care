@@ -18,6 +18,9 @@ old = (migrations / '20260913630000_record_release_prescription_history.sql').re
 old = old[old.index('create function public.ezyvet_validate_reviewed_prescriptions'):old.index('create function public.release_preview_v8_internal')]
 old = old.replace('create function', 'create or replace function', 1)
 new = (migrations / '20260913650000_prescription_release_reference_hardening.sql').read_text()
+# 20260928190000 rewrote every 40001 raise to the non-retryable PT409 (PostgREST retries
+# 40001 forever); replay these historical definitions with the same SQLSTATE convention.
+old, new = old.replace("'40001'", "'PT409'"), new.replace("'40001'", "'PT409'")
 test = (root / 'supabase/tests/ezyvet_prescription_release_reference.test.sql').read_text()
 # Populate an approved review using canonical schema8 before applying additive6500.
 test = test.replace('-- FIXTURE_BEGIN:', old + '\n-- FIXTURE_BEGIN:', 1)

@@ -186,13 +186,13 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"3b000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 select throws_ok(
   $$select public.retry_outbound_delivery('3b100000-0000-4000-8000-000000000003', null, timestamptz '2026-09-22 21:00:00+00')$$,
-  '40001',
+  'PT409',
   'Outbound delivery is not retryable',
   'Accepted deliveries cannot be manually retried'
 );
 select throws_ok(
   $$select public.cancel_outbound_delivery('3b100000-0000-4000-8000-000000000004', null, timestamptz '2026-09-22 21:00:00+00')$$,
-  '40001',
+  'PT409',
   'Outbound delivery is not cancelable',
   'Actively leased deliveries cannot be manually canceled'
 );

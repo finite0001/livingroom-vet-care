@@ -158,7 +158,7 @@ const staleCredit = await review(creditIntent());
 const abandonedOperation = { id: randomUUID(), kind: 'record_native_dispense_finance', payload: staleCredit };
 const genericCreditId = randomUUID();
 await rpc('credit_billing_invoice', { p_id: genericCreditId, p_invoice_id: invoiceId, p_amount_cents: 10, p_reason: '  Synthetic unallocated invoice credit  ' }, staff.headers);
-await denied('record_native_dispense_finance', { p_id: randomUUID(), p_request: staleCredit }, '40001', staff.headers);
+await denied('record_native_dispense_finance', { p_id: randomUUID(), p_request: staleCredit }, 'PT409', staff.headers);
 check(await finance.recover(abandonedOperation) === null, 'Lost-before-write request has no recorded receipt');
 const closed = await finance.close(abandonedOperation);
 check(closed.status === 'closed_unrecorded' && closed.closure.id === abandonedOperation.id, 'Stale request closes through actual Auth with exact immutable evidence');

@@ -223,7 +223,7 @@ test("recovery absent is distinct from a fabricated receipt and RPC errors retai
     {
       rpc: async () => ({
         data: null,
-        error: { code: "40001", message: "stale" },
+        error: { code: "PT409", message: "stale" },
       }),
     },
     actor,
@@ -231,7 +231,7 @@ test("recovery absent is distinct from a fabricated receipt and RPC errors retai
   );
   await assert.rejects(
     api.execute(f.op),
-    (e) => (e as { code: string }).code === "40001",
+    (e) => (e as { code: string }).code === "PT409",
   );
 });
 test("receipt chronology preserves microseconds rather than truncating them", async () => {

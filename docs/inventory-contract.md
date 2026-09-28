@@ -77,4 +77,4 @@ Historical records may attach to archived patients, never decrement stock or gen
 
 ## Reads and errors
 
-SELECT tables `catalog_products`, `inventory_lots`, `inventory_movements`, `billing_invoices`, `billing_invoice_items`, `billing_credits`, `patient_treatments`, `patient_treatment_corrections`; filter by client/pet/lot/invoice IDs as applicable. `40001` indicates stale revision: reload before continuing. `23514` indicates validation/state/idempotency mismatch. `42501` means staff authorization failed. Show errors without discarding pending UUIDs or request data.
+SELECT tables `catalog_products`, `inventory_lots`, `inventory_movements`, `billing_invoices`, `billing_invoice_items`, `billing_credits`, `patient_treatments`, `patient_treatment_corrections`; filter by client/pet/lot/invoice IDs as applicable. `PT409` indicates stale revision: reload before continuing. `23514` indicates validation/state/idempotency mismatch. `42501` means staff authorization failed. Show errors without discarding pending UUIDs or request data.

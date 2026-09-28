@@ -44,7 +44,7 @@ insert into fixture_ids select 'lease',lease_token from public.claim_communicati
 select is((select state from public.communication_outbox where id=(select id from fixture_ids where kind='email')),'claimed','Worker atomically claims a lease');
 select is((public.claim_communication()).id,null::uuid,'Second worker cannot claim active lease');
 select lives_ok($$select public.start_communication_attempt((select id from fixture_ids where kind='email'),(select id from fixture_ids where kind='lease'),'{"from":"care@example.test","reply_to":"care@example.test"}')$$,'Worker starts audited provider attempt');
-select throws_ok($$select public.start_communication_attempt((select id from fixture_ids where kind='email'),(select id from fixture_ids where kind='lease'),'{"from":"care@example.test","reply_to":"care@example.test"}')$$,'40001',null,'Same lease cannot start two provider requests');
+select throws_ok($$select public.start_communication_attempt((select id from fixture_ids where kind='email'),(select id from fixture_ids where kind='lease'),'{"from":"care@example.test","reply_to":"care@example.test"}')$$,'PT409',null,'Same lease cannot start two provider requests');
 select lives_ok($$select public.finish_communication_attempt((select id from fixture_ids where kind='email'),(select id from fixture_ids where kind='lease'),'uncertain',null,'network_timeout')$$,'Connection ambiguity persists as uncertain');
 reset role;
 set local role authenticated;

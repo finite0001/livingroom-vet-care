@@ -26,7 +26,7 @@ select throws_ok($$select public.save_patient_qol_scale(gen_random_uuid(),(selec
 select throws_ok($$select public.save_patient_qol_scale(gen_random_uuid(),(select id from fx where k='pet'),null,now(),'  ',5,5,5,5,5,5,5,'','','','','','','','')$$,'23514',null,'Assessor required');
 select throws_ok($$select public.save_patient_qol_scale(gen_random_uuid(),(select id from fx where k='pet'),null,now(),'Dr. Synthetic',5,5,5,5,5,5,5,repeat('x',2001),'','','','','','','')$$,'23514',null,'Category note length bounded');
 select throws_ok($$select public.save_patient_qol_scale('3b000000-0000-4000-8000-000000000001',(select id from fx where k='other'),1,now(),'Dr. Synthetic',5,5,5,5,5,5,5,'','','','','','','','')$$,'23514','Patient does not match assessment','Cannot reparent assessment');
-select throws_ok($$select public.save_patient_qol_scale('3b000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),0,now(),'Dr. Synthetic',5,5,5,5,5,5,5,'','','','','','','','')$$,'40001',null,'Stale edit rejected');
+select throws_ok($$select public.save_patient_qol_scale('3b000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),0,now(),'Dr. Synthetic',5,5,5,5,5,5,5,'','','','','','','','')$$,'PT409',null,'Stale edit rejected');
 -- Complete, sign and verify total.
 select lives_ok($$select public.save_patient_qol_scale('3b000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),1,now(),'Dr. Synthetic',5,7,6,8,4,3,2,'Guarding','','','','','Slow on stairs','','Complete')$$,'Complete all categories');
 select is((select total from public.patient_qol_scale_assessments where id='3b000000-0000-4000-8000-000000000001'),35::smallint,'Total is the sum of seven categories');
@@ -60,7 +60,7 @@ select throws_ok($$select public.save_qol_scale_reference(1,true,71,'Configured 
 select throws_ok($$select public.save_qol_scale_reference(1,true,35,'Configured reference','')$$,'23514',null,'Enabled reference requires a review note');
 select lives_ok($$select public.save_qol_scale_reference(1,true,35,'Synthetic configured reference','Synthetic test entry')$$,'Administrator configures reference');
 select lives_ok($$select public.save_qol_scale_reference(1,true,35,'Synthetic configured reference','Synthetic test entry')$$,'Reference save replay is idempotent');
-select throws_ok($$select public.save_qol_scale_reference(1,false,null,'','')$$,'40001',null,'Stale reference save rejected');
+select throws_ok($$select public.save_qol_scale_reference(1,false,null,'','')$$,'PT409',null,'Stale reference save rejected');
 select throws_ok($$update public.qol_scale_reference_settings set enabled=false$$,'42501',null,'Direct setting update denied');
 select set_config('request.jwt.claims','{"sub":"3a000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select is((select count(*) from public.patient_qol_scale_assessments),0::bigint,'Inactive staff cannot read assessments');

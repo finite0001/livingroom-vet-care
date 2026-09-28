@@ -77,7 +77,7 @@ test("save and recovery bind exact actor, household, request, version and calcul
 test("invalid local requests never reach transport and RPC failures remain failures", async () => {
   const a = api(receipt()), wrong = operation(); wrong.payload.client_id = id(10);
   await assert.rejects(a.client.save(wrong)); assert.equal(a.calls.length, 0);
-  const stale = { code: "40001", message: "Changed catalog" };
+  const stale = { code: "PT409", message: "Changed catalog" };
   await assert.rejects(api(null, stale).client.save(operation()), e => e === stale);
   assert.equal(await api(null).client.recover(operation()), null);
   await assert.rejects(api(null).client.save(operation()));

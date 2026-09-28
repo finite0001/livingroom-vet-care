@@ -46,7 +46,7 @@ async function fixture(page: Page, observation = false, names: NameOptions = {})
     if (rpc === "read_ezyvet_migration_resolution_context") return state.failContext ? unavailable() : route.fulfill({ json: { version: 1, actor_id: actor, scope_id: scope, target: body.p_target, target_key: "c".repeat(64), context: selectedContext(body.p_target), context_hash: "d".repeat(64), latest: state.receipts.at(-1) ?? null, ...flags, observed_at: at } });
     if (rpc === "save_ezyvet_migration_resolution") {
       state.requests.push(body);
-      if (state.reject) return route.fulfill({ status: 409, json: { code: "40001", message: "Stale context" } });
+      if (state.reject) return route.fulfill({ status: 409, json: { code: "PT409", message: "Stale context" } });
       const receipt = { receipt_version: 1, id: body.p_id, actor_id: actor, migration_run_id: run, scope_id: scope, target_kind: body.p_target.kind, binding_id: body.p_target.binding_id, page: body.p_target.page, ordinal: body.p_target.ordinal, snapshot_id: body.p_target.snapshot_id, evidence_hash: body.p_target.evidence_hash,
         target_key: "c".repeat(64), action: body.p_action, reason: body.p_reason, request_hash: "e".repeat(64), reviewed_context: selectedContext(body.p_target), reviewed_context_hash: body.p_expected_context_hash,
         replaces_id: body.p_replaces_id, version: state.receipts.length + 1, record_hash: "f".repeat(64), created_at: new Date(Date.parse(at) + state.receipts.length * 1000).toISOString() };

@@ -33,7 +33,7 @@ select throws_ok($$select list_abandoned_attachment_cleanup_candidates(168,101)$
 insert into evidence select claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),168);
 select is(list_abandoned_attachment_cleanup_candidates(168,100),'[]'::jsonb,'Discovery excludes active cleanup lease');
 select is((select v->>'uploadId' from evidence),(select id::text from fx where k='abandoned'),'Cleanup lease binds abandoned reservation');
-select throws_ok($$select claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),168)$$,'40001',null,'Competing cleanup claim cannot steal live lease');
+select throws_ok($$select claim_abandoned_attachment_cleanup((select id from fx where k='abandoned'),168)$$,'PT409',null,'Competing cleanup claim cannot steal live lease');
 select throws_ok($$select revalidate_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),gen_random_uuid())$$,'42501',null,'Wrong cleanup token cannot revalidate');
 select throws_ok($$select finalize_abandoned_attachment_cleanup((select (v->>'id')::uuid from evidence),(select (v->>'token')::uuid from evidence))$$,'23514',null,'Existing object prevents completion');
 reset role;

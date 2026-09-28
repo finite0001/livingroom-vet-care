@@ -403,7 +403,7 @@ function vaccinationFixture() {
         assert.equal(actor, "actor");
         assert.equal(page.items[0].payload.consult_id, 82);
         if (state.failStage) {
-          throw { code: "40001", message: "SOURCE_CONSULT_STALE" };
+          throw { code: "PT409", message: "SOURCE_CONSULT_STALE" };
         }
         state.terminal = true;
         return { ...run, status: "review_ready", next_page: 2 };
@@ -516,7 +516,7 @@ test("vaccination stale context and legacy run errors are actionable without lea
   for (
     const error of [
       { code: "22023", message: "VACCINATION_RUN_REQUIRES_NEW_CONTEXT" },
-      { code: "40001", message: "SOURCE_CONSULT_STALE" },
+      { code: "PT409", message: "SOURCE_CONSULT_STALE" },
     ]
   ) {
     const f = vaccinationFixture();
@@ -538,7 +538,7 @@ test("vaccination stale context and legacy run errors are actionable without lea
   assert.deepEqual(f.state.failures, ["SOURCE_CONSULT_STALE"]);
   const privateError = vaccinationFixture();
   privateError.state.claimError = {
-    code: "40001",
+    code: "PT409",
     message: "secret source context details",
   };
   const redacted = await privateError.handler(privateError.request());
@@ -638,7 +638,7 @@ function prescriptionitemFixture() {
         assert.equal(actor, "actor");
         assert.equal(page.items[0].payload.prescription_id, 82);
         if (state.failStage) {
-          throw { code: "40001", message: "SOURCE_PRESCRIPTION_STALE" };
+          throw { code: "PT409", message: "SOURCE_PRESCRIPTION_STALE" };
         }
         state.terminal = true;
         return { ...run, status: "review_ready", next_page: 2 };
@@ -751,7 +751,7 @@ test("prescriptionitem stale context and legacy run errors are actionable withou
   for (
     const error of [
       { code: "22023", message: "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT" },
-      { code: "40001", message: "SOURCE_PRESCRIPTION_STALE" },
+      { code: "PT409", message: "SOURCE_PRESCRIPTION_STALE" },
     ]
   ) {
     const f = prescriptionitemFixture();
@@ -773,7 +773,7 @@ test("prescriptionitem stale context and legacy run errors are actionable withou
   assert.deepEqual(f.state.failures, ["SOURCE_PRESCRIPTION_STALE"]);
   const privateError = prescriptionitemFixture();
   privateError.state.claimError = {
-    code: "40001",
+    code: "PT409",
     message: "secret source context details",
   };
   const redacted = await privateError.handler(privateError.request());

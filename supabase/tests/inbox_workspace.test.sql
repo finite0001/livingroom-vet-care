@@ -21,7 +21,7 @@ select throws_ok($$update public.conversations set priority='URGENT'$$,'42501',n
 select throws_ok($$select public.update_conversation_metadata('95000000-0000-4000-8000-000000000002',(select id from fixture_ids where kind='conversation'),1,'ACTIVE',null,'URGENT','{}')$$,'42501',null,'Metadata actor spoof rejected');
 select lives_ok($$select public.update_conversation_metadata(auth.uid(),(select id from fixture_ids where kind='conversation'),1,'ACTIVE',auth.uid(),'URGENT',array['followup','followup'])$$,'Assigned priority and tags update atomically');
 select is((select tags from public.conversations where id=(select id from fixture_ids where kind='conversation')),array['followup'],'Tags normalized and deduplicated');
-select throws_ok($$select public.update_conversation_metadata(auth.uid(),(select id from fixture_ids where kind='conversation'),1,'ACTIVE',null,'NORMAL','{}')$$,'40001',null,'Stale metadata rejected');
+select throws_ok($$select public.update_conversation_metadata(auth.uid(),(select id from fixture_ids where kind='conversation'),1,'ACTIVE',null,'NORMAL','{}')$$,'PT409',null,'Stale metadata rejected');
 reset role;
 insert into public.messages(id,conversation_id,type,sender_type,content,created_at) values
 ('95000000-0000-4000-8000-000000000011',(select id from fixture_ids where kind='conversation'),'EMAIL','CLIENT','Initial question',now()-interval '1 minute');

@@ -147,7 +147,7 @@ async function workspace(page: Page, historyCount = 0) {
       if (state.stale) {
         await route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Draft revision changed" },
+          json: { code: "PT409", message: "Draft revision changed" },
         });
         return;
       }

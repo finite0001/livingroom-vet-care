@@ -77,7 +77,7 @@ set local role authenticated;
 insert into fx select 'payment',id from invoice_payments where invoice_id=(select id from fx where k='invoice');
 insert into data select 'stale-generic',pg_temp.finance_request(pg_temp.finance_intent('credit','300'));
 select credit_billing_invoice((select id from fx where k='generic-credit'),(select id from fx where k='invoice'),200,'Synthetic generic accounting adjustment');
-select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='stale-generic'))$$,'40001',null,'Generic credit invalidates reviewed financial hash');
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='stale-generic'))$$,'PT409',null,'Generic credit invalidates reviewed financial hash');
 select is(pg_temp.finance_read()#>>'{snapshot,capacity,unallocated_credit_cents}','200','Generic credit stays unallocated');
 select is(pg_temp.finance_read()#>>'{snapshot,capacity,credit_capacity_cents}','800','Unallocated credit conservatively consumes item capacity');
 select throws_ok($$select record_native_dispense_finance((select id from fx where k='generic-credit'),pg_temp.finance_request(pg_temp.finance_intent('credit','200')))$$,'23514',null,'Existing generic credit ID cannot be adopted');
@@ -114,14 +114,14 @@ select is((apply_refund_evidence('evt_finance_success',(select id from fx where 
 set local role authenticated;
 select is(preview_native_dispense_finance(pg_temp.finance_intent('refund','1',(select id from fx where k='native-credit'),(select id from fx where k='payment')))#>>'{context,eligible_amount_cents}','150','Settled refund counted once, never as extra reservation');
 select is(pg_temp.finance_read()#>>'{snapshot,balance,refunded_cents}','150','Only provider ledger evidence changes completed refund amount');
-select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='before-settlement'))$$,'40001',null,'Provider state transition invalidates review even unchanged capacity');
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='before-settlement'))$$,'PT409',null,'Provider state transition invalidates review even unchanged capacity');
 select is(recover_native_dispense_finance((select id from fx where k='native-refund')),(select v from data where k='refund'),'Settlement retains exact historical receipt');
 -- A clinical head change requires a fresh accounting review, without forcing a credit.
 insert into data select 'before-return',pg_temp.finance_request(pg_temp.finance_intent('credit','10'));
 insert into data select 'return-intent',jsonb_build_object('target',pg_temp.finance_intent('credit','10')->'target','action','intake','intake_id',null,'allocations',jsonb_build_array(jsonb_build_object('allocation_id',(select id from fx where k='allocation1'),'quantity','0.1')),'custody','client_returned','package_condition','unknown','storage_history','unknown','reason','Synthetic return custody','note','No implied financial adjustment');
 insert into data select 'return-preview',preview_native_dispense_return(v) from data where k='return-intent';
 select record_native_dispense_return(gen_random_uuid(),jsonb_build_object('intent',(select v from data where k='return-intent'),'expected_context_hash',(select v->'context_hash' from data where k='return-preview'),'expected_head',(select v#>'{context,head}' from data where k='return-preview'),'attest_review',true,'attest_restock',false));
-select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='before-return'))$$,'40001',null,'Clinical return head invalidates review');
+select throws_ok($$select record_native_dispense_finance(gen_random_uuid(),(select v from data where k='before-return'))$$,'PT409',null,'Clinical return head invalidates review');
 select is(recover_native_dispense_finance((select id from fx where k='native-credit')),(select v from data where k='credit'),'Clinical change does not invalidate exact historical credit receipt');
 set local role service_role;
 select record_payment_reconciliation('refund',(select id from fx where k='failed-refund'),'provider_reconciliation_required');
@@ -132,7 +132,7 @@ select is(recover_native_dispense_finance((select id from fx where k='native-ref
 -- Resolve a lost-before-commit operation whose original review has since changed.
 insert into fx values('closed-operation',gen_random_uuid());
 select is(recover_native_dispense_finance((select id from fx where k='closed-operation')),null::jsonb,'Unrecorded original has no receipt');
-select throws_ok($$select record_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'40001',null,'Original uncertain review is stale');
+select throws_ok($$select record_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'))$$,'PT409',null,'Original uncertain review is stale');
 insert into data select 'closure',close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return'));
 select is((select v->>'status' from data where k='closure'),'closed_unrecorded','Stale uncertain operation can be durably closed');
 select is(close_native_dispense_finance((select id from fx where k='closed-operation'),(select v from data where k='before-return')),(select v from data where k='closure'),'Lost closure reply recovers exact durable closure');

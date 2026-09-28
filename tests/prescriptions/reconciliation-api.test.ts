@@ -293,7 +293,7 @@ test("absent recovery remains absent and provider errors propagate", async () =>
     ).recover(f.op),
     null,
   );
-  const error = { code: "40001", message: "Changed source" };
+  const error = { code: "PT409", message: "Changed source" };
   await assert.rejects(
     createNativeReconciliationApi(
       { rpc: async () => ({ data: null, error }) },

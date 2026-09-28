@@ -83,7 +83,7 @@ select is(pg_temp.retry_source_probe((select id from fx where k='outbox'),$$sele
 insert into fx select 'lease',lease_token from claim_communication();
 select is(read_frozen_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'payload_text',(select v::text from data where k='payload'),'Generic adapter returns exact serialized invoice request');
 select is(read_frozen_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'artifact_kind','invoice','Dispatcher receives invoice proof requirement');
-select throws_ok($$select read_frozen_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'40001',null,'Wrong lease cannot read frozen invoice');
+select throws_ok($$select read_frozen_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'PT409',null,'Wrong lease cannot read frozen invoice');
 select ok(read_release_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease')) is null,'Old dispatcher cannot discover invoice through clinical release reader');
 select is((start_communication_attempt((select id from fx where k='outbox'),(select id from fx where k='lease'),'{"from":"care@example.test","reply_to":"care@example.test"}')).state,'failed','Old plain-text dispatcher fails closed without invoice payload proof');
 reset role;set local role authenticated;

@@ -118,7 +118,7 @@ update communication_outbox set state='claimed',lease_token=gen_random_uuid(),le
 insert into data values('invoice_lease',(select to_jsonb(o) from communication_outbox o where id=(select (v->>'id')::uuid from data where k='invoice_queue'))),('record_lease',(select to_jsonb(o) from communication_outbox o where id=(select (v->>'id')::uuid from data where k='record_queue')));
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select is(document_link_delivery_context((select (v->>'id')::uuid from data where k='invoice_lease'),(select (v->>'lease_token')::uuid from data where k='invoice_lease'))->>'message_hash',repeat('b',64),'Worker receives message digest and immutable context');
-select throws_ok($$select document_link_delivery_context((select (v->>'id')::uuid from data where k='invoice_lease'),gen_random_uuid())$$,'40001',null,'Worker needs current exact lease');
+select throws_ok($$select document_link_delivery_context((select (v->>'id')::uuid from data where k='invoice_lease'),gen_random_uuid())$$,'PT409',null,'Worker needs current exact lease');
 select is((start_communication_attempt((select (v->>'id')::uuid from data where k='invoice_lease'),(select (v->>'lease_token')::uuid from data where k='invoice_lease'),'{"from":"+13035550199","account_sid":"ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}')).state,'failed','Old worker lacking proof fails closed');
 reset role;
 select is((select count(*)::integer from communication_attempts where outbox_id=(select (v->>'id')::uuid from data where k='invoice_queue')),0,'Old worker cannot begin provider attempt');

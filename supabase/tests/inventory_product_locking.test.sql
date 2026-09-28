@@ -40,7 +40,7 @@ select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v f
 select throws_ok($$select record_patient_treatment((select id from fx where k='treatment'),(select v||'{"quantity":2}' from data where k='treatment-request'))$$,'23514','Treatment identifier already used','Same treatment UUID payload cannot change');
 select save_catalog_product((select id from fx where k='product'),2,'Synthetic medication','medication','','tablet',200,true);
 select save_patient_problem(null,(select id from fx where k='pet'),null,'Synthetic important alert','Synthetic review change',null,'active','high');
-select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from data where k='treatment-request'))$$,'40001','Patient alerts changed; reload and review the current alerts before recording treatment','Patient alert protection unchanged');
+select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from data where k='treatment-request'))$$,'PT409','Patient alerts changed; reload and review the current alerts before recording treatment','Patient alert protection unchanged');
 select is(to_jsonb(record_patient_treatment((select id from fx where k='treatment'),(select v from data where k='treatment-request'))),(select v from data where k='treatment-result'),'Exact historical retry remains before current alert validation');
 select is((select count(*) from patient_treatments where pet_id=(select id from fx where k='pet')),1::bigint,'Rejected new writes leave no treatment');
 reset role;

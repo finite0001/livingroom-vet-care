@@ -131,7 +131,7 @@ async function fixture(page: Page, actor = staff) {
         state.version = 2;
         return route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Conversation changed" },
+          json: { code: "PT409", message: "Conversation changed" },
         });
       }
       state.version++;

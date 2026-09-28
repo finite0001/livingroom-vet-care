@@ -61,7 +61,7 @@ insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,ex
 insert into ezyvet_import_pages(run_id,page,item_count) values('e5300000-0000-4000-8000-000000000001',2,1);
 insert into ezyvet_import_page_items(run_id,page,snapshot_id) values('e5300000-0000-4000-8000-000000000001',2,'e5500000-0000-4000-8000-000000000001');
 set local role authenticated;
-select throws_ok($$select pg_temp.approve_weight(gen_random_uuid(),'e5500000-0000-4000-8000-000000000001',12.9)$$,'40001',null,'Stale source head rejected');
+select throws_ok($$select pg_temp.approve_weight(gen_random_uuid(),'e5500000-0000-4000-8000-000000000001',12.9)$$,'PT409',null,'Stale source head rejected');
 select lives_ok($$select review_ezyvet_weight_change('e5600000-0000-4000-8000-000000000001','e5400000-0000-4000-8000-000000000001','e5500000-0000-4000-8000-000000000001',2,'Reviewed discrepancy; retain approved local history')$$,'Changed source explicitly reviewed without replacing chart');
 select lives_ok($$select review_ezyvet_weight_change('e5600000-0000-4000-8000-000000000001','e5400000-0000-4000-8000-000000000001','e5500000-0000-4000-8000-000000000001',2,'Reviewed discrepancy; retain approved local history')$$,'Source-review retry idempotent');
 select is((select weight from patient_weights where id=(select id from fx where k='weight')),12.3::numeric,'Corrected source never overwrites approved local weight');

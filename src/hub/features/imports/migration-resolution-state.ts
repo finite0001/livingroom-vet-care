@@ -51,7 +51,7 @@ export function resolutionSaveFailed(state: MigrationResolutionState, reply: Mig
   const code = error && typeof error === "object" && "code" in error ? String(error.code) : null;
   // These database errors abort the transaction. Unknown errors, including
   // response validation failures, cannot prove that the write did not commit.
-  if (!state.priorSaveUncertain && code && ["23514", "40001", "42501"].includes(code)) return emptyResolutionState(state.actor, state.targetKey);
+  if (!state.priorSaveUncertain && code && ["23514", "PT409", "42501"].includes(code)) return emptyResolutionState(state.actor, state.targetKey);
   // An absent recovery can race an original write still in flight. Rejection
   // of a later retry does not prove that the original transaction rolled back.
   return { ...state, phase: "uncertain", priorSaveUncertain: true };

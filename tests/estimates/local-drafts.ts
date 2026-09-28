@@ -104,7 +104,7 @@ const version2 = await api.save(revised);
 check(version2.result.version === 2 && version2.result.updated_by === staff.id, 'Optimistic update records second complete revision');
 assert.deepEqual(await api.recover(op), saved); checks++;
 const stale = makeOperation({ ...op.payload, expected_version: 1 });
-await denied('save_native_estimate_draft', { p_id: stale.id, p_request: stale.payload }, '40001');
+await denied('save_native_estimate_draft', { p_id: stale.id, p_request: stale.payload }, 'PT409');
 const history1 = await api.history(op.payload.estimate_id, null, 1);
 check(history1.revisions.length === 1 && history1.revisions[0].version === 2 && history1.has_more && history1.next_before_version === 2, 'History explicitly paginates newest version');
 const history2 = await api.history(op.payload.estimate_id, history1.next_before_version, 1);
@@ -139,7 +139,7 @@ check(seen.size === 3 && seen.has(op.payload.estimate_id), 'List contains all th
 const catalogStale = makeOperation(makeRequest());
 const p = products[0];
 const updated = await rpc('save_catalog_product', { p_id: p.id, p_expected_version: p.version, p_name: p.name, p_kind: p.kind, p_manufacturer: '', p_unit: p.unit, p_unit_price_cents: 126, p_active: true });
-await denied('save_native_estimate_draft', { p_id: catalogStale.id, p_request: catalogStale.payload }, '40001');
+await denied('save_native_estimate_draft', { p_id: catalogStale.id, p_request: catalogStale.payload }, 'PT409');
 assert.deepEqual(await reloaded.recover(op), saved); checks++;
 check((await api.read(op.payload.estimate_id))?.total_cents === '412', 'Catalog change does not rewrite historical draft amount or description');
 const catalogClosed = await api.close(catalogStale);

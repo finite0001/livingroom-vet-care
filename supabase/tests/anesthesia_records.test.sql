@@ -22,7 +22,7 @@ select lives_ok($$select pg_temp.a_save('ab100000-0000-4000-8000-000000000001',n
 select lives_ok($$select pg_temp.a_save('ab100000-0000-4000-8000-000000000001',null)$$,'Lost response retry idempotent');
 select is((select count(*) from public.anesthesia_record_revisions),1::bigint,'No duplicate version on retry');
 select is((select observations from public.patient_anesthesia_records where id='ab100000-0000-4000-8000-000000000001'),'[]'::jsonb,'No assumed normal values');
-select throws_ok($$select pg_temp.a_save('ab100000-0000-4000-8000-000000000001',0,'{"plan":"Conflicting edit"}')$$,'40001',null,'Stale draft rejected');
+select throws_ok($$select pg_temp.a_save('ab100000-0000-4000-8000-000000000001',0,'{"plan":"Conflicting edit"}')$$,'PT409',null,'Stale draft rejected');
 select throws_ok($$select public.save_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='other'),1,'{}')$$,'42501',null,'Cross-patient draft rejected');
 select throws_ok($$select public.sign_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='other'),1)$$,'42501',null,'Cross-patient signature rejected');
 select throws_ok($$select public.sign_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='pet'),1)$$,'23514',null,'End time required before signature');
@@ -42,7 +42,7 @@ select throws_ok($$select pg_temp.a_save(gen_random_uuid(),null,'{"original_docu
 select throws_ok($$select pg_temp.a_save(gen_random_uuid(),null,'{"original_document_id":"ab300000-0000-4000-8000-000000000002"}')$$,'42501',null,'Pending original file rejected');
 select lives_ok($$select pg_temp.a_save('ab100000-0000-4000-8000-000000000001',1,'{"ended_at":"2026-01-01T16:30:00Z","observations":[{"at":"2026-01-01T16:01:00Z","label":"Observed parameter","value":0,"unit":"mmHg","notes":"Source observation"}],"events":[{"at":"2026-01-01T16:03:00Z","kind":"procedure","description":"Documented event"}]}')$$,'Save explicit monitoring and documentary event');
 select is((select count(*) from public.anesthesia_record_revisions),2::bigint,'Revisions preserve original draft');
-select throws_ok($$select public.sign_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='pet'),1)$$,'40001',null,'Stale signature rejected');
+select throws_ok($$select public.sign_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='pet'),1)$$,'PT409',null,'Stale signature rejected');
 select lives_ok($$select public.sign_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='pet'),2)$$,'Reviewed saved record signed');
 select lives_ok($$select public.sign_patient_anesthesia_record('ab100000-0000-4000-8000-000000000001',(select id from anesthesia_fixture where kind='pet'),2)$$,'Lost signature response retry idempotent');
 select is((select count(*) from public.anesthesia_record_revisions),3::bigint,'Signature retry adds no second version');

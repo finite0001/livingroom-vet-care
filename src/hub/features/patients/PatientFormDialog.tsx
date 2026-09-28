@@ -79,7 +79,7 @@ export function PatientFormDialog({ clientId, patient }: PatientFormDialogProps)
         p_microchip_id: values.microchip.trim() || null, p_archived_at: values.archived ? archivedAt ?? new Date().toISOString() : null,
         p_deceased_at: values.deceasedAt || null,
       });
-      if (saveError) { if (saveError.code === "40001") setConflict(true); throw saveError; }
+      if (saveError) { if (saveError.code === "PT409") setConflict(true); throw saveError; }
       if (!data) throw new Error("Patient could not be saved. Reload before retrying.");
       await Promise.all([queryClient.invalidateQueries({ queryKey: ["client", clientId] }), queryClient.invalidateQueries({ queryKey: ["clients"] }), queryClient.invalidateQueries({ queryKey: ["patient", data.id] }), queryClient.invalidateQueries({ queryKey: patientProblemsKey(data.id) })]);
       setOpen(false); toast.success("Patient details saved");

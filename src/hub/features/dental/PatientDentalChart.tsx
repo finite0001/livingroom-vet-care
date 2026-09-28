@@ -192,7 +192,7 @@ export function PatientDentalChart({
           failure &&
             typeof failure === "object" &&
             "code" in failure &&
-            failure.code === "40001"
+            failure.code === "PT409"
             ? { message: "Dental chart version conflict" }
             : failure,
         ),

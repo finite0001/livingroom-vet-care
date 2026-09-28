@@ -106,7 +106,7 @@ async function fixture(page: Page, species = "Dog") {
         return route.fulfill({
           status: 409,
           json: {
-            code: "40001",
+            code: "PT409",
             message: "Dental chart changed; reload before saving",
           },
         });

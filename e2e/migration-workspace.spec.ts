@@ -48,7 +48,7 @@ async function fixture(page: Page, admin = true, history = false, vaccination = 
     if (rpc === "list_ezyvet_attachment_runs") return route.fulfill({ json: { runs: [{ id: id(50), requested_by: actor, source_origin: origin, source_site_uid: site, resource: "attachment", status: "running", created_at: at, parent_context: { animal_link_id: mapping, pet_id: pet, client_id: client, parent_snapshot_id: snapshot, parent_observed_head_version: 1 } }], has_more: false, next_cursor: null } });
     if (rpc === "prepare_ezyvet_migration_run") {
       state.requests.push({ name: rpc, body });
-      if (state.rejectPlan) return route.fulfill({ status: 409, json: { code: "40001", message: "Parent changed" } });
+      if (state.rejectPlan) return route.fulfill({ status: 409, json: { code: "PT409", message: "Parent changed" } });
       const scopes = body.p_scopes;
       const saved = { run: { ...summary, id: body.p_id, actor_id: actor, intent: { version: 1, source_origin: body.p_source_origin, source_site_uid: body.p_source_site_uid, scopes } }, scopes: scopes.map(s => ({ ...s, migration_run_id: body.p_id, mapping_snapshot_id: snapshot, mapping_head_version: 1, client_id: client, pet_id: identity === "contact" && s.resource === "contact" ? null : pet, parent_external_id: "77", parent_payload_hash: "a".repeat(64) })), scope_manifest_version: 1, scope_manifest_hash: "b".repeat(64) };
       if (!state.omitPlanSave) savedPlans.set(body.p_id, saved);

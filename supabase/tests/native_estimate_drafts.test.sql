@@ -23,7 +23,7 @@ select is(recover_native_estimate_draft((select id from fx where k='save')),(sel
 select is(save_native_estimate_draft((select id from fx where k='save'),(select v from data where k='request')),(select v from data where k='receipt'),'Save retry returns exact original');
 select is(read_native_estimate_draft((select id from fx where k='estimate'),(select id from fx where k='client'))->'draft',(select v->'result' from data where k='receipt'),'Current read returns complete draft');
 select throws_ok($$select save_native_estimate_draft((select id from fx where k='save'),jsonb_set((select v from data where k='request'),'{fields,title}','"Different"'))$$,'23514',null,'Same operation cannot change request');
-select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),(select v from data where k='request'))$$,'40001',null,'Repeated create cannot overwrite');
+select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),(select v from data where k='request'))$$,'PT409',null,'Repeated create cannot overwrite');
 select throws_ok($$select read_native_estimate_draft((select id from fx where k='estimate'),(select id from fx where k='client2'))$$,'23514',null,'Read binds household');
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='request'),'{estimate_id}',to_jsonb(gen_random_uuid())),'{pet_id}',to_jsonb((select id from fx where k='pet2'))))$$,'23514',null,'Patient must belong to household');
 -- Independent input failures happen before attempting any new root write.
@@ -34,13 +34,13 @@ select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set((select v from data where k='request'),'{fields,lines,0,pricing,unit_price_cents}','"0"'))$$,'23514',null,'Zero unit amount requires reason');
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set((select v from data where k='request'),'{fields,lines,0,pricing,unit_price_cents}','"9223372036854775808"'))$$,'23514',null,'Unit price bigint overflow rejected');
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='request'),'{fields,lines,0,quantity}','"2"'),'{fields,lines,0,pricing,unit_price_cents}','"9223372036854775807"'))$$,'23514',null,'Line total overflow rejected');
-select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='request'),'{fields,lines,0,pricing}','{"kind":"allocated","amount_cents":"9223372036854775807"}'),'{fields,lines,0,pricing_reason}','"Allocation"') )$$,'40001',null,'Maximum exact allocated line passes arithmetic before optimistic conflict');
+select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='request'),'{fields,lines,0,pricing}','{"kind":"allocated","amount_cents":"9223372036854775807"}'),'{fields,lines,0,pricing_reason}','"Allocation"') )$$,'PT409',null,'Maximum exact allocated line passes arithmetic before optimistic conflict');
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set(jsonb_set((select v from data where k='request'),'{fields,lines,0,pricing}','{"kind":"allocated","amount_cents":"9223372036854775807"}'),'{fields,lines,0,pricing_reason}','"Allocation"'),'{fields,lines,1,pricing,amount_cents}','"1"'))$$,'23514',null,'Summed exact line totals cannot overflow bigint');
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='request'),'{fields,lines,0,quantity}','"0.001"'),'{fields,lines,0,pricing,unit_price_cents}','"1"'))$$,'23514',null,'Rounded zero unit amount still requires reason');
 -- Version 2 changes prices explicitly; catalog price changes do not rewrite historical drafts.
 select save_catalog_product((select id from fx where k='product'),1,'Renamed catalog service','service','','visit',7,true);
 insert into data select 'stale-request',jsonb_set(v,'{expected_version}','1') from data where k='request';
-select throws_ok($$select save_native_estimate_draft((select id from fx where k='stale'),(select v from data where k='stale-request'))$$,'40001',null,'Stale catalog version rejected');
+select throws_ok($$select save_native_estimate_draft((select id from fx where k='stale'),(select v from data where k='stale-request'))$$,'PT409',null,'Stale catalog version rejected');
 select is(recover_native_estimate_draft((select id from fx where k='save')),(select v from data where k='receipt'),'Historical receipt independent of current catalog');
 insert into data select 'request2',jsonb_set(jsonb_set(jsonb_set(v,'{fields,lines,0,product_version}','2'),'{fields,lines,1,product_version}','2'),'{fields,lines,0,pricing_reason}','"Honor original quote"') from data where k='stale-request';
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set((select v from data where k='request2'),'{fields,lines,0,pricing_reason}','null'))$$,'23514',null,'Current price override requires reason');
@@ -48,7 +48,7 @@ insert into data select 'receipt2',save_native_estimate_draft((select id from fx
 select is((select v#>>'{result,version}' from data where k='receipt2'),'2','Successful edit appends exact optimistic version');
 select is((select v#>'{result,created_at}' from data where k='receipt2'),(select v#>'{result,created_at}' from data where k='receipt'),'Creation timestamp preserved');
 select is((select v#>>'{result,fields,lines,0,description}' from data where k='receipt2'),'Chosen description','Catalog rename does not overwrite chosen description');
-select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),(select v from data where k='request2'))$$,'40001',null,'Concurrent stale edit rejected');
+select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),(select v from data where k='request2'))$$,'PT409',null,'Concurrent stale edit rejected');
 select throws_ok($$select save_native_estimate_draft(gen_random_uuid(),jsonb_set(jsonb_set((select v from data where k='request2'),'{expected_version}','2'),'{pet_id}',to_jsonb((select id from fx where k='pet2'))))$$,'23514',null,'Patient cannot change on an existing estimate');
 select is(read_native_estimate_draft_history((select id from fx where k='estimate'),(select id from fx where k='client'),null,1)#>>'{revisions,0,version}','2','History starts newest');
 select is(read_native_estimate_draft_history((select id from fx where k='estimate'),(select id from fx where k='client'),null,1)->'next_before_version','2'::jsonb,'History returns exact continuation');

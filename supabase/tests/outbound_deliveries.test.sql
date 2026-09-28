@@ -353,7 +353,7 @@ select throws_ok(
       null,
       now()
     )$$,
-  '40001',
+  'PT409',
   'Outbound delivery is not actively leased to this worker',
   'Workers cannot complete another worker lease'
 );
@@ -415,18 +415,19 @@ select lives_ok(
     )$$,
   'Worker can record terminal provider failure'
 );
-select throws_ok(
-  $$select public.record_outbound_delivery_callback(
+-- Unknown/ineligible receipts are acknowledged no-ops (NULL row), never a raised SQLSTATE:
+-- PostgREST <16 retries 40001 forever (2026-09-28 incident).
+select is(
+  (select (public.record_outbound_delivery_callback(
       'resend',
       'provider-missing',
       'DELIVERED',
       'Unknown callback',
       null,
       now()
-    )$$,
-  '40001',
-  'Outbound delivery is not callback-eligible',
-  'Provider callbacks must match an accepted provider message id'
+    )).id),
+  null::uuid,
+  'Provider callbacks for an unknown provider message id are an acknowledged no-op'
 );
 select throws_ok(
   $$select public.record_outbound_delivery_callback(
@@ -463,18 +464,17 @@ select lives_ok(
     )$$,
   'Duplicate same-status provider callbacks are idempotent'
 );
-select throws_ok(
-  $$select public.record_outbound_delivery_callback(
+select is(
+  (select (public.record_outbound_delivery_callback(
       'resend',
       'provider-accepted-003',
       'FAILED',
       'Conflicting failure callback',
       'late provider failure',
       timestamptz '2026-09-22 20:10:00+00'
-    )$$,
-  '40001',
-  'Outbound delivery is not callback-eligible',
-  'Provider callbacks cannot overwrite a conflicting terminal status'
+    )).id),
+  null::uuid,
+  'Provider callbacks cannot overwrite a conflicting terminal status (no-op)'
 );
 reset role;
 

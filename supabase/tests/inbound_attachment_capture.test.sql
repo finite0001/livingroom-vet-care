@@ -28,7 +28,7 @@ select throws_ok($$select claim_inbound_attachment((select id from fx where k='i
 select throws_ok($$select claim_inbound_attachment((select id from fx where k='inbound'),gen_random_uuid(),1,'ee300000-0000-4000-8000-000000000001')$$,'23514',null,'Unlisted attachment rejected');
 insert into data values('claim',claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001'));
 select is((select v#>>'{lease,message_id}' from data where k='claim'),(select id::text from fx where k='message'),'Claim binds current reviewed message');
-select throws_ok($$select claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001')$$,'40001',null,'Live lease prevents competing capture');
+select throws_ok($$select claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001')$$,'PT409',null,'Live lease prevents competing capture');
 select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',gen_random_uuid(),repeat('b',64),5,'application/pdf')$$,'42501',null,'Wrong lease cannot finalize');
 select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',(select (v#>>'{lease,token}')::uuid from data where k='claim'),repeat('b',64),5,'application/pdf')$$,'23514',null,'No artifact published without stored object');
 -- Reclaim a stalled attempt without allowing its old worker to publish.
@@ -36,7 +36,7 @@ reset role;
 update inbound_attachment_captures set lease_expires_at=clock_timestamp()-interval '1 second'
  where id=(select (v#>>'{lease,id}')::uuid from data where k='claim');
 set local role service_role;
-select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',(select (v#>>'{lease,token}')::uuid from data where k='claim'),repeat('b',64),5,'application/pdf')$$,'40001',null,'Expired worker cannot finalize');
+select throws_ok($$select finalize_inbound_attachment((select (v#>>'{lease,id}')::uuid from data where k='claim'),'ee300000-0000-4000-8000-000000000001',(select (v#>>'{lease,token}')::uuid from data where k='claim'),repeat('b',64),5,'application/pdf')$$,'PT409',null,'Expired worker cannot finalize');
 insert into data values('expired-claim',(select v from data where k='claim'));
 update data set v=claim_inbound_attachment((select id from fx where k='inbound'),(select id from fx where k='attachment'),1,'ee300000-0000-4000-8000-000000000001') where k='claim';
 select is((select v#>>'{lease,id}' from data where k='claim'),(select v#>>'{lease,id}' from data where k='expired-claim'),'Reclaim retains the capture identity');

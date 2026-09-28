@@ -69,7 +69,7 @@ select is((select v#>>'{result,sequence}' from data where k='clinical-receipt'),
 select is(append_native_dispense_correction((select id from fx where k='annotation'),(select v from data where k='clinical-request')),(select v from data where k='clinical-receipt'),'Exact append retry returns same receipt');
 select is(recover_native_dispense_correction((select id from fx where k='annotation')),(select v from data where k='clinical-receipt'),'Same actor exact recovery');
 select throws_ok($$select append_native_dispense_correction((select id from fx where k='annotation'),(select v||'{"note":"Different"}' from data where k='clinical-request'))$$,'23514','Correction identifier already used','Changed content cannot reuse operation');
-select throws_ok($$select append_native_dispense_correction((select id from fx where k='stale-correction'),(select v from data where k='clinical-request'))$$,'40001','Correction review context changed','Competing first-root review stale');
+select throws_ok($$select append_native_dispense_correction((select id from fx where k='stale-correction'),(select v from data where k='clinical-request'))$$,'PT409','Correction review context changed','Competing first-root review stale');
 select throws_ok($$select read_native_prescription_print((select id from fx where k='sign'),(select id from fx where k='dispense'))$$,'23514','Prescription has correction history; use version2 print disclosure','Legacy print cannot omit correction history');
 select is(read_record_release((select id from fx where k='release'))->>'eligible','false','Correction invalidates existing schema10');
 select throws_ok($$select pg_temp.preview_native_release((select v from data where k='fill-selection'))$$,'23514','Native correction history requires release schema11','Fresh schema10 cannot hide corrections');
@@ -94,7 +94,7 @@ select throws_ok($$select append_native_dispense_correction(gen_random_uuid(),pg
 select throws_ok($$select append_native_dispense_correction(gen_random_uuid(),pg_temp.correction_request('pickup_amendment')||jsonb_build_object('pickup_amendment',jsonb_build_object('original_pickup_id',gen_random_uuid(),'disposition','recorded_in_error','handoff',null)))$$,'23514',null,'Pickup amendment requires original pickup');
 insert into data select 'pre-pickup-context',pg_temp.correction_request('operational_annotation');
 insert into data select 'pickup',record_native_pickup((select id from fx where k='pickup'),jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'dispense_id',(select id from fx where k='dispense'),'expected_context_hash',preview_native_pickup((select id from fx where k='dispense'),(select id from fx where k='pet'),null)->>'context_hash','recipient_name','Original recipient','recipient_relationship','Original relationship','reason','Synthetic handoff','attest_handoff',true,'refill_close',null));
-select throws_ok($$select append_native_dispense_correction(gen_random_uuid(),(select v from data where k='pre-pickup-context'))$$,'40001','Correction review context changed','Pickup appearing during review invalidates context');
+select throws_ok($$select append_native_dispense_correction(gen_random_uuid(),(select v from data where k='pre-pickup-context'))$$,'PT409','Correction review context changed','Pickup appearing during review invalidates context');
 -- Rollback-only clock regression probe: replace only the private pickup projection
 -- inside the failing subtransaction. Original rows and function definition survive unchanged.
 reset role;
@@ -104,7 +104,7 @@ select throws_ok($probe$do $body$declare definition text;request jsonb;begin
  execute replace(definition,'p.document->''picked_up_at''','to_jsonb(''2099-01-01T00:00:00Z''::text)');
  request:=pg_temp.correction_request('pickup_amendment')||jsonb_build_object('pickup_amendment',jsonb_build_object('original_pickup_id',(select id from fx where k='pickup'),'disposition','recorded_in_error','handoff',null));
  perform append_native_dispense_correction(gen_random_uuid(),request);
- end $body$;$probe$,'40001','Correction observation clock moved backwards','Pickup amendment rejects clock earlier than original handoff');
+ end $body$;$probe$,'PT409','Correction observation clock moved backwards','Pickup amendment rejects clock earlier than original handoff');
 select ok(position('2099-01-01T00:00:00Z' in pg_get_functiondef('public.native_correction_pickup(uuid)'::regprocedure))=0,'Synthetic clock projection rolled back');
 set local role authenticated;
 insert into data select 'amend1-request',pg_temp.correction_request('pickup_amendment')||jsonb_build_object('pickup_amendment',jsonb_build_object('original_pickup_id',(select id from fx where k='pickup'),'disposition','recorded_in_error','handoff',null));

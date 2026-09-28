@@ -366,7 +366,7 @@ test("lost prepare acknowledgement stays uncertain until exact SQL retry succeed
   }
 });
 test("definite SQL preparation failures are conflicts without capture recovery override", async () => {
-  for (const code of ["23505", "23514", "22023", "40001"]) {
+  for (const code of ["23505", "23514", "22023", "PT409"]) {
     const f = fixture(envelope(true));
     f.prepareCode = code;
     assert.equal((await f.send()).status, 409);

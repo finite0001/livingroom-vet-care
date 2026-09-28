@@ -179,7 +179,7 @@ try:
     # locks serialize, and stale review must not create a second credit.
     a,d,t=ready();before=original(a,d,t);request=finance_review(finance_intent(a,d,'150'))
     one,two=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(finance_write(one,request),finance_write(two,request),rejected('40001'))
+    contended(finance_write(one,request),finance_write(two,request),rejected('PT409'))
     check(credit_count(t['invoice_id'])=='1','Competing native credits record one winner')
     check(finance_recover(two) is None,'Stale credit leaves no operation receipt')
     check(finance_read(a,d)['snapshot']['capacity']['credit_capacity_cents']=='50','Winning native credit consumes exact item capacity')
@@ -195,7 +195,7 @@ try:
     inv=invoice();a,d,t=filled(inv);a2,d2,t2=filled(inv);issue(inv)
     first_request=finance_review(finance_intent(a,d));second_request=finance_review(finance_intent(a2,d2))
     op2=str(uuid.uuid4())
-    contended(finance_write(str(uuid.uuid4()),first_request),finance_write(op2,second_request),rejected('40001'))
+    contended(finance_write(str(uuid.uuid4()),first_request),finance_write(op2,second_request),rejected('PT409'))
     check(finance_recover(op2) is None,'Other dispense on same invoice must refresh its financial review')
     check(finance_read(a2,d2)['snapshot']['capacity']['credit_capacity_cents']=='200','Other attributed dispense credit does not consume selected item capacity')
     credit(a2,d2)
@@ -204,7 +204,7 @@ try:
     # Generic credit first invalidates the native review and conservatively consumes
     # its item capacity, even though no generic item attribution is guessed.
     a,d,t=ready();request=finance_review(finance_intent(a,d));op=str(uuid.uuid4())
-    contended(generic(str(uuid.uuid4()),t['invoice_id'],'50'),finance_write(op,request),rejected('40001'))
+    contended(generic(str(uuid.uuid4()),t['invoice_id'],'50'),finance_write(op,request),rejected('PT409'))
     cap=finance_read(a,d)['snapshot']['capacity']
     check(cap['unallocated_credit_cents']=='50' and cap['credit_capacity_cents']=='150','Unallocated credit is conservatively counted')
     check(finance_recover(op) is None,'Generic conflict leaves no native receipt')
@@ -242,7 +242,7 @@ try:
             reviewed_physical_facts=True,intake_claim_incorrect=False,remains_physically_held=False,
             was_not_destroyed=False,removed_from_available_stock=False))
     bare_gate='select pg_advisory_xact_lock(hashtextextended('+quote(op)+'::text,0));'
-    contended(bare_gate,finance_write(op,request),rejected('40001'),
+    contended(bare_gate,finance_write(op,request),rejected('PT409'),
               operation('record_native_dispense_return_v2',op,return_request))
     check(finance_recover(op) is None,'Changed return head prevents stale finance commit without deadlock')
     check(invoke('recover_native_dispense_return_v2',quote(op)) is not None,'Actual return commits after observed bare-ID wait')
@@ -270,18 +270,18 @@ try:
         return invoke('preview_native_dispense_finance',jsonsql(finance_intent(a,d,'1','refund',credit_id,payment)))['context']['eligible_amount_cents']
     a,d,t,payment,provider_payment=paid();before=original(a,d,t);c=credit(a,d,'150')
     request=refund_review(a,d,c,payment,'100');one,two=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(finance_write(one,request),finance_write(two,request),rejected('40001'))
+    contended(finance_write(one,request),finance_write(two,request),rejected('PT409'))
     check(finance_recover(two) is None,'Concurrent reservation loser has no receipt')
     check(refund_capacity(a,d,c,payment)=='50','Pending or lost-response reservation consumes linked capacity')
     frozen=finance_recover(one)
-    contended(evidence(one,provider_payment,'100','failed'),finance_write(str(uuid.uuid4()),refund_review(a,d,c,payment,'50')),rejected('40001'))
+    contended(evidence(one,provider_payment,'100','failed'),finance_write(str(uuid.uuid4()),refund_review(a,d,c,payment,'50')),rejected('PT409'))
     check(refund_capacity(a,d,c,payment)=='150','Authoritative failure releases linked reservation capacity')
     check(finance_recover(one)==frozen,'Later provider failure does not rewrite original reservation receipt')
     request=refund_review(a,d,c,payment,'100');settled=str(uuid.uuid4())
     invoke('record_native_dispense_finance',quote(settled),jsonsql(request))
     settled_receipt=finance_recover(settled)
     contended(evidence(settled,provider_payment,'100','succeeded'),
-              finance_write(str(uuid.uuid4()),refund_review(a,d,c,payment,'50')),rejected('40001'))
+              finance_write(str(uuid.uuid4()),refund_review(a,d,c,payment,'50')),rejected('PT409'))
     check(refund_capacity(a,d,c,payment)=='50','Settled refund consumes capacity once, without pending double count')
     snap=finance_read(a,d)['snapshot']
     check(snap['balance']['pending_refund_cents']=='0' and snap['balance']['refunded_cents']=='100','Settlement moves reservation into confirmed cash history')

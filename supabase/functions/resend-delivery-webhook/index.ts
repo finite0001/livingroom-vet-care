@@ -7,6 +7,10 @@ import { WebhookError } from "../_shared/inbound/verification.ts";
 // The single Resend webhook endpoint (Resend is outbound only since 2026-09-27).
 // Delivery/bounce/complaint/failure receipts settle the canonical outbox (and,
 // only when the outbox does not know the id, a legacy outbound_deliveries row).
+// Resend webhooks are ACCOUNT-WIDE (the account also sends for other businesses):
+// receipts whose sender domain is not RESEND_FROM's (or RESEND_AUTH_FROM_ADDRESS's)
+// are acknowledged with 204 before any database call and never stored or logged.
+// Unknown receipts from our own domain are acknowledged, not retried.
 // email.received is refused: client replies arrive through AgentMail.
 // RESEND_DELIVERY_WEBHOOK_SECRET is this endpoint's own Svix signing secret; it
 // is deliberately not shared with any other slug. verify_jwt=false: Svix proof
@@ -30,7 +34,7 @@ serve(async (req) => {
       },
       (raw, headers) => verifier.verify(raw, headers),
       async ({ providerMessageId, status, note, errorText }) => {
-        const { error } = await db.rpc("record_outbound_delivery_callback", {
+        const { data, error } = await db.rpc("record_outbound_delivery_callback", {
           p_provider: "resend",
           p_provider_message_id: providerMessageId,
           p_status: status,
@@ -38,7 +42,9 @@ serve(async (req) => {
           p_error_text: errorText,
           p_recorded_at: new Date().toISOString(),
         });
-        return !error;
+        if (error) return false;
+        // An unknown/ineligible delivery is a NULL row: not ours, acknowledged.
+        return (data as { id?: unknown } | null)?.id ? "settled" : "unmatched";
       },
     );
     return new Response(null, { status: 204 });

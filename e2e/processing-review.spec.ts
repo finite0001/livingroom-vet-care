@@ -169,7 +169,7 @@ async function fixture(page: Page, role = "ADMIN") {
       if (state.stale)
         return route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Work changed" },
+          json: { code: "PT409", message: "Work changed" },
         });
       const r = {
         id: b.p_id,

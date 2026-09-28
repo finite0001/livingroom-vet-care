@@ -153,7 +153,7 @@ try:
     def success(code,out,err):return code==0
     # Different operations reviewed against the same unopened slot cannot both open it.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);win,lose=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(dispense(win,r),dispense(lose,r),rejected('40001'))
+    contended(dispense(win,r),dispense(lose,r),rejected('PT409'))
     check(fill_receipt(lose) is None,'Losing slot race creates no receipt')
     check(json.loads(effects(t['invoice_id'],l))==dict(stock=8,charges=1),'One slot winner debits and charges exactly once')
     # Exact replay waits and recovers the first immutable transaction, without child effects.
@@ -162,52 +162,52 @@ try:
     check(json.loads(effects(t['invoice_id'],l))==dict(stock=8,charges=1),'Same UUID race debits and charges once')
     # Distinct authorizations/invoices compete for the same physical lot.
     l=lot(10);t1=target(signed(),l,quantity='6');t2=target(signed(),l,quantity='6');r1,r2=reviewed(t1),reviewed(t2);op1,op2=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(dispense(op1,r1),dispense(op2,r2),rejected('23514','40001'))
+    contended(dispense(op1,r1),dispense(op2,r2),rejected('23514','PT409'))
     check(fill_receipt(op2) is None and json.loads(effects(t2['invoice_id'],l))==dict(stock=4,charges=0),'Stock loser rolls back allowance and charge')
     # Invoice issuance wins its row lock; reviewed draft can no longer be charged.
     service=invoke('save_catalog_product','null','null',quote('Synthetic service'),quote('service'),quote(''),quote('service'),'100','true')['id']
     a=signed();l=lot();t=target(a,l)
     invoke('add_invoice_service',quote(str(uuid.uuid4())),quote(t['invoice_id']),quote(fx['pet']),quote(service),'1')
     r=reviewed(t);op=str(uuid.uuid4())
-    contended(staff+call('issue_billing_invoice',quote(t['invoice_id']),'2'),dispense(op,r),rejected('23514','40001'))
+    contended(staff+call('issue_billing_invoice',quote(t['invoice_id']),'2'),dispense(op,r),rejected('23514','PT409'))
     check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=10,charges=1),'Invoice issuance prevents dispensing side effects')
     # A service charge invalidates reviewed invoice evidence while it holds that row.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
     charge=staff+call('add_invoice_service',quote(str(uuid.uuid4())),quote(t['invoice_id']),quote(fx['pet']),quote(service),'1')
-    contended(charge,dispense(op,r),rejected('40001'))
+    contended(charge,dispense(op,r),rejected('PT409'))
     check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=10,charges=1),'Competing service charge keeps only its own invoice effect')
     # A terminal cancellation winning authorization serialization blocks dispensing.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    contended(operation('cancel_native_prescription',str(uuid.uuid4()),cancel_request(a)),dispense(op,r),rejected('23514','40001'))
+    contended(operation('cancel_native_prescription',str(uuid.uuid4()),cancel_request(a)),dispense(op,r),rejected('23514','PT409'))
     check(fill_receipt(op) is None,'Canceled authorization cannot produce a fill')
     # Conversely an actual fill invalidates a previously reviewed cancellation context.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);cancel_id=str(uuid.uuid4());cr=cancel_request(a)
-    contended(dispense(str(uuid.uuid4()),r),operation('cancel_native_prescription',cancel_id,cr),rejected('40001'))
+    contended(dispense(str(uuid.uuid4()),r),operation('cancel_native_prescription',cancel_id,cr),rejected('PT409'))
     check(receipt(cancel_id) is None,'Cancellation cannot ignore newly recorded native usage')
     # Replacement is terminal-only and cannot leave an old-order fill behind it.
     a=signed();d=draft();rr=replacement(a,d);l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
-    contended(operation('replace_native_prescription',str(uuid.uuid4()),rr),dispense(op,r),rejected('23514','40001'))
+    contended(operation('replace_native_prescription',str(uuid.uuid4()),rr),dispense(op,r),rejected('23514','PT409'))
     check(fill_receipt(op) is None,'Replacement winner leaves no prior-order fill')
     # Explicit remainder closure versus another partial; no reopen or lost forfeiture.
     a=signed();l=lot();t=target(a,l);invoke('record_native_dispense',quote(str(uuid.uuid4())),jsonsql(reviewed(t)))
     t2={**t,'expected_slot_version':1};r=reviewed(t2);p=invoke('preview_native_slot_close',quote(a),quote(fx['pet']),'0')
     close=dict(authorization_id=a,pet_id=fx['pet'],slot_index=0,expected_slot_version=1,expected_context_hash=p['context_hash'],reason='Synthetic forfeiture race',attest_forfeit=True);op=str(uuid.uuid4())
-    contended(operation('close_native_fill_slot',str(uuid.uuid4()),close),dispense(op,r),rejected('40001','23514'))
+    contended(operation('close_native_fill_slot',str(uuid.uuid4()),close),dispense(op,r),rejected('PT409','23514'))
     check(fill_receipt(op) is None and invoke('read_native_fulfillment',quote(a),quote(fx['pet']))['open_slot'] is None,'Forfeited slot cannot reopen through a stale partial')
     # Operational request changes serialize before authorization and reject old versions.
     a=signed();i=create_refill();p=invoke('preview_native_refill_link',quote(i),quote(fx['pet']),quote(a));tr=transition(i,'link');tr.update(authorization_id=a,expected_link_context_hash=p['context_hash']);invoke('transition_native_refill',quote(str(uuid.uuid4())),jsonsql(tr))
     l=lot();t=target(a,l,refill=dict(id=i,expected_version=2));r=reviewed(t);op=str(uuid.uuid4());assignment=transition(i,'assign',2);assignment['assigned_to']=actor
-    contended(operation('transition_native_refill',str(uuid.uuid4()),assignment),dispense(op,r),rejected('40001'))
+    contended(operation('transition_native_refill',str(uuid.uuid4()),assignment),dispense(op,r),rejected('PT409'))
     check(fill_receipt(op) is None and invoke('read_native_refill',quote(i),quote(fx['pet']))['refill']['version']==3,'Refill race keeps only operational winner')
     # Receiving changes balance while dispensing waits on its exact stock row.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
     receive=staff+call('receive_inventory',quote(str(uuid.uuid4())),quote(l),quote(fx['product']),quote('SYNTHETIC-'+l),quote('2099-12-31'),quote('Synthetic shelf'),'1',quote('Synthetic received during review'))
-    contended(receive,dispense(op,r),rejected('40001'))
+    contended(receive,dispense(op,r),rejected('PT409'))
     check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=11,charges=0),'Receipt balance drift requires fresh review, with no partial effect')
     # A current alert update holds the patient row and invalidates the old review.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())
     alert=staff+call('save_patient_problem','null',quote(fx['pet']),'null',quote('Synthetic concurrent alert'),quote('Synthetic caution'),'null',quote('active'),quote('high'))
-    contended(alert,dispense(op,r),rejected('40001'))
+    contended(alert,dispense(op,r),rejected('PT409'))
     check(fill_receipt(op) is None,'Alert changed while waiting cannot be bypassed')
     # Real three-writer schedule: receive owns product SHARE while waiting on lot;
     # catalog UPDATE queues; native dispense joins SHARE before its lot wait.
@@ -237,7 +237,7 @@ try:
     blocker.stdin.write('commit;\n');blocker.stdin.close()
     for proc,label in [(blocker,'lot holder'),(receiver,'receiver'),(catalog,'catalog')]:
         proc.wait(timeout=30);check(proc.returncode==0,label+' failed: '+proc.stderr.read())
-    filling.wait(timeout=30);check(filling.returncode!=0 and '40001' in filling.stderr.read(),'Concurrent receiving invalidates the exact reviewed balance')
+    filling.wait(timeout=30);check(filling.returncode!=0 and 'PT409' in filling.stderr.read(),'Concurrent receiving invalidates the exact reviewed balance')
     check(fill_receipt(op) is None and json.loads(effects(t['invoice_id'],l))==dict(stock=11,charges=0),'Three-way stale dispense rolls back stock and billing effects')
     # Role revocation while authorization gate is held is rechecked after waiting.
     a=signed();l=lot();t=target(a,l);r=reviewed(t);op=str(uuid.uuid4())

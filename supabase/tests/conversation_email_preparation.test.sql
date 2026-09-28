@@ -83,7 +83,7 @@ select set_config('request.jwt.claims','{"role":"service_role"}',true);
 insert into fx select 'lease',lease_token from claim_communication();
 select is(read_frozen_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'payload_text',(select v::text from data where k='payload'),'Dispatcher reads exact captured payload');
 select is(read_frozen_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'artifact_kind','conversation','Dispatcher receives conversation proof requirement');
-select throws_ok($$select read_frozen_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'40001',null,'Wrong lease rejected');
+select throws_ok($$select read_frozen_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'PT409',null,'Wrong lease rejected');
 -- Roll back each negative attempt so the final positive attempt uses the same real lease.
 reset role;
 create function pg_temp.attempt_probe(config jsonb) returns text language plpgsql security definer as $$

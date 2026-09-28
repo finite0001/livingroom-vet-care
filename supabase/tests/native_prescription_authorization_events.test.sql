@@ -44,7 +44,7 @@ select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-00000000
 select throws_ok($$select cancel_native_prescription((select id from fx where k='cancel'),(select v from data where k='cancel-request'))$$,'42501','Configured veterinarian required','Staff cannot cancel');
 select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 reset role;update pets set archived_at=clock_timestamp(),deceased_at=current_date where id=(select id from fx where k='pet');set local role authenticated;
-select throws_ok($$select cancel_native_prescription((select id from fx where k='cancel'),(select v from data where k='cancel-request'))$$,'40001','Authorization change context changed','Patient drift invalidates review');
+select throws_ok($$select cancel_native_prescription((select id from fx where k='cancel'),(select v from data where k='cancel-request'))$$,'PT409','Authorization change context changed','Patient drift invalidates review');
 select is(recover_native_prescription_operation((select id from fx where k='cancel')),null::jsonb,'Failed cancellation leaves no receipt');
 update data set v=jsonb_set(v,'{expected_context_hash}',preview_native_prescription_cancel((select id from fx where k='sign'),(select id from fx where k='pet'))->'context_hash') where k='cancel-request';
 insert into data select 'cancel-receipt',cancel_native_prescription((select id from fx where k='cancel'),(select v from data where k='cancel-request'));
@@ -81,7 +81,7 @@ select is(read_native_prescription_print((select id from fx where k='replace'))-
 select is(replace_native_prescription((select id from fx where k='replace'),(select v from data where k='replace-request')),(select v from data where k='replace-receipt'),'Replacement exact retry after draft signed and old head changed');
 select is(recover_native_prescription_operation((select id from fx where k='replace')),(select v from data where k='replace-receipt'),'Replacement UUID recovery');
 select throws_ok($$select sign_native_prescription((select id from fx where k='replace'),(select v from data where k='external-sign-request'))$$,'23514','Prescription operation identity cannot change','Replacement UUID cannot masquerade as child signature');
-select throws_ok($$select replace_native_prescription(gen_random_uuid(),(select v from data where k='replace-request'))$$,'40001','Prescription draft changed','Different operation cannot adopt already signed draft');
+select throws_ok($$select replace_native_prescription(gen_random_uuid(),(select v from data where k='replace-request'))$$,'PT409','Prescription draft changed','Different operation cannot adopt already signed draft');
 select configure_native_prescriber(gen_random_uuid(),(select jsonb_set(v||'{"expected_version":1}','{fields,active}','false') from data where k='config-request'));
 select is(replace_native_prescription((select id from fx where k='replace'),(select v from data where k='replace-request')),(select v from data where k='replace-receipt'),'Historical replacement recovery survives decommissioning');
 select throws_ok($$select preview_native_prescription_cancel((select id from fx where k='replace'),(select id from fx where k='pet'))$$,'42501','Current native prescriber commissioning required','New cancellation requires current commissioning');

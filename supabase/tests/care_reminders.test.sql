@@ -21,7 +21,7 @@ create function pg_temp.care_plan(p_id uuid,p_version integer,p_due date default
 select lives_ok($$select pg_temp.care_plan('ac200000-0000-4000-8000-000000000001',null)$$,'Create current canonical due plan');
 select lives_ok($$select pg_temp.care_plan('ac200000-0000-4000-8000-000000000001',null)$$,'Plan replay idempotent');
 select throws_ok($$select pg_temp.care_plan(gen_random_uuid(),null)$$,'23505',null,'Duplicate active antigen group rejected');
-select throws_ok($$select pg_temp.care_plan('ac200000-0000-4000-8000-000000000001',0,'2026-02-01')$$,'40001',null,'Stale plan edit rejected');
+select throws_ok($$select pg_temp.care_plan('ac200000-0000-4000-8000-000000000001',0,'2026-02-01')$$,'PT409',null,'Stale plan edit rejected');
 select throws_ok($$select pg_temp.care_plan('ac200000-0000-4000-8000-000000000001',1,'2026-02-01')$$,'23514',null,'Due override requires reason');
 select throws_ok($$select public.save_patient_vaccine_due_plan('ac200000-0000-4000-8000-000000000001',(select id from care_fixture where kind='other'),1,'ac100000-0000-4000-8000-000000000001',1,(select id from care_fixture where kind='product'),null,'2026-01-01','Source',30,'2026-01-31','current',true,'','Review')$$,'42501',null,'Cross patient due write rejected');
 select throws_ok($$select public.save_patient_vaccine_due_plan(gen_random_uuid(),(select id from care_fixture where kind='other'),null,'ac100000-0000-4000-8000-000000000001',1,(select id from care_fixture where kind='otherproduct'),null,'2026-01-01','Source',30,'2026-01-31','current',true,'','Review')$$,'23514',null,'Unmapped product is not treated as equivalent');
@@ -31,7 +31,7 @@ select throws_ok($$select public.enqueue_care_reminder(gen_random_uuid(),'vaccin
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok($$select public.enqueue_care_reminder('ac400000-0000-4000-8000-000000000001','vaccine','ac200000-0000-4000-8000-000000000001',1,'ac300000-0000-4000-8000-000000000001',1)$$,'Service creates unsent durable job');
 select is((select id from public.enqueue_care_reminder(gen_random_uuid(),'vaccine','ac200000-0000-4000-8000-000000000001',1,'ac300000-0000-4000-8000-000000000001',1)),'ac400000-0000-4000-8000-000000000001'::uuid,'Different request UUID cannot duplicate same source/template version');
-select throws_ok($$select public.enqueue_care_reminder(gen_random_uuid(),'vaccine','ac200000-0000-4000-8000-000000000001',0,'ac300000-0000-4000-8000-000000000001',1)$$,'40001',null,'Stale source cannot enqueue');
+select throws_ok($$select public.enqueue_care_reminder(gen_random_uuid(),'vaccine','ac200000-0000-4000-8000-000000000001',0,'ac300000-0000-4000-8000-000000000001',1)$$,'PT409',null,'Stale source cannot enqueue');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ac000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select is((select rendered_body from public.care_reminder_jobs where id='ac400000-0000-4000-8000-000000000001'),'Juniper {{due_date}}: Synthetic reviewed group due 2026-01-31','Slot values are not recursively interpreted as template tokens');
 select is((select scheduled_on from public.care_reminder_jobs where id='ac400000-0000-4000-8000-000000000001'),'2026-01-24'::date,'Reviewed offset calculates calendar job date');
@@ -46,7 +46,7 @@ set local role authenticated;select set_config('request.jwt.claims','{"sub":"ac0
 select lives_ok($$select pg_temp.care_plan('ac200000-0000-4000-8000-000000000001',2,'2026-02-01','current',false,'Reviewed patient correction')$$,'Patient-specific reminders can be disabled');
 select is((select status from public.care_reminder_jobs where id='ac400000-0000-4000-8000-000000000002'),'invalidated','Disabled plan invalidates pending job');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
-select throws_ok($$select public.enqueue_care_reminder(gen_random_uuid(),'vaccine','ac200000-0000-4000-8000-000000000001',3,'ac300000-0000-4000-8000-000000000001',1)$$,'40001',null,'Disabled plan cannot enqueue');
+select throws_ok($$select public.enqueue_care_reminder(gen_random_uuid(),'vaccine','ac200000-0000-4000-8000-000000000001',3,'ac300000-0000-4000-8000-000000000001',1)$$,'PT409',null,'Disabled plan cannot enqueue');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ac000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select lives_ok($$select public.save_patient_lab_order('ac500000-0000-4000-8000-000000000001',(select id from care_fixture where kind='pet'),null,'{"test_name":"Synthetic lab","status":"planned","reminders_enabled":true,"due_date":"2026-10-01"}','')$$,'Uses existing lab due order without duplicate interval catalog');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);

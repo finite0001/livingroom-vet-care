@@ -69,7 +69,7 @@ insert into data select 'retract-dispose',record_native_dispense_return_v2(gen_r
 select is((select sum((x->>'disposed_quantity')::numeric)::text from jsonb_array_elements(pg_temp.reconciliation_read()->'allocations')x),'1.000','Partial two-lot disposal compensation');
 select is(recover_native_dispense_return_v2((select(v#>>'{result,id}')::uuid from data where k='retract-dispose')),(select v from data where k='retract-dispose'),'Actor-bound exact recovery');
 select is(record_native_dispense_return_v2((select(v#>>'{result,id}')::uuid from data where k='retract-dispose'),(select v from data where k='retract-dispose-request')),(select v from data where k='retract-dispose'),'Exact operation replay returns same receipt');
-select throws_ok($$select record_native_dispense_return_v2(gen_random_uuid(),(select v from data where k='retract-dispose-request'))$$,'40001',null,'Changed head prevents stale second correction');
+select throws_ok($$select record_native_dispense_return_v2(gen_random_uuid(),(select v from data where k='retract-dispose-request'))$$,'PT409',null,'Changed head prevents stale second correction');
 select throws_ok($$select preview_native_dispense_return_v2(pg_temp.reconciliation_intent('retract_disposal','retract-dispose','0.1',null))$$,'23514',null,'Cannot correct correction');
 select configure_native_return_policy(gen_random_uuid(),'{"expected_version":0,"enabled":true,"review_reference":"Synthetic only","attest_review":true}');
 insert into data select 'restock-v2',record_native_dispense_return_v2(gen_random_uuid(),pg_temp.reconciliation_request(pg_temp.reconciliation_intent('restock',null,'0.5','0.5')));

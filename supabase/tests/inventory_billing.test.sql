@@ -36,7 +36,7 @@ select is((select count(*) from public.patient_treatments),1::bigint,'Failed tra
 select lives_ok($$select public.receive_inventory('35000000-0000-4000-8000-000000000005','35000000-0000-4000-8000-000000000006',(select id from fx where k='product'),'EXPIRED',(now() at time zone 'America/Denver')::date-1,'Clinic',5,'Historical count')$$,'Receive expired stock for reconciliation');
 select throws_ok($$select public.record_patient_treatment(gen_random_uuid(),(select v||'{"lot_id":"35000000-0000-4000-8000-000000000006"}' from requests where k='live'))$$,'23514','Expired stock cannot be administered or dispensed','Expired lot cannot dispense');
 select lives_ok($$select public.add_invoice_service('35000000-0000-4000-8000-000000000007','35000000-0000-4000-8000-000000000003',(select id from fx where k='pet'),(select id from fx where k='service'),1)$$,'Charge service without stock');
-select throws_ok($$select public.issue_billing_invoice('35000000-0000-4000-8000-000000000003',1)$$,'40001',null,'New invoice lines invalidate stale issue version');
+select throws_ok($$select public.issue_billing_invoice('35000000-0000-4000-8000-000000000003',1)$$,'PT409',null,'New invoice lines invalidate stale issue version');
 select lives_ok($$select public.issue_billing_invoice('35000000-0000-4000-8000-000000000003',3)$$,'Issue current draft');
 select is((select total_cents from public.billing_invoices where id='35000000-0000-4000-8000-000000000003'),12500::bigint,'Issued total calculated in cents');
 select lives_ok($$select public.record_patient_treatment('35000000-0000-4000-8000-000000000004',(select v from requests where k='live'))$$,'Original successful treatment retry works after invoice issue');

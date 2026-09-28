@@ -170,7 +170,7 @@ async function fixture(
         return route.fulfill({
           status: 409,
           json: {
-            code: "40001",
+            code: "PT409",
             message:
               "Patient alerts changed; reload and review the current alerts before recording treatment",
           },

@@ -189,7 +189,7 @@ select throws_ok(
       null,
       null
     )$$,
-  '40001',
+  'PT409',
   'Appointment changed; reload before saving',
   'Stale appointment versions are rejected'
 );

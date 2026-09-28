@@ -93,7 +93,7 @@ try:
     fixture_ids.append(client)
     sql(f"insert into conversations(id,client_id) values('{conversation}','{client}');")
     upload, path = fixture()
-    race(service + claim(upload), service + claim(upload), expected_state='40001')
+    race(service + claim(upload), service + claim(upload), expected_state='PT409')
     check(sql(f"select count(*) from abandoned_attachment_cleanup where upload_id='{upload}'") == '1', 'Concurrent claims persist one cleanup identity')
 
     upload, path = fixture('uploading')

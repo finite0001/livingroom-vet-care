@@ -173,7 +173,7 @@ try:
     def stock_quantity(lid):return scalar('select coalesce(sum(quantity),0)::text from inventory_movements where lot_id='+quote(lid)+';')
     # Different UUID corrections reviewed against the same original cannot exceed it.
     a,d,t,i,s=stocked();request=current_review(current_intent(a,d,'retract_restock','0.750',i['id'],s));one,two=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(append_current(one,request),append_current(two,request),rejected('23514','40001'))
+    contended(append_current(one,request),append_current(two,request),rejected('23514','PT409'))
     check(reconciliation_read(a,d)['allocations'][0]['restocked_quantity']=='0.250','Competing corrections consume source capacity only once')
     check(invoke('recover_native_dispense_return_v2',quote(two)) is None,'Rejected correction has no receipt')
     check(scalar('select count(*) from native_return_compensation_links where event_id='+quote(one)+';')=='1','Winning correction has exactly one negative stock link')
@@ -190,7 +190,7 @@ try:
     # A concurrent stock adjustment invalidates a previously reviewed compensation.
     a,d,t,i,s=stocked();lid=t['allocations'][0]['lot_id'];request=current_review(current_intent(a,d,'retract_restock','1',i['id'],s));op=str(uuid.uuid4())
     adjustment=staff+call('adjust_inventory',quote(str(uuid.uuid4())),quote(lid),'1',quote('Synthetic competing count'))
-    contended(adjustment,append_current(op,request),rejected('40001'))
+    contended(adjustment,append_current(op,request),rejected('PT409'))
     check(invoke('recover_native_dispense_return_v2',quote(op)) is None,'Changed stock review commits no compensation')
     # A report that obtains its lot lock first blocks a waiting generic adjustment.
     a,d,t,i,s=stocked();lid=t['allocations'][0]['lot_id'];report_id=str(uuid.uuid4());request=discrepancy_review(discrepancy_intent(a,d,s));before=stock_quantity(lid)
@@ -200,7 +200,7 @@ try:
     check(reconciliation_read(a,d)['discrepancies']['open_case_count']==1,'Report remains open after blocked writer')
     # A separate prescription shares the lot gate and cannot dispense held stock.
     a,d,t,i,s=stocked();lid=t['allocations'][0]['lot_id'];other_authorization=signed();new_target=target(other_authorization,lid,quantity='1');new_fill=str(uuid.uuid4());dispense_request=reviewed(new_target)
-    contended(append_discrepancy(str(uuid.uuid4()),discrepancy_review(discrepancy_intent(a,d,s))),dispense(new_fill,dispense_request),rejected('23514','40001'))
+    contended(append_discrepancy(str(uuid.uuid4()),discrepancy_review(discrepancy_intent(a,d,s))),dispense(new_fill,dispense_request),rejected('23514','PT409'))
     check(fill_receipt(new_fill) is None,'Waiting cross-prescription dispense creates no receipt')
     check(scalar('select count(*) from billing_invoice_items where invoice_id='+quote(new_target['invoice_id'])+';')=='0','Held-lot rejection rolls back billing')
     # Discrepancy exact retry creates one decision, not a second hold/case.

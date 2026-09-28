@@ -28,7 +28,7 @@ select is((select v->'artifact' from data where k='prep1'),'null'::jsonb,'Prepar
 select is(read_native_estimate_publication((select id from fx where k='estimate'),(select id from fx where k='client'))->>'current_status','none','No implicit publication');
 select is(prepare_native_estimate_publication((select id from fx where k='prep1'),(select v from data where k='prep1-request')),(select v from data where k='prep1'),'Preparation retry exact');
 select throws_ok($$select prepare_native_estimate_publication((select id from fx where k='prep1'),jsonb_set((select v from data where k='prep1-request'),'{draft_version}','1'))$$,'23514',null,'Preparation cannot change identity');
-select throws_ok($$select prepare_native_estimate_publication(gen_random_uuid(),jsonb_set((select v from data where k='prep1-request'),'{expected_source_hash}',to_jsonb(repeat('0',64))))$$,'40001',null,'Stale reviewed source hash rejected');
+select throws_ok($$select prepare_native_estimate_publication(gen_random_uuid(),jsonb_set((select v from data where k='prep1-request'),'{expected_source_hash}',to_jsonb(repeat('0',64))))$$,'PT409',null,'Stale reviewed source hash rejected');
 insert into data values('html',to_jsonb('<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src ''none''; style-src ''unsafe-inline''; base-uri ''none''; form-action ''none''"></head><body><p>Synthetic captured estimate: $0.03 &lt;a href=&quot;javascript:alert(1)&quot;&gt;special&lt;/a&gt; &lt;img src=x onerror=&quot;bad&quot;&gt; url(example) @import text</p></body></html>'::text));
 select throws_ok($$select capture_native_estimate_publication_artifact((select id from fx where k='prep1'),auth.uid(),(select v->>'content_hash' from data where k='prep1'),1,'')$$,'42501',null,'Staff cannot impersonate artifact renderer');
 set local role service_role;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"service_role"}',true);
@@ -66,7 +66,7 @@ set local role authenticated;select set_config('request.jwt.claims','{"sub":"e57
 update data set v=recover_native_estimate_preparation((select id from fx where k='prep2')) where k='prep2';
 insert into data select 'pub2-stale',pg_temp.publish_request('prep2');
 select save_client(auth.uid(),(select id from fx where k='client'),1,'Changed','Household',null,'estimate@example.test','EMAIL',null,null);
-select throws_ok($$select publish_native_estimate((select id from fx where k='closepub'),(select v from data where k='pub2-stale'))$$,'40001',null,'Display change requires new captured publication review');
+select throws_ok($$select publish_native_estimate((select id from fx where k='closepub'),(select v from data where k='pub2-stale'))$$,'PT409',null,'Display change requires new captured publication review');
 insert into data select 'closure',close_native_estimate_publication_operation((select id from fx where k='closepub'),jsonb_build_object('kind','publish','request',v)) from data where k='pub2-stale';
 select is((select v->>'status' from data where k='closure'),'closed_unrecorded','Stale uncertain publication safely closed');
 select is(close_native_estimate_publication_operation((select id from fx where k='closepub'),jsonb_build_object('kind','publish','request',(select v from data where k='pub2-stale'))),(select v from data where k='closure'),'Exact closure retry');
@@ -87,7 +87,7 @@ select is(read_native_estimate_publication((select id from fx where k='estimate'
 select is(read_native_estimate_publication((select id from fx where k='estimate'),(select id from fx where k='client'))->'current','null'::jsonb,'Withdrawn proposal no longer current');
 select is(read_native_estimate_published_revision((select id from fx where k='pub2'),(select id from fx where k='client'))->>'status','withdrawn','Withdrawn history explicit');
 select is(withdraw_native_estimate((select id from fx where k='withdraw'),(select v from data where k='withdraw-request')),(select v from data where k='withdraw'),'Withdrawal exact retry');
-select throws_ok($$select withdraw_native_estimate(gen_random_uuid(),(select v from data where k='withdraw-request'))$$,'40001',null,'Stale withdrawal cannot repeat');
+select throws_ok($$select withdraw_native_estimate(gen_random_uuid(),(select v from data where k='withdraw-request'))$$,'PT409',null,'Stale withdrawal cannot repeat');
 select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select lives_ok($$select read_native_estimate_publication_artifact((select id from fx where k='prep1'),(select id from fx where k='client'),(select v->>'sha256' from data where k='artifact'))$$,'Active staff can read superseded published bytes');
 select throws_ok($$select recover_native_estimate_publication_operation((select id from fx where k='pub1'))$$,'42501',null,'Mutation recovery creator-only');

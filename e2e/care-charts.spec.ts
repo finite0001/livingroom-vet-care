@@ -108,7 +108,7 @@ async function fixture(page: Page) {
         return route.fulfill({
           status: 409,
           json: {
-            code: "40001",
+            code: "PT409",
             message: "Chart changed; reload before saving",
           },
         });
@@ -152,7 +152,7 @@ async function fixture(page: Page) {
         return route.fulfill({
           status: 409,
           json: {
-            code: "40001",
+            code: "PT409",
             message: "Body map changed; reload before saving",
           },
         });
