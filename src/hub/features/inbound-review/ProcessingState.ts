@@ -14,7 +14,7 @@ const state = z.enum(["pending", "claimed", "processed", "review"]),
     .nullable();
 export const eventSchema = z.object({
   id,
-  provider: z.enum(["resend", "twilio"]),
+  provider: z.enum(["resend", "twilio", "agentmail"]),
   event_id: z.string(),
   resource_id: z.string(),
   event_type: z.enum([

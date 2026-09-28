@@ -15,7 +15,14 @@ import {
 } from "./handlers.ts";
 import { normalizePhone } from "../delivery-policy.ts";
 import { boundedBody, digestMetadata, WebhookError } from "./verification.ts";
+import {
+  AgentMailContentError,
+  agentMailFetchTarget,
+  normalizeAgentMailMessage,
+} from "./agentmail.ts";
 export interface ReceivingEnvironment {
+  AGENTMAIL_API_KEY?: string;
+  AGENTMAIL_INBOX_ID?: string;
   RESEND_API_KEY?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_ACCOUNT_SID?: string;
@@ -50,7 +57,13 @@ export async function processOneInbound(
     }
     let endpoint: string;
     let authorization: string;
-    if (event.provider === "resend") {
+    if (event.provider === "agentmail") {
+      if (!env.AGENTMAIL_API_KEY || !env.AGENTMAIL_INBOX_ID) {
+        throw new Error("Receiving credentials missing");
+      }
+      endpoint = (await agentMailFetchTarget(event, env.AGENTMAIL_INBOX_ID)).url;
+      authorization = `Bearer ${env.AGENTMAIL_API_KEY}`;
+    } else if (event.provider === "resend") {
       if (!env.RESEND_API_KEY) throw new Error("Receiving credentials missing");
       if (!/^[0-9a-f-]{36}$/i.test(event.resource_id)) {
         throw new ReviewError("Invalid resource");
@@ -89,7 +102,11 @@ export async function processOneInbound(
     let rfc: string | null = null;
     let replies: string[] = [];
     let attachments: unknown[] = [];
-    if (event.provider === "resend") {
+    if (event.provider === "agentmail") {
+      const email = await normalizeAgentMailMessage(data, event.metadata);
+      ({ sender, recipient, body, html, subject, occurred, rfc, replies } = email);
+      attachments = email.attachments;
+    } else if (event.provider === "resend") {
       sender = emailAddress(data.from);
       const recipients = Array.isArray(data.to)
         ? data.to.map(emailAddress)
@@ -182,6 +199,7 @@ export async function processOneInbound(
     return { processed: true };
   } catch (error) {
     const review = error instanceof ReviewError ||
+      error instanceof AgentMailContentError ||
       error instanceof InboundAttachmentMetadataError ||
       (error instanceof WebhookError && error.status === 413);
     const released: unknown = await call(

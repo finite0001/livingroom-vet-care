@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-for (const name of ["send-email", "send-sms", "send-provider-email"]) {
+for (const name of ["send-provider-email"]) {
   test(`${name}: retired endpoint cannot bypass queue even with live credentials`, async () => {
     let handler: ((request: Request) => Response) | undefined;
     let externalCalls = 0;

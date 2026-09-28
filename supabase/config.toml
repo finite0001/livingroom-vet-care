@@ -9,6 +9,9 @@ verify_jwt = true
 [functions.resend-webhook]
 verify_jwt = false
 
+[functions.agentmail-inbound-webhook]
+verify_jwt = false
+
 [functions.twilio-webhook]
 verify_jwt = false
 

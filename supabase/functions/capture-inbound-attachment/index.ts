@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.110.3";
 import { createInboundAttachmentCaptureHandler } from "../_shared/inbound/capture-attachment.ts";
 import { retrieveResendAttachment } from "../_shared/inbound/resend-attachment.ts";
+import { retrieveAgentMailAttachment } from "../_shared/inbound/agentmail.ts";
 import { storeIncomingOriginal } from "../_shared/inbound/store-attachment.ts";
 const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -18,7 +19,14 @@ const handler = createInboundAttachmentCaptureHandler({
     if (error) throw error;
     return data;
   },
-  retrieve: (emailId, metadata) => retrieveResendAttachment(emailId, metadata, Deno.env.get("RESEND_API_KEY") || ""),
+  // The provider comes from the database lease (saved receipt), never the browser.
+  retrieve: (emailId, metadata, lease) => lease.provider === "agentmail"
+    ? retrieveAgentMailAttachment(
+      { emailId, providerMessageId: lease.provider_message_id, providerInboxId: lease.provider_inbox_id },
+      metadata,
+      { AGENTMAIL_API_KEY: Deno.env.get("AGENTMAIL_API_KEY"), AGENTMAIL_INBOX_ID: Deno.env.get("AGENTMAIL_INBOX_ID") },
+    )
+    : retrieveResendAttachment(emailId, metadata, Deno.env.get("RESEND_API_KEY") || ""),
   store: (path, captured) => storeIncomingOriginal(service.storage.from("inbound-attachment-originals"), path, captured),
   finalize: async (lease, captured) => {
     const { data, error } = await service.rpc("finalize_inbound_attachment", {

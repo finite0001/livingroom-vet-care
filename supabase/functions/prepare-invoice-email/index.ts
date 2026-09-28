@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.110.3";
 import { createPrepareInvoiceEmailHandler } from "../_shared/prepare-invoice-email.ts";
+import { resolveEmailReplyTo } from "../_shared/delivery-policy.ts";
 const url = Deno.env.get("SUPABASE_URL")!;
 const service = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -25,7 +26,7 @@ Deno.serve(
     },
     sender: {
       from: Deno.env.get("RESEND_FROM") || "",
-      replyTo: Deno.env.get("RESEND_REPLY_TO") || "",
+      replyTo: resolveEmailReplyTo({ AGENTMAIL_INBOX_ADDRESS: Deno.env.get("AGENTMAIL_INBOX_ADDRESS"), RESEND_REPLY_TO: Deno.env.get("RESEND_REPLY_TO"), OUTBOUND_DELIVERY_MODE: Deno.env.get("OUTBOUND_DELIVERY_MODE") }),
     },
   }),
 );

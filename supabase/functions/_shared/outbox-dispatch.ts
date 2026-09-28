@@ -53,6 +53,7 @@ export interface OutboxEnvironment extends DeliveryPolicyEnvironment {
   RESEND_API_KEY?: string;
   RESEND_FROM?: string;
   RESEND_REPLY_TO?: string;
+  AGENTMAIL_INBOX_ADDRESS?: string;
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_FROM_NUMBER?: string;

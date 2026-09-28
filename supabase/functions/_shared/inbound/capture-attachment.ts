@@ -23,6 +23,11 @@ export interface InboundCaptureLease {
   token: string;
   storage_path: string;
   metadata: InboundAttachmentMetadata;
+  /** Absent on leases issued before migration 20260928180000 (Resend only). */
+  provider?: "resend" | "agentmail";
+  /** AgentMail only: signed provider identity from the durable receipt. */
+  provider_message_id?: string | null;
+  provider_inbox_id?: string | null;
 }
 export interface InboundCaptureDependencies {
   authenticate(token: string): Promise<string | null>;
@@ -30,7 +35,7 @@ export interface InboundCaptureDependencies {
     ready: InboundCaptureReceipt | null;
     lease: InboundCaptureLease | null;
   }>;
-  retrieve(emailId: string, metadata: InboundAttachmentMetadata): Promise<CapturedInboundAttachment>;
+  retrieve(emailId: string, metadata: InboundAttachmentMetadata, lease: InboundCaptureLease): Promise<CapturedInboundAttachment>;
   store(path: string, captured: CapturedInboundAttachment): Promise<void>;
   finalize(lease: InboundCaptureLease, captured: CapturedInboundAttachment): Promise<unknown>;
 }
@@ -72,9 +77,11 @@ export function createInboundAttachmentCaptureHandler(deps: InboundCaptureDepend
       if (!lease || !uuid(lease.id) || !uuid(lease.token) || !uuid(lease.email_id) || !uuid(lease.message_id) ||
         lease.actor_id !== actor || lease.inbound_id !== input.inbound_id || lease.attachment_id !== input.attachment_id ||
         lease.inbound_version !== input.version || lease.metadata.id !== input.attachment_id ||
-        lease.storage_path !== `${input.inbound_id}/${input.attachment_id}/${lease.token}/original`)
+        lease.storage_path !== `${input.inbound_id}/${input.attachment_id}/${lease.token}/original` ||
+        (lease.provider !== undefined && lease.provider !== "resend" && lease.provider !== "agentmail") ||
+        (lease.provider === "agentmail" && (typeof lease.provider_message_id !== "string" || typeof lease.provider_inbox_id !== "string")))
         throw new Error("Capture lease unavailable");
-      const captured = await deps.retrieve(lease.email_id, lease.metadata);
+      const captured = await deps.retrieve(lease.email_id, lease.metadata, lease);
       if (!hash(captured.sha256) || captured.bytes.length !== lease.metadata.size || captured.mimeType !== lease.metadata.content_type || captured.filename !== lease.metadata.filename)
         throw new Error("Retrieved file differs from saved metadata");
       await deps.store(lease.storage_path, captured);

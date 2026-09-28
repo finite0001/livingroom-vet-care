@@ -1,8 +1,10 @@
 # Go-live runbook — September 2026
 
-One owner checklist for everything between the app and a ready state. Steps are in order: each one depends on the steps above it. It covers the ready-state train (integration branch `integration/2026-09-28-ready`): CloudTalk outbound SMS, the CloudTalk unified inbox, vaccine status and catalog, the HHHHHMM quality-of-life scale, anesthesia drug billing and the reminder pipeline.
+One owner checklist for everything between the app and a ready state. Steps are in order: each one depends on the steps above it. It covers the ready-state train (integration branch `integration/2026-09-28-ready`): CloudTalk outbound SMS, the CloudTalk unified inbox, vaccine status and catalog, the HHHHHMM quality-of-life scale, anesthesia drug billing, the reminder pipeline, and AgentMail inbound email (with Resend outbound only and the legacy `send-email`/`send-sms` functions retired).
 
 **Owner decision, 2026-09-27:** all text messaging goes through CloudTalk (`+1 720-764-6677`). Twilio code stays in the repository and can still be selected, but it is not used. Don't configure Twilio dashboards, and don't set `SMS_PROVIDER` to `twilio`.
+
+**Owner decision, 2026-09-27 (email):** Resend sends app email (outbound only). An **AgentMail** inbox receives client replies and hands them to the app ([AgentMail inbound](agentmail-inbound.md)). Fastmail stays the staff mailbox provider, and the root MX doesn't change. The legacy `send-email` and `send-sms` functions are retired and must be deleted from both projects (§2).
 
 Rules for every step:
 
@@ -16,7 +18,7 @@ Rules for every step:
 | Item | State |
 | --- | --- |
 | Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
-| Repository migrations after this train | 161. There are **9 pending**: `20260927120000` (contact SMS consent, already on main) plus the 8 from this train (§3). |
+| Repository migrations after this train | 162. There are **10 pending**: `20260927120000` (contact SMS consent, already on main) plus the 9 from this train (§3). |
 | Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
 | Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
@@ -35,7 +37,21 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
 - [ ] **C1: functions not deployed.** These local entrypoints are outside the deployed set (the 2026-09-26 set of 23 plus the two CloudTalk functions): `invite-staff`, `invoice-checkout`, `invoice-refund`, `payment-collection`, `payment-status`, `prepare-payment-collection`, `recover-payment-collection`, `verify-payment-reconciliation`, `process-stripe-events`, `stripe-webhook`, `prepare-payment-delivery`, `prepare-document-link`, `recover-document-link`, `retrieve-document-link`, `prepare-release-email`, `prepare-invoice-email`, `prepare-external-record`, `prepare-lab-report`, `capture-ezyvet-attachment`, `retrieve-reviewed-ezyvet-original`, `ezyvet-import`, `send-provider-email`, `suggest-replies`.
   - Check what is live: `supabase functions list --project-ref mgadheotkdnrsatfivjy`.
   - Nine of the ten train functions in §4 are among them (`cloudtalk-webhook` is already deployed and is redeployed in §4). Deploy the rest only when the UI that calls them is enabled (payments in §11, `invite-staff` for staff onboarding). Leave optional ones (`send-provider-email`, `suggest-replies`, ezyVet import) undeployed and shown as unavailable.
-  - Never deploy `send-email` or `send-sms`. They are retired 410 stubs, and production v8 of both still enqueues into `outbound_deliveries`, so they should be **deleted** from both projects: `supabase functions delete send-email --project-ref <ref>`, and the same for `send-sms`, after confirming nothing calls them.
+- [ ] **Delete the legacy `send-email` and `send-sms` functions from both projects.** Their source is gone from the repository. Production v8 of both still enqueues into `outbound_deliveries`, so they must not stay deployed. Every app caller already uses `enqueue-message` → `communication_outbox` → `dispatch-outbox`, and bulk campaigns stay unavailable.
+  1. Check that nothing calls them. Both checks must pass:
+     ```sh
+     git grep -nE "functions\.invoke\(\s*['\"](send-email|send-sms)['\"]|/functions/v1/(send-email|send-sms)\b" -- src supabase/functions scripts   # expect no output
+     node --experimental-strip-types --test tests/delivery/legacy-send-retired.test.ts                                                          # expect pass
+     ```
+     Then open each function in the dashboard (Edge Functions → `send-email` / `send-sms` → Invocations/Logs) and confirm there have been no invocations since the last frontend deploy. If there have been any, stop and find the caller first.
+  2. Delete, staging first:
+     ```sh
+     npx supabase functions delete send-email --project-ref kothoqicubowyhwfsrte
+     npx supabase functions delete send-sms   --project-ref kothoqicubowyhwfsrte
+     npx supabase functions delete send-email --project-ref mgadheotkdnrsatfivjy
+     npx supabase functions delete send-sms   --project-ref mgadheotkdnrsatfivjy
+     ```
+  3. Verify: `npx supabase functions list --project-ref <ref>` shows neither slug, and `npm run supabase:functions-inventory` reports `"retiredStillDeployed": []`.
 - [ ] **C3: readiness summary trusts stale evidence.** After §3–§4, run `npm run readiness:refresh --silent && npm run readiness:summary -- --fail-on-blockers`. Treat a pass as meaningful only when it names the merged SHA and a green CI run for it.
 - [ ] **W2: scheduler routes.** The scheduler targets `dispatch-outbox`, `process-inbound`, `queue-reminders`, `process-stripe-events` and `cleanup-abandoned-attachment`. `process-stripe-events` is not deployed yet (see C1). `dispatch-outbound-deliveries` has no cron job. After this train, the `enqueue_due_appointment_reminders()` path that fed it is retired, so it only settles legacy rows and needs no schedule.
 - [ ] **W4: recovery and alerting.** Turn on PITR, or record an explicit decision not to, for `mgadheotkdnrsatfivjy`. Confirm restore access and who receives alerts. Point an external uptime monitor at `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/health`, which is only a liveness check.
@@ -44,7 +60,7 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
 
 ## 3. Apply database migrations (staging, then primary)
 
-These are the 9 pending migrations, applied in this order:
+These are the 10 pending migrations, applied in this order:
 
 | Version | What it does | Must land before |
 | --- | --- | --- |
@@ -56,6 +72,7 @@ These are the 9 pending migrations, applied in this order:
 | `20260928130000_qol_hhhhhmm_scale` | Adds QOL assessments, addenda and the reference-line setting | the frontend |
 | `20260928140000_anesthesia_drug_administrations` | Adds `record_anesthesia_drug_administration` and the append-only link table | the frontend |
 | `20260928150000_reminder_pipeline_readiness` | Makes one appointment reminder path, adds email reminder channel choice and per-order lab reminders | **the frontend**. The old `save_patient_lab_order` rejects the new `reminders_enabled` key. |
+| `20260928180000_agentmail_inbound` | Adds provider `agentmail` to provider receipts (inbound only, with the signed inbox and message ids required), makes it an EMAIL channel in `complete_inbound_communication`, and lets attachment capture/read/list accept AgentMail rows. The capture lease now names the provider and the signed provider ids. Resend and Twilio rows are unchanged. | **deploying `agentmail-inbound-webhook`, `process-inbound` and `capture-inbound-attachment`** (§4). Without it, AgentMail receipts are refused with 23514 and AgentMail retries them. |
 | `20260928160000_cloudtalk_capability_redaction` | Redacts document-link and payment-link capabilities from CloudTalk message bodies and AI summaries at ingest, redacts any already stored (audited in `cloudtalk_capability_redactions`), re-projects the texts they had blocked, and matches app-sent link texts to their outbox row | **enabling live CloudTalk SMS** (§7). Apply it before any document or payment link is texted. Redeploy `cloudtalk-webhook` (§4) right after it. |
 
 ```sh
@@ -64,7 +81,7 @@ git rev-parse HEAD                      # must equal the merged SHA from §1
 
 # Staging
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault --dry-run
-#   expect exactly the 9 files above and nothing else. Stop if the list differs.
+#   expect exactly the 10 files above and nothing else. Stop if the list differs.
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault
 
 # Primary: only after the staging probes below pass
@@ -75,7 +92,9 @@ npx supabase db push --project-ref mgadheotkdnrsatfivjy --skip-vault
 Read-only probes to run after each push (SQL editor or `psql "$LRV_DB_URL"`):
 
 ```sql
-select count(*) from supabase_migrations.schema_migrations;          -- 161
+select count(*) from supabase_migrations.schema_migrations;          -- 162
+select pg_get_constraintdef(oid) from pg_constraint
+ where conname='communication_provider_events_provider_check';         -- lists 'agentmail'
 select count(*) from public.cloudtalk_messages
  where body ~ '(v1|p1|s1|e1)\.[A-Za-z0-9_-]{43}';                -- 0
 select provider from public.communication_sms_provider_setting;       -- cloudtalk
@@ -88,7 +107,7 @@ select column_name from information_schema.columns
 
 ## 4. Deploy Edge functions from the merged SHA (staging, then primary)
 
-The train changes these 10 function bundles, either directly or through `_shared`. Deploy exactly this list in one command, never a blanket deploy:
+The train changes these function bundles, either directly or through `_shared`. Deploy exactly this list in one command, never a blanket deploy:
 
 | Function | `verify_jwt` | Why |
 | --- | --- | --- |
@@ -102,15 +121,23 @@ The train changes these 10 function bundles, either directly or through `_shared
 | `prepare-release-email` | true | the renderer prints the rabies serial number separately |
 | `capture-conversation-email` | true | shared outbox module |
 | `cloudtalk-webhook` | false (CloudTalk signature) | redacts document and payment link capabilities before ingest |
+| `agentmail-inbound-webhook` | false (Svix signature) | **new**: AgentMail inbound email receipts |
+| `process-inbound` | false (worker key) | fetches AgentMail messages into the canonical inbound pipeline |
+| `capture-inbound-attachment` | true | captures AgentMail attachments into the private bucket |
+| `read-inbound-attachment` | true | shared inbound modules |
+| `resend-delivery-webhook` | false (Svix signature) | the only Resend endpoint now: canonical outbox receipts plus legacy fallback, **own secret `RESEND_DELIVERY_WEBHOOK_SECRET`** |
+| `resend-webhook` | false | now an inert 410 stub (Resend receiving retired) |
+| `enqueue-message` | true | shared delivery policy (Reply-To resolver) |
+| `cleanup-abandoned-attachment`, `verify-conversation-attachment` | as configured | shared attachment modules; no behavior change |
 
 ```sh
-F="dispatch-outbox dispatch-outbound-deliveries prepare-payment-delivery prepare-document-link recover-document-link retrieve-document-link prepare-invoice-email prepare-release-email capture-conversation-email cloudtalk-webhook"
+F="dispatch-outbox dispatch-outbound-deliveries prepare-payment-delivery prepare-document-link recover-document-link retrieve-document-link prepare-invoice-email prepare-release-email capture-conversation-email cloudtalk-webhook agentmail-inbound-webhook process-inbound capture-inbound-attachment read-inbound-attachment resend-delivery-webhook resend-webhook enqueue-message cleanup-abandoned-attachment verify-conversation-attachment"
 npx supabase functions deploy $F --project-ref kothoqicubowyhwfsrte
 npx supabase functions list --project-ref kothoqicubowyhwfsrte   # check the JWT column against the table
 # then the same two commands with --project-ref mgadheotkdnrsatfivjy
 ```
 
-The CLI reads `verify_jwt` from `supabase/config.toml`. Check every row against the table above. The 2026-09-26 deploy once kept a stale flag, so don't assume it's right.
+The CLI reads `verify_jwt` from `supabase/config.toml`. Check every row against the table above. The 2026-09-26 deploy once kept a stale flag, so don't assume it's right. `twilio-webhook` also imports the changed shared inbound module but is a legacy slug; leave it as is. Never deploy `send-email` or `send-sms` (§2).
 
 ## 5. Frontend
 
@@ -135,7 +162,9 @@ Set these **names** in each project. Values go in only through the dashboard or 
 | `OUTBOUND_DISPATCHER_TOKEN` | a long random token | `dispatch-outbound-deliveries` |
 | `SUPABASE_SECRET_KEYS` | must include the `sb_secret_` key used as `scheduler_worker_key` (§9) | all workers |
 | `REMINDER_SCHEDULER_ENABLED` | `true` only in §9, after C-PILOT-08 | `queue-reminders` (also needs `APP_ENV` of `staging` or `production`) |
-| `RESEND_API_KEY`, `RESEND_FROM`, `RESEND_REPLY_TO`, `RESEND_WEBHOOK_SECRET`, `RESEND_INBOUND_ADDRESSES`, (`RESEND_AUTH_FROM_ADDRESS` optional) | see §8 | email |
+| `RESEND_API_KEY`, `RESEND_FROM`, `RESEND_DELIVERY_WEBHOOK_SECRET`, (`RESEND_AUTH_FROM_ADDRESS` optional) | see §8 | outbound email and its delivery webhook |
+| `AGENTMAIL_API_KEY`, `AGENTMAIL_WEBHOOK_SECRET`, `AGENTMAIL_INBOX_ID`, `AGENTMAIL_INBOX_ADDRESS` | see §8 | inbound email. `AGENTMAIL_INBOX_ADDRESS` is also the Reply-To on every app email, and live sends fail closed without it. |
+| Retired: `RESEND_WEBHOOK_SECRET`, `RESEND_INBOUND_ADDRESSES`, `RESEND_REPLY_TO` | unset after §8. If `RESEND_REPLY_TO` stays set, it must equal `AGENTMAIL_INBOX_ADDRESS`, otherwise every email send fails closed. | — |
 | Stripe and payment-link secrets | see §11 | payments |
 
 Confirm afterwards with `npx supabase secrets list --project-ref <ref>`. It lists names and digests only.
@@ -162,13 +191,29 @@ Confirm afterwards with `npx supabase secrets list --project-ref <ref>`. It list
 5. [ ] Repeat steps 3–4 on primary only if the owner wants production evidence before §10. Otherwise primary is first exercised at go-live.
 6. [ ] **`VITE_CLOUDTALK_ENABLED=true`.** Set it in Vercel Production after steps 3–4 pass, then redeploy the frontend. This shows `/hub/call`, where projection failures are listed.
 
-## 8. Resend email (sender, reply mailbox, inbound, webhooks)
+## 8. Email: Resend outbound, AgentMail inbound
 
-1. [ ] The sending domain is verified in Resend (done). Choose `RESEND_FROM` on that domain and a monitored `RESEND_REPLY_TO` practice mailbox. Set both.
-2. [ ] **Delivery and status webhook.** In Resend → Webhooks, add `https://<ref>.supabase.co/functions/v1/resend-delivery-webhook` for the delivered, bounced, complained and failed events. Save its signing secret as `RESEND_WEBHOOK_SECRET`.
-3. [ ] **Inbound replies.** The client-reply handler (`receiveResend`, which needs `RESEND_INBOUND_ADDRESSES`) runs in the `resend-webhook` slug, but `docs/inbound-communications.md` still calls that slug legacy. Both slugs read the same `RESEND_WEBHOOK_SECRET`, and Resend issues one signing secret per endpoint. **Decide before commissioning:** either use one Resend endpoint for all events, or split the secret names in code. Then set `RESEND_INBOUND_ADDRESSES` to the exact client-reply address(es) and configure Resend receiving (MX for the receiving subdomain).
-4. [ ] Test one authorized outgoing email and one reply in `OUTBOUND_DELIVERY_MODE=test` with `OUTBOUND_TEST_EMAILS` set. Confirm delivery status and reply ingestion in `/hub/chats`.
-5. [ ] Supabase Auth SMTP: configure the sender and test invite and recovery on staging. Signup stays disabled.
+Full contract, options and documentation citations: [AgentMail inbound](agentmail-inbound.md).
+
+1. [ ] **Resend sender.** The sending domain is verified in Resend (done). Set `RESEND_FROM` on that domain.
+2. [ ] **Resend delivery and status webhook.** In Resend → Webhooks, keep **one** endpoint, `https://<ref>.supabase.co/functions/v1/resend-delivery-webhook`, with only `email.delivered`, `email.bounced`, `email.complained` and `email.failed` (not `email.received`). Save that endpoint's signing secret as `RESEND_DELIVERY_WEBHOOK_SECRET`. Delete any Resend endpoint that points at `resend-webhook`. Once the new secret is set, unset `RESEND_WEBHOOK_SECRET` and `RESEND_INBOUND_ADDRESSES`. Don't configure Resend receiving or any Resend MX for receiving.
+3. [ ] **AgentMail receiving address.** Recommended: add the custom domain `reply.thelivingroom.vet` in AgentMail and publish its generated MX, SPF and DKIM records in GoDaddy, **only on the `reply` subdomain**. The root MX stays on Fastmail. Wait for Verified, then create the inbox `care@reply.thelivingroom.vet`. (For a quick first test before DNS is ready, an AgentMail-hosted `…@agentmail.to` inbox works. Don't forward Fastmail `care@` into AgentMail without a separate test; see the options table in the doc.)
+4. [ ] **AgentMail webhook.** Create a webhook scoped to that inbox (`inbox_ids`) with only `message.received`, at `https://<ref>.supabase.co/functions/v1/agentmail-inbound-webhook`. Copy its `whsec_…` secret.
+5. [ ] **AgentMail secrets.** Set `AGENTMAIL_WEBHOOK_SECRET`, `AGENTMAIL_API_KEY` (least privilege for reading that inbox), `AGENTMAIL_INBOX_ID` (exactly as the webhook payload reports it) and `AGENTMAIL_INBOX_ADDRESS` (the bare inbox address). Unset `RESEND_REPLY_TO`, or set it to the same address. Then send AgentMail's test event, or one real email, and confirm HTTP 204 (or 202 for an ignored type) in the AgentMail delivery log.
+6. [ ] **Controlled round trip** in `OUTBOUND_DELIVERY_MODE=test`, with `OUTBOUND_TEST_EMAILS=<owner's own mailbox>` and a synthetic household whose primary email is that mailbox:
+   1. Queue one email from `/hub/chats` and run `dispatch-outbox` once (same `curl` as §7 step 3). The received email must show `Reply-To: care@reply.thelivingroom.vet`.
+   2. Reply from the owner's mailbox. Run `process-inbound` once:
+      ```sh
+      read -rs LRV_WORKER_KEY
+      curl -sS -X POST "https://kothoqicubowyhwfsrte.supabase.co/functions/v1/process-inbound" \
+        -H "apikey: $LRV_WORKER_KEY" -H "Content-Type: application/json" -d '{}'
+      unset LRV_WORKER_KEY
+      ```
+      The reply must appear **in the same thread** in `/hub/chats`. `communication_inbound` should have one `provider='agentmail'` row with `client_id` and `conversation_id` set.
+   3. Reply again with a small PDF. Capture it from the thread (this needs `INBOUND_ATTACHMENT_CAPTURE_ENABLED=true` on `capture-inbound-attachment`), open it, and confirm a SHA-256 is shown.
+   4. Email the inbox from an address that isn't on file. The message must land in `/hub/inbox/review`.
+   5. Confirm the Resend delivery receipt reached the outbox (`delivered`), then set `OUTBOUND_DELIVERY_MODE=disabled` again and record the evidence. Note what AgentMail's attachment endpoint returned (JSON or raw bytes) and the `download_url` host. These are unverified items in the doc.
+7. [ ] Supabase Auth SMTP: configure the sender and test invite and recovery on staging. Signup stays disabled. If `RESEND_AUTH_FROM_ADDRESS` is set, it must differ from `RESEND_FROM` and from `AGENTMAIL_INBOX_ADDRESS`; otherwise the delivery webhook returns 503.
 
 ## 9. Scheduler (after §4, §6 and C-PILOT-08)
 
@@ -191,7 +236,7 @@ unset LRV_SCHEDULER_WORKER_KEY LRV_DB_URL
 
 ## 10. Live outbound (primary; separate owner go decision)
 
-Prerequisites: §7 staging test evidence, §8 email test evidence, §9 verified, and C-PILOT-08 accepted.
+Prerequisites: §7 staging test evidence, §8 email round-trip evidence (AgentMail reply threaded), §9 verified, and C-PILOT-08 accepted. `AGENTMAIL_INBOX_ADDRESS` must be set on primary: in `live` mode every email send fails closed without it.
 
 1. `APP_ENV=production`. `live` is refused for any other value.
 2. `OUTBOUND_DELIVERY_MODE=live`.
@@ -259,4 +304,6 @@ Both tables are audited. To revoke, set `active=false` (issuer) or `enabled=fals
 - A reminder's channel is fixed when the appointment is saved. After a household changes its preferred channel, re-save the appointment to switch it.
 - Lab care jobs that are still queued when `20260928150000` lands are blocked at the final check. Re-queue them.
 - `tests/payment-access/delivery-local-roundtrip.ts` (a manual script) still uses Twilio sender shapes.
+- AgentMail items that are unverified until the §8 round trip: the Get Attachment response shape (JSON vs raw bytes), the CDN host, the exact `message_id`/`inbox_id` forms, and whether forwarded mail passes AgentMail's authentication filter. See [AgentMail inbound](agentmail-inbound.md#unverified-isolated-in-_sharedinboundagentmailts-confirm-in-the-controlled-test).
+- A client's first reply to an app email is threaded by household (one active conversation), not by the outbound Message-ID, because outbound RFC Message-IDs are not recorded yet.
 - `b1_scheduler.test.sql` #11 and #13 fail on the long-lived local container because of accumulated `configuration_missing` receipts. They fail the same way without this train, and a fresh CI database is unaffected.

@@ -13,6 +13,8 @@ serve(async (req) => {
     const result = await processOneInbound(
       createClient(Deno.env.get("SUPABASE_URL")!, key),
       {
+        AGENTMAIL_API_KEY: Deno.env.get("AGENTMAIL_API_KEY"),
+        AGENTMAIL_INBOX_ID: Deno.env.get("AGENTMAIL_INBOX_ID"),
         RESEND_API_KEY: Deno.env.get("RESEND_API_KEY"),
         TWILIO_ACCOUNT_SID: Deno.env.get("TWILIO_ACCOUNT_SID"),
         TWILIO_AUTH_TOKEN: Deno.env.get("TWILIO_AUTH_TOKEN"),

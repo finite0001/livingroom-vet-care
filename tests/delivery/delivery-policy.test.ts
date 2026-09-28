@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { authorizeDelivery, normalizeEmail, normalizePhone, requireEmailConfiguration } from "../../supabase/functions/_shared/delivery-policy.ts";
+import { authorizeDelivery, normalizeEmail, normalizePhone, requireEmailConfiguration, resolveEmailReplyTo } from "../../supabase/functions/_shared/delivery-policy.ts";
 
 test("delivery fails closed for missing, disabled, or malformed environments and modes", () => {
   for (const env of [{}, { APP_ENV: "production" }, { APP_ENV: "production", OUTBOUND_DELIVERY_MODE: "disabled" }, { APP_ENV: "prod", OUTBOUND_DELIVERY_MODE: "live" }, { APP_ENV: "production", OUTBOUND_DELIVERY_MODE: "LIVE" }, { APP_ENV: "staging", OUTBOUND_DELIVERY_MODE: "live" }, { APP_ENV: "development", OUTBOUND_DELIVERY_MODE: "live" }]) {
@@ -33,4 +33,22 @@ test("email requires a usable practice reply mailbox and configured sender", () 
   const valid = { RESEND_API_KEY: "test-key", RESEND_FROM: "Practice <send@example.com>", RESEND_REPLY_TO: "care@example.com" };
   assert.equal(requireEmailConfiguration(valid).replyTo, "care@example.com");
   for (const config of [{ ...valid, RESEND_API_KEY: "" }, { ...valid, RESEND_FROM: "" }, { ...valid, RESEND_REPLY_TO: undefined }, { ...valid, RESEND_REPLY_TO: "care@example.com,evil@example.com" }, { ...valid, RESEND_FROM: "Practice\r\nBcc:evil@example.com <send@example.com>" }]) assert.throws(() => requireEmailConfiguration(config));
+});
+
+test("Reply-To is the AgentMail inbox and fails closed when unset in live mode or conflicting", () => {
+  assert.equal(resolveEmailReplyTo({ AGENTMAIL_INBOX_ADDRESS: "Care@Reply.Example.com", OUTBOUND_DELIVERY_MODE: "live" }), "care@reply.example.com");
+  assert.equal(resolveEmailReplyTo({ AGENTMAIL_INBOX_ADDRESS: "care@reply.example.com", RESEND_REPLY_TO: "CARE@reply.example.com", OUTBOUND_DELIVERY_MODE: "live" }), "care@reply.example.com");
+  // Conflicting legacy value, invalid inbox, or live mode without the inbox: no Reply-To at all.
+  assert.equal(resolveEmailReplyTo({ AGENTMAIL_INBOX_ADDRESS: "care@reply.example.com", RESEND_REPLY_TO: "dave@example.com" }), "");
+  assert.equal(resolveEmailReplyTo({ AGENTMAIL_INBOX_ADDRESS: "not a mailbox", RESEND_REPLY_TO: "care@example.com" }), "");
+  assert.equal(resolveEmailReplyTo({ RESEND_REPLY_TO: "care@example.com", OUTBOUND_DELIVERY_MODE: "live" }), "");
+  // Test and disabled modes may keep the legacy mailbox until AgentMail is configured.
+  assert.equal(resolveEmailReplyTo({ RESEND_REPLY_TO: "care@example.com", OUTBOUND_DELIVERY_MODE: "test" }), "care@example.com");
+  assert.equal(resolveEmailReplyTo({}), "");
+  const base = { RESEND_API_KEY: "test-key", RESEND_FROM: "Practice <send@example.com>" };
+  assert.equal(requireEmailConfiguration({ ...base, AGENTMAIL_INBOX_ADDRESS: "care@reply.example.com", OUTBOUND_DELIVERY_MODE: "live" }).replyTo, "care@reply.example.com");
+  for (const env of [{ ...base, RESEND_REPLY_TO: "care@example.com", OUTBOUND_DELIVERY_MODE: "live" },
+    { ...base, AGENTMAIL_INBOX_ADDRESS: "care@reply.example.com", RESEND_REPLY_TO: "other@example.com" }]) {
+    assert.throws(() => requireEmailConfiguration(env), /reply mailbox/);
+  }
 });
