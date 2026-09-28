@@ -52,7 +52,7 @@ async function fixture(page:Page, options:{lostSave?:boolean;admin?:boolean;dvm?
     }
     return r.fulfill({json:[]});
   });
-  await page.goto(`/hub/patient/${pet}`);await expect(page.getByRole("button",{name:"New prescription draft"})).toBeEnabled({timeout:30000});return state;
+  await page.goto(`/hub/patient/${pet}?tab=medical`);await expect(page.getByRole("button",{name:"New prescription draft"})).toBeEnabled({timeout:30000});return state;
 }
 async function fill(page:Page){await page.getByRole("button",{name:"New prescription draft"}).click();await page.getByLabel("Dispensing destination",{exact:true}).selectOption("external_pharmacy");for(const [label,value]of [["Medication name","Authored medication"],["Strength","Authored strength"],["Dosage form","Tablet"],["Route","Authored route"],["Maximum quantity per fill","2.5"],["Quantity unit","tablet"],["Additional refills authorized","0"],["Start date","2026-09-16"],["Authorization expiry date","2026-09-30"],["Directions / SIG","Clinician authored directions"]])await page.getByRole("region",{name:"Native prescription editor"}).getByLabel(label,{exact:true}).fill(value);}
 async function save(page:Page){await page.getByRole("button",{name:"Review draft save"}).click();await page.getByRole("checkbox",{name:/I reviewed the draft values/}).check();await page.getByRole("button",{name:"Save reviewed draft",exact:true}).click();}

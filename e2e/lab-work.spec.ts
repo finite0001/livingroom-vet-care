@@ -90,7 +90,7 @@ async function fixture(page: Page) {
  });return state;
 }
 test('lab results reopen with private document link, failed edits retained, and explicit correction history',async({page})=>{
- const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);
+ const state=await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);
  await expect(page.getByText(/Antech selected · connection not configured/)).toBeVisible();
  await page.getByRole('button',{name:'New lab order',exact:true}).click();
  await page.getByLabel('Test name',{exact:true}).fill('Synthetic chemistry');
@@ -117,7 +117,7 @@ test('lab results reopen with private document link, failed edits retained, and 
  expect(new Set(state.saves).size).toBe(1);expect(state.revisions).toHaveLength(2);
 });
 test('mobile lab due plan uses reviewed template with explicit patient override',async({page})=>{
- await page.setViewportSize({width:390,height:844});const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);
+ await page.setViewportSize({width:390,height:844});const state=await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);
  await page.getByRole('button',{name:'New lab order',exact:true}).click();
  await expect(page.getByLabel('Lab due date',{exact:true})).toHaveValue('');
  await page.getByLabel('Test name',{exact:true}).fill('Reviewed follow-up');
@@ -131,7 +131,7 @@ test('mobile lab due plan uses reviewed template with explicit patient override'
  await expect(page.getByText('Reviewed standard lab intervals',{exact:true})).toHaveCount(0);
 });
 test('unsaved lab plan participates in the shared patient navigation guard',async({page})=>{
- await fixture(page);await page.goto(`/hub/patient/${petId}`);
+ await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);
  await page.getByRole('button',{name:'New lab order',exact:true}).click();
  await page.getByLabel('Test name',{exact:true}).fill('Unsaved synthetic plan');
  await page.getByRole('link',{name:'Synthetic Household',exact:true}).click();
@@ -140,7 +140,7 @@ test('unsaved lab plan participates in the shared patient navigation guard',asyn
  await expect(page.getByLabel('Test name',{exact:true})).toHaveValue('Unsaved synthetic plan');
 });
 test('lab reminders are an explicit per-order opt-in for open orders with a due date',async({page})=>{
- const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);
+ const state=await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);
  await page.getByRole('button',{name:'New lab order',exact:true}).click();
  const reminders=page.getByLabel('Enable due reminders for this lab order');
  await expect(reminders).not.toBeChecked();await expect(reminders).toBeDisabled();

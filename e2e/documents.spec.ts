@@ -191,7 +191,7 @@ test("private document finalization retries without duplicate upload and retains
   page,
 }, testInfo) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
   await expect(page.getByRole("heading", { name: "Synthetic Juniper" })).toBeVisible({
     timeout: 15_000,
   });
@@ -255,7 +255,7 @@ test("rejects a renamed HTML file before reserving a document", async ({
   page,
 }) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
   await page
     .getByLabel("Document file")
     .setInputFiles({
@@ -279,7 +279,7 @@ test("ambiguous upload response probes the same path before finalizing", async (
   const state = await fixture(page);
   state.loseUploadResponse = true;
   state.failFinalize = false;
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
   await page
     .getByLabel("Document file")
     .setInputFiles({

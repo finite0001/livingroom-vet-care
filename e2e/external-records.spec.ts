@@ -419,7 +419,7 @@ async function fixture(page: Page, role = "ADMIN") {
   return state;
 }
 async function open(page: Page) {
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
   await expect(
     page.getByRole("button", {
       name: "Recover historical record work",

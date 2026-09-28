@@ -222,7 +222,7 @@ test("treatment requires historical alert review and retries same debit and char
   page,
 }, testInfo) => {
   const calls = await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   const tab = page.getByRole("tab", { name: "Treatments", exact: true });
   if (await tab.count()) await tab.click();
   await expect(
@@ -272,7 +272,7 @@ test("saving an important diagnosis refreshes treatment and booking alerts in th
   page,
 }) => {
   await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   const checkbox = page.getByLabel(
     "I reviewed the important patient history and recorded allergy information before recording this treatment.",
   );
@@ -317,7 +317,7 @@ test("stale server review preserves treatment fields and allows a fresh acknowle
   page,
 }) => {
   const calls = await fixture(page, "stale");
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await fillTreatment(page);
   const checkbox = page.getByLabel(
     "I reviewed the important patient history and recorded allergy information before recording this treatment.",
@@ -362,7 +362,7 @@ test("malformed alert response shows a local retry control instead of crashing t
         },
       }),
   );
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await expect(
     page.getByRole("button", { name: "Reload patient alerts" }),
   ).toBeVisible();
@@ -379,7 +379,7 @@ test("patient edit and refreshed external allergy history each clear the treatme
   page,
 }) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   const checkbox = page.getByLabel(
     "I reviewed the important patient history and recorded allergy information before recording this treatment.",
   );

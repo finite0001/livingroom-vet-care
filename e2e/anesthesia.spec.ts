@@ -120,7 +120,7 @@ async function basicDraft(page:Page){
  await page.getByLabel('Anesthesia plan notes').fill('Documented procedure plan');
 }
 test('anesthesia monitoring reopens, retains concurrent edits, signs and appends corrections',async({page})=>{
- const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);await basicDraft(page);
+ const state=await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);await basicDraft(page);
  await page.getByRole('button',{name:'Add monitoring observation',exact:true}).click();
  await expect(page.getByLabel('Recorded value 1',{exact:true})).toHaveValue('');
  await page.getByLabel('Observation time (Denver) 1',{exact:true}).fill('2026-01-01T09:02');
@@ -153,7 +153,7 @@ test('anesthesia monitoring reopens, retains concurrent edits, signs and appends
  expect(state.addenda).toHaveLength(1);
 });
 test('mobile manual transcription links a private source without claiming automatic import',async({page})=>{
- await page.setViewportSize({width:390,height:844});const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);await basicDraft(page);
+ await page.setViewportSize({width:390,height:844});const state=await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);await basicDraft(page);
  await page.getByLabel('Record source',{exact:true}).selectOption('transcribed_from_document');
  await page.getByLabel('Source / transcription detail').fill('Manually transcribed original paper chart');
  await page.getByLabel('Original anesthesia file (private)').selectOption('55555555-5555-4555-8555-555555555555');
@@ -164,7 +164,7 @@ test('mobile manual transcription links a private source without claiming automa
  await expect(page.getByText(/Automatic vendor import is not configured/)).toBeVisible();
 });
 test('stock anesthesia drug debits a lot and charges the household draft, then locks on signature',async({page})=>{
- const state=await fixture(page);await page.goto(`/hub/patient/${petId}`);await basicDraft(page);
+ const state=await fixture(page);await page.goto(`/hub/patient/${petId}?tab=medical`);await basicDraft(page);
  await expect(page.getByRole('region',{name:'Anesthesia drugs from stock'})).toHaveCount(0);
  await page.getByRole('button',{name:'Save anesthesia draft',exact:true}).click();
  await expect(page.getByRole('status').filter({hasText:'Anesthesia draft saved.'})).toBeVisible();

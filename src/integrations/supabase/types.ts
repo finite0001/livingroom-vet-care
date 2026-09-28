@@ -6383,12 +6383,32 @@ export type Database = {
         }
         Returns: Json
       }
+      list_household_timeline: {
+        Args: {
+          p_before_at?: string
+          p_before_key?: string
+          p_client_id: string
+          p_kinds?: string[]
+          p_limit?: number
+        }
+        Returns: Json
+      }
       list_patient_imported_histories: {
         Args: {
           p_before_at?: string
           p_before_id?: string
           p_limit?: number
           p_pet_id: string
+        }
+        Returns: Json
+      }
+      list_patient_timeline: {
+        Args: {
+          p_before_at?: string
+          p_before_key?: string
+          p_kinds?: string[]
+          p_limit?: number
+          p_patient_id: string
         }
         Returns: Json
       }
@@ -6532,6 +6552,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      read_household_360: { Args: { p_client_id: string }; Returns: Json }
+      read_patient_360: { Args: { p_patient_id: string }; Returns: Json }
       read_patient_problem_import_provenance: {
         Args: { p_pet_id: string; p_problem_ids: string[] }
         Returns: Json

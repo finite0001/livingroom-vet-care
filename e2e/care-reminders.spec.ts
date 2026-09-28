@@ -94,7 +94,7 @@ async function fixture(page: Page, baseURL: string | undefined, admin=false) {
  });return state;
 }
 test('reviewed patient vaccine plan only offers explicitly mapped products, preserves overrides and stale drafts',async({page,baseURL})=>{
- const state=await fixture(page,baseURL);await page.goto(`/hub/patient/${petId}`);
+ const state=await fixture(page,baseURL);await page.goto(`/hub/patient/${petId}?tab=medical`);
  await page.getByRole('button',{name:'New vaccine due plan',exact:true}).click();
  await expect(page.getByLabel('Reviewed patient next due date',{exact:true})).toHaveValue('');
  await page.getByLabel('Reviewed vaccine group template').selectOption('44444444-4444-4444-8444-444444444444');
@@ -128,7 +128,7 @@ test('reviewed patient vaccine plan only offers explicitly mapped products, pres
  expect(new Set(state.saves).size).toBe(1);
 });
 test('mobile administrator approves wording without enabling provider dispatch',async({page,baseURL})=>{
- await page.setViewportSize({width:390,height:844});const state=await fixture(page,baseURL,true);await page.goto(`/hub/patient/${petId}`);
+ await page.setViewportSize({width:390,height:844});const state=await fixture(page,baseURL,true);await page.goto(`/hub/patient/${petId}?tab=medical`);
  await page.getByRole('button',{name:'More',exact:true}).click();
  await page.getByRole('button',{name:'Care reminders',exact:true}).click();
  await expect(page).toHaveURL(/\/hub\/tools\/care-reminders$/);
