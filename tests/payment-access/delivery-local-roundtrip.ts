@@ -54,7 +54,11 @@ try{
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
  const c=await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Payment roundtrip",p_primary_phone:"+13035550102",p_primary_email:"delivery@example.test",p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null},true);client=c.id;ids.push(client);
  const p=await rpc("save_catalog_product",{p_id:null,p_expected_version:null,p_name:"Synthetic visit",p_kind:"service",p_manufacturer:"",p_unit:"visit",p_unit_price_cents:10000,p_active:true},true);product=p.id;ids.push(product);
- server=spawn("deno",["run","--cached-only","--allow-env","--allow-net=127.0.0.1","tests/payment-access/delivery-local-server.ts"],{env:{...process.env,SUPABASE_URL:local.API_URL,SUPABASE_SERVICE_ROLE_KEY:local.SERVICE_ROLE_KEY,SUPABASE_ANON_KEY:local.ANON_KEY,APP_URL:origin,PAYMENT_DELIVERY_STAFF_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"",TWILIO_AUTH_TOKEN:"",TWILIO_FROM_NUMBER:"+13035550101",TWILIO_ACCOUNT_SID:"AC"+"a".repeat(32)},stdio:"ignore"});
+ // Outbound SMS runs through CloudTalk (owner decision, 20260928100000_cloudtalk_outbound_sms): the database
+ // provider setting is cloudtalk, so the staff runtime and worker must freeze and send the CloudTalk sender.
+ // Credentials are synthetic; every provider request is intercepted below and never leaves the process.
+ const cloudTalkEnv={SMS_PROVIDER:"cloudtalk",CLOUDTALK_API_KEY_ID:"synthetic-key-id",CLOUDTALK_API_KEY_SECRET:"synthetic-never-transmitted",CLOUDTALK_ALLOWED_NUMBERS:"+13035550101"};
+ server=spawn("deno",["run","--cached-only","--allow-env","--allow-net=127.0.0.1","tests/payment-access/delivery-local-server.ts"],{env:{...process.env,SUPABASE_URL:local.API_URL,SUPABASE_SERVICE_ROLE_KEY:local.SERVICE_ROLE_KEY,SUPABASE_ANON_KEY:local.ANON_KEY,APP_URL:origin,PAYMENT_DELIVERY_STAFF_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"",...cloudTalkEnv},stdio:"ignore"});
  let ready=false;for(let i=0;i<80;i++){if(server.exitCode!==null)throw new Error("Local Deno handler failed to boot");try{ready=await(await fetch(root+"/health")).text()==="ready";if(ready)break;}catch{/* Boot pending. */}await new Promise(resolve=>setTimeout(resolve,100));}
  check(ready,"Actual localhost Deno HTTP server booted with external network denied");
  const post=(args:unknown,authenticated=true)=>fetch(root+"/prepare",{method:"POST",headers:{Origin:origin,...(authenticated?staffHeaders:{"Content-Type":"application/json"})},body:JSON.stringify(args)});
@@ -82,7 +86,7 @@ try{
  const persisted=sql(`select to_jsonb(r) from public.payment_delivery_requests r where id=${quote(delivery)};select to_jsonb(c) from public.payment_delivery_captures c where request_id=${quote(delivery)};`);
  check(!persisted.includes(access.collection_token) && !persisted.includes(access.status_token),"Only templates and hashes enter durable delivery rows");
 
- const workerEnv:OutboxEnvironment={APP_ENV:"staging",OUTBOUND_DELIVERY_MODE:"test",OUTBOUND_TEST_EMAILS:"delivery@example.test",OUTBOUND_TEST_PHONES:"+13035550102",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"synthetic-never-transmitted",TWILIO_FROM_NUMBER:"+13035550101",TWILIO_ACCOUNT_SID:"AC"+"a".repeat(32),TWILIO_AUTH_TOKEN:"synthetic-never-transmitted",PAYMENT_DELIVERY_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true"};
+ const workerEnv:OutboxEnvironment={APP_ENV:"staging",OUTBOUND_DELIVERY_MODE:"test",OUTBOUND_TEST_EMAILS:"delivery@example.test",OUTBOUND_TEST_PHONES:"+13035550102",RESEND_FROM:"billing@thelivingroom.vet",RESEND_REPLY_TO:"care@thelivingroom.vet",RESEND_API_KEY:"synthetic-never-transmitted",...cloudTalkEnv,PAYMENT_DELIVERY_ENABLED:"true",PAYMENT_ACCESS_ORIGIN:origin,PAYMENT_ACCESS_ACTIVE_KEY_VERSION:"local-v1",PAYMENT_ACCESS_KEYS:JSON.stringify({"local-v1":key}),PAYMENT_COLLECTION_ENABLED:"true",PAYMENT_STATUS_ENABLED:"true"};
  const workerDb={rpc:async(name:string,args:Record<string,unknown>={})=>({data:await rpc(name,args),error:null})};
  let transports=0;
  interface ReviewedDelivery {delivery:{capture:{message_hash:string;payload_hash:string};request:{channel:string}};preview:{message:string}}
@@ -96,11 +100,11 @@ try{
    transports++;const body=String(init.body);
    check(createHash("sha256").update(body).digest("hex")===capture.payload_hash,"Actual worker transport matches captured payload digest");
    const email=preview.delivery.request.channel==="EMAIL";
-   check(String(input).startsWith(email?"https://api.resend.com/":"https://api.twilio.com/"),"Worker selects expected provider endpoint without contacting it");
+   check(String(input)===(email?"https://api.resend.com/emails":"https://my.cloudtalk.io/api/sms/send.json"),"Worker selects expected provider endpoint without contacting it");
    if(email){const payload=JSON.parse(body);check(payload.text===preview.preview.message,"Actual email matches staff review");if(expectedAttachment)check(JSON.stringify(payload.attachments[0])===JSON.stringify(expectedAttachment),"Actual worker preserves reviewed invoice attachment bytes");}
-   else check(new URLSearchParams(body).get("Body")===preview.preview.message,"Actual SMS matches staff review");
+   else{const payload=JSON.parse(body);check(payload.message===preview.preview.message && payload.sender==="+13035550101" && payload.recipient==="+13035550102","Actual CloudTalk SMS matches staff review and frozen sender");}
    if(uncertain)throw new Error("Synthetic lost provider response");
-   return new Response(JSON.stringify(email?{id:randomUUID()}:{sid:"SM"+"a".repeat(32)}),{status:200});
+   return new Response(JSON.stringify(email?{id:randomUUID()}:{responseData:{status:200,success:true}}),{status:200});
   }) as typeof fetch);
   check(result.outbox_id===queued.id && result.state===(uncertain?"uncertain":"accepted"),"Production dispatcher records real guarded attempt outcome");
   const recovery=await(await post({action:"recover",p_request_id:requestId})).json();
@@ -123,6 +127,7 @@ try{
  const smsArgs={...args,p_channel:"SMS",p_recipient:"+13035550102",p_subject:"",p_request_id:smsDelivery};
  check((await post(smsArgs)).status===200,"Actual SMS preparation validates current consent");
  const smsReview=await(await post({action:"review",p_request_id:smsDelivery})).json();
+ check(JSON.stringify(smsReview.delivery.capture.sender_config)===JSON.stringify({from:"+13035550101",provider:"cloudtalk"}),"SMS preparation freezes the credential-free CloudTalk sender");
  await sendReviewed(smsDelivery,smsReview,undefined,true);
  const beforeRetry=transports;check((await dispatchOne(workerDb,workerEnv,(async()=>{transports++;throw new Error("Must not retry uncertainty");}) as typeof fetch)).processed===false && transports===beforeRetry,"Uncertain provider response never automatically resends");
  check((await post({...smsArgs,p_request_id:blockedDelivery})).status===200,"Prepare separate delivery for revoke-before-send check");
