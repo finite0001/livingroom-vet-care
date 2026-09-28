@@ -3,7 +3,9 @@ import { useBlocker } from 'react-router-dom';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 export function useUnsavedChanges(dirty: boolean) {
-  const blocker = useBlocker(dirty);
+  // Switching tabs or sections inside the same record keeps every draft mounted;
+  // only leaving the record (a different path) needs confirmation.
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname);
   useEffect(() => {
     if (!dirty) return;
     const beforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };

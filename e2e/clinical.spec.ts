@@ -52,7 +52,7 @@ async function fixture(page: Page, inactive = false) {
 
 test('patient important history, SOAP conflict retention, signature and append-only addendum', async ({ page }, testInfo) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await expect(page.getByRole('heading', { name: 'Synthetic Juniper' })).toBeVisible();
   await expect(page.getByLabel('Important patient history')).toContainText('Historical vaccine reaction (resolved)');
   await page.getByRole('button', { name: 'New encounter', exact: true }).click();
@@ -90,7 +90,7 @@ test('patient important history, SOAP conflict retention, signature and append-o
 
 test('unsaved SOAP text blocks route navigation until staff explicitly discards it', async ({ page }) => {
   await fixture(page);
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await page.getByRole('button', { name: 'New encounter', exact: true }).click();
   await page.getByLabel('Subjective', { exact: true }).fill('Do not lose this note');
   await page.getByRole('link', { name: 'Synthetic Household', exact: true }).click();

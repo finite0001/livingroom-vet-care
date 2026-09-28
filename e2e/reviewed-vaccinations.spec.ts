@@ -272,7 +272,7 @@ async function fixture(page: Page, role = "DVM", initialVaccinations: Row[] = []
       });
     return r.fulfill({ json: [] });
   });
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await expect(
     page.getByRole("heading", {
       name: "Outside vaccination history",

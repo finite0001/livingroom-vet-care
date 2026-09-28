@@ -296,7 +296,7 @@ async function fixture(page: Page) {
       });
     return route.fulfill({ json: [] });
   });
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=documents`);
   await expect(
     page.getByRole("checkbox", { name: /Native prescription 1 ·/ }),
   ).toBeVisible({ timeout: 30000 });

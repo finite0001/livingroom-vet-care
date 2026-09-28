@@ -186,7 +186,7 @@ async function fixture(page: Page, verified = true) {
     }
     return route.fulfill({ json: [] });
   });
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
   await expect(
     page.getByRole("heading", { name: "Vaccine certificates", exact: true }),
   ).toBeVisible();

@@ -191,7 +191,7 @@ test("QOL draft reopens, retains stale edits, reloads and signs saved observatio
   page,
 }, testInfo) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await page
     .getByRole("button", { name: "New QOL observation", exact: true })
     .click();
@@ -234,7 +234,7 @@ test("lesion schematic keyboard location persists across reopen and protects con
   page,
 }, testInfo) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await page.getByRole("button", { name: "Add lesion", exact: true }).click();
   await page.getByLabel("Lesion label", { exact: true }).fill("Shoulder mass");
   await page.getByLabel("Length (mm, optional)").fill("10");

@@ -60,7 +60,7 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
 
 ## 3. Apply database migrations (staging, then primary)
 
-These are the 10 pending migrations, applied in this order:
+These are the 11 pending migrations, applied in this order:
 
 | Version | What it does | Must land before |
 | --- | --- | --- |
@@ -74,6 +74,7 @@ These are the 10 pending migrations, applied in this order:
 | `20260928150000_reminder_pipeline_readiness` | Makes one appointment reminder path, adds email reminder channel choice and per-order lab reminders | **the frontend**. The old `save_patient_lab_order` rejects the new `reminders_enabled` key. |
 | `20260928180000_agentmail_inbound` | Adds provider `agentmail` to provider receipts (inbound only, with the signed inbox and message ids required), makes it an EMAIL channel in `complete_inbound_communication`, and lets attachment capture/read/list accept AgentMail rows. The capture lease now names the provider and the signed provider ids. Resend and Twilio rows are unchanged. | **deploying `agentmail-inbound-webhook`, `process-inbound` and `capture-inbound-attachment`** (§4). Without it, AgentMail receipts are refused with 23514 and AgentMail retries them. |
 | `20260928160000_cloudtalk_capability_redaction` | Redacts document-link and payment-link capabilities from CloudTalk message bodies and AI summaries at ingest, redacts any already stored (audited in `cloudtalk_capability_redactions`), re-projects the texts they had blocked, and matches app-sent link texts to their outbox row | **enabling live CloudTalk SMS** (§7). Apply it before any document or payment link is texted. Redeploy `cloudtalk-webhook` (§4) right after it. |
+| `20260928170000_patient_360_read_model` | Adds the read-only Patient 360 / household 360 RPCs (`read_patient_360`, `read_household_360`, `list_patient_timeline`, `list_household_timeline`) and supporting indexes. No data changes. See `docs/patient-360.md` | **the frontend**. `/hub/patient/:id` and `/hub/client/:id` call these RPCs. |
 
 ```sh
 cd ~/Developer/livingroom-vet-care && git switch main && git pull --ff-only

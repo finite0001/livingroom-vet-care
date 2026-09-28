@@ -179,7 +179,7 @@ test("dental findings reopen, retain failed draft and missing-tooth history, the
   page,
 }, testInfo) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await page
     .getByRole("button", { name: "New dental chart", exact: true })
     .click();
@@ -271,7 +271,7 @@ test("feline deciduous chart has deliberate numbering gaps and no prefilled obse
   page,
 }) => {
   await fixture(page, "Cat");
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await page
     .getByRole("button", { name: "New dental chart", exact: true })
     .click();
@@ -292,7 +292,7 @@ test("unsupported species uses explicit manual dental notes", async ({
   page,
 }) => {
   await fixture(page, "Rabbit");
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await page
     .getByRole("button", { name: "New dental chart", exact: true })
     .click();
@@ -322,7 +322,7 @@ test("one patient navigation guard preserves multiple dirty panels and remains a
     if (/blocker/i.test(message.text())) warnings.push(message.text());
   });
   await fixture(page);
-  await page.goto(`/hub/patient/${petId}`);
+  await page.goto(`/hub/patient/${petId}?tab=medical`);
   await page
     .getByRole("button", { name: "New dental chart", exact: true })
     .click();
@@ -347,7 +347,7 @@ test("one patient navigation guard preserves multiple dirty panels and remains a
   await household.click();
   await expect(page.getByRole("alertdialog")).toHaveCount(1);
   await page.getByRole("button", { name: "Keep editing", exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/hub/patient/${petId}$`));
+  await expect(page).toHaveURL(new RegExp(`/hub/patient/${petId}\\?tab=medical$`));
   await expect(page.getByLabel("Dental chart / manual notes")).toHaveValue(
     "Dental draft retained",
   );
@@ -377,7 +377,7 @@ for (const panel of ["dental", "QOL"] as const) {
     page,
   }) => {
     await fixture(page);
-    await page.goto(`/hub/patient/${petId}`);
+    await page.goto(`/hub/patient/${petId}?tab=medical`);
     if (panel === "dental") {
       await page
         .getByRole("button", { name: "New dental chart", exact: true })

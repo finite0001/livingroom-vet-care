@@ -178,7 +178,7 @@ test("HHHHHMM assessment totals live, signs, locks, trends and takes addenda", a
   page,
 }, testInfo) => {
   const state = await fixture(page);
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   // First paint waits for the cold dev-server module graph, like the sibling care-chart spec's first click.
   await expect(
     page.getByText("HHHHHMM quality-of-life scale", { exact: true }),
@@ -255,7 +255,7 @@ test("reference line appears only when configured and is labelled pending clinic
     }
     state.assessments.push(r);
   }
-  await page.goto(`/hub/patient/${pet}`);
+  await page.goto(`/hub/patient/${pet}?tab=medical`);
   await expect(
     page.getByText("HHHHHMM quality-of-life scale", { exact: true }),
   ).toBeVisible({ timeout: 30_000 });

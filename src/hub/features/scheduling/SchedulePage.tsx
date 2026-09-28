@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -157,11 +158,25 @@ function AppointmentCard({
   );
 }
 
+const CALENDAR_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function SchedulePage() {
   usePageTitle("Schedule");
-  const [day, setDay] = useState(() => denverLocal(new Date()).slice(0, 10));
+  // Deep links from the patient/household 360: ?date=YYYY-MM-DD opens that day;
+  // ?book=1&client=<id>&pet=<id> opens the booking form prefilled.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedDay = searchParams.get("date");
+  const [booking] = useState(() => {
+    const client = searchParams.get("client");
+    const pet = searchParams.get("pet");
+    return searchParams.get("book") === "1"
+      ? { clientId: client && UUID.test(client) ? client : "", petId: pet && UUID.test(pet) ? pet : "" }
+      : null;
+  });
+  const [day, setDay] = useState(() => (linkedDay && CALENDAR_DAY.test(linkedDay) ? linkedDay : denverLocal(new Date()).slice(0, 10)));
   const [week, setWeek] = useState(false);
-  const [editing, setEditing] = useState<Appointment | null | undefined>();
+  const [editing, setEditing] = useState<Appointment | null | undefined>(() => (booking ? null : undefined));
   const count = week ? 7 : 1;
   const query = useScheduleDay(day, count);
   const today = denverLocal(new Date()).slice(0, 10);
@@ -342,7 +357,20 @@ export default function SchedulePage() {
         <AppointmentEditor
           appointment={editing}
           initialDay={day}
-          close={() => setEditing(undefined)}
+          initialClientId={editing === null ? booking?.clientId : undefined}
+          initialPetId={editing === null ? booking?.petId : undefined}
+          close={() => {
+            setEditing(undefined);
+            if (searchParams.has("book")) {
+              setSearchParams((previous) => {
+                const next = new URLSearchParams(previous);
+                next.delete("book");
+                next.delete("client");
+                next.delete("pet");
+                return next;
+              }, { replace: true });
+            }
+          }}
         />
       )}
     </main>
@@ -351,17 +379,19 @@ export default function SchedulePage() {
 interface EditorProps {
   appointment: Appointment | null;
   initialDay: string;
+  initialClientId?: string;
+  initialPetId?: string;
   close: () => void;
 }
-function AppointmentEditor({ appointment, initialDay, close }: EditorProps) {
+function AppointmentEditor({ appointment, initialDay, initialClientId, initialPetId, close }: EditorProps) {
   const { session } = useAuth();
   const cache = useQueryClient();
   const lock = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [householdSearch, setHouseholdSearch] = useState("");
-  const [clientId, setClientId] = useState(appointment?.client_id ?? "");
-  const [petId, setPetId] = useState(appointment?.pet_id ?? "");
+  const [clientId, setClientId] = useState(appointment?.client_id ?? initialClientId ?? "");
+  const [petId, setPetId] = useState(appointment?.pet_id ?? initialPetId ?? "");
   const [clinician, setClinician] = useState(
     appointment?.assigned_dvm_id ?? "",
   );
