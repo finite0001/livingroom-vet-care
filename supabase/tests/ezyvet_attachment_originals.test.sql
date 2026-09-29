@@ -44,7 +44,7 @@ insert into data select 'claimed',claim_ezyvet_attachment_capture((select id fro
 select ok((select v->>'lease_id' is not null from data where k='claimed'),'Service worker receives lease');
 select throws_ok($$select claim_ezyvet_attachment_capture((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001')$$,'55P03',null,'Concurrent worker cannot duplicate claim');
 select throws_ok($$select claim_ezyvet_attachment_import((select id from fx where k='other-run'),'db700000-0000-4000-8000-000000000001','attachment-test-site','https://api.trial.ezyvet.com',(select id from fx where k='mapping'))$$,'55P03',null,'Metadata scan respects original capture source lease');
-select throws_ok($$select reserve_ezyvet_attachment_original((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',null,repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64))$$,'40001',null,'Reserve requires current lease');
+select throws_ok($$select reserve_ezyvet_attachment_original((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',null,repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64))$$,'PT409',null,'Reserve requires current lease');
 insert into data select 'reserved',reserve_ezyvet_attachment_original((select id from fx where k='capture'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed'),repeat('e',64),'application/pdf',12,repeat('a',64),repeat('c',64));
 select is((select v#>>'{request,status}' from data where k='reserved'),'reserved','Verified byte intent reserves private object');
 select isnt((select v#>>'{intent,before_raw_sha256}' from data where k='reserved'),(select v#>>'{intent,after_raw_sha256}' from data where k='reserved'),'Raw URL renewal digests need not match');
@@ -74,7 +74,7 @@ select is((select v->>'entry_method' from data where k='approved'),'staff_review
 select is((select v#>>'{source_context,capture_contract}' from data where k='approved'),'canonical_api_original_v1','Stable metadata and file identity retain canonical provenance');
 select is(to_jsonb(pg_temp.approve_original()),(select v from data where k='approved'),'Exact approval replay preserves saved record');
 select throws_ok($$select pg_temp.approve_original('approval',null,true,'Different title')$$,'23505',null,'Approval UUID cannot change reviewed intent');
-select throws_ok($$select pg_temp.approve_original('correction')$$,'40001',null,'Correction requires exact predecessor');
+select throws_ok($$select pg_temp.approve_original('correction')$$,'PT409',null,'Correction requires exact predecessor');
 insert into data select 'corrected',to_jsonb(pg_temp.approve_original('correction',(select id from fx where k='approval')));
 select is((select(v->>'version')::integer from data where k='corrected'),2,'Canonical original correction appends version2');
 select is((select v#>>'{source_context,file_id}' from data where k='corrected'),(select v#>>'{request,file_id}' from data where k='ready'),'Separate file ID remains bound to approval');
@@ -97,10 +97,10 @@ insert into data select 'release-original',pg_temp.release_original();
 select is((select v#>>'{0,capture,object_path}' from data where k='release-original'),(select v#>>'{intent,object_path}' from data where k='reserved'),'Release validation binds exact canonical original path');
 select is((select v#>>'{0,record,source_context,file_id}' from data where k='release-original'),(select v#>>'{request,file_id}' from data where k='ready'),'Release retains separate canonical file identity');
 select ok(not (select(v#>'{0,record,source_context}') ? 'metadata' from data where k='release-original'),'Release provenance omits raw metadata');
-select throws_ok($$select pg_temp.release_original('approved')$$,'40001',null,'Superseded approval cannot enter a new release');
-select throws_ok($$select pg_temp.release_original('corrected',(select id from fx where k='client'))$$,'40001',null,'Release rejects another patient');
+select throws_ok($$select pg_temp.release_original('approved')$$,'PT409',null,'Superseded approval cannot enter a new release');
+select throws_ok($$select pg_temp.release_original('corrected',(select id from fx where k='client'))$$,'PT409',null,'Release rejects another patient');
 select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),'[]')$$,'23514',null,'Empty API original selection rejected');
-select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),jsonb_build_array(jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',repeat('f',64))))$$,'40001',null,'Release refuses altered approval digest');
+select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),jsonb_build_array(jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',repeat('f',64))))$$,'PT409',null,'Release refuses altered approval digest');
 select throws_ok($$select ezyvet_validate_release_attachments((select id from fx where k='pet'),jsonb_build_array(jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',(select v->>'record_hash' from data where k='corrected')),jsonb_build_object('id',(select id from fx where k='correction'),'record_hash',(select v->>'record_hash' from data where k='corrected'))))$$,'23514',null,'Release rejects duplicate approval identities');
 select ok(not has_function_privilege('authenticated','ezyvet_validate_release_attachments(uuid,jsonb)','execute'),'Private release validation unavailable directly to staff');
 select ok(not has_function_privilege('service_role','ezyvet_validate_release_attachments(uuid,jsonb)','execute'),'Worker cannot invoke release validation directly');
@@ -213,7 +213,7 @@ select is(pg_temp.confirm_api_release(),(select v from data where k='confirmed-a
 select is(jsonb_array_length(list_record_release_sources_v9((select id from fx where k='pet'))->'api_attachment_ids'),0,'Stale source disappears from release chooser while chart history survives');
 
 
-select throws_ok($$select pg_temp.release_original()$$,'40001',null,'Source change prevents a new release of retained original');
+select throws_ok($$select pg_temp.release_original()$$,'PT409',null,'Source change prevents a new release of retained original');
 set local role authenticated;
 select is(read_ezyvet_attachment_chart((select id from fx where k='pet'))#>>'{records,0,source_current}','false','Latest review remains visible but stale after source changes');
 select is(recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))->>'status','ready','Ready historical capture recovers after parent changes');
@@ -242,10 +242,10 @@ select is((select v->>'has_more' from data where k='review-older'),'false','Hist
 select throws_ok($$select list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='pet'),now(),null,20)$$,'23514',null,'History rejects partial cursor');
 select throws_ok($$select list_ezyvet_attachment_record_versions((select id from fx where k='capture'),(select id from fx where k='client'))$$,'42501',null,'History rejects another patient');
 
-select throws_ok($$select pg_temp.approve_original('capture3',(select id from fx where k='correction'))$$,'40001',null,'Fresh approval rejects changed parent source');
+select throws_ok($$select pg_temp.approve_original('capture3',(select id from fx where k='correction'))$$,'PT409',null,'Fresh approval rejects changed parent source');
 select is(recover_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'))->>'source_current','false','Historical capture honestly reports stale source');
 select is(prepare_ezyvet_attachment_capture((select id from fx where k='capture'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))->>'status','ready','Exact prepare replay remains available historically');
-select throws_ok($$select prepare_ezyvet_attachment_capture((select id from fx where k='capture2'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'40001',null,'Fresh request rejects stale parent');
+select throws_ok($$select prepare_ezyvet_attachment_capture((select id from fx where k='capture2'),(select id from fx where k='mapping'),(select id from fx where k='run'),1,1,(select id from fx where k='attachment-snapshot'),1,repeat('b',64))$$,'PT409',null,'Fresh request rejects stale parent');
 reset role;
 update ezyvet_identity_heads set version=version-1 where resource='animal' and external_id='77';
 set local role authenticated;
@@ -257,7 +257,7 @@ reset role;
 insert into storage.objects(bucket_id,name,metadata) select 'ezyvet-attachment-originals',v#>>'{intent,object_path}','{"size":12,"mimetype":"application/pdf"}'::jsonb from data where k='reserved2';
 set local role service_role;
 select is(begin_discard_ezyvet_attachment_capture((select id from fx where k='capture2'),'db700000-0000-4000-8000-000000000001')#>>'{request,status}','discarding','Discard fences an active worker');
-select throws_ok($$select complete_ezyvet_attachment_capture((select id from fx where k='capture2'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed2'),(select(v#>>'{intent,id}')::uuid from data where k='reserved2'),repeat('e',64),'application/pdf',12)$$,'40001',null,'Fenced worker cannot finalize');
+select throws_ok($$select complete_ezyvet_attachment_capture((select id from fx where k='capture2'),'db700000-0000-4000-8000-000000000001',(select(v->>'lease_id')::uuid from data where k='claimed2'),(select(v#>>'{intent,id}')::uuid from data where k='reserved2'),repeat('e',64),'application/pdf',12)$$,'PT409',null,'Fenced worker cannot finalize');
 select throws_ok($$select complete_discard_ezyvet_attachment_capture((select id from fx where k='capture2'),'db700000-0000-4000-8000-000000000001')$$,'23514',null,'Discard must verify private object absence');
 reset role;set local storage.allow_delete_query='true';delete from storage.objects where name=(select v#>>'{intent,object_path}' from data where k='reserved2');
 set local role authenticated;

@@ -40,6 +40,26 @@ export function emailAddress(value: unknown): string | null {
   if (typeof value !== "string") return null;
   return normalizeEmail(value.match(/^[^<>\r\n]*<([^<>]+)>$/)?.[1] ?? value);
 }
+/** Domain of a bare or display-name address (`Name <a@b.c>`), lowercased; null if invalid. */
+export function emailDomain(value: unknown): string | null {
+  const address = emailAddress(value);
+  return address ? address.slice(address.lastIndexOf("@") + 1) : null;
+}
+/**
+ * Sender domains this deployment owns on the shared Resend account: the RESEND_FROM
+ * domain (required) plus the RESEND_AUTH_FROM_ADDRESS domain when that is set.
+ */
+function ownResendDomains(env: WebhookEnvironment): Set<string> {
+  const client = emailDomain(env.RESEND_FROM);
+  if (!client) throw new WebhookError(503, "Sender domain unavailable");
+  const domains = new Set([client]);
+  if (env.RESEND_AUTH_FROM_ADDRESS !== undefined) {
+    const auth = emailDomain(env.RESEND_AUTH_FROM_ADDRESS);
+    if (!auth) throw new WebhookError(503, "Authentication sender separation unavailable");
+    domains.add(auth);
+  }
+  return domains;
+}
 export async function persistProviderEvent(
   db: EventDatabase,
   provider: string,
@@ -78,6 +98,7 @@ const resendStatusTypes: Record<string, string> = {
 };
 type ParsedResend =
   | { purpose: "authentication"; status: string }
+  | { purpose: "foreign" }
   | {
     purpose: "client";
     id: string;
@@ -90,11 +111,20 @@ async function parseResend(
   req: Request,
   env: WebhookEnvironment,
   verify: ResendVerifier,
+  ownSenderDomainsOnly = false,
 ): Promise<ParsedResend> {
   if (req.method !== "POST") throw new WebhookError(405, "Method not allowed");
   const raw = await boundedBody(req);
   const { id, event } = verifiedSvix(raw, req.headers, verify);
   const data = event.data as Record<string, unknown> | undefined;
+  if (ownSenderDomainsOnly && event.type !== "email.received") {
+    // Resend webhooks are account-wide: the same account sends for other businesses.
+    // Their receipts are acknowledged here, before any validation that could make the
+    // provider retry and before any database call. Nothing about them is stored or logged.
+    const domains = ownResendDomains(env);
+    const sender = emailDomain(data?.from);
+    if (!sender || !domains.has(sender)) return { purpose: "foreign" };
+  }
   if (!data || typeof data.email_id !== "string" || !uuid.test(data.email_id))
     throw new WebhookError(400, "Invalid email resource");
   const type = event.type === "email.received"
@@ -136,7 +166,7 @@ export async function receiveResend(
   verify: ResendVerifier,
 ) {
   const parsed = await parseResend(req, env, verify);
-  if (parsed.purpose === "authentication") return parsed;
+  if (parsed.purpose !== "client") return parsed;
   const { id, type, event, data, authSender } = parsed;
   if (type === "inbound") {
     if (authSender && emailAddress(data.from) === authSender)
@@ -164,21 +194,28 @@ export async function receiveResend(
     type,
   });
 }
-/** Legacy outbound_deliveries receipt (retired reminder path), keyed by provider id. */
+/**
+ * Legacy outbound_deliveries receipt (retired reminder path), keyed by provider id.
+ * Resolves "settled" when a row was updated, "unmatched" when no row is eligible
+ * (acknowledged, never retried); resolve false or throw only for a transient failure.
+ */
 export interface LegacyDeliveryCallback {
   (input: {
     providerMessageId: string;
     status: "DELIVERED" | "FAILED";
     note: string;
     errorText: string | null;
-  }): PromiseLike<boolean>;
+  }): PromiseLike<"settled" | "unmatched" | false>;
 }
 /**
  * Resend delivery/status webhook (resend-delivery-webhook). Resend is outbound
  * only: email.received is refused, because client replies arrive via AgentMail.
- * Receipts for the canonical communication_outbox persist durably first; a
- * receipt the outbox does not know (SQLSTATE 23503) may settle a legacy
- * outbound_deliveries row instead, otherwise it fails for provider retry.
+ * The webhook is account-wide, so receipts whose sender domain is not ours are
+ * acknowledged without any database call. Receipts for the canonical
+ * communication_outbox persist durably first; a receipt the outbox does not know
+ * (SQLSTATE 23503) may settle a legacy outbound_deliveries row instead, and is
+ * otherwise acknowledged as not ours (never retried; see
+ * docs/postgrest-retryable-sqlstates.md). Only transient failures return 503.
  */
 export async function receiveResendDelivery(
   req: Request,
@@ -187,7 +224,8 @@ export async function receiveResendDelivery(
   verify: ResendVerifier,
   legacy?: LegacyDeliveryCallback,
 ) {
-  const parsed = await parseResend(req, env, verify);
+  const parsed = await parseResend(req, env, verify, true);
+  if (parsed.purpose === "foreign") return { acknowledged: true, ignored: "foreign_sender" };
   if (parsed.purpose === "authentication") return parsed;
   const { id, type, event, data } = parsed;
   if (type === "inbound")
@@ -198,27 +236,28 @@ export async function receiveResendDelivery(
       type,
     });
   } catch (error) {
-    if (
-      !legacy || !(error instanceof WebhookError) || error.code !== "23503" ||
-      !["delivered", "bounced", "complained", "failed"].includes(type)
-    ) throw error;
+    if (!(error instanceof WebhookError) || error.code !== "23503") throw error;
+    const unmatched = { acknowledged: true, recorded: false, status: type };
+    if (!legacy || !["delivered", "bounced", "complained", "failed"].includes(type))
+      return unmatched;
     const bounce = data.bounce as Record<string, unknown> | undefined;
     const message = typeof bounce?.message === "string" && bounce.message.trim() &&
         bounce.message.length <= 300
       ? bounce.message.trim()
       : null;
-    let settled = false;
+    let outcome: "settled" | "unmatched" | false = false;
     try {
-      settled = await legacy({
+      outcome = await legacy({
         providerMessageId: data.email_id as string,
         status: type === "delivered" ? "DELIVERED" : "FAILED",
         note: `Resend webhook reported email.${type}.`,
         errorText: type === "delivered" ? null : message ?? `Resend email.${type}`,
       });
     } catch {
-      settled = false;
+      outcome = false;
     }
-    if (!settled) throw error;
+    if (outcome === "unmatched") return unmatched;
+    if (outcome !== "settled") throw error;
     return { recorded: true, legacy: true, status: type };
   }
 }

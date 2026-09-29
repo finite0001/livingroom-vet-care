@@ -42,5 +42,5 @@ select throws_ok($$select ezyvet_prescription_source_context((select id from fx 
 select ok(not has_function_privilege('authenticated','ezyvet_prescription_source_context(uuid,uuid)','EXECUTE'),'Private collector not callable by browser');
 select ok(not has_function_privilege('service_role','ezyvet_prescription_source_context(uuid,uuid)','EXECUTE'),'Private collector not callable by service API');
 update ezyvet_identity_heads set version=version+2 where resource='prescriptionitem' and external_id='501';
-select throws_ok($$select ezyvet_prescription_source_context((select id from fx where k='pet'),(select id from fx where k='run'))$$,'40001','SOURCE_PRESCRIPTION_ITEM_STALE','Item revision change invalidates source context');
+select throws_ok($$select ezyvet_prescription_source_context((select id from fx where k='pet'),(select id from fx where k='run'))$$,'PT409','SOURCE_PRESCRIPTION_ITEM_STALE','Item revision change invalidates source context');
 select * from finish();rollback;

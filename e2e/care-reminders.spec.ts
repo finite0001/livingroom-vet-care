@@ -83,7 +83,7 @@ async function fixture(page: Page, baseURL: string | undefined, admin=false) {
   if(path==='/rest/v1/care_message_templates')return route.fulfill({json:state.settings});
   if(path==='/rest/v1/rpc/save_patient_vaccine_due_plan'){
    const b=route.request().postDataJSON();expect(b.p_pet_id).toBe(petId);state.saves.push(b.p_id);
-   if(state.failNext){state.failNext=false;state.row={...state.row!,version:Number(state.row!.version)+1,review_note:'Remote reviewed correction'};return route.fulfill({status:409,json:{code:'40001',message:'Due plan version conflict'}});}
+   if(state.failNext){state.failNext=false;state.row={...state.row!,version:Number(state.row!.version)+1,review_note:'Remote reviewed correction'};return route.fulfill({status:409,json:{code:'PT409',message:'Due plan version conflict'}});}
    state.row={id:b.p_id,pet_id:petId,version:Number(state.row?.version||0)+1,template_id:b.p_template_id,template_version:b.p_template_version,template_snapshot:template,group_key:template.group_key,product_id:b.p_product_id,treatment_id:b.p_treatment_id,last_administered_on:b.p_last_administered_on,anchor_source:b.p_anchor_source,interval_days:b.p_interval_days,proposed_due_on:'2026-01-31',current_due_on:b.p_current_due_on,status:b.p_status,reminders_enabled:b.p_reminders_enabled,override_reason:b.p_override_reason,review_note:b.p_review_note,created_by:staffId,updated_by:staffId,created_at:'2026-01-02T17:00:00Z',updated_at:'2026-01-02T17:00:00Z'};
    state.revisions.push({id:state.revisions.length+1,entity:'vaccine_plan',entity_id:b.p_id,version:state.row.version,snapshot:{...state.row},actor_id:staffId,recorded_at:'2026-01-02T17:00:00Z'});return route.fulfill({json:state.row});
   }

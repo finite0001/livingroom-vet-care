@@ -80,6 +80,6 @@ export function createPaymentDeliveryStaffHandler(deps:PaymentDeliveryStaffDepen
  // Preview is intentionally transient and must never be placed in browser persistence or logs.
  const attachment=context.invoice_payload_text?JSON.parse(context.invoice_payload_text).attachments[0]:null;
  return json({delivery,preview:{message:payload.message,recipient:context.request.recipient,subject:context.request.subject,sender,attachment}});
- }catch(error){const code=object(error)&&typeof error.code==="string"?error.code:"";const status=code==="42501"?404:["23505","23514","22023","40001"].includes(code)?409:202;
+ }catch(error){const code=object(error)&&typeof error.code==="string"?error.code:"";const status=code==="42501"?404:["23505","23514","22023","PT409"].includes(code)?409:202;
  return json({error:status===404?"Payment delivery unavailable":status===409?"Saved delivery differs or is no longer eligible. Recover the request.":"Preparation or review was not confirmed. Recover the same request before retrying.",request_id:id,retry_requires_recovery:true},status);}
 };}

@@ -49,7 +49,7 @@ Last given = the newest administration date; if a plan's anchor is newer than ev
 | `default_booster_interval_days` | Optional whole days (1–36500). Used **only** to offer a pre-fill. |
 | `review_note` | Required label source / reviewer. |
 
-`save_catalog_vaccine_profile(p_product_id, p_expected_version, p_group_key, p_species, p_vaccine_type, p_labeled_duration, p_default_booster_interval_days, p_review_note)` requires an active **DVM or ADMIN**. Optimistic concurrency via `version`; a lost-response retry by the same reviewer with identical values returns the saved row; any other stale write fails with `40001`.
+`save_catalog_vaccine_profile(p_product_id, p_expected_version, p_group_key, p_species, p_vaccine_type, p_labeled_duration, p_default_booster_interval_days, p_review_note)` requires an active **DVM or ADMIN**. Optimistic concurrency via `version`; a lost-response retry by the same reviewer with identical values returns the saved row; any other stale write fails with `PT409`.
 
 UI: **Inventory → Product catalog → Edit** on a vaccine product shows a “Vaccine information” form (read-only for other staff). The catalog list shows a one-line summary for vaccine products.
 

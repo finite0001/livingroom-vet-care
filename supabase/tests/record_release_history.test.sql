@@ -49,7 +49,7 @@ select public.save_patient_problem((select id from fx where k='problem'),(select
 select is(public.read_record_release('79000000-0000-4000-8000-000000000003')->>'eligible','false','Diagnosis revision invalidates prior package');
 select is(public.read_record_release('79000000-0000-4000-8000-000000000003')#>>'{release,snapshot,problems,0,current,status}','resolved','Previously reviewed diagnosis stays immutable');
 select lives_ok($$select pg_temp.confirm_history('79000000-0000-4000-8000-000000000003',(select v from data where k='preview'))$$,'Original retry still resolves after invalidation');
-select throws_ok($$select pg_temp.confirm_history('79000000-0000-4000-8000-000000000004',(select v from data where k='preview'))$$,'40001',null,'Stale clinical history cannot create another release');
+select throws_ok($$select pg_temp.confirm_history('79000000-0000-4000-8000-000000000004',(select v from data where k='preview'))$$,'PT409',null,'Stale clinical history cannot create another release');
 select public.record_patient_treatment('79000000-0000-4000-8000-000000000005',jsonb_build_object('historical',true,'pet_id',(select id from fx where k='pet'),'quantity',1,'product_name','Prior vaccine','manufacturer','External','lot_number','UNKNOWN','dose','unknown','route','unknown','veterinarian','External veterinarian','administered_at',now()-interval '1 year','source','Original vaccine history'));
 update data set v=public.select_all_record_release_sources((select id from fx where k='pet'))->'selection' where k='selection';
 update data set v=pg_temp.preview_history((select v from data where k='selection')) where k='preview';

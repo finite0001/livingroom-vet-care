@@ -159,7 +159,7 @@ try:
     def confirm(i,sel,p):return staff+call('confirm_record_release',quote(i),quote(fx['pet']),quote(fx['client']),quote('EMAIL'),quote(email),jsonsql(sel),jsonsql(p['snapshot']),quote(p['source_hash']),'true')
     def absent(i):check(scalar('select count(*) from record_releases where id='+quote(i)+';')=='0','Rejected review leaves no release')
     a=signed();sel=selection(a);p=preview(sel);i=str(uuid.uuid4())
-    contended(operation('cancel_native_prescription',str(uuid.uuid4()),cancel_request(a)),confirm(i,sel,p),rejected('40001'))
+    contended(operation('cancel_native_prescription',str(uuid.uuid4()),cancel_request(a)),confirm(i,sel,p),rejected('PT409'))
     absent(i)
     # Confirmation winning the gate preserves its frozen result, later terminal change invalidates delivery.
     a=signed();sel=selection(a);p=preview(sel);i=str(uuid.uuid4());cr=cancel_request(a)
@@ -169,7 +169,7 @@ try:
     check(retained['snapshot']==p['snapshot'],'Exact historical replay retains original reviewed snapshot')
     # Actual stock/charge mutation wins the parent gate and invalidates reviewed totals.
     a=signed();sel=selection(a);p=preview(sel);i=str(uuid.uuid4());l=lot();t=target(a,l)
-    contended(dispense(str(uuid.uuid4()),reviewed(t)),confirm(i,sel,p),rejected('40001'));absent(i)
+    contended(dispense(str(uuid.uuid4()),reviewed(t)),confirm(i,sel,p),rejected('PT409'));absent(i)
     check(json.loads(effects(t['invoice_id'],l))==dict(stock=8,charges=1),'Release race adds no stock or invoice effect')
     # Confirmation winning the gate does not block a subsequently valid dispense forever.
     a=signed();sel=selection(a);p=preview(sel);i=str(uuid.uuid4());l=lot();t=target(a,l);r=reviewed(t)
@@ -179,15 +179,15 @@ try:
     a=signed();t=target(a,lot());fill=str(uuid.uuid4());invoke('record_native_dispense',quote(fill),jsonsql(reviewed(t)))
     sel=selection(a,fill);p=preview(sel);i=str(uuid.uuid4());c=invoke('preview_native_slot_close',quote(a),quote(fx['pet']),'0')
     close=dict(authorization_id=a,pet_id=fx['pet'],slot_index=0,expected_slot_version=1,expected_context_hash=c['context_hash'],reason='Synthetic remainder forfeiture',attest_forfeit=True)
-    contended(operation('close_native_fill_slot',str(uuid.uuid4()),close),confirm(i,sel,p),rejected('40001'));absent(i)
+    contended(operation('close_native_fill_slot',str(uuid.uuid4()),close),confirm(i,sel,p),rejected('PT409'));absent(i)
     # Selected pickup is an additional fact, never an extra dispense or charge.
     a=signed();t=target(a,lot());fill=str(uuid.uuid4());invoke('record_native_dispense',quote(fill),jsonsql(reviewed(t)))
     sel=selection(a,fill);p=preview(sel);i=str(uuid.uuid4());pickup_target=dict(authorization_id=a,pet_id=fx['pet'],dispense_id=fill,refill_close=None)
     cp=invoke('preview_native_pickup',quote(fill),quote(fx['pet']),'null');pickup=dict(**pickup_target,expected_context_hash=cp['context_hash'],recipient_name='Synthetic recipient',recipient_relationship='Owner',reason='Synthetic handoff',attest_handoff=True)
-    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),confirm(i,sel,p),rejected('40001'));absent(i)
+    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),confirm(i,sel,p),rejected('PT409'));absent(i)
     # Replacement changes only the selected predecessor status, without following successor content.
     a=signed();sel=selection(a);p=preview(sel);i=str(uuid.uuid4());d=draft()
-    contended(operation('replace_native_prescription',str(uuid.uuid4()),replacement(a,d)),confirm(i,sel,p),rejected('40001'));absent(i)
+    contended(operation('replace_native_prescription',str(uuid.uuid4()),replacement(a,d)),confirm(i,sel,p),rejected('PT409'));absent(i)
     # Opposite caller order still uses one global sorted authorization gate order.
     a,b=signed(),signed();sel1=dict(native_prescription_ids=[a,b]);sel2=dict(native_prescription_ids=[b,a])
     def preview_query(sel):return staff+call('preview_record_release_v10',quote(fx['pet']),quote(fx['client']),quote('EMAIL'),quote(email),jsonsql(sel))

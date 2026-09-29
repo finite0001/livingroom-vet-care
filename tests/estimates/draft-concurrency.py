@@ -143,7 +143,7 @@ try:
     one={**r,'expected_version':1,'fields':{**r['fields'],'title':'Winning title'}}
     two={**r,'expected_version':1,'fields':{**r['fields'],'title':'Competing title'}}
     winner,loser=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(save(winner,one),save(loser,two),rejected('40001'))
+    contended(save(winner,one),save(loser,two),rejected('PT409'))
     check(count(r['estimate_id'])=='2' and read(r['estimate_id'])['draft']['fields']['title']=='Winning title','Version race preserves one complete winning revision')
     check(recover(loser) is None,'Stale concurrent save has no operation receipt')
     check(recover(op)==frozen,'Historical exact receipt survives later edit')
@@ -154,7 +154,7 @@ try:
 
     r=request();op=str(uuid.uuid4());p=products[0]
     catalog=staff+call('save_catalog_product',quote(p['id']),str(p['version']),quote(p['name']),quote(p['kind']),quote(''),quote(p['unit']),'126','true')
-    contended(catalog,save(op,r),rejected('40001'))
+    contended(catalog,save(op,r),rejected('PT409'))
     check(recover(op) is None and read(r['estimate_id'])['draft'] is None,'Changed locked catalog prevents stale draft creation')
     products[0]=json.loads(scalar('select to_jsonb(p) from catalog_products p where id='+quote(p['id'])+';'))
     # Future requests explicitly review the changed price as an override.

@@ -19,7 +19,7 @@ test("billing price converts exact cents and rejects unsupported precision", () 
     assert.throws(() => centsValue(value));
 });
 test("only known transaction rejections permit a fresh operation ID", () => {
-  for (const code of ["23514", "42501", "40001"])
+  for (const code of ["23514", "42501", "PT409"])
     assert.equal(isDefinitiveRejection({ code }), true);
   for (const failure of [
     new Error("Network timeout"),

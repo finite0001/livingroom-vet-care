@@ -74,7 +74,7 @@ try{
   const treatment=id();treatmentIds.push(treatment);
   const request={pet_id:patient.id,lot_id:lot,invoice_id:invoice,quantity:1,dose:"Synthetic dose",route:"SC",site:"Synthetic site",veterinarian:"Dr Synthetic",veterinarian_license:"TEST-ONLY",administered_at:visitAt,next_due_on:kind==="vaccine"?"2099-01-01":null,alert_review:{source_hash:current.source_hash,acknowledged:true}};
   if(kind==="vaccine"){
-   await denied("record_patient_treatment",{p_id:treatment,p_request:{...request,alert_review:{source_hash:stale.source_hash,acknowledged:true}}},"40001");
+   await denied("record_patient_treatment",{p_id:treatment,p_request:{...request,alert_review:{source_hash:stale.source_hash,acknowledged:true}}},"PT409");
    check(sql(`select coalesce(sum(quantity),0) from public.inventory_movements where lot_id=${quote(lot)};`)==="10.000","Rejected stale alert leaves stock untouched");
    check(sql(`select count(*) from public.billing_invoice_items where invoice_id=${quote(invoice)};`)==="0","Rejected stale alert creates no invoice charge");
   }

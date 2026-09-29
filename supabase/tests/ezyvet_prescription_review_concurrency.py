@@ -33,6 +33,15 @@ def sql(query, fail=True):
         raise AssertionError(result.stderr)
     return result
 
+def current_sqlstates(migration_sql):
+    """Replay a historical migration with the SQLSTATE convention of 20260928190000.
+
+    That migration rewrote every `40001` raise to the non-retryable `PT409` (PostgREST
+    retries 40001 forever); the current SQL regressions assert PT409, so historical
+    helpers replayed here must use it too. Nothing else in the text changes."""
+    assert "'PT409'" not in migration_sql
+    return migration_sql.replace("'40001'", "'PT409'")
+
 def quote(value):
     return "'" + str(value).replace("'", "''") + "'"
 
@@ -137,10 +146,10 @@ try:
         if scalar(f'select {probe} is null;')=='t':
             paths=list(migration_dir.glob(version+'_*'))
             assert len(paths)==1,version
-            sql(paths[0].read_text())
+            sql(current_sqlstates(paths[0].read_text()))
     # Additive private-helper replacement follows the deployed schema8 baseline.
-    sql((migration_dir/'20260913650000_prescription_release_reference_hardening.sql').read_text())
-    for migration in args.overlay_migration:sql(migration.read_text())
+    sql(current_sqlstates((migration_dir/'20260913650000_prescription_release_reference_hardening.sql').read_text()))
+    for migration in args.overlay_migration:sql(current_sqlstates(migration.read_text()))
     regression_count=0
     for filename in ['ezyvet_prescription_release_reference.test.sql','release_imported_prescription.test.sql','release_imported_vaccination.test.sql','ezyvet_prescription_review_discovery.test.sql','ezyvet_prescription_review.test.sql','ezyvet_prescription_interpretation.test.sql','ezyvet_prescription_review_preparation.test.sql','ezyvet_prescription_source_context.test.sql','ezyvet_prescription_reconciliation.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_vaccination_runs.test.sql']:
         result=sql(Path(__file__).with_name(filename).read_text())

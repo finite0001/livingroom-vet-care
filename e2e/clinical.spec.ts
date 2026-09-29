@@ -31,7 +31,7 @@ async function fixture(page: Page, inactive = false) {
     if (path === '/rest/v1/clinical_encounters') return route.fulfill({ json: url.searchParams.has('id') ? state.row : state.row ? [state.row] : [] });
     if (path === '/rest/v1/rpc/save_clinical_encounter') {
       state.saves++;
-      if (state.conflict) { state.conflict = false; return route.fulfill({ status: 409, json: { code: '40001', message: 'Encounter version conflict' } }); }
+      if (state.conflict) { state.conflict = false; return route.fulfill({ status: 409, json: { code: 'PT409', message: 'Encounter version conflict' } }); }
       const body = route.request().postDataJSON();
       state.row = { id: body.p_id ?? '44444444-4444-4444-8444-444444444444', pet_id: petId, visit_at: body.p_visit_at, visit_type: body.p_visit_type, location: body.p_location, subjective: body.p_subjective, objective: body.p_objective, assessment: body.p_assessment, plan: body.p_plan, status: 'draft', version: (state.row?.version ?? 0) + 1, created_by: staffId, updated_by: staffId, signed_by: null, signed_at: null, created_at: '2026-09-12T15:00:00Z', updated_at: '2026-09-12T15:00:00Z' };
       return route.fulfill({ json: state.row });

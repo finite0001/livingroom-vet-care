@@ -38,7 +38,7 @@ test("unavailable recovery never unlocks the draft, even on an authorization err
 });
 
 test("confirmed database rejection permits a fresh reviewed request; other errors remain uncertain", () => {
-  for (const code of ["23514", "40001", "42501"]) {
+  for (const code of ["23514", "PT409", "42501"]) {
     const state = resolutionSaveFailed(beginResolutionSave(initial(), request()), reply, { code });
     assert.deepEqual(state, initial());
   }
@@ -51,7 +51,7 @@ test("late replies after actor or target change cannot release another draft", (
   const saving = beginResolutionSave(initial(), request());
   for (const stale of [{ ...reply, actor: "admin-2" }, { ...reply, targetKey: "other-scope" }, { ...reply, requestId: "old-decision" }]) {
     assert.equal(resolutionConfirmed(saving, stale), saving);
-    assert.equal(resolutionSaveFailed(saving, stale, { code: "40001" }), saving);
+    assert.equal(resolutionSaveFailed(saving, stale, { code: "PT409" }), saving);
     const recovering = beginResolutionRecovery(resolutionSaveFailed(saving, reply, null));
     assert.equal(resolutionRecoveryAbsent(recovering, stale), recovering);
     assert.equal(resolutionConfirmed(recovering, stale), recovering);
@@ -69,7 +69,7 @@ test("duplicate submission and repeated recovery clicks preserve one pending ope
 });
 
 test("retry rejection cannot discard an original write that may commit after an absent recovery", () => {
-  for (const code of ["42501", "40001", "23514"]) {
+  for (const code of ["42501", "PT409", "23514"]) {
     let state = resolutionSaveFailed(beginResolutionSave(initial(), request()), reply, new Error("Timeout"));
     state = resolutionRecoveryAbsent(beginResolutionRecovery(state), reply);
     state = beginResolutionSave(state, request());

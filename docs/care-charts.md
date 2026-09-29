@@ -18,7 +18,7 @@ A linked photo must be a ready JPEG/PNG document belonging to the same patient. 
 - `record_lesion_observation(p_id, p_lesion_id, p_pet_id, p_expected_version, p_observed_at, p_label, p_body_view, p_x, p_y, p_length_mm, p_width_mm, p_depth_mm, p_notes, p_photo_document_id)` creates or reopens the lesion and appends the observation in one transaction. New lesion uses its own stable UUID and null expected revision; observation UUID is the retry key. Body view is dorsal/ventral/left/right; x/y are finite in [0,1]. Measurements are optional and may be zero, never negative or nonfinite.
 - `correct_lesion_observation(p_id, p_observation_id, p_reason)` appends one reasoned correction per observation.
 
-`40001` indicates a stale record; preserve local form data and explicitly reload the current version. `23514` indicates invalid clinical metadata, transition or mismatched retry. `42501` indicates inactive/nonstaff/anonymous access. Draft JSON contains no calculated clinical interpretation.
+`PT409` indicates a stale record; preserve local form data and explicitly reload the current version. `23514` indicates invalid clinical metadata, transition or mismatched retry. `42501` indicates inactive/nonstaff/anonymous access. Draft JSON contains no calculated clinical interpretation.
 
 ## HHHHHMM quality-of-life scale (migration `20260928130000_qol_hhhhhmm_scale.sql`)
 
@@ -39,7 +39,7 @@ Requested by Dr. Susan Edler as a structured companion to the free-text template
 - `qol_scale_reference_settings`: single row (fixed UUID); ADMIN-only via RPC; revision-stamped and audited.
 - Authenticated/service users have SELECT only (active-staff RLS); all writes use security-definer RPCs; all three tables are audited by `audit_trigger_fn`.
 
-RPCs (errors: `40001` stale version, `23514` invalid data/transition/replay mismatch, `42501` inactive/nonstaff/non-admin):
+RPCs (errors: `PT409` stale version, `23514` invalid data/transition/replay mismatch, `42501` inactive/nonstaff/non-admin):
 
 - `save_patient_qol_scale(p_id, p_pet_id, p_expected_version, p_assessed_at, p_assessor, p_hurt, p_hunger, p_hydration, p_hygiene, p_happiness, p_mobility, p_more_good_days, p_hurt_note, p_hunger_note, p_hydration_note, p_hygiene_note, p_happiness_note, p_mobility_note, p_more_good_days_note, p_notes)` — scores are integers 0–10 or null (draft); notes are text (empty string when blank).
 - `sign_patient_qol_scale(p_id, p_expected_version)` — idempotent for the same signer.

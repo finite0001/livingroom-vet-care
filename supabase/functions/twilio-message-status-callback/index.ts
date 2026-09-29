@@ -110,7 +110,7 @@ serve(async (req) => {
     if (!mapped.status) return jsonResponse({ success: true, ignored: true, note: mapped.note });
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { error } = await supabase.rpc("record_outbound_delivery_callback", {
+    const { data, error } = await supabase.rpc("record_outbound_delivery_callback", {
       p_provider: "twilio",
       p_provider_message_id: providerMessageId,
       p_status: mapped.status,
@@ -121,6 +121,11 @@ serve(async (req) => {
 
     if (error) {
       return jsonResponse({ success: false, error: "Unable to record Twilio callback." }, 500);
+    }
+    // Unknown or no-longer-eligible message: the RPC returns a NULL row (never a
+    // retryable SQLSTATE). Not ours to settle; acknowledge without retry.
+    if (!(data as { id?: unknown } | null)?.id) {
+      return jsonResponse({ success: true, recorded: false, acknowledged: true });
     }
     return jsonResponse({ success: true, recorded: true, status: mapped.status });
   } catch {

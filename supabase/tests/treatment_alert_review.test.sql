@@ -36,7 +36,7 @@ select is((select count(*) from billing_invoice_items),0::bigint,'Bypass leaves 
 select is((select sum(quantity) from inventory_movements),10::numeric,'Bypass leaves stock unchanged');
 insert into fx select 'problem',id from save_patient_problem(null,(select id from fx where k='pet'),null,'Prior vaccine reaction','Important historical context',(now() at time zone 'America/Denver')::date,'resolved','high');
 select is(read_patient_treatment_alerts((select id from fx where k='pet'))#>>'{snapshot,important_problems,0,status}','resolved','Resolved critical history remains in reviewed content');
-select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'40001',null,'New flag invalidates old empty-alert review');
+select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'PT409',null,'New flag invalidates old empty-alert review');
 update requests set v=v||jsonb_build_object('alert_review',jsonb_build_object('source_hash',read_patient_treatment_alerts((v->>'pet_id')::uuid)->>'source_hash','acknowledged',true)) where k='live';
 select lives_ok($$select record_patient_treatment('35000000-0000-4000-8000-000000000004',(select v from requests where k='live'))$$,'Reviewed administration commits');
 select is((select reviewed_by from treatment_alert_reviews where treatment_id='35000000-0000-4000-8000-000000000004'),auth.uid(),'Review actor stamped from session');
@@ -45,7 +45,7 @@ reset role;
 select is((select count(*) from audit_logs where table_name='treatment_alert_reviews'),1::bigint,'Review association audited');
 set local role authenticated;
 select save_patient_problem((select id from fx where k='problem'),(select id from fx where k='pet'),1,'Prior vaccine reaction','Updated reaction details',(now() at time zone 'America/Denver')::date,'resolved','high');
-select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'40001',null,'Changed alert details reject a new treatment');
+select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'PT409',null,'Changed alert details reject a new treatment');
 select lives_ok($$select record_patient_treatment('35000000-0000-4000-8000-000000000004',(select v from requests where k='live'))$$,'Committed response-loss retry succeeds despite later alerts');
 select is((select count(*) from treatment_alert_reviews),1::bigint,'Retry does not duplicate review association');
 select is((select count(*) from billing_invoice_items),1::bigint,'Retry does not duplicate charge');
@@ -59,7 +59,7 @@ update pets set allergies='Legacy reaction text' where id=(select id from fx whe
 set local role authenticated;
 select is(read_patient_treatment_alerts((select id from fx where k='pet'))#>>'{snapshot,legacy_allergies,text}','Legacy reaction text','Legacy allergy text included');
 select ok(read_patient_treatment_alerts((select id from fx where k='pet'))#>>'{snapshot,legacy_allergies,provenance}' like '%not established%','Legacy verification uncertainty preserved');
-select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'40001',null,'Allergy change rejects stale review');
+select throws_ok($$select record_patient_treatment(gen_random_uuid(),(select v from requests where k='live'))$$,'PT409',null,'Allergy change rejects stale review');
 select lives_ok($$select record_patient_treatment('35000000-0000-4000-8000-000000000009',jsonb_build_object('pet_id',(select id from fx where k='pet'),'historical',true,'quantity',1,'product_name','External medication','manufacturer','External','lot_number','Unknown','dose','Unknown','route','Unknown','veterinarian','Source veterinarian unknown','administered_at',now()-interval '1 year','source','Historical source transcription'))$$,'Historical transcription does not claim current-care review');
 select is((select count(*) from treatment_alert_reviews),1::bigint,'No fabricated acknowledgment on historical transcription');
 select set_config('request.jwt.claims','{"sub":"34000000-0000-4000-8000-000000000003","role":"authenticated"}',true);

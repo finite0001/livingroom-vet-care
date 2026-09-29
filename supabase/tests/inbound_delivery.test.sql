@@ -54,7 +54,7 @@ select is((select unread_count from public.list_communication_inbox() where conv
 select throws_ok($$select public.list_communication_inbox('',null,null,null)$$,'23514',null,'Inbox cannot request unbounded page');
 select throws_ok($$select public.mark_conversation_read('61000000-0000-4000-8000-000000000001',(select id from fixture_ids where kind='conversation'),(select message_id from public.communication_inbound where id=(select id from fixture_ids where kind='known')))$$,'42501',null,'Cannot spoof another staff read cursor');
 select lives_ok($$select public.assign_inbound_communication(auth.uid(),(select id from fixture_ids where kind='unknown'),1,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='conversation'),'Confirmed household by callback')$$,'Staff can explicitly resolve unknown sender with reason');
-select throws_ok($$select public.assign_inbound_communication(auth.uid(),(select id from fixture_ids where kind='unknown'),1,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='conversation'),'Stale duplicate assignment')$$,'40001',null,'Review assignment cannot duplicate message');
+select throws_ok($$select public.assign_inbound_communication(auth.uid(),(select id from fixture_ids where kind='unknown'),1,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='conversation'),'Stale duplicate assignment')$$,'PT409',null,'Review assignment cannot duplicate message');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
@@ -108,7 +108,7 @@ set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"61000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select throws_ok($$update public.sms_consent set opted_in=true$$,'42501',null,'Browser cannot bypass consent audit or backdate timestamps');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+1 (303) 555-0100',false,'VERBAL','Client requested no text messages',(select max(updated_at) from public.sms_consent where client_id=(select id from fixture_ids where kind='client')))$$,'Staff records normalized opt-out with server timestamp');
-select throws_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+13035550100',true,'VERBAL','Stale proposed opt in',null)$$,'40001',null,'Stale consent mutation rejected');
+select throws_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+13035550100',true,'VERBAL','Stale proposed opt in',null)$$,'PT409',null,'Stale consent mutation rejected');
 select throws_ok($$select public.record_sms_consent('61000000-0000-4000-8000-000000000002',(select id from fixture_ids where kind='client'),'+13035550100',true,'VERBAL','Spoofed staff actor',null)$$,'42501',null,'Consent actor cannot be spoofed');
 reset role;
 set local role service_role;

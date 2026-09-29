@@ -48,7 +48,7 @@ export function MigrationBindingForm({ actor, manifest, scopeId, onDirtyChange, 
     lock.current = true; setBusy(true); setRequest(payload); setError("");
     try { finish(await api.bind(payload)); }
     catch (e) { if (alive.current) {
-      if (e && typeof e === "object" && "code" in e && ["23514", "40001", "42501"].includes(String(e.code))) {
+      if (e && typeof e === "object" && "code" in e && ["23514", "PT409", "42501"].includes(String(e.code))) {
         setRequest(null); setConfirmed(false); setError("The database rejected this binding. Review the run, exact source parent and current preceding binding before trying again."); void latest.refetch();
       } else { setRecoverFirst(true); setError("Binding could not be confirmed. Check this request before retrying; the selected run is locked."); }
     } }

@@ -126,7 +126,7 @@ async function fixture(page: Page) {
             status: 400,
             json: {
               message: "Inquiry changed; reload before saving",
-              code: "40001",
+              code: "PT409",
             },
           })
         : route.fulfill({ json: {} });

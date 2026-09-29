@@ -81,7 +81,7 @@ async function fixture(page: Page) {
   }
   if(path==='/rest/v1/rpc/save_patient_anesthesia_record') {
    const body=route.request().postDataJSON();state.saves++;expect(body.p_pet_id).toBe(petId);
-   if(state.failNext){state.failNext=false;state.row={...state.row!,version:Number(state.row!.version)+1,plan:'Remote saved plan'};return route.fulfill({status:409,json:{code:'40001',message:'Anesthesia record version conflict'}});}
+   if(state.failNext){state.failNext=false;state.row={...state.row!,version:Number(state.row!.version)+1,plan:'Remote saved plan'};return route.fulfill({status:409,json:{code:'PT409',message:'Anesthesia record version conflict'}});}
    state.row={...body.p_values,id:body.p_id,pet_id:petId,status:'draft',version:Number(state.row?.version||0)+1,created_by:staffId,updated_by:staffId,created_at:'2026-01-02T17:00:00Z',updated_at:'2026-01-02T17:00:00Z',signed_by:null,signed_at:null};
    state.revisions.push({id:state.revisions.length+1,record_id:body.p_id,version:state.row.version,snapshot:{...state.row},actor_id:staffId,recorded_at:'2026-01-02T17:00:00Z'});
    return route.fulfill({json:state.row});

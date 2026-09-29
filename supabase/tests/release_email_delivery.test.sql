@@ -78,7 +78,7 @@ select is(pg_temp.retry_source_probe((select id from fx where k='outbox'))->>'el
 select is(pg_temp.retry_source_probe((select id from fx where k='outbox'),$$update record_release_policy set enabled=false$$)->>'reason','source_ineligible','Disabled clinical release policy blocks retry');
 insert into fx select 'lease',lease_token from public.claim_communication();
 select is(public.read_release_email_payload((select id from fx where k='outbox'),(select id from fx where k='lease'))->>'payload_text',(select v::text from data where k='payload'),'Dispatcher reads exact frozen serialized provider request');
-select throws_ok($$select public.read_release_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'40001',null,'Wrong lease cannot read payload');
+select throws_ok($$select public.read_release_email_payload((select id from fx where k='outbox'),gen_random_uuid())$$,'PT409',null,'Wrong lease cannot read payload');
 reset role;
 update public.record_release_policy set enabled=false;
 set local role service_role;

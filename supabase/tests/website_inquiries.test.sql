@@ -32,7 +32,7 @@ select throws_ok($$update website_inquiry_triage set status='resolved'$$,'42501'
 select throws_ok($$select update_website_inquiry('97000000-0000-4000-8000-000000000002',(select id from fx where k='inquiry'),1,'in_progress',null,'Reviewed request')$$,'42501',null,'Forged actor denied');
 select throws_ok($$select update_website_inquiry(auth.uid(),(select id from fx where k='inquiry'),1,'in_progress','97000000-0000-4000-8000-000000000002','Reviewed request')$$,'23514',null,'Inactive assignee denied');
 select lives_ok($$select update_website_inquiry(auth.uid(),(select id from fx where k='inquiry'),1,'in_progress',auth.uid(),'Staff reviewing request')$$,'Authored assignment accepted');
-select throws_ok($$select update_website_inquiry(auth.uid(),(select id from fx where k='inquiry'),1,'resolved',null,'Stale review')$$,'40001',null,'Stale version denied');
+select throws_ok($$select update_website_inquiry(auth.uid(),(select id from fx where k='inquiry'),1,'resolved',null,'Stale review')$$,'PT409',null,'Stale version denied');
 select throws_ok($$select authorize_website_inquiry_reply(auth.uid(),(select id from fx where k='inquiry'),2)$$,'42501',null,'Unreviewed reply denied');
 select throws_ok($$select review_website_inquiry_household(auth.uid(),(select id from fx where k='inquiry'),2,(select id from fx where k='client'),'EMAIL','verified@example.test',false,'Independently checked')$$,'23514',null,'Explicit confirmation required');
 select throws_ok($$select review_website_inquiry_household(auth.uid(),(select id from fx where k='inquiry'),2,(select id from fx where k='client'),'EMAIL','claim@example.test',true,'Independently checked')$$,'23514',null,'Claimed destination cannot substitute for household destination');

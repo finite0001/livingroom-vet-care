@@ -400,7 +400,7 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
         args,
       );
       if (error) {
-        if (!pendingUncertain.current && ["40001", "23514", "42501"].includes(error.code)) {
+        if (!pendingUncertain.current && ["PT409", "23514", "42501"].includes(error.code)) {
           pendingRef.current = null;
           setPending(null);
           setPreview(null);

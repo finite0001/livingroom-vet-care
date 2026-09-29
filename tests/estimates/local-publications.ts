@@ -190,7 +190,7 @@ const stalePublish = publishRequest(secondPreparation), abandonedId = randomUUID
 // Contact update invalidates an unpublished review but cannot rewrite historical bytes.
 await rpc('save_client', { p_actor_id: staff.id, p_client_id: client.id, p_expected_version: client.version,
   p_first_name: 'Changed', p_last_name: client.last_name, p_primary_phone: null, p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: 'New synthetic address', p_housecall_address: null });
-await denied('publish_native_estimate', { p_id: abandonedId, p_request: stalePublish }, '40001');
+await denied('publish_native_estimate', { p_id: abandonedId, p_request: stalePublish }, 'PT409');
 const closeMutation = { kind: 'publish', request: stalePublish };
 check(await rpc('recover_native_estimate_publication_operation', { p_id: abandonedId }) === null, 'Uncommitted stale publication has no receipt');
 const closure = await rpc('close_native_estimate_publication_operation', { p_id: abandonedId, p_mutation: closeMutation });
@@ -219,7 +219,7 @@ const withdrawn = await rpc('withdraw_native_estimate', { p_id: withdrawalId, p_
 assert.deepEqual(await rpc('withdraw_native_estimate', { p_id: withdrawalId, p_request: withdrawal }), withdrawn); checks++;
 check((await getCurrent()).current_status === 'withdrawn' && (await getCurrent()).current === null, 'Withdrawal leaves historical publication and no active current slot');
 check((await rpc('read_native_estimate_published_revision', { p_publication_id: replacementId, p_client_id: client.id })).status === 'withdrawn', 'Staff detail distinguishes withdrawal from replacement');
-await denied('withdraw_native_estimate', { p_id: randomUUID(), p_request: withdrawal }, '40001');
+await denied('withdraw_native_estimate', { p_id: randomUUID(), p_request: withdrawal }, 'PT409');
 // Current catalog can change; history and real HTTP recovery still return exact captures.
 await rpc('save_catalog_product', { p_id: product.id, p_expected_version: product.version, p_name: product.name, p_kind: product.kind, p_manufacturer: '', p_unit: product.unit, p_unit_price_cents: 999, p_active: false });
 assert.deepEqual((await jsonHttp('recover', { id: prepId })).preparation, prepared); checks++;

@@ -54,7 +54,7 @@ select is((select version from public.patient_documents where id='33000000-0000-
 delete from storage.objects where bucket_id='patient-documents';
 select is((select count(*) from storage.objects where bucket_id='patient-documents'),1::bigint,'Ready original cannot be deleted');
 select throws_ok($$update public.patient_documents set created_by='32000000-0000-4000-8000-000000000002'$$,'42501',null,'Direct metadata and actor writes denied');
-select throws_ok($$select public.void_patient_document('33000000-0000-4000-8000-000000000001',1,'Wrong record')$$,'40001',null,'Stale void rejected');
+select throws_ok($$select public.void_patient_document('33000000-0000-4000-8000-000000000001',1,'Wrong record')$$,'PT409',null,'Stale void rejected');
 select throws_ok($$select public.void_patient_document('33000000-0000-4000-8000-000000000001',2,' ')$$,'23514',null,'Void reason required');
 select set_config('request.jwt.claims','{"sub":"32000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select is((select count(*) from storage.objects where bucket_id='patient-documents'),1::bigint,'Active staff can read finalized document');

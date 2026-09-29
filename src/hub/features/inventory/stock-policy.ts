@@ -33,7 +33,7 @@ export function isDefinitiveRejection(error: unknown): boolean {
     "23502",
     "23505",
     "42501",
-    "40001",
+    "PT409",
     "22P02",
     "22003",
     "22007",

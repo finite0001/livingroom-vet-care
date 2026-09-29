@@ -106,7 +106,7 @@ const preview = await doctorApi.preview(strictDraft!);
 check(preview.actor_id === doctor.id && preview.pet_id === patient.id && preview.context.draft.id === draftId && preview.context.prescriber.user_id === doctor.id, 'Signing preview binds native patient, DVM and exact draft');
 const signId = randomUUID();
 const signRequest = { draft_id: draftId, pet_id: patient.id, expected_version: 1, expected_context_hash: preview.context_hash, signature_name: preview.context.prescriber.name, attest_review: true };
-await denied('sign_native_prescription', { p_id: randomUUID(), p_request: { ...signRequest, expected_context_hash: '0'.repeat(64) } }, '40001');
+await denied('sign_native_prescription', { p_id: randomUUID(), p_request: { ...signRequest, expected_context_hash: '0'.repeat(64) } }, 'PT409');
 await denied('sign_native_prescription', { p_id: randomUUID(), p_request: signRequest }, '42501', staff.headers);
 const signed = await rpc('sign_native_prescription', { p_id: signId, p_request: signRequest });
 check(signed.id === signId && signed.actor_id === doctor.id && signed.operation === 'sign' && signed.pet_id === patient.id && signed.result.id === signId && signed.result.signed_by === doctor.id, 'Signed authorization and operation identity bound');
@@ -187,7 +187,7 @@ const refillAssign = { refill_id: refillId, pet_id: patient.id, expected_version
 const refillAssignId = randomUUID();
 const refillAssigned = await refillApi.execute({ id: refillAssignId, kind: 'transition_refill', payload: refillAssign });
 check(refillAssigned.result.after.version === 2 && refillAssigned.result.after.assigned_to === doctor.id && refillAssigned.result.before.version === 1, 'Assignment records exact before/after revision');
-await denied('transition_native_refill', { p_id: randomUUID(), p_request: refillAssign }, '40001', staff.headers);
+await denied('transition_native_refill', { p_id: randomUUID(), p_request: refillAssign }, 'PT409', staff.headers);
 // New exact order: linking cannot reuse or silently follow the replaced/cancelled orders above.
 const refillDraftId = randomUUID(), refillSignId = randomUUID();
 await rpc('save_native_prescription_draft', { p_id: randomUUID(), p_request: { ...saveRequest, draft_id: refillDraftId } }, staff.headers);

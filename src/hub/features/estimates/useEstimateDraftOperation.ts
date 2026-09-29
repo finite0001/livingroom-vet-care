@@ -163,7 +163,7 @@ export function useEstimateDraftOperation({
         e && typeof e === "object" && "code" in e ? String(e.code) : "";
       if (
         !wasUncertain &&
-        ["23514", "40001", "42501", "23505"].includes(code)
+        ["23514", "PT409", "42501", "23505"].includes(code)
       ) {
         try {
           clear(op);

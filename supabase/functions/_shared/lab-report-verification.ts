@@ -72,7 +72,7 @@ export function createLabReportVerificationHandler(deps:LabReportDependencies){r
   await rpc(deps.service,"capture_lab_report_bytes",{p_receipt_id:id,p_actor_id:auth.actorId,p_expected_receipt_hash:staged.receipt_hash,p_document_version:document.version,p_content_sha256:digest,p_file_size:document.file_size,p_mime_type:document.mime_type});
   const verified=await recover();if(!verified?.capture||verified.capture.content_sha256!==digest)unavailable();return reply(200,verified);
  }catch(error){
-  const code=errorCode(error);if(["23505","23514","22023","40001"].includes(code))return deny(409);if(code==="42501")return deny(404);
+  const code=errorCode(error);if(["23505","23514","22023","PT409"].includes(code))return deny(409);if(code==="42501")return deny(404);
   if(captureAttempted){try{const saved=await recover();if(saved?.capture&&saved.capture.content_sha256===expectedDigest)return reply(200,saved);}catch{/* Unknown acknowledgement remains pending. */}}
   return reply(202,{error:"Lab report verification unconfirmed",receipt_id:id,retry_requires_recovery:true});
  }

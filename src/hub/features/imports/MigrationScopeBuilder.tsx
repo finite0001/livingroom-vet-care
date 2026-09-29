@@ -39,7 +39,7 @@ export function MigrationScopeBuilder({ actor, onDirtyChange, onSaved }: Props) 
     lock.current = true; setBusy(true); setRequest(payload); setError("");
     try { finish(await api.prepare(payload)); }
     catch (e) { if (alive.current) {
-      if (e && typeof e === "object" && "code" in e && ["23514", "40001", "42501"].includes(String(e.code))) { setRequest(null); setConfirmed(false); setError("The database rejected this scope. Refresh and review the source parents and coverage before saving again."); }
+      if (e && typeof e === "object" && "code" in e && ["23514", "PT409", "42501"].includes(String(e.code))) { setRequest(null); setConfirmed(false); setError("The database rejected this scope. Refresh and review the source parents and coverage before saving again."); }
       else { setRecoverFirst(true); setError("Save could not be confirmed. Check this request before retrying; its scope is locked."); }
     } }
     finally { lock.current = false; if (alive.current) setBusy(false); }

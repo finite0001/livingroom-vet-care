@@ -57,7 +57,7 @@ select throws_ok($$select pg_temp.drug(gen_random_uuid(),jsonb_build_object('adm
 select throws_ok($$select pg_temp.drug(gen_random_uuid(),'{"source":"Forged source"}')$$,'23514','Invalid anesthesia drug fields','Client cannot set treatment source');
 select throws_ok($$select pg_temp.drug(gen_random_uuid(),'{"historical":true}')$$,'23514','Invalid anesthesia drug fields','Historical transcription not accepted here');
 select throws_ok($$select public.record_anesthesia_drug_administration(gen_random_uuid(),'ad300000-0000-4000-8000-000000000001',(select id from fx where k='pet'),(select v-'invoice_id' from requests where k='live'))$$,'23514','Anesthesia drugs require a stock lot and the household draft invoice','Invoice required');
-select throws_ok($$select pg_temp.drug(gen_random_uuid(),'{"alert_review":{"source_hash":"0000000000000000000000000000000000000000000000000000000000000000","acknowledged":true}}')$$,'40001',null,'Stale alert review rejected');
+select throws_ok($$select pg_temp.drug(gen_random_uuid(),'{"alert_review":{"source_hash":"0000000000000000000000000000000000000000000000000000000000000000","acknowledged":true}}')$$,'PT409',null,'Stale alert review rejected');
 select is((select count(*) from public.anesthesia_drug_administrations),1::bigint,'Failed attempts leave no drug entries');
 select is((select count(*) from public.inventory_movements where kind='dispense'),1::bigint,'Failed attempts leave no stock debit');
 select is((select count(*) from public.billing_invoice_items),1::bigint,'Failed attempts leave no invoice lines');

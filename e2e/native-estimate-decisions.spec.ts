@@ -45,12 +45,12 @@ async function witnessFixture(page: Page) {
       version: 1, target, head: decisionHead(), items: [...decisions].reverse(), next_before_sequence: null, has_more: false,
     };
     else if (name === 'preview_native_estimate_decision_grant') {
-      if (!current || current.id !== args.p_publication_id) return route.fulfill({ status: 400, json: { code: '40001', message: 'Publication changed' } });
+      if (!current || current.id !== args.p_publication_id) return route.fulfill({ status: 400, json: { code: 'PT409', message: 'Publication changed' } });
       response = { version: 1, binding: { target, publication_id: current.id, content_hash: current.content_hash, artifact_hash: current.artifact.sha256 },
         publication_head: publicationHead(), expires_at: current.expires_at, decision: null };
     } else if (name === 'record_native_estimate_witnessed_decision') {
       state.writes.push({ id: args.p_id, request: args.p_request }); state.retainedAtWrite = await saved(page);
-      if (state.rejectWrite) return route.fulfill({ status: 400, json: { code: '40001', message: 'Reviewed publication changed' } });
+      if (state.rejectWrite) return route.fulfill({ status: 400, json: { code: 'PT409', message: 'Reviewed publication changed' } });
       if (!receipts.has(args.p_id)) {
         const request = args.p_request as EstimateWitnessOperation['payload'];
         const created_at = '2026-09-16T12:01:00.123456Z';

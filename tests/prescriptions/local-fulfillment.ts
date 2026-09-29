@@ -112,7 +112,7 @@ check(first.result.slot.remaining_quantity === '1.000' && first.result.slot.vers
 check(first.result.dispense.allocations.length === 2 && new Set(first.result.dispense.allocations.map(a => a.movement_id)).size === 2, 'Two immutable lot movements bind one actual dispense');
 check(sql(`select count(*) from billing_invoice_items where invoice_id=${quote(invoiceId)}`) === '1', 'Multi-lot dispensing creates one charge');
 check(sql(`select sum(quantity)::text from inventory_movements where lot_id in (${lots.map(quote).join(',')})`) === '18.000', 'Exact retry does not debit stock again');
-await denied('cancel_native_prescription', { p_id: randomUUID(), p_request: { authorization_id: authorization.id, pet_id: patient.id, expected_event_id: staleCancel.context.head.id, expected_context_hash: staleCancel.context_hash, reason: 'Stale reviewed cancellation', attest_review: true } }, '40001');
+await denied('cancel_native_prescription', { p_id: randomUUID(), p_request: { authorization_id: authorization.id, pet_id: patient.id, expected_event_id: staleCancel.context.head.id, expected_context_hash: staleCancel.context_hash, reason: 'Stale reviewed cancellation', attest_review: true } }, 'PT409');
 const queue = await refillApi.read(refillId, patient.id);
 check(queue?.authorization_usage?.version === 2 && queue.authorization_usage.dispensed_quantity === '2.000' && queue.refill.version === 3, 'Refill snapshot exposes actual native usage and exact linked revision');
 const remaining = { ...target, expected_slot_version: 1, quantity: '1', allocations: [{ lot_id: lots[0], quantity: '1' }], refill: null };
@@ -120,7 +120,7 @@ const remainingReview = await api.previewDispense(remaining);
 const finalPartial = await api.execute({ id: randomUUID(), kind: 'dispense', payload: { ...remaining, expected_context_hash: remainingReview.context_hash, reason: 'Synthetic final partial', attest_alert_review: true, attest_dispense_review: true } });
 assert.equal(finalPartial.operation, 'dispense');
 check(finalPartial.result.slot.state === 'closed' && finalPartial.result.slot.closure_kind === 'filled' && finalPartial.result.slot.version === 2, 'Reaching exact maximum closes initial slot');
-await denied('preview_native_dispense', { p_target: remaining }, '40001', staff.headers);
+await denied('preview_native_dispense', { p_target: remaining }, 'PT409', staff.headers);
 const next = { ...target, slot_index: 1, expected_slot_version: null, quantity: '0.500', allocations: [{ lot_id: lots[1], quantity: '0.500' }], refill: null };
 const nextReview = await api.previewDispense(next);
 check(nextReview.context.charge.amount_cents === '63', 'Half-cent rounds once at dispense level');

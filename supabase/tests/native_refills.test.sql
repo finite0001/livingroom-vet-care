@@ -29,14 +29,14 @@ select is((select v#>'{result,after,authorization_id}' from data where k='create
 select is(create_native_refill((select id from fx where k='create'),(select v from data where k='create-request')),(select v from data where k='create-receipt'),'Create exact retry');
 select is(recover_native_refill_operation((select id from fx where k='create')),(select v from data where k='create-receipt'),'Create exact recovery');
 select throws_ok($$select create_native_refill((select id from fx where k='create'),(select v||'{"reason":"Substitution"}' from data where k='create-request'))$$,'23514','Refill operation identity cannot change','No request substitution');
-select throws_ok($$select create_native_refill(gen_random_uuid(),(select v from data where k='create-request'))$$,'40001','Refill changed','Different create UUID cannot overwrite');
+select throws_ok($$select create_native_refill(gen_random_uuid(),(select v from data where k='create-request'))$$,'PT409','Refill changed','Different create UUID cannot overwrite');
 select throws_ok($$select create_native_refill(gen_random_uuid(),(select v||'{"status":"APPROVED"}' from data where k='create-request'))$$,'23514','Exact prescription fields required','No clinical state fields accepted');
 select is(read_native_refill((select id from fx where k='refill'),gen_random_uuid()),null::jsonb,'Wrong patient read absent');
 insert into data select 'assign-request',jsonb_build_object('refill_id',(select id from fx where k='refill'),'pet_id',(select id from fx where k='pet'),'expected_version',1,'action','assign','reason','Assign operational follow up','assigned_to','a5510000-0000-4000-8000-000000000002','authorization_id',null,'expected_link_context_hash',null);
 insert into data select 'assign-receipt',transition_native_refill((select id from fx where k='assign'),(select v from data where k='assign-request'));
 select is((select v#>>'{result,after,version}' from data where k='assign-receipt'),'2','Assignment increments version');
 select is((select v#>>'{result,prior_event_id}' from data where k='assign-receipt'),(select id::text from fx where k='create'),'Immutable transition chains predecessor');
-select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v from data where k='assign-request'))$$,'40001','Refill changed','Stale assignment denied');
+select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v from data where k='assign-request'))$$,'PT409','Refill changed','Stale assignment denied');
 select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select is(recover_native_refill_operation((select id from fx where k='create')),null::jsonb,'Foreign actor cannot recover');
 select throws_ok($$select create_native_refill((select id from fx where k='create'),(select v from data where k='create-request'))$$,'23514','Refill operation identity cannot change','Foreign actor cannot reuse operation UUID');
@@ -45,7 +45,7 @@ select configure_native_prescriber((select id from fx where k='config'),(select 
 select save_native_prescription_draft((select id from fx where k='save'),(select v from data where k='save-request'));
 select sign_native_prescription((select id from fx where k='sign'),jsonb_build_object('draft_id',(select id from fx where k='draft'),'pet_id',(select id from fx where k='pet'),'expected_version',1,'expected_context_hash',preview_native_prescription_sign((select id from fx where k='draft'),1)->>'context_hash','signature_name','Synthetic prescriber','attest_review',true));
 insert into data select 'link-request',jsonb_build_object('refill_id',(select id from fx where k='refill'),'pet_id',(select id from fx where k='pet'),'expected_version',2,'action','link','reason','Exact signed order reviewed for operational association','assigned_to',null,'authorization_id',(select id from fx where k='sign'),'expected_link_context_hash',preview_native_refill_link((select id from fx where k='refill'),(select id from fx where k='pet'),(select id from fx where k='sign'))->>'context_hash');
-select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v||jsonb_build_object('expected_link_context_hash',repeat('0',64)) from data where k='link-request'))$$,'40001','Refill authorization context changed','Stale link evidence denied');
+select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v||jsonb_build_object('expected_link_context_hash',repeat('0',64)) from data where k='link-request'))$$,'PT409','Refill authorization context changed','Stale link evidence denied');
 insert into data select 'link-receipt',transition_native_refill((select id from fx where k='link'),(select v from data where k='link-request'));
 select is(read_native_refill((select id from fx where k='refill'),(select id from fx where k='pet'))#>>'{authorization_status,state}','active','Linked authorization current state disclosed');
 reset role;

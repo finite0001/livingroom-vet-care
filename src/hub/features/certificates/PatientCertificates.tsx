@@ -301,7 +301,7 @@ export function PatientCertificates({
         args,
       );
       if (error) {
-        if (["40001", "23514", "42501"].includes(error.code)) {
+        if (["PT409", "23514", "42501"].includes(error.code)) {
           requestRef.current = null;
           setPending(null);
           setPreview(null);

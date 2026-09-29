@@ -170,7 +170,7 @@ try:
     def correction_recover(i):return invoke('recover_native_dispense_correction',quote(i))
     # Same reviewed predecessor allows only one new event; stale loser creates no receipt.
     a,d=filled();r=correction(a,d);one,two=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(append(one,r),append(two,r),rejected('40001'))
+    contended(append(one,r),append(two,r),rejected('PT409'))
     check(correction_recover(two) is None,'Stale append has no durable operation')
     check(invoke('read_native_dispense_corrections',quote(a),quote(fx['pet']),quote(d))['context']['head']['version']==1,'Exactly one event appended')
     # Same actor/UUID/request can recover committed evidence after waiting.
@@ -180,14 +180,14 @@ try:
     # Original pickup appearing while reviewed annotation waits changes its reviewed context.
     a,d=filled();r=correction(a,d);p=invoke('preview_native_pickup',quote(d),quote(fx['pet']),'null')
     pickup=dict(authorization_id=a,pet_id=fx['pet'],dispense_id=d,refill_close=None,expected_context_hash=p['context_hash'],recipient_name='Synthetic recipient',recipient_relationship='Owner',reason='Synthetic handoff',attest_handoff=True)
-    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),append(str(uuid.uuid4()),r),rejected('40001'))
+    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),append(str(uuid.uuid4()),r),rejected('PT409'))
     # A waiting current print includes the committed amendment.
     a,d=filled();r=correction(a,d)
     def has_amendment(code,out,err):return code==0 and 'Synthetic client-shareable annotation' in out
     contended(append(str(uuid.uuid4()),r),staff+call('read_native_prescription_print_v2',quote(a),quote(d)),has_amendment)
     # Correction before release confirmation rejects obsolete reviewed content.
     a,d=filled();sel=selection(a,d);p=preview(sel);i=str(uuid.uuid4());r=correction(a,d)
-    contended(append(str(uuid.uuid4()),r),confirm(i,sel,p),rejected('40001'));absent(i)
+    contended(append(str(uuid.uuid4()),r),confirm(i,sel,p),rejected('PT409'));absent(i)
     # Confirmation before correction preserves historical content but invalidates delivery.
     a,d=filled();sel=selection(a,d);p=preview(sel);i=str(uuid.uuid4());r=correction(a,d)
     contended(confirm(i,sel,p),append(str(uuid.uuid4()),r),success)

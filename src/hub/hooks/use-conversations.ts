@@ -77,7 +77,7 @@ function mutationError(error: unknown) {
       ? error.code
       : null;
   toast.error(
-    code === "40001"
+    code === "PT409"
       ? "This conversation changed. Refresh and review before trying again."
       : "Unable to confirm the change. Refresh to check the saved state before retrying.",
   );

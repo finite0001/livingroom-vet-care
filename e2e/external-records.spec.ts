@@ -355,7 +355,7 @@ async function fixture(page: Page, role = "ADMIN") {
         state.petVersion = 2;
         return route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Patient changed" },
+          json: { code: "PT409", message: "Patient changed" },
         });
       }
       const r = state.receipts.find((r) => r.id === body.p_receipt_id)!,

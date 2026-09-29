@@ -48,7 +48,7 @@ const knownRejection = (error: unknown) =>
   error &&
   typeof error === "object" &&
   "code" in error &&
-  ["23514", "23503", "42501", "40001", "22P02", "22003"].includes(
+  ["23514", "23503", "42501", "PT409", "22P02", "22003"].includes(
     String(error.code),
   );
 

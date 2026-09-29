@@ -23,7 +23,7 @@ insert into data select 'save-request',jsonb_build_object('draft_id',(select id 
 select throws_ok($$select preview_native_prescription_sign((select id from fx where k='draft'),1)$$,'42501','Current native prescriber commissioning required','DVM cannot sign without separate commissioning');
 insert into data select 'config-receipt',configure_native_prescriber((select id from fx where k='config'),(select v from data where k='config-request'));
 select is(configure_native_prescriber((select id from fx where k='config'),(select v from data where k='config-request')),(select v from data where k='config-receipt'),'Configuration exact retry');
-select throws_ok($$select configure_native_prescriber(gen_random_uuid(),(select v from data where k='config-request'))$$,'40001','Prescriber configuration changed','Duplicate first configuration fails');
+select throws_ok($$select configure_native_prescriber(gen_random_uuid(),(select v from data where k='config-request'))$$,'PT409','Prescriber configuration changed','Duplicate first configuration fails');
 select ok((list_native_prescribers()->'entries') @> '[{"user_id":"a5510000-0000-4000-8000-000000000001","eligible":true}]','Configured DVM eligible');
 select throws_ok($$select configure_native_prescriber(gen_random_uuid(),(select jsonb_set(v||'{"expected_version":1}','{fields,clinical_review_note}',to_jsonb(E'\t\n'::text)) from data where k='config-request'))$$,'23514','Invalid prescription text','Whitespace-only commissioning rejected');
 select throws_ok($$select configure_native_prescriber(gen_random_uuid(),(select jsonb_set(v||'{"expected_version":1}','{fields,clinical_review_note}',to_jsonb(chr(160)||chr(65279))) from data where k='config-request'))$$,'23514','Invalid prescription text','Unicode blank commissioning rejected');
@@ -40,7 +40,7 @@ select is((select v#>>'{request,fields,quantity_per_fill}' from data where k='sa
 select is(save_native_prescription_draft((select id from fx where k='save'),(select v from data where k='save-request')),(select v from data where k='save-receipt'),'Draft exact retry');
 select is(recover_native_prescription_operation((select id from fx where k='save')),(select v from data where k='save-receipt'),'Draft UUID recovery');
 select throws_ok($$select save_native_prescription_draft((select id from fx where k='save'),(select jsonb_set(v,'{fields,quantity_per_fill}','"31"') from data where k='save-request'))$$,'23514','Prescription operation identity cannot change','Same UUID altered request fails');
-select throws_ok($$select save_native_prescription_draft(gen_random_uuid(),(select v from data where k='save-request'))$$,'40001','Prescription draft changed','Different create UUID cannot replace existing draft');
+select throws_ok($$select save_native_prescription_draft(gen_random_uuid(),(select v from data where k='save-request'))$$,'PT409','Prescription draft changed','Different create UUID cannot replace existing draft');
 select throws_ok($$select preview_native_prescription_sign((select id from fx where k='draft'),1)$$,'42501','Configured veterinarian required','Staff cannot preview signing');
 select is(read_native_prescription_draft((select id from fx where k='draft'),gen_random_uuid()),null::jsonb,'Wrong patient cannot read draft');
 select throws_ok($$select list_native_prescription_drafts((select id from fx where k='pet'),now(),null)$$,'23514',null,'Half cursor rejected');
@@ -61,7 +61,7 @@ select is(recover_native_prescription_operation((select id from fx where k='save
 insert into data select 'preview',preview_native_prescription_sign((select id from fx where k='draft'),1);
 insert into data select 'sign-request',jsonb_build_object('draft_id',(select id from fx where k='draft'),'pet_id',(select id from fx where k='pet'),'expected_version',1,'expected_context_hash',v->>'context_hash','signature_name','Synthetic prescriber','attest_review',true) from data where k='preview';
 select save_patient_problem(null,(select id from fx where k='pet'),null,'Synthetic reaction','Synthetic warning',null,'active','high');
-select throws_ok($$select sign_native_prescription((select id from fx where k='sign'),(select v from data where k='sign-request'))$$,'40001','Prescription signing context changed','Alert changes invalidate reviewed signature');
+select throws_ok($$select sign_native_prescription((select id from fx where k='sign'),(select v from data where k='sign-request'))$$,'PT409','Prescription signing context changed','Alert changes invalidate reviewed signature');
 select is(recover_native_prescription_operation((select id from fx where k='sign')),null::jsonb,'Stale signing creates no receipt');
 update data set v=preview_native_prescription_sign((select id from fx where k='draft'),1) where k='preview';
 update data set v=jsonb_set(v,'{expected_context_hash}',(select v->'context_hash' from data where k='preview')) where k='sign-request';
@@ -73,7 +73,7 @@ select is((read_native_prescription_draft((select id from fx where k='draft'),(s
 select is(read_native_prescription_authorization((select id from fx where k='sign'),(select id from fx where k='pet')),(select v->'result' from data where k='sign-receipt'),'Immutable authorization recovery');
 select is(read_native_prescription_authorization((select id from fx where k='sign'),gen_random_uuid()),null::jsonb,'Wrong patient authorization read empty');
 select is(sign_native_prescription((select id from fx where k='sign'),(select v from data where k='sign-request')),(select v from data where k='sign-receipt'),'Exact signature retry');
-select throws_ok($$select sign_native_prescription(gen_random_uuid(),(select v from data where k='sign-request'))$$,'40001','Prescription draft changed','A second UUID cannot sign twice');
+select throws_ok($$select sign_native_prescription(gen_random_uuid(),(select v from data where k='sign-request'))$$,'PT409','Prescription draft changed','A second UUID cannot sign twice');
 select throws_ok($$select save_native_prescription_draft(gen_random_uuid(),(select v||'{"expected_version":1}' from data where k='save-request'))$$,'23514','Signed draft or patient identity cannot change','Signed fields cannot be rewritten');
 select save_native_prescription_draft((select id from fx where k='save2'),(select v||jsonb_build_object('draft_id',(select id from fx where k='draft2')) from data where k='save-request'));
 insert into fx values('edit2',gen_random_uuid());
@@ -82,7 +82,7 @@ insert into data select 'edit2-request',jsonb_set(v||jsonb_build_object('draft_i
 insert into data select 'edit2-receipt',save_native_prescription_draft((select id from fx where k='edit2'),(select v from data where k='edit2-request'));
 select is((select v#>>'{result,version}' from data where k='edit2-receipt'),'2','Unsigned draft edit advances revision');
 select is(save_native_prescription_draft((select id from fx where k='edit2'),(select v from data where k='edit2-request')),(select v from data where k='edit2-receipt'),'Unsigned edit exact retry preserves one revision');
-select throws_ok($$select save_native_prescription_draft(gen_random_uuid(),(select v from data where k='edit2-request'))$$,'40001','Prescription draft changed','Stale unsigned revision refused');
+select throws_ok($$select save_native_prescription_draft(gen_random_uuid(),(select v from data where k='edit2-request'))$$,'PT409','Prescription draft changed','Stale unsigned revision refused');
 select is(recover_native_prescription_operation((select id from fx where k='save2')),(select v from data where k='draft2-original'),'Earlier immutable receipt survives draft edits');
 select is(read_native_prescription_draft((select id from fx where k='draft2'),(select id from fx where k='pet'))#>>'{fields,quantity_per_fill}','31.000','Current read exposes revised quantity');
 insert into data select 'page',list_native_prescription_drafts((select id from fx where k='pet'),null,null,1);

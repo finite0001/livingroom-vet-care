@@ -71,7 +71,7 @@ update ezyvet_identity_heads set version=version+1 where resource='animal' and s
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"db700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select is(prepare_ezyvet_migration_run((select id from fx where k='migration'),'https://api.trial.ezyvet.com','attachment-test-site',(select v from data where k='manifest')),(select v from data where k='saved'),'Old exact intent recovers after source-head change');
-select throws_ok($$select prepare_ezyvet_migration_run(gen_random_uuid(),'https://api.trial.ezyvet.com','attachment-test-site',(select jsonb_build_array(v||jsonb_build_object('id',gen_random_uuid())) from data where k='scope'))$$,'40001',null,'New request must review changed parent version');
+select throws_ok($$select prepare_ezyvet_migration_run(gen_random_uuid(),'https://api.trial.ezyvet.com','attachment-test-site',(select jsonb_build_array(v||jsonb_build_object('id',gen_random_uuid())) from data where k='scope'))$$,'PT409',null,'New request must review changed parent version');
 reset role;
 update profiles set is_active=false where id='db700000-0000-4000-8000-000000000001';
 set local role authenticated;

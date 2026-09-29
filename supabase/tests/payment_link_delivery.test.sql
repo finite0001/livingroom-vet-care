@@ -77,7 +77,7 @@ reset role;
 update public.communication_outbox set state='claimed',lease_token='73700000-0000-4000-8000-000000000090',lease_expires_at=now()+interval '5 minutes' where id=(select id from fx where k='outbox');
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
-select throws_ok($$select public.payment_delivery_context((select id from fx where k='outbox'),gen_random_uuid())$$,'40001',null,'Wrong worker lease cannot retrieve materialization context');
+select throws_ok($$select public.payment_delivery_context((select id from fx where k='outbox'),gen_random_uuid())$$,'PT409',null,'Wrong worker lease cannot retrieve materialization context');
 select is(public.payment_delivery_context((select id from fx where k='outbox'),'73700000-0000-4000-8000-000000000090')#>>'{capture,payload_hash}',repeat('d',64),'Leased context returns reviewed payload digest');
 select is((public.start_communication_attempt((select id from fx where k='outbox'),'73700000-0000-4000-8000-000000000090','{"from":"billing@thelivingroom.vet","reply_to":"billing@thelivingroom.vet"}')).state,'failed','Existing worker without payment materialization proof fails closed');
 set local role authenticated;

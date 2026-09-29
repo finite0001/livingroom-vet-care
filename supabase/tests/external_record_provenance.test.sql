@@ -32,7 +32,7 @@ create function pg_temp.approve(p_id uuid,p_receipt text default 'receipt',p_cap
 insert into data select 'before',jsonb_build_object('encounters',(select count(*) from clinical_encounters),'problems',(select count(*) from patient_problems),'weights',(select count(*) from patient_weights),'invoices',(select count(*) from billing_invoices),'treatments',(select count(*) from patient_treatments),'stock',(select count(*) from inventory_movements),'payments',(select count(*) from invoice_payments),'pets',(select jsonb_agg(to_jsonb(p)) from pets p where id in (select id from fx where k in ('pet','other'))));
 set local role authenticated;
 select throws_ok($$select pg_temp.stage(gen_random_uuid(),(select id from fx where k='other-doc'))$$,'42501',null,'Mapped patient cannot use another patient document');
-select throws_ok($$select pg_temp.stage(gen_random_uuid(),(select id from fx where k='doc'),null,0)$$,'40001',null,'Stale patient cannot stage');
+select throws_ok($$select pg_temp.stage(gen_random_uuid(),(select id from fx where k='doc'),null,0)$$,'PT409',null,'Stale patient cannot stage');
 insert into data select 'receipt',pg_temp.stage((select id from fx where k='receipt'),(select id from fx where k='doc'));
 select lives_ok($$select pg_temp.stage((select id from fx where k='receipt'),(select id from fx where k='doc'))$$,'Exact staging retry returns original receipt');
 select throws_ok($$select pg_temp.stage((select id from fx where k='receipt'),(select id from fx where k='doc'),null,1,'Changed reason')$$,'23505',null,'Changed retry cannot replace review');
@@ -54,7 +54,7 @@ select throws_ok($$select pg_temp.approve((select id from fx where k='record'))$
 select set_config('request.jwt.claims','{"sub":"db420000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select lives_ok($$select pg_temp.approve((select id from fx where k='record'))$$,'Exact verified original preserved');
 select lives_ok($$select pg_temp.approve((select id from fx where k='record'))$$,'Approval replay creates no duplicate');
-select throws_ok($$select pg_temp.approve(gen_random_uuid())$$,'40001',null,'Different UUID cannot duplicate series original');
+select throws_ok($$select pg_temp.approve(gen_random_uuid())$$,'PT409',null,'Different UUID cannot duplicate series original');
 select is(jsonb_array_length(read_external_record_history((select id from fx where k='pet'))#>'{records,0,acknowledgments}'),0,'Preservation never asserts clinician review');
 select throws_ok($$select acknowledge_external_record((select id from fx where k='ack'),(select id from fx where k='record'),(select id from fx where k='pet'),(select v->>'capture_hash' from data where k='capture'),2,true)$$,'42501',null,'ADMIN alone cannot acknowledge as DVM');
 select set_config('request.jwt.claims','{"sub":"db420000-0000-4000-8000-000000000002","role":"authenticated"}',true);
@@ -65,7 +65,7 @@ select ok(recover_external_record_acknowledgment(gen_random_uuid()) is null,'Mis
 select is(read_external_record_history((select id from fx where k='pet'))#>>'{records,0,source_site_uid}','external-test-site','Clinical projection distinguishes source account identity');
 select is(jsonb_array_length(read_external_record_history((select id from fx where k='other'))->'records'),0,'History is patient-scoped');
 select set_config('request.jwt.claims','{"sub":"db420000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select throws_ok($$select pg_temp.stage(gen_random_uuid(),(select id from fx where k='replacement-doc'))$$,'40001',null,'Replacement requires exact reviewed previous head');
+select throws_ok($$select pg_temp.stage(gen_random_uuid(),(select id from fx where k='replacement-doc'))$$,'PT409',null,'Replacement requires exact reviewed previous head');
 insert into data select 'replacement-receipt',pg_temp.stage((select id from fx where k='replacement-receipt'),(select id from fx where k='replacement-doc'),(select id from fx where k='record'));
 set local role service_role;
 insert into data select 'replacement-capture',to_jsonb(capture_external_record_bytes((select id from fx where k='replacement-receipt'),'db420000-0000-4000-8000-000000000001',(select v->>'receipt_hash' from data where k='replacement-receipt'),2,repeat('b',64),12,'application/pdf'));

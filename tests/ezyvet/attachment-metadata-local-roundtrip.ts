@@ -300,7 +300,7 @@ try {
   check((await recover(runId)).observed_count === 3, "Exact committed replay leaves immutable receipt count unchanged");
   const altered = structuredClone(capturedFirstPage) as { p_page: { page_sha256: string } };
   altered.p_page.page_sha256 = 'f'.repeat(64);
-  await assert.rejects(rpc("stage_ezyvet_attachment_page", altered), (e: { code: string }) => ['23514','40001'].includes(e.code)); assertions++;
+  await assert.rejects(rpc("stage_ezyvet_attachment_page", altered), (e: { code: string }) => ['23514','PT409'].includes(e.code)); assertions++;
   await assert.rejects(rpc("stage_ezyvet_import_page", { p_id: runId, p_actor: actor, p_lease_id: randomUUID(), p_page: 3, p_complete: true, p_items: [] }), (e: { code: string }) => e.code === '23514'); assertions++;
   const secondRun = randomUUID(); urlRevision++;
   resetCooldown();

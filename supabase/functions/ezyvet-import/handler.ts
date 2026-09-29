@@ -362,17 +362,17 @@ export function createHandler(dependencies: HandlerDependencies) {
           "code" in error && "message" in error &&
           ((error.code === "22023" &&
             error.message === "VACCINATION_RUN_REQUIRES_NEW_CONTEXT") ||
-            (error.code === "40001" &&
+            (error.code === "PT409" &&
               error.message === "SOURCE_CONSULT_STALE"))
         ? String(error.message)
         : null;
       const prescriptionCode = error && typeof error === "object" && "code" in error && "message" in error &&
         ((error.code === "22023" && ["PRESCRIPTION_RUN_REQUIRES_NEW_MAPPING", "PRESCRIPTIONITEM_RUN_REQUIRES_NEW_CONTEXT"].includes(String(error.message))) ||
-          (error.code === "40001" && error.message === "SOURCE_PRESCRIPTION_STALE"))
+          (error.code === "PT409" && error.message === "SOURCE_PRESCRIPTION_STALE"))
         ? String(error.message) : null;
       const attachmentCode = error && typeof error === "object" && "code" in error && "message" in error &&
         ((error.code === "22023" && error.message === "ATTACHMENT_RUN_REQUIRES_NEW_CONTEXT") ||
-          (error.code === "40001" && error.message === "SOURCE_ATTACHMENT_PARENT_STALE")) ? String(error.message) : null;
+          (error.code === "PT409" && error.message === "SOURCE_ATTACHMENT_PARENT_STALE")) ? String(error.message) : null;
       const code = attachmentCode ?? prescriptionCode ?? vaccinationCode ??
         (error && typeof error === "object" && "code" in error &&
             error.code === "22023" && "message" in error &&

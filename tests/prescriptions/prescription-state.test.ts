@@ -35,21 +35,21 @@ test("lost dispense reply requires recovery; absent recovery permits exact origi
 test("rejection after prior uncertainty cannot erase an original request still in flight", () => {
   let state = prescriptionOperationFailed(submitted(), reply, new Error("Lost response"));
   state = prescriptionRecoveryAbsent(recoverPrescriptionOperation(state), reply);
-  state = prescriptionOperationFailed(commitPrescriptionOperation(state), reply, { code: "40001" });
+  state = prescriptionOperationFailed(commitPrescriptionOperation(state), reply, { code: "PT409" });
   assert.equal(state.phase, "uncertain");
   assert.deepEqual(state.operation, operation());
   state = recoverPrescriptionOperation(state);
   assert.equal(prescriptionOperationConfirmed(state, reply).phase, "confirmed");
 });
 test("confirmed first database rejection permits revised review; unknown failures stay locked", () => {
-  for (const code of ["23514", "40001", "42501"]) assert.deepEqual(prescriptionOperationFailed(submitted(), reply, { code }), initial());
+  for (const code of ["23514", "PT409", "42501"]) assert.deepEqual(prescriptionOperationFailed(submitted(), reply, { code }), initial());
   for (const failure of [null, { code: "23505" }, { code: "503" }, new Error("Receipt validation failed")]) assert.equal(prescriptionOperationFailed(submitted(), reply, failure).phase, "uncertain");
 });
 test("wrong actor, patient and operation responses cannot confirm or unlock private intent", () => {
   for (const wrong of [{ ...reply, actor: "staff-2" }, { ...reply, patientId: "patient-2" }, { ...reply, operationId: "other" }]) {
     const state = submitted();
     assert.equal(prescriptionOperationConfirmed(state, wrong), state);
-    assert.equal(prescriptionOperationFailed(state, wrong, { code: "40001" }), state);
+    assert.equal(prescriptionOperationFailed(state, wrong, { code: "PT409" }), state);
     const recovery = recoverPrescriptionOperation(prescriptionOperationFailed(state, reply, null));
     assert.equal(prescriptionRecoveryAbsent(recovery, wrong), recovery);
     assert.equal(prescriptionRecoveryFailed(recovery, wrong), recovery);

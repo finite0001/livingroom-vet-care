@@ -40,7 +40,7 @@ select ok(not has_function_privilege('authenticated','outbox_retry_source_intern
 select ok(not has_function_privilege('service_role','outbox_retry_preview_internal(uuid)','execute'),'Private hash context inaccessible');
 select throws_ok($$select * from outbox_retry_actions$$,'42501',null,'Raw action table inaccessible');
 select throws_ok($$select requeue_outbox_retry(gen_random_uuid(),(select id from fixture_ids where kind='email'),(select v->>'expected_work_hash' from retry_data where k='review'),'configuration_repaired',false)$$,'23514',null,'Explicit repair attestation required');
-select throws_ok($$select requeue_outbox_retry(gen_random_uuid(),(select id from fixture_ids where kind='email'),repeat('0',64),'configuration_repaired',true)$$,'40001',null,'Wrong hash rejected');
+select throws_ok($$select requeue_outbox_retry(gen_random_uuid(),(select id from fixture_ids where kind='email'),repeat('0',64),'configuration_repaired',true)$$,'PT409',null,'Wrong hash rejected');
 insert into retry_data values('action',requeue_outbox_retry('b5000000-0000-4000-8000-000000000005',(select id from fixture_ids where kind='email'),(select v->>'expected_work_hash' from retry_data where k='review'),'configuration_repaired',true));
 select is((select state from communication_outbox where id=(select id from fixture_ids where kind='email')),'pending','Retry queues but never claims sent');
 select is((select count(*) from communication_attempts where outbox_id=(select id from fixture_ids where kind='email')),0::bigint,'Retry performs no provider attempt');
@@ -56,7 +56,7 @@ update communication_outbox set state='failed' where id=(select id from fixture_
 set local role authenticated;
 select is(requeue_outbox_retry('b5000000-0000-4000-8000-000000000005',(select id from fixture_ids where kind='email'),(select v->>'expected_work_hash' from retry_data where k='review'),'configuration_repaired',true),(select v from retry_data where k='action'),'Late exact reply cannot requeue a later failure');
 select is((select state from communication_outbox where id=(select id from fixture_ids where kind='email')),'failed','Second failure remains failed after replay');
-select throws_ok($$select requeue_outbox_retry(gen_random_uuid(),(select id from fixture_ids where kind='email'),(select v->>'expected_work_hash' from retry_data where k='review'),'configuration_repaired',true)$$,'40001',null,'Same-clock second failure invalidates prior review');
+select throws_ok($$select requeue_outbox_retry(gen_random_uuid(),(select id from fixture_ids where kind='email'),(select v->>'expected_work_hash' from retry_data where k='review'),'configuration_repaired',true)$$,'PT409',null,'Same-clock second failure invalidates prior review');
 select is((select to_jsonb(o)-array['state','revision','updated_at'] from communication_outbox o where id=(select id from fixture_ids where kind='email')),(select v from retry_data where k='intent'),'Payload, attachments, sender and evidence unchanged');
 reset role;
 insert into retry_data values('revision',(select to_jsonb(revision) from communication_outbox where id=(select id from fixture_ids where kind='email')));

@@ -298,7 +298,7 @@ async function fixture(page: Page, role = "STAFF") {
       if (lab.rejectMapping)
         return route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Order changed" },
+          json: { code: "PT409", message: "Order changed" },
         });
       const r = {
         id: b.p_id,
@@ -384,7 +384,7 @@ async function fixture(page: Page, role = "STAFF") {
         state.failNext = false;
         return route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Lab order version conflict" },
+          json: { code: "PT409", message: "Lab order version conflict" },
         });
       }
       state.row = {

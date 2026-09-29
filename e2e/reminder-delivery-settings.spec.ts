@@ -146,7 +146,7 @@ async function fixture(page: Page, baseURL: string | undefined, admin = true) {
           ];
           return route.fulfill({
             status: 409,
-            json: { code: "40001", message: "Policy version conflict" },
+            json: { code: "PT409", message: "Policy version conflict" },
           });
         }
         const signature = JSON.stringify({ name, args });

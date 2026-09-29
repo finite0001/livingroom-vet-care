@@ -95,7 +95,7 @@ try:
     fixture_ids.append(client)
     sql(f"insert into conversations(id,client_id) values('{conversation}','{client}');")
     incoming, attachment = fixture()
-    race(service + claim(incoming, attachment), service + claim(incoming, attachment), expected_state='40001')
+    race(service + claim(incoming, attachment), service + claim(incoming, attachment), expected_state='PT409')
     check(sql(f"select count(*) from inbound_attachment_captures where inbound_id='{incoming}'") == '1', 'Concurrent claims persist one lease')
 
     incoming, attachment, lease = prepare()

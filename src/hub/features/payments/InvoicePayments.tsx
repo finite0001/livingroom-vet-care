@@ -315,7 +315,7 @@ function PaymentSession({
               );
         if (
           !found &&
-          ["23514", "23505", "42501", "40001"].includes(result.error.code)
+          ["23514", "23505", "42501", "PT409"].includes(result.error.code)
         ) {
           clearPending();
           setAttest(false);

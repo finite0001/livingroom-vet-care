@@ -1073,7 +1073,7 @@ async function correctionFixture(page: Page, pickup = false) {
       if (controls.stale)
         return r.fulfill({
           status: 409,
-          json: { code: "40001", message: "Review changed" },
+          json: { code: "PT409", message: "Review changed" },
         });
       if (receipts.has(input.p_id))
         return r.fulfill({ json: receipts.get(input.p_id) });

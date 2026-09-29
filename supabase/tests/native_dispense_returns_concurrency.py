@@ -179,7 +179,7 @@ try:
     invoke('configure_native_return_policy',quote(str(uuid.uuid4())),jsonsql(policy_request(True)))
     # Two new intakes cannot both consume the same reviewed allocation balance.
     a,d,t=filled();r=review(intent(a,d));one,two=str(uuid.uuid4()),str(uuid.uuid4())
-    contended(append(one,r),append(two,r),rejected('40001'))
+    contended(append(one,r),append(two,r),rejected('PT409'))
     check(read(a,d)['allocations'][0]['returned_quantity']=='1.000','Only one cumulative intake')
     check(invoke('recover_native_dispense_return',quote(two)) is None,'Stale intake has no receipt')
     # Concurrent exact UUID recovers once, including the stock-producing operation.
@@ -189,27 +189,27 @@ try:
     check(scalar("select count(*) from native_return_stock_links where event_id="+quote(op)+';')=='1','Exactly one attributed positive movement')
     # Disposal and restocking compete for the same held quantity/head.
     a,d,t=filled();i=intake(a,d);dispose=review(intent(a,d,'dispose','1',i));stock=restock(a,d,i)
-    contended(append(str(uuid.uuid4()),dispose),append(str(uuid.uuid4()),stock),rejected('40001','23514'))
+    contended(append(str(uuid.uuid4()),dispose),append(str(uuid.uuid4()),stock),rejected('PT409','23514'))
     check(read(a,d)['allocations'][0]['held_quantity']=='0.000','Disposition consumes held once')
     # Policy changes while restocking waits invalidate the exact reviewed context.
     a,d,t=filled();i=intake(a,d);r=restock(a,d,i);change=policy_request(False)
-    contended(operation('configure_native_return_policy',str(uuid.uuid4()),change),append(str(uuid.uuid4()),r),rejected('40001','42501','23514'))
+    contended(operation('configure_native_return_policy',str(uuid.uuid4()),change),append(str(uuid.uuid4()),r),rejected('PT409','42501','23514'))
     check(read(a,d)['allocations'][0]['held_quantity']=='1.000','Disabled policy leaves custody unchanged')
     invoke('configure_native_return_policy',quote(str(uuid.uuid4())),jsonsql(policy_request(True)))
     # Current inventory and product changes must force a fresh stock review.
     a,d,t=filled();i=intake(a,d);r=restock(a,d,i);lid=t['allocations'][0]['lot_id']
     adjust=staff+call('adjust_inventory',quote(str(uuid.uuid4())),quote(lid),'1',quote('Synthetic adjustment'))
-    contended(adjust,append(str(uuid.uuid4()),r),rejected('40001'))
+    contended(adjust,append(str(uuid.uuid4()),r),rejected('PT409'))
     def catalog_change(active):
         product=json.loads(scalar("select to_jsonb(p) from catalog_products p where id="+quote(fx['product'])+';'))
         return staff+call('save_catalog_product',quote(product['id']),str(product['version']),quote(product['name']),quote(product['kind']),quote(product['manufacturer']),quote(product['unit']),str(product['unit_price_cents']),'true' if active else 'false')
     a,d,t=filled();i=intake(a,d);r=restock(a,d,i)
-    contended(catalog_change(False),append(str(uuid.uuid4()),r),rejected('40001','42501','23514'))
+    contended(catalog_change(False),append(str(uuid.uuid4()),r),rejected('PT409','42501','23514'))
     sql(transaction(catalog_change(True)))
     # Original pickup wins first: reviewed intake must be refreshed.
     a,d,t=filled();r=review(intent(a,d));p=invoke('preview_native_pickup',quote(d),quote(fx['pet']),'null')
     pickup=dict(authorization_id=a,pet_id=fx['pet'],dispense_id=d,refill_close=None,expected_context_hash=p['context_hash'],recipient_name='Synthetic recipient',recipient_relationship='Owner',reason='Synthetic handoff',attest_handoff=True)
-    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),append(str(uuid.uuid4()),r),rejected('40001'))
+    contended(operation('record_native_pickup',str(uuid.uuid4()),pickup),append(str(uuid.uuid4()),r),rejected('PT409'))
     # Intake wins first: a later unqualified original pickup is refused.
     a,d,t=filled();r=review(intent(a,d));p=invoke('preview_native_pickup',quote(d),quote(fx['pet']),'null');pickup.update(authorization_id=a,dispense_id=d,expected_context_hash=p['context_hash'])
     contended(append(str(uuid.uuid4()),r),operation('record_native_pickup',str(uuid.uuid4()),pickup),rejected('23514'))
@@ -218,7 +218,7 @@ try:
     contended(append(str(uuid.uuid4()),r),staff+call('read_native_prescription_print_v3',quote(a),quote(d)),lambda code,out,err:code==0 and 'Synthetic concurrent custody note' in out)
     # Client-package confirmation shares the source gate in both arrival orders.
     a,d,t=filled();sel=selection(a,d);p=preview(sel);op=str(uuid.uuid4());r=review(intent(a,d))
-    contended(append(str(uuid.uuid4()),r),confirm(op,sel,p),rejected('40001'));absent(op)
+    contended(append(str(uuid.uuid4()),r),confirm(op,sel,p),rejected('PT409'));absent(op)
     a,d,t=filled();sel=selection(a,d);p=preview(sel);op=str(uuid.uuid4());r=review(intent(a,d))
     contended(confirm(op,sel,p),append(str(uuid.uuid4()),r),success)
     check(not invoke('read_record_release',quote(op))['eligible'],'Return invalidates saved release')

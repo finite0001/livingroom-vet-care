@@ -81,7 +81,7 @@ async function fixture(page: Page) {
   }
   if(path==='/rest/v1/rpc/save_patient_lab_order') {
    const body=route.request().postDataJSON();state.saves.push(body.p_id);expect(body.p_pet_id).toBe(petId);
-   if(state.failNext){state.failNext=false;return route.fulfill({status:409,json:{code:'40001',message:'Lab order version conflict'}});}
+   if(state.failNext){state.failNext=false;return route.fulfill({status:409,json:{code:'PT409',message:'Lab order version conflict'}});}
    state.row={...body.p_values,id:body.p_id,pet_id:petId,version:Number(state.row?.version||0)+1,created_by:staffId,updated_by:staffId,created_at:'2026-01-02T17:00:00Z',updated_at:'2026-01-02T17:00:00Z'};
    state.revisions.push({id:state.revisions.length+1,entity:'order',entity_id:body.p_id,version:state.row.version,snapshot:{...state.row},reason:body.p_correction_reason,actor_id:staffId,recorded_at:'2026-01-02T17:00:00Z'});
    return route.fulfill({json:state.row});

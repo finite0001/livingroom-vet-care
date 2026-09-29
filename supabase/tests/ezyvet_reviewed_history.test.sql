@@ -49,7 +49,7 @@ insert into data select 'second-prepared',prepare_ezyvet_problem_extraction((sel
 insert into data select 'second-receipt',approve_ezyvet_problem_extraction((select id from fx where k='second-extraction'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='second-prepared'),true);
 select isnt((select v#>>'{receipt,problem_id}' from data where k='second-receipt'),(select id::text from fx where k='problem'),'One history can support multiple distinct native problems');
 insert into data select 'link-payload',v||jsonb_build_object('action','link','problem_id',(select id from fx where k='problem'),'problem_version',1,'duplicate_decision','link_existing') from data where k='extraction-payload';
-select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(select id from fx where k='pet'),(select jsonb_set(v,'{fields,title}','"Unreviewed target rewrite"') from data where k='link-payload'))$$,'40001',null,'Link cannot change local fields');
+select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(select id from fx where k='pet'),(select jsonb_set(v,'{fields,title}','"Unreviewed target rewrite"') from data where k='link-payload'))$$,'PT409',null,'Link cannot change local fields');
 insert into data select 'link-prepared',prepare_ezyvet_problem_extraction((select id from fx where k='linked'),(select id from fx where k='pet'),(select v from data where k='link-payload'));
 select approve_ezyvet_problem_extraction((select id from fx where k='linked'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='link-prepared'),true);
 select is((select version from patient_problems where id=(select id from fx where k='problem')),1,'Link preserves native target version');
@@ -76,7 +76,7 @@ select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(s
 select pg_temp.observe_source('history',(select id from fx where k='mapping'),'[{"external_id":"101","payload":{"id":101,"animal_id":77,"comments":"Corrected outside history B","active":false}}]');
 select is(read_patient_problem_import_provenance((select id from fx where k='pet'),array[(select id from fx where k='problem')])#>>'{0,extractions,0,discrepancy,required}','true','Changed/inactive source creates discrepancy attention');
 select is((select importance from patient_problems where id=(select id from fx where k='problem')),'high','Source changes do not erase important reactions');
-select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(select id from fx where k='pet'),(select v from data where k='extraction-payload'))$$,'40001',null,'Stale approved source cannot create a fresh extraction');
+select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(select id from fx where k='pet'),(select v from data where k='extraction-payload'))$$,'PT409',null,'Stale approved source cannot create a fresh extraction');
 select set_config('request.jwt.claims','{"sub":"db490000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 insert into data select 'later-candidate',value from jsonb_array_elements(list_ezyvet_clinical_candidates((select id from fx where k='mapping'),'history')->'candidates') where value->>'is_current'='true';
 insert into data select 'later-payload',(select v from data where k='source-payload')||jsonb_build_object('snapshot_id',v->'id','payload_hash',v->'payload_hash','observed_head_version',v->'head_version') from data where k='later-candidate';
@@ -92,7 +92,7 @@ select is((select version from patient_problems where id=(select id from fx wher
 select pg_temp.observe_source('history',(select id from fx where k='mapping'),(select v from data where k='items'));
 select is(recover_ezyvet_history_request((select id from fx where k='extraction'),(select id from fx where k='pet'),'problem_extraction')#>>'{receipt,discrepancy,required}','true','A→B→A creates new attention despite reused original snapshot');
 select is(approve_ezyvet_problem_extraction((select id from fx where k='extraction'),(select id from fx where k='pet'),(select v#>>'{request,request_hash}' from data where k='prepared-extraction'),true)#>>'{receipt,problem_id}',(select id::text from fx where k='problem'),'Committed recovery survives source reversion without creating another problem');
-select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(select id from fx where k='pet'),(select jsonb_set(v,'{fields,onset_date}','"yesterday"') from data where k='extraction-payload'))$$,'40001',null,'Stale source still denied before clinical field approval');
+select throws_ok($$select prepare_ezyvet_problem_extraction(gen_random_uuid(),(select id from fx where k='pet'),(select jsonb_set(v,'{fields,onset_date}','"yesterday"') from data where k='extraction-payload'))$$,'PT409',null,'Stale source still denied before clinical field approval');
 -- Known wrong-patient consult evidence cannot be hidden behind an unresolved label.
 select pg_temp.observe_source('consult',(select id from fx where k='mapping2'),'[{"external_id":"900","payload":{"id":900,"animal_id":88}}]');
 select pg_temp.observe_source('history',(select id from fx where k='mapping'),'[{"external_id":"101","payload":{"id":101,"animal_id":77,"consult_id":900,"comments":"Outside consult relation"}}]');

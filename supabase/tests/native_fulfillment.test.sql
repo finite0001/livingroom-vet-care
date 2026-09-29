@@ -42,11 +42,11 @@ select throws_ok($$select preview_native_dispense((select jsonb_set(v,'{allocati
 select throws_ok($$select preview_native_dispense((select jsonb_set(v,'{allocations,1,lot_id}',v#>'{allocations,0,lot_id}') from data where k='target'))$$,'23514','Sorted unique lot allocations required','Duplicate lots rejected');
 select throws_ok($$select preview_native_dispense((select v||'{"quantity":"11"}' from data where k='target'))$$,'23514','Lot allocations must exactly equal dispense quantity','Allocation sum exact');
 select throws_ok($$select preview_native_dispense((select v||'{"slot_index":3}' from data where k='target'))$$,'23514','Authorized fill slot limit exceeded','Cannot exceed signed refill count');
-select throws_ok($$select preview_native_dispense((select v||'{"slot_index":1}' from data where k='target'))$$,'40001','Fill slot changed','Cannot skip initial slot');
+select throws_ok($$select preview_native_dispense((select v||'{"slot_index":1}' from data where k='target'))$$,'PT409','Fill slot changed','Cannot skip initial slot');
 insert into data select 'dispense-request',t.v||jsonb_build_object('expected_context_hash',p.v->>'context_hash','reason','Synthetic partial dispensing','attest_alert_review',true,'attest_dispense_review',true) from data t,data p where t.k='target' and p.k='preview';
 -- A price change makes the entire reviewed transaction stale; no slot is opened.
 select save_catalog_product((select id from fx where k='product'),1,'Synthetic medication','medication','','tablet',200,true);
-select throws_ok($$select record_native_dispense((select id from fx where k='dispense'),(select v from data where k='dispense-request'))$$,'40001','Fulfillment review context changed','Price drift requires renewed review');
+select throws_ok($$select record_native_dispense((select id from fx where k='dispense'),(select v from data where k='dispense-request'))$$,'PT409','Fulfillment review context changed','Price drift requires renewed review');
 select is(recover_native_fulfillment_operation((select id from fx where k='dispense')),null::jsonb,'Stale review leaves no receipt');
 select is(read_native_fulfillment((select id from fx where k='sign'),(select id from fx where k='pet'))#>>'{usage,used_fill_slots}','0','Stale review leaves allowance untouched');
 select save_catalog_product((select id from fx where k='product'),2,'Synthetic medication','medication','','tablet',100,true);
@@ -73,11 +73,11 @@ set local role authenticated;
 
 select is(recover_native_fulfillment_operation((select id from fx where k='dispense')),(select v from data where k='dispense-receipt'),'Exact receipt recovery');
 select throws_ok($$select record_native_dispense((select id from fx where k='dispense'),(select v||'{"reason":"Changed"}' from data where k='dispense-request'))$$,'23514','Fulfillment operation identity cannot change','UUID payload immutable');
-select throws_ok($$select record_native_dispense(gen_random_uuid(),(select v from data where k='dispense-request'))$$,'40001','Fill slot changed','Second UUID cannot reopen slot');
+select throws_ok($$select record_native_dispense(gen_random_uuid(),(select v from data where k='dispense-request'))$$,'PT409','Fill slot changed','Second UUID cannot reopen slot');
 select is(read_native_prescription_print((select id from fx where k='sign'),(select id from fx where k='dispense'))->'dispense',(select v#>'{result,dispense,artifact}' from data where k='dispense-receipt'),'Dispensed print is exact immutable artifact');
 select throws_ok($$select read_native_prescription_print((select id from fx where k='sign'),gen_random_uuid())$$,'23514','Exact native authorization dispense required','Wrong dispense print refused');
 reset role;insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000001','DVM');set local role authenticated;
-select throws_ok($$select cancel_native_prescription(gen_random_uuid(),(select v from data where k='pre-fill-cancel'))$$,'40001','Authorization change context changed','Intervening fill invalidates old cancellation review');
+select throws_ok($$select cancel_native_prescription(gen_random_uuid(),(select v from data where k='pre-fill-cancel'))$$,'PT409','Authorization change context changed','Intervening fill invalidates old cancellation review');
 insert into data select 'close-request',jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'slot_index',0,'expected_slot_version',1,'expected_context_hash',preview_native_slot_close((select id from fx where k='sign'),(select id from fx where k='pet'),0)->>'context_hash','reason','Explicitly forfeit undistributed remainder','attest_forfeit',true);
 insert into data select 'close-receipt',close_native_fill_slot((select id from fx where k='close'),(select v from data where k='close-request'));
 select is((select v#>>'{result,forfeited_quantity}' from data where k='close-receipt'),'20.000','Slot close records exact forfeiture');

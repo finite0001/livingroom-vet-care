@@ -168,7 +168,7 @@ async function workspace(page: Page) {
       if (control.reject) {
         await route.fulfill({
           status: 409,
-          json: { code: "40001", message: "Reviewed evidence changed" },
+          json: { code: "PT409", message: "Reviewed evidence changed" },
         });
         return;
       }

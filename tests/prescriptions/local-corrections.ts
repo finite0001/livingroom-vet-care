@@ -127,7 +127,7 @@ assert.deepEqual(await rpc('append_native_dispense_correction', { p_id: opId, p_
 assert.deepEqual(await rpc('recover_native_dispense_correction', { p_id: opId }, staff.headers), first); checks++;
 await denied('recover_native_dispense_correction', { p_id: opId }, '42501');
 await denied('append_native_dispense_correction', { p_id: opId, p_request: { ...operational, note: 'Changed synthetic content' } }, '23514', staff.headers);
-await denied('append_native_dispense_correction', { p_id: randomUUID(), p_request: operational }, '40001', staff.headers);
+await denied('append_native_dispense_correction', { p_id: randomUUID(), p_request: operational }, 'PT409', staff.headers);
 const clinicalRequest = await request('clinical_annotation');
 await denied('append_native_dispense_correction', { p_id: randomUUID(), p_request: clinicalRequest }, '42501', staff.headers);
 const administrator = await user('admin-only');

@@ -100,7 +100,7 @@ try{
   const claim=await rpc("claim_communication_event",{});
   check(claim.id===eventRow().id&&claim.attempts===attempt&&claim.cycle_attempts===attempt,"Expired worker claim consumes one durable cycle attempt");
   sql(`update public.communication_provider_events set lease_expires_at=now()-interval '1 second' where resource_id=${quote(resource)};`);
-  await assert.rejects(rpc("release_communication_event_outcome",{p_id:claim.id,p_lease_token:claim.lease_token,p_error:"provider_fetch_or_persistence_retry",p_review:false}),/SQL 40001/);
+  await assert.rejects(rpc("release_communication_event_outcome",{p_id:claim.id,p_lease_token:claim.lease_token,p_error:"provider_fetch_or_persistence_retry",p_review:false}),/SQL PT409/);
   check(eventRow().state==="claimed","Expired token cannot invent a successful release");
  }
  const tenth=await processOneInbound(service,{RESEND_API_KEY:"synthetic-never-sent"},async()=>{throw new Error("Synthetic tenth transport failure");});

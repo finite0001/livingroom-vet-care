@@ -24,7 +24,7 @@ select is((select message_template_version from public.reminder_automation_polic
 select is((select approved_by from public.reminder_automation_policies where id='b4200000-0000-4000-8000-000000000001'),'b4000000-0000-4000-8000-000000000001'::uuid,'Reviewer is the authenticated administrator');
 select lives_ok($$select public.disable_reminder_automation_policy('b4200000-0000-4000-8000-000000000001',1,'Stop delivery pending revision')$$,'Lost-response retry returns same review');
 select is((select count(*) from public.reminder_automation_policy_history where policy_id='b4200000-0000-4000-8000-000000000001'),2::bigint,'Retry does not duplicate history');
-select throws_ok($$select public.disable_reminder_automation_policy('b4200000-0000-4000-8000-000000000001',1,'Changed stale review')$$,'40001','Automation policy version conflict','Changed stale request cannot overwrite review');
+select throws_ok($$select public.disable_reminder_automation_policy('b4200000-0000-4000-8000-000000000001',1,'Changed stale review')$$,'PT409','Automation policy version conflict','Changed stale request cannot overwrite review');
 select throws_ok($$select public.disable_reminder_automation_policy('b4200000-0000-4000-8000-000000000001',2,' ')$$,'23514','Policy version and review reason are required','Review rationale cannot be blank');
 select throws_ok($$select public.disable_reminder_automation_policy('b4200000-0000-4000-8000-000000000099',1,'Unavailable')$$,'23514','Policy unavailable','Unknown policy rejected');
 select set_config('request.jwt.claims','{"sub":"b4000000-0000-4000-8000-000000000002","role":"authenticated"}',true);

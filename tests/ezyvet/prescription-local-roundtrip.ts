@@ -1085,7 +1085,7 @@ try {
   await expectDenied(
     () => rpc("approve_ezyvet_prescription_review", pendingReviewArgs, true),
     "Actual upstream header revision invalidates pending HTTP review",
-    "40001",
+    "PT409",
   );
   const stalePreview = await rpc(
     "get_ezyvet_prescription_review_candidate",

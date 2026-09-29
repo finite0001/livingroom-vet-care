@@ -31,7 +31,7 @@ async function mockBackend(page: Page, options: BackendOptions = {}) {
       if (conflict) {
         conflict = false;
         client = { ...client, version: 2, mailing_address: "Saved by another staff member" };
-        return route.fulfill({ status: 409, json: { code: "40001", message: "Record changed or no longer exists; reload before saving" } });
+        return route.fulfill({ status: 409, json: { code: "PT409", message: "Record changed or no longer exists; reload before saving" } });
       }
       client = { ...client, first_name: body.p_first_name, last_name: body.p_last_name, full_name: `${body.p_first_name} ${body.p_last_name}`, primary_phone: body.p_primary_phone, primary_email: body.p_primary_email, mailing_address: body.p_mailing_address, housecall_address: body.p_housecall_address, version: client.version + 1 };
       exists = true;

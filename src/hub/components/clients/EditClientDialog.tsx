@@ -70,7 +70,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
     } catch (error) {
       const message = error instanceof Error ? error.message : (error as { message?: string })?.message || "Unable to save client details. Your changes are still here.";
       setErrorMessage(message);
-      setConflict((error as { code?: string })?.code === "40001");
+      setConflict((error as { code?: string })?.code === "PT409");
     } finally { pending.current = false; setSaving(false); }
   };
   return <Dialog open={open} onOpenChange={changeOpen}>

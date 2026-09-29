@@ -166,11 +166,11 @@ try:
 
     r,p=prepared();q=publishing(p);op=str(uuid.uuid4())
     changed={**r,'expected_version':1,'fields':{**r['fields'],'title':'Changed while publication waits'}}
-    contended(operation('save_native_estimate_draft',str(uuid.uuid4()),changed),publish(op,q),rejected('40001'))
+    contended(operation('save_native_estimate_draft',str(uuid.uuid4()),changed),publish(op,q),rejected('PT409'))
     check(recover(op) is None and current(r)['current'] is None,'Draft edit wins; stale publication has no receipt')
 
     r,p=prepared();q=publishing(p);op=str(uuid.uuid4())
-    contended('update clients set full_name=full_name||\' changed\',version=version+1 where id='+quote(fx['client'])+';',publish(op,q),rejected('40001'))
+    contended('update clients set full_name=full_name||\' changed\',version=version+1 where id='+quote(fx['client'])+';',publish(op,q),rejected('PT409'))
     check(recover(op) is None and current(r)['current'] is None,'Locked household change invalidates reviewed source after wait')
 
     r,p=prepared();q=publishing(p);op=str(uuid.uuid4())
@@ -192,14 +192,14 @@ try:
     check(recover(op) is None and current(r)['current'] is None,'Staff revoked during root wait cannot publish')
 
     r,p=prepared();q=publishing(p);first=str(uuid.uuid4());second=str(uuid.uuid4())
-    contended(publish(first,q),publish(second,q),rejected('40001'))
+    contended(publish(first,q),publish(second,q),rejected('PT409'))
     check(recover(first) is not None and recover(second) is None,'Distinct competing publication intent requires fresh lifecycle review')
 
     r,p=prepared();first=str(uuid.uuid4());invoke('publish_native_estimate',quote(first),jsonsql(publishing(p)))
     edited={**r,'expected_version':1,'fields':{**r['fields'],'title':'Replacement proposal'}}
     r2,p2=prepared(edited);replacement=str(uuid.uuid4());withdrawal=str(uuid.uuid4())
     w=dict(target=p2['request']['target'],publication_id=first,expected_publication_head=p2['request']['expected_publication_head'],reason='Synthetic withdrawal',attest_review=True)
-    contended(publish(replacement,publishing(p2)),operation('withdraw_native_estimate',withdrawal,w),rejected('40001'))
+    contended(publish(replacement,publishing(p2)),operation('withdraw_native_estimate',withdrawal,w),rejected('PT409'))
     check(current(r)['current']['id']==replacement and recover(withdrawal) is None,'Atomic replacement prevents stale withdrawal of predecessor')
 
     # Capture and publish serialize at the root without taking preparation gate after root.
@@ -223,7 +223,7 @@ try:
     edited={**r,'expected_version':1,'fields':{**r['fields'],'title':'Withdrawal wins'}}
     _,p2=prepared(edited);replacement=str(uuid.uuid4());withdrawal=str(uuid.uuid4())
     w=dict(target=p2['request']['target'],publication_id=first,expected_publication_head=p2['request']['expected_publication_head'],reason='Synthetic withdrawal first',attest_review=True)
-    contended(operation('withdraw_native_estimate',withdrawal,w),publish(replacement,publishing(p2)),rejected('40001'))
+    contended(operation('withdraw_native_estimate',withdrawal,w),publish(replacement,publishing(p2)),rejected('PT409'))
     check(current(r)['current_status']=='withdrawn' and recover(replacement) is None,'Withdrawal invalidates stale replacement review after observed root wait')
 
     # Real wall-clock evidence, not a simulated midnight crossing: the waiter must
