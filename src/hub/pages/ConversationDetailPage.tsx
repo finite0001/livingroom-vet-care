@@ -21,6 +21,7 @@ import {
   useMarkRead,
 } from "@/hub/hooks/use-conversations";
 import { useClientConsent } from "@/hub/hooks/use-sms-consent";
+import { smsBlockedReason, smsBlockedText } from "@/hub/features/communications/sms-consent-status";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -212,7 +213,13 @@ function ConversationDetailContent() {
           consent.phone_number?.replace(/\D/g, "") !==
             conversation.client.primary_phone.replace(/\D/g, "")
         ) {
-          toast.error("No SMS consent on record for this number");
+          toast.error(
+            (consent?.phone_number?.replace(/\D/g, "") ===
+              conversation.client.primary_phone?.replace(/\D/g, "") &&
+              consent &&
+              smsBlockedText(consent)) ||
+              "No SMS consent on record for this number",
+          );
           return false;
         }
         const phone = conversation.client.primary_phone;
@@ -459,6 +466,7 @@ function ConversationDetailContent() {
             conversation.client.preferred_channel === "EMAIL" ? "EMAIL" : "SMS"
           }
           smsOptedOut={smsOptedOut}
+          smsUnavailableReason={consent ? smsBlockedReason(consent) : null}
           disabled={isSending}
         />
       )}

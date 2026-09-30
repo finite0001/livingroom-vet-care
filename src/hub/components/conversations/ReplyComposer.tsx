@@ -21,6 +21,8 @@ interface ReplyComposerProps {
   ) => Promise<boolean>;
   defaultChannel?: "SMS" | "EMAIL" | "NOTE";
   smsOptedOut?: boolean;
+  /** Why SMS is unavailable, e.g. "client replied STOP on Sep 30, 2026". */
+  smsUnavailableReason?: string | null;
   draft?: string;
   onDraftConsumed?: () => void;
   disabled?: boolean;
@@ -35,6 +37,7 @@ export function ReplyComposer({
   onSend,
   defaultChannel,
   smsOptedOut,
+  smsUnavailableReason,
   draft,
   onDraftConsumed,
   disabled,
@@ -211,6 +214,9 @@ export function ReplyComposer({
           </TabsList>
         </Tabs>
       </div>
+      {smsOptedOut && smsUnavailableReason && (
+        <p className="text-xs text-muted-foreground">SMS unavailable: {smsUnavailableReason}.</p>
+      )}
       {channel === "EMAIL" && (
         <Input
           disabled={busy}

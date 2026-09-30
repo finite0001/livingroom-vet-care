@@ -3989,6 +3989,9 @@ export type Database = {
           channel: string
           created_at: string
           created_by: string | null
+          occurred_at: string | null
+          provider: string | null
+          provider_message_id: string | null
           reason: string
           recipient: string
         }
@@ -3996,6 +3999,9 @@ export type Database = {
           channel: string
           created_at?: string
           created_by?: string | null
+          occurred_at?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
           reason: string
           recipient: string
         }
@@ -4003,8 +4009,62 @@ export type Database = {
           channel?: string
           created_at?: string
           created_by?: string | null
+          occurred_at?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
           reason?: string
           recipient?: string
+        }
+        Relationships: []
+      }
+      sms_suppression_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          client_id: string | null
+          created_at: string
+          id: string
+          keyword: string | null
+          note: string | null
+          occurred_at: string
+          provider: string | null
+          provider_message_id: string | null
+          recipient: string
+          source: string
+          suppressed_at: string | null
+          suppression_reason: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          keyword?: string | null
+          note?: string | null
+          occurred_at: string
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          source: string
+          suppressed_at?: string | null
+          suppression_reason: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          keyword?: string | null
+          note?: string | null
+          occurred_at?: string
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          source?: string
+          suppressed_at?: string | null
+          suppression_reason?: string
         }
         Relationships: []
       }
@@ -7719,6 +7779,44 @@ export type Database = {
         Returns: string
       }
       communication_require_service: { Args: never; Returns: undefined }
+      sms_apply_start_keyword_internal: {
+        Args: {
+          p_note?: string
+          p_occurred_at: string
+          p_provider: string
+          p_provider_message_id: string
+          p_recipient: string
+        }
+        Returns: boolean
+      }
+      sms_keyword: { Args: { p_body: string }; Returns: string }
+      sms_lift_opt_out_internal: {
+        Args: {
+          p_actor_id: string
+          p_client_id: string
+          p_note?: string
+          p_occurred_at: string
+          p_provider: string
+          p_provider_message_id: string
+          p_recipient: string
+          p_source: string
+        }
+        Returns: boolean
+      }
+      sms_reconcile_opt_outs_internal: { Args: never; Returns: number }
+      sms_record_opt_out_internal: {
+        Args: {
+          p_actor_id: string
+          p_client_id: string
+          p_occurred_at: string
+          p_provider: string
+          p_provider_message_id: string
+          p_reason: string
+          p_recipient: string
+          p_source: string
+        }
+        Returns: boolean
+      }
       enqueue_communication: {
         Args: {
           p_actor_id: string

@@ -422,6 +422,43 @@ test("consent records server version and preserves stale entry without bypassing
   });
   await expect(panel).toContainText("SMS is blocked");
 });
+test("consent panel names a STOP reply and the staff re-consent that resumed texts", async ({
+  page,
+}) => {
+  await fixture(page, "rejected");
+  let resumed = false;
+  await page.route(`${backend}/rest/v1/rpc/current_sms_consent`, (route) =>
+    route.fulfill({
+      json: resumed
+        ? {
+            id: "consent", client_id: client, phone_number: "+13035550123", opted_in: true,
+            can_message: true, updated_at: "2026-09-30T20:00:00Z", block_reason: null, blocked_since: null,
+            consent_details: "Client re-signed SMS consent at front desk",
+            last_resumed: { source: "staff_consent", keyword: null, at: "2026-09-30T20:00:00Z", by: "Synthetic Staff", after_reason: "cloudtalk_sms_stop", after_since: "2026-09-30T18:00:00Z" },
+          }
+        : {
+            id: "consent", client_id: client, phone_number: "+13035550123", opted_in: false,
+            can_message: false, updated_at: "2026-09-30T18:00:00Z", block_reason: "sms_stop",
+            blocked_since: "2026-09-30T18:00:00Z", last_resumed: null,
+          },
+    }),
+  );
+  await page.route(`${backend}/rest/v1/rpc/record_sms_consent`, (route) => {
+    resumed = true;
+    return route.fulfill({ json: { id: "consent", updated_at: "2026-09-30T20:00:00Z" } });
+  });
+  await page.goto(`/hub/client/${client}`);
+  await page.getByRole("tab", { name: "Communication", exact: true }).click();
+  const panel = page.getByRole("region", { name: "SMS consent" });
+  await expect(panel).toContainText("Client replied STOP on Sep 30, 2026. Texts resume if they reply START");
+  await panel.getByRole("button", { name: "Record consent or withdrawal" }).click();
+  await expect(panel).toContainText("Explicit agreement lifts a STOP reply");
+  await panel.getByLabel("Preference", { exact: true }).selectOption("yes");
+  await panel.getByLabel("Consent evidence", { exact: true }).fill("Client re-signed SMS consent at front desk");
+  await panel.getByRole("button", { name: "Save consent record" }).click();
+  await expect(panel.getByRole("status")).toContainText("Consent record saved");
+  await expect(panel).toContainText("Texts resumed: re-consented by Synthetic Staff on Sep 30, 2026 (after STOP on Sep 30, 2026)");
+});
 for (const mobile of [false, true])
   test(`older messages preserve position and unread visibility on ${mobile ? "mobile" : "desktop"}`, async ({
     page,

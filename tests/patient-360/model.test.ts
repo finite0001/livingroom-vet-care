@@ -133,6 +133,15 @@ test("SMS-preferred households without effective consent get a consent step", ()
   assert.equal(deriveNextSteps(emailOnly).some(s => s.id === "sms-consent"), false);
 });
 
+test("the SMS consent step explains a STOP reply", () => {
+  const stopped = read("household", {}, {
+    household: { ...read("household").household, preferred_channel: "SMS" },
+    sms_consent: { opted_in: false, can_message: false, phone_number: "+17205550360", updated_at: null, block_reason: "sms_stop", blocked_since: "2026-09-30T18:00:00Z" },
+  });
+  const step = deriveNextSteps(stopped).find(s => s.id === "sms-consent")!;
+  assert.equal(step.detail, "SMS is their preferred channel. Client replied STOP on Sep 30, 2026. Texts resume if they reply START, or when staff record new explicit consent.");
+});
+
 test("estimates, prescriptions, reminders and releases each route to their owning screen", () => {
   const steps = deriveNextSteps(read("patient", {
     estimates_open: [
