@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useClientConsent, useUpdateConsent } from "@/hub/hooks/use-sms-consent";
+import { SMS_BLOCKED_FALLBACK, smsBlockedText, smsResumedText } from "@/hub/features/communications/sms-consent-status";
 interface SmsConsentPanelProps { clientId: string; }
 interface ConsentDraft { phone: string; expected: string | null; optedIn: boolean; method: "VERBAL" | "WRITTEN" | "WEB_FORM"; details: string; }
 export function SmsConsentPanel({clientId}:SmsConsentPanelProps) {
@@ -24,7 +25,8 @@ export function SmsConsentPanel({clientId}:SmsConsentPanelProps) {
   <h2 className="font-semibold">SMS consent</h2>
   {query.isLoading?<p>Loading consent…</p>:query.isError?<p role="alert">Unable to load consent. <button className="underline" onClick={()=>void query.refetch()}>Retry</button></p>:<>
    <p className="text-sm">{query.data?.phone_number??"No valid primary phone number"}</p>
-   <p className="text-sm text-muted-foreground">{query.data?.can_message?"SMS consent is recorded and the number is eligible for messaging.":"SMS is blocked. Consent may be missing, withdrawn, shared or suppressed."}</p>
+   <p className="text-sm text-muted-foreground">{query.data?.can_message?"SMS consent is recorded and the number is eligible for messaging.":(query.data?smsBlockedText(query.data):null)??SMS_BLOCKED_FALLBACK}</p>
+   {query.data&&smsResumedText(query.data)&&<p className="text-sm">{smsResumedText(query.data)}</p>}
    {query.data?.consent_details&&<p className="text-sm whitespace-pre-wrap">Recorded evidence: {query.data.consent_details}</p>}
    {!draft&&<Button variant="outline" disabled={!query.data?.phone_number} onClick={start}>Record consent or withdrawal</Button>}
   </>}
@@ -33,7 +35,7 @@ export function SmsConsentPanel({clientId}:SmsConsentPanelProps) {
    <div className="space-y-1"><Label htmlFor="sms-preference">Preference</Label><select id="sms-preference" className="w-full rounded-md border bg-background p-2" value={draft.optedIn?"yes":"no"} onChange={e=>setDraft({...draft,optedIn:e.target.value==='yes'})}><option value="no">Withdraw / do not allow SMS</option><option value="yes">Client explicitly agrees to SMS</option></select></div>
    <div className="space-y-1"><Label htmlFor="sms-method">How was this preference received?</Label><select id="sms-method" className="w-full rounded-md border bg-background p-2" value={draft.method} onChange={e=>setDraft({...draft,method:e.target.value as ConsentDraft['method']})}><option value="VERBAL">Verbal</option><option value="WRITTEN">Written</option><option value="WEB_FORM">Web form</option></select></div>
    <div className="space-y-1"><Label htmlFor="sms-evidence">Consent evidence</Label><Textarea id="sms-evidence" maxLength={1000} value={draft.details} onChange={e=>setDraft({...draft,details:e.target.value})} placeholder="Who gave this preference, when and where it was documented" /></div>
-   <p className="text-xs text-muted-foreground">This records consent for {draft.phone}. It does not remove provider complaints or other delivery exclusions.</p>
+   <p className="text-xs text-muted-foreground">This records consent for {draft.phone}. Explicit agreement lifts a STOP reply or earlier withdrawal. It does not remove carrier, complaint or other delivery exclusions.</p>
    {save.isError&&<p role="alert" className="text-sm text-destructive">{save.error instanceof Error?save.error.message:"Consent could not be saved. Reload the saved record and review before retrying."} Your entry is preserved.</p>}
    <div className="flex flex-wrap gap-2"><Button disabled={draft.details.trim().length<5||save.isPending} onClick={()=>void submit()}>{save.isPending?"Saving…":"Save consent record"}</Button><Button variant="outline" onClick={()=>{if(window.confirm("Discard this unsaved consent entry?")){setDraft(null);save.reset();void query.refetch();}}}>Discard and reload</Button></div>
   </fieldset>}

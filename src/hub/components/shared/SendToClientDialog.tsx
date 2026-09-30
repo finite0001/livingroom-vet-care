@@ -22,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useClient } from "@/hub/hooks/use-client";
 import { useClientConsent } from "@/hub/hooks/use-sms-consent";
+import { smsBlockedReason } from "@/hub/features/communications/sms-consent-status";
 
 interface SendToClientDialogProps {
   clientId: string;
@@ -121,10 +122,16 @@ function SendToClientContent({
     else if (emailAllowed) setChannel("EMAIL");
   }, [isOpen, channel, contactsFetched, smsAllowed, emailAllowed]);
 
+  const consentForPhone =
+    consent && normalizePhone(consent.phone_number ?? "") === normalizePhone(phone ?? "")
+      ? consent
+      : null;
+  // Lower-case phrase: "SMS unavailable: client replied STOP on Sep 30, 2026."
   const smsDisabledReason = !phone
-    ? "No phone number on file"
+    ? "no phone number on file"
     : !smsAllowed
-      ? "No SMS consent on record for this number"
+      ? (consentForPhone && smsBlockedReason(consentForPhone)) ||
+        "no SMS consent on record for this number"
       : null;
   const emailDisabledReason = !email ? "No email address on file" : null;
   const nothingAllowed = contactsFetched && !smsAllowed && !emailAllowed;
@@ -279,7 +286,7 @@ function SendToClientContent({
               </div>
               {smsDisabledReason && (
                 <p className="text-xs text-muted-foreground">
-                  SMS unavailable: {smsDisabledReason.toLowerCase()}.
+                  SMS unavailable: {smsDisabledReason}.
                 </p>
               )}
               {emailDisabledReason && (

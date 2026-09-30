@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SendToClientDialog } from "@/hub/components/shared/SendToClientDialog";
 import { cn } from "@/lib/utils";
 import { patientAge } from "@/hub/features/patients/patient-details";
+import { smsBlockedText, smsChipText, smsResumedText } from "@/hub/features/communications/sms-consent-status";
 import {
   centsNumber, formatCents, householdHref, patientHref, scheduleHref, type Read360,
 } from "./model";
@@ -79,8 +80,11 @@ export function Header360({ read, manage }: Header360Props) {
               <span className="truncate">{!patient && problem.pet_name ? `${problem.pet_name}: ` : ""}{problem.title}</span>
             </li>
           ))}
-          <li className={cn("status-chip", consent.can_message ? "tone-success" : "tone-warning")}>
-            {consent.can_message ? "SMS consent on file" : "SMS blocked"}
+          <li
+            className={cn("status-chip max-w-full", consent.can_message ? "tone-success" : "tone-warning")}
+            title={(consent.can_message ? smsResumedText(consent) : smsBlockedText(consent)) ?? undefined}
+          >
+            <span className="truncate">{smsChipText(consent)}</span>
           </li>
           <li className="status-chip tone-neutral">Prefers {preferred}</li>
           <li>

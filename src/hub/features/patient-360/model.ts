@@ -7,6 +7,8 @@
  * module decides what staff should do next and where each fact is resolved.
  */
 
+import { smsBlockedText, type SmsConsentStatus } from "../communications/sms-consent-status.ts";
+
 export type Scope = "patient" | "household";
 
 export type PatientTab = "overview" | "medical" | "communication" | "billing" | "schedule" | "documents";
@@ -110,7 +112,7 @@ export interface Read360 {
   patient: PatientDetail | null;
   household: Household;
   pets: PetSummary[];
-  sms_consent: { opted_in: boolean; can_message: boolean; phone_number: string | null; updated_at: string | null };
+  sms_consent: SmsConsentStatus & { opted_in: boolean; updated_at: string | null };
   balance: { outstanding_cents: string; open_invoice_count: number };
   high_priority_problems: (PetRef & { id: string; title: string })[];
   signals: Signals;
@@ -373,7 +375,9 @@ export function deriveNextSteps(read: Read360): NextStep[] {
     steps.push({
       id: "sms-consent", priority: "soon", category: "communication",
       title: "Texting is blocked for this household",
-      detail: read.sms_consent.phone_number ? "SMS is their preferred channel but consent is missing, withdrawn or suppressed." : "SMS is their preferred channel but there is no valid primary phone.",
+      detail: read.sms_consent.phone_number
+        ? `SMS is their preferred channel. ${smsBlockedText(read.sms_consent) ?? "Consent is missing, withdrawn or suppressed."}`
+        : "SMS is their preferred channel but there is no valid primary phone.",
       href: householdHref(clientId, "communication", "consent"), actionLabel: "Record consent",
     });
   }
