@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import {
   overviewSchema,
   pageSchema,
@@ -9,15 +10,9 @@ import {
   schedulerStatusSchema,
   type Cursor,
 } from "./OperationsState";
-interface RpcClient {
-  rpc(
-    name: string,
-    args: Record<string, unknown>,
-  ): PromiseLike<{ data: unknown; error: unknown }>;
-}
-const db = supabase as unknown as RpcClient;
-async function read(name: string, args: Record<string, unknown> = {}) {
-  const { data, error } = await db.rpc(name, args);
+type Fns = Database["public"]["Functions"];
+async function read<N extends keyof Fns>(name: N, args: Fns[N]["Args"] = {} as Fns[N]["Args"]) {
+  const { data, error } = await supabase.rpc(name, args);
   if (error) throw error;
   return data;
 }

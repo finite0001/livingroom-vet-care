@@ -41,21 +41,7 @@ import { useScheduleDay } from "@/hub/features/scheduling/use-schedule-day";
 import { useAppointmentStatus } from "@/hub/features/scheduling/use-appointment-status";
 import { cn } from "@/lib/utils";
 
-// The newest native tables (e.g. native_refills) are RPC-only and not in the
-// generated types, so the refill count uses the same permissive cast as the
-// refill API rather than a typed table select.
-interface Database {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      [key: string]: { Args: Record<string, unknown>; Returns: unknown };
-    };
-  };
-}
-const client = supabase as unknown as SupabaseClient<Database>;
+const client = supabase;
 
 const TERMINAL_STATUSES = ["COMPLETED", "CANCELLED", "NO_SHOW"];
 
