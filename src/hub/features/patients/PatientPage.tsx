@@ -106,7 +106,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   usePageTitle(patient ? `${patient.name} · Patient record` : "Patient record");
   if (query.isLoading) return <div role="status" className="p-6">Loading patient record…</div>;
   if (query.isError && !patient) return <div className="space-y-3 p-6" role="alert"><p>Patient record could not be loaded.</p><Button variant="outline" onClick={() => void query.refetch()}>Retry patient</Button></div>;
-  if (!patient) return <div className="space-y-3 p-6"><h1 className="text-xl font-semibold">Patient not found</h1><Button asChild variant="outline"><Link to="/hub/clients">Back to clients</Link></Button></div>;
+  if (!patient) return <div className="space-y-3 p-6"><h1 className="text-xl font-semibold">Patient not found</h1><Button asChild variant="outline"><Link to="/hub/patients">Back to patients</Link></Button></div>;
   const inactive = Boolean(patient.archived_at || patient.deceased_at);
   const details = [
     ["Species", patient.species], ["Breed", patient.breed || "Not recorded"], ["Birthday", patient.dob ? `${patient.dob}${patient.birth_date_precision === "estimated" ? " (estimated)" : ""}` : "Unknown"], ["Age", patientAge(patient.dob, patient.birth_date_precision, patient.deceased_at ?? undefined)],
