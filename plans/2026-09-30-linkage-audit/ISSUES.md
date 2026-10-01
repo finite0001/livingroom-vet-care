@@ -8,7 +8,24 @@ Postgres; `tsc -p tsconfig.app.json` is clean; no link targets a nonexistent rou
 Goal: **every item below is fixed, or explicitly closed as an owner decision, on one reviewed PR train
 — with migrations replay-tested and the full `npm run check` + SQL suite green.**
 
-Status legend: `[ ]` open · `[x]` fixed in this train · `[owner]` needs an owner action/decision.
+## Resolution (integration/2026-09-30-linkage)
+
+All items are addressed in this train: #223 (A + B10), #222 (B), #221 (C), #224 (D + C4), plus
+integration commits for A19 and a final types regeneration.
+
+- **Closed without code change, by design:** D16 (bookmark-only stub routes).
+- **Owner decision taken 2026-09-30:** A19. New inquiries is the single triage surface. `/hub/contact-submissions`
+  redirects there, and notes from the retired page show read-only on the inquiry.
+- **A11:** `refills.refill_requests` is excluded from the composite check. An existing trigger already refuses every
+  write to it, and restore validation requires its constraints to be validated.
+- **Documented, not migrated:** A9, A13, A15, A16 and A20 are recorded as SQL comments in `20260930120000_linkage_integrity.sql`.
+- **Owner actions after merge** (hosted projects were not touched):
+  - Apply `20260930120000` and `20260930130000` to staging, then to prod.
+  - Run the NOT VALID violation query from PR #223. Validate the constraints only once every count is 0.
+  - Deploy `process-stripe-events` before setting the Vault scheduler secrets (B4).
+  - Redeploy the changed workers and Twilio callbacks.
+  - Undeploy `suggest-replies` and `send-provider-email`.
+  - Set the `ESTIMATE_DECISION_*` secrets and run the origin agreement check (B13/B14) before issuing client estimate links.
 
 ## A. Database integrity (migrations)
 

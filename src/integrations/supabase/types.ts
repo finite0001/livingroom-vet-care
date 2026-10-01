@@ -1163,6 +1163,13 @@ export type Database = {
             referencedRelation: "messages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       client_notes: {
@@ -2327,6 +2334,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inbox_workspace_rows"
             referencedColumns: ["conversation_id"]
+          },
+          {
+            foreignKeyName: "consent_submissions_pet_household_fkey"
+            columns: ["pet_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id", "client_id"]
           },
           {
             foreignKeyName: "consent_submissions_pet_id_fkey"
@@ -6415,6 +6429,13 @@ export type Database = {
             referencedColumns: ["conversation_id"]
           },
           {
+            foreignKeyName: "follow_up_instances_pet_household_fkey"
+            columns: ["pet_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id", "client_id"]
+          },
+          {
             foreignKeyName: "follow_up_instances_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -7660,6 +7681,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inbox_workspace_rows"
             referencedColumns: ["conversation_id"]
+          },
+          {
+            foreignKeyName: "lab_results_pet_household_fkey"
+            columns: ["pet_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id", "client_id"]
           },
           {
             foreignKeyName: "lab_results_pet_id_fkey"
@@ -13154,6 +13182,13 @@ export type Database = {
             referencedRelation: "messages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "response_metrics_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       scheduler_job_results: {
@@ -14111,6 +14146,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "waitlist_entries_pet_household_fkey"
+            columns: ["pet_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id", "client_id"]
+          },
+          {
             foreignKeyName: "waitlist_entries_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -14268,6 +14310,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wellness_reminders_pet_household_fkey"
+            columns: ["pet_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id", "client_id"]
           },
           {
             foreignKeyName: "wellness_reminders_pet_id_fkey"
@@ -15934,10 +15983,6 @@ export type Database = {
         }
       }
       current_sms_consent: { Args: { p_client_id: string }; Returns: Json }
-      delete_conversation_cascade: {
-        Args: { conv_id: string }
-        Returns: undefined
-      }
       dental_tooth_numbers: {
         Args: { p_dentition: string; p_species: string }
         Returns: string[]
@@ -21463,6 +21508,10 @@ export type Database = {
         }[]
       }
       scheduler_dispatch: { Args: { p_job: string }; Returns: Json }
+      scheduler_purge_expired_email_payloads: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       scheduler_reconcile: { Args: Record<PropertyKey, never>; Returns: number }
       scheduler_run_projection_internal: {
         Args: { p_run_id: string }
