@@ -18,7 +18,7 @@ Rules for every step:
 | Item | State |
 | --- | --- |
 | Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
-| Repository migrations on `main` | 167 (as of 2026-10-01, after #225). There are **15 pending**, listed in order in §3. The Vercel frontend deploys on every merge, so production is already running code that expects them. |
+| Repository migrations on `main` | 167 (as of 2026-10-01, after #225). Up to **15 pending**, listed in order in §3. A staging dry run on 2026-10-01 listed only 3 (`20260930100000`, `20260930120000`, `20260930130000`), so staging is at 164. Primary is unverified, so run its own dry run. The Vercel frontend deploys on every merge, so production is already running code that expects them. |
 | Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
 | Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. Migration `20260930130000_scheduler_timeout_and_payload_purge` (not yet applied) raises the call timeout to 30 s and adds a seventh, in-database job, `purge-expired-email-payloads` (daily, needs no Vault secret). |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
@@ -89,7 +89,7 @@ git rev-parse HEAD                      # must equal the merged SHA from §1
 
 # Staging
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault --dry-run
-#   expect exactly the 15 files above and nothing else. Stop if the list differs.
+#   expect a tail of the 15 files above, in order, and nothing else. Stop on any file not in the list.
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault
 
 # Primary: only after the staging probes below pass
