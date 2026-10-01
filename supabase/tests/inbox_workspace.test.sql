@@ -56,7 +56,7 @@ select set_config('request.jwt.claims','{"sub":"95000000-0000-4000-8000-00000000
 select public.update_conversation_metadata(auth.uid(),(select id from fixture_ids where kind='conversation'),2,'ARCHIVED',null,'NORMAL','{}');
 select is((select unread_conversations from public.inbox_unread_totals()),0::bigint,'Archived thread excluded from active aggregate');
 select is((select count(*) from public.list_inbox_workspace(p_status=>'ARCHIVED')),1::bigint,'Archive filter returns retained conversation');
-select throws_ok($$select public.delete_conversation_cascade((select id from fixture_ids where kind='conversation'))$$,'42501',null,'Legacy cascade delete disabled');
+select ok(to_regprocedure('public.delete_conversation_cascade(uuid)') is null,'Legacy cascade delete function removed');
 reset role;
 select throws_ok($$delete from public.conversations where id=(select id from fixture_ids where kind='conversation')$$,'23514',null,'Archived history cannot be deleted through privileged table path');
 set local role authenticated;
