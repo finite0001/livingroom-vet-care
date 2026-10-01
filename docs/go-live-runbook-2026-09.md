@@ -18,7 +18,7 @@ Rules for every step:
 | Item | State |
 | --- | --- |
 | Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
-| Repository migrations on `main` | 167 (as of 2026-10-01, after #225). There are **15 pending**, listed in order in §3. The Vercel frontend deploys on every merge, so production is already running code that expects them. |
+| Repository migrations on `main` | 167 (as of 2026-10-01, after #225). Up to **15 pending**, listed in order in §3. A staging dry run on 2026-10-01 listed only 3 (`20260930100000`, `20260930120000`, `20260930130000`), so staging is at 164. Primary is unverified, so run its own dry run. The Vercel frontend deploys on every merge, so production is already running code that expects them. |
 | Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
 | Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. Migration `20260930130000_scheduler_timeout_and_payload_purge` (not yet applied) raises the call timeout to 30 s and adds a seventh, in-database job, `purge-expired-email-payloads` (daily, needs no Vault secret). |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
@@ -76,8 +76,8 @@ These are the 15 pending migrations, applied in this order:
 | `20260928180000_agentmail_inbound` | Adds provider `agentmail` to provider receipts (inbound only, with the signed inbox and message ids required), makes it an EMAIL channel in `complete_inbound_communication`, and lets attachment capture/read/list accept AgentMail rows. The capture lease now names the provider and the signed provider ids. Resend and Twilio rows are unchanged. | **deploying `agentmail-inbound-webhook`, `process-inbound` and `capture-inbound-attachment`** (§4). Without it, AgentMail receipts are refused with 23514 and AgentMail retries them. |
 | `20260928160000_cloudtalk_capability_redaction` | Redacts document-link and payment-link capabilities from CloudTalk message bodies and AI summaries at ingest, redacts any already stored (audited in `cloudtalk_capability_redactions`), re-projects the texts they had blocked, and matches app-sent link texts to their outbox row | **enabling live CloudTalk SMS** (§7). Apply it before any document or payment link is texted. Redeploy `cloudtalk-webhook` (§4) right after it. |
 | `20260928170000_patient_360_read_model` | Adds the read-only Patient 360 / household 360 RPCs (`read_patient_360`, `read_household_360`, `list_patient_timeline`, `list_household_timeline`) and supporting indexes. No data changes. See `docs/patient-360.md` | **the frontend**. `/hub/patient/:id` and `/hub/client/:id` call these RPCs. |
-| `20260928190000_no_retryable_sqlstate_for_permanent_conditions` | Stops raising SQLSTATE 40001 for permanent conditions, which PostgREST retried forever (PR #219) | any webhook or worker traffic |
-| `20260930100000_sms_resubscribe_after_stop` | START keyword and staff re-consent clear a CloudTalk STOP suppression, and adds `sms_suppression_events` (PR #220) | redeploying `cloudtalk-webhook` |
+| `20260928190000_no_retryable_sqlstate_for_permanent_conditions` | Stops raising SQLSTATE 40001 for permanent conditions, which PostgREST retried forever (PR #219). Permanent conflicts now raise `PT409` | **redeploying** `resend-delivery-webhook` and `twilio-message-status-callback` (#219), plus any *deployed* function that maps `PT409` to 409: `prepare-payment-delivery`, `prepare-external-record`, `prepare-lab-report` (and the payment-collection/reconciliation functions once they are deployed per C1) |
+| `20260930100000_sms_resubscribe_after_stop` | START keyword and staff re-consent clear a CloudTalk STOP suppression, and adds `sms_suppression_events` (PR #220). All the behaviour is in SQL (`ingest_cloudtalk_event`), so no function redeploy is needed | — |
 | `20260930120000_linkage_integrity` | Clinical FKs become RESTRICT, pets can't be deleted, NOT VALID pet/household FKs and CHECKs, writes to legacy `pet_vaccinations`/`lab_results` frozen, 19 indexes (PR #225, audit A-items). Re-creating the RESTRICT FKs scans each child table, so apply it outside clinic hours. | the validation step below |
 | `20260930130000_scheduler_timeout_and_payload_purge` | `scheduler_dispatch` timeout 5 s → 30 s, plus a daily `purge-expired-email-payloads` cron job (PR #225, audit B3/B12) | **redeploying the queue workers** (§4). Their new 20 s batch budget would otherwise exceed the old 5 s timeout, and runs would be recorded as failed. |
 
@@ -89,7 +89,7 @@ git rev-parse HEAD                      # must equal the merged SHA from §1
 
 # Staging
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault --dry-run
-#   expect exactly the 15 files above and nothing else. Stop if the list differs.
+#   expect a tail of the 15 files above, in order, and nothing else. Stop on any file not in the list.
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault
 
 # Primary: only after the staging probes below pass
