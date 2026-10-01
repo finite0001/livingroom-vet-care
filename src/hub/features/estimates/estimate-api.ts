@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
+import { asJson } from "../../../integrations/supabase/rpc.ts";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
 import { correctionEqual } from "../prescriptions/fulfillment-corrections-api.ts";
 
@@ -174,7 +176,7 @@ function before(a: EstimateDraft, cursor: EstimateCursor) {
 }
 export function createEstimateDraftApi(client: PrescriptionRpc, actorId: string, clientId: string) {
   uuid.parse(actorId); uuid.parse(clientId);
-  async function rpc(name: string, args: Record<string, unknown>) {
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;
@@ -201,7 +203,7 @@ export function createEstimateDraftApi(client: PrescriptionRpc, actorId: string,
     parseOperation,
     async save(operation: EstimateOperation): Promise<EstimateReceipt> {
       const op = parseOperation(operation);
-      return parseReceipt(await rpc("save_native_estimate_draft", { p_id: op.id, p_request: op.payload }), op);
+      return parseReceipt(await rpc("save_native_estimate_draft", { p_id: op.id, p_request: asJson(op.payload) }), op);
     },
     async recover(operation: EstimateOperation): Promise<EstimateReceipt | null> {
       const op = parseOperation(operation), raw = await rpc("recover_native_estimate_draft", { p_id: op.id });
@@ -209,7 +211,7 @@ export function createEstimateDraftApi(client: PrescriptionRpc, actorId: string,
     },
     async close(operation: EstimateOperation): Promise<EstimateCloseResult> {
       const op = parseOperation(operation);
-      const r = resolutionSchema.parse(await rpc("close_native_estimate_draft", { p_id: op.id, p_request: op.payload }));
+      const r = resolutionSchema.parse(await rpc("close_native_estimate_draft", { p_id: op.id, p_request: asJson(op.payload) }));
       if (r.status === "recorded") return { version: 1, status: "recorded", receipt: parseReceipt(r.receipt, op) };
       check(r.closure.id === op.id && r.closure.actor_id === actorId && correctionEqual(r.closure.request, op.payload));
       return r as EstimateClosedResolution;

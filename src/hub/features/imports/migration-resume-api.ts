@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { createMigrationRunApi } from "./migration-run-api.ts";
 import type { MigrationBinding, MigrationManifest, MigrationRpc } from "./migration-run-api.ts";
+import type { RpcArgs } from "@/integrations/supabase/rpc";
+/** Child-run recovery RPC per non-generic resource (consult/history share the clinical runner). */
+const recoverRun = {
+  consult: "recover_ezyvet_clinical_run",
+  history: "recover_ezyvet_clinical_run",
+  vaccination: "recover_ezyvet_vaccination_run",
+  prescription: "recover_ezyvet_prescription_run",
+  prescriptionitem: "recover_ezyvet_prescriptionitem_run",
+  attachment: "recover_ezyvet_attachment_run",
+} as const;
 const uuid = z.string().uuid(), date = z.string().datetime({ offset: true });
 export interface MigrationResumeIdentity { manifest_id: string; scope_id: string; binding_id: string }
 export interface MigrationResumeTransport extends MigrationRpc {
@@ -45,7 +55,10 @@ export function createMigrationResumeApi(transport: MigrationResumeTransport, ac
       const args: Record<string, unknown> = { p_id: binding.child_run_id, p_animal_link_id: scope.mapping_id };
       if (["clinical", "prescription"].includes(family)) args.p_resource = scope.resource;
       for (const [key, value] of Object.entries(body)) if (key.startsWith("consult_") || key.startsWith("prescription_")) args[`p_${key}`] = value;
-      const { data, error } = await transport.rpc(`recover_ezyvet_${family}_run`, args); if (error) throw error; raw = data;
+      const name = recoverRun[scope.resource as keyof typeof recoverRun];
+      if (!name) throw new Error("Run recovery unavailable for this resource");
+      // args are assembled per family from the validated manifest scope.
+      const { data, error } = await transport.rpc(name, args as RpcArgs<typeof name>); if (error) throw error; raw = data;
     }
     const schema = z.object({ id: z.literal(binding.child_run_id), requested_by: z.literal(actor), source_origin: z.literal(manifest.run.source_origin), source_site_uid: z.literal(manifest.run.source_site_uid), resource: z.literal(scope.resource), status: z.enum(["running", "review_ready", "page_limit_reached"]), next_page: z.number().int().min(1).max(1001), retry_after: date.nullable() });
     const run = schema.parse(raw);

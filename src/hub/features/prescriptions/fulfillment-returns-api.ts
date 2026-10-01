@@ -1,5 +1,6 @@
 /** Closed native custody/stock-return boundaries; quantities remain exact decimals. */
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionRpc } from "./prescription-api.ts";
 import type { PrescriptionOperation } from "./prescription-state.ts";
 import {
@@ -383,7 +384,7 @@ export type ReturnRead = z.infer<typeof readSchema>;
 export type ReturnPolicy = z.infer<typeof returnPolicySchema>;
 export type ReturnReceipt = z.infer<typeof receiptSchema>;
 function transport(client: PrescriptionRpc) {
-  return async (name: string, args: Record<string, unknown> = {}) => {
+  return async <N extends RpcName>(name: N, args: RpcArgs<N> = {} as RpcArgs<N>) => {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;

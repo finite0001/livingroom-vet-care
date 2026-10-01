@@ -1,5 +1,7 @@
 /** Closed native finance transport. PostgreSQL verifies canonical hashes and ledger links. */
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
+import { asJson } from "../../../integrations/supabase/rpc.ts";
 import type { PrescriptionRpc } from "./prescription-api.ts";
 import type { PrescriptionOperation } from "./prescription-state.ts";
 import { correctionEqual } from "./fulfillment-corrections-api.ts";
@@ -546,7 +548,7 @@ export function createNativeDispenseFinanceApi(
   uuid.parse(actorId);
   target.parse(t);
   const contexts = new Map<string, FinanceContext>();
-  const rpc = async (name: string, args: Record<string, unknown>) => {
+  const rpc = async <N extends RpcName>(name: N, args: RpcArgs<N>) => {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;
@@ -643,7 +645,7 @@ export function createNativeDispenseFinanceApi(
       const intent = financeIntentSchema.parse(value) as FinanceIntent;
       check(correctionEqual(intent.target, t));
       const p = preview.parse(
-        await rpc("preview_native_dispense_finance", { p_intent: intent }),
+        await rpc("preview_native_dispense_finance", { p_intent: asJson(intent) }),
       ) as FinancePreview;
       check(
         p.actor_id === actorId && correctionEqual(p.context.intent, intent),
@@ -668,7 +670,7 @@ export function createNativeDispenseFinanceApi(
       return parseReceipt(
         await rpc("record_native_dispense_finance", {
           p_id: parsed.id,
-          p_request: parsed.payload,
+          p_request: asJson(parsed.payload),
         }),
         parsed,
       );
@@ -682,7 +684,7 @@ export function createNativeDispenseFinanceApi(
       const parsed = parseOperation(op);
       const r = resolution.parse(await rpc("close_native_dispense_finance", {
         p_id: parsed.id,
-        p_request: parsed.payload,
+        p_request: asJson(parsed.payload),
       }));
       if (r.status === "recorded")
         return { version: 1, status: "recorded", receipt: parseReceipt(r.receipt, parsed) };

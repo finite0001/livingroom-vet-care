@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import { migrationItemCursorSchema, parseMigrationItems } from "./migration-items-api.ts";
 import type { MigrationItemCursor } from "./migration-items-api.ts";
 import { precedes } from "./attachment-review-history.ts";
@@ -58,8 +59,9 @@ export interface MigrationProgress extends z.infer<typeof progressSchema> {}
 export interface MigrationAttemptEvent extends z.infer<typeof attemptEventSchema> {}
 export interface MigrationRequest { id: string; source_origin: string; source_site_uid: string; scopes: MigrationScopeInput[] }
 export interface MigrationBindingRequest { id: string; scope_id: string; child_run_id: string; reason: string; replaces_id: string | null }
+/** Injected RPC transport (the Supabase client, or a test fake) keyed on the generated schema. */
 export interface MigrationRpc {
-  rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }>;
+  rpc<N extends RpcName>(name: N, args: RpcArgs<N>): PromiseLike<{ data: unknown; error: unknown }>;
 }
 
 function sameScope(left: MigrationScopeInput, right: MigrationScopeInput) {
@@ -126,7 +128,7 @@ function verifyPage<T extends HistoryIdentity>(rows: T[], more: boolean, cursor:
 
 export function createMigrationRunApi(client: MigrationRpc, actorId: string) {
   uuid.parse(actorId);
-  async function rpc(name: string, args: Record<string, unknown>) {
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;

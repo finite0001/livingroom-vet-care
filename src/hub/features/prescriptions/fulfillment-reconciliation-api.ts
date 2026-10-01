@@ -1,5 +1,6 @@
 /** Exact, actor-bound transport for physical return reconciliation. Hash verification is server-owned. */
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionRpc } from "./prescription-api.ts";
 import type { PrescriptionOperation } from "./prescription-state.ts";
 import {
@@ -690,7 +691,7 @@ export function createNativeReconciliationApi(
     p_dispense_id: t.dispense_id,
   };
   const contexts = new Map<string, z.infer<typeof context>>();
-  const rpc = async (name: string, args: Record<string, unknown>) => {
+  const rpc = async <N extends RpcName>(name: N, args: RpcArgs<N>) => {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;
@@ -1000,7 +1001,7 @@ export function createNativeReturnDiscrepancyApi(
 ) {
   uuid.parse(actor);
   target.parse(t);
-  const rpc = async (name: string, args: Record<string, unknown>) => {
+  const rpc = async <N extends RpcName>(name: N, args: RpcArgs<N>) => {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;

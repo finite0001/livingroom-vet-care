@@ -1,5 +1,6 @@
 /** Strict native dispensing adapter with exact request recovery and versioned history. */
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import {
   nativePrescriptionArtifactSchema,
   parsePrescriptionAuthorization,
@@ -734,7 +735,7 @@ export function createFulfillmentApi(
     original.pet_id,
     original.id,
   );
-  async function rpc(name: string, args: Record<string, unknown>) {
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;
@@ -874,7 +875,7 @@ export function createFulfillmentApi(
           dispense: "record_native_dispense",
           close_slot: "close_native_fill_slot",
           pickup: "record_native_pickup",
-        };
+        } as const;
       return receipt(
         await rpc(names[op.kind as keyof typeof names], {
           p_id: op.id,
@@ -1067,7 +1068,7 @@ export function createFulfillmentApi(
           dispenses: "list_native_dispenses",
           closures: "list_native_slot_closures",
           pickups: "list_native_pickups",
-        },
+        } as const,
         schemas = {
           dispenses: dispenseSchema,
           closures: closureSchema,

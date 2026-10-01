@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionRpc } from "./prescription-api.ts";
 import type { PrescriptionOperation } from "./prescription-state.ts";
 const uuid = z.string().uuid(),
@@ -225,7 +226,7 @@ export function createFulfillmentCorrectionsApi(
     p_pet_id: target.pet_id,
     p_dispense_id: target.dispense_id,
   };
-  async function rpc(name: string, args: Record<string, unknown>) {
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;
