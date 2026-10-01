@@ -126,7 +126,10 @@ alter table public.pets add constraint pets_id_client_id_key unique (id, client_
 do $$
 declare t text;
 begin
-  foreach t in array array['lab_results','consent_submissions','refill_requests','wellness_reminders','waitlist_entries','follow_up_instances'] loop
+  -- refill_requests is excluded: legacy_refill_read_only already refuses every
+  -- insert/update (even privileged), so a NOT VALID FK there could never check
+  -- a row; it would only leave a permanently unvalidated constraint.
+  foreach t in array array['lab_results','consent_submissions','wellness_reminders','waitlist_entries','follow_up_instances'] loop
     execute format(
       'alter table public.%I add constraint %I foreign key (pet_id, client_id) references public.pets(id, client_id) deferrable initially immediate not valid',
       t, t || '_pet_household_fkey'

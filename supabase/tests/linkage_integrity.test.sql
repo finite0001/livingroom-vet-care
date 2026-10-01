@@ -44,7 +44,7 @@ select throws_ok($$insert into public.lab_results(client_id,pet_id,lab_provider,
 select lives_ok($$insert into public.lab_results(client_id,pet_id,lab_provider,result_type) values ((select id from fx where kind='client'),(select id from fx where kind='pet'),'Synthetic','CBC')$$,'Matching patient/household lab result is accepted');
 select lives_ok($$insert into public.lab_results(client_id,pet_id,lab_provider,result_type) values ((select id from fx where kind='other'),null,'Synthetic','Household panel')$$,'Household-only row (null patient) is not checked');
 select throws_ok($$insert into public.consent_submissions(template_id,client_id,pet_id) values ((select id from fx where kind='template'),(select id from fx where kind='other'),(select id from fx where kind='pet'))$$,'23503',null,'Mismatched patient/household consent is refused');
-select is((select count(*)::int from pg_constraint where conname like '%\_pet_household_fkey' and not convalidated),6,'Six composite household FKs, NOT VALID until the owner validates');
+select is((select count(*)::int from pg_constraint where conname like '%\_pet_household_fkey' and not convalidated),5,'Five composite household FKs, NOT VALID until the owner validates');
 
 -- A18: vocabulary checks apply to new rows.
 select throws_ok($$insert into public.lab_results(client_id,lab_provider,result_type,status) values ((select id from fx where kind='client'),'Synthetic','CBC','pending')$$,'23514',null,'Unknown lab status casing is refused');
