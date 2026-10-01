@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
+import { asJson } from "../../../integrations/supabase/rpc.ts";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
 import {
   estimateDecisionBindingSchema,
@@ -146,7 +148,7 @@ export function createEstimateDecisionGrantApi(edge: EstimateGrantEdge, db: Pres
   function require(condition: unknown): asserts condition {
     if (!condition) throw new Error("Client link evidence does not match this estimate and staff member.");
   }
-  async function call(name: string, args: Record<string, unknown>) {
+  async function call<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await db.rpc(name, args);
     if (error) throw error;
     return data;
@@ -212,10 +214,10 @@ export function createEstimateDecisionGrantApi(edge: EstimateGrantEdge, db: Pres
       const head = estimateDecisionHeadSchema.parse(publicationHead);
       const receipt = activationReceiptSchema.parse(await call("record_native_estimate_decision_grant", {
         p_id: crypto.randomUUID(),
-        p_mutation: { kind: "activate", request: {
+        p_mutation: asJson({ kind: "activate", request: {
           grant_id: grant.id, expected_grant_head: grant.head, expected_publication_head: head,
           expected_context_hash: grant.capability.context_hash, attest_review: true,
-        } },
+        } }),
       }));
       require(receipt.actor_id === actorId && receipt.result.id === grant.id && receipt.result.state === "active");
       return receipt.result as EstimateGrantView;
