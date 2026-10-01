@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/auth-context";
+import type { LoginRedirectState } from "@/hub/lib/safe-redirect";
 
 interface Props {
   requiredRole?: string;
@@ -8,6 +10,7 @@ interface Props {
 
 export function ProtectedRoute({ requiredRole }: Props) {
   const { user, profile, roles, authError, refreshProfile, loading, hasRole, signOut } = useAuth();
+  const location = useLocation();
 
   // A staff member whose account was deactivated mid-session still holds a valid
   // token. DB RLS blocks their data, but without this they'd sit in the Hub UI
@@ -16,6 +19,13 @@ export function ProtectedRoute({ requiredRole }: Props) {
   useEffect(() => {
     if (!loading && deactivated) void signOut().catch(() => { /* Access remains denied if server sign-out fails. */ });
   }, [loading, deactivated, signOut]);
+
+  // Staff who follow an admin link land on Home; say why instead of silently
+  // swapping the page under them.
+  const roleDenied = !loading && !!user && !deactivated && !!profile && roles.length > 0 && !authError && !!requiredRole && !hasRole(requiredRole);
+  useEffect(() => {
+    if (roleDenied) toast.info("That page is for administrators", { id: "hub-admin-only" });
+  }, [roleDenied]);
 
   if (loading) {
     return (
@@ -26,7 +36,9 @@ export function ProtectedRoute({ requiredRole }: Props) {
   }
 
   if (!user || deactivated) {
-    return <Navigate to="/hub/login" replace />;
+    // Remember where they were headed so sign-in can return them there.
+    const state: LoginRedirectState = { from: `${location.pathname}${location.search}${location.hash}` };
+    return <Navigate to="/hub/login" replace state={state} />;
   }
 
   if (!profile || !roles.length || authError) {
@@ -42,7 +54,7 @@ export function ProtectedRoute({ requiredRole }: Props) {
     );
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
+  if (roleDenied) {
     return <Navigate to="/hub" replace />;
   }
 

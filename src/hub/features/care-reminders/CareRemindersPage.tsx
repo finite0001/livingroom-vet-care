@@ -18,6 +18,14 @@ import { careDb, selectClass } from "./model";
 import { ReminderDeliverySettings } from "./ReminderDeliverySettings";
 import { CareReminderSettings } from "./CareReminderSettings";
 import { denverCalendarDay, addCareDays } from "./date-tools";
+import { patientHref } from "@/hub/features/patient-360/model";
+
+// `QUEUED` (handed to the outbound delivery worker) is newer than the
+// generated enum types, so statuses are matched as plain strings.
+const APPOINTMENT_REMINDER_LABELS: Record<string, string> = {
+  PENDING: "Pending",
+  QUEUED: "Queued",
+};
 interface DueItem {
   id: string;
   kind: string;
@@ -149,7 +157,10 @@ export function CareRemindersPage() {
           more: (vaccineRows?.length ?? 0) > 20 || (labRows?.length ?? 0) > 20,
         };
       }
-      return { rows, more: false };
+      return {
+        rows,
+        more: (vaccineRows?.length ?? 0) > 20 || (labRows?.length ?? 0) > 20,
+      };
     },
   });
   const jobs = useQuery({
@@ -172,7 +183,7 @@ export function CareRemindersPage() {
         .select(
           "id,appointment_id,appointment_version,remind_at,channel,status",
         )
-        .eq("status", "PENDING")
+        .filter("status", "in", "(PENDING,QUEUED)")
         .order("remind_at")
         .limit(30);
       if (error) throw error;
@@ -280,12 +291,22 @@ export function CareRemindersPage() {
                 {row.kind}: {row.name} · due {row.due}
               </p>
               <p className="text-sm">{row.detail}</p>
-              <Link
-                className="text-sm text-primary underline"
-                to={`/hub/patient/${row.petId}`}
-              >
-                Open patient due plan
-              </Link>
+              {row.petId ? (
+                <Link
+                  className="text-sm text-primary underline"
+                  to={patientHref(
+                    row.petId,
+                    "medical",
+                    row.kind === "Lab" ? "labs" : "vaccine-plans",
+                  )}
+                >
+                  {row.kind === "Lab" ? "Open patient lab orders" : "Open patient due plan"}
+                </Link>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No patient is linked to this record.
+                </p>
+              )}
             </li>
           ))}
         </ul>
@@ -357,7 +378,7 @@ export function CareRemindersPage() {
             Existing appointment reminder queue
           </h2>
           <p className="text-sm text-muted-foreground">
-            Earliest 30 pending appointment reminders, shown independently of
+            Earliest 30 pending or queued appointment reminders, shown independently of
             the care due-date filter. No duplicate appointment jobs are
             generated here.
           </p>
@@ -371,7 +392,8 @@ export function CareRemindersPage() {
           )}
           {appointments.data?.map((a) => (
             <p key={a.id} className="rounded-md border p-3 text-sm">
-              {denverCalendarDay(a.remind_at)} · {a.channel} · {a.status} ·
+              {denverCalendarDay(a.remind_at)} · {a.channel} ·{" "}
+              {APPOINTMENT_REMINDER_LABELS[a.status] ?? a.status} ·
               appointment version {a.appointment_version} ·{" "}
               {deliveryState("appointment", a.id)}
             </p>

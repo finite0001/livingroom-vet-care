@@ -205,7 +205,7 @@ test("operations observes independent sections, exact cursors and safe workflow 
   ).toHaveAttribute("href", `/hub/conversation/${id}`);
   await expect(
     page.getByRole("link", { name: "Open household billing" }),
-  ).toHaveAttribute("href", `/hub/client/${id}`);
+  ).toHaveAttribute("href", `/hub/client/${id}?tab=billing&section=invoices`);
   await page
     .getByRole("button", { name: "Next outgoing work page", exact: true })
     .click();

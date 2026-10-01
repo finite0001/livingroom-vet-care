@@ -9,6 +9,7 @@ import { useAuth } from "@/hub/contexts/auth-context";
 import { useUnreadCount } from "@/hub/hooks/use-conversations";
 import {
   adminItems,
+  isNavItemActive,
   settingsItem,
   toolItems,
   workspaceItems,
@@ -29,13 +30,8 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
 
-  const isActive = (path: string, exact?: boolean) => {
-    if (exact) return location.pathname === path;
-    return location.pathname.startsWith(path);
-  };
-
   const renderItem = (item: NavItem & { badge?: number }) => {
-    const active = isActive(item.path, item.exact);
+    const active = isNavItemActive(item, location.pathname);
     return (
       <button
         key={item.path}
