@@ -7,7 +7,7 @@ export interface EstimateDecisionStaffTransportOptions {
   getSession:()=>Promise<EstimateDecisionStaffSession|null>;
   fetcher?:typeof fetch;
 }
-const procedures=new Set(['read_native_estimate_decision_state','read_native_estimate_decisions','preview_native_estimate_decision_grant','record_native_estimate_witnessed_decision','recover_native_estimate_witnessed_decision','close_native_estimate_witnessed_decision']);
+const procedures=new Set(['read_native_estimate_decision_state','read_native_estimate_decisions','preview_native_estimate_decision_grant','read_native_estimate_decision_grants','record_native_estimate_decision_grant','record_native_estimate_witnessed_decision','recover_native_estimate_witnessed_decision','close_native_estimate_witnessed_decision']);
 const unavailable=()=>new Error('Staff decision access could not be verified. Return to the original account to recover its saved request.');
 /** Capture one verified actor JWT before dispatch; never delegate writes to mutable global auth. */
 export function createActorPinnedEstimateDecisionRpc(options:EstimateDecisionStaffTransportOptions):PrescriptionRpc {
