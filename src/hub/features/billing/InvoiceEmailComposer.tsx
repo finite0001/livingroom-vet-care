@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { captureInvoiceEmail, invoiceEmailDb as db } from "./invoice-email-api";
+import {
+  captureInvoiceEmail,
+  invoiceEmailDb as db,
+  parseInvoiceEmailPreview,
+} from "./invoice-email-api";
 import {
   invoiceEmailArgs,
   parseInvoiceEmail,
@@ -160,11 +164,12 @@ function InvoiceEmailSession({
     queryKey: ["invoice-email-preview", actorId, clientId, invoiceId],
     retry: false,
     queryFn: async () => {
-      const { data, error } = await db.rpc("read_invoice_email_preview", {
+      const { data: raw, error } = await db.rpc("read_invoice_email_preview", {
         p_invoice_id: invoiceId,
         p_client_id: clientId,
       });
       if (error) throw error;
+      const data = parseInvoiceEmailPreview(raw);
       if (
         !data ||
         data.client_id !== clientId ||
