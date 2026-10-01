@@ -17,6 +17,7 @@ import type {
 } from "../../supabase/functions/_shared/native-return-reconciliation-contract.ts";
 import type { PrescriptionOperation } from "../../src/hub/features/prescriptions/prescription-state.ts";
 import type { PrescriptionRpc } from "../../src/hub/features/prescriptions/prescription-api.ts";
+import type { RpcName } from "../../src/integrations/supabase/rpc.ts";
 const id = (n: number) =>
     `f9160000-0000-4000-8000-${String(n).padStart(12, "0")}`,
   hash = "a".repeat(64);
@@ -151,7 +152,7 @@ function fixture() {
   return { f, events, t, actor, read, preview, op, receipt, intent };
 }
 function client(
-  handler: (name: string, args: Record<string, unknown>) => unknown,
+  handler: (name: RpcName, args: Record<string, unknown>) => unknown,
 ): PrescriptionRpc {
   return {
     rpc: async (name, args) => ({

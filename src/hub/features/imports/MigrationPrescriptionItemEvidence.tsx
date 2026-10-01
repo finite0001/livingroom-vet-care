@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { createMigrationPrescriptionItemApi } from "./migration-prescription-item-api";
-import type { MigrationBinding, MigrationRpc } from "./migration-run-api";
+import type { MigrationBinding } from "./migration-run-api";
 import type { MigrationItem } from "./migration-items-api";
 interface Props { actor: string; binding: MigrationBinding; item: MigrationItem }
 export function MigrationPrescriptionItemEvidence({ actor, binding, item }: Props) {
-  const api = useMemo(() => createMigrationPrescriptionItemApi(supabase as unknown as MigrationRpc, actor), [actor]);
+  const api = useMemo(() => createMigrationPrescriptionItemApi(supabase, actor), [actor]);
   const [before, setBefore] = useState<number | null>(null);
   const [previous, setPrevious] = useState<(number | null)[]>([]);
   const query = useQuery({ queryKey: ["migration-prescription-item-evidence", actor, binding.id, item.evidence_hash, before], retry: false,

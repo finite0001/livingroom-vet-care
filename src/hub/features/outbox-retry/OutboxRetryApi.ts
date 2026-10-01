@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import {
   action,
   actions,
@@ -6,15 +7,9 @@ import {
   outboxId,
   type RetryIntent,
 } from "./OutboxRetryState";
-interface Client {
-  rpc(
-    name: string,
-    args: Record<string, unknown>,
-  ): PromiseLike<{ data: unknown; error: unknown }>;
-}
-const db = supabase as unknown as Client;
-async function rpc(name: string, args: Record<string, unknown>) {
-  const { data, error } = await db.rpc(name, args);
+type Fns = Database["public"]["Functions"];
+async function rpc<N extends keyof Fns>(name: N, args: Fns[N]["Args"]) {
+  const { data, error } = await supabase.rpc(name, args);
   if (error) throw error;
   return data;
 }

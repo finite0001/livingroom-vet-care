@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { createMigrationIdentityApi } from "./migration-identity-api";
-import type { MigrationBinding, MigrationRpc } from "./migration-run-api";
+import type { MigrationBinding } from "./migration-run-api";
 import type { MigrationItem } from "./migration-items-api";
 interface Props { actor: string; binding: MigrationBinding; item: MigrationItem }
 export function MigrationIdentityEvidence({ actor, binding, item }: Props) {
-  const api = useMemo(() => createMigrationIdentityApi(supabase as unknown as MigrationRpc, actor), [actor]);
+  const api = useMemo(() => createMigrationIdentityApi(supabase, actor), [actor]);
   const query = useQuery({ queryKey: ["migration-identity-evidence", actor, binding.id, item.evidence_hash], retry: false, queryFn: () => api.read(binding, item) });
   const receipt = query.data?.approval;
   return <section aria-label="Identity approval evidence" className="mt-3 space-y-3 border-t pt-3">

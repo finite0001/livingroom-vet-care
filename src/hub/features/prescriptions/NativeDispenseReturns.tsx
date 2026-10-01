@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import type { PrescriptionRpc } from "./prescription-api";
 import type { NativeDispense } from "./fulfillment-api";
 import { correctionEqual } from "./fulfillment-corrections-api";
 import {
@@ -94,7 +93,7 @@ function ReturnsWorkspace({
   const api = useMemo(
       () =>
         createNativeReconciliationApi(
-          supabase as unknown as PrescriptionRpc,
+          supabase,
           actor,
           target,
         ),
@@ -860,7 +859,7 @@ function ReturnDiscrepancies({
   const api = useMemo(
     () =>
       createNativeReturnDiscrepancyApi(
-        supabase as unknown as PrescriptionRpc,
+        supabase,
         actor,
         target,
       ),

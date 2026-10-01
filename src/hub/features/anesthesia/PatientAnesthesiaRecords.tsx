@@ -2,7 +2,6 @@ import { AnesthesiaHistorySnapshot } from "./AnesthesiaHistorySnapshot";
 import { AnesthesiaDrugAdministrations } from "./AnesthesiaDrugAdministrations";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -25,11 +24,11 @@ import {
   anesthesiaDraft,
   anesthesiaValues,
   emptyAnesthesia,
-  type AnesthesiaDatabase,
+  parseAnesthesiaRecord,
   type AnesthesiaDraft,
   type AnesthesiaRecord,
 } from "./model";
-const db = supabase as unknown as SupabaseClient<AnesthesiaDatabase>;
+const db = supabase;
 interface PatientAnesthesiaRecordsProps {
   petId: string;
   clientId: string;
@@ -89,7 +88,7 @@ export function PatientAnesthesiaRecords({
         .order("id")
         .range(page * 20, page * 20 + 20);
       if (error) throw error;
-      return data;
+      return data.map(parseAnesthesiaRecord);
     },
   });
   const documents = useQuery({
@@ -212,7 +211,7 @@ export function PatientAnesthesiaRecords({
         p_values: anesthesiaValues(form) as unknown as Json,
       });
       if (error) throw error;
-      adopt(data);
+      adopt(parseAnesthesiaRecord(data));
       setMessage("Anesthesia draft saved.");
       await refresh(data.id);
     });
@@ -235,7 +234,7 @@ export function PatientAnesthesiaRecords({
         .eq("pet_id", petId)
         .single();
       if (error) throw error;
-      adopt(data);
+      adopt(parseAnesthesiaRecord(data));
       setAddendum("");
     });
   }
@@ -770,7 +769,7 @@ export function PatientAnesthesiaRecords({
                       },
                     );
                     if (error) throw error;
-                    adopt(data);
+                    adopt(parseAnesthesiaRecord(data));
                     setConfirmSign(false);
                     setMessage("Anesthesia record signed.");
                     await refresh(data.id);

@@ -10,7 +10,6 @@ import {
   returnPolicyRequestSchema,
   type ReturnPolicy,
 } from "./fulfillment-returns-api";
-import type { PrescriptionRpc } from "./prescription-api";
 import { usePrescriptionOperation } from "./usePrescriptionOperation";
 import { PrescriptionOperationControls } from "./PrescriptionOperationControls";
 export function NativeReturnPolicySettings() {
@@ -32,7 +31,7 @@ function PolicyWorkspace({ actor, canConfigure }: PolicyWorkspaceProps) {
     api = useMemo(
       () =>
         createNativeReturnPolicyApi(
-          supabase as unknown as PrescriptionRpc,
+          supabase,
           actor,
         ),
       [actor],

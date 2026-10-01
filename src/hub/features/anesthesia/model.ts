@@ -1,4 +1,5 @@
-import type { Database, Json, Tables } from "@/integrations/supabase/types";
+import { z } from "zod";
+import type { Json } from "@/integrations/supabase/types";
 import { denverDateTime, denverInstant } from "../clinical/editor-state.ts";
 export interface MonitoringObservation {
   at: string;
@@ -61,57 +62,46 @@ export interface AnesthesiaDrugAdministration {
   created_by: string;
   created_at: string;
 }
-interface Table<Row> {
-  Row: { [K in keyof Row]: Row[K] };
-  Insert: never;
-  Update: never;
-  Relationships: [];
-}
-export interface AnesthesiaDatabase {
-  public: {
-    Tables: {
-      patient_anesthesia_records: Table<AnesthesiaRecord>;
-      anesthesia_record_revisions: Table<AnesthesiaRevision>;
-      anesthesia_record_addenda: Table<AnesthesiaAddendum>;
-      anesthesia_drug_administrations: Table<AnesthesiaDrugAdministration>;
-    };
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
-    Functions: {
-      save_patient_anesthesia_record: {
-        Args: {
-          p_id: string;
-          p_pet_id: string;
-          p_expected_version: number | null;
-          p_values: Json;
-        };
-        Returns: AnesthesiaRecord;
-      };
-      sign_patient_anesthesia_record: {
-        Args: { p_id: string; p_pet_id: string; p_expected_version: number };
-        Returns: AnesthesiaRecord;
-      };
-      add_anesthesia_record_addendum: {
-        Args: {
-          p_id: string;
-          p_record_id: string;
-          p_pet_id: string;
-          p_content: string;
-        };
-        Returns: AnesthesiaAddendum;
-      };
-      record_anesthesia_drug_administration: {
-        Args: {
-          p_id: string;
-          p_record_id: string;
-          p_pet_id: string;
-          p_request: Json;
-        };
-        Returns: Tables<"patient_treatments">;
-      };
-    };
-  };
+// Mirrors public.anesthesia_validate: the jsonb collections are checked at the
+// API boundary so a malformed row fails loudly instead of rendering partially.
+const observationSchema = z.object({
+  at: z.string(),
+  label: z.string(),
+  value: z.number(),
+  unit: z.string(),
+  notes: z.string(),
+});
+const eventSchema = z.object({
+  at: z.string(),
+  kind: z.string(),
+  description: z.string(),
+});
+const anesthesiaRecordSchema = z.object({
+  id: z.string(),
+  pet_id: z.string(),
+  status: z.string(),
+  version: z.number(),
+  created_by: z.string(),
+  updated_by: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  signed_by: z.string().nullable(),
+  signed_at: z.string().nullable(),
+  procedure_name: z.string(),
+  started_at: z.string(),
+  ended_at: z.string().nullable(),
+  team: z.string(),
+  assessment: z.string(),
+  plan: z.string(),
+  recovery_notes: z.string(),
+  observations: z.array(observationSchema),
+  events: z.array(eventSchema),
+  source: z.string(),
+  source_description: z.string(),
+  original_document_id: z.string().nullable(),
+});
+export function parseAnesthesiaRecord(value: unknown): AnesthesiaRecord {
+  return anesthesiaRecordSchema.parse(value) as AnesthesiaRecord;
 }
 export interface ObservationDraft {
   at: string;

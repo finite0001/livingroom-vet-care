@@ -29,7 +29,6 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { formatDenverDayLabel, formatDenverTime, denverLocal } from "@/hub/features/scheduling/time";
 import {
@@ -42,21 +41,7 @@ import { useAppointmentStatus } from "@/hub/features/scheduling/use-appointment-
 import { cn } from "@/lib/utils";
 import { householdHref, patientHref } from "@/hub/features/patient-360/model";
 
-// The newest native tables (e.g. native_refills) are RPC-only and not in the
-// generated types, so the refill count uses the same permissive cast as the
-// refill API rather than a typed table select.
-interface Database {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      [key: string]: { Args: Record<string, unknown>; Returns: unknown };
-    };
-  };
-}
-const client = supabase as unknown as SupabaseClient<Database>;
+const client = supabase;
 
 const TERMINAL_STATUSES = ["COMPLETED", "CANCELLED", "NO_SHOW"];
 

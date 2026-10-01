@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionOperation } from "../prescriptions/prescription-state.ts";
 import { prescriptionUsageSchema } from "../prescriptions/prescription-api.ts";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
@@ -54,7 +55,7 @@ function checkEvent(value: unknown): NativeRefillEvent {
 export { refillSchema as nativeRefillSchema, eventV2Schema as nativeRefillFulfillmentEventSchema, checkEvent as parseNativeRefillEvent };
 export function createNativeRefillApi(client: PrescriptionRpc, actor: string) {
   uuid.parse(actor);
-  async function rpc(name: string, args: Record<string, unknown>) { const { data, error } = await client.rpc(name, args); if (error) throw error; return data; }
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) { const { data, error } = await client.rpc(name, args); if (error) throw error; return data; }
   function parseOperation(op: Readonly<PrescriptionOperation>) { uuid.parse(op.id); if (op.kind === "create_refill") return refillCreateSchema.parse(op.payload); if (op.kind === "transition_refill") return refillTransitionSchema.parse(op.payload); throw new Error("Unknown refill operation"); }
   function receipt(value: unknown, op: Readonly<PrescriptionOperation>) {
     const request = parseOperation(op), r = receiptSchema.parse(value), e = checkEvent(r.result), a = e.after;

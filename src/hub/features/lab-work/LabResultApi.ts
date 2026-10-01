@@ -1,27 +1,18 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { resultHistory, type PendingLabAction } from "./LabResultState";
-interface FunctionContract {
-  Args: Record<string, Json>;
-  Returns: Json;
+type Fns = Database["public"]["Functions"];
+const mutations = {
+  source: "review_lab_source_account",
+  mapping: "review_lab_order_source",
+  link: "link_lab_report_version",
+  ack: "acknowledge_lab_report",
+} as const;
+type LabMutation = (typeof mutations)[keyof typeof mutations];
+function mutate<N extends LabMutation>(name: N, args: Fns[N]["Args"]) {
+  return supabase.rpc(name, args);
 }
-interface ResultDatabase {
-  public: {
-    Tables: Database["public"]["Tables"];
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
-    Functions: {
-      read_lab_result_history: FunctionContract;
-      review_lab_source_account: FunctionContract;
-      review_lab_order_source: FunctionContract;
-      link_lab_report_version: FunctionContract;
-      acknowledge_lab_report: FunctionContract;
-    };
-  };
-}
-const db = supabase as unknown as SupabaseClient<ResultDatabase>;
+const db = supabase;
 export async function readLabResults(pet: string, order: string) {
   const { data, error } = await db.rpc("read_lab_result_history", {
     p_pet_id: pet,
@@ -39,13 +30,9 @@ export async function submitLabAction(p: PendingLabAction) {
     if (error) throw error;
     return data as unknown;
   }
-  const functions = {
-    source: "review_lab_source_account",
-    mapping: "review_lab_order_source",
-    link: "link_lab_report_version",
-    ack: "acknowledge_lab_report",
-  } as const;
-  const { data, error } = await db.rpc(functions[p.kind], p.args);
+  const name = mutations[p.kind];
+  // p.args is zod-validated per kind against these signatures (LabResultState).
+  const { data, error } = await mutate(name, p.args as Fns[typeof name]["Args"]);
   if (error) throw error;
   return data;
 }

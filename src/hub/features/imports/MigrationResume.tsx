@@ -3,11 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { createMigrationResumeApi } from "./migration-resume-api";
 import type { MigrationResumeIdentity, MigrationResumeState } from "./migration-resume-api";
-import type { MigrationRpc } from "./migration-run-api";
 interface Props extends MigrationResumeIdentity { actor: string; onDirtyChange: (dirty: boolean) => void; onUpdated: () => void }
 export function MigrationResume({ actor, manifest_id, scope_id, binding_id, onDirtyChange, onUpdated }: Props) {
   const api = useMemo(() => createMigrationResumeApi({
-    rpc: (name, args) => (supabase as unknown as MigrationRpc).rpc(name, args),
+    rpc: (name, args) => supabase.rpc(name, args),
     async readGenericRun(id, owner) {
       const { data, error } = await supabase.from("ezyvet_import_runs").select("id,requested_by,source_origin,source_site_uid,resource,status,next_page,retry_after,lease_until").eq("id", id).eq("requested_by", owner).maybeSingle();
       if (error) throw error; return data;

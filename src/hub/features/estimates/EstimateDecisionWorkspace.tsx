@@ -4,7 +4,6 @@ import {Button} from '@/components/ui/button';
 import {supabase} from '@/integrations/supabase/client';
 import {useAuth} from '@/hub/contexts/auth-context';
 import type {EstimateDraft} from './estimate-api';
-import type {PrescriptionRpc} from '../prescriptions/prescription-api';
 import {createEstimatePublicationApi,createEstimatePublicationEdge} from './publication-api';
 import {createEstimateDecisionStaffApi,type StaffEstimateDecisionPage,type StaffEstimateDecisionState,type EstimateWitnessOperation,type EstimateWitnessReceipt} from './decision-staff-api';
 import {createActorPinnedEstimateDecisionRpc} from './decision-staff-transport';
@@ -18,7 +17,7 @@ export function EstimateDecisionWorkspace(props:Props){const {user,profile}=useA
 function StaffWorkspace({draft,actorId,onDirtyChange}:StaffProps){
  const target=useMemo(()=>({estimate_id:draft.id,client_id:draft.client_id,pet_id:draft.pet_id}),[draft.id,draft.client_id,draft.pet_id]);
  const api=useMemo(()=>createEstimateDecisionStaffApi(createActorPinnedEstimateDecisionRpc({baseUrl:import.meta.env.VITE_SUPABASE_URL,publishableKey:import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,actorId,getSession:async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw new Error('Staff session unavailable');return data.session;}}),actorId,target),[actorId,target]);
- const documents=useMemo(()=>createEstimatePublicationApi(supabase as unknown as PrescriptionRpc,actorId,target,createEstimatePublicationEdge(import.meta.env.VITE_SUPABASE_URL,async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw error;if(data.session?.user.id!==actorId)throw new Error('Staff session changed');return data.session.access_token;},import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)),[actorId,target]);
+ const documents=useMemo(()=>createEstimatePublicationApi(supabase,actorId,target,createEstimatePublicationEdge(import.meta.env.VITE_SUPABASE_URL,async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw error;if(data.session?.user.id!==actorId)throw new Error('Staff session changed');return data.session.access_token;},import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)),[actorId,target]);
  const grants=useMemo(()=>createEstimateDecisionGrantApi(createEstimateDecisionGrantEdge(import.meta.env.VITE_SUPABASE_URL,async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw error;if(data.session?.user.id!==actorId)throw new Error('Staff session changed');return data.session.access_token;},import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),createActorPinnedEstimateDecisionRpc({baseUrl:import.meta.env.VITE_SUPABASE_URL,publishableKey:import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,actorId,getSession:async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw new Error('Staff session unavailable');return data.session;}}),actorId,target),[actorId,target]);
  const linkPreview=useCallback(async()=>{const current=await api.state();if(!current.current_publication_id||current.current_decision)throw new Error('No undecided current publication');return (await api.preview(current.current_publication_id)) as EstimateGrantPreview;},[api]);
  const [linkDirty,setLinkDirty]=useState(false);

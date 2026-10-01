@@ -9,7 +9,7 @@ import { useRefillApi, useRefillAssigneeSearch, useRefillClientSearch, useRefill
 import { usePrescriptionOperation } from "../prescriptions/usePrescriptionOperation";
 import { PrescriptionOperationControls } from "../prescriptions/PrescriptionOperationControls";
 import { createPrescriptionApi } from "../prescriptions/prescription-api";
-import type { PrescriptionCursor, PrescriptionDraft, PrescriptionRpc } from "../prescriptions/prescription-api";
+import type { PrescriptionCursor, PrescriptionDraft } from "../prescriptions/prescription-api";
 import { refillAuthorizationIdSchema, refillCreateSchema, refillReasonSchema, refillTransitionSchema } from "./refill-api";
 import type { NativeRefill, NativeRefillCursor, NativeRefillEvent, NativeRefillLinkPreview, NativeRefillRead } from "./refill-api";
 import { householdHref, patientHref } from "@/hub/features/patient-360/model";
@@ -25,7 +25,7 @@ export function NativeRefillEditor({ actor, disabled, initial, onDirtyChange, on
   const [action, setAction] = useState<"assign" | "link" | "close" | "deny" | null>(null), [assignedTo, setAssignedTo] = useState(""), [staffSearch, setStaffSearch] = useState("");
   const [orders, setOrders] = useState<PrescriptionDraft[]>([]), [orderCursor, setOrderCursor] = useState<PrescriptionCursor | null>(null), [ordersLoaded, setOrdersLoaded] = useState(false), [authorizationId, setAuthorizationId] = useState(""), [preview, setPreview] = useState<NativeRefillLinkPreview | null>(null);
   const patientId = row?.pet_id ?? petId;
-  const prescriptionApi = useMemo(() => patientId ? createPrescriptionApi(supabase as unknown as PrescriptionRpc, actor, patientId) : null, [actor, patientId]);
+  const prescriptionApi = useMemo(() => patientId ? createPrescriptionApi(supabase, actor, patientId) : null, [actor, patientId]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const operation = usePrescriptionOperation({ actor, patientId, execute: api.execute, recover: api.recover, onConfirmed: receipt => { setRow(receipt.result.after); setDisclosure(null); setEvents(previous => [receipt.result, ...previous.filter(e => e.id !== receipt.result.id)]); setAction(null); setAck(false); setPreview(null); setReason(""); onSaved(); } });
   const dirty = !row || action !== null || operation.dirty;

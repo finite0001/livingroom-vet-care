@@ -14,6 +14,12 @@ import { RecordReleaseArtifact } from "./RecordReleaseArtifact";
 import {
   releases,
   readRelease,
+  parseReleaseCandidates,
+  parseSelectAllSources,
+  parseReleasePreview,
+  parseReleaseRow,
+  previewRpcArgs,
+  confirmRpcArgs,
   sourceLabels,
   type SourceKind,
   type ReleaseConfirmArgs,
@@ -119,11 +125,12 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
     refetchOnReconnect: false,
     retry: false,
     queryFn: async () => {
-      const { data, error } = await releases.rpc(
+      const { data: raw, error } = await releases.rpc(
         "list_record_release_sources_v13",
         { p_pet_id: petId, p_offset: sourcePage * 100 },
       );
       if (error) throw error;
+      const data = parseReleaseCandidates(raw);
       if (
         !data ||
         Array.isArray(data) ||
@@ -319,11 +326,12 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
   };
   const selectAllEligible = () =>
     run(async () => {
-      const { data, error } = await releases.rpc(
+      const { data: raw, error } = await releases.rpc(
         "select_all_record_release_sources_v13",
         { p_pet_id: petId },
       );
       if (error) throw error;
+      const data = parseSelectAllSources(raw);
       if (
         !data ||
         !data.selection ||
@@ -358,11 +366,12 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
         p_recipient: recipient,
         p_selection: structuredClone(selection),
       };
-      const { data, error } = await releases.rpc(
+      const { data: raw, error } = await releases.rpc(
         "preview_record_release_v13",
-        args,
+        previewRpcArgs(args),
       );
       if (error) throw error;
+      const data = parseReleasePreview(raw);
       if (!data || data.snapshot.schema_version !== 13)
         throw new Error(
           "Current source-aware release preview is unavailable. Preserve selections and retry.",
@@ -395,9 +404,9 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
       };
       pendingRef.current = args;
       setPending(args);
-      const { data, error } = await releases.rpc(
+      const { data: raw, error } = await releases.rpc(
         "confirm_record_release",
-        args,
+        confirmRpcArgs(args),
       );
       if (error) {
         if (!pendingUncertain.current && ["PT409", "23514", "42501"].includes(error.code)) {
@@ -411,6 +420,7 @@ function ReleaseWorkspace({ petId, onDirtyChange }: PatientRecordReleasesProps) 
         throw error;
       }
       pendingUncertain.current = true; // A malformed success cannot establish whether the write committed.
+      const data = parseReleaseRow(raw);
       if (!data || data.id !== args.p_id || data.created_by !== user.id || data.pet_id !== args.p_pet_id || data.client_id !== args.p_client_id || data.channel !== args.p_channel || data.recipient !== args.p_recipient || data.source_hash !== args.p_reviewed_hash || canonicalReleaseValue(data.snapshot) !== canonicalReleaseValue(args.p_reviewed_snapshot) || canonicalReleaseValue(data.selection) !== canonicalReleaseValue(args.p_selection)) throw new Error("Saved release could not be matched to this exact reviewed request. Preserve the original confirmation and retry it.");
       renderRecordRelease({ preview: data });
       pendingUncertain.current = false;

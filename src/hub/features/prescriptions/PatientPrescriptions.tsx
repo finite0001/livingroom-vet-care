@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createPrescriptionApi, prescriptionFieldsSchema } from "./prescription-api";
-import type { PrescriptionAuthorization, PrescriptionCursor, PrescriptionDraft, PrescriptionFields, PrescriptionRpc, PrescriptionSignPreview, PrescriberEntry } from "./prescription-api";
+import type { PrescriptionAuthorization, PrescriptionCursor, PrescriptionDraft, PrescriptionFields, PrescriptionSignPreview, PrescriberEntry } from "./prescription-api";
 import { PrescriptionEditor } from "./PrescriptionEditor";
 import type { PrescriptionDraftFields } from "./PrescriptionEditor";
 import { emptyPrescriptionDraft } from "./prescription-draft";
@@ -26,7 +26,7 @@ export function PatientPrescriptions(props: Props) {
 interface WorkspaceProps extends Props { actor: string; isAdmin: boolean; isDvm: boolean }
 function PrescriptionWorkspace({ petId, clientId, actor, isAdmin, isDvm, inactive, disabled, onDirtyChange }: WorkspaceProps) {
   const releaseCache = useQueryClient();
-  const api = useMemo(() => createPrescriptionApi(supabase as unknown as PrescriptionRpc, actor, petId), [actor, petId]);
+  const api = useMemo(() => createPrescriptionApi(supabase, actor, petId), [actor, petId]);
   const alive = useRef(true), sequence = useRef(0), readLock = useRef(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const [drafts, setDrafts] = useState<PrescriptionDraft[]>([]), [cursor, setCursor] = useState<PrescriptionCursor | null>(null), [loaded, setLoaded] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
