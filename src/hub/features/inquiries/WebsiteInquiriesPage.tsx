@@ -213,6 +213,20 @@ function InquiryDetail({ id, actor }: DetailProps) {
       return detailSchema.parse(data);
     },
   });
+  // Notes written on the retired Contact submissions page (A19). Read-only;
+  // New inquiries is the single triage surface.
+  const legacyNotes = useQuery({
+    queryKey: ["website-inquiries", actor, id, "legacy-notes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contact_submissions")
+        .select("staff_notes")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.staff_notes ?? null;
+    },
+  });
   const profiles = useQuery({
     queryKey: ["website-inquiries", actor, "staff"],
     queryFn: async () => {
@@ -304,6 +318,12 @@ function InquiryDetail({ id, actor }: DetailProps) {
             : ""}
         </p>
         <p className="mt-3 whitespace-pre-wrap break-words">{s.message}</p>
+        {legacyNotes.data && (
+          <div className="mt-3 rounded bg-muted p-3 text-sm">
+            <p className="font-medium">Earlier staff notes</p>
+            <p className="whitespace-pre-wrap break-words">{legacyNotes.data}</p>
+          </div>
+        )}
       </article>
       {error && (
         <p role="alert">
