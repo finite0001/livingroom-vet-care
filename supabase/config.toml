@@ -5,6 +5,10 @@ verify_jwt = true
 [functions.ezyvet-import]
 verify_jwt = true
 
+# Administrator JWT required at the gateway; the handler also checks the caller's admin role.
+[functions.invite-staff]
+verify_jwt = true
+
 # Provider-signed webhooks authenticate their raw payloads, not Supabase JWTs.
 [functions.resend-webhook]
 verify_jwt = false

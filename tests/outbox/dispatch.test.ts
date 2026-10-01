@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  dispatchBatch,
   dispatchOne,
   type OutboxRow,
   type OutboxEnvironment,
@@ -251,4 +252,45 @@ test("database rejection of reviewed conversation proof prevents provider execut
   f.setStartState("failed");
   assert.equal((await dispatchOne(db, f.env, f.transport)).state, "failed");
   assert.equal(f.requests.length, 0);
+});
+
+function queued(f: ReturnType<typeof fixture>, rows: number) {
+  let claims = 0;
+  return {
+    db: { rpc: async (name: string, args?: Record<string, unknown>) =>
+      name === "claim_communication" && ++claims > rows ? { data: null, error: null } : f.db.rpc(name, args) },
+    claims: () => claims,
+  };
+}
+test("batch dispatch drains accepted rows until the queue is empty", async () => {
+  const f = fixture(), q = queued(f, 3);
+  const summary = await dispatchBatch(q.db, f.env, f.transport);
+  assert.equal(summary.processed, true);
+  assert.equal(summary.items, 3);
+  assert.deepEqual(summary.states, { accepted: 3 });
+  assert.equal(summary.stopped, "empty");
+  assert.equal(f.requests.length, 3);
+  assert.equal(q.claims(), 4);
+});
+test("batch dispatch stops on the first non-accepted row so a fault fails one row per call", async () => {
+  const f = fixture(), q = queued(f, 10);
+  f.env.RESEND_FROM = "";
+  const summary = await dispatchBatch(q.db, f.env, f.transport);
+  assert.equal(summary.items, 1);
+  assert.deepEqual(summary.states, { failed: 1 });
+  assert.equal(summary.stopped, "halted");
+  assert.equal(q.claims(), 1);
+  assert.equal(f.requests.length, 0);
+});
+test("batch dispatch honours the item cap and the disabled gate", async () => {
+  const f = fixture(), q = queued(f, 100);
+  const capped = await dispatchBatch(q.db, f.env, f.transport, { maxItems: 5 });
+  assert.equal(capped.items, 5);
+  assert.equal(capped.stopped, "item_cap");
+  const off = fixture();
+  off.env.OUTBOUND_DELIVERY_MODE = "disabled";
+  const disabled = await dispatchBatch(off.db, off.env, off.transport);
+  assert.equal(disabled.processed, false);
+  assert.equal(disabled.disabled, true);
+  assert.equal(off.calls.length, 0);
 });

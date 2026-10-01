@@ -2,7 +2,7 @@ import { authenticateWorker } from "../_shared/worker-auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  dispatchOne,
+  dispatchBatch,
   type OutboxEnvironment,
 } from "../_shared/outbox-dispatch.ts";
 import { SmsProviderConfigurationError } from "../_shared/cloudtalk-sms.ts";
@@ -50,7 +50,7 @@ serve(async (req) => {
     ] as const)
       env[name] = Deno.env.get(name);
     const db = createClient(Deno.env.get("SUPABASE_URL")!, key);
-    return json(await dispatchOne(db, env));
+    return json(await dispatchBatch(db, env));
   } catch (error) {
     // Nothing was claimed: an unknown SMS_PROVIDER stops the worker before any row is touched.
     if (error instanceof SmsProviderConfigurationError) {

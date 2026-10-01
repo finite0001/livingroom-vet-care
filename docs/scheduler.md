@@ -10,6 +10,9 @@ The database scheduler (migration `20260922120000_b1_scheduler.sql`, design in `
 | `queue-reminders` | every 15 minutes | `queue_due_reminders()`: appointment, vaccine and lab reminders into `communication_outbox` |
 | `cleanup-abandoned-attachment` | every 30 minutes | attachment housekeeping |
 | `scheduler-reconcile` | every minute | database only; records the HTTP outcome of each request |
+| `purge-expired-email-payloads` | daily, 09:17 UTC | database only (migration `20260930130000`); `scheduler_purge_expired_email_payloads()` clears frozen release/invoice email bytes 90 days after an abandoned request or a provider-accepted send. Never pending, failed or uncertain sends; hashes, manifests and audit rows are kept. Its outcome is in `cron.job_run_details`, not on the ops card. |
+
+Each call posts `{}` with a 30 s `pg_net` timeout (`20260930130000`; it was 5 s). The queue workers (`dispatch-outbox`, `process-inbound`, `process-stripe-events`, `cleanup-abandoned-attachment`) each process a bounded batch per call: they claim until the queue is empty, 25 items, or a 20 s budget, and stop early at the first failed or uncertain item, so a provider or configuration fault still fails at most one item per call. Their response body is a count summary (`items`, per-state counts, `stopped`, `elapsed_ms`); reconcile records only the HTTP status.
 
 Until both Vault secrets exist, every HTTP job records `configuration_missing` (at most once an hour per job) and calls nothing. That is the current hosted state.
 
@@ -26,7 +29,7 @@ No value belongs in the repository, a migration, a workflow, chat, or shell hist
 
 Setting the secrets starts roughly 134,000 Edge invocations a month (B1 contract §3). It does not send messages by itself: `queue-reminders` stays disabled unless `REMINDER_SCHEDULER_ENABLED=true` and `APP_ENV` is `staging` or `production`, reminder policies default disabled, and provider delivery keeps its own gates. Confirm first:
 
-1. The Edge functions listed above are deployed from the reviewed commit (`docs/hosted-edge-commissioning.md`).
+1. The Edge functions listed above are deployed from the reviewed commit (`docs/hosted-edge-commissioning.md`). **`process-stripe-events` in particular must be deployed before the secrets exist**, or its job records a 404 every minute; it is safe to deploy while Stripe is off (it answers `{"state":"disabled"}`).
 2. Provider gates are where you intend them. Texts go through CloudTalk (`+1 720-764-6677`); Twilio remains in code but is not used.
 3. Dr. Edler has reviewed reminder wording (`docs/clinical-staff-acceptance-register.json`, `C-PILOT-08`) before any reminder policy is enabled.
 

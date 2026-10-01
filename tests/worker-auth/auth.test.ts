@@ -84,11 +84,11 @@ function endpoint(name: string) {
       calls.push(key);
       return { rpc: async () => ({ data: [], error: null }) };
     },
-    dispatchOne: async () => {
+    dispatchBatch: async () => {
       calls.push("dispatch");
       return { processed: false };
     },
-    processOneInbound: async () => {
+    processInboundBatch: async () => {
       calls.push("inbound");
       return { processed: false };
     },
