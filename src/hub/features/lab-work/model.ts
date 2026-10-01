@@ -1,4 +1,4 @@
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 export interface LabValues {
   test_name: string;
   status: string;
@@ -43,47 +43,6 @@ export interface LabRevision {
   reason: string;
   actor_id: string;
   recorded_at: string;
-}
-interface Table<Row> {
-  Row: { [K in keyof Row]: Row[K] };
-  Insert: never;
-  Update: never;
-  Relationships: [];
-}
-export interface LabDatabase {
-  public: {
-    Tables: {
-      patient_lab_orders: Table<LabOrder>;
-      lab_due_templates: Table<LabTemplate>;
-      lab_work_revisions: Table<LabRevision>;
-    };
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
-    Functions: {
-      save_patient_lab_order: {
-        Args: {
-          p_id: string;
-          p_pet_id: string;
-          p_expected_version: number | null;
-          p_values: Json;
-          p_correction_reason: string;
-        };
-        Returns: LabOrder;
-      };
-      save_lab_due_template: {
-        Args: {
-          p_id: string;
-          p_expected_version: number | null;
-          p_name: string;
-          p_interval_days: number;
-          p_active: boolean;
-          p_review_note: string;
-        };
-        Returns: LabTemplate;
-      };
-    };
-  };
 }
 export const emptyLab = (): LabValues => ({
   test_name: "",

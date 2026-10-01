@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -16,7 +15,7 @@ import {
 } from "../inventory/stock-policy";
 import { usePatientAlertReview } from "../clinical/alert-review";
 import { alertAcknowledgmentMatches } from "../clinical/alert-review-policy";
-import type { AnesthesiaDatabase, AnesthesiaRecord } from "./model";
+import type { AnesthesiaRecord } from "./model";
 import {
   anesthesiaDrugLots,
   anesthesiaDrugRequest,
@@ -24,7 +23,7 @@ import {
   SIGNED_RECORD_DRUG_POLICY,
   type AnesthesiaDrugRequest,
 } from "./drug-administration";
-const db = supabase as unknown as SupabaseClient<AnesthesiaDatabase>;
+const db = supabase;
 interface AnesthesiaDrugAdministrationsProps {
   petId: string;
   clientId: string;

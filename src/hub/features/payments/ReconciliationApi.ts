@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { paymentDb } from "./api";
 import { parsePaymentState } from "./state";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,31 +5,7 @@ import {
   reconciliationDiscovery,
   type ReconciliationIntent,
 } from "./ReconciliationState";
-interface ReconciliationDatabase {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      list_payment_reconciliation_workspace: {
-        Args: { p_invoice_id: string };
-        Returns: unknown;
-      };
-      complete_payment_reconciliation: {
-        Args: {
-          p_case_id: string;
-          p_reviewed_proof_hash: string;
-          p_expected_case_hash: string;
-          p_attest: boolean;
-        };
-        Returns: unknown;
-      };
-    };
-  };
-}
-export const reconciliationDb =
-  supabase as unknown as SupabaseClient<ReconciliationDatabase>;
+export const reconciliationDb = supabase;
 export async function previewReconciliation(
   invoice: string,
   family: "checkout" | "refund",

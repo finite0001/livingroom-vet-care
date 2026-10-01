@@ -2,7 +2,6 @@ import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useRef, useState } from "react";
 import { PatientLabResults } from "./PatientLabResults";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -17,12 +16,11 @@ import {
   labReminderLabel,
   labRemindersAvailable,
   dueFromInterval,
-  type LabDatabase,
   type LabOrder,
   type LabValues,
   type LabTemplate,
 } from "./model";
-const db = supabase as unknown as SupabaseClient<LabDatabase>;
+const db = supabase;
 interface PatientLabWorkProps {
   petId: string;
   onDirtyChange?: (dirty: boolean) => void;
