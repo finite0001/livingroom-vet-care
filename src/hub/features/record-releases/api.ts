@@ -6,7 +6,6 @@ import type {
   ReleasePreview,
   ReleaseRow,
   ReleaseBundle,
-  ReleaseEvent,
 } from "./print";
 import { sourceLabels, type SourceKind } from "./selection";
 export { sourceLabels, type SourceKind };

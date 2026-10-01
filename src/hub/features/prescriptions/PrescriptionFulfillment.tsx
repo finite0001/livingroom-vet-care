@@ -29,7 +29,6 @@ import type {
 } from "./fulfillment-api";
 import type {
   PrescriptionAuthorization,
-  PrescriptionRpc,
 } from "./prescription-api";
 import { usePrescriptionOperation } from "./usePrescriptionOperation";
 import { PrescriptionOperationControls } from "./PrescriptionOperationControls";
@@ -94,14 +93,14 @@ function FulfillmentWorkspace({
   const api = useMemo(
     () =>
       createFulfillmentApi(
-        supabase as unknown as PrescriptionRpc,
+        supabase,
         actor,
         authorization,
       ),
     [actor, authorization],
   );
   const refillApi = useMemo(
-    () => createNativeRefillApi(supabase as unknown as PrescriptionRpc, actor),
+    () => createNativeRefillApi(supabase, actor),
     [actor],
   );
   const alive = useRef(true),
@@ -393,7 +392,7 @@ function FulfillmentWorkspace({
     await read(async () => {
       try {
         const { data, error } = await (
-          supabase as unknown as PrescriptionRpc
+          supabase
         ).rpc("read_native_prescription_print_v4", {
           p_authorization_id: authorization.id,
           p_dispense_id: d.id,

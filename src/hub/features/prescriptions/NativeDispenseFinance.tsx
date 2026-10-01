@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { NativeDispense } from "./fulfillment-api";
-import type { PrescriptionRpc } from "./prescription-api";
 import {
   createNativeDispenseFinanceApi,
   financeDollarsToCents,
@@ -57,7 +56,7 @@ function Workspace({
   const api = useMemo(
     () =>
       createNativeDispenseFinanceApi(
-        supabase as unknown as PrescriptionRpc,
+        supabase,
         actor,
         target,
       ),

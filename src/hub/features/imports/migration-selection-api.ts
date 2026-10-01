@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import type { RpcArgs } from "@/integrations/supabase/rpc";
 import type { MigrationScopeInput, MigrationManifest, MigrationCursor } from "./migration-run-api.ts";
 export const migrationResourceLabels: Record<MigrationScopeInput["resource"], string> = { contact: "Contacts", animal: "Patients", healthstatus: "Weights", consult: "Consultations", history: "Clinical history", vaccination: "Vaccinations", prescription: "Prescriptions", prescriptionitem: "Prescription items", attachment: "Attachments" };
 const uuid = z.string().uuid();
@@ -13,7 +15,16 @@ export const migrationResources: MigrationScopeInput["resource"][] = ["contact",
 export function migrationParentType(resource: MigrationScopeInput["resource"], mapping: MigrationMapping): MigrationScopeInput["parent_type"] {
   return resource === "contact" || (resource === "attachment" && mapping.resource === "contact") ? "contact" : resource === "vaccination" ? "consult" : resource === "prescriptionitem" ? "prescription" : "animal";
 }
-export function createMigrationSelectionApi(client: SupabaseClient, actor: string) {
+/** Child-run listing RPC per scoped resource (consult/history share the clinical runner). */
+const listRuns = {
+  consult: "list_ezyvet_clinical_runs",
+  history: "list_ezyvet_clinical_runs",
+  vaccination: "list_ezyvet_vaccination_runs",
+  prescription: "list_ezyvet_prescription_runs",
+  prescriptionitem: "list_ezyvet_prescriptionitem_runs",
+  attachment: "list_ezyvet_attachment_runs",
+} as const;
+export function createMigrationSelectionApi(client: SupabaseClient<Database>, actor: string) {
   uuid.parse(actor);
   function offset(page: number) { z.number().int().min(0).max(10000).parse(page); return page * 20; }
   return {
@@ -65,7 +76,9 @@ export function createMigrationSelectionApi(client: SupabaseClient, actor: strin
         const family = ["history", "consult"].includes(scope.resource) ? "clinical" : scope.resource;
         const args: Record<string, unknown> = { p_animal_link_id: scope.mapping_id, p_before_at: cursor?.before_at ?? null, p_before_id: cursor?.before_id ?? null, p_limit: 20 };
         if (["clinical", "prescription"].includes(family)) args.p_resource = scope.resource;
-        const { data, error } = await client.rpc(`list_ezyvet_${family}_runs`, args);
+        const name = listRuns[scope.resource as keyof typeof listRuns];
+        if (!name) throw new Error("Run listing unavailable for this resource");
+        const { data, error } = await client.rpc(name, args as RpcArgs<typeof name>);
         if (error) throw error;
         const page = z.object({ runs: z.array(z.unknown()).max(20), has_more: z.boolean(), next_cursor: cursorSchema.nullable() }).strict().parse(data);
         raw = page.runs; more = page.has_more; next = page.next_cursor;

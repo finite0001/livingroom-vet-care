@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createMigrationRunApi } from "./migration-run-api";
-import type { MigrationBinding, MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
+import type { MigrationBinding, MigrationCursor, MigrationManifest } from "./migration-run-api";
 import { MigrationWeightEvidence } from "./MigrationWeightEvidence";
 import { MigrationPrescriptionEvidence } from "./MigrationPrescriptionEvidence";
 import { MigrationVaccinationEvidence } from "./MigrationVaccinationEvidence";
@@ -36,7 +36,7 @@ interface FailureProps { message: string; retry: () => void }
 function Failure({ message, retry }: FailureProps) {
   return <div role="alert" className="space-y-2"><p>{message}</p><Button type="button" variant="outline" size="sm" onClick={retry}>Try again</Button></div>;
 }
-function useApi(actor: string) { return useMemo(() => createMigrationRunApi(supabase as unknown as MigrationRpc, actor), [actor]); }
+function useApi(actor: string) { return useMemo(() => createMigrationRunApi(supabase, actor), [actor]); }
 
 export function EzyVetMigrationRuns({ actor, onDirtyChange }: WorkspaceProps) {
   return <MigrationWorkspace key={actor} actor={actor} onDirtyChange={onDirtyChange} />;
@@ -174,7 +174,7 @@ function SourceEvidence({ actor, manifest, binding, onResumeDirty, onDecisionDir
 
 interface CaptureProps extends Props { binding: MigrationBinding; item: MigrationItem }
 function CaptureEvidence({ actor, binding, item }: CaptureProps) {
-  const api = useMemo(() => createMigrationCaptureApi(supabase as unknown as MigrationRpc, actor), [actor]);
+  const api = useMemo(() => createMigrationCaptureApi(supabase, actor), [actor]);
   const [cursor, setCursor] = useState<MigrationCursor | null>(null);
   const [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]);
   const query = useQuery({ queryKey: ["migration-capture-evidence", actor, binding.id, item.evidence_hash, cursor], retry: false, queryFn: () => api.list(binding, item, cursor) });

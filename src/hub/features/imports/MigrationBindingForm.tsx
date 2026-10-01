@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createMigrationRunApi } from "./migration-run-api";
-import type { MigrationBinding, MigrationBindingRequest, MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
+import type { MigrationBinding, MigrationBindingRequest, MigrationCursor, MigrationManifest } from "./migration-run-api";
 import { createMigrationSelectionApi, migrationResourceLabels } from "./migration-selection-api";
 interface Props { actor: string; manifest: MigrationManifest; scopeId: string; onDirtyChange: (dirty: boolean) => void; onSaved: (binding: MigrationBinding) => void }
 export function MigrationBindingForm({ actor, manifest, scopeId, onDirtyChange, onSaved }: Props) {
-  const api = useMemo(() => createMigrationRunApi(supabase as unknown as MigrationRpc, actor), [actor]);
-  const choices = useMemo(() => createMigrationSelectionApi(supabase as unknown as SupabaseClient, actor), [actor]);
+  const api = useMemo(() => createMigrationRunApi(supabase, actor), [actor]);
+  const choices = useMemo(() => createMigrationSelectionApi(supabase, actor), [actor]);
   const scope = manifest.scopes.find(s => s.id === scopeId)!;
   const [opened, setOpened] = useState(false), [cursor, setCursor] = useState<MigrationCursor | null>(null), [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]), [child, setChild] = useState<string | null>(null), [reason, setReason] = useState("");
   const [confirmed, setConfirmed] = useState(false), [busy, setBusy] = useState(false), [recoverFirst, setRecoverFirst] = useState(false), [error, setError] = useState("");

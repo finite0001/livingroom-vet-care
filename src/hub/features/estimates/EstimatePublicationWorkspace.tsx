@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
-import type { PrescriptionRpc } from "../prescriptions/prescription-api";
 import type { EstimateDraft } from "./estimate-api";
 import {
   createEstimatePublicationApi,
@@ -82,7 +81,7 @@ function StaffWorkspace({
   const api = useMemo(
     () =>
       createEstimatePublicationApi(
-        supabase as unknown as PrescriptionRpc,
+        supabase,
         actorId,
         target,
         createEstimatePublicationEdge(

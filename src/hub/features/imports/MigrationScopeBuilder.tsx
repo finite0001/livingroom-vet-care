@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createMigrationRunApi } from "./migration-run-api";
-import type { MigrationManifest, MigrationRequest, MigrationRpc, MigrationScopeInput } from "./migration-run-api";
+import type { MigrationManifest, MigrationRequest, MigrationScopeInput } from "./migration-run-api";
 import { createMigrationSelectionApi, migrationParentType, migrationResources, migrationResourceLabels } from "./migration-selection-api";
 import type { MigrationMapping, MigrationParent } from "./migration-selection-api";
 const selectClass = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
 interface DraftScope { input: MigrationScopeInput; mapping: MigrationMapping; parent: MigrationParent }
 interface Props { actor: string; onDirtyChange: (dirty: boolean) => void; onSaved: (manifest: MigrationManifest) => void }
 export function MigrationScopeBuilder({ actor, onDirtyChange, onSaved }: Props) {
-  const api = useMemo(() => createMigrationRunApi(supabase as unknown as MigrationRpc, actor), [actor]);
-  const choices = useMemo(() => createMigrationSelectionApi(supabase as unknown as SupabaseClient, actor), [actor]);
+  const api = useMemo(() => createMigrationRunApi(supabase, actor), [actor]);
+  const choices = useMemo(() => createMigrationSelectionApi(supabase, actor), [actor]);
   const [opened, setOpened] = useState(false), [page, setPage] = useState(0), [parentPage, setParentPage] = useState(0);
   const [mapping, setMapping] = useState<MigrationMapping | null>(null), [parent, setParent] = useState<MigrationParent | null>(null);
   const [attachmentParent, setAttachmentParent] = useState<"animal" | "consult">("animal");

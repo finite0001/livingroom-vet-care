@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
 import {
   decodePatientAlertReview,
-  type PatientAlertReview,
 } from "./alert-review-policy";
 const alerts = supabase;
 export const patientProblemsKey = (petId: string) =>
