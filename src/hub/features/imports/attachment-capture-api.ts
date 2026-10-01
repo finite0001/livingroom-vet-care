@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { matchesDocumentSignature } from "../documents/file-validation";
 import {
   captureIntentSchema,
@@ -13,33 +13,24 @@ import type {
   CaptureScope,
   OriginalCapture,
 } from "./attachment-capture-state";
-interface Database {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      [key: string]: { Args: Record<string, unknown>; Returns: unknown };
-    };
-  };
-}
-const client = supabase as unknown as SupabaseClient<Database>;
-export async function captureRpc(name: string, args: Record<string, unknown>) {
+const client = supabase;
+type Fns = Database["public"]["Functions"];
+export async function captureRpc<N extends keyof Fns>(name: N, args: Fns[N]["Args"]) {
   const { data, error } = await client.rpc(name, args);
   if (error)
     throw new Error("Capture data unavailable. Recover the original request.");
   return data;
 }
+// Under strict:false zod infers every key optional; parse() has already verified all of them.
+const intentArgs = (intent: CaptureIntent) =>
+  captureIntentSchema.parse(intent) as Fns["prepare_ezyvet_attachment_capture"]["Args"];
 export async function prepareCapture(
   intent: CaptureIntent,
   actor: string,
   mapping: CaptureScope,
 ) {
   return validateCapture(
-    await captureRpc("prepare_ezyvet_attachment_capture", {
-      ...captureIntentSchema.parse(intent),
-    }),
+    await captureRpc("prepare_ezyvet_attachment_capture", intentArgs(intent)),
     actor,
     mapping,
     intent,
@@ -142,9 +133,7 @@ export async function abandonCapturePreparation(
   mapping: CaptureScope,
 ) {
   return validateCapture(
-    await captureRpc("abandon_ezyvet_attachment_capture_preparation", {
-      ...captureIntentSchema.parse(intent),
-    }),
+    await captureRpc("abandon_ezyvet_attachment_capture_preparation", intentArgs(intent)),
     actor,
     mapping,
     intent,
