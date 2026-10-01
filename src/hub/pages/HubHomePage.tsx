@@ -29,7 +29,6 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { formatDenverDayLabel, formatDenverTime, denverLocal } from "@/hub/features/scheduling/time";
 import {
