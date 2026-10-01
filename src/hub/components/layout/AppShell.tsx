@@ -23,7 +23,7 @@ export function AppShell() {
           <main
             id="main-content"
             key={location.pathname}
-            className={`mx-auto min-w-0 w-full max-w-screen-xl flex-1 animate-fade-in ${isConversation ? "min-h-0 overflow-hidden" : "min-h-0 overflow-y-auto"} ${navHidden ? "pb-0" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}`}
+            className={`mx-auto min-w-0 w-full max-w-screen-xl flex-1 animate-fade-in ${isConversation ? "min-h-0 overflow-hidden" : "min-h-0 overflow-y-auto"} ${navHidden ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"}`}
           >
             <ErrorBoundary>
               <Outlet />
