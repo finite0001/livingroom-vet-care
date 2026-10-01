@@ -43,7 +43,6 @@ const ProcessingQueuePage = lazy(() => import("@/hub/features/inbound-review/Pro
 const InboxReviewPage = lazy(() => import("@/hub/features/inbound-review/InboxReviewPage"));
 const ConversationsPage = lazy(() => import("@/hub/pages/ConversationsPage"));
 const ConversationDetailPage = lazy(() => import("@/hub/pages/ConversationDetailPage"));
-const ContactSubmissionsPage = lazy(() => import("@/hub/pages/ContactSubmissionsPage"));
 const DeliveriesPage = lazy(() => import("@/hub/pages/DeliveriesPage"));
 const CloudTalkActivityPage = lazy(() => import("@/hub/features/cloudtalk/CloudTalkActivityPage"));
 const ClientsPage = lazy(() => import("@/hub/pages/ClientsPage"));
@@ -109,7 +108,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route element={<AppShell />}>
                   <Route path="/hub" element={<HubHomePage />} />
                   <Route path="/hub/inquiries" element={<WebsiteInquiriesPage />} />
-                  <Route path="/hub/contact-submissions" element={<ContactSubmissionsPage />} />
+                  <Route path="/hub/contact-submissions" element={<Navigate to="/hub/inquiries" replace />} />
                   <Route path="/hub/chats" element={<ConversationsPage />} />
                   <Route path="/hub/inbox/review" element={<InboxReviewPage />} />
                   <Route path="/hub/inbox/processing" element={<ProcessingQueuePage />} />

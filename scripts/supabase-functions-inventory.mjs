@@ -19,13 +19,12 @@ const expectedHostedFunctions = [
   { slug: 'cloudtalk-call-media', verifyJwt: true, purpose: 'administrator-only CloudTalk recording and transcript proxy' },
 ];
 
-// Retired 2026-09-27. They must be deleted from hosted projects, not redeployed.
-const retiredMustBeAbsent = ['send-email', 'send-sms'];
+// Retired 2026-09-27 (send-email, send-sms) and 2026-09-30 (send-provider-email,
+// suggest-replies: source deleted). They must be deleted from hosted projects,
+// not redeployed.
+const retiredMustBeAbsent = ['send-email', 'send-sms', 'send-provider-email', 'suggest-replies'];
 
-const intentionallyNotCommissioned = [
-  { slug: 'send-provider-email', reason: 'references provider delivery tables outside the launch baseline' },
-  { slug: 'suggest-replies', reason: 'requires AI provider configuration and is not needed for foundation launch' },
-];
+const intentionallyNotCommissioned = [];
 
 function run(command, args) {
   const result = spawnSync(command, args, {

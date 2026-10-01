@@ -5,7 +5,7 @@ import {
   receiveTwilio,
   type ProviderEvent,
 } from "../../supabase/functions/_shared/inbound/handlers.ts";
-import { processOneInbound } from "../../supabase/functions/_shared/inbound/process.ts";
+import { processInboundBatch, processOneInbound } from "../../supabase/functions/_shared/inbound/process.ts";
 const id = "11111111-1111-4111-8111-111111111111";
 function dbFixture(event?: ProviderEvent, release?: { value: unknown }) {
   const calls: { name: string; args?: Record<string, unknown> }[] = [];
@@ -259,4 +259,37 @@ test("lost release RPC acknowledgment propagates without inventing a durable dis
     if (name === "release_communication_event_outcome") return { data: null, error: new Error("lost acknowledgment") };
     return f.db.rpc(name, args);
   } }, { RESEND_API_KEY: "synthetic" }, async () => { throw new Error("provider timeout"); }), /lost acknowledgment/);
+});
+
+function queuedEvents(events: ProviderEvent[]) {
+  const f = dbFixture();
+  const queue = [...events];
+  const db = { rpc: async (name: string, args?: Record<string, unknown>) => {
+    if (name === "release_communication_event_outcome") {
+      f.calls.push({ name, args });
+      return { data: { id: args?.p_id, state: args?.p_review ? "review" : "pending" }, error: null };
+    }
+    if (name !== "claim_communication_event") return f.db.rpc(name, args);
+    f.calls.push({ name, args });
+    return { data: queue.shift() ?? null, error: null };
+  } };
+  return { db, calls: f.calls, remaining: () => queue.length };
+}
+test("batch processing drains events until the queue is empty", async () => {
+  const status = (n: number): ProviderEvent => ({ ...retryEvent, id: `event-${n}`, event_type: "delivered" });
+  const q = queuedEvents([status(1), status(2), status(3)]);
+  const summary = await processInboundBatch(q.db, {}, async () => { throw new Error("status events must not fetch"); });
+  assert.equal(summary.processed, 3);
+  assert.equal(summary.items, 3);
+  assert.equal(summary.stopped, "empty");
+  assert.equal(q.calls.filter(call => call.name === "complete_communication_status").length, 3);
+});
+test("batch processing stops at the first failed event instead of spending every event's retry", async () => {
+  const q = queuedEvents([retryEvent, { ...retryEvent, id: "second" }, { ...retryEvent, id: "third" }]);
+  const summary = await processInboundBatch(q.db, { RESEND_API_KEY: "synthetic" }, async () => {
+    throw new Error("provider timeout");
+  });
+  assert.deepEqual({ processed: summary.processed, retry_pending: summary.retry_pending, items: summary.items, stopped: summary.stopped },
+    { processed: 0, retry_pending: 1, items: 1, stopped: "halted" });
+  assert.equal(q.remaining(), 2);
 });

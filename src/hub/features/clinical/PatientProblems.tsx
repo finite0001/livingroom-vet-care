@@ -15,17 +15,19 @@ import { patientProblemsKey } from './alert-review';
 import { usePatientProblems } from './queries';
 import { errorText } from './editor-state';
 
+// `ezyvet_problem_fields` is a computed field (SQL function over the row); `select('*')` and RPC rows never include it.
+type ProblemRow = Omit<Tables<'patient_problems'>, 'ezyvet_problem_fields'>;
 interface PatientProblemsProps { petId: string; disabled?: boolean; onDirtyChange: (dirty: boolean) => void }
 interface ProblemDraft { title: string; notes: string; onset_date: string; status: 'active' | 'resolved'; importance: 'routine' | 'high' }
 const emptyProblem: ProblemDraft = { title: '', notes: '', onset_date: '', status: 'active', importance: 'routine' };
-const toDraft = (row: Tables<'patient_problems'>): ProblemDraft => ({ title: row.title, notes: row.notes ?? '', onset_date: row.onset_date ?? '', status: row.status === 'resolved' ? 'resolved' : 'active', importance: row.importance === 'high' ? 'high' : 'routine' });
+const toDraft = (row: ProblemRow): ProblemDraft => ({ title: row.title, notes: row.notes ?? '', onset_date: row.onset_date ?? '', status: row.status === 'resolved' ? 'resolved' : 'active', importance: row.importance === 'high' ? 'high' : 'routine' });
 
 export function PatientProblems({ petId, disabled, onDirtyChange }: PatientProblemsProps) {
   const query = usePatientProblems(petId);
   const provenance = useProblemImportEvidence(petId, query.data?.map(p => p.id) ?? []);
   const cache = useQueryClient();
   const { session } = useAuth();
-  const [record, setRecord] = useState<Tables<'patient_problems'> | null>(null);
+  const [record, setRecord] = useState<ProblemRow | null>(null);
   const [draft, setDraft] = useState<ProblemDraft | null>(null);
   const [baseline, setBaseline] = useState('');
   const [busy, setBusy] = useState(false);
@@ -35,7 +37,7 @@ export function PatientProblems({ petId, disabled, onDirtyChange }: PatientProbl
   const dirty = !!draft && JSON.stringify(draft) !== baseline;
   useEffect(() => { onDirtyChange(dirty || busy); }, [dirty, busy, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
-  const open = (row: Tables<'patient_problems'> | null) => {
+  const open = (row: ProblemRow | null) => {
     if (busy || (dirty && !window.confirm('Discard unsaved problem changes?'))) return;
     const next = row ? toDraft(row) : { ...emptyProblem };
     setRecord(row); setDraft(next); setBaseline(JSON.stringify(next)); setError(''); setMessage('');

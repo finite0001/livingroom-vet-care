@@ -1,19 +1,11 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { parseVaccineStatusSummary } from "./vaccine-status";
 
-export interface CatalogVaccineProfile {
-  id: string;
-  product_id: string;
-  group_key: string | null;
-  species: string[];
-  vaccine_type: string | null;
+/** labeled_duration is narrowed by the catalog_vaccine_profiles CHECK constraint. */
+export interface CatalogVaccineProfile
+  extends Omit<Tables<"catalog_vaccine_profiles">, "labeled_duration"> {
   labeled_duration: "1 year" | "3 years" | "other licensed duration" | null;
-  default_booster_interval_days: number | null;
-  review_note: string;
-  version: number;
-  updated_by: string;
-  updated_at: string;
 }
 export interface SaveVaccineProfileArgs {
   p_product_id: string;
@@ -25,32 +17,7 @@ export interface SaveVaccineProfileArgs {
   p_default_booster_interval_days: number | null;
   p_review_note: string;
 }
-interface Table<Row> {
-  Row: { [K in keyof Row]: Row[K] };
-  Insert: Partial<Row>;
-  Update: Partial<Row>;
-  Relationships: [];
-}
-// Local typing until src/integrations/supabase/types.ts is regenerated from the migrated schema.
-interface VaccineDatabase {
-  public: {
-    Tables: { catalog_vaccine_profiles: Table<CatalogVaccineProfile> };
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      patient_vaccine_status_summary: {
-        Args: { p_pet_id: string };
-        Returns: unknown;
-      };
-      save_catalog_vaccine_profile: {
-        Args: { [K in keyof SaveVaccineProfileArgs]: SaveVaccineProfileArgs[K] };
-        Returns: CatalogVaccineProfile;
-      };
-    };
-  };
-}
-const vaccines = supabase as unknown as SupabaseClient<VaccineDatabase>;
+const vaccines = supabase;
 
 export async function readVaccineStatus(petId: string) {
   const { data, error } = await vaccines.rpc("patient_vaccine_status_summary", {
@@ -70,7 +37,7 @@ export async function readVaccineProfiles(
     .select("*")
     .in("product_id", ids);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as CatalogVaccineProfile[];
 }
 
 export async function saveVaccineProfile(args: SaveVaccineProfileArgs) {

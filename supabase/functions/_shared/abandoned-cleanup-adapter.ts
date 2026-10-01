@@ -5,6 +5,18 @@ export interface AbandonedCleanupClient {
   storage: { from(bucket: string): CleanupStorageBucket };
 }
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
+/** Server-only discovery snapshot. Returns upload IDs only; each must still pass the per-upload claim. */
+export async function discoverAbandonedUploads(client: Pick<AbandonedCleanupClient, "rpc">, graceHours: number, limit: number): Promise<string[]> {
+  if (!Number.isInteger(graceHours) || graceHours < 24 || graceHours > 720 || !Number.isInteger(limit) || limit < 1 || limit > 100)
+    throw new Error("Bounded discovery and cleanup grace required");
+  const { data, error } = await client.rpc("list_abandoned_attachment_cleanup_candidates", { p_grace_hours: graceHours, p_limit: limit });
+  if (error) throw error;
+  if (!Array.isArray(data) || data.length > limit) throw new Error("Cleanup discovery is unconfirmed");
+  return data.map(entry => {
+    if (!record(entry) || typeof entry.upload_id !== "string") throw new Error("Cleanup discovery is unconfirmed");
+    return entry.upload_id;
+  });
+}
 /** Server-only adapter. Caller must enforce its default-off gate and configured grace. */
 export async function runAbandonedUploadCleanup(client: AbandonedCleanupClient, uploadId: string, graceHours: number) {
   if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(uploadId) || !Number.isInteger(graceHours) || graceHours < 24 || graceHours > 720)

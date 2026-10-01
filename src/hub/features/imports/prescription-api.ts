@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 const uuid = z.string().uuid();
 const date = z
   .string()
@@ -63,19 +63,9 @@ const candidateSchema = z.object({
   client_id: uuid,
 });
 export type PrescriptionCandidate = z.infer<typeof candidateSchema>;
-interface PrescriptionDatabase {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      [key: string]: { Args: Record<string, unknown>; Returns: unknown };
-    };
-  };
-}
-const client = supabase as unknown as SupabaseClient<PrescriptionDatabase>;
-async function rpc(name: string, args: Record<string, unknown>) {
+const client = supabase;
+type Fns = Database["public"]["Functions"];
+async function rpc<N extends keyof Fns>(name: N, args: Fns[N]["Args"]) {
   const { data, error } = await client.rpc(name, args);
   if (error)
     throw new Error(

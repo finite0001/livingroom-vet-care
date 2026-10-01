@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, X } from "lucide-react";
+import { LogOut, MoreHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   adminItems,
+  isNavItemActive,
   settingsItem,
   tabItems,
   toolItems,
@@ -28,7 +29,7 @@ const moreItems: NavItem[] = [
 export function BottomTabBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { hasRole } = useAuth();
+  const { hasRole, signOut } = useAuth();
   const isAdmin = hasRole("ADMIN");
   const [moreOpen, setMoreOpen] = useState(false);
   const {
@@ -37,23 +38,18 @@ export function BottomTabBar() {
     isPending: unreadPending,
   } = useUnreadCount();
 
-  const isActive = (path: string, exact?: boolean) => {
-    if (exact) return location.pathname === path;
-    return location.pathname.startsWith(path);
-  };
+  const isActive = (item: NavItem) => isNavItemActive(item, location.pathname);
 
-  const isMoreActive = [...moreItems, ...adminItems].some((item) =>
-    isActive(item.path),
-  );
+  const isMoreActive = [...moreItems, ...(isAdmin ? adminItems : [])].some(isActive);
 
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border bg-card/95 shadow-[0_-2px_12px_-2px_hsl(var(--charcoal)/0.08)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-0 left-0 right-0 z-50 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-center justify-around border-t border-border bg-card/95 shadow-[0_-2px_12px_-2px_hsl(var(--charcoal)/0.08)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
         aria-label="Hub navigation"
       >
         {tabItems.map((tab) => {
-          const active = isActive(tab.path, tab.exact);
+          const active = isActive(tab);
           const badge = tab.path === "/hub/chats" ? (unreadCount ?? 0) : 0;
           const label = tab.mobileLabel ?? tab.label;
           return (
@@ -136,7 +132,7 @@ export function BottomTabBar() {
                 }}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
-                  isActive(item.path)
+                  isActive(item)
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-accent",
                 )}
@@ -157,7 +153,7 @@ export function BottomTabBar() {
                   }}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors",
-                    isActive(item.path)
+                    isActive(item)
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-accent",
                   )}
@@ -169,6 +165,19 @@ export function BottomTabBar() {
                 </button>
               ))}
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setMoreOpen(false);
+              void signOut().catch(() => {
+                window.location.assign("/hub/login");
+              });
+            }}
+            className="guided-touch flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            Sign out
+          </button>
         </SheetContent>
       </Sheet>
     </>

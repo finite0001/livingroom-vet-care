@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { createMigrationResolutionApi } from "./migration-resolution-api";
 import type { MigrationResolutionTarget } from "./migration-resolution-api";
-import type { MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api";
+import type { MigrationCursor, MigrationManifest } from "./migration-run-api";
 interface Props { actor: string; manifest: MigrationManifest; scopeId: string; target: MigrationResolutionTarget | null }
 export function MigrationResolutionHistory({ actor, manifest, scopeId, target }: Props) {
-  const api = useMemo(() => createMigrationResolutionApi(supabase as unknown as MigrationRpc, actor, manifest), [actor, manifest]);
+  const api = useMemo(() => createMigrationResolutionApi(supabase, actor, manifest), [actor, manifest]);
   const [opened, setOpened] = useState(false);
   const [cursor, setCursor] = useState<MigrationCursor | null>(null);
   const [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]);

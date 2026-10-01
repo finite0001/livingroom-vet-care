@@ -28,6 +28,12 @@ import {
   selectSmsProvider,
   type SmsProvider,
 } from "./cloudtalk-sms.ts";
+import {
+  countBy,
+  runWorkerBatch,
+  type WorkerBatchOptions,
+  type WorkerBatchStop,
+} from "./worker-batch.ts";
 export interface OutboxRow {
   id: string;
   channel: "EMAIL" | "SMS";
@@ -396,5 +402,49 @@ async function finish(db: OutboxDatabase, row: OutboxRow, outcome: Outcome) {
     state: outcome.outcome,
     accepted: outcome.outcome === "accepted",
     delivered: false,
+  };
+}
+
+export interface OutboxBatchSummary {
+  processed: boolean;
+  disabled?: true;
+  items: number;
+  states: Record<string, number>;
+  stopped: WorkerBatchStop;
+  elapsed_ms: number;
+}
+/**
+ * Dispatch up to the batch cap within the time budget. Continues only while
+ * the provider accepts: any failed, uncertain or interrupted row stops the
+ * batch, so a configuration or provider fault fails at most one row a minute,
+ * as the single-item worker did. Persistence errors propagate unchanged.
+ */
+export async function dispatchBatch(
+  db: OutboxDatabase,
+  env: OutboxEnvironment,
+  transport: typeof fetch = fetch,
+  options: WorkerBatchOptions = {},
+): Promise<OutboxBatchSummary> {
+  if (
+    !env.OUTBOUND_DELIVERY_MODE || env.OUTBOUND_DELIVERY_MODE === "disabled"
+  ) {
+    return { processed: false, disabled: true, items: 0, states: {}, stopped: "empty", elapsed_ms: 0 };
+  }
+  const batch = await runWorkerBatch(
+    () => dispatchOne(db, env, transport),
+    (result) =>
+      !result.processed
+        ? "empty"
+        : "state" in result && result.state === "accepted"
+        ? "continue"
+        : "halt",
+    options,
+  );
+  return {
+    processed: batch.results.length > 0,
+    items: batch.results.length,
+    states: countBy(batch.results, (result) => ("state" in result && result.state) || "unknown"),
+    stopped: batch.stopped,
+    elapsed_ms: batch.elapsed_ms,
   };
 }

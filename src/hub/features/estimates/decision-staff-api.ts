@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
 import {
   estimateDecisionBindingSchema,
@@ -63,7 +64,7 @@ export function createEstimateDecisionStaffReads(db: PrescriptionRpc, targetInpu
   function requireMatch(condition: unknown): asserts condition {
     if (!condition) throw new Error("Estimate decision evidence does not match this patient and household.");
   }
-  async function call(name: string, args: Record<string, unknown>) {
+  async function call<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await db.rpc(name, args);
     if (error) throw error;
     return data;
@@ -127,7 +128,7 @@ export function createEstimateDecisionStaffApi(db:PrescriptionRpc,actorId:string
     const micros=(v:string)=>BigInt(Date.parse(v.replace(/\.\d+(?=Z$)/,'')))*1000n+BigInt((/\.(\d+)Z$/.exec(v)?.[1]??'').padEnd(6,'0'));
     require(micros(op.payload.witness.occurred_at)<=micros(r.created_at));return r;
   }
-  async function call(name:string,args:Record<string,unknown>){const {data,error}=await db.rpc(name,args);if(error)throw error;return data;}
+  async function call<N extends RpcName>(name:N,args:RpcArgs<N>){const {data,error}=await db.rpc(name,args);if(error)throw error;return data;}
   return {...createEstimateDecisionStaffReads(db,target),parseOperation,
     async execute(input:unknown){const op=parseOperation(input);return receipt(await call('record_native_estimate_witnessed_decision',{p_id:op.id,p_request:op.payload}),op);},
     async recover(input:unknown){const op=parseOperation(input);const r=await call('recover_native_estimate_witnessed_decision',{p_id:op.id});return r===null?null:receipt(r,op);},

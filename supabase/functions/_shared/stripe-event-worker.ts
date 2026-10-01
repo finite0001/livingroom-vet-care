@@ -1,6 +1,7 @@
 import { checkoutEvidence, refundEvidence } from "./stripe-provider.ts";
 import type { CheckoutIntent, RefundIntent, StripeObject } from "./stripe-provider.ts";
 import type { StripeWebhookReceipt } from "./stripe-webhook.ts";
+import { countBy, runWorkerBatch, type WorkerBatchOptions, type WorkerBatchStop } from "./worker-batch.ts";
 export interface StripeEventLease {
   receipt: StripeWebhookReceipt & {id: string};
   lease_token: string;
@@ -55,4 +56,33 @@ export async function processStripeEvent(deps: StripeEventWorkerDependencies): P
     }
   } catch { return quarantine("provider_context_mismatch"); }
   return finish(evidence);
+}
+
+export interface StripeEventBatchSummary {
+  /** "uncertain" if any event's disposition is unconfirmed (the caller answers 503), else the last item's state, or "empty". */
+  state: "empty" | "finished" | "retry" | "uncertain";
+  items: number;
+  states: Record<string, number>;
+  stopped: WorkerBatchStop;
+  elapsed_ms: number;
+}
+/**
+ * Process leased events until the queue is empty, the cap or budget is reached,
+ * or an event is deferred ("retry") or unconfirmed ("uncertain"). Both mean the
+ * provider or database is not answering reliably, so the batch stops rather
+ * than leasing more events into the same fault.
+ */
+export async function processStripeEventBatch(deps: StripeEventWorkerDependencies, options: WorkerBatchOptions = {}): Promise<StripeEventBatchSummary> {
+  const batch = await runWorkerBatch(
+    () => processStripeEvent(deps),
+    result => result === "empty" ? "empty" : result === "finished" ? "continue" : "halt",
+    options,
+  );
+  return {
+    state: batch.results.at(-1) ?? "empty",
+    items: batch.results.length,
+    states: countBy(batch.results, result => result),
+    stopped: batch.stopped,
+    elapsed_ms: batch.elapsed_ms,
+  };
 }

@@ -1,4 +1,5 @@
 import { renderNativePrescriptionV4, type NativePrescriptionPrintV4 } from "../../../../supabase/functions/_shared/native-return-reconciliation.ts";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import { z } from "zod";
 import type { PrescriptionOperation } from "./prescription-state.ts";
 const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
@@ -73,7 +74,8 @@ export interface PrescriberEntry extends z.infer<typeof entrySchema> {}
 export interface PrescriptionAuthorization extends z.infer<typeof authorizationSchema> {}
 export interface PrescriptionCursor extends z.infer<typeof cursorSchema> {}
 export interface PrescriptionSignPreview extends z.infer<typeof signPreviewSchema> {}
-export interface PrescriptionRpc { rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }> }
+/** Injected RPC transport (the Supabase client, or a test/actor-pinned fake) keyed on the generated schema. */
+export interface PrescriptionRpc { rpc<N extends RpcName>(name: N, args: RpcArgs<N>): PromiseLike<{ data: unknown; error: unknown }> }
 export type PrescriptionReceipt = z.infer<typeof receiptSchema>;
 const signPreviewSchema = z.object({ version: z.literal(1), actor_id: uuid, draft_id: uuid, pet_id: uuid, context: signContextSchema, context_hash: hash, observed_at: instant }).strict();
 function canonical(value: unknown): string { return JSON.stringify(value && typeof value === "object" ? Array.isArray(value) ? value.map(v => JSON.parse(canonical(v))) : Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, JSON.parse(canonical(v))])) : value); }
@@ -110,7 +112,7 @@ function eventIdentity(event: PrescriptionEvent, patientId: string, authorizatio
 function micros(value: string): bigint { const fraction = /\.(\d+)(?:Z|[+-]\d{2}:?\d{2})$/.exec(value)?.[1] ?? ""; return BigInt(Date.parse(value)) * 1000n + BigInt(fraction.padEnd(6, "0").slice(3)); }
 export function createPrescriptionApi(client: PrescriptionRpc, actor: string, patientId: string) {
   uuid.parse(actor); uuid.parse(patientId);
-  async function rpc(name: string, args: Record<string, unknown>) { const { data, error } = await client.rpc(name, args); if (error) throw error; return data; }
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) { const { data, error } = await client.rpc(name, args); if (error) throw error; return data; }
   function parseOperation(operation: Readonly<PrescriptionOperation>) {
     uuid.parse(operation.id);
     if (operation.kind === "configure_prescriber") return configureRequestSchema.parse(operation.payload);
@@ -141,7 +143,7 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
     return r;
   }
   return {
-    async execute(operation: Readonly<PrescriptionOperation>) { const request = parseOperation(operation); const names = { configure_prescriber: "configure_native_prescriber", save_draft: "save_native_prescription_draft", sign: "sign_native_prescription", cancel: "cancel_native_prescription", replace: "replace_native_prescription" }; return receipt(await rpc(names[operation.kind as keyof typeof names], { p_id: operation.id, p_request: request }), operation); },
+    async execute(operation: Readonly<PrescriptionOperation>) { const request = parseOperation(operation); const names = { configure_prescriber: "configure_native_prescriber", save_draft: "save_native_prescription_draft", sign: "sign_native_prescription", cancel: "cancel_native_prescription", replace: "replace_native_prescription" } as const; return receipt(await rpc(names[operation.kind as keyof typeof names], { p_id: operation.id, p_request: request }), operation); },
     async recover(operation: Readonly<PrescriptionOperation>) { parseOperation(operation); const result = await rpc("recover_native_prescription_operation", { p_id: operation.id }); return result === null ? null : receipt(result, operation); },
     async readDraft(id: string) { uuid.parse(id); const result = await rpc("read_native_prescription_draft", { p_id: id, p_pet_id: patientId }); if (result === null) return null; const d = draftSchema.parse(result); if (d.id !== id || d.pet_id !== patientId) throw new Error("Draft identity differs"); return d; },
     async readAuthorization(id: string) { uuid.parse(id); const result = await rpc("read_native_prescription_authorization", { p_id: id, p_pet_id: patientId }); return result === null ? null : authorization(result, patientId, id); },

@@ -25,7 +25,7 @@ Apply migration `20260913270000_invoice_email.sql` **before** deploying the upda
 
 ## Retention and verification
 
-An operator can schedule service-role `purge_expired_frozen_email_payloads(100)`, which purges up to 100 eligible payloads per artifact family. Bytes are eligible after 90 days only for abandoned preparations or accepted/delivered sends with provider receipt evidence. Pending, failed/uncertain delivery and unresolved reconciliation retain bytes. Hashes, manifest, immutable invoice snapshot and audit evidence remain. This is a documented operator job, not an automatically configured cloud schedule.
+The daily `purge-expired-email-payloads` cron job (migration `20260930130000`, [scheduler](scheduler.md)) runs service-role `purge_expired_frozen_email_payloads(100)`, which purges up to 100 eligible payloads per artifact family per call, repeating while a family fills its batch. Bytes are eligible after 90 days only for abandoned preparations or accepted/delivered sends with provider receipt evidence. Pending, failed/uncertain delivery and unresolved reconciliation retain bytes. Hashes, manifest, immutable invoice snapshot and audit evidence remain. The job runs in the database and needs no Vault secret or Edge function.
 
 SQL tests cover permissions, durable retries, exact snapshots, source changes, frozen-payload proofs, old-dispatcher denial and retention. Unit tests cover exact BigInt money, escaping, no internal notes, deterministic HTML and payloads, full-request limits, preparation recovery and exact dispatch payload reuse. Frontend recovery/attestation is implemented in the separately stacked UI change.
 

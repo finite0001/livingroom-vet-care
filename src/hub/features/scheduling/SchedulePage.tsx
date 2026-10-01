@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -23,6 +23,7 @@ import { useScheduleDay } from "./use-schedule-day";
 import { useAppointmentStatus } from "./use-appointment-status";
 import { StatusChip } from "@/hub/components/shared/StatusChip";
 import { cn } from "@/lib/utils";
+import { householdHref, patientHref } from "@/hub/features/patient-360/model";
 
 type Appointment = Tables<"appointments">;
 const statusLabels = {
@@ -88,14 +89,26 @@ function AppointmentCard({
       </div>
       <div className="min-w-0">
         <p className="truncate font-semibold text-foreground">
-          {row.pets?.name ?? "Patient unavailable"}
+          {row.pet_id ? (
+            <Link className="underline-offset-2 hover:underline" to={patientHref(row.pet_id)}>
+              {row.pets?.name ?? "Patient record"}
+            </Link>
+          ) : (
+            "Patient unavailable"
+          )}
           <span className="font-normal text-muted-foreground">
             {" "}
             — {row.appointment_type}
           </span>
         </p>
         <p className="truncate text-sm text-muted-foreground">
-          {[row.clients?.full_name, staffName].filter(Boolean).join(" · ")}
+          {row.clients?.full_name && (
+            <Link className="underline-offset-2 hover:text-foreground hover:underline" to={householdHref(row.client_id)}>
+              {row.clients.full_name}
+            </Link>
+          )}
+          {row.clients?.full_name && staffName ? " · " : ""}
+          {staffName}
         </p>
         {address && (
           <p className="truncate text-sm text-muted-foreground">
@@ -174,7 +187,23 @@ export default function SchedulePage() {
       ? { clientId: client && UUID.test(client) ? client : "", petId: pet && UUID.test(pet) ? pet : "" }
       : null;
   });
-  const [day, setDay] = useState(() => (linkedDay && CALENDAR_DAY.test(linkedDay) ? linkedDay : denverLocal(new Date()).slice(0, 10)));
+  const [day, setDayState] = useState(() => (linkedDay && CALENDAR_DAY.test(linkedDay) ? linkedDay : denverLocal(new Date()).slice(0, 10)));
+  // A later ?date link to this already-open page (e.g. from Operations) wins.
+  const [seenLinkedDay, setSeenLinkedDay] = useState(linkedDay);
+  if (linkedDay !== seenLinkedDay) {
+    setSeenLinkedDay(linkedDay);
+    if (linkedDay && CALENDAR_DAY.test(linkedDay)) setDayState(linkedDay);
+  }
+  // Keep ?date in the URL so reload, back-from-a-patient and shared links
+  // reopen the same day. Replace, not push: paging days is not navigation.
+  const setDay = (next: string) => {
+    setDayState(next);
+    setSearchParams((previous) => {
+      const params = new URLSearchParams(previous);
+      params.set("date", next);
+      return params;
+    }, { replace: true });
+  };
   const [week, setWeek] = useState(false);
   const [editing, setEditing] = useState<Appointment | null | undefined>(() => (booking ? null : undefined));
   const count = week ? 7 : 1;
@@ -268,28 +297,46 @@ export default function SchedulePage() {
                   )}
                   <div className="space-y-2">
                     {entries.map((row) => (
-                      <button
-                        className="w-full rounded-md border bg-card p-3 text-left hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                      // The whole card opens the editor; the pet and household
+                      // names sit above that button as their own links.
+                      <div
+                        className="relative w-full rounded-md border bg-card p-3 text-left hover:bg-accent focus-within:ring-2 focus-within:ring-ring"
                         key={row.id}
-                        onClick={() => setEditing(row)}
                       >
-                        <p className="font-semibold">
+                        <button
+                          type="button"
+                          className="absolute inset-0 rounded-md focus-visible:outline-none"
+                          aria-label={`Edit ${formatDenverTime(row.scheduled_at)} ${row.pets?.name ?? "appointment"}`}
+                          onClick={() => setEditing(row)}
+                        />
+                        <p className="pointer-events-none relative font-semibold">
                           {formatDenverTime(row.scheduled_at)} ·{" "}
-                          {row.pets?.name ?? "Patient unavailable"}
+                          {row.pet_id ? (
+                            <Link className="pointer-events-auto underline-offset-2 hover:underline" to={patientHref(row.pet_id)}>
+                              {row.pets?.name ?? "Patient record"}
+                            </Link>
+                          ) : (
+                            "Patient unavailable"
+                          )}
                         </p>
-                        <p className="text-sm">
-                          {row.clients?.full_name} · {row.appointment_type}
+                        <p className="pointer-events-none relative text-sm">
+                          {row.clients?.full_name && (
+                            <Link className="pointer-events-auto underline-offset-2 hover:underline" to={householdHref(row.client_id)}>
+                              {row.clients.full_name}
+                            </Link>
+                          )}{" "}
+                          · {row.appointment_type}
                         </p>
-                        <p className="text-sm">
+                        <p className="pointer-events-none relative text-sm">
                           {row.profiles?.full_name?.trim() || (row.assigned_dvm_id ? `Staff ${row.assigned_dvm_id.slice(0, 8)}` : "Unassigned")}
                         </p>
-                        <div className="mt-1 flex items-center gap-2">
+                        <div className="pointer-events-none relative mt-1 flex items-center gap-2">
                           <StatusChip status={row.status} />
                           <span className="text-sm text-muted-foreground">
                             {row.duration_minutes} min · {visitTypeLabel(row.visit_type)}
                           </span>
                         </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                   {query.data.total === query.data.appointments.length && (

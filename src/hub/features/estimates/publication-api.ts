@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
+import { asJson } from "../../../integrations/supabase/rpc.ts";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
 import { correctionEqual as equal } from "../prescriptions/fulfillment-corrections-api.ts";
 import {
@@ -531,7 +533,7 @@ export function createEstimatePublicationApi(
   target.parse(t);
   const previews = new Map<string, PublicationContext>(),
     prepared = new Map<string, PublicationPreparation>();
-  async function rpc(name: string, args: Record<string, unknown>) {
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await db.rpc(name, args);
     if (error) throw error;
     return data;
@@ -808,7 +810,7 @@ export function createEstimatePublicationApi(
           op.payload.kind === "publish"
             ? "publish_native_estimate"
             : "withdraw_native_estimate",
-          { p_id: op.id, p_request: op.payload.request },
+          { p_id: op.id, p_request: asJson(op.payload.request) },
         ),
         op,
       );
@@ -825,7 +827,7 @@ export function createEstimatePublicationApi(
         r = resolution.parse(
           await rpc("close_native_estimate_publication_operation", {
             p_id: op.id,
-            p_mutation: op.payload,
+            p_mutation: asJson(op.payload),
           }),
         );
       if (r.status === "recorded")

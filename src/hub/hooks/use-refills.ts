@@ -3,8 +3,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createNativeRefillApi } from "@/hub/features/refills/refill-api";
 import type { NativeRefillCursor } from "@/hub/features/refills/refill-api";
-import type { PrescriptionRpc } from "@/hub/features/prescriptions/prescription-api";
-export function useRefillApi(actor: string) { return useMemo(() => createNativeRefillApi(supabase as unknown as PrescriptionRpc, actor), [actor]); }
+export function useRefillApi(actor: string) { return useMemo(() => createNativeRefillApi(supabase, actor), [actor]); }
 export function useRefills(actor: string, enabled = true) {
   const api = useRefillApi(actor);
   return useInfiniteQuery({ queryKey: ["native-refills", actor], enabled, initialPageParam: null as NativeRefillCursor | null, queryFn: ({ pageParam }) => api.list(pageParam), getNextPageParam: page => page.next_cursor ?? undefined, refetchOnWindowFocus: false, refetchOnReconnect: false });

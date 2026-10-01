@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import {
   queue,
@@ -8,26 +6,7 @@ import {
   retryPage,
   type RetryIntent,
 } from "./ProcessingState";
-interface Contract {
-  Args: Record<string, Json>;
-  Returns: Json;
-}
-interface ProcessingDatabase {
-  public: {
-    Tables: Database["public"]["Tables"];
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
-    Functions: {
-      list_communication_processing_queue: Contract;
-      preview_communication_event_retry: Contract;
-      requeue_communication_event: Contract;
-      recover_communication_event_retry: Contract;
-      list_communication_event_retries: Contract;
-    };
-  };
-}
-const db = supabase as unknown as SupabaseClient<ProcessingDatabase>;
+const db = supabase;
 export interface Cursor {
   at: string;
   id: string;

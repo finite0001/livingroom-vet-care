@@ -29,7 +29,6 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { formatDenverDayLabel, formatDenverTime, denverLocal } from "@/hub/features/scheduling/time";
 import {
@@ -40,22 +39,9 @@ import {
 import { useScheduleDay } from "@/hub/features/scheduling/use-schedule-day";
 import { useAppointmentStatus } from "@/hub/features/scheduling/use-appointment-status";
 import { cn } from "@/lib/utils";
+import { householdHref, patientHref } from "@/hub/features/patient-360/model";
 
-// The newest native tables (e.g. native_refills) are RPC-only and not in the
-// generated types, so the refill count uses the same permissive cast as the
-// refill API rather than a typed table select.
-interface Database {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      [key: string]: { Args: Record<string, unknown>; Returns: unknown };
-    };
-  };
-}
-const client = supabase as unknown as SupabaseClient<Database>;
+const client = supabase;
 
 const TERMINAL_STATUSES = ["COMPLETED", "CANCELLED", "NO_SHOW"];
 
@@ -104,6 +90,8 @@ interface AttentionItem {
   path: string;
   tone: StatusTone;
   icon: LucideIcon;
+  /** Direct links to the specific records behind the count, when known. */
+  links?: { key: string; label: string; path: string }[];
   /** Positive phrasing used in the "All caught up" card when count is zero. */
   clearLabel: string;
   query: {
@@ -135,6 +123,20 @@ function AttentionRow({ item }: { item: AttentionItem }) {
         >
           {item.actionLabel} →
         </Link>
+        {item.links && item.links.length > 1 && (
+          <ul className="mt-1 space-y-0.5">
+            {item.links.map((link) => (
+              <li key={link.key}>
+                <Link
+                  to={link.path}
+                  className="text-xs text-muted-foreground underline-offset-2 hover:text-terracotta-dark hover:underline"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </li>
   );
@@ -333,6 +335,29 @@ export default function HubHomePage() {
     return count;
   });
 
+  // The oldest few drafts, so "Review notes" lands on an actual note (the
+  // patient's SOAP section) instead of the unfiltered patient list.
+  const unsignedNotes = useQuery({
+    queryKey: ["today", "unsigned-notes"],
+    enabled: !!actor && (unsigned.data ?? 0) > 0,
+    staleTime: 15_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clinical_encounters")
+        .select("id,pet_id,visit_at,pets(name)")
+        .eq("status", "draft")
+        .order("visit_at", { ascending: true })
+        .limit(3);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const unsignedLinks = (unsignedNotes.data ?? []).map((note) => ({
+    key: note.id,
+    label: `${note.pets?.name ?? "Patient"} · ${formatDenverDayLabel(denverLocal(note.visit_at).slice(0, 10))}`,
+    path: patientHref(note.pet_id, "medical", "soap"),
+  }));
+
   // Admin-gated: the query stays disabled (and unread) for non-admins, and the
   // item below is only built for admins, so the card can never get stuck on
   // "Loading…" for staff without the admin role.
@@ -443,8 +468,11 @@ export default function HubHomePage() {
           ? "1 note is still unsigned"
           : `${unsigned.data ?? 0} notes are still unsigned`,
       detail: "Signed notes keep every patient record complete.",
-      actionLabel: "Review notes",
-      path: "/hub/patients",
+      actionLabel: unsignedLinks.length
+        ? `Open ${unsignedLinks.length > 1 ? "oldest " : ""}unsigned note`
+        : "Review notes",
+      path: unsignedLinks[0]?.path ?? "/hub/patients",
+      links: unsignedLinks,
       tone: "warning",
       icon: FileText,
       clearLabel: "Every note is signed.",
@@ -678,7 +706,7 @@ export default function HubHomePage() {
                   )}
                   {hero.pet_id ? (
                     <Button variant="outline" asChild>
-                      <Link to={`/hub/patient/${hero.pet_id}`}>
+                      <Link to={patientHref(hero.pet_id)}>
                         Open {hero.pets?.name ?? "patient"}'s record
                       </Link>
                     </Button>
@@ -749,15 +777,31 @@ export default function HubHomePage() {
               <ul className="mt-1 divide-y divide-border/70">
                 {restOfDay.map((visit) => {
                   const address = visitAddress(visit.address_snapshot);
-                  const subtitle = guided
-                    ? `${visit.appointment_type} with ${visit.clients?.full_name ?? "the client"}${address ? ` at ${address}` : ""}, starting at ${formatDenverTime(visit.scheduled_at)}.`
-                    : [
-                        visit.appointment_type,
-                        visit.clients?.full_name,
-                        address,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ");
+                  const clientName = visit.clients?.full_name;
+                  const clientLink = clientName ? (
+                    <Link
+                      to={householdHref(visit.client_id)}
+                      className="underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      {clientName}
+                    </Link>
+                  ) : null;
+                  const subtitle = guided ? (
+                    <>
+                      {visit.appointment_type} with {clientLink ?? "the client"}
+                      {address ? ` at ${address}` : ""}, starting at{" "}
+                      {formatDenverTime(visit.scheduled_at)}.
+                    </>
+                  ) : (
+                    [visit.appointment_type, clientLink, address]
+                      .filter(Boolean)
+                      .map((part, index) => (
+                        <span key={index}>
+                          {index > 0 && " · "}
+                          {part}
+                        </span>
+                      ))
+                  );
                   return (
                     <li
                       key={visit.id}
@@ -773,8 +817,17 @@ export default function HubHomePage() {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">
-                          {visit.pets?.name ?? "Patient"} —{" "}
-                          {visit.appointment_type}
+                          {visit.pet_id ? (
+                            <Link
+                              to={patientHref(visit.pet_id)}
+                              className="underline-offset-2 hover:underline"
+                            >
+                              {visit.pets?.name ?? "Patient"}
+                            </Link>
+                          ) : (
+                            (visit.pets?.name ?? "Patient")
+                          )}{" "}
+                          — {visit.appointment_type}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {subtitle}

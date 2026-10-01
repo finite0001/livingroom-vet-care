@@ -4,11 +4,12 @@ import {Button} from '@/components/ui/button';
 import {supabase} from '@/integrations/supabase/client';
 import {useAuth} from '@/hub/contexts/auth-context';
 import type {EstimateDraft} from './estimate-api';
-import type {PrescriptionRpc} from '../prescriptions/prescription-api';
 import {createEstimatePublicationApi,createEstimatePublicationEdge} from './publication-api';
 import {createEstimateDecisionStaffApi,type StaffEstimateDecisionPage,type StaffEstimateDecisionState,type EstimateWitnessOperation,type EstimateWitnessReceipt} from './decision-staff-api';
 import {createActorPinnedEstimateDecisionRpc} from './decision-staff-transport';
 import {useEstimateWitnessOperation} from './useEstimateWitnessOperation';
+import {createEstimateDecisionGrantApi,createEstimateDecisionGrantEdge,type EstimateGrantPreview} from './decision-grant-api';
+import {EstimateClientLink} from './EstimateClientLink';
 interface Props {draft:EstimateDraft;onDirtyChange:(dirty:boolean)=>void}
 interface StaffProps extends Props {actorId:string}
 interface ReviewedDocument {url:string;filename:string;preview:Awaited<ReturnType<ReturnType<typeof createEstimateDecisionStaffApi>['preview']>>}
@@ -16,7 +17,10 @@ export function EstimateDecisionWorkspace(props:Props){const {user,profile}=useA
 function StaffWorkspace({draft,actorId,onDirtyChange}:StaffProps){
  const target=useMemo(()=>({estimate_id:draft.id,client_id:draft.client_id,pet_id:draft.pet_id}),[draft.id,draft.client_id,draft.pet_id]);
  const api=useMemo(()=>createEstimateDecisionStaffApi(createActorPinnedEstimateDecisionRpc({baseUrl:import.meta.env.VITE_SUPABASE_URL,publishableKey:import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,actorId,getSession:async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw new Error('Staff session unavailable');return data.session;}}),actorId,target),[actorId,target]);
- const documents=useMemo(()=>createEstimatePublicationApi(supabase as unknown as PrescriptionRpc,actorId,target,createEstimatePublicationEdge(import.meta.env.VITE_SUPABASE_URL,async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw error;if(data.session?.user.id!==actorId)throw new Error('Staff session changed');return data.session.access_token;},import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)),[actorId,target]);
+ const documents=useMemo(()=>createEstimatePublicationApi(supabase,actorId,target,createEstimatePublicationEdge(import.meta.env.VITE_SUPABASE_URL,async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw error;if(data.session?.user.id!==actorId)throw new Error('Staff session changed');return data.session.access_token;},import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)),[actorId,target]);
+ const grants=useMemo(()=>createEstimateDecisionGrantApi(createEstimateDecisionGrantEdge(import.meta.env.VITE_SUPABASE_URL,async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw error;if(data.session?.user.id!==actorId)throw new Error('Staff session changed');return data.session.access_token;},import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),createActorPinnedEstimateDecisionRpc({baseUrl:import.meta.env.VITE_SUPABASE_URL,publishableKey:import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,actorId,getSession:async()=>{const {data,error}=await supabase.auth.getSession();if(error)throw new Error('Staff session unavailable');return data.session;}}),actorId,target),[actorId,target]);
+ const linkPreview=useCallback(async()=>{const current=await api.state();if(!current.current_publication_id||current.current_decision)throw new Error('No undecided current publication');return (await api.preview(current.current_publication_id)) as EstimateGrantPreview;},[api]);
+ const [linkDirty,setLinkDirty]=useState(false);
  const [state,setState]=useState<StaffEstimateDecisionState|null>(null),[history,setHistory]=useState<StaffEstimateDecisionPage|null>(null),[review,setReview]=useState<ReviewedDocument|null>(null);
  const [error,setError]=useState(''),[loading,setLoading]=useState(false),[name,setName]=useState(''),[relationship,setRelationship]=useState<'owner'|'authorized_agent'>('owner'),[choice,setChoice]=useState<'accept'|'decline'>('accept');
  const [channel,setChannel]=useState<'in_person'|'telephone'|'video'|'written'>('telephone'),[occurred,setOccurred]=useState(''),[note,setNote]=useState(''),[comment,setComment]=useState(''),[attest,setAttest]=useState(false);
@@ -27,7 +31,7 @@ function StaffWorkspace({draft,actorId,onDirtyChange}:StaffProps){
  useEffect(()=>{void refresh().catch(()=>{if(alive.current)setError('Decision history could not be loaded. Try again.');});},[refresh]);
  const onResolved=useCallback((receipt:EstimateWitnessReceipt|null)=>{clearReview();if(receipt){setName('');setNote('');setComment('');setOccurred('');}void refresh().catch(()=>{if(alive.current)setError('Saved outcome confirmed, but current history could not be refreshed.');});},[clearReview,refresh]);
  const operation=useEstimateWitnessOperation<EstimateWitnessOperation,EstimateWitnessReceipt>({identity:`${actorId}:${draft.id}:${draft.client_id}:${draft.pet_id}`,actorId,parseOperation:api.parseOperation,execute:api.execute,recover:api.recover,close:api.close,onResolved});
- const dirty=operation.locked||loading||!!review||!!name||!!note||!!comment||!!occurred;
+ const dirty=operation.locked||loading||linkDirty||!!review||!!name||!!note||!!comment||!!occurred;
  useEffect(()=>{onDirtyChange(dirty);return()=>onDirtyChange(false);},[dirty,onDirtyChange]);
  async function loadDocument(){if(lock.current||operation.locked)return;lock.current=true;setLoading(true);setError('');clearReview();const g=++generation.current;
   try{const current=await api.state();if(!current.current_publication_id||current.current_decision)throw new Error('No undecided current publication');const preview=await api.preview(current.current_publication_id);const published=await documents.published(current.current_publication_id);
@@ -42,6 +46,7 @@ function StaffWorkspace({draft,actorId,onDirtyChange}:StaffProps){
   {error&&<p role="alert" className="text-destructive">{error}</p>}{operation.error&&<p role="alert" className="text-destructive">{operation.error}</p>}{operation.notice&&<p role="status">{operation.notice}</p>}
   {operation.pending&&<div className="space-y-2 rounded-md border border-border p-3"><h4 className="font-semibold">Resolve original witnessed decision</h4><p className="break-all text-sm">Request {operation.pending.id} · {operation.pending.payload.decision.choice} · {operation.pending.payload.decision.signer_name}</p><div className="flex flex-wrap gap-2"><Button disabled={operation.busy||operation.blocked} onClick={()=>void operation.recover()}>Recover original witnessed decision</Button><Button variant="outline" disabled={operation.busy||operation.blocked} onClick={()=>void operation.retry()}>Retry identical witnessed decision</Button><Button variant="outline" disabled={operation.busy||operation.blocked} onClick={()=>void operation.resolve()}>Resolve or close original witnessed request</Button></div><p className="text-sm">An absent recovery is not cancellation. Keep this original request until its exact outcome or permanent closure is confirmed.</p></div>}
   <div className="flex flex-wrap gap-2"><Button onClick={()=>void loadDocument()} disabled={operation.locked||loading}>Review current published estimate</Button><Button variant="outline" onClick={()=>void refresh().catch(()=>setError('History could not be refreshed.'))} disabled={operation.busy||loading}>Refresh decision history</Button></div>
+  <EstimateClientLink grants={grants} preview={linkPreview} disabled={operation.locked||loading} onDirtyChange={setLinkDirty}/>
   {state?.current_decision&&<p role="status">Current publication: {state.current_decision.choice==='accept'?'accepted':'declined'} by {state.current_decision.signer_name}.</p>}
   {review&&<><iframe title="Published estimate for witnessed decision" src={review.url} sandbox="" referrerPolicy="no-referrer" className="h-[28rem] w-full rounded-md border border-border"/><a href={review.url} download={review.filename} className="underline">Download reviewed published estimate</a><p className="text-sm">Acceptance deadline {new Date(review.preview.expires_at).toLocaleString('en-US',{timeZone:'America/Denver'})}, Mountain Time.</p></>}
   <fieldset disabled={!review||operation.locked||loading} className="space-y-3"><legend className="font-semibold">Direct client instruction</legend>

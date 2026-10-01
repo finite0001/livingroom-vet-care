@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { createMigrationWeightApi } from "./migration-weight-api";
-import type { MigrationBinding, MigrationCursor, MigrationRpc } from "./migration-run-api";
+import type { MigrationBinding, MigrationCursor } from "./migration-run-api";
 import type { MigrationItem } from "./migration-items-api";
 interface Props { actor: string; binding: MigrationBinding; item: MigrationItem }
 export function MigrationWeightEvidence({ actor, binding, item }: Props) {
-  const api = useMemo(() => createMigrationWeightApi(supabase as unknown as MigrationRpc, actor), [actor]);
+  const api = useMemo(() => createMigrationWeightApi(supabase, actor), [actor]);
   const [cursor, setCursor] = useState<MigrationCursor | null>(null);
   const [previous, setPrevious] = useState<(MigrationCursor | null)[]>([]);
   const query = useQuery({ queryKey: ["migration-weight-evidence", actor, binding.id, item.evidence_hash, cursor], retry: false,

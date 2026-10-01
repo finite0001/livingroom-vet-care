@@ -1,5 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import {
   historyPage,
@@ -8,26 +7,14 @@ import {
   type PendingAction,
   type Mapping,
 } from "./ExternalRecordState";
-interface Contract {
-  Args: Record<string, Json>;
-  Returns: Json;
+type Fns = Database["public"]["Functions"];
+type ExternalMutation =
+  | "approve_external_record_import"
+  | "acknowledge_external_record";
+function mutate<N extends ExternalMutation>(name: N, args: Fns[N]["Args"]) {
+  return supabase.rpc(name, args);
 }
-interface ExternalDatabase {
-  public: {
-    Tables: Database["public"]["Tables"];
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
-    Functions: {
-      read_external_record_history: Contract;
-      list_external_record_receipts: Contract;
-      approve_external_record_import: Contract;
-      acknowledge_external_record: Contract;
-      recover_external_record_acknowledgment: Contract;
-    };
-  };
-}
-const db = supabase as unknown as SupabaseClient<ExternalDatabase>;
+const db = supabase;
 export interface Cursor {
   at: string;
   id: string;
@@ -87,12 +74,12 @@ export async function verifyAction(
 }
 export async function submitAction(p: PendingAction) {
   if (p.kind === "verify") return verifyAction("prepare", p.args);
-  const { data, error } = await db.rpc(
+  const name: ExternalMutation =
     p.kind === "approve"
       ? "approve_external_record_import"
-      : "acknowledge_external_record",
-    p.args,
-  );
+      : "acknowledge_external_record";
+  // p.args is zod-validated per kind against these signatures (ExternalRecordState).
+  const { data, error } = await mutate(name, p.args as Fns[typeof name]["Args"]);
   if (error) throw error;
   return data;
 }

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { Button } from "@/components/ui/button";
@@ -32,35 +31,6 @@ interface SavePolicy {
   p_enabled: boolean;
   p_review_note: string;
 }
-interface PolicyDatabase {
-  public: {
-    Tables: {
-      reminder_automation_policies: {
-        Row: { [K in keyof Policy]: Policy[K] };
-        Insert: never;
-        Update: never;
-        Relationships: [];
-      };
-    };
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      save_reminder_automation_policy: {
-        Args: { [K in keyof SavePolicy]: SavePolicy[K] };
-        Returns: Policy;
-      };
-      disable_reminder_automation_policy: {
-        Args: {
-          p_id: string;
-          p_expected_version: number;
-          p_review_note: string;
-        };
-        Returns: Policy;
-      };
-    };
-  };
-}
 interface PolicyForm {
   id: string;
   existing: Policy | null;
@@ -74,7 +44,7 @@ interface PolicyForm {
 interface ReminderDeliverySettingsProps {
   onDirtyChange: (dirty: boolean) => void;
 }
-const db = supabase as unknown as SupabaseClient<PolicyDatabase>;
+const db = supabase;
 const sources = [
   { value: "appointment", label: "Appointments" },
   { value: "vaccine", label: "Vaccines" },

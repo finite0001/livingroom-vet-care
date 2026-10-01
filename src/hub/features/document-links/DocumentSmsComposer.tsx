@@ -4,7 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { linkDb as db } from "./api";
+import {
+  linkDb as db,
+  parseLinkHistory,
+  parseLinkPreview,
+  type LinkHistoryRow,
+} from "./api";
 import {
   parsePreparation,
   validateIntent,
@@ -52,16 +57,7 @@ function Composer({
     ),
     [expiry, setExpiry] = useState("");
   const [historyId, setHistoryId] = useState("");
-  const [history, setHistory] = useState<
-    Array<{
-      id: string;
-      created_at: string;
-      expires_at: string;
-      state: string;
-      recipient: string;
-      receipt_state: string | null;
-    }>
-  >([]);
+  const [history, setHistory] = useState<LinkHistoryRow[]>([]);
   const [historyError, setHistoryError] = useState(false);
   const loadHistory = async () => {
     const result = await db.rpc("read_document_link_history", {
@@ -69,11 +65,12 @@ function Composer({
       p_source_id: sourceId,
     });
     if (!active.current) return;
-    if (result.error || !Array.isArray(result.data)) {
+    const rows = result.error ? null : parseLinkHistory(result.data);
+    if (!rows) {
       setHistoryError(true);
       return;
     }
-    setHistory(result.data);
+    setHistory(rows);
     setHistoryError(false);
   };
   const [checked, setChecked] = useState(false),
@@ -249,6 +246,7 @@ function Composer({
           p_client_id: clientId,
         });
         if (preview.error) throw preview.error;
+        const reviewed = parseLinkPreview(preview.data);
         const conversation = await supabase.rpc("ensure_active_conversation", {
           p_client_id: clientId,
         });
@@ -263,8 +261,8 @@ function Composer({
             p_source_id: sourceId,
             p_client_id: clientId,
             p_conversation_id: conversation.data.id,
-            p_recipient: preview.data.recipient,
-            p_source_hash: preview.data.source_hash,
+            p_recipient: reviewed.recipient,
+            p_source_hash: reviewed.source_hash,
             p_expires_at: new Date(expiry).toISOString(),
             p_message_template: template,
           },

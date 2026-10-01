@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface CloudTalkCall {
@@ -39,32 +37,10 @@ export interface CloudTalkMessage {
   occurred_at: string;
 }
 
-interface CloudTalkDatabase {
-  public: {
-    Tables: {
-      cloudtalk_calls: { Row: CloudTalkCall; Insert: CloudTalkCall; Update: Partial<CloudTalkCall>; Relationships: [] };
-      cloudtalk_messages: { Row: CloudTalkMessage; Insert: CloudTalkMessage; Update: Partial<CloudTalkMessage>; Relationships: [] };
-      cloudtalk_projection_failures: { Row: CloudTalkProjectionFailure; Insert: CloudTalkProjectionFailure; Update: Partial<CloudTalkProjectionFailure>; Relationships: [] };
-    };
-    Views: Record<never, never>;
-    Functions: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-  };
-}
 
 // CloudTalk tables are read directly under their RLS policies (active staff;
 // calls additionally require a trusted practice number).
-export const cloudtalkDb = supabase as unknown as SupabaseClient<CloudTalkDatabase>;
+export const cloudtalkDb = supabase;
 
-interface RetryDatabase {
-  public: {
-    Tables: Database["public"]["Tables"];
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
-    Functions: { retry_cloudtalk_projections: { Args: Record<string, Json>; Returns: Json } };
-  };
-}
-export const cloudtalkRpc = supabase as unknown as SupabaseClient<RetryDatabase>;
+export const cloudtalkRpc = supabase;
 

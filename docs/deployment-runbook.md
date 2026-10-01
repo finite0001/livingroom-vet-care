@@ -54,7 +54,7 @@ Apply checked-in migrations in chronological order. Prefer authenticated CLI dep
 
 The September 24 Edge Function inventory records 35 hosted functions, including the current launch worker/webhook slugs and the public `health` probe. The three server workers use managed secret API-key authentication; staff endpoints retain JWT verification. `send-email` and `send-sms` are retired 410 endpoints directing callers to the reviewed queue workflow. `APP_URL=https://thelivingroom.vet`, `APP_ENV=staging`, and `OUTBOUND_DELIVERY_MODE=disabled` are the intended safe defaults unless a controlled test changes them deliberately. No provider credentials are required for disabled-mode readiness. Deploy only reviewed Edge Functions. `invite-staff` requires fixed `APP_URL` and active-admin authentication. Production Auth SMTP and real invitations are separate operational acceptance steps; configure them using [staff-access.md](staff-access.md). Keep client/provider delivery disabled by default using [messaging-environments.md](messaging-environments.md). Provider round-trips and actual staff workflows remain unverified.
 
-`send-provider-email` and `suggest-replies` remain intentionally not commissioned for launch. Do not enable either until its schema, provider configuration and acceptance evidence are explicitly reviewed.
+`send-provider-email` and `suggest-replies` were deleted from the repository on 2026-09-30 (no caller). If either is still deployed on a hosted project, delete it there; never redeploy it.
 
 ## Before switching from the old backend
 

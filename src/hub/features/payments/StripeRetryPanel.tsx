@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import {
   matchingStripeRetry,
@@ -15,15 +16,9 @@ import {
   stripeQueuePage,
   type StripeQueueCursor,
 } from "./StripeRetryState";
-interface RetryDatabase {
-  rpc: (
-    name: string,
-    args: Record<string, unknown>,
-  ) => PromiseLike<{ data: unknown; error: unknown }>;
-}
-const db = supabase as unknown as RetryDatabase;
-async function rpc(name: string, args: Record<string, unknown>) {
-  const { data, error } = await db.rpc(name, args);
+type Fns = Database["public"]["Functions"];
+async function rpc<N extends keyof Fns>(name: N, args: Fns[N]["Args"]) {
+  const { data, error } = await supabase.rpc(name, args);
   if (error) throw error;
   return data;
 }

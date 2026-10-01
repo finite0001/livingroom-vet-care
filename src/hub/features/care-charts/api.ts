@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 export interface QolRecord {
   id: string;
@@ -50,7 +50,7 @@ export interface LesionObservation {
   photo_document_id: string | null;
   created_by: string;
   created_at: string;
-  request: Record<string, unknown>;
+  request: Json;
 }
 export interface QolAddendum {
   id: string;
@@ -143,12 +143,6 @@ export interface QolReferenceArgs {
   p_reference_label: string;
   p_review_note: string;
 }
-interface Table<Row> {
-  Row: { [K in keyof Row]: Row[K] };
-  Insert: Partial<Row>;
-  Update: Partial<Row>;
-  Relationships: [];
-}
 export interface QolArgs {
   p_id: string;
   p_pet_id: string;
@@ -179,63 +173,15 @@ export interface LesionArgs {
   p_notes: string;
   p_photo_document_id: string | null;
 }
-interface CareDatabase {
-  public: {
-    Tables: {
-      patient_qol_records: Table<QolRecord>;
-      patient_qol_addenda: Table<QolAddendum>;
-      patient_lesions: Table<Lesion>;
-      patient_lesion_observations: Table<LesionObservation>;
-      patient_lesion_corrections: Table<LesionCorrection>;
-      patient_qol_scale_assessments: Table<QolScaleAssessment>;
-      patient_qol_scale_addenda: Table<QolScaleAddendum>;
-      qol_scale_reference_settings: Table<QolScaleReference>;
-    };
-    Views: Record<never, never>;
-    Functions: {
-      save_patient_qol: {
-        Args: { [K in keyof QolArgs]: QolArgs[K] };
-        Returns: QolRecord;
-      };
-      sign_patient_qol: {
-        Args: { p_id: string; p_expected_version: number };
-        Returns: QolRecord;
-      };
-      add_patient_qol_addendum: {
-        Args: { p_id: string; p_qol_id: string; p_content: string };
-        Returns: QolAddendum;
-      };
-      record_lesion_observation: {
-        Args: { [K in keyof LesionArgs]: LesionArgs[K] };
-        Returns: LesionObservation;
-      };
-      correct_lesion_observation: {
-        Args: { p_id: string; p_observation_id: string; p_reason: string };
-        Returns: LesionCorrection;
-      };
-      save_patient_qol_scale: {
-        Args: { [K in keyof QolScaleArgs]: QolScaleArgs[K] };
-        Returns: QolScaleAssessment;
-      };
-      sign_patient_qol_scale: {
-        Args: { p_id: string; p_expected_version: number };
-        Returns: QolScaleAssessment;
-      };
-      add_patient_qol_scale_addendum: {
-        Args: { p_id: string; p_assessment_id: string; p_content: string };
-        Returns: QolScaleAddendum;
-      };
-      save_qol_scale_reference: {
-        Args: { [K in keyof QolReferenceArgs]: QolReferenceArgs[K] };
-        Returns: QolScaleReference;
-      };
-    };
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-  };
-}
-// This module's exact schema contract keeps parallel migrations out of generated shared types.
-export const care = supabase as unknown as SupabaseClient<CareDatabase>;
-export type CareMutation = keyof CareDatabase["public"]["Functions"];
-export type CareArgs =
-  CareDatabase["public"]["Functions"][CareMutation]["Args"];
+export const care = supabase;
+export type CareMutation =
+  | "save_patient_qol"
+  | "sign_patient_qol"
+  | "add_patient_qol_addendum"
+  | "record_lesion_observation"
+  | "correct_lesion_observation"
+  | "save_patient_qol_scale"
+  | "sign_patient_qol_scale"
+  | "add_patient_qol_scale_addendum"
+  | "save_qol_scale_reference";
+export type CareArgs = Database["public"]["Functions"][CareMutation]["Args"];

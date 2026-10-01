@@ -22,6 +22,7 @@ import {
 import { readVaccineProfiles } from "../vaccines/api";
 import { vaccineProfileQueryKey } from "../vaccines/profile-display";
 import { suggestedDueDate } from "../vaccines/vaccine-status";
+import { householdHref } from "@/hub/features/patient-360/model";
 interface PatientTreatmentsProps {
   petId: string;
   clientId: string;
@@ -338,7 +339,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
               )}
               <p className="text-sm text-muted-foreground">
                 Create a draft invoice in{" "}
-                <Link className="underline" to={`/hub/client/${clientId}`}>
+                <Link className="underline" to={householdHref(clientId, "billing", "invoices")}>
                   this client’s billing panel
                 </Link>{" "}
                 first. Recording treatment debits stock and adds one charge

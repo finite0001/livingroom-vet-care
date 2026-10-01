@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import type { PrescriptionRpc } from "./prescription-api";
 import type { NativeDispense } from "./fulfillment-api";
 import {
   createFulfillmentCorrectionsApi,
@@ -53,7 +52,7 @@ function CorrectionWorkspace({
   const api = useMemo(
     () =>
       createFulfillmentCorrectionsApi(
-        supabase as unknown as PrescriptionRpc,
+        supabase,
         actor,
         target,
       ),

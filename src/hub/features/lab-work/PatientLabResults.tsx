@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LabDatabase, LabOrder } from "./model";
+import type { LabOrder } from "./model";
 import {
   readLabResults,
   recoverLabReceipt,
@@ -137,7 +136,7 @@ function LabResults({
         .eq("pet_id", order.pet_id)
         .eq("status", "ready")
         .order("created_at", { ascending: false }),
-      (supabase as unknown as SupabaseClient<LabDatabase>)
+      supabase
         .from("patient_lab_orders")
         .select("version")
         .eq("id", order.id)

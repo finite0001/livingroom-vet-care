@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,41 +12,12 @@ import {
   type EmailArgs,
   type EmailPreparation,
 } from "./email-state";
-interface DeliveryDatabase {
-  public: {
-    Tables: Record<never, never>;
-    Views: Record<never, never>;
-    Enums: Record<never, never>;
-    CompositeTypes: Record<never, never>;
-    Functions: {
-      recover_release_email: {
-        Args: { p_release_id: string; p_request_id?: string };
-        Returns: EmailPreparation | null;
-      };
-      prepare_release_email: {
-        Args: { [K in keyof EmailArgs]: EmailArgs[K] };
-        Returns: EmailPreparation;
-      };
-      enqueue_release_email: {
-        Args: {
-          p_request_id: string;
-          p_reviewed_payload_hash: string;
-          p_attest: boolean;
-        };
-        Returns: { id: string; state: string };
-      };
-      abandon_release_email: {
-        Args: { p_request_id: string };
-        Returns: undefined;
-      };
-      read_release_email_attachment: {
-        Args: { p_request_id: string; p_index: number };
-        Returns: { filename: string; content_type: string; content: string };
-      };
-    };
-  };
-}
-const db = supabase as unknown as SupabaseClient<DeliveryDatabase>;
+const attachmentSchema = z.object({
+  filename: z.string(),
+  content_type: z.string(),
+  content: z.string(),
+});
+const db = supabase;
 function argsFrom(p: EmailPreparation): EmailArgs {
   return {
     p_request_id: p.request.id,
@@ -254,15 +225,16 @@ export function ReleaseEmailComposer({
         p_index: index,
       });
       if (error) throw error;
-      if (!data) throw new Error("Frozen attachment unavailable.");
-      const raw = atob(data.content),
+      const file = attachmentSchema.safeParse(data);
+      if (!file.success) throw new Error("Frozen attachment unavailable.");
+      const raw = atob(file.data.content),
         bytes = Uint8Array.from(raw, (c) => c.charCodeAt(0));
       const url = URL.createObjectURL(
-        new Blob([bytes], { type: data.content_type }),
+        new Blob([bytes], { type: file.data.content_type }),
       );
       const a = document.createElement("a");
       a.href = url;
-      a.download = data.filename;
+      a.download = file.data.filename;
       a.rel = "noopener noreferrer";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);

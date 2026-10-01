@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import { precedes } from "./attachment-review-history.ts";
 import type { MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api.ts";
 import type { MigrationResolutionRequest } from "./migration-resolution-state.ts";
@@ -91,7 +92,7 @@ export function createMigrationResolutionApi(client: MigrationRpc, actor: string
     if (r.id !== request.id || r.action !== request.action || r.reason !== request.reason || r.replaces_id !== request.replaces_id || r.reviewed_context_hash !== request.expected_context_hash) throw new Error("Saved resolution request differs");
     return r;
   }
-  async function rpc(name: string, args: Record<string, unknown>) {
+  async function rpc<N extends RpcName>(name: N, args: RpcArgs<N>) {
     const { data, error } = await client.rpc(name, args);
     if (error) throw error;
     return data;

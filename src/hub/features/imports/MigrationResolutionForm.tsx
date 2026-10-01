@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { createMigrationResolutionApi } from "./migration-resolution-api";
 import type { MigrationResolutionContext, MigrationResolutionTarget } from "./migration-resolution-api";
-import type { MigrationManifest, MigrationRpc } from "./migration-run-api";
+import type { MigrationManifest } from "./migration-run-api";
 import { beginResolutionRecovery, beginResolutionSave, emptyResolutionState, resolutionConfirmed, resolutionRecoveryAbsent, resolutionRecoveryFailed, resolutionSaveFailed } from "./migration-resolution-state";
 import { MigrationResolutionHistory } from "./MigrationResolutionHistory";
 
@@ -49,7 +49,7 @@ function CurrentTargetNames({ actor, clientId, petId }: TargetNamesProps) {
   </div>;
 }
 function ResolutionForm({ actor, manifest, scopeId, target, onDirtyChange }: Props) {
-  const api = useMemo(() => createMigrationResolutionApi(supabase as unknown as MigrationRpc, actor, manifest), [actor, manifest]);
+  const api = useMemo(() => createMigrationResolutionApi(supabase, actor, manifest), [actor, manifest]);
   const targetKey = `${scopeId}:${JSON.stringify(target)}`;
   const [state, setState] = useState(() => emptyResolutionState(actor, targetKey));
   const [context, setContext] = useState<MigrationResolutionContext | null>(null);

@@ -9,6 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   certificates,
   readCertificate,
+  parseCertificateSnapshot,
+  parseCertificateRow,
+  previewRpcArgs,
+  issueRpcArgs,
   attestations,
   type CertificateBundle,
   type IssueArgs,
@@ -272,10 +276,10 @@ export function PatientCertificates({
     run(async () => {
       const { data, error } = await certificates.rpc(
         "preview_vaccine_certificate",
-        previewArgs(),
+        previewRpcArgs(previewArgs()),
       );
       if (error) throw error;
-      setPreview(data);
+      setPreview(parseCertificateSnapshot(data));
       setSignature("");
       setAttested(false);
     });
@@ -298,7 +302,7 @@ export function PatientCertificates({
       setPending(args);
       const { data, error } = await certificates.rpc(
         "issue_vaccine_certificate",
-        args,
+        issueRpcArgs(args),
       );
       if (error) {
         if (["PT409", "23514", "42501"].includes(error.code)) {
@@ -321,7 +325,7 @@ export function PatientCertificates({
       await cache.invalidateQueries({
         queryKey: ["patient-certificates", petId],
       });
-      setOpened(await readCertificate(data.id));
+      setOpened(await readCertificate(parseCertificateRow(data).id));
     });
   const open = (id: string) =>
     run(async () => {
