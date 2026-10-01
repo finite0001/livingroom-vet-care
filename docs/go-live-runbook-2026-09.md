@@ -18,7 +18,7 @@ Rules for every step:
 | Item | State |
 | --- | --- |
 | Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
-| Repository migrations after this train | 162. There are **10 pending**: `20260927120000` (contact SMS consent, already on main) plus the 9 from this train (§3). |
+| Repository migrations on `main` | 167 (as of 2026-10-01, after #225). There are **15 pending**, listed in order in §3. The Vercel frontend deploys on every merge, so production is already running code that expects them. |
 | Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
 | Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. Migration `20260930130000_scheduler_timeout_and_payload_purge` (not yet applied) raises the call timeout to 30 s and adds a seventh, in-database job, `purge-expired-email-payloads` (daily, needs no Vault secret). |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
@@ -61,7 +61,7 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
 
 ## 3. Apply database migrations (staging, then primary)
 
-These are the 11 pending migrations, applied in this order:
+These are the 15 pending migrations, applied in this order:
 
 | Version | What it does | Must land before |
 | --- | --- | --- |
@@ -76,6 +76,12 @@ These are the 11 pending migrations, applied in this order:
 | `20260928180000_agentmail_inbound` | Adds provider `agentmail` to provider receipts (inbound only, with the signed inbox and message ids required), makes it an EMAIL channel in `complete_inbound_communication`, and lets attachment capture/read/list accept AgentMail rows. The capture lease now names the provider and the signed provider ids. Resend and Twilio rows are unchanged. | **deploying `agentmail-inbound-webhook`, `process-inbound` and `capture-inbound-attachment`** (§4). Without it, AgentMail receipts are refused with 23514 and AgentMail retries them. |
 | `20260928160000_cloudtalk_capability_redaction` | Redacts document-link and payment-link capabilities from CloudTalk message bodies and AI summaries at ingest, redacts any already stored (audited in `cloudtalk_capability_redactions`), re-projects the texts they had blocked, and matches app-sent link texts to their outbox row | **enabling live CloudTalk SMS** (§7). Apply it before any document or payment link is texted. Redeploy `cloudtalk-webhook` (§4) right after it. |
 | `20260928170000_patient_360_read_model` | Adds the read-only Patient 360 / household 360 RPCs (`read_patient_360`, `read_household_360`, `list_patient_timeline`, `list_household_timeline`) and supporting indexes. No data changes. See `docs/patient-360.md` | **the frontend**. `/hub/patient/:id` and `/hub/client/:id` call these RPCs. |
+| `20260928190000_no_retryable_sqlstate_for_permanent_conditions` | Stops raising SQLSTATE 40001 for permanent conditions, which PostgREST retried forever (PR #219) | any webhook or worker traffic |
+| `20260930100000_sms_resubscribe_after_stop` | START keyword and staff re-consent clear a CloudTalk STOP suppression, and adds `sms_suppression_events` (PR #220) | redeploying `cloudtalk-webhook` |
+| `20260930120000_linkage_integrity` | Clinical FKs become RESTRICT, pets can't be deleted, NOT VALID pet/household FKs and CHECKs, writes to legacy `pet_vaccinations`/`lab_results` frozen, 19 indexes (PR #225, audit A-items). Re-creating the RESTRICT FKs scans each child table, so apply it outside clinic hours. | the validation step below |
+| `20260930130000_scheduler_timeout_and_payload_purge` | `scheduler_dispatch` timeout 5 s → 30 s, plus a daily `purge-expired-email-payloads` cron job (PR #225, audit B3/B12) | **redeploying the queue workers** (§4). Their new 20 s batch budget would otherwise exceed the old 5 s timeout, and runs would be recorded as failed. |
+
+If you hand-applied either hotfix (`20260928190000`, `20260930100000`) through the SQL editor, it has no ledger row, so the dry run will still list it. `20260930100000` is not re-runnable: first mark it with `npx supabase migration repair --status applied <version> --project-ref <ref>`, then repeat the dry run.
 
 ```sh
 cd ~/Developer/livingroom-vet-care && git switch main && git pull --ff-only
@@ -83,7 +89,7 @@ git rev-parse HEAD                      # must equal the merged SHA from §1
 
 # Staging
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault --dry-run
-#   expect exactly the 10 files above and nothing else. Stop if the list differs.
+#   expect exactly the 15 files above and nothing else. Stop if the list differs.
 npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault
 
 # Primary: only after the staging probes below pass
@@ -94,7 +100,7 @@ npx supabase db push --project-ref mgadheotkdnrsatfivjy --skip-vault
 Read-only probes to run after each push (SQL editor or `psql "$LRV_DB_URL"`):
 
 ```sql
-select count(*) from supabase_migrations.schema_migrations;          -- 162
+select count(*) from supabase_migrations.schema_migrations;          -- 167
 select pg_get_constraintdef(oid) from pg_constraint
  where conname='communication_provider_events_provider_check';         -- lists 'agentmail'
 select count(*) from public.cloudtalk_messages
@@ -105,7 +111,28 @@ select to_regclass('public.patient_qol_scale_assessments'),
        to_regclass('public.catalog_vaccine_profiles');                -- all non-null
 select column_name from information_schema.columns
  where table_name='patient_lab_orders' and column_name='reminders_enabled'; -- 1 row
+select to_regclass('public.sms_suppression_events');                  -- non-null
+select count(*) from pg_constraint where conname like '%_pet_household_fkey'; -- 5
+select jobname from cron.job where jobname='purge-expired-email-payloads';   -- 1 row
 ```
+
+**Linkage constraint validation.** `20260930120000` adds its new FKs and CHECKs as NOT VALID, so existing rows are not checked. On each project, run this read-only query:
+
+```sql
+select 'lab_results' t, count(*) from public.lab_results x join public.pets p on p.id = x.pet_id where p.client_id <> x.client_id
+union all select 'consent_submissions', count(*) from public.consent_submissions x join public.pets p on p.id = x.pet_id where p.client_id <> x.client_id
+union all select 'wellness_reminders', count(*) from public.wellness_reminders x join public.pets p on p.id = x.pet_id where p.client_id <> x.client_id
+union all select 'waitlist_entries', count(*) from public.waitlist_entries x join public.pets p on p.id = x.pet_id where p.client_id <> x.client_id
+union all select 'follow_up_instances', count(*) from public.follow_up_instances x join public.pets p on p.id = x.pet_id where p.client_id <> x.client_id
+union all select 'response_metrics.staff_id', count(*) from public.response_metrics x where not exists (select 1 from public.profiles p where p.id = x.staff_id)
+union all select 'client_files.uploaded_by', count(*) from public.client_files x where x.uploaded_by is not null and not exists (select 1 from public.profiles p where p.id = x.uploaded_by)
+union all select 'lab_results.status', count(*) from public.lab_results where status not in ('PENDING','RECEIVED','REVIEWED')
+union all select 'appointment_reminders.channel', count(*) from public.appointment_reminders where channel not in ('SMS','EMAIL');
+```
+
+Run `alter table … validate constraint …` only when every count is 0. The constraints are the five `*_pet_household_fkey`, `response_metrics_staff_id_fkey`, `client_files_uploaded_by_fkey`, `lab_results_status_check` and `appointment_reminders_channel_check`. A non-zero count is a data question for the owner: record it under `docs/launch-evidence/` and do not repair it in place.
+
+**Staff offboarding changed.** `profiles.id → auth.users` is now RESTRICT, so deleting a staff user from the Supabase dashboard fails while their profile exists. To offboard, deactivate the profile (`is_active = false`) and the user's role instead. Pets can no longer be deleted either: archive them through `archived_at`/`deceased_at`.
 
 ## 4. Deploy Edge functions from the merged SHA (staging, then primary)
 
@@ -130,10 +157,15 @@ The train changes these function bundles, either directly or through `_shared`. 
 | `resend-delivery-webhook` | false (Svix signature) | the only Resend endpoint now: canonical outbox receipts plus legacy fallback, **own secret `RESEND_DELIVERY_WEBHOOK_SECRET`** |
 | `resend-webhook` | false | now an inert 410 stub (Resend receiving retired) |
 | `enqueue-message` | true | shared delivery policy (Reply-To resolver) |
-| `cleanup-abandoned-attachment`, `verify-conversation-attachment` | as configured | shared attachment modules; no behavior change |
+| `cleanup-abandoned-attachment` | as configured | **batch mode**: the scheduler's empty body now claims up to 25 eligible uploads (audit B1) |
+| `verify-conversation-attachment` | as configured | shared attachment modules; no behavior change |
+| `twilio-webhook` | false | now an inert 410 stub (audit B8) |
+| `twilio-inbound-sms`, `twilio-message-status-callback` | false (Twilio signature) | answer 503 when their `TWILIO_*_URL` is unset instead of rejecting every signature (audit B9) |
+
+Apply `20260930130000` (§3) **before** this deploy. `dispatch-outbox` and `process-inbound` now process batches within a 20 s budget, and under the old 5 s scheduler timeout those runs would be recorded as failed.
 
 ```sh
-F="dispatch-outbox dispatch-outbound-deliveries prepare-payment-delivery prepare-document-link recover-document-link retrieve-document-link prepare-invoice-email prepare-release-email capture-conversation-email cloudtalk-webhook agentmail-inbound-webhook process-inbound capture-inbound-attachment read-inbound-attachment resend-delivery-webhook resend-webhook enqueue-message cleanup-abandoned-attachment verify-conversation-attachment"
+F="dispatch-outbox dispatch-outbound-deliveries prepare-payment-delivery prepare-document-link recover-document-link retrieve-document-link prepare-invoice-email prepare-release-email capture-conversation-email cloudtalk-webhook agentmail-inbound-webhook process-inbound capture-inbound-attachment read-inbound-attachment resend-delivery-webhook resend-webhook enqueue-message cleanup-abandoned-attachment verify-conversation-attachment twilio-webhook twilio-inbound-sms twilio-message-status-callback"
 npx supabase functions deploy $F --project-ref kothoqicubowyhwfsrte
 npx supabase functions list --project-ref kothoqicubowyhwfsrte   # check the JWT column against the table
 # then the same two commands with --project-ref mgadheotkdnrsatfivjy
