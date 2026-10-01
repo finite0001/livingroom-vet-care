@@ -1,6 +1,6 @@
 # Living Room Vet environment manifest
 
-Last updated: 2026-09-24.
+Last updated: 2026-09-30.
 
 This manifest records what each environment must own before commercial launch. It intentionally contains placeholders only; secrets belong in Vercel or Supabase secret stores, never in Git or chat.
 
@@ -58,9 +58,15 @@ Set these per Supabase project with the Supabase dashboard/CLI secret store.
 | `TWILIO_ACCOUNT_SID` | SMS provider tests/live (retained, not selected) | Requires owned Twilio account and number. |
 | `TWILIO_AUTH_TOKEN` | SMS provider tests/live | Server-only. |
 | `TWILIO_FROM_NUMBER` | SMS provider tests/live | Must be E.164 and consent/opt-out compliant. |
-| `TWILIO_STATUS_CALLBACK_URL` | Twilio delivery status webhook | Exact public URL configured in Twilio for message status callbacks; required for signature validation behind proxies/custom domains. |
-| `TWILIO_INBOUND_WEBHOOK_URL` | Twilio inbound SMS webhook | Exact public URL configured in Twilio for incoming messages; required for signature validation behind proxies/custom domains. |
-| `LOVABLE_API_KEY` | Smart replies only | Not required for launch-critical operating loop. |
+| `TWILIO_STATUS_CALLBACK_URL` | Twilio delivery status webhook | Exact public URL configured in Twilio for message status callbacks. Required: without it `twilio-message-status-callback` answers 503 (it no longer falls back to the internal request URL, which never matches the signature). |
+| `TWILIO_INBOUND_WEBHOOK_URL` | Twilio inbound SMS webhook | Exact public URL configured in Twilio for incoming messages. Required: without it `twilio-inbound-sms` answers 503 (it no longer falls back to the internal request URL, which never matches the signature). |
+| `ESTIMATE_DECISION_ORIGIN` | `estimate-decision`, `prepare-estimate-decision-grant`, `recover-estimate-decision-grant` | App origin only, e.g. `https://thelivingroom.vet` (https, or http only for localhost). It is bound into every client estimate link's HMAC context and is the only browser origin the staff link functions accept, so it must equal `APP_URL` and the other origin settings (go-live runbook §6, origin agreement check). Changing it invalidates links already issued. |
+| `ESTIMATE_DECISION_ACTIVE_KEY_VERSION` | same three functions | Key version used for new links: 1–40 characters of `A-Za-z0-9_-`. Must be a key in `ESTIMATE_DECISION_KEYS`. |
+| `ESTIMATE_DECISION_KEYS` | same three functions | Server-only JSON object `{"<version>":"<base64 key>"}`, at most 16 entries, each key 32–64 random bytes in canonical base64. Keep retired versions here until every link issued under them has expired; a link names the version it was issued with. |
+| `ESTIMATE_DECISION_PUBLIC_ENABLED` | `estimate-decision` (client page) | `true` or `false`; unset means off. Off makes every client estimate link unavailable without revoking it. |
+| `ESTIMATE_DECISION_ISSUANCE_ENABLED` | `prepare-estimate-decision-grant`, `recover-estimate-decision-grant` | `true` or `false`; unset means off. Off refuses new client links (the staff workspace shows "issuance is switched off") and recovery returns grant metadata without the link. Any of these five values malformed makes all three functions answer 404. |
+| `LOVABLE_API_KEY` | Retired 2026-09-30 | Only `suggest-replies` read it, and that function was deleted. Unset it. |
+| `TWILIO_WEBHOOK_URL` | Retired 2026-09-30 | Only the legacy `twilio-webhook` slug read it; that slug is now an inert 410 stub. Twilio callbacks use `TWILIO_INBOUND_WEBHOOK_URL` and `TWILIO_STATUS_CALLBACK_URL`. Unset it. |
 
 ## Provider Ownership Gates
 

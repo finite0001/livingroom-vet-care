@@ -66,8 +66,12 @@ serve(async (req) => {
 
   try {
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")?.trim();
-    const callbackUrl = Deno.env.get("TWILIO_INBOUND_WEBHOOK_URL")?.trim() || req.url;
-    if (!authToken) return jsonResponse({ success: false, error: "Twilio inbound webhook validation is not configured." }, 503);
+    // Twilio signs the exact public URL it was configured with. Behind the
+    // Supabase gateway req.url is the internal URL, so falling back to it would
+    // reject every genuine callback (403) forever. A missing setting is a
+    // configuration fault: answer 503 so Twilio retries and the gap is visible.
+    const callbackUrl = Deno.env.get("TWILIO_INBOUND_WEBHOOK_URL")?.trim();
+    if (!authToken || !callbackUrl) return jsonResponse({ success: false, error: "Twilio inbound webhook validation is not configured." }, 503);
 
     const rawBody = await req.text();
     const valid = await verifyTwilioSignature(req, rawBody, callbackUrl, authToken);

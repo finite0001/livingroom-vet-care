@@ -35,13 +35,6 @@ backend.
       finalize a job. With delivery disabled, `dispatch-outbox` does not even claim
       pending work.
 
-## Smart replies (`suggest-replies` edge function)
-
-- [ ] **Unauthorized users are blocked.** Anonymous or non-staff caller → 401/403.
-- [ ] **PII is redacted before AI call.** Conversation containing an email and a phone
-      number produces edge-function logs showing the redacted payload (no raw
-      `user@example.com` or `303-555-0100` strings reach the gateway).
-
 ## Admin-only operations
 
 - [ ] **Non-admin staff cannot delete conversations.** As a `DVM`/`TECH`/`STAFF` user,

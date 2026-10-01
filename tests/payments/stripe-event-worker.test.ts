@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {processStripeEvent} from "../../supabase/functions/_shared/stripe-event-worker.ts";
+import {processStripeEvent, processStripeEventBatch} from "../../supabase/functions/_shared/stripe-event-worker.ts";
 import type {StripeEventWorkerDependencies, StripeEventLease} from "../../supabase/functions/_shared/stripe-event-worker.ts";
 import type {CheckoutIntent} from "../../supabase/functions/_shared/stripe-provider.ts";
 const id = "10000000-0000-4000-8000-000000000001";
@@ -28,4 +28,24 @@ test("provider failure retries and lost completion acknowledgement stays uncerta
 });
 test("no claim performs no provider work", async () => {
  const {deps} = setup({claim: async () => null, retrieveCheckout: async () => {throw new Error("must not call");}}); assert.equal(await processStripeEvent(deps), "empty");
+});
+test("batch drains finished events and stops on the first deferred or unconfirmed event", async () => {
+ let claims = 0;
+ const three = setup({claim: async () => (claims++ < 3 ? lease : null)});
+ const drained = await processStripeEventBatch(three.deps);
+ assert.equal(drained.state, "finished"); assert.equal(drained.items, 3); assert.equal(drained.stopped, "empty"); assert.equal(three.completions.length, 3);
+ let retryClaims = 0;
+ const outage = setup({claim: async () => (retryClaims++ < 5 ? lease : null), retrieveCheckout: async () => {throw new Error("provider down");}});
+ const deferred = await processStripeEventBatch(outage.deps);
+ assert.equal(deferred.state, "retry"); assert.equal(deferred.items, 1); assert.equal(deferred.stopped, "halted"); assert.equal(retryClaims, 1);
+ const lost = setup({finish: async () => {throw new Error("lost acknowledgement");}});
+ const uncertain = await processStripeEventBatch(lost.deps);
+ assert.equal(uncertain.state, "uncertain"); assert.equal(uncertain.items, 1);
+ const empty = await processStripeEventBatch(setup({claim: async () => null}).deps);
+ assert.deepEqual({state: empty.state, items: empty.items}, {state: "empty", items: 0});
+});
+test("batch respects the item cap", async () => {
+ const {deps,completions} = setup();
+ const capped = await processStripeEventBatch(deps, {maxItems: 4});
+ assert.equal(capped.items, 4); assert.equal(capped.stopped, "item_cap"); assert.equal(completions.length, 4);
 });

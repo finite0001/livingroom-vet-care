@@ -7,7 +7,7 @@ import {createStripeProvider} from "./stripe-provider.ts";
 import {createStripeCheckoutHandler} from "./stripe-checkout.ts";
 import type {CheckoutContext} from "./stripe-checkout.ts";
 import {createStripeWebhookHandler} from "./stripe-webhook.ts";
-import {processStripeEvent} from "./stripe-event-worker.ts";
+import {processStripeEventBatch} from "./stripe-event-worker.ts";
 import type {StripeEventLease} from "./stripe-event-worker.ts";
 import type {CheckoutIntent, RefundIntent} from "./stripe-provider.ts";
 import {authenticateWorker} from "./worker-auth.ts";
@@ -87,7 +87,7 @@ export async function stripeWorkerRuntime(request: Request): Promise<Response> {
   if (Deno.env.get("STRIPE_PAYMENTS_ENABLED") !== "true" || Deno.env.get("STRIPE_EVENT_PROCESSING_ENABLED") !== "true") return reply(200, {state: "disabled"});
   try {
     const {rpc} = rpcClient(key);
-    const result = await processStripeEvent({
+    const summary = await processStripeEventBatch({
       claim: () => rpc<StripeEventLease | null>("claim_stripe_event"),
       checkoutContext: requestId => rpc<CheckoutIntent>("provider_checkout_context", {p_request_id: requestId}),
       refundContext: requestId => rpc<RefundIntent>("provider_refund_context", {p_request_id: requestId}),
@@ -95,7 +95,7 @@ export async function stripeWorkerRuntime(request: Request): Promise<Response> {
       finish: async (receiptId, token, evidence) => {await rpc("finish_stripe_event", {p_receipt_id: receiptId, p_lease_token: token, p_evidence: evidence});},
       retry: async (receiptId, token, reason) => {await rpc("retry_stripe_event", {p_receipt_id: receiptId, p_lease_token: token, p_reason: reason});},
     });
-    return reply(result === "uncertain" ? 503 : 200, {state: result});
+    return reply(summary.state === "uncertain" ? 503 : 200, summary);
   } catch {return reply(503, {error: "processing_unavailable"});}
 }
 

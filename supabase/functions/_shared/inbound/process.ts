@@ -20,6 +20,11 @@ import {
   agentMailFetchTarget,
   normalizeAgentMailMessage,
 } from "./agentmail.ts";
+import {
+  runWorkerBatch,
+  type WorkerBatchOptions,
+  type WorkerBatchStop,
+} from "../worker-batch.ts";
 export interface ReceivingEnvironment {
   AGENTMAIL_API_KEY?: string;
   AGENTMAIL_INBOX_ID?: string;
@@ -228,4 +233,51 @@ export async function processOneInbound(
       review_required: released.state === "review",
     };
   }
+}
+
+export interface InboundBatchSummary {
+  processed: number;
+  retry_pending: number;
+  review_required: number;
+  items: number;
+  stopped: WorkerBatchStop;
+  elapsed_ms: number;
+}
+/**
+ * Process events until the queue is empty, the batch cap or time budget is
+ * reached, or one event fails. A released event is backed off by SQL before it
+ * can be claimed again, so the loop never retries the same event; stopping on
+ * the first failure keeps a provider outage or missing credential from
+ * spending a retry attempt on every queued event in one call.
+ */
+export async function processInboundBatch(
+  db: EventDatabase,
+  env: ReceivingEnvironment,
+  transport: typeof fetch = fetch,
+  options: WorkerBatchOptions = {},
+): Promise<InboundBatchSummary> {
+  const batch = await runWorkerBatch(
+    () => processOneInbound(db, env, transport),
+    (result) =>
+      result.processed
+        ? "continue"
+        : "retry_pending" in result
+        ? "halt"
+        : "empty",
+    options,
+  );
+  const summary: InboundBatchSummary = {
+    processed: 0,
+    retry_pending: 0,
+    review_required: 0,
+    items: batch.results.length,
+    stopped: batch.stopped,
+    elapsed_ms: batch.elapsed_ms,
+  };
+  for (const result of batch.results) {
+    if (result.processed) summary.processed++;
+    else if ("retry_pending" in result && result.retry_pending) summary.retry_pending++;
+    else if ("review_required" in result && result.review_required) summary.review_required++;
+  }
+  return summary;
 }

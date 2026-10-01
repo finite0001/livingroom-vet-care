@@ -64,9 +64,9 @@ async function invoke(
       handler = fn;
     },
     createClient: () => db,
-    dispatchOne: async () => {
+    dispatchBatch: async () => {
       calls.push("dispatch");
-      return { processed: false };
+      return { processed: false, items: 0, states: {}, stopped: "empty", elapsed_ms: 0 };
     },
     Deno: { env: { get: (key: string) => env[key] } },
     Request,

@@ -1,7 +1,7 @@
 import { authenticateWorker } from "../_shared/worker-auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { processOneInbound } from "../_shared/inbound/process.ts";
+import { processInboundBatch } from "../_shared/inbound/process.ts";
 serve(async (req) => {
   const key = authenticateWorker(req, {
     SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method !== "POST" || !key)
     return new Response("Service authorization required", { status: 401 });
   try {
-    const result = await processOneInbound(
+    const result = await processInboundBatch(
       createClient(Deno.env.get("SUPABASE_URL")!, key),
       {
         AGENTMAIL_API_KEY: Deno.env.get("AGENTMAIL_API_KEY"),

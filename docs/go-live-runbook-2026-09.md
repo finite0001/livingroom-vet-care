@@ -20,7 +20,7 @@ Rules for every step:
 | Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
 | Repository migrations after this train | 162. There are **10 pending**: `20260927120000` (contact SMS consent, already on main) plus the 9 from this train (§3). |
 | Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
-| Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. |
+| Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. Migration `20260930130000_scheduler_timeout_and_payload_purge` (not yet applied) raises the call timeout to 30 s and adds a seventh, in-database job, `purge-expired-email-payloads` (daily, needs no Vault secret). |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
 | Backups | Daily physical backups on both projects. No PITR. |
 
@@ -34,9 +34,9 @@ Rules for every step:
 
 These items come from the [2026-09-25 independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md). C2, the C1 placeholder functions and staging/primary migration parity were repaired on 2026-09-26 ([receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). What remains:
 
-- [ ] **C1: functions not deployed.** These local entrypoints are outside the deployed set (the 2026-09-26 set of 23 plus the two CloudTalk functions): `invite-staff`, `invoice-checkout`, `invoice-refund`, `payment-collection`, `payment-status`, `prepare-payment-collection`, `recover-payment-collection`, `verify-payment-reconciliation`, `process-stripe-events`, `stripe-webhook`, `prepare-payment-delivery`, `prepare-document-link`, `recover-document-link`, `retrieve-document-link`, `prepare-release-email`, `prepare-invoice-email`, `prepare-external-record`, `prepare-lab-report`, `capture-ezyvet-attachment`, `retrieve-reviewed-ezyvet-original`, `ezyvet-import`, `send-provider-email`, `suggest-replies`.
+- [ ] **C1: functions not deployed.** These local entrypoints are outside the deployed set (the 2026-09-26 set of 23 plus the two CloudTalk functions): `invite-staff`, `invoice-checkout`, `invoice-refund`, `payment-collection`, `payment-status`, `prepare-payment-collection`, `recover-payment-collection`, `verify-payment-reconciliation`, `process-stripe-events`, `stripe-webhook`, `prepare-payment-delivery`, `prepare-document-link`, `recover-document-link`, `retrieve-document-link`, `prepare-release-email`, `prepare-invoice-email`, `prepare-external-record`, `prepare-lab-report`, `capture-ezyvet-attachment`, `retrieve-reviewed-ezyvet-original`, `ezyvet-import`.
   - Check what is live: `supabase functions list --project-ref mgadheotkdnrsatfivjy`.
-  - Nine of the ten train functions in §4 are among them (`cloudtalk-webhook` is already deployed and is redeployed in §4). Deploy the rest only when the UI that calls them is enabled (payments in §11, `invite-staff` for staff onboarding). Leave optional ones (`send-provider-email`, `suggest-replies`, ezyVet import) undeployed and shown as unavailable.
+  - Nine of the ten train functions in §4 are among them (`cloudtalk-webhook` is already deployed and is redeployed in §4). Deploy the rest only when the UI that calls them is enabled (payments in §11, `invite-staff` for staff onboarding). Leave ezyVet import undeployed and shown as unavailable.
 - [ ] **Delete the legacy `send-email` and `send-sms` functions from both projects.** Their source is gone from the repository. Production v8 of both still enqueues into `outbound_deliveries`, so they must not stay deployed. Every app caller already uses `enqueue-message` → `communication_outbox` → `dispatch-outbox`, and bulk campaigns stay unavailable.
   1. Check that nothing calls them. Both checks must pass:
      ```sh
@@ -52,8 +52,9 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
      npx supabase functions delete send-sms   --project-ref mgadheotkdnrsatfivjy
      ```
   3. Verify: `npx supabase functions list --project-ref <ref>` shows neither slug, and `npm run supabase:functions-inventory` reports `"retiredStillDeployed": []`.
+- [ ] **Delete `send-provider-email` and `suggest-replies` if they are deployed.** Their source was deleted on 2026-09-30 (no caller existed; `suggest-replies` depended on the Lovable AI gateway). They were excluded from the 2026-09-14 and 2026-09-26 deploys, so they are probably absent. Check with `npx supabase functions list --project-ref <ref>`, and if either is listed, `npx supabase functions delete <slug> --project-ref <ref>` (staging first). `npm run supabase:functions-inventory` lists both under `retiredMustBeAbsent`.
 - [ ] **C3: readiness summary trusts stale evidence.** After §3–§4, run `npm run readiness:refresh --silent && npm run readiness:summary -- --fail-on-blockers`. Treat a pass as meaningful only when it names the merged SHA and a green CI run for it.
-- [ ] **W2: scheduler routes.** The scheduler targets `dispatch-outbox`, `process-inbound`, `queue-reminders`, `process-stripe-events` and `cleanup-abandoned-attachment`. `process-stripe-events` is not deployed yet (see C1). `dispatch-outbound-deliveries` has no cron job. After this train, the `enqueue_due_appointment_reminders()` path that fed it is retired, so it only settles legacy rows and needs no schedule.
+- [ ] **W2: scheduler routes.** The scheduler targets `dispatch-outbox`, `process-inbound`, `queue-reminders`, `process-stripe-events` and `cleanup-abandoned-attachment`. `process-stripe-events` is not deployed yet (see C1). **Deploy it before §9 creates the Vault secrets**, or that job records a 404 failure every minute from the moment the scheduler is switched on (§9 step 1). `dispatch-outbound-deliveries` has no cron job. After this train, the `enqueue_due_appointment_reminders()` path that fed it is retired, so it only settles legacy rows and needs no schedule.
 - [ ] **W4: recovery and alerting.** Turn on PITR, or record an explicit decision not to, for `mgadheotkdnrsatfivjy`. Confirm restore access and who receives alerts. Point an external uptime monitor at `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/health`, which is only a liveness check.
 - [ ] **Security follow-up.** Turn on leaked-password protection (Dashboard → Authentication → Passwords). Record a decision on moving `pg_net` out of `public`. Don't bulk-add permissive policies.
 - [ ] **Public contact content.** `src/config/practice.ts` still has `null` for phone, email and emergency instructions. The owner must approve the values. The phone can be `+1 720-764-6677` once CloudTalk voice and SMS pass §7. Then run `npm run public:readiness`.
@@ -138,7 +139,7 @@ npx supabase functions list --project-ref kothoqicubowyhwfsrte   # check the JWT
 # then the same two commands with --project-ref mgadheotkdnrsatfivjy
 ```
 
-The CLI reads `verify_jwt` from `supabase/config.toml`. Check every row against the table above. The 2026-09-26 deploy once kept a stale flag, so don't assume it's right. `twilio-webhook` also imports the changed shared inbound module but is a legacy slug; leave it as is. Never deploy `send-email` or `send-sms` (§2).
+The CLI reads `verify_jwt` from `supabase/config.toml`. Check every row against the table above. The 2026-09-26 deploy once kept a stale flag, so don't assume it's right. `twilio-webhook` is now an inert 410 stub (retired 2026-09-30; it used to write inbound events alongside `twilio-inbound-sms`). Redeploy it with this set, or delete the slug, so the hosted copy stops writing; it must not be registered in the Twilio console. Never deploy `send-email` or `send-sms` (§2).
 
 ## 5. Frontend
 
@@ -169,6 +170,18 @@ Set these **names** in each project. Values go in only through the dashboard or 
 | Stripe and payment-link secrets | see §11 | payments |
 
 Confirm afterwards with `npx supabase secrets list --project-ref <ref>`. It lists names and digests only.
+
+**Origin agreement check.** Five settings each carry the app's public origin, and every one of them must be exactly the same value: scheme and host, no path and no trailing slash (`https://thelivingroom.vet`, or the staging app origin on staging).
+
+| Setting | What breaks if it differs |
+| --- | --- |
+| `APP_URL` | staff invitation and recovery links; Stripe checkout and refund CORS |
+| `DOCUMENT_LINK_ORIGIN` | document links sent by SMS; their HMAC context includes the origin, so a later change invalidates every link already sent |
+| `PAYMENT_ACCESS_ORIGIN` | payment links; same HMAC binding |
+| `STRIPE_RETURN_ORIGIN` | where Stripe returns the client after checkout |
+| `ESTIMATE_DECISION_ORIGIN` | client estimate links (`/estimate/:id#token`) and the CORS origin of the staff link-issuing functions; same HMAC binding |
+
+`supabase secrets list` shows only digests, so compare digests: set all five from one value in one `--env-file`, then confirm the five digests are identical. Any setting that is unset is fine until its feature is enabled; one that is set to a different origin is not.
 
 ## 7. CloudTalk SMS and inbox commissioning
 
@@ -218,7 +231,17 @@ Full contract, options and documentation citations: [AgentMail inbound](agentmai
 
 ## 9. Scheduler (after §4, §6 and C-PILOT-08)
 
-Follow [scheduler commissioning](scheduler.md):
+Follow [scheduler commissioning](scheduler.md). Two preconditions first:
+
+1. [ ] **Deploy `process-stripe-events` before creating the Vault secrets.** The moment `project_url` and `scheduler_worker_key` exist, every job is called, including `process-stripe-events`; if the function is missing, that job records a 404 failure every minute. Deploying it is safe while Stripe is off: it answers `{"state":"disabled"}` until `STRIPE_PAYMENTS_ENABLED` and `STRIPE_EVENT_PROCESSING_ENABLED` are both `true`.
+   ```sh
+   npx supabase functions deploy process-stripe-events --project-ref <ref>
+   npx supabase functions list --project-ref <ref>     # listed, JWT verification off
+   ```
+2. [ ] **Origin agreement check (§6)** passes on this project.
+
+`cleanup-abandoned-attachment` answers 503 (shown as failed on the ops card) until `ATTACHMENT_CLEANUP_ENABLED=true` and `ATTACHMENT_CLEANUP_GRACE_HOURS` are set; see [attachment cleanup](attachment-cleanup-operations.md). That is the expected disabled state, not a scheduler fault.
+
 
 ```sh
 read -rs LRV_DB_URL                    # session pooler URL for the project
@@ -231,7 +254,7 @@ psql "$LRV_DB_URL" -X -f scripts/scheduler/verify-scheduler.sql     # read-only
 unset LRV_SCHEDULER_WORKER_KEY LRV_DB_URL
 ```
 
-- Expect `ok`/2xx within two minutes for the one-minute jobs. `process-stripe-events` returns 404 until it is deployed.
+- Expect `ok`/2xx within two minutes for the one-minute jobs, including `process-stripe-events` (deployed in step 1). Each queue worker now handles up to 25 items per call within a 20 s budget and reports counts in its response body.
 - Then set `REMINDER_SCHEDULER_ENABLED=true`, and enable the reviewed reminder policies (SMS, and EMAIL for email-preferring households) in the admin reminder settings.
 - **Kill switch:** `delete from vault.secrets where name in ('project_url','scheduler_worker_key');`
 
