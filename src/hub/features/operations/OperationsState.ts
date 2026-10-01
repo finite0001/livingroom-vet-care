@@ -206,6 +206,10 @@ export function conversationLink(idValue: string) {
 export function householdLink(idValue: string) {
   return `/hub/client/${id.parse(idValue)}`;
 }
+/** Household 360 opened on its invoices, where draft and unpaid bills live. */
+export function householdBillingLink(idValue: string) {
+  return `/hub/client/${id.parse(idValue)}?tab=billing&section=invoices`;
+}
 export function patientLink(idValue: string) {
   return `/hub/patient/${id.parse(idValue)}`;
 }

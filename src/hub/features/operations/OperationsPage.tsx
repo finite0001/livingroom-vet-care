@@ -6,13 +6,17 @@ import {
   type ReactNode,
 } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { denverLocal } from "@/hub/features/scheduling/time";
+import { scheduleHref } from "@/hub/features/patient-360/model";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hub/contexts/auth-context";
 import * as api from "./OperationsApi";
 import {
   displayTime,
   conversationLink,
-  householdLink,
+  householdBillingLink,
   patientLink,
   type Cursor,
 } from "./OperationsState";
@@ -258,7 +262,7 @@ function OperationsSession() {
           <Link to="/hub/inbox/review">Review unmatched messages</Link>
           <Link to="/hub/inbox/processing">Review incoming processing</Link>
           <Link to="/hub/tools/care-reminders">Care reminders</Link>
-          <Link to="/hub/admin">Payment processing recovery</Link>
+          <Link to="/hub/admin">Payment processing recovery (Admin dashboard)</Link>
         </nav>
       </header>
       <Overview />
@@ -294,7 +298,7 @@ function OperationsSession() {
                 Open conversation
               </Link>
               {r.client_id && (
-                <Link to={householdLink(r.client_id)}>
+                <Link to={householdBillingLink(r.client_id)}>
                   Open household billing
                 </Link>
               )}
@@ -389,9 +393,7 @@ function OperationsSession() {
               </Link>
             )}
             {r.appointment_id && (
-              <Link className="block text-primary underline" to="/hub/schedule">
-                Open schedule to locate appointment
-              </Link>
+              <AppointmentScheduleLink appointmentId={r.appointment_id} />
             )}
             <p>
               Created {displayTime(r.created_at)} · invalidated{" "}
@@ -485,5 +487,34 @@ export default function OperationsPage() {
     <OperationsSession key={session.user.id} />
   ) : (
     <p className="p-4">Administrator access required.</p>
+  );
+}
+
+/**
+ * Opens the schedule on the blocked appointment's own day. The block row only
+ * carries the appointment id, so its date is read separately; until it loads
+ * (or if it cannot be read) the link falls back to today's schedule.
+ */
+function AppointmentScheduleLink({ appointmentId }: { appointmentId: string }) {
+  const appointment = useQuery({
+    queryKey: ["operations-appointment-day", appointmentId],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("scheduled_at")
+        .eq("id", appointmentId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const day = appointment.data?.scheduled_at
+    ? denverLocal(appointment.data.scheduled_at).slice(0, 10)
+    : null;
+  return (
+    <Link className="block text-primary underline" to={scheduleHref({ date: day })}>
+      {day ? `Open schedule on ${day} to locate appointment` : "Open schedule to locate appointment"}
+    </Link>
   );
 }

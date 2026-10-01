@@ -377,7 +377,11 @@ function InquiryDetail({ id, actor }: DetailProps) {
         </p>
         {t.client_id && (
           <p>
-            Reviewed household: {detail.data.household_name} · {t.reply_channel}{" "}
+            Reviewed household:{" "}
+            <Link className="text-primary underline" to={`/hub/client/${t.client_id}`}>
+              {detail.data.household_name || "Open household"}
+            </Link>{" "}
+            · {t.reply_channel}{" "}
             · {t.reply_recipient}
           </p>
         )}

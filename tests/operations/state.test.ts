@@ -4,6 +4,7 @@ import {
   runSchema,
   outboxSchema,
   conversationLink,
+  householdBillingLink,
   householdLink,
   patientLink,
 } from "../../src/hub/features/operations/OperationsState.ts";
@@ -56,6 +57,8 @@ test("safe outbox projection drops private fields and rejects arbitrary upstream
   assert.equal(householdLink(id), `/hub/client/${id}`);
   assert.equal(patientLink(id), `/hub/patient/${id}`);
   assert.throws(() => householdLink("https://external.test"));
+  assert.equal(householdBillingLink(id), `/hub/client/${id}?tab=billing&section=invoices`);
+  assert.throws(() => householdBillingLink("https://external.test"));
 });
 test("Stripe keyset preserves database timestamp precision for older discovery", () => {
   const page = stripeQueuePage({

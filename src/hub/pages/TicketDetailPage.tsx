@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
   useTicket, useUpdateTicket, TICKET_STATUSES, statusLabel, formTypeLabel, type Ticket, type TicketStatus, type PetSex,
 } from "@/hub/hooks/use-tickets";
 import { SendToClientDialog } from "@/hub/components/shared/SendToClientDialog";
+import { householdHref } from "@/hub/features/patient-360/model";
 
 const UNASSIGNED = "__unassigned__";
 
@@ -132,8 +133,22 @@ export default function TicketDetailPage() {
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/hub/tickets")} aria-label="Back"><ArrowLeft className="h-4 w-4" /></Button>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{ticket?.pet_name ?? "Ticket"}</p>
-          <p className="truncate text-xs text-muted-foreground">{ticket?.client_name}{ticket && ` · ${formTypeLabel(ticket.form_type)}`}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {linkedClientId && ticket?.client_name ? (
+              <Link className="underline-offset-2 hover:text-foreground hover:underline" to={householdHref(linkedClientId)}>{ticket.client_name}</Link>
+            ) : ticket?.client_name}
+            {ticket && ` · ${formTypeLabel(ticket.form_type)}`}
+          </p>
         </div>
+        {ticket?.conversation_id && (
+          <Button asChild variant="outline" size="sm" className="shrink-0 gap-1.5">
+            <Link to={`/hub/conversation/${ticket.conversation_id}`}>
+              <MessageSquare className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Conversation</span>
+              <span className="sr-only sm:hidden">Open conversation</span>
+            </Link>
+          </Button>
+        )}
         <Button size="sm" disabled={update.isPending || !form} onClick={handleSave}>{update.isPending ? "Saving…" : "Save"}</Button>
       </header>
 
