@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { loginRedirectFrom } from "@/hub/lib/safe-redirect";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { signIn } = useAuth();
 
@@ -23,7 +25,7 @@ export default function LoginPage() {
     try {
       const { error } = await signIn(email.trim(), password);
       if (error) throw new Error(error);
-      navigate("/hub");
+      navigate(loginRedirectFrom(location.state), { replace: true });
     } catch (cause) {
       toast({ title: "Login failed", description: cause instanceof Error ? cause.message : "Unable to sign in. Try again.", variant: "destructive" });
     } finally {
