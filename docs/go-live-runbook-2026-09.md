@@ -13,14 +13,13 @@ Rules for every step:
 - **Order:** staging first, then primary, for every database and Edge step.
 - **Evidence:** when a step finishes, record the operator, UTC time, project ref and result in a dated note under `docs/launch-evidence/`.
 
-## 0. Current hosted state (as of 2026-09-27)
+## 0. Current hosted state (as of 2026-10-02)
 
 | Item | State |
 | --- | --- |
-| Hosted migrations (both projects) | 152, ending at `20260926090000_cloudtalk_activity` ([CloudTalk activation receipt](launch-evidence/2026-09-26-cloudtalk-activation.md#hosted-deployment-receipt)) |
-| Repository migrations on `main` | 167 (as of 2026-10-01, after #225). Up to **15 pending**, listed in order in §3. A staging dry run on 2026-10-01 listed only 3 (`20260930100000`, `20260930120000`, `20260930130000`), so staging is at 164. Primary is unverified, so run its own dry run. The Vercel frontend deploys on every merge, so production is already running code that expects them. |
-| Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). |
-| Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. Migration `20260930130000_scheduler_timeout_and_payload_purge` (not yet applied) raises the call timeout to 30 s and adds a seventh, in-database job, `purge-expired-email-payloads` (daily, needs no Vault secret). |
+| Hosted migrations (both projects) | **167**, matching `main`. The 2026-10-01 linkage-audit rollout applied the last ones and validated all linkage constraints ([receipt](launch-evidence/2026-10-01-linkage-audit-rollout.md)). §3 is complete. |
+| Edge | The explicit 23-function set from 2026-09-26 plus `cloudtalk-webhook` and `cloudtalk-call-media` are deployed ([deployment receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md)). On 2026-10-01 the 17 post-#225 functions were redeployed on both projects, including `process-stripe-events`. `send-provider-email` was deleted from staging ([receipt](launch-evidence/2026-10-01-linkage-audit-rollout.md)). |
+| Scheduler | Six cron jobs are installed. The Vault secrets `project_url` and `scheduler_worker_key` are absent, so every job records `configuration_missing` and nothing is called. Migration `20260930130000_scheduler_timeout_and_payload_purge` (applied 2026-10-01) raised the call timeout to 30 s and added a seventh, in-database job, `purge-expired-email-payloads` (daily, needs no Vault secret). |
 | Delivery | `APP_ENV=staging` and `OUTBOUND_DELIVERY_MODE=disabled` on primary. No provider message or payment has been sent. |
 | Backups | Daily physical backups on both projects. No PITR. |
 
@@ -52,9 +51,9 @@ These items come from the [2026-09-25 independent commercial audit](launch-evide
      npx supabase functions delete send-sms   --project-ref mgadheotkdnrsatfivjy
      ```
   3. Verify: `npx supabase functions list --project-ref <ref>` shows neither slug, and `npm run supabase:functions-inventory` reports `"retiredStillDeployed": []`.
-- [ ] **Delete `send-provider-email` and `suggest-replies` if they are deployed.** Their source was deleted on 2026-09-30 (no caller existed; `suggest-replies` depended on the Lovable AI gateway). They were excluded from the 2026-09-14 and 2026-09-26 deploys, so they are probably absent. Check with `npx supabase functions list --project-ref <ref>`, and if either is listed, `npx supabase functions delete <slug> --project-ref <ref>` (staging first). `npm run supabase:functions-inventory` lists both under `retiredMustBeAbsent`.
+- [x] **Delete `send-provider-email` and `suggest-replies` if they are deployed.** Done 2026-10-01. `send-provider-email` was deleted from staging. Neither function is deployed on primary.
 - [ ] **C3: readiness summary trusts stale evidence.** After §3–§4, run `npm run readiness:refresh --silent && npm run readiness:summary -- --fail-on-blockers`. Treat a pass as meaningful only when it names the merged SHA and a green CI run for it.
-- [ ] **W2: scheduler routes.** The scheduler targets `dispatch-outbox`, `process-inbound`, `queue-reminders`, `process-stripe-events` and `cleanup-abandoned-attachment`. `process-stripe-events` is not deployed yet (see C1). **Deploy it before §9 creates the Vault secrets**, or that job records a 404 failure every minute from the moment the scheduler is switched on (§9 step 1). `dispatch-outbound-deliveries` has no cron job. After this train, the `enqueue_due_appointment_reminders()` path that fed it is retired, so it only settles legacy rows and needs no schedule.
+- [x] **W2: scheduler routes.** Done 2026-10-01: `process-stripe-events` is deployed on both projects ([receipt](launch-evidence/2026-10-01-linkage-audit-rollout.md)), so creating the §9 Vault secrets will not cause 404s.
 - [ ] **W4: recovery and alerting.** Turn on PITR, or record an explicit decision not to, for `mgadheotkdnrsatfivjy`. Confirm restore access and who receives alerts. Point an external uptime monitor at `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/health`, which is only a liveness check.
 - [ ] **Security follow-up.** Turn on leaked-password protection (Dashboard → Authentication → Passwords). Record a decision on moving `pg_net` out of `public`. Don't bulk-add permissive policies.
 - [ ] **Public contact content.** `src/config/practice.ts` still has `null` for phone, email and emergency instructions. The owner must approve the values. The phone can be `+1 720-764-6677` once CloudTalk voice and SMS pass §7. Then run `npm run public:readiness`.
