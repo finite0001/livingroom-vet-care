@@ -70,7 +70,7 @@ export function DesktopSidebar({ collapsed = false }: { collapsed?: boolean }) {
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar-background">
       <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4">
         <img
-          src="/brand/living-room-medical-mark-v1.png"
+          src="/brand/living-room-stethoscope-mark-v2.png"
           alt=""
           aria-hidden="true"
           width={36}
