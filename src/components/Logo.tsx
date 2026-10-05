@@ -21,7 +21,7 @@ export function Logo({ stacked = false, inverse = false, className }: LogoProps)
       )}
     >
       <img
-        src="/brand/living-room-medical-mark-v1.png"
+        src="/brand/living-room-stethoscope-mark-v2.png"
         alt=""
         aria-hidden="true"
         width={56}
