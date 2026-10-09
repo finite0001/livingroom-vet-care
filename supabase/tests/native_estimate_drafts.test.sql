@@ -6,8 +6,8 @@ insert into public.user_roles (user_id, role) values ('e5710000-0000-4000-8000-0
 insert into user_roles(user_id,role) values('e5710000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Estimate','Household',null,'estimate@example.test','EMAIL',null,null);
-insert into fx select 'client2',id from save_client(auth.uid(),null,null,'Other','Household',null,'other-estimate@example.test','EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Estimate','Household','+13035554239','estimate@example.test','EMAIL',null,null);
+insert into fx select 'client2',id from save_client(auth.uid(),null,null,'Other','Household','+13035553849','other-estimate@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Estimate Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'pet2',id from save_patient(null,(select id from fx where k='client2'),null,'Other Patient','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic service','service','','visit',5,true);

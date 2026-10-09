@@ -10,10 +10,10 @@ update public.profiles set is_active = true where id in ('62000000-0000-4000-800
 insert into public.user_roles(user_id, role) values
 ('62000000-0000-4000-8000-000000000001', 'STAFF'), ('62000000-0000-4000-8000-000000000002', 'ADMIN');
 
-insert into public.clients(id, first_name, last_name, full_name, primary_phone, preferred_channel) values
-('62100000-0000-4000-8000-000000000001', 'Matched', 'Family', 'Matched Family', '+1 (720) 555-0101', 'SMS'),
-('62100000-0000-4000-8000-000000000002', 'Shared', 'One', 'Shared One', '+17205550102', 'SMS'),
-('62100000-0000-4000-8000-000000000003', 'Shared', 'Two', 'Shared Two', '+17205550102', 'SMS');
+insert into public.clients(id, first_name, last_name, full_name, primary_phone, preferred_channel,primary_email) values
+('62100000-0000-4000-8000-000000000001', 'Matched', 'Family', 'Matched Family', '+1 (720) 555-0101', 'SMS','fixture-1713@example.test'),
+('62100000-0000-4000-8000-000000000002', 'Shared', 'One', 'Shared One', '+17205550102', 'SMS','fixture-6735@example.test'),
+('62100000-0000-4000-8000-000000000003', 'Shared', 'Two', 'Shared Two', '+17205550102', 'SMS','fixture-5279@example.test');
 
 create function pg_temp.ingest(p_event text, p_type text, p_at timestamptz, p_data jsonb) returns boolean language plpgsql as $$
 declare result boolean;

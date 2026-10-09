@@ -6,8 +6,8 @@ insert into public.user_roles (user_id, role) values ('e5710000-0000-4000-8000-0
 insert into user_roles(user_id,role) values('e5710000-0000-4000-8000-000000000001','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Estimate','Household',null,'estimate@example.test','EMAIL',null,null);
-insert into fx select 'client2',id from save_client(auth.uid(),null,null,'Other','Household',null,'other-estimate@example.test','EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Estimate','Household','+13035558740','estimate@example.test','EMAIL',null,null);
+insert into fx select 'client2',id from save_client(auth.uid(),null,null,'Other','Household','+13035551463','other-estimate@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Estimate Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'pet2',id from save_patient(null,(select id from fx where k='client2'),null,'Other Patient','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic service','service','','visit',5,true);
@@ -65,7 +65,7 @@ select capture_native_estimate_publication_artifact((select id from fx where k='
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"e5710000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 update data set v=recover_native_estimate_preparation((select id from fx where k='prep2')) where k='prep2';
 insert into data select 'pub2-stale',pg_temp.publish_request('prep2');
-select save_client(auth.uid(),(select id from fx where k='client'),1,'Changed','Household',null,'estimate@example.test','EMAIL',null,null);
+select save_client(auth.uid(),(select id from fx where k='client'),1,'Changed','Household','+13035551615','estimate@example.test','EMAIL',null,null);
 select throws_ok($$select publish_native_estimate((select id from fx where k='closepub'),(select v from data where k='pub2-stale'))$$,'PT409',null,'Display change requires new captured publication review');
 insert into data select 'closure',close_native_estimate_publication_operation((select id from fx where k='closepub'),jsonb_build_object('kind','publish','request',v)) from data where k='pub2-stale';
 select is((select v->>'status' from data where k='closure'),'closed_unrecorded','Stale uncertain publication safely closed');

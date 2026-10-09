@@ -12,11 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 import { practiceToday, validatePatient } from "./patient-details";
 import type { PatientFormValues } from "./patient-details";
+import { hasCompleteClientContacts, type ClientContacts } from "@/hub/components/clients/client-form";
 
-interface PatientFormDialogProps { clientId: string; patient?: Tables<"pets"> }
+interface PatientFormDialogProps { clientId: string; patient?: Tables<"pets">; clientContacts?: ClientContacts }
 const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function PatientFormDialog({ clientId, patient }: PatientFormDialogProps) {
+export function PatientFormDialog({ clientId, patient, clientContacts }: PatientFormDialogProps) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export function PatientFormDialog({ clientId, patient }: PatientFormDialogProps)
   const [version, setVersion] = useState(patient?.version ?? null);
   const [archivedAt, setArchivedAt] = useState(patient?.archived_at ?? null);
   const dirty = JSON.stringify(values) !== JSON.stringify(baseline);
+  const incompleteClient = !patient && clientContacts !== undefined && !hasCompleteClientContacts(clientContacts);
   const changeOpen = (next: boolean) => {
     if (pendingRef.current) return;
     if (!next && dirty && !window.confirm("Discard unsaved patient details?")) return;
@@ -88,7 +90,8 @@ export function PatientFormDialog({ clientId, patient }: PatientFormDialogProps)
     finally { pendingRef.current = false; setPending(false); }
   };
   return <Dialog open={open} onOpenChange={changeOpen}>
-    <DialogTrigger asChild><Button variant={patient ? "outline" : "default"} size="sm">{patient ? "Edit patient" : "Add patient"}</Button></DialogTrigger>
+    <DialogTrigger asChild><Button variant={patient ? "outline" : "default"} size="sm" disabled={incompleteClient} title={incompleteClient ? "Save a valid client phone and email before adding a patient." : undefined}>{patient ? "Edit patient" : "Add patient"}</Button></DialogTrigger>
+    {incompleteClient && <p role="status" className="text-sm text-muted-foreground">Edit this client to add a valid phone and email before adding a patient.</p>}
     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
       <DialogHeader><DialogTitle>{patient ? "Edit patient" : "Add patient"}</DialogTitle><DialogDescription>Keep identity details separate from visit notes. Microchip numbers retain leading zeros.</DialogDescription></DialogHeader>
       <form onSubmit={save} className="space-y-4">

@@ -12,7 +12,7 @@ insert into user_roles(user_id,role) values('ee200000-0000-4000-8000-00000000000
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
 select set_config('request.jwt.claims','{"sub":"ee200000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Email','Fixture',null,'client@example.test','EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Email','Fixture','+13035552934','client@example.test','EMAIL',null,null);
 insert into conversations(client_id) values((select id from fx where k='client')) returning id as conversation_id \gset
 insert into fx values('conversation',:'conversation_id');
 insert into fx select k,gen_random_uuid() from unnest(array['upload','request','abandoned']) k;

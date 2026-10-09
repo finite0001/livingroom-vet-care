@@ -47,7 +47,7 @@ try{
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
 
  const staff=(name:string,args:Record<string,unknown>)=>rpc(name,args,true);
- client=(await staff("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Lab bytes",p_primary_phone:null,p_primary_email:null,p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null})).id;ids.push(client);
+ client=(await staff("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Lab bytes",p_primary_phone:"+13035550197",p_primary_email:"synthetic-contact@example.test",p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null})).id;ids.push(client);
  const pet=(await staff("save_patient",{p_id:null,p_client_id:client,p_expected_version:null,p_name:"Synthetic external-record patient",p_species:"Dog",p_breed:null,p_dob:null,p_birth_date_precision:"unknown",p_color:null,p_sex:"unknown",p_neuter_status:"unknown",p_microchip_id:null,p_archived_at:null,p_deceased_at:null})).id;ids.push(pet);
  const document=randomUUID(),source=randomUUID(),receipt=randomUUID();ids.push(document,source,receipt);
  const bytes=new TextEncoder().encode("%PDF-1.7\nSynthetic private external record only\n%%EOF");

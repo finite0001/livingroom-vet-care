@@ -10,7 +10,7 @@ insert into user_roles(user_id,role) values('ee400000-0000-4000-8000-00000000000
 select set_config('request.jwt.claims','{"sub":"ee400000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table evidence(v jsonb);grant all on evidence to authenticated,service_role;
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Cleanup','Fixture',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Cleanup','Fixture','+13035558707','fixture-8707@example.test','EMAIL',null,null);
 insert into fx select k,gen_random_uuid() from unnest(array['conversation','abandoned','ready','uploading']) k;
 insert into conversations(id,client_id) values((select id from fx where k='conversation'),(select id from fx where k='client'));
 insert into conversation_attachment_uploads(id,actor_id,conversation_id,file_name,mime_type,byte_length,storage_path,status,sha256,verified_at,created_at)

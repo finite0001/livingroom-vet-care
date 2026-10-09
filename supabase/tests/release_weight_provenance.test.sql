@@ -11,7 +11,7 @@ create temp table fx(k text primary key,id uuid);grant all on fx to authenticate
 create temp table rr(v jsonb);grant all on rr to authenticated,service_role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"e5000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Weight','Family',null,'weight@example.test','EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Weight','Family','+13035551979','weight@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Weight Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'otherpet',id from save_patient(null,(select id from fx where k='client'),null,'Other Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 reset role;

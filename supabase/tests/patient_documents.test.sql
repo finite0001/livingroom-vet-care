@@ -16,7 +16,7 @@ create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"32000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Document','Family',null,null,'EMAIL',null,null);
+insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Document','Family','+13035558277','fixture-8277@example.test','EMAIL',null,null);
 insert into fixture_ids select 'pet',id from public.save_patient(null,(select id from fixture_ids where kind='client'),null,'Dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fixture_ids select 'other',id from public.save_patient(null,(select id from fixture_ids where kind='client'),null,'Cat','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fixture_ids select 'encounter',id from public.save_clinical_encounter(null,(select id from fixture_ids where kind='other'),null,now(),'clinic','','','','','');

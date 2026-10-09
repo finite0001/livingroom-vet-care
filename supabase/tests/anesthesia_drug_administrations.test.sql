@@ -18,8 +18,8 @@ select ok(has_function_privilege('authenticated','public.record_anesthesia_drug_
 select ok(not exists(select 1 from pg_proc p,aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where p.oid='public.record_anesthesia_drug_administration(uuid,uuid,uuid,jsonb)'::regprocedure and a.grantee=0),'PUBLIC execution denied');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Sedation',null,null,'EMAIL',null,null);
-insert into fx select 'other_client',id from public.save_client(auth.uid(),null,null,'Synthetic','Elsewhere',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Sedation','+13035558780','fixture-8780@example.test','EMAIL',null,null);
+insert into fx select 'other_client',id from public.save_client(auth.uid(),null,null,'Synthetic','Elsewhere','+13035555459','fixture-5459@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Drowsy','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'sibling',id from public.save_patient(null,(select id from fx where k='client'),null,'Sibling','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'drug',id from public.save_catalog_product(null,null,'Synthetic induction agent','medication','Synthetic manufacturer','mL',250,true);

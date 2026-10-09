@@ -13,7 +13,7 @@ create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Schedule','Family',null,null,'EMAIL',null,'Housecall snapshot');
+insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Schedule','Family','+13035555743','fixture-5743@example.test','EMAIL',null,'Housecall snapshot');
 insert into fixture_ids select 'pet',id from public.save_patient(null,(select id from fixture_ids where kind='client'),null,'Zero','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fixture_ids select 'appointment',id from public.save_appointment(auth.uid(),null,null,(select id from fixture_ids where kind='client'),(select id from fixture_ids where kind='pet'),now()+interval '10 days',30,'Exam','SCHEDULED',auth.uid(),'housecall','Housecall snapshot',15,15,'Room A','Access notes',array[48,24]);
 select is((select count(*) from public.schedule_clinicians() where id='41000000-0000-4000-8000-000000000001'),1::bigint,'Ordinary staff can list eligible clinicians');

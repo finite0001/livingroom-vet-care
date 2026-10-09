@@ -617,7 +617,7 @@ insert into public.clients (
     'Reminder',
     'Email',
     'Reminder Email',
-    null,
+    '+13035556097',
     'email-reminder@example.test',
     'EMAIL'
   );

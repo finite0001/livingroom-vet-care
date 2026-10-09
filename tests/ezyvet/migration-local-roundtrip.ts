@@ -74,7 +74,7 @@ const otherApi = createMigrationRunApi(transport(other.auth), other.id);
 const staffRpc = async (name: string, args: Record<string, unknown>) => {
   const { data, error } = await ownerTransport.rpc(name, args); if (error) throw error; return data;
 };
-const client = (await staffRpc("save_client", { p_actor_id: owner.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Migration", p_primary_phone: null, p_primary_email: null, p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null })).id;
+const client = (await staffRpc("save_client", { p_actor_id: owner.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Migration", p_primary_phone: "+13035550197", p_primary_email: "synthetic-contact@example.test", p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null })).id;
 const pet = (await staffRpc("save_patient", { p_id: null, p_client_id: client, p_expected_version: null, p_name: "Synthetic migration patient", p_species: "Dog", p_breed: null, p_dob: null, p_birth_date_precision: "unknown", p_color: null, p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: null, p_deceased_at: null })).id;
 const origin = "https://api.trial.ezyvet.com", site = "Synthetic-Migration-" + randomUUID();
 const animalRun = randomUUID(), mapping = randomUUID();
@@ -87,7 +87,7 @@ const effects = () => sql("select jsonb_build_array((select count(*) from patien
 const beforeEffects = effects();
 // A different patient's historical mapping must not block valid new choices.
 // Keep the mapping immutable, matching the persisted drift in the originals fixture.
-const movedClient = (await staffRpc("save_client", { p_actor_id: owner.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Other household", p_primary_phone: null, p_primary_email: null, p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null })).id;
+const movedClient = (await staffRpc("save_client", { p_actor_id: owner.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Other household", p_primary_phone: "+13035550197", p_primary_email: "synthetic-contact@example.test", p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null })).id;
 const movedPet = (await staffRpc("save_patient", { p_id: null, p_client_id: client, p_expected_version: null, p_name: "Synthetic moved migration patient", p_species: "Dog", p_breed: null, p_dob: null, p_birth_date_precision: "unknown", p_color: null, p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: null, p_deceased_at: null })).id;
 const movedMapping = randomUUID(), movedSnapshot = randomUUID();
 sql(`insert into ezyvet_import_snapshots(id,source_origin,source_site_uid,resource,external_id,payload,payload_hash,first_seen_by)

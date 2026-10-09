@@ -12,7 +12,7 @@ update profiles set full_name='Synthetic prescriber' where id='a5510000-0000-400
 insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000001','DVM'),('a5510000-0000-4000-8000-000000000001','ADMIN'),('a5510000-0000-4000-8000-000000000003','DVM'),('a5510000-0000-4000-8000-000000000004','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Native','Household',null,null,'EMAIL','2619 Synthetic Street',null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Native','Household','+13035554766','fixture-4766@example.test','EMAIL','2619 Synthetic Street',null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Native Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic medication','medication','','tablet',100,true);
 insert into fx select k,gen_random_uuid() from unnest(array['config','save','draft','sign','save2','draft2']) k;

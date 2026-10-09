@@ -23,7 +23,7 @@ insert into public.user_roles (user_id, role) values ('b6000000-0000-4000-8000-0
 
 insert into user_roles(user_id,role) values('b6000000-0000-4000-8000-000000000001','ADMIN');
 update profiles set is_active=false where id='b6000000-0000-4000-8000-000000000003';
-insert into clients(id,first_name,last_name,full_name) values('b6000000-0000-4000-8000-000000000004','Synthetic','Grant','Synthetic Grant');
+insert into clients(id,first_name,last_name,full_name,primary_phone,primary_email) values('b6000000-0000-4000-8000-000000000004','Synthetic','Grant','Synthetic Grant','+13035555154','fixture-5154@example.test');
 insert into consent_form_templates(id,name) values('b6000000-0000-4000-8000-000000000005','Synthetic grant fixture');
 insert into consent_submissions(id,template_id,client_id,access_token,expires_at) values
  ('b6000000-0000-4000-8000-000000000006','b6000000-0000-4000-8000-000000000005','b6000000-0000-4000-8000-000000000004','synthetic-grant-valid',now()+interval '1 day'),

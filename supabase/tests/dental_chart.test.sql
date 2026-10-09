@@ -20,7 +20,7 @@ select ok(not has_table_privilege('authenticated','public.dental_chart_revisions
 select ok(not has_table_privilege('anon','public.dental_charts','SELECT'),'Anonymous clinical data access denied');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"d7000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into dental_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Dental',null,null,'EMAIL',null,null);
+insert into dental_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Dental','+13035558823','fixture-8823@example.test','EMAIL',null,null);
 insert into dental_fixture select 'dog',id from public.save_patient(null,(select id from dental_fixture where kind='client'),null,'Dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into dental_fixture select 'cat',id from public.save_patient(null,(select id from dental_fixture where kind='client'),null,'Cat','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into dental_fixture select 'rabbit',id from public.save_patient(null,(select id from dental_fixture where kind='client'),null,'Rabbit','Rabbit',null,null,'unknown',null,'unknown','unknown',null,null,null);

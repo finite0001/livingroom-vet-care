@@ -150,7 +150,7 @@ try {
     p_expected_version: null,
     p_first_name: "Synthetic",
     p_last_name: "Retry",
-    p_primary_phone: null,
+    p_primary_phone: "+13035550197",
     p_primary_email: email,
     p_preferred_channel: "EMAIL",
     p_mailing_address: null,

@@ -94,7 +94,7 @@ try {
     p_expected_version: null,
     p_first_name: "Upload",
     p_last_name: "Fixture",
-    p_primary_phone: null,
+    p_primary_phone: "+13035550197",
     p_primary_email: "attachment-client@example.test",
     p_preferred_channel: "EMAIL",
     p_mailing_address: null,

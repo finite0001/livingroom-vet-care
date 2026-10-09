@@ -28,14 +28,24 @@ set local role authenticated;select set_config('request.jwt.claims','{"sub":"af0
 insert into pipeline_fixture select 'email-pref',id from public.save_client(auth.uid(),null,null,'Email','Pref','+13035550201','email-pref@example.test','EMAIL',null,null);
 insert into pipeline_fixture select 'sms-pref',id from public.save_client(auth.uid(),null,null,'Sms','Pref','+13035550202','sms-pref@example.test','SMS',null,null);
 insert into pipeline_fixture select 'sms-noconsent',id from public.save_client(auth.uid(),null,null,'Sms','NoConsent','+13035550203','sms-noconsent@example.test','SMS',null,null);
-insert into pipeline_fixture select 'email-missing',id from public.save_client(auth.uid(),null,null,'Email','Missing','+13035550204',null,'EMAIL',null,null);
-insert into pipeline_fixture select 'unreachable',id from public.save_client(auth.uid(),null,null,'No','Contact',null,null,'EMAIL',null,null);
+insert into pipeline_fixture select 'email-missing',id from public.save_client(auth.uid(),null,null,'Email','Missing','+13035550204','fixture-5949@example.test','EMAIL',null,null);
+insert into pipeline_fixture select 'unreachable',id from public.save_client(auth.uid(),null,null,'No','Contact','+13035557493','fixture-7493@example.test','EMAIL',null,null);
 insert into pipeline_fixture select 'voice-pref',id from public.save_client(auth.uid(),null,null,'Voice','Pref','+13035550206','voice-pref@example.test','VOICE',null,null);
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from pipeline_fixture where kind='sms-pref'),'+13035550202',true,'WRITTEN','Synthetic written consent',null)$$,'SMS consent for SMS-preferring household');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from pipeline_fixture where kind='email-missing'),'+13035550204',true,'WRITTEN','Synthetic written consent',null)$$,'SMS consent for household without email');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from pipeline_fixture where kind='voice-pref'),'+13035550206',true,'WRITTEN','Synthetic written consent',null)$$,'SMS consent for voice-preferring household');
 insert into pipeline_fixture select 'pet-'||k,(public.save_patient(null,(select id from pipeline_fixture where kind=k),null,'Pet '||k,'Dog',null,null,'unknown',null,'unknown','unknown',null,null,null)).id
  from unnest(array['email-pref','sms-pref','sms-noconsent','email-missing','unreachable','voice-pref']) k;
+-- Simulate historical contact-incomplete rows that predate the new guards.
+-- Privileged setup only; schema is restored immediately and the whole test rolls back.
+reset role;
+alter table public.clients disable trigger client_required_contacts;
+alter table public.clients drop constraint clients_required_contacts_check;
+update public.clients set primary_email=null where id=(select id from pipeline_fixture where kind='email-missing');
+update public.clients set primary_phone=null,primary_email=null where id=(select id from pipeline_fixture where kind='unreachable');
+alter table public.clients add constraint clients_required_contacts_check check(public.client_contacts_complete(primary_phone,primary_email)) not valid;
+alter table public.clients enable trigger client_required_contacts;
+set local role authenticated;
 insert into pipeline_fixture select 'appt-'||k,(public.save_appointment(auth.uid(),null,null,(select id from pipeline_fixture where kind=k),(select id from pipeline_fixture where kind='pet-'||k),now()+interval '3 days'+(n*interval '2 hours'),30,'Synthetic exam','SCHEDULED',auth.uid(),'clinic','2619 Spruce Street, Boulder, CO',0,0,null,'',array[48,24])).id
  from unnest(array['email-pref','sms-pref','sms-noconsent','email-missing','unreachable','voice-pref']) with ordinality u(k,n);
 

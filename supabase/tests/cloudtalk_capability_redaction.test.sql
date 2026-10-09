@@ -7,8 +7,8 @@ insert into auth.users(id, email, raw_user_meta_data) values
 ('63000000-0000-4000-8000-000000000001', 'redaction-staff@example.test', '{"first_name":"Redaction","last_name":"Staff"}');
 update public.profiles set is_active = true where id = '63000000-0000-4000-8000-000000000001';
 insert into public.user_roles(user_id, role) values ('63000000-0000-4000-8000-000000000001', 'STAFF');
-insert into public.clients(id, first_name, last_name, full_name, primary_phone, preferred_channel) values
-('63100000-0000-4000-8000-000000000001', 'Linked', 'Family', 'Linked Family', '+17205550301', 'SMS');
+insert into public.clients(id, first_name, last_name, full_name, primary_phone, preferred_channel,primary_email) values
+('63100000-0000-4000-8000-000000000001', 'Linked', 'Family', 'Linked Family', '+17205550301', 'SMS','fixture-6018@example.test');
 
 create function pg_temp.ingest(p_event text, p_type text, p_at timestamptz, p_data jsonb) returns boolean language plpgsql as $$
 declare result boolean;

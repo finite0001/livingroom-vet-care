@@ -183,7 +183,7 @@ const household = await rpc("save_client", {
   p_expected_version: null,
   p_first_name: "Synthetic",
   p_last_name: "Browser household",
-  p_primary_phone: null,
+  p_primary_phone: "+13035550197",
   p_primary_email: "synthetic@example.test",
   p_preferred_channel: "EMAIL",
   p_mailing_address: "Synthetic browser test address",

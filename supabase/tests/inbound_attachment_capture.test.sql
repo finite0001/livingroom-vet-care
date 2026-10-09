@@ -10,7 +10,7 @@ insert into user_roles(user_id,role) values('ee300000-0000-4000-8000-00000000000
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
 select set_config('request.jwt.claims','{"sub":"ee300000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Incoming','Fixture',null,'client@example.test','EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Incoming','Fixture','+13035556548','client@example.test','EMAIL',null,null);
 insert into fx select k,gen_random_uuid() from unnest(array['conversation','message','inbound','event','email','attachment']) k;
 insert into conversations(id,client_id) values((select id from fx where k='conversation'),(select id from fx where k='client'));
 insert into messages(id,conversation_id,type,sender_type,content,is_internal) values((select id from fx where k='message'),(select id from fx where k='conversation'),'EMAIL','CLIENT','File attached',false);

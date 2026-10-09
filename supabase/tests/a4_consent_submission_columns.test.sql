@@ -14,8 +14,8 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 
-insert into public.clients(id,first_name,last_name,full_name)
-  values ('a4000000-0000-4000-8000-000000000001','Synthetic','A4','Synthetic A4');
+insert into public.clients(id,first_name,last_name,full_name,primary_phone,primary_email)
+  values ('a4000000-0000-4000-8000-000000000001','Synthetic','A4','Synthetic A4','+13035552471','fixture-2471@example.test');
 insert into public.consent_form_templates(id,name)
   values ('a4000000-0000-4000-8000-000000000002','Synthetic A4 template');
 insert into public.consent_submissions(id,template_id,client_id,access_token,expires_at,ip_address,user_agent)

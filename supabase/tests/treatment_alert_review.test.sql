@@ -15,7 +15,7 @@ create temp table fx(k text primary key,id uuid); grant all on fx to authenticat
 create temp table requests(k text primary key,v jsonb); grant all on requests to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"34000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Stock','Family',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Stock','Family','+13035553838','fixture-3838@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Stockdog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'product',id from public.save_catalog_product(null,null,'Rabies vaccine','vaccine','Manufacturer','dose',3500,true);
 insert into fx select 'service',id from public.save_catalog_product(null,null,'Exam','service','','visit',9000,true);

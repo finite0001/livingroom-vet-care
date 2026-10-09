@@ -1,3 +1,38 @@
+import { z } from "zod";
+
+const phonePattern = /^\+[0-9 ().-]+$/;
+const normalizedPhonePattern = /^\+[1-9][0-9]{7,14}$/;
+const emailPattern = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+
+const phoneSchema = z.string().trim()
+  .min(1, "Phone number is required.")
+  .max(50, "Phone must be 50 characters or fewer.")
+  .refine(value => phonePattern.test(value) && normalizedPhonePattern.test(value.replace(/[ ().-]/g, "")), "Enter a valid phone number with a country code, such as +1 303 555 0100.")
+  .transform(value => value.replace(/[ ().-]/g, ""));
+const emailSchema = z.string().trim().toLowerCase()
+  .min(1, "Email address is required.")
+  .max(254, "Email must be 254 characters or fewer.")
+  .refine(value => emailPattern.test(value) && !value.startsWith(".") && !value.includes("..") && !value.includes(".@"), "Enter a valid email address.");
+const addressSchema = z.string().trim().max(1000, "Addresses must be 1,000 characters or fewer.").transform(value => value || null);
+const clientFormSchema = z.object({
+  first_name: z.string().trim().min(1, "First and last name are required.").max(100, "Names must be 100 characters or fewer."),
+  last_name: z.string().trim().min(1, "First and last name are required.").max(100, "Names must be 100 characters or fewer."),
+  primary_phone: phoneSchema,
+  primary_email: emailSchema,
+  preferred_channel: z.enum(["SMS", "EMAIL", "VOICE"]),
+  mailing_address: addressSchema,
+  housecall_address: addressSchema,
+});
+
+export interface ClientContacts {
+  primary_phone: string | null;
+  primary_email: string | null;
+}
+
+export function hasCompleteClientContacts(contacts: ClientContacts): boolean {
+  return phoneSchema.safeParse(contacts.primary_phone).success && emailSchema.safeParse(contacts.primary_email).success;
+}
+
 export interface ClientFormValues {
   first_name: string;
   last_name: string;
@@ -14,23 +49,10 @@ export const emptyClientForm: ClientFormValues = {
 };
 
 export function normalizeClientForm(values: ClientFormValues) {
-  const firstName = values.first_name.trim();
-  const lastName = values.last_name.trim();
-  const email = values.primary_email.trim().toLowerCase();
-  if (!firstName || !lastName) throw new Error("First and last name are required.");
-  if (firstName.length > 100 || lastName.length > 100) throw new Error("Names must be 100 characters or fewer.");
-  if (values.primary_phone.trim().length > 50) throw new Error("Phone must be 50 characters or fewer.");
-  if (email.length > 254) throw new Error("Email must be 254 characters or fewer.");
-  if (values.mailing_address.trim().length > 1000 || values.housecall_address.trim().length > 1000) throw new Error("Addresses must be 1,000 characters or fewer.");
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email address.");
-  return {
-    first_name: firstName, last_name: lastName,
-    primary_phone: values.primary_phone.trim() || null,
-    primary_email: email || null,
-    preferred_channel: values.preferred_channel,
-    mailing_address: values.mailing_address.trim() || null,
-    housecall_address: values.housecall_address.trim() || null,
-  };
+  const result = clientFormSchema.safeParse(values);
+  if (!result.success) throw new Error(result.error.issues[0].message);
+  const { first_name, last_name, primary_phone, primary_email, preferred_channel, mailing_address, housecall_address } = result.data;
+  return { first_name, last_name, primary_phone, primary_email, preferred_channel, mailing_address, housecall_address };
 }
 
 interface DuplicateCandidate {

@@ -93,7 +93,7 @@ async function jsonHttp(mode: 'prepare' | 'recover', body: unknown, headers = st
 }
 const client = await rpc('save_client', {
   p_actor_id: staff.id, p_client_id: null, p_expected_version: null, p_first_name: 'Synthetic', p_last_name: `Publication ${randomUUID()}`,
-  p_primary_phone: null, p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: '2619 Synthetic Street', p_housecall_address: null,
+  p_primary_phone: "+13035550197", p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: '2619 Synthetic Street', p_housecall_address: null,
 });
 const patient = await rpc('save_patient', {
   p_id: null, p_client_id: client.id, p_expected_version: null, p_name: 'Synthetic publication patient', p_species: 'Dog', p_breed: 'Synthetic breed',

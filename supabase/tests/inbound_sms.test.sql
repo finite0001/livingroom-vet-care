@@ -9,15 +9,15 @@ insert into public.clients (
   last_name,
   full_name,
   primary_phone,
-  preferred_channel
-) values (
+  preferred_channel,
+  primary_email) values (
   '39000000-0000-4000-8000-000000000001',
   'Inbound',
   'Client',
   'Inbound Client',
   '+1 (303) 555-0100',
-  'SMS'
-);
+  'SMS',
+  'fixture-1488@example.test');
 
 insert into public.sms_consent (
   client_id,
@@ -61,6 +61,7 @@ select ok(
 );
 
 set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok(
   $$select * from public.record_inbound_sms(
       '+1 (303) 555-0100',
@@ -101,6 +102,7 @@ select is(
 );
 
 set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok(
   $$select * from public.record_inbound_sms(
       '+1 (303) 555-0100',
@@ -120,6 +122,7 @@ select is(
 );
 
 set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok(
   $$select * from public.record_inbound_sms(
       '+1 (303) 555-0100',
@@ -149,6 +152,7 @@ select is(
 );
 
 set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok(
   $$select * from public.record_inbound_sms(
       '+1 (303) 555-0100',
@@ -173,6 +177,7 @@ select is(
 );
 
 set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
 select lives_ok(
   $$select * from public.record_inbound_sms(
       '+1 (303) 555-0999',
@@ -182,19 +187,40 @@ select lives_ok(
       null,
       timestamptz '2026-09-22 19:30:00+00'
     )$$,
-  'Inbound SMS from an unknown number creates a placeholder client'
+  'Unknown inbound SMS is retained for review without creating a client'
 );
 reset role;
 select is(
   (select count(*) from public.clients where primary_phone = '+13035550999' and full_name = 'Unknown SMS +13035550999'),
-  1::bigint,
-  'Unknown inbound SMS creates a staff-visible placeholder client'
+  0::bigint,
+  'Unknown inbound SMS does not create a placeholder client'
 );
 select is(
-  (select count(*) from public.messages m join public.conversations c on c.id = m.conversation_id join public.clients cl on cl.id = c.client_id where m.provider_message_id = 'SM-inbound-unknown' and cl.primary_phone = '+13035550999'),
+  (select count(*) from public.communication_inbound where resource_id = 'SM-inbound-unknown' and client_id is null and message_id is null and review_reason = 'Unknown or shared sender'),
   1::bigint,
-  'Unknown inbound SMS is attached to the placeholder client conversation'
+  'Unknown inbound SMS is durably retained in the canonical review queue'
 );
+
+set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select lives_ok($$select * from record_inbound_sms('+13035550999','+13035550199','New household here','SM-inbound-unknown',null,now())$$,'Unknown SMS retry remains idempotent');
+select lives_ok($$select * from record_inbound_sms('+13035550999','+13035550199','STOP','SM-unknown-stop',null,now())$$,'Unknown STOP is captured without inventing contacts');
+reset role;
+select is((select count(*) from communication_inbound where resource_id='SM-inbound-unknown'),1::bigint,'Unknown retry produces one review item');
+select is((select count(*) from communication_suppressions where channel='SMS' and recipient='+13035550999'),1::bigint,'Unknown STOP suppresses its phone number');
+select is((select count(*) from clients where primary_phone='+13035550999'),0::bigint,'STOP does not create a client');
+
+insert into public.clients(first_name,last_name,full_name,primary_phone,primary_email)
+ values('Reviewed','Household','Reviewed Household','+13035550999','reviewed-sms@example.test');
+set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select lives_ok($$select * from record_inbound_sms('+13035550999','+13035550199','New household here','SM-inbound-unknown',null,now())$$,'Retry after household creation retains the original review record');
+select throws_ok($$select * from record_inbound_sms('+13035550999','+13035550199','Changed content','SM-inbound-unknown',null,now())$$,'23505','Provider event identifier reused','Canonical provider ID cannot be reused for different content');
+select lives_ok($$select * from record_inbound_sms('+13035550998','+13035550199','Long provider id',repeat('x',220),null,now())$$,'Previously supported long provider identifiers remain durably recordable');
+reset role;
+select is((select count(*) from communication_inbound where resource_id='SM-inbound-unknown'),1::bigint,'Later household creation does not duplicate the review item');
+select is((select count(*) from messages where provider='twilio' and provider_message_id='SM-inbound-unknown'),0::bigint,'Webhook retry does not create a second legacy message');
+select is((select count(*) from communication_inbound where sender='+13035550998' and client_id is null),1::bigint,'Long identifier has one canonical review record');
 
 set local role authenticated;
 select throws_ok(
