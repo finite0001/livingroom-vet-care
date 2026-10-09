@@ -242,3 +242,281 @@ test("a failed summary never hides the patient record", async ({ page }) => {
   await expect(page.getByText("Next steps could not be loaded.")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole("tab", { name: "Medical" })).toBeVisible();
 });
+
+interface PhotoFixture {
+  version: number;
+  current: string | null;
+  uploads: number;
+  chosen: number;
+  reservations: Record<string, Record<string, unknown>>;
+}
+async function photos(page: Page, lose?: string) {
+  await fixture(page);
+  const state: PhotoFixture = {
+    version: 0,
+    current: null,
+    uploads: 0,
+    chosen: 0,
+    reservations: {},
+  };
+  const objects = new Set<string>(), actions = new Map<string, unknown>();
+  let lost = false;
+  await page.route("http://127.0.0.1:54321/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const method = route.request().method();
+    const body = method === "POST" &&
+        !path.startsWith("/storage/v1/object/patient-documents/")
+      ? route.request().postDataJSON()
+      : null;
+    const reply = async (step: string, json: unknown) => {
+      if (lose === step && !lost) {
+        lost = true;
+        return route.abort("failed");
+      }
+      return route.fulfill({ json });
+    };
+    if (path === "/rest/v1/rpc/read_patient_photo") {
+      const d = state.current ? state.reservations[state.current] : null;
+      return route.fulfill({
+        json: {
+          pet_id: luna,
+          version: state.version,
+          document_id: state.current,
+          document: d
+            ? {
+              id: d.id,
+              pet_id: luna,
+              file_path: d.file_path,
+              mime_type: "image/png",
+            }
+            : null,
+        },
+      });
+    }
+    if (path === "/rest/v1/rpc/prepare_patient_photo") {
+      const d = state.reservations[body.p_id] ??= {
+        id: body.p_id,
+        pet_id: luna,
+        created_by: staff,
+        file_path: `${staff}/${luna}/${body.p_id}/original`,
+        status: "uploading",
+      };
+      return reply("prepare", {
+        document: d,
+        expected_version: body.p_expected_version,
+        expected_sha256: body.p_sha256,
+      });
+    }
+    if (path === "/storage/v1/object/list/patient-documents") {
+      return route.fulfill({
+        json: objects.has(`${body.prefix}/original`)
+          ? [{ name: "original" }]
+          : [],
+      });
+    }
+    if (path.startsWith("/storage/v1/object/patient-documents/")) {
+      objects.add(path.replace("/storage/v1/object/patient-documents/", ""));
+      state.uploads++;
+      return reply("upload", { Key: path });
+    }
+    if (path === "/functions/v1/verify-patient-photo") {
+      return reply("verify", { id: body.id });
+    }
+    if (path === "/rest/v1/rpc/finalize_patient_document") {
+      state.reservations[body.p_id].status = "ready";
+      return reply("finalize", state.reservations[body.p_id]);
+    }
+    if (path === "/rest/v1/rpc/set_patient_photo") {
+      let receipt = actions.get(body.p_id);
+      if (!receipt) {
+        if (body.p_expected_version !== state.version) {
+          return route.fulfill({
+            status: 409,
+            json: {
+              code: "PT409",
+              message: "Photo changed; reload before choosing another image",
+            },
+          });
+        }
+        state.current = body.p_document_id;
+        state.version++;
+        state.chosen++;
+        receipt = {
+          id: body.p_id,
+          pet_id: luna,
+          document_id: state.current,
+          version: state.version,
+        };
+        actions.set(body.p_id, receipt);
+      }
+      return reply("choose", receipt);
+    }
+    if (path.startsWith("/storage/v1/object/sign/patient-documents/")) {
+      if (method === "POST") {
+        return route.fulfill({
+          json: {
+            signedURL:
+              "/object/sign/patient-documents/synthetic?token=synthetic",
+          },
+        });
+      }
+      return route.fulfill({
+        body: Buffer.from(
+          await page.evaluate(() => {
+            const c = document.createElement("canvas");
+            c.width = c.height = 1;
+            return c.toDataURL("image/png").split(",")[1];
+          }),
+          "base64",
+        ),
+        contentType: "image/png",
+      });
+    }
+    return route.fallback();
+  });
+  return state;
+}
+async function openPhoto(page: Page) {
+  await page.getByRole("button", { name: "Photo options for Luna" }).click();
+  await expect(page.getByLabel("Upload photo", { exact: true })).toBeEnabled();
+}
+async function uploadPixel(page: Page) {
+  const encoded = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 2;
+    const ctx = c.getContext("2d")!;
+    ctx.fillRect(0, 0, 2, 2);
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "luna.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(encoded, "base64"),
+  });
+}
+test("patient photo supports mobile upload, rejected replacement and retained-history removal", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const state = await photos(page);
+  await page.goto(`/hub/patient/${luna}`);
+  await openPhoto(page);
+  await uploadPixel(page);
+  await expect(page.getByText("Photo action confirmed.")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Luna", exact: true }).first())
+    .toBeVisible();
+  const original = state.current;
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "broken.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("corrupt"),
+  });
+  await expect(page.getByRole("alert")).toBeVisible();
+  expect(state.current).toBe(original);
+  expect(state.uploads).toBe(1);
+  await page.getByRole("button", { name: "Remove current photo" }).click();
+  await expect(page.getByLabel("Upload photo", { exact: true })).toBeEnabled();
+  expect(state.current).toBeNull();
+  expect(state.version).toBe(2);
+  expect(Object.keys(state.reservations)).toHaveLength(1);
+});
+for (const stage of ["upload", "verify", "finalize", "choose"]) {
+  test(`patient photo recovers lost ${stage} acknowledgment after reload`, async ({ page }) => {
+    const state = await photos(page, stage);
+    await page.goto(`/hub/patient/${luna}`);
+    await openPhoto(page);
+    await uploadPixel(page);
+    await expect(page.getByRole("button", { name: "Retry photo save" }))
+      .toBeEnabled();
+    await page.reload();
+    await page.getByRole("button", { name: "Photo options for Luna" }).click();
+    await page.getByRole("button", { name: "Retry photo save" }).click();
+    await expect(page.getByText("Photo action confirmed.")).toBeVisible();
+    expect(state.uploads).toBe(1);
+    expect(state.chosen).toBe(1);
+    expect(state.version).toBe(1);
+  });
+}
+test("lost prepare acknowledgment requires file reselection", async ({ page }) => {
+  const state = await photos(page, "prepare");
+  await page.goto(`/hub/patient/${luna}`);
+  await openPhoto(page);
+  await uploadPixel(page);
+  await expect(page.getByRole("button", { name: "Retry photo save" }))
+    .toBeEnabled();
+  await page.reload();
+  await page.getByRole("button", { name: "Photo options for Luna" }).click();
+  await page.getByRole("button", { name: "Retry photo save" }).click();
+  await expect(page.getByRole("alert")).toContainText("choose the image again");
+  expect(state.chosen).toBe(0);
+  await page.getByRole("button", { name: "Discard photo draft" }).click();
+  await uploadPixel(page);
+  await expect(page.getByText("Photo action confirmed.")).toBeVisible();
+  expect(state.uploads).toBe(1);
+});
+test("concurrent photo removal rejects a stale upload choice", async ({ page }) => {
+  const state = await photos(page, "verify");
+  await page.goto(`/hub/patient/${luna}`);
+  await openPhoto(page);
+  await uploadPixel(page);
+  await expect(page.getByRole("button", { name: "Retry photo save" }))
+    .toBeEnabled();
+  state.version = 1;
+  await page.getByRole("button", { name: "Retry photo save" }).click();
+  await expect(page.getByRole("alert")).toContainText("Photo changed");
+  expect(state.chosen).toBe(0);
+  expect(state.current).toBeNull();
+});
+test("photo retry journals reject another actor or patient's reservation", async ({ page }) => {
+  const state = await photos(page);
+  await page.addInitScript(({ staff, luna, milo }) => {
+    localStorage.setItem(
+      `lrv-patient-photo-v1:${staff}:${luna}`,
+      JSON.stringify({
+        id: crypto.randomUUID(),
+        actionId: crypto.randomUUID(),
+        petId: milo,
+        actorId: staff,
+        expectedVersion: 0,
+        sha256: "a".repeat(64),
+        size: 100,
+        mime: "image/png",
+        kind: "upload",
+      }),
+    );
+  }, { staff, luna, milo });
+  await page.goto(`/hub/patient/${luna}`);
+  await openPhoto(page);
+  await expect(page.getByRole("button", { name: "Retry photo save" }))
+    .toHaveCount(0);
+  expect(state.chosen).toBe(0);
+  expect(state.uploads).toBe(0);
+});
+test("unconfirmed photo action participates in the patient navigation guard", async ({ page }) => {
+  await photos(page, "verify");
+  await page.goto(`/hub/patient/${luna}`);
+  await openPhoto(page);
+  await uploadPixel(page);
+  await expect(page.getByRole("button", { name: "Retry photo save" }))
+    .toBeEnabled();
+  await page.keyboard.press("Escape");
+  await page.getByRole("region", { name: "Patient summary" }).getByRole(
+    "link",
+    { name: "Ada Lovelace", exact: true },
+  ).click();
+  await expect(
+    page.getByRole("heading", { name: "Leave with unsaved changes?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Keep editing" }).click();
+  await expect(page).toHaveURL(new RegExp(`/hub/patient/${luna}`));
+});
+test("failed signed-image loading falls back and explicitly retries private access",async({page})=>{
+  await photos(page);let unavailable=true;
+  await page.route("**/storage/v1/object/sign/patient-documents/**",route=>{
+    if(route.request().method()==="GET"&&unavailable)return route.fulfill({status:503,body:"Unavailable"});
+    return route.fallback();
+  });
+  await page.goto(`/hub/patient/${luna}`);await openPhoto(page);await uploadPixel(page);
+  await expect(page.getByText("Photo could not be loaded. The patient chart is still available.")).toBeVisible();
+  await expect(page.getByRole("img",{name:"Luna",exact:true})).toHaveCount(0);
+  unavailable=false;await page.getByRole("button",{name:"Retry photo",exact:true}).click();
+  await expect(page.getByRole("img",{name:"Luna",exact:true}).first()).toBeVisible();
+});
