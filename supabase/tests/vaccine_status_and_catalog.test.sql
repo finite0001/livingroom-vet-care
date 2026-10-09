@@ -12,7 +12,7 @@ select is((select count(*)::integer from public.catalog_vaccine_profiles),0,'No 
 select is((select count(*)::integer from public.app_settings where key='vaccine_due_soon_days'),0,'No due-soon window is seeded');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"a9280000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Vaccine','Status','3035550111',null,'EMAIL','1 Test St, Boulder CO',null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Vaccine','Status','+13035550111','fixture-7066@example.test','EMAIL','1 Test St, Boulder CO',null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Status dog','Dog','Mixed','2020-01-01','exact','Brown','female','neutered',null,null,null);
 insert into fx select 'other',id from public.save_patient(null,(select id from fx where k='client'),null,'Other dog','Dog','Mixed','2020-01-01','exact','Brown','female','neutered',null,null,null);
 insert into fx select 'rabies',id from public.save_catalog_product(null,null,'Synthetic rabies product','vaccine','Synthetic maker','dose',100,true);

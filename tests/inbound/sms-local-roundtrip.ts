@@ -67,7 +67,7 @@ try{
  sql(`insert into public.user_roles(user_id,role) values(${quote(actor)},'STAFF') on conflict do nothing; update public.profiles set is_active=true where id=${quote(actor)};`);
  const auth=await api("/auth/v1/token?grant_type=password",{email,password},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
- client=(await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"SMS",p_primary_phone:phone,p_primary_email:null,p_preferred_channel:"SMS",p_mailing_address:null,p_housecall_address:null},true)).id;ids.push(client);
+ client=(await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"SMS",p_primary_phone:phone,p_primary_email:"synthetic-contact@example.test",p_preferred_channel:"SMS",p_mailing_address:null,p_housecall_address:null},true)).id;ids.push(client);
  const suppressed=()=>sql(`select public.communication_is_suppressed('SMS',${quote(phone)},${quote(client)});`)==="t";
  const values=(body:string)=>{const sid=`SM${randomUUID().replaceAll("-","")}`;resources.push(sid);ids.push(sid);return {AccountSid:account,MessageSid:sid,MessageStatus:"received",From:phone,To:practicePhone,Body:body,OptOutType:body};};
  await new Promise<void>((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve);});listening=true;

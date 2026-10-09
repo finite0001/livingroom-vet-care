@@ -10,7 +10,7 @@ create temp table fixture_ids(kind text primary key,id uuid);
 grant all on fixture_ids to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"96000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Consent','Household','+13035550166',null,'SMS',null,null);
+insert into fixture_ids select 'client',id from public.save_client(auth.uid(),null,null,'Consent','Household','+13035550166','fixture-4842@example.test','SMS',null,null);
 select is(public.current_sms_consent((select id from fixture_ids where kind='client'))->>'can_message','false','Missing consent is not messaging permission');
 select is(public.current_sms_consent((select id from fixture_ids where kind='client'))->>'phone_number','+13035550166','Display uses normalized current household number');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from fixture_ids where kind='client'),'+13035550166',true,'WRITTEN','Synthetic signed form',null)$$,'Staff records supported consent evidence');

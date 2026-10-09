@@ -34,7 +34,7 @@ select public.configure_payment_provider('acct_test',false,'https://thelivingroo
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"73700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Payment','Family','+13035550404','payment@example.test','EMAIL',null,null);
-insert into fx select 'other-client',id from public.save_client(auth.uid(),null,null,'Different','Family',null,null,'EMAIL',null,null);
+insert into fx select 'other-client',id from public.save_client(auth.uid(),null,null,'Different','Family','+13035555013','fixture-5013@example.test','EMAIL',null,null);
 insert into fx select 'product',id from public.save_catalog_product(null,null,'Visit','service','','visit',10000,true);
 insert into fx values('invoice','73700000-0000-4000-8000-000000000010'),('attempt','73700000-0000-4000-8000-000000000020'),('refund','73700000-0000-4000-8000-000000000030');
 select public.create_billing_invoice((select id from fx where k='invoice'),(select id from fx where k='client'));

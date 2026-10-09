@@ -83,7 +83,7 @@ def race(holder_query, waiter_query, rejected=False):
 
 try:
     sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','race-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into user_roles(user_id,role) values('{actor}','ADMIN');")
-    client = sql(f"begin;{staff}select (save_client(auth.uid(),null,null,'Race','Fixture',null,'race@example.test','EMAIL',null,null)).id;commit;")
+    client = sql(f"begin;{staff}select (save_client(auth.uid(),null,null,'Race','Fixture','+13035550812','race@example.test','EMAIL',null,null)).id;commit;")
     fixture_ids.append(client)
     sql(f"insert into conversations(id,client_id) values('{conversation}','{client}');")
     sql(f"begin;{staff}select prepare_conversation_attachment('{upload}','{conversation}','race.pdf','application/pdf',5);commit;")

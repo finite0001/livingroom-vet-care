@@ -14,7 +14,7 @@ select ok(not has_table_privilege('authenticated','public.lab_work_revisions','U
 select ok(not has_table_privilege('anon','public.patient_lab_orders','SELECT'),'Anonymous access denied');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"da000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into lab_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Lab',null,null,'EMAIL',null,null);
+insert into lab_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Lab','+13035552004','fixture-2004@example.test','EMAIL',null,null);
 insert into lab_fixture select 'pet',id from public.save_patient(null,(select id from lab_fixture where kind='client'),null,'One','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into lab_fixture select 'other',id from public.save_patient(null,(select id from lab_fixture where kind='client'),null,'Two','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 select throws_ok($$select public.save_lab_due_template(gen_random_uuid(),null,'Reviewed test',30,true,'Dr reviewer')$$,'42501',null,'Non-admin cannot standardize clinical intervals');

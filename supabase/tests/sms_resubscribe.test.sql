@@ -28,9 +28,9 @@ grant execute on function pg_temp.consent(text), pg_temp.ct(text,text,text,text,
 
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"97000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'a',id from public.save_client(auth.uid(),null,null,'Stop','Start','+13035550201',null,'SMS',null,null);
-insert into fx select 'b',id from public.save_client(auth.uid(),null,null,'Out','OfOrder','+13035550202',null,'SMS',null,null);
-insert into fx select 'c',id from public.save_client(auth.uid(),null,null,'Carrier','Bounce','+13035550203',null,'SMS',null,null);
+insert into fx select 'a',id from public.save_client(auth.uid(),null,null,'Stop','Start','+13035550201','fixture-3298@example.test','SMS',null,null);
+insert into fx select 'b',id from public.save_client(auth.uid(),null,null,'Out','OfOrder','+13035550202','fixture-8835@example.test','SMS',null,null);
+insert into fx select 'c',id from public.save_client(auth.uid(),null,null,'Carrier','Bounce','+13035550203','fixture-3996@example.test','SMS',null,null);
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from fx where kind='a'),'+13035550201',true,'WRITTEN','Synthetic signed form A',null)$$,'Household A consents');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from fx where kind='b'),'+13035550202',true,'WRITTEN','Synthetic signed form B',null)$$,'Household B consents');
 select lives_ok($$select public.record_sms_consent(auth.uid(),(select id from fx where kind='c'),'+13035550203',true,'WRITTEN','Synthetic signed form C',null)$$,'Household C consents');
@@ -180,9 +180,9 @@ reset role;
 -- Reconciliation of legacy STOP rows (no occurred_at) written before this migration.
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"97000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'd',id from public.save_client(auth.uid(),null,null,'Legacy','Keyword','+13035550204',null,'SMS',null,null);
-insert into fx select 'e',id from public.save_client(auth.uid(),null,null,'Legacy','Staff','+13035550205',null,'SMS',null,null);
-insert into fx select 'f',id from public.save_client(auth.uid(),null,null,'Legacy','Stopped','+13035550206',null,'SMS',null,null);
+insert into fx select 'd',id from public.save_client(auth.uid(),null,null,'Legacy','Keyword','+13035550204','fixture-8310@example.test','SMS',null,null);
+insert into fx select 'e',id from public.save_client(auth.uid(),null,null,'Legacy','Staff','+13035550205','fixture-9144@example.test','SMS',null,null);
+insert into fx select 'f',id from public.save_client(auth.uid(),null,null,'Legacy','Stopped','+13035550206','fixture-3107@example.test','SMS',null,null);
 reset role;
 -- D: STOP -> START -> staff consent (the production case).
 insert into public.cloudtalk_messages(message_id,direction,channel,external_number,internal_number,body,occurred_at) values

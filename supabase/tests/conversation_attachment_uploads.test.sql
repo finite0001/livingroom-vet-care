@@ -11,7 +11,7 @@ insert into public.user_roles (user_id, role) values ('ee100000-0000-4000-8000-0
 insert into user_roles(user_id,role) values('ee100000-0000-4000-8000-000000000001','ADMIN'),('ee100000-0000-4000-8000-000000000002','ADMIN');
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated,service_role;
 select set_config('request.jwt.claims','{"sub":"ee100000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Upload','Fixture',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Upload','Fixture','+13035558474','fixture-8474@example.test','EMAIL',null,null);
 insert into conversations(client_id) values((select id from fx where k='client')) returning id as conversation_id \gset
 insert into fx values('conversation',:'conversation_id');
 insert into fx select k,gen_random_uuid() from unnest(array['upload','abandon']) k;

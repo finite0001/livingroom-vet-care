@@ -71,7 +71,7 @@ try{
  const auth=await api("/auth/v1/token?grant_type=password",{email,password},{apikey:local.ANON_KEY,"Content-Type":"application/json"});
  staffHeaders={apikey:local.ANON_KEY,Authorization:`Bearer ${auth.access_token}`,"Content-Type":"application/json"};
  const sender=`family-${randomUUID()}@example.test`;
- client=(await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Inbound",p_primary_phone:null,p_primary_email:sender,p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null},true)).id;ids.push(client);
+ client=(await rpc("save_client",{p_actor_id:actor,p_client_id:null,p_expected_version:null,p_first_name:"Synthetic",p_last_name:"Inbound",p_primary_phone:"+13035550197",p_primary_email:sender,p_preferred_channel:"EMAIL",p_mailing_address:null,p_housecall_address:null},true)).id;ids.push(client);
  await new Promise<void>((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve);});listening=true;
  const address=server.address();assert.ok(address&&typeof address!=="string");
  const endpoint=`http://127.0.0.1:${address.port}/webhook`;

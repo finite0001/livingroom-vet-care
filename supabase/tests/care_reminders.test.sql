@@ -8,7 +8,7 @@ create temp table care_fixture(kind text primary key,id uuid);grant all on care_
 select ok(not has_table_privilege('authenticated','public.care_reminder_jobs','UPDATE'),'Browser cannot mark jobs sent');
 select ok(not has_table_privilege('authenticated','public.care_plan_revisions','DELETE'),'Due history cannot be deleted');
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ac000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into care_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Care',null,null,'EMAIL',null,null);
+insert into care_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Care','+13035553317','fixture-3317@example.test','EMAIL',null,null);
 insert into care_fixture select 'pet',id from public.save_patient(null,(select id from care_fixture where kind='client'),null,'Juniper {{due_date}}','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into care_fixture select 'other',id from public.save_patient(null,(select id from care_fixture where kind='client'),null,'Other','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into care_fixture select 'product',id from public.save_catalog_product(null,null,'Synthetic exact vaccine','vaccine','','dose',100,true);

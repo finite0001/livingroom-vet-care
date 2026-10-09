@@ -14,8 +14,8 @@ insert into public.user_roles (user_id, role) values ('10000000-0000-4000-8000-0
 update public.profiles set role = 'ADMIN' where id = '10000000-0000-4000-8000-000000000001';
 update public.user_roles set role = 'ADMIN' where user_id = '10000000-0000-4000-8000-000000000001';
 update public.profiles set is_active = false where id = '10000000-0000-4000-8000-000000000003';
-insert into public.clients (id, first_name, last_name, full_name)
-values ('20000000-0000-4000-8000-000000000001', 'Synthetic', 'Client', 'Synthetic Client');
+insert into public.clients (id, first_name, last_name, full_name,primary_phone,primary_email)
+values ('20000000-0000-4000-8000-000000000001', 'Synthetic', 'Client', 'Synthetic Client','+13035551137','fixture-1137@example.test');
 
 select is((select role::text from public.profiles where id = '10000000-0000-4000-8000-000000000002'), 'STAFF', 'User metadata cannot grant ADMIN');
 select is((select role::text from public.user_roles where user_id = '10000000-0000-4000-8000-000000000002'), 'STAFF', 'Role mapping ignores user metadata');

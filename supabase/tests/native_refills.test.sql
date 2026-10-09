@@ -12,7 +12,7 @@ update profiles set full_name='Synthetic prescriber' where id='a5510000-0000-400
 insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000001','DVM'),('a5510000-0000-4000-8000-000000000001','ADMIN'),('a5510000-0000-4000-8000-000000000003','DVM'),('a5510000-0000-4000-8000-000000000004','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Native','Household',null,null,'EMAIL','2619 Synthetic Street',null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Native','Household','+13035555612','fixture-5612@example.test','EMAIL','2619 Synthetic Street',null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Native Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'product',id from save_catalog_product(null,null,'Synthetic medication','medication','','tablet',100,true);
 insert into fx select k,gen_random_uuid() from unnest(array['config','save','draft','sign','save2','draft2']) k;
@@ -77,7 +77,7 @@ select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v f
 reset role;update profiles set is_active=true where id='a5510000-0000-4000-8000-000000000002';delete from user_roles where user_id='a5510000-0000-4000-8000-000000000002';set local role authenticated;
 select throws_ok($$select transition_native_refill(gen_random_uuid(),(select v from data where k='assign2'))$$,'23514','Active staff assignee required','Active profile without staff role cannot receive assignment');
 reset role;insert into user_roles(user_id,role) values('a5510000-0000-4000-8000-000000000002','STAFF');set local role authenticated;
-insert into fx select 'other-client',id from save_client(auth.uid(),null,null,'Other','Household',null,null,'EMAIL','Synthetic other street',null);
+insert into fx select 'other-client',id from save_client(auth.uid(),null,null,'Other','Household','+13035551078','fixture-1078@example.test','EMAIL','Synthetic other street',null);
 -- Rollback-only synthetic historical drift; production ownership guard remains unchanged.
 reset role;alter table public.pets disable trigger pets_version;
 update pets set client_id=(select id from fx where k='other-client') where id=(select id from fx where k='pet');

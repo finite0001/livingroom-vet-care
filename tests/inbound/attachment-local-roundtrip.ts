@@ -101,7 +101,7 @@ try {
   const bytes = new TextEncoder().encode("%PDF-synthetic-incoming-original");
   const sha256 = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
   const metadata = { id: ids.attachment, filename: "incoming.pdf", content_type: "application/pdf", size: bytes.length };
-  const saved = await owner.client.rpc("save_client", { p_actor_id: actor, p_client_id: null, p_expected_version: null, p_first_name: "Incoming", p_last_name: "Fixture", p_primary_phone: null, p_primary_email: "incoming@example.test", p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null });
+  const saved = await owner.client.rpc("save_client", { p_actor_id: actor, p_client_id: null, p_expected_version: null, p_first_name: "Incoming", p_last_name: "Fixture", p_primary_phone: "+13035550197", p_primary_email: "incoming@example.test", p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null });
   if (saved.error) throw saved.error;
   ids.client = (Array.isArray(saved.data) ? saved.data[0] : saved.data).id;
   sql(`begin;

@@ -7,7 +7,7 @@ insert into public.user_roles (user_id, role) values ('ed900000-0000-4000-8000-0
 insert into user_roles(user_id,role) values('ed900000-0000-4000-8000-000000000001','ADMIN'),('ed900000-0000-4000-8000-000000000002','ADMIN');
 create temp table fx(k text primary key,id uuid);create temp table data(k text primary key,v jsonb);grant all on fx,data to authenticated,service_role;
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"ed900000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Resolution','Household',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Resolution','Household','+13035552357','fixture-2357@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Resolution patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select k,gen_random_uuid() from unnest(array['mapping','child','migration','scope','excluded','unsupported','binding','root','reopen','item-root']) k;
 reset role;

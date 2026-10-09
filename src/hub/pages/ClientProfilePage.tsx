@@ -138,7 +138,7 @@ export default function ClientProfilePage() {
                     <div><dt className="text-xs text-muted-foreground">Mailing address</dt><dd className="whitespace-pre-wrap text-sm">{client.mailing_address || "Not recorded"}</dd></div>
                   </dl>
                   <div className="border-t pt-3">
-                    <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">Patients</h3><PatientFormDialog clientId={client.id} /></div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">Patients</h3><PatientFormDialog clientId={client.id} clientContacts={client} /></div>
                     {client.pets.length === 0 ? <p className="text-sm text-muted-foreground">No pets on file</p> : (
                       <ul className="mt-2 space-y-1">
                         {client.pets.map((pet) => (
@@ -155,7 +155,7 @@ export default function ClientProfilePage() {
 
           <TabsContent value="patients" forceMount className={shown("patients")}>
             {visited.has("patients") && <>
-              <div className="flex justify-end"><PatientFormDialog clientId={client.id} /></div>
+              <div className="flex flex-wrap justify-end gap-2"><PatientFormDialog clientId={client.id} clientContacts={client} /></div>
               {client.pets.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No pets on file</p>
               ) : (

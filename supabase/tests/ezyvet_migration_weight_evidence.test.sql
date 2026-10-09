@@ -11,7 +11,7 @@ create temp table fx(k text primary key,id uuid);grant all on fx to authenticate
 create temp table rr(v jsonb);grant all on rr to authenticated,service_role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"e5000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Weight','Family',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Weight','Family','+13035551446','fixture-1446@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from save_patient(null,(select id from fx where k='client'),null,'Weight Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'otherpet',id from save_patient(null,(select id from fx where k='client'),null,'Other Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 reset role;
@@ -93,7 +93,7 @@ select throws_ok($$select pg_temp.receipt('9','infinity',gen_random_uuid())$$,'2
 select throws_ok($$select pg_temp.receipt('9',null,null,101)$$,'23514','Invalid weight evidence identity or cursor','Unbounded read denied');
 select throws_ok($$update ezyvet_weight_approvals set reason='Changed reason'$$,'42501',null,'Reader cannot mutate approval ledger');
 select throws_ok($$delete from ezyvet_weight_source_reviews$$,'42501',null,'Reader cannot erase acknowledgments');
-insert into fx select 'movedhousehold',id from save_client(auth.uid(),null,null,'Moved','Household',null,null,'EMAIL',null,null);
+insert into fx select 'movedhousehold',id from save_client(auth.uid(),null,null,'Moved','Household','+13035557341','fixture-7341@example.test','EMAIL',null,null);
 reset role;
 -- Model preexisting drift in rollback-only superuser fixture; restore the live write guard before reads.
 alter table pets disable trigger pets_version;

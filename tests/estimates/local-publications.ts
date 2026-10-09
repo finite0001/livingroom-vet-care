@@ -90,7 +90,7 @@ async function jsonHttp(mode: 'prepare' | 'recover', body: unknown, headers = st
 }
 const client = await rpc('save_client', {
   p_actor_id: staff.id, p_client_id: null, p_expected_version: null, p_first_name: 'Synthetic', p_last_name: `Publication ${randomUUID()}`,
-  p_primary_phone: null, p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: '2619 Synthetic Street', p_housecall_address: null,
+  p_primary_phone: "+13035550197", p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: '2619 Synthetic Street', p_housecall_address: null,
 });
 const patient = await rpc('save_patient', {
   p_id: null, p_client_id: client.id, p_expected_version: null, p_name: 'Synthetic publication patient', p_species: 'Dog', p_breed: 'Synthetic breed',
@@ -189,7 +189,7 @@ const secondPreparation = estimatePublicationPreparationSchema.parse((await json
 const stalePublish = publishRequest(secondPreparation), abandonedId = randomUUID();
 // Contact update invalidates an unpublished review but cannot rewrite historical bytes.
 await rpc('save_client', { p_actor_id: staff.id, p_client_id: client.id, p_expected_version: client.version,
-  p_first_name: 'Changed', p_last_name: client.last_name, p_primary_phone: null, p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: 'New synthetic address', p_housecall_address: null });
+  p_first_name: 'Changed', p_last_name: client.last_name, p_primary_phone: "+13035550197", p_primary_email: 'publication@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: 'New synthetic address', p_housecall_address: null });
 await denied('publish_native_estimate', { p_id: abandonedId, p_request: stalePublish }, 'PT409');
 const closeMutation = { kind: 'publish', request: stalePublish };
 check(await rpc('recover_native_estimate_publication_operation', { p_id: abandonedId }) === null, 'Uncommitted stale publication has no receipt');

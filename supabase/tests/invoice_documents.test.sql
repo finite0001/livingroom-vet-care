@@ -11,8 +11,8 @@ create temp table fx(k text primary key,id uuid); grant all on fx to authenticat
 create temp table documents(k text primary key,v jsonb); grant all on documents to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"93000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Invoice','Family','private@example.test',null,'EMAIL','123 Mailing Way','Private Housecall Address');
-insert into fx select 'other',id from public.save_client(auth.uid(),null,null,'Other','Family',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Invoice','Family','+13035557841','private@example.test','EMAIL','123 Mailing Way','Private Housecall Address');
+insert into fx select 'other',id from public.save_client(auth.uid(),null,null,'Other','Family','+13035556088','fixture-6088@example.test','EMAIL',null,null);
 insert into fx select 'product',id from public.save_catalog_product(null,null,'Exam <script>','service','','visit',1001,true);
 select public.create_billing_invoice('94000000-0000-4000-8000-000000000001',(select id from fx where k='client'));
 select public.add_invoice_service('94000000-0000-4000-8000-000000000002','94000000-0000-4000-8000-000000000001',null,(select id from fx where k='product'),1.5);

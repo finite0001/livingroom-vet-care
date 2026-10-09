@@ -54,7 +54,7 @@ const transport = (headers: Record<string, string>) => ({ rpc: async (name: stri
   const response = await post(`/rest/v1/rpc/${name}`, args, headers);
   return { data: response.ok ? response.value : null, error: response.ok ? null : Object.assign(new Error(`Synthetic ${name} failed`), { code: response.value?.code }) };
 } });
-const client = await rpc('save_client', { p_actor_id: staff.id, p_client_id: null, p_expected_version: null, p_first_name: 'Synthetic', p_last_name: `Estimate ${randomUUID()}`, p_primary_phone: null, p_primary_email: 'estimate@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: 'Synthetic estimate address', p_housecall_address: null });
+const client = await rpc('save_client', { p_actor_id: staff.id, p_client_id: null, p_expected_version: null, p_first_name: 'Synthetic', p_last_name: `Estimate ${randomUUID()}`, p_primary_phone: "+13035550197", p_primary_email: 'estimate@example.test', p_preferred_channel: 'EMAIL', p_mailing_address: 'Synthetic estimate address', p_housecall_address: null });
 const patient = await rpc('save_patient', { p_id: null, p_client_id: client.id, p_expected_version: null, p_name: 'Synthetic estimate patient', p_species: 'Dog', p_breed: null, p_dob: null, p_birth_date_precision: 'unknown', p_color: null, p_sex: 'unknown', p_neuter_status: 'unknown', p_microchip_id: null, p_archived_at: null, p_deceased_at: null });
 const api = createEstimateDraftApi(transport(staff.headers), staff.id, client.id);
 const otherApi = createEstimateDraftApi(transport(other.headers), other.id, client.id);

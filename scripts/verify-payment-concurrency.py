@@ -57,7 +57,7 @@ insert into auth.users(id,email,raw_user_meta_data) values('{actor}','payment-co
 update public.profiles set is_active=true where id='{actor}';
 insert into public.user_roles(user_id,role) values('{actor}','STAFF');
 {claims}
-insert into public.clients(id,first_name,last_name,full_name) values('{client}','Payment','Concurrency','Payment Concurrency');
+insert into public.clients(id,first_name,last_name,full_name,primary_phone,primary_email) values('{client}','Payment','Concurrency','Payment Concurrency','+13035550822','payment-concurrency@example.test');
 select public.create_billing_invoice('{invoice}','{client}');
 commit;""")
     # Use the ordinary catalog/issue RPCs; no direct ledger writes.

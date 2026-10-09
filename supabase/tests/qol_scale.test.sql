@@ -9,7 +9,7 @@ update public.profiles set is_active=false where id='3a000000-0000-4000-8000-000
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"3a000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Scale','Family',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Scale','Family','+13035555231','fixture-5231@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Scale dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'other',id from public.save_patient(null,(select id from fx where k='client'),null,'Other dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 -- Draft may be partial; total stays unknown until every category is scored.

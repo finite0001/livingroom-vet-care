@@ -5,7 +5,7 @@ const backend = "http://127.0.0.1:54321";
 const user = { id: "11111111-1111-4111-8111-111111111111", aud: "authenticated", role: "authenticated", email: "synthetic-staff@example.test", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, created_at: "2026-01-01T00:00:00Z" };
 const initialClient = { id: "22222222-2222-4222-8222-222222222222", first_name: "Jane", last_name: "Example", full_name: "Jane Example", primary_email: "jane@example.test", primary_phone: "+13035550100", preferred_channel: "EMAIL", mailing_address: "PO Box 10", housecall_address: "10 Pine Street", version: 1, created_at: "2026-01-01T00:00:00Z", ezyvet_id: null };
 
-interface BackendOptions { existing?: boolean; conflictOnce?: boolean; }
+interface BackendOptions { existing?: boolean; conflictOnce?: boolean; incompleteContacts?: boolean; }
 
 async function mockBackend(page: Page, options: BackendOptions = {}) {
   const expires = Math.floor(Date.now() / 1000) + 3600;
@@ -13,6 +13,7 @@ async function mockBackend(page: Page, options: BackendOptions = {}) {
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${payload}.synthetic-signature`, refresh_token: "synthetic-refresh", token_type: "bearer", expires_in: 3600, expires_at: expires, user };
   await page.addInitScript(value => localStorage.setItem("sb-127-auth-token", JSON.stringify(value)), session);
   let client = { ...initialClient };
+  if (options.incompleteContacts) client = { ...client, primary_phone: "", primary_email: "" };
   let exists = !!options.existing;
   let conflict = !!options.conflictOnce;
   const saves: Record<string, unknown>[] = [];
@@ -46,6 +47,7 @@ async function fillNewClient(page: Page) {
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.getByLabel("First name", { exact: false }).fill("Jane");
   await page.getByLabel("Last name", { exact: false }).fill("Example");
+  await page.getByLabel("Phone", { exact: true }).fill("+1 (303) 555-0100");
   await page.getByLabel("Email", { exact: true }).fill("jane@example.test");
   await page.getByLabel("Mailing address", { exact: true }).fill("PO Box 10");
   await page.getByLabel("Housecall address", { exact: true }).fill("10 Pine Street");
@@ -67,6 +69,41 @@ test("household creation and editing preserve separate mailing and housecall add
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByText("12 Pine Street", { exact: true })).toBeVisible();
   expect(backendState.saves[1]).toMatchObject({ p_expected_version: 2, p_mailing_address: "PO Box 10", p_housecall_address: "12 Pine Street" });
+});
+
+test("new client requires both contacts and retains its draft when contact validation fails", async ({ page }) => {
+  const state = await mockBackend(page);
+  await page.goto("/hub/clients");
+  await fillNewClient(page);
+  await page.getByLabel("Phone", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Create Client", exact: true }).click();
+  expect(state.saves).toHaveLength(0);
+  await expect(page.getByLabel("First name", { exact: false })).toHaveValue("Jane");
+  await page.getByLabel("Phone", { exact: true }).fill("unknown");
+  await page.getByRole("button", { name: "Create Client", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("valid phone");
+  expect(state.saves).toHaveLength(0);
+  await page.getByLabel("Phone", { exact: true }).fill("+13035550100");
+  await page.getByLabel("Email", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Create Client", exact: true }).click();
+  expect(state.saves).toHaveLength(0);
+  await page.getByLabel("Email", { exact: true }).fill("jane@example.test");
+  await page.getByRole("button", { name: "Create Client", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "New Client", exact: true })).toHaveCount(0);
+  expect(state.saves[0]).toMatchObject({ p_primary_phone: "+13035550100", p_primary_email: "jane@example.test" });
+});
+
+test("legacy client cannot add a patient until both contacts are saved", async ({ page }) => {
+  const state = await mockBackend(page, { existing: true, incompleteContacts: true });
+  await page.goto(`/hub/client/${initialClient.id}`);
+  await expect(page.getByRole("button", { name: "Add patient", exact: true }).first()).toBeDisabled();
+  await expect(page.getByText("Edit this client to add a valid phone and email before adding a patient.").first()).toBeVisible();
+  await page.getByRole("button", { name: "Edit client", exact: true }).click();
+  await page.getByLabel("Phone", { exact: true }).fill("+13035550100");
+  await page.getByLabel("Email", { exact: true }).fill("jane@example.test");
+  await page.getByRole("button", { name: "Save client", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Add patient", exact: true }).first()).toBeEnabled();
+  expect(state.saves).toHaveLength(1);
 });
 
 test("duplicate warning permits review or explicit separate-household creation", async ({ page }) => {

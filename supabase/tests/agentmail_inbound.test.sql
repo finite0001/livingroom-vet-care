@@ -12,7 +12,7 @@ create temp table fx(k text primary key,id uuid);grant all on fx to authenticate
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"a9100000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'AgentMail','Family',null,'agentmail-family@example.test','EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'AgentMail','Family','+13035551275','agentmail-family@example.test','EMAIL',null,null);
 select throws_ok($$select public.receive_communication_event('agentmail','msg_forged','8f0e0c4e-1c1f-8a2b-9c3d-4e5f60718293','inbound',repeat('a',64),'{"from":"a@example.test","to":"b@example.test","inbox_id":"inbox_x","message_id":"<m@example.test>"}')$$,'42501',null,'Staff cannot forge AgentMail receipts');
 reset role;
 select ok(not has_function_privilege('anon','public.receive_communication_event(text,text,text,text,text,jsonb)','execute'),'Anonymous callers cannot record provider events');

@@ -92,7 +92,7 @@ set local role authenticated;
 insert into fx select 'boundary-release',gen_random_uuid();
 insert into data select 'boundary-confirmed',to_jsonb(confirm_record_release((select id from fx where k='boundary-release'),(select id from fx where k='pet'),(select id from fx where k='client'),'EMAIL','attachment@example.test',v#>'{snapshot,selection}',v->'snapshot',v->>'source_hash',true)) from data where k='max-preview';
 select is(read_record_release((select id from fx where k='boundary-release'))->>'eligible','true','Maximum explicit release confirms and remains current');
-insert into fx select 'other-client',id from save_client(auth.uid(),null,null,'Mapping','Other',null,'mapping-other@example.test','EMAIL',null,null);
+insert into fx select 'other-client',id from save_client(auth.uid(),null,null,'Mapping','Other','+13035557682','mapping-other@example.test','EMAIL',null,null);
 insert into fx select 'other-pet',id from save_patient(null,(select id from fx where k='client'),null,'Other mapped patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 reset role;
 -- Each mapping mutation is rolled back independently; no stale result carries over.

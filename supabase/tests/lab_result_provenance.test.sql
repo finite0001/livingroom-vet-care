@@ -15,7 +15,7 @@ create temp table fx(k text primary key,id uuid);grant all on fx to authenticate
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"db410000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Lab',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Lab','+13035552448','fixture-2448@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'One','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'other',id from public.save_patient(null,(select id from fx where k='client'),null,'Two','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select k,gen_random_uuid() from unnest(array['order','source','foreign-source','doc','corrected-doc','other-doc','receipt','corrected-receipt','other-receipt','mapping','report','corrected-report','ack']) k;

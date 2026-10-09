@@ -14,7 +14,7 @@ select ok(not has_table_privilege('authenticated','public.anesthesia_record_revi
 select ok(not has_table_privilege('anon','public.patient_anesthesia_records','SELECT'),'Anonymous access denied');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"ab000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into anesthesia_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Anesthesia',null,null,'EMAIL',null,null);
+insert into anesthesia_fixture select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Anesthesia','+13035553780','fixture-3780@example.test','EMAIL',null,null);
 insert into anesthesia_fixture select 'pet',id from public.save_patient(null,(select id from anesthesia_fixture where kind='client'),null,'One','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into anesthesia_fixture select 'other',id from public.save_patient(null,(select id from anesthesia_fixture where kind='client'),null,'Two','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 create function pg_temp.a_save(p_id uuid,p_version integer,p_extra jsonb default '{}') returns public.patient_anesthesia_records language sql as $$select public.save_patient_anesthesia_record(p_id,(select id from anesthesia_fixture where kind='pet'),p_version,'{"procedure_name":"Synthetic procedure","started_at":"2026-01-01T16:00:00Z","team":"Synthetic clinician and technician","source":"manual","assessment":"Documented assessment","plan":"Documented plan"}'::jsonb||p_extra)$$;

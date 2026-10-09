@@ -12,8 +12,8 @@ grant all on fx to authenticated;
 
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"98000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Linkage','Household',null,null,'EMAIL','1 Synthetic Street',null);
-insert into fx select 'other',id from public.save_client(auth.uid(),null,null,'Other','Household',null,null,'EMAIL','2 Synthetic Street',null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Linkage','Household','+13035555979','fixture-5979@example.test','EMAIL','1 Synthetic Street',null);
+insert into fx select 'other',id from public.save_client(auth.uid(),null,null,'Other','Household','+13035557512','fixture-7512@example.test','EMAIL','2 Synthetic Street',null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where kind='client'),null,'Linkage Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'bare',id from public.save_patient(null,(select id from fx where kind='client'),null,'No History','Cat',null,null,'unknown',null,'unknown','unknown',null,null,null);
 reset role;

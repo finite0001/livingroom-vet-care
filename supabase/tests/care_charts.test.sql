@@ -10,7 +10,7 @@ update public.profiles set is_active=false where id='38000000-0000-4000-8000-000
 create temp table fx(k text primary key,id uuid);grant all on fx to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"38000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Care','Family',null,null,'EMAIL',null,null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Care','Family','+13035556704','fixture-6704@example.test','EMAIL',null,null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Care dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 insert into fx select 'other',id from public.save_patient(null,(select id from fx where k='client'),null,'Other dog','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);
 select lives_ok($$select public.save_patient_qol('39000000-0000-4000-8000-000000000001',(select id from fx where k='pet'),null,now(),'Caregiver','Eating normally','','','','','','Qualitative only')$$,'Create qualitative QOL draft');

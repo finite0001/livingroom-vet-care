@@ -11,7 +11,7 @@ create temp table fx(k text primary key,id uuid); grant all on fx to authenticat
 create temp table requests(k text primary key,v jsonb); grant all on requests to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"48000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Certificate','Family','3035550100',null,'EMAIL','123 Test St, Boulder CO',null);
+insert into fx select 'client',id from public.save_client(auth.uid(),null,null,'Certificate','Family','+13035550100','fixture-7087@example.test','EMAIL','123 Test St, Boulder CO',null);
 insert into fx select 'pet',id from public.save_patient(null,(select id from fx where k='client'),null,'Certificate dog','Dog','Mixed','2020-01-01','exact','Brown','female','neutered',null,null,null);
 insert into fx select 'other',id from public.save_patient(null,(select id from fx where k='client'),null,'Other dog','Dog','Mixed','2020-01-01','exact','Brown','female','neutered',null,null,null);
 select throws_ok($$select public.preview_vaccine_certificate((select id from fx where k='pet'),'vaccine_history',null,'{"due_plan_review_version":2}')$$,'42501','Verified veterinarian credentials and clinical acceptance are required','DVM role alone does not establish verified credentials');

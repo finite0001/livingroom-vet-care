@@ -25,8 +25,8 @@ create temp table fx(k text primary key,id uuid);grant all on fx to authenticate
 create temp table data(k text primary key,v jsonb);grant all on data to authenticated,service_role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"97000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into fx select 'client',id from save_client(auth.uid(),null,null,'Invoice','Family',null,'invoice@example.test','EMAIL','123 Mailing Way','INTERNAL HOUSECALL ADDRESS');
-insert into fx select 'other',id from save_client(auth.uid(),null,null,'Other','Family',null,'other@example.test','EMAIL',null,null);
+insert into fx select 'client',id from save_client(auth.uid(),null,null,'Invoice','Family','+13035552180','invoice@example.test','EMAIL','123 Mailing Way','INTERNAL HOUSECALL ADDRESS');
+insert into fx select 'other',id from save_client(auth.uid(),null,null,'Other','Family','+13035559232','other@example.test','EMAIL',null,null);
 insert into fx select 'product',id from save_catalog_product(null,null,'Exam <script>','service','','visit',1001,true);
 select create_billing_invoice('98000000-0000-4000-8000-000000000001',(select id from fx where k='client'));
 select add_invoice_service('98000000-0000-4000-8000-000000000002','98000000-0000-4000-8000-000000000001',null,(select id from fx where k='product'),1.5);
