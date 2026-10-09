@@ -1,6 +1,6 @@
 # Client and patient integrity implementation evidence
 
-**Status:** implementation candidate, not applied to either hosted database. Branch `feat/client-integrity-20261008`; baseline `1790f11c1989b3a5daac94757ddbe104299c14b8`. Scope: N04, N09 and H20, with N05 multiple-pet regression coverage from the October 8 feedback plan.
+**Status:** merged in PR #230 and rolled out to both hosted databases. See the [hosted rollout receipt](2026-10-08-client-contact-rollout.md) for current counts, validated constraints and deployed frontend identities. Original implementation branch `feat/client-integrity-20261008`; baseline `1790f11c1989b3a5daac94757ddbe104299c14b8`. Scope: N04, N09 and H20, with N05 multiple-pet regression coverage from the October 8 feedback plan.
 
 ## Behavior
 
