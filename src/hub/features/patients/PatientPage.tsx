@@ -25,6 +25,7 @@ import { patientAge } from "./patient-details";
 import { PatientCareCharts } from "@/hub/features/care-charts/PatientCareCharts";
 import { PatientTreatments } from "@/hub/features/treatments/PatientTreatments";
 import { PatientApiAttachments } from "@/hub/features/imports/PatientApiAttachments";
+import { PatientPhoto } from "@/hub/features/patient-photos/PatientPhoto";
 import { PatientDocuments } from "@/hub/features/documents/PatientDocuments";
 import { PatientDentalChart } from "@/hub/features/dental/PatientDentalChart";
 import { ClinicalWorkspace } from "@/hub/features/clinical/ClinicalWorkspace";
@@ -68,6 +69,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const section = searchParams.get("section");
   const [visited, setVisited] = useState<Set<PatientTab>>(() => new Set([tab]));
   if (!visited.has(tab)) setVisited(new Set(visited).add(tab));
+  const [photoDirty, setPhotoDirty] = useState(false);
   const [nativePrescriptionDirty, setNativePrescriptionDirty] = useState(false);
   const [importedPrescriptionDirty, setImportedPrescriptionDirty] = useState(false);
   const [importedVaccinationDirty, setImportedVaccinationDirty] = useState(false);
@@ -81,7 +83,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [certificateDirty, setCertificateDirty] = useState(false);
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
-  const dirty = nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty;
+  const dirty = photoDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty;
   const medicalDirty = nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || clinicalDirty || careDirty || dentalDirty || labDirty || anesthesiaDirty || vaccineDueDirty;
   const documentsDirty = externalDirty || releaseDirty || certificateDirty;
   const navigationGuard = useUnsavedChanges(dirty);
@@ -123,7 +125,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const clientId = patient.client_id;
   return <section aria-label="Patient workspace" className="h-full overflow-y-auto">
     {navigationGuard}
-    {read ? <Header360 read={read} manage={<PatientFormDialog clientId={patient.client_id} patient={patient} />} /> : (
+    {read ? <Header360 read={read} photo={<PatientPhoto petId={petId} name={patient.name} disabled={dirty && !photoDirty} onDirtyChange={setPhotoDirty} />} manage={<PatientFormDialog clientId={patient.client_id} patient={patient} />} /> : (
       <header className="border-b bg-card"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6"><div><Link to={householdHref(clientId)} className="text-sm text-primary hover:underline">{clientQuery.data?.full_name || "Back to household"}</Link><h1 className="font-display text-xl md:text-2xl">{patient.name}</h1><p className="text-sm text-muted-foreground">Patient record · {patient.species}{patient.breed ? ` · ${patient.breed}` : ""}</p>{summary.isError && <p role="alert" className="text-sm">Summary could not be loaded. <Button variant="link" className="h-auto p-0" onClick={() => void summary.refetch()}>Retry summary</Button></p>}</div><PatientFormDialog clientId={patient.client_id} patient={patient} /></div></header>
     )}
     <div className="mx-auto max-w-6xl space-y-4 p-4 md:p-6">

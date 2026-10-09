@@ -117,6 +117,10 @@ verify_jwt = true
 [functions.verify-conversation-attachment]
 verify_jwt = true
 
+# Genuine staff JWT, owned reservation and bounded image byte capture.
+[functions.verify-patient-photo]
+verify_jwt = true
+
 [functions.capture-conversation-email]
 verify_jwt = true
 

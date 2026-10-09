@@ -17,12 +17,13 @@ interface Header360Props {
   read: Read360;
   /** Right-aligned management control (edit household / edit patient). */
   manage?: ReactNode;
+  photo?: ReactNode;
 }
 
 const CHANNEL_LABEL: Record<string, string> = { SMS: "Text", EMAIL: "Email", VOICE: "Phone", VOICEMAIL: "Phone" };
 
 /** Sticky identity, contact, red-flag and balance header shared by patient and household 360. */
-export function Header360({ read, manage }: Header360Props) {
+export function Header360({ read, manage, photo }: Header360Props) {
   const { household, patient, sms_consent: consent, balance } = read;
   const outstanding = centsNumber(balance.outstanding_cents);
   const allergies = patient
@@ -42,6 +43,7 @@ export function Header360({ read, manage }: Header360Props) {
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           </Link>
+          {photo}
           <div className="min-w-0 flex-1">
             {patient ? (
               <>

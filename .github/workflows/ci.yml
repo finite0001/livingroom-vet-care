@@ -52,6 +52,8 @@ jobs:
         run: deno check --frozen supabase/functions/*/index.ts supabase/functions/ezyvet-import/attachment-metadata.ts
       - name: Verify invoice handler without root Node dependencies
         run: python3 scripts/verify-invoice-edge-isolation.py
+      - name: Verify patient photo handler without root Node dependencies
+        run: python3 scripts/verify-patient-photo-edge-isolation.py
 
   database:
     runs-on: ubuntu-latest
@@ -64,6 +66,8 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify photo choice, replay and verified-byte deletion concurrency
+        run: python3 -B supabase/tests/patient_photos_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify unknown inbound retry after concurrent complete-household creation
         run: python3 -B supabase/tests/client_inbound_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify native prescription cancellation and replacement concurrency
@@ -231,3 +235,7 @@ jobs:
         run: node --experimental-strip-types tests/inbound/attachment-local-roundtrip.ts
         env:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+      - name: Verify patient photo ownership and actual private image bytes
+        run: node --experimental-strip-types tests/patient-photos/local-roundtrip.ts
+        env:
+          PHOTO_TEST_PROJECT: ${{ github.workspace }}
