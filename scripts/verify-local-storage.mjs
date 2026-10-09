@@ -25,7 +25,7 @@ import { randomUUID } from 'node:crypto';
  checked(await admin.from('user_roles').insert({user_id:user.id,role:'STAFF'}));
  checked(await admin.from('profiles').update({is_active:true}).eq('id',user.id));
  checked(await api.auth.signInWithPassword({email,password}));
- const client = checked(await api.rpc('save_client',{p_actor_id:user.id,p_client_id:null,p_expected_version:null,p_first_name:'Synthetic Storage',p_last_name:'Roundtrip',p_primary_email:null,p_primary_phone:null,p_preferred_channel:'EMAIL',p_mailing_address:null,p_housecall_address:null}));
+ const client = checked(await api.rpc('save_client',{p_actor_id:user.id,p_client_id:null,p_expected_version:null,p_first_name:'Synthetic Storage',p_last_name:'Roundtrip',p_primary_email:'storage-roundtrip@example.test',p_primary_phone:'+13035550823',p_preferred_channel:'EMAIL',p_mailing_address:null,p_housecall_address:null}));
  const pet = checked(await api.rpc('save_patient',{p_id:null,p_client_id:client.id,p_expected_version:null,p_name:'Synthetic Storage Patient',p_species:'Dog',p_breed:null,p_dob:null,p_birth_date_precision:'unknown',p_color:null,p_sex:'unknown',p_neuter_status:'unknown',p_microchip_id:null,p_archived_at:null,p_deceased_at:null}));
  const content = Buffer.from('%PDF-1.7\nSynthetic storage verification; no clinical data\n%%EOF');
  const row = checked(await api.rpc('prepare_patient_document',{p_id:randomUUID(),p_pet_id:pet.id,p_encounter_id:null,p_file_name:'synthetic.pdf',p_mime_type:'application/pdf',p_file_size:content.length,p_category:'medical_record',p_source:'Automated isolated local verification',p_document_date:null,p_visibility:'internal'}));

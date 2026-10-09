@@ -235,7 +235,7 @@ try {
       quote(JSON.stringify({ sub: actor, role: "authenticated" }))
     },true);
  create temp table owned(kind text,id uuid);
- insert into owned select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Operations',null,${
+ insert into owned select 'client',id from public.save_client(auth.uid(),null,null,'Synthetic','Operations','+13035550821',${
       quote(email)
     },'EMAIL',null,null);
  insert into owned select 'pet',id from public.save_patient(null,(select id from owned where kind='client'),null,'Synthetic Patient','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null);

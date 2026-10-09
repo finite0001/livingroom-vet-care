@@ -72,7 +72,7 @@ def contended(first_query, second_query, second_expected):
 
 try:
     sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','external-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
-    client=sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','External',null,null,'EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(client)
+    client=sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','External','+13035550818','external-race@example.test','EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(client)
     for scenario in ['competing_original','patient_edit_first','void_first','approval_first','competing_replacement']:
         pet=sql(f"begin;{staff}select (public.save_patient(null,'{client}',null,'Synthetic','Dog',null,null,'unknown',null,'unknown','unknown',null,null,null)).id;commit;").stdout.strip().splitlines()[-1];ids.append(pet)
         snapshot,mapping=[str(uuid.uuid4()) for _ in range(2)];ids.extend([snapshot,mapping])

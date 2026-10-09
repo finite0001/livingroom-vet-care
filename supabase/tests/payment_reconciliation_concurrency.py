@@ -83,7 +83,7 @@ try:
         sql(f"select public.configure_payment_provider('{account}',false,'{origin}');")
         created_profile=True
     sql(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','reconcile-{actor}@example.test','{{}}');update profiles set is_active=true where id='{actor}';insert into public.user_roles(user_id,role) values('{actor}','ADMIN');")
-    client=sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','Reconciliation',null,null,'EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1]
+    client=sql(f"begin;{staff}select (public.save_client(auth.uid(),null,null,'Synthetic','Reconciliation','+13035550814','reconciliation-race@example.test','EMAIL',null,null)).id;commit;").stdout.strip().splitlines()[-1]
     product=sql(f"begin;{staff}select (public.save_catalog_product(null,null,'Synthetic visit','service','','visit',10000,true)).id;commit;").stdout.strip().splitlines()[-1]
     ids.extend([client,product])
     for scenario in ['resolve_first','observation_first','repeat']:
