@@ -71,6 +71,7 @@ async function fixture(page: Page, baseURL: string | undefined, admin = true) {
   const state = {
     policies: [] as Policy[],
     calls: [] as Call[],
+    readCalls: [] as string[],
     lostNext: false,
     conflictNext: false,
     committed: new Map<string, Policy>(),
@@ -130,6 +131,10 @@ async function fixture(page: Page, baseURL: string | undefined, admin = true) {
       const name = path.split("/").at(-1)!;
       const args = route.request().postDataJSON();
       if (name === "inbox_unread_totals") return route.fulfill({ json: [] });
+      if (["list_recurring_care_due", "list_recurring_care_templates", "list_care_plan_delivery_windows"].includes(name)) {
+        state.readCalls.push(name);
+        return route.fulfill({ json: name === "list_care_plan_delivery_windows" ? [] : { rows: [], next: null } });
+      }
       state.calls.push({ name, args });
       if (
         name === "save_reminder_automation_policy" ||
@@ -434,4 +439,7 @@ test("staff can read care dashboard without administrator policy controls", asyn
     page.getByRole("button", { name: "New reviewed reminder wording" }),
   ).toHaveCount(0);
   expect(state.calls).toHaveLength(0);
+  expect(state.readCalls).toContain("list_recurring_care_due");
+  expect(state.readCalls).toContain("list_recurring_care_templates");
+  expect(state.readCalls).not.toContain("list_care_plan_delivery_windows");
 });

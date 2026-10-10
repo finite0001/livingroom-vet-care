@@ -123,7 +123,7 @@ export const candidateSchema = z.object({
   eligible_at: time,
 });
 export const blockSchema = z.object({
-  source_kind: z.enum(["lab", "vaccine", "appointment"]).nullable(),
+  source_kind: z.enum(["lab", "vaccine", "appointment", "care_plan"]).nullable(),
   source_id: id.nullable(),
   pet_id: id.nullable(),
   appointment_id: id.nullable(),
