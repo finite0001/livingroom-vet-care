@@ -1,270 +1,442 @@
-import { useMemo, useState } from "react";
-import { formatDistanceToNow, parseISO } from "date-fns";
-import { AlertTriangle, CheckCircle2, Clock3, ExternalLink, Mail, Phone, RefreshCw, Send, TimerReset, XCircle } from "lucide-react";
+import { useState } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { RefreshCw, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hub/contexts/auth-context";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
 import {
-  OUTBOUND_DELIVERY_STATUSES,
-  deliveryPayloadText,
-  isOutboundDeliveryCancelable,
-  isOutboundDeliveryRetryable,
-  outboundDeliveryStatusLabel,
-  useCancelOutboundDelivery,
-  useOutboundDeliveries,
   useRetryOutboundDelivery,
-  type OutboundDeliveryStatus,
-  type OutboundDeliveryWithDetails,
+  useCancelOutboundDelivery,
 } from "@/hub/hooks/use-outbound-deliveries";
-import { usePageTitle } from "@/hooks/use-page-title";
-import { cn } from "@/lib/utils";
-
-const FILTERS: (OutboundDeliveryStatus | "ALL")[] = ["ALL", ...OUTBOUND_DELIVERY_STATUSES];
-
-const STATUS_TONE: Record<OutboundDeliveryStatus, string> = {
-  QUEUED: "bg-primary/10 text-primary",
-  LEASED: "bg-accent text-accent-foreground",
-  ACCEPTED: "bg-primary/10 text-primary",
-  DELIVERED: "bg-primary/10 text-primary",
-  FAILED: "bg-destructive/10 text-destructive",
-  CANCELED: "bg-muted text-muted-foreground",
-  UNKNOWN: "bg-destructive/10 text-destructive",
+import {
+  listDailyCommunications,
+  readDailyCommunication,
+} from "@/hub/features/daily-communications/api";
+import {
+  filtersSchema,
+  initialFilters,
+  statuses,
+  statusLabels,
+  type CommunicationRow,
+  type CommunicationCursor,
+  type CommunicationStatus,
+} from "@/hub/features/daily-communications/model";
+const selectClass =
+  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const at = (stamp: string) =>
+  new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Denver",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(stamp));
+const tones: Record<CommunicationStatus, string> = {
+  scheduled: "bg-muted text-muted-foreground",
+  queued: "bg-info/10 text-info",
+  processing: "bg-info/10 text-info",
+  accepted: "bg-warning/10 text-warning",
+  delivered: "bg-success/10 text-success",
+  failed: "bg-destructive/10 text-destructive",
+  uncertain: "bg-warning/10 text-warning",
+  suppressed: "bg-muted text-muted-foreground",
+  cancelled: "bg-muted text-muted-foreground",
 };
-
-const STATUS_ICON: Record<OutboundDeliveryStatus, typeof Clock3> = {
-  QUEUED: Clock3,
-  LEASED: TimerReset,
-  ACCEPTED: CheckCircle2,
-  DELIVERED: CheckCircle2,
-  FAILED: AlertTriangle,
-  CANCELED: AlertTriangle,
-  UNKNOWN: AlertTriangle,
-};
-
-function formatRelative(value: string | null) {
-  return value ? formatDistanceToNow(parseISO(value), { addSuffix: true }) : "Not set";
+interface CommunicationCardProps {
+  row: CommunicationRow;
+  actor: string;
+  admin: boolean;
+  onChange: () => void;
 }
-
-function deliveryTimestamp(delivery: OutboundDeliveryWithDetails): string {
-  return delivery.delivered_at ?? delivery.accepted_at ?? delivery.failed_at ?? delivery.unknown_at ?? delivery.canceled_at ?? delivery.leased_at ?? delivery.created_at;
-}
-
-interface DeliveryCardProps {
-  delivery: OutboundDeliveryWithDetails;
-}
-
-function DeliveryCard({ delivery }: DeliveryCardProps) {
-  const retryDelivery = useRetryOutboundDelivery();
-  const cancelDelivery = useCancelOutboundDelivery();
-  const StatusIcon = STATUS_ICON[delivery.status];
-  const payloadText = deliveryPayloadText(delivery.payload);
-  const attempts = `${delivery.attempt_count}/${delivery.max_attempts}`;
-  const channelIcon = delivery.channel === "SMS" ? Phone : Mail;
-  const ChannelIcon = channelIcon;
-  const retryable = isOutboundDeliveryRetryable(delivery.status);
-  const cancelable = isOutboundDeliveryCancelable(delivery.status);
-  const actionBusy = retryDelivery.isPending || cancelDelivery.isPending;
-
-  const handleRetry = () => {
-    retryDelivery.mutate({ id: delivery.id, updated_at: delivery.updated_at }, {
-      onSuccess: () => toast.success("Delivery requeued"),
-      onError: (error) => toast.error(error instanceof Error ? error.message : "Unable to retry delivery. Refresh and try again."),
-    });
+function CommunicationCard({
+  row,
+  actor,
+  admin,
+  onChange,
+}: CommunicationCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const history = useQuery({
+    queryKey: [
+      "daily-communication-detail",
+      actor,
+      row.source,
+      row.id,
+      row.updated_at,
+    ],
+    queryFn: () => readDailyCommunication(row),
+    enabled: expanded,
+    retry: 1,
+  });
+  const retry = useRetryOutboundDelivery(),
+    cancel = useCancelOutboundDelivery();
+  const action = (kind: "retry" | "cancel") => {
+    if (
+      !window.confirm(
+        kind === "retry"
+          ? "Retry this retained failed delivery using its existing delivery workflow?"
+          : "Cancel this retained queued delivery? The recorded message remains in history.",
+      )
+    )
+      return;
+    (kind === "retry" ? retry : cancel).mutate(
+      { id: row.id, updated_at: row.updated_at },
+      {
+        onSuccess: () => {
+          toast.success(
+            kind === "retry"
+              ? "Delivery requeued; delivery is not confirmed"
+              : "Delivery cancelled",
+          );
+          onChange();
+        },
+        onError: () =>
+          toast.error(
+            "The delivery may have changed. Refresh and review it before trying again.",
+          ),
+      },
+    );
   };
-
-  const handleCancel = () => {
-    if (!window.confirm("Cancel this queued delivery? The staff message will remain visible, but this delivery attempt will not be sent.")) return;
-    cancelDelivery.mutate({ id: delivery.id, updated_at: delivery.updated_at }, {
-      onSuccess: () => toast.success("Delivery canceled"),
-      onError: (error) => toast.error(error instanceof Error ? error.message : "Unable to cancel delivery. Refresh and try again."),
-    });
-  };
-
   return (
     <Card>
-      <CardContent className="space-y-4 p-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className={cn("gap-1 border-transparent text-xs", STATUS_TONE[delivery.status])}>
-                <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                {outboundDeliveryStatusLabel(delivery.status)}
-              </Badge>
-              <Badge variant="outline" className="gap-1 text-xs">
-                <ChannelIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                {delivery.channel}
-              </Badge>
-              <span className="text-xs text-muted-foreground">Attempts {attempts}</span>
-            </div>
-            <p className="truncate text-sm font-semibold">
-              {delivery.client?.full_name ?? "Unlinked client"}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">{delivery.recipient}</p>
-          </div>
-
-          <div className="text-left text-xs text-muted-foreground md:text-right">
-            <p>Created {formatRelative(delivery.created_at)}</p>
-            <p>Next attempt {formatRelative(delivery.next_attempt_at)}</p>
-          </div>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className={`border-transparent ${tones[row.status]}`}>
+            {statusLabels[row.status]}
+          </Badge>
+          <Badge variant="outline">
+            {row.channel === "EMAIL" ? "Email" : "Text"}
+          </Badge>
+          {row.source === "legacy" && (
+            <Badge variant="outline">Retained delivery</Badge>
+          )}
         </div>
-
-        <div className="rounded-lg bg-muted/50 p-3">
-          <p className="line-clamp-2 text-sm text-foreground">
-            {delivery.message?.content ?? payloadText ?? "No message preview available"}
+        <div>
+          <h2 className="font-semibold">{row.summary}</h2>
+          <p className="text-sm">
+            {row.client_name ?? "Unlinked client"}
+            {row.patient_name && ` · ${row.patient_name}`}
           </p>
-          {delivery.status_note && (
-            <p className="mt-2 text-xs text-muted-foreground">{delivery.status_note}</p>
-          )}
-          {delivery.last_error_text && (
-            <p className="mt-2 text-xs text-destructive">{delivery.last_error_text}</p>
-          )}
+          <p className="break-all text-xs text-muted-foreground">
+            {row.recipient ?? "No current destination"}
+          </p>
         </div>
-
-        <div className="grid gap-2 text-xs text-muted-foreground md:grid-cols-3">
-          <span>Last status {formatRelative(deliveryTimestamp(delivery))}</span>
-          <span>Provider {delivery.provider ?? "Pending"}</span>
-          <span className="truncate">Provider ID {delivery.provider_message_id ?? "Pending"}</span>
-        </div>
-
+        <p className="text-xs text-muted-foreground">
+          {at(row.activity_at)} (Denver) · {row.attempt_count} recorded attempts
+        </p>
+        {row.reason && (
+          <p className="text-sm text-muted-foreground">{row.reason}</p>
+        )}
         <div className="flex flex-wrap gap-2">
-          {retryable && (
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleRetry} disabled={actionBusy}>
-              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-              Retry
+          <Button asChild variant="outline" size="sm">
+            <Link to={row.source_href}>Open source</Link>
+          </Button>
+          {row.client_id && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to={`/hub/client/${row.client_id}`}>Client</Link>
             </Button>
           )}
-          {cancelable && (
+          {row.pet_id && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to={`/hub/patient/${row.pet_id}`}>Patient</Link>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-expanded={expanded}
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? "Hide history" : "Status and attempts"}
+          </Button>
+          {admin &&
+            row.source === "outbox" &&
+            ["failed", "suppressed"].includes(row.status) && (
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/hub/admin/outbox/${row.id}`}>Review retry</Link>
+              </Button>
+            )}
+          {row.source === "legacy" && row.status === "failed" && (
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 border-destructive/30 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={handleCancel}
-              disabled={actionBusy}
+              disabled={retry.isPending || cancel.isPending}
+              onClick={() => action("retry")}
             >
-              <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-              Cancel
+              Retry retained delivery
             </Button>
           )}
-          {delivery.conversation_id && (
-            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-              <Link to={`/hub/conversation/${delivery.conversation_id}`}>
-                Conversation
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            </Button>
-          )}
-          {delivery.client_id && (
-            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-              <Link to={`/hub/client/${delivery.client_id}`}>
-                Client
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            </Button>
-          )}
+          {row.source === "legacy" &&
+            ["queued", "scheduled"].includes(row.status) && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={retry.isPending || cancel.isPending}
+                onClick={() => action("cancel")}
+              >
+                Cancel retained delivery
+              </Button>
+            )}
         </div>
+        {expanded && (
+          <section
+            className="rounded-md bg-muted/50 p-3 text-sm"
+            aria-label="Communication history"
+          >
+            {history.isPending ? (
+              <p>Loading history…</p>
+            ) : history.isError ? (
+              <>
+                <p role="alert">Could not load communication history.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void history.refetch()}
+                >
+                  Reload history
+                </Button>
+              </>
+            ) : !history.data ? (
+              <p>
+                This row was superseded by its canonical message. Refresh the
+                list.
+              </p>
+            ) : (
+              <>
+                <p>
+                  Current status: {statusLabels[history.data.record.status]}
+                </p>
+                {history.data.record.accepted_at && (
+                  <p>
+                    Provider accepted: {at(history.data.record.accepted_at)}
+                  </p>
+                )}
+                {history.data.record.delivered_at && (
+                  <p>Delivered: {at(history.data.record.delivered_at)}</p>
+                )}
+                {history.data.attempts.length ? (
+                  <ol className="mt-2 space-y-1">
+                    {history.data.attempts.map((attempt) => (
+                      <li key={attempt.attempt_number}>
+                        Attempt {attempt.attempt_number} ·{" "}
+                        {at(attempt.started_at)} ·{" "}
+                        {attempt.outcome
+                          ? statusLabels[attempt.outcome]
+                          : "Started; result pending"}
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p>No individual attempt history is stored for this row.</p>
+                )}
+              </>
+            )}
+          </section>
+        )}
       </CardContent>
     </Card>
   );
 }
-
-interface SummaryStatProps {
-  label: string;
-  value: number;
-}
-
-function SummaryStat({ label, value }: SummaryStatProps) {
+export default function DeliveriesPage() {
+  usePageTitle("Daily communications");
+  const { session, hasRole } = useAuth();
+  const actor = session?.user.id ?? "";
   return (
-    <div className="rounded-lg border bg-card px-3 py-2">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
-    </div>
+    <DailyCommunicationsSession
+      key={actor}
+      actor={actor}
+      admin={hasRole("ADMIN")}
+    />
   );
 }
-
-export default function DeliveriesPage() {
-  usePageTitle("Outbound Deliveries");
-  const [filter, setFilter] = useState<OutboundDeliveryStatus | "ALL">("ALL");
-  const { data: deliveries, error, isError, isFetching, isLoading, refetch } = useOutboundDeliveries(filter);
-
-  const summary = useMemo(() => {
-    const rows = deliveries ?? [];
-    return {
-      total: rows.length,
-      pending: rows.filter((delivery) => delivery.status === "QUEUED" || delivery.status === "LEASED").length,
-      failed: rows.filter((delivery) => delivery.status === "FAILED" || delivery.status === "UNKNOWN").length,
-      delivered: rows.filter((delivery) => delivery.status === "DELIVERED").length,
-    };
-  }, [deliveries]);
-
+interface SessionProps {
+  actor: string;
+  admin: boolean;
+}
+function DailyCommunicationsSession({ actor, admin }: SessionProps) {
+  const [draft, setDraft] = useState(initialFilters),
+    [applied, setApplied] = useState(draft);
+  const [generation, setGeneration] = useState(0),
+    [error, setError] = useState("");
+  const list = useInfiniteQuery({
+    queryKey: ["daily-communications", actor, applied, generation],
+    enabled: !!actor,
+    retry: 1,
+    initialPageParam: null as CommunicationCursor | null,
+    queryFn: ({ pageParam }) => listDailyCommunications(applied, pageParam),
+    getNextPageParam: (page) => page.next ?? undefined,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+  const rows = list.data?.pages.flatMap((p) => p.rows) ?? [];
+  const refresh = () => setGeneration((n) => n + 1);
+  const apply = (event: React.FormEvent) => {
+    event.preventDefault();
+    const parsed = filtersSchema.safeParse(draft);
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
+      return;
+    }
+    setError("");
+    setApplied(parsed.data);
+    refresh();
+  };
+  const set = (key: keyof typeof draft, value: string) =>
+    setDraft((old) => ({ ...old, [key]: value }));
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-40 border-b bg-card">
-        <div className="flex h-14 items-center justify-between px-4">
+    <div className="mx-auto w-full max-w-5xl space-y-5 p-4 md:p-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl">Daily communications</h1>
+          <p className="text-sm text-muted-foreground">
+            Scheduled reminders, outgoing messages and delivery outcomes.
+          </p>
+        </div>
+        <Button variant="outline" onClick={refresh} disabled={list.isFetching}>
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Refresh
+        </Button>
+      </header>
+      <form
+        onSubmit={apply}
+        className="space-y-3 rounded-lg border bg-card p-4"
+        aria-label="Communication filters"
+      >
+        <div className="grid gap-3 md:grid-cols-4">
           <div>
-            <h1 className="text-lg font-semibold">Outbound Deliveries</h1>
-            <p className="text-xs text-muted-foreground">Queued sends, provider results, and delivery exceptions</p>
+            <Label htmlFor="daily-from">From (Denver date)</Label>
+            <Input
+              id="daily-from"
+              type="date"
+              value={draft.from}
+              onChange={(e) => set("from", e.target.value)}
+              required
+            />
           </div>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void refetch()} disabled={isFetching}>
-            <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} aria-hidden="true" />
-            Refresh
+          <div>
+            <Label htmlFor="daily-to">Through (Denver date)</Label>
+            <Input
+              id="daily-to"
+              type="date"
+              value={draft.to}
+              onChange={(e) => set("to", e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="daily-channel">Channel</Label>
+            <select
+              id="daily-channel"
+              className={selectClass}
+              value={draft.channel}
+              onChange={(e) => set("channel", e.target.value)}
+            >
+              <option value="">Email and text</option>
+              <option value="EMAIL">Email</option>
+              <option value="SMS">Text</option>
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="daily-status">Status</Label>
+            <select
+              id="daily-status"
+              className={selectClass}
+              value={draft.status}
+              onChange={(e) => set("status", e.target.value)}
+            >
+              <option value="">All statuses</option>
+              {statuses.map((s) => (
+                <option key={s} value={s}>
+                  {statusLabels[s]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="daily-search">Client or patient name</Label>
+          <Input
+            id="daily-search"
+            value={draft.search}
+            maxLength={200}
+            onChange={(e) => set("search", e.target.value)}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Dates use the most recent attempt start, or the scheduled time for
+          reminder jobs. Messages awaiting their first attempt use their
+          creation date. Status updates alone do not move a message to another
+          day.
+        </p>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <Button type="submit">Apply filters</Button>
+      </form>
+      <p className="text-sm text-muted-foreground">
+        Results use the last applied filters. Provider acceptance does not
+        confirm delivery. Scheduled reminder jobs still require an enabled
+        policy and final eligibility checks.
+      </p>
+      {list.isPending ? (
+        <p role="status">Loading communications…</p>
+      ) : list.isError && !rows.length ? (
+        <div role="alert">
+          <p>Could not load daily communications.</p>
+          <Button variant="outline" onClick={refresh}>
+            Try again
           </Button>
         </div>
-        <div className="flex gap-1.5 overflow-x-auto px-3 pb-3">
-          {FILTERS.map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              aria-pressed={filter === status}
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                filter === status ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent",
-              )}
-            >
-              {status === "ALL" ? "All" : outboundDeliveryStatusLabel(status)}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <section className="grid grid-cols-2 gap-2 border-b bg-muted/30 p-3 md:grid-cols-4" aria-label="Delivery summary">
-        <SummaryStat label="Showing" value={summary.total} />
-        <SummaryStat label="Pending" value={summary.pending} />
-        <SummaryStat label="Needs review" value={summary.failed} />
-        <SummaryStat label="Delivered" value={summary.delivered} />
-      </section>
-
-      <main className="mx-auto w-full max-w-4xl flex-1 space-y-3 p-4">
-        {isLoading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, index) => (
-              <Skeleton key={index} className="h-40 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <AlertTriangle className="mb-3 h-10 w-10 text-muted-foreground" aria-hidden="true" />
-            <p className="text-sm font-medium">Could not load outbound deliveries</p>
-            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              {error instanceof Error ? error.message : "Check your connection and try again."}
+      ) : (
+        <>
+          <p role="status" className="text-xs text-muted-foreground">
+            {rows.length} communications loaded
+            {list.data?.pages[0] &&
+              ` · read ${at(list.data.pages[0].read_at)} (Denver)`}
+            . Refresh to restart the list; new attempts can change its order.
+          </p>
+          {!rows.length ? (
+            <EmptyState
+              icon={Send}
+              title="No communications in this range"
+              description="Change the dates or filters to find earlier messages and scheduled reminder jobs."
+            />
+          ) : (
+            rows.map((row) => (
+              <CommunicationCard
+                key={`${row.source}:${row.id}`}
+                row={row}
+                actor={actor}
+                admin={admin}
+                onChange={refresh}
+              />
+            ))
+          )}
+          {list.isFetchNextPageError && (
+            <p role="alert">
+              Could not load the next page. Your loaded results are retained.
             </p>
-            <Button variant="outline" size="sm" className="mt-4" onClick={() => void refetch()} disabled={isFetching}>
-              Retry
+          )}
+          {list.hasNextPage && (
+            <Button
+              variant="outline"
+              onClick={() => void list.fetchNextPage()}
+              disabled={list.isFetchingNextPage}
+            >
+              {list.isFetchingNextPage
+                ? "Loading…"
+                : "Load more communications"}
             </Button>
-          </div>
-        ) : !deliveries || deliveries.length === 0 ? (
-          <EmptyState
-            icon={Send}
-            title={filter === "ALL" ? "No outbound deliveries yet" : `No ${outboundDeliveryStatusLabel(filter).toLowerCase()} deliveries`}
-            description="Staff sends and reminder jobs will appear here once queued."
-          />
-        ) : (
-          deliveries.map((delivery) => <DeliveryCard key={delivery.id} delivery={delivery} />)
-        )}
-      </main>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -64,7 +64,7 @@ export const navItems: NavItem[] = [
 
   // Tools
   { path: "/hub/tools/care-reminders", label: "Care reminders", icon: BellRing, section: "tools" },
-  { path: "/hub/deliveries", label: "Outbound deliveries", mobileLabel: "Deliveries", icon: Send, section: "tools" },
+  { path: "/hub/deliveries", label: "Daily communications", mobileLabel: "Daily communications", icon: Send, section: "tools" },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText, section: "tools" },
   { path: "/hub/tools/refills", label: "Refills", icon: Pill, section: "tools" },
 
