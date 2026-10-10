@@ -76,9 +76,9 @@ export function ReminderDeliverySettings({
         .select("*")
         .order("source_kind")
         .order("channel")
-        .limit(7);
+        .limit(9);
       if (error) throw error;
-      if (!Array.isArray(data) || data.length > 6)
+      if (!Array.isArray(data) || data.length > 8)
         throw new Error("Unexpected policy response");
       return data;
     },

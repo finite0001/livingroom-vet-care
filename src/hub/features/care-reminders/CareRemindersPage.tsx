@@ -15,6 +15,9 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { careDb, selectClass } from "./model";
+import { RecurringCareTemplates } from "@/hub/features/care-plans/RecurringCareTemplates";
+import { RecurringCareDashboard } from "@/hub/features/care-plans/RecurringCareDashboard";
+import { RecurringCareDeliverySettings } from "@/hub/features/care-plans/RecurringCareDeliverySettings";
 import { ReminderDeliverySettings } from "./ReminderDeliverySettings";
 import { CareReminderSettings } from "./CareReminderSettings";
 import { denverCalendarDay, addCareDays } from "./date-tools";
@@ -37,7 +40,9 @@ interface DueItem {
 export function CareRemindersPage() {
   const [settingsDirty, setSettingsDirty] = useState(false);
   const [deliveryDirty, setDeliveryDirty] = useState(false);
-  const dirty = settingsDirty || deliveryDirty;
+  const [recurrenceDirty, setRecurrenceDirty] = useState(false);
+  const [recurringDeliveryDirty, setRecurringDeliveryDirty] = useState(false);
+  const dirty = settingsDirty || deliveryDirty || recurrenceDirty || recurringDeliveryDirty;
   const blocker = useBlocker(dirty);
   useEffect(() => {
     if (!dirty) return;
@@ -253,12 +258,14 @@ export function CareRemindersPage() {
             Care due dates and reminders
           </h1>
           <p className="text-sm text-muted-foreground">
-            Reviewed vaccine plans and native lab due orders. Delivery status
+            Reviewed recurring care plans, vaccine plans and native lab due orders. Delivery status
             comes from the durable outbox; provider acceptance is distinct from
             delivery. Automation requires reviewed enabled policies and
             deployment configuration.
           </p>
         </header>
+        <RecurringCareDashboard />
+        <RecurringCareTemplates onDirtyChange={setRecurrenceDirty} />
         <div className="max-w-sm">
           <Label htmlFor="care-filter">Due date view (Denver)</Label>
           <select
@@ -404,6 +411,7 @@ export function CareRemindersPage() {
         </section>
         <CareReminderSettings onDirtyChange={setSettingsDirty} />
         <ReminderDeliverySettings onDirtyChange={setDeliveryDirty} />
+        <RecurringCareDeliverySettings onDirtyChange={setRecurringDeliveryDirty} />
       </div>
     </section>
   );

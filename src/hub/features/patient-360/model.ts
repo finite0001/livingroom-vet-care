@@ -83,6 +83,8 @@ export interface Signals {
   as_of: string;
   vaccines_overdue: (PetRef & { group_key: string; group_name: string; due_on: string })[];
   vaccine_plans_awaiting_review: (PetRef & { group_key: string; group_name: string; plan_id: string | null })[];
+  care_plans_overdue?: (PetRef & { id: string; name: string; due_on: string })[];
+  care_plans_awaiting_review?: (PetRef & { id: string; name: string; due_on: string })[];
   labs_overdue: (PetRef & { id: string; test_name: string; status: string; due_date: string })[];
   labs_awaiting_results: (PetRef & { id: string; test_name: string; collected_date: string | null })[];
   unsigned_records: (PetRef & { kind: "encounter" | "dental" | "anesthesia" | "qol" | "qol_scale"; id: string; at: string })[];
@@ -352,6 +354,18 @@ export function deriveNextSteps(read: Read360): NextStep[] {
     });
   }
 
+  for (const plan of s.care_plans_overdue ?? []) {
+    steps.push({ id: `care-overdue:${plan.id}`, priority: "soon", category: "clinical",
+      title: `${petPrefix(scope, plan.pet_name)}${plan.name} overdue`, detail: `Care due ${formatDay(plan.due_on)}.`,
+      href: petLink(plan.pet_id, "medical", "care-plans"), actionLabel: "Review care plan" });
+  }
+  for (const plan of s.care_plans_awaiting_review ?? []) {
+    steps.push({ id: `care-review:${plan.id}`, priority: "soon", category: "clinical",
+      title: `${petPrefix(scope, plan.pet_name)}${plan.name} awaiting veterinarian review`,
+      detail: "Review the clinical interval and due date before enabling routine reminders.",
+      href: petLink(plan.pet_id, "medical", "care-plans"), actionLabel: "Review care plan" });
+  }
+
   for (const plan of s.vaccine_plans_awaiting_review) {
     steps.push({
       id: `plan:${plan.pet_id}:${plan.group_key}`, priority: "soon", category: "clinical",
@@ -608,7 +622,7 @@ export function timelineEntryView(entry: TimelineEntry, context: { clientId: str
     case "reminder": {
       const care = str("reminder") === "care";
       const reason = str("reason");
-      return { ...base, icon: "bell", label: "Reminder", title: care ? `${title === "lab" ? "Lab" : "Vaccine"} reminder` : "Appointment reminder", detail: [entry.detail ? `By ${entry.detail.toLowerCase() === "sms" ? "text" : entry.detail.toLowerCase()}` : null, reason].filter(Boolean).join(" · ") || null, href: care ? "/hub/tools/care-reminders" : scheduleHref({ date: str("date") }) };
+      return { ...base, icon: "bell", label: "Reminder", title: care ? `${title === "lab" ? "Lab" : title === "care_plan" ? "Recurring care" : "Vaccine"} reminder` : "Appointment reminder", detail: [entry.detail ? `By ${entry.detail.toLowerCase() === "sms" ? "text" : entry.detail.toLowerCase()}` : null, reason].filter(Boolean).join(" · ") || null, href: care ? "/hub/tools/care-reminders" : scheduleHref({ date: str("date") }) };
     }
     case "record_release": {
       const email = str("email");
