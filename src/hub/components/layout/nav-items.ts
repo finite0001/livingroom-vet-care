@@ -58,7 +58,7 @@ export const navItems: NavItem[] = [
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },
   { path: "/hub/inquiries", label: "New inquiries", icon: Inbox, section: "workspace" },
   { path: "/hub/clients", label: "Clients", icon: Users, section: "workspace", activePrefixes: ["/hub/client/"] },
-  { path: "/hub/patients", label: "Patients", icon: PawPrint, section: "workspace", activePrefixes: ["/hub/patient/"] },
+  { path: "/hub/patients", label: "Patients", icon: PawPrint, section: "workspace", activePrefixes: ["/hub/patient/", "/hub/whogot"] },
   { path: "/hub/time", label: "Time Clock", icon: Clock, section: "workspace" },
   { path: "/hub/timesheet", label: "Timesheet", icon: History, section: "workspace" },
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, PawPrint } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,7 @@ export default function PatientsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Patients</h1>
         <p className="text-sm text-muted-foreground mt-1">All patients across households.</p>
+        <Button asChild variant="outline" className="mt-3"><Link to="/hub/whogot">Whogot</Link></Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

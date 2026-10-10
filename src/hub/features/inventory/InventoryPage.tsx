@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { cloneElement, useId, useState, type ReactElement } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -381,6 +382,7 @@ export function InventoryPage() {
         <p className="text-muted-foreground">
           Medication and vaccine stock by lot, expiry and location.
         </p>
+        <Button asChild variant="outline" className="mt-3"><Link to="/hub/whogot">Whogot</Link></Button>
       </header>
       <Card>
         <CardHeader>
@@ -426,6 +428,8 @@ export function InventoryPage() {
                     </p>
                   )}
                 </div>
+                <div className="flex flex-wrap gap-2">
+                <Button asChild size="sm" variant="outline"><Link to={`/hub/whogot?product=${p.id}`}>Whogot</Link></Button>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -435,6 +439,7 @@ export function InventoryPage() {
                 >
                   Edit
                 </Button>
+                </div>
               </div>
             ))}
           </div>
