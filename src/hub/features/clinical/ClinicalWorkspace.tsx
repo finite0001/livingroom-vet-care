@@ -1,3 +1,4 @@
+import { PerformedServices } from '../whogot/PerformedServices';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,13 +27,14 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
   const [baseline, setBaseline] = useState('');
   const [addendum, setAddendum] = useState('');
   const [problemDirty, setProblemDirty] = useState(false);
+  const [serviceDirty, setServiceDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [confirmSign, setConfirmSign] = useState(false);
   const dirty = !!draft && JSON.stringify(draft) !== baseline;
-  const unsaved = dirty || !!addendum.trim() || problemDirty || busy;
+  const unsaved = dirty || !!addendum.trim() || problemDirty || serviceDirty || busy;
   useEffect(() => {
     onDirtyChange?.(unsaved);
     return () => onDirtyChange?.(false);
@@ -50,7 +52,7 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
   } });
   const author = (id: string | null) => authors.data?.find(person => person.id === id)?.full_name || (id ? `Staff ${id}` : 'Unknown staff');
   const select = (row: Tables<'clinical_encounters'> | null) => {
-    if (busy || ((dirty || addendum.trim()) && !window.confirm('Discard unsaved clinical changes?'))) return;
+    if (busy || serviceDirty || ((dirty || addendum.trim()) && !window.confirm('Discard unsaved clinical changes?'))) return;
     const next = row ? encounterDraft(row) : newEncounter();
     setRecord(row); setDraft(next); setBaseline(JSON.stringify(next)); setAddendum(''); setError(''); setMessage('');
   };
@@ -99,12 +101,13 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
   });
   return <section className="space-y-6" aria-label="Clinical records">
     <PatientProblems petId={petId} disabled={disabled} onDirtyChange={setProblemDirty} />
-    <Card><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-lg">Clinical encounters</CardTitle><Button disabled={disabled || busy} onClick={() => select(null)}>New encounter</Button></CardHeader><CardContent className="space-y-4">
+    <PerformedServices petId={petId} encounterId={record?.id ?? null} disabled={disabled} onDirtyChange={setServiceDirty} />
+    <Card><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-lg">Clinical encounters</CardTitle><Button disabled={disabled || busy || serviceDirty} onClick={() => select(null)}>New encounter</Button></CardHeader><CardContent className="space-y-4">
       {disabled && <p className="text-sm text-muted-foreground">This patient is inactive. Existing drafts can be corrected; encounter history and signed-record addenda remain available.</p>}
       {encounters.isPending && <p role="status">Loading encounters…</p>}
       {encounters.isError && <p role="alert" className="text-destructive">Could not load encounters. <button className="underline" onClick={() => void encounters.refetch()}>Retry</button></p>}
       {encounters.data?.length === 0 && <p className="text-sm text-muted-foreground">No clinical encounters recorded.</p>}
-      <div className="flex flex-wrap gap-2">{encounters.data?.map(row => <Button key={row.id} variant={record?.id === row.id ? 'secondary' : 'outline'} disabled={busy} onClick={() => select(row)}>{dateTime(row.visit_at)} · {row.visit_type} · {row.status}</Button>)}</div>
+      <div className="flex flex-wrap gap-2">{encounters.data?.map(row => <Button key={row.id} variant={record?.id === row.id ? 'secondary' : 'outline'} disabled={busy || serviceDirty} onClick={() => select(row)}>{dateTime(row.visit_at)} · {row.visit_type} · {row.status}</Button>)}</div>
       {draft && <div className="space-y-4 border-t pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{signed ? 'Signed encounter' : record ? 'Edit draft encounter' : 'New encounter'}</h3><p role="status" className="text-sm text-muted-foreground">{busy ? 'Saving…' : dirty ? 'Unsaved changes' : message || (record ? 'Saved record' : 'Not saved yet')}</p></div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

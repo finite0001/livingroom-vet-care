@@ -63,6 +63,8 @@ const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
 const TicketsPage = lazy(() => import("@/hub/pages/TicketsPage"));
 const TicketDetailPage = lazy(() => import("@/hub/pages/TicketDetailPage"));
 const RefillsPage = lazy(() => import("@/hub/pages/RefillsPage"));
+const WhogotSourcePage = lazy(() => import("@/hub/features/whogot/WhogotSourcePage"));
+const WhogotPage = lazy(() => import("@/hub/features/whogot/WhogotPage"));
 const PatientsPage = lazy(() => import("@/hub/pages/PatientsPage"));
 
 function HubLoader() {
@@ -118,6 +120,8 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/deliveries" element={<DeliveriesPage />} />
                   <Route path="/hub/inventory" element={<InventoryPage />} />
                   <Route path="/hub/clients" element={<ClientsPage />} />
+                  <Route path="/hub/whogot/source/:eventType/:id" element={<WhogotSourcePage />} />
+                  <Route path="/hub/whogot" element={<WhogotPage />} />
                   <Route path="/hub/patients" element={<PatientsPage />} />
                   <Route path="/hub/client/:id" element={<ClientProfilePage />} />
                   <Route path="/hub/patient/:id" element={<PatientPage />} />

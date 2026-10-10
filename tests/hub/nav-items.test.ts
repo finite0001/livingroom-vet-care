@@ -33,6 +33,8 @@ test("Home and the admin dashboard light only on their exact path", () => {
 test("detail pages highlight the list they belong to", () => {
   assert.deepEqual(activeFor("/hub/client/c1"), ["/hub/clients"]);
   assert.deepEqual(activeFor("/hub/patient/p1"), ["/hub/patients"]);
+  assert.deepEqual(activeFor("/hub/whogot"), ["/hub/patients"]);
+  assert.deepEqual(activeFor("/hub/whogot/source/performed/p1"), ["/hub/patients"]);
   assert.deepEqual(activeFor("/hub/ticket/t1"), ["/hub/tickets"]);
   assert.deepEqual(activeFor("/hub/conversation/x"), ["/hub/chats"]);
   assert.deepEqual(activeFor("/hub/inbox/review"), ["/hub/chats"]);
