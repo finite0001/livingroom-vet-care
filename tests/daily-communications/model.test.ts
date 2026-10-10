@@ -64,6 +64,7 @@ const row = {
 };
 test("read model refuses capability fields and external source URLs", () => {
   assert.ok(rowSchema.safeParse(row).success);
+  assert.ok(rowSchema.safeParse({ ...row, source_href: null }).success);
   for (const change of [
     { provider_config: {} },
     { lease_token: "private" },

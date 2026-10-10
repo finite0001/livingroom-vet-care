@@ -22,7 +22,7 @@ insert into communication_attempts(outbox_id,lease_token,attempt_number,started_
 insert into outbound_deliveries(idempotency_key,channel,recipient,client_id,conversation_id,message_id,scheduled_at)
 values('daily-duplicate','EMAIL','daily-client@example.test',(select id from fx where k='client'),(select id from fx where k='conversation'),(select id from fx where k='message'),'2026-03-08T07:00:00Z');
 with inserted as (insert into outbound_deliveries(idempotency_key,channel,recipient,client_id,conversation_id,message_id,scheduled_at)
-values('daily-independent','SMS','+12025550139',(select id from fx where k='client'),(select id from fx where k='conversation'),(select id from fx where k='message'),'2026-03-08T07:00:00Z') returning id) insert into fx select 'legacy',id from inserted;
+values('daily-independent','SMS','+12025550139',(select id from fx where k='client'),null,(select id from fx where k='message'),'2026-03-08T07:00:00Z') returning id) insert into fx select 'legacy',id from inserted;
 -- Protected document association supplies the exact patient without exposing its capability.
 with inserted as (insert into record_releases(id,pet_id,client_id,channel,recipient,selection,snapshot,source_hash,request,created_by)
  values(gen_random_uuid(),(select id from fx where k='pet'),(select id from fx where k='client'),'SMS','+12025550139','{}','{}',repeat('a',64),'{}','a5520000-0000-4000-8000-000000000001') returning id)
@@ -64,6 +64,13 @@ select throws_ok($$select list_daily_communications('2026-01-01','2027-01-02')$$
 select throws_ok($$select list_daily_communications(p_limit=>101)$$,'23514',null,'Oversize page rejected');
 select throws_ok($$select list_daily_communications(p_status=>'sent')$$,'23514',null,'Ambiguous sent status rejected');
 select throws_ok($$select list_daily_communications(p_before=>'{}')$$,'23514',null,'Malformed cursor rejected');
+select is(read_daily_communication('legacy',(select id from fx where k='legacy'))#>>'{record,conversation_id}',(select id::text from fx where k='conversation'),'Retained row recovers its real thread through the stored message');
+reset role;
+with inserted as (insert into outbound_deliveries(idempotency_key,channel,recipient,scheduled_at)
+ values('daily-orphan','SMS','+12025550143','2026-04-01T18:00:00Z') returning id) insert into fx select 'orphan',id from inserted;
+set local role authenticated;
+select is(read_daily_communication('legacy',(select id from fx where k='orphan'))#>>'{record,source_href}',null::text,'Unlinked retained delivery does not invent a scheduling source');
+
 -- Scheduled and blocked jobs remain distinct from actual accepted/delivered evidence.
 reset role;
 with inserted as (insert into care_message_templates(id,name,channel,days_before,body,review_note,updated_by)

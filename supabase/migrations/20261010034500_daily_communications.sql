@@ -45,11 +45,13 @@ create function public.daily_communication_rows_internal() returns table(
     when 'LEASED' then 'processing' when 'ACCEPTED' then 'accepted' when 'DELIVERED' then 'delivered'
     when 'FAILED' then 'failed' when 'CANCELED' then 'cancelled' else 'uncertain' end,
    case when d.appointment_reminder_id is not null then 'Retained appointment reminder' else 'Retained staff delivery' end,
-   d.client_id,c.full_name,a.pet_id,p.name,d.conversation_id,d.recipient,d.attempt_count,d.accepted_at,d.delivered_at,
+   d.client_id,c.full_name,a.pet_id,p.name,coalesce(d.conversation_id,m.conversation_id),d.recipient,d.attempt_count,d.accepted_at,d.delivered_at,
    case when d.status='UNKNOWN' then 'Delivery is unconfirmed; do not resend without reconciliation'
-    when d.status='FAILED' then 'Recorded failure; review the source before retrying' else null end,
-   case when d.conversation_id is not null then '/hub/conversation/'||d.conversation_id::text else '/hub/schedule' end
+    when d.status='FAILED' then 'Recorded failure; review the source before retrying'
+    when coalesce(d.conversation_id,m.conversation_id) is null and ar.id is null then 'No linked source remains; review the retained delivery metadata' else null end,
+   case when coalesce(d.conversation_id,m.conversation_id) is not null then '/hub/conversation/'||coalesce(d.conversation_id,m.conversation_id)::text when ar.id is not null then '/hub/schedule' else null end
   from public.outbound_deliveries d left join public.clients c on c.id=d.client_id
+  left join public.messages m on m.id=d.message_id
   left join public.appointment_reminders ar on ar.id=d.appointment_reminder_id
   left join public.appointments a on a.id=ar.appointment_id left join public.pets p on p.id=a.pet_id
   where not exists(select 1 from public.communication_outbox o where (o.message_id=d.message_id and o.channel=d.channel::text)

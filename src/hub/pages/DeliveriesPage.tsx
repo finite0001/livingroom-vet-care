@@ -132,9 +132,11 @@ function CommunicationCard({
           <p className="text-sm text-muted-foreground">{row.reason}</p>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to={row.source_href}>Open source</Link>
-          </Button>
+          {row.source_href && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={row.source_href}>Open source</Link>
+            </Button>
+          )}
           {row.client_id && (
             <Button asChild variant="ghost" size="sm">
               <Link to={`/hub/client/${row.client_id}`}>Client</Link>

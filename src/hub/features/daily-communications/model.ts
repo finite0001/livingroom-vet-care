@@ -94,7 +94,8 @@ export const rowSchema = z
       .string()
       .regex(
         /^\/hub\/(conversation\/[0-9a-f-]{36}|schedule|tools\/care-reminders)$/,
-      ),
+      )
+      .nullable(),
   })
   .strict();
 export type CommunicationRow = z.infer<typeof rowSchema>;

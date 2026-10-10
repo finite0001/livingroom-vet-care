@@ -178,6 +178,9 @@ test("admin retry links use the existing review, uncertain sends have no resend 
     ...row,
     id: "66666666-6666-4666-8666-666666666666",
     status: "uncertain",
+    source: "legacy",
+    conversation_id: null,
+    source_href: null,
   };
   await page.route(
     `${backend}/rest/v1/rpc/list_daily_communications`,
@@ -195,7 +198,10 @@ test("admin retry links use the existing review, uncertain sends have no resend 
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: /resend/i })).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "Open source", exact: true }).first(),
+    page.getByRole("link", { name: "Open source", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("link", { name: "Open source", exact: true }),
   ).toHaveAttribute("href", row.source_href);
 });
 test("failed next page retains results and refresh restarts at the first page", async ({
