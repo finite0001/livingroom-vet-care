@@ -5,6 +5,7 @@ import {
   Clock,
   DatabaseZap,
   FileText,
+  FolderOpen,
   History,
   Home,
   Inbox,
@@ -63,6 +64,7 @@ export const navItems: NavItem[] = [
   { path: "/hub/timesheet", label: "Timesheet", icon: History, section: "workspace" },
 
   // Tools
+  { path: "/hub/tools/record-requests", label: "Records requests", icon: FolderOpen, section: "tools" },
   { path: "/hub/tools/care-reminders", label: "Care reminders", icon: BellRing, section: "tools" },
   { path: "/hub/deliveries", label: "Daily communications", mobileLabel: "Daily communications", icon: Send, section: "tools" },
   { path: "/hub/tools/templates", label: "Templates", icon: FileText, section: "tools" },

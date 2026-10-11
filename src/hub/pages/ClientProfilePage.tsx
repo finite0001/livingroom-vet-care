@@ -238,6 +238,7 @@ export default function ClientProfilePage() {
 
           <TabsContent value="documents" forceMount className={shown("documents")}>
             {visited.has("documents") && <>
+              <Button asChild variant="outline"><Link to={`/hub/tools/record-requests?client_id=${client.id}`}>Household records requests</Link></Button>
               <p className="text-sm text-muted-foreground">Patient documents, certificates and record releases are filed on each patient. Open a patient to upload or release records.</p>
               <Timeline360 scope="household" id={client.id} clientId={client.id} filters={["documents"]} title="Documents, certificates and releases" />
             </>}

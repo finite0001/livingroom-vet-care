@@ -196,6 +196,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
 
         <TabsContent value="documents" forceMount className={shown("documents")}>
           {visited.has("documents") && <>
+            <Button asChild variant="outline"><Link to={`/hub/tools/record-requests?pet_id=${petId}&client_id=${clientId}`}>Patient records requests</Link></Button>
             <Section360 id="documents"><PatientDocuments petId={petId} /></Section360>
             <Section360 id="attachments"><PatientApiAttachments petId={petId} disabled={dirty} /></Section360>
             <Section360 id="certificates"><PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} /></Section360>

@@ -126,6 +126,14 @@ select is(jsonb_array_length(select_all_record_release_sources_v10((select id fr
 select is(pg_temp.preview_native_release(jsonb_build_object('native_prescription_ids',(select jsonb_agg(id order by id desc) from boundary_ids))),pg_temp.preview_native_release(jsonb_build_object('native_prescription_ids',(select jsonb_agg(id order by id) from boundary_ids))),'Caller ordering canonicalized to same snapshot and hash');
 insert into fx values('replace-prior',pg_temp.sign_release_fixture()),('replacement',gen_random_uuid()),('replace-release',gen_random_uuid());
 select throws_ok($$select select_all_record_release_sources_v10((select id from fx where k='pet'))$$,'23514','More than20 native sources per family; split into explicit packages','Select-all fails at21 rather than dropping history');
+-- Records requests partition the real 21-source history rather than rejecting or truncating it.
+insert into data select 'request21',save_record_request(gen_random_uuid(),'a551ffff-0000-4000-8000-000000000001',null,jsonb_build_object('pet_id',(select id from fx where k='pet'),'client_id',(select id from fx where k='client'),'direction','outgoing','subset','custom','channel','EMAIL','requester_name','Synthetic native history','request_note','','requested_on',(now() at time zone 'America/Denver')::date,'due_on',null,'assigned_to',null,'ticket_id',null,'conversation_id',null));
+insert into data select 'manifest21',prepare_record_request_manifest(gen_random_uuid(),'a551ffff-0000-4000-8000-000000000001',1,jsonb_build_object('manifest_id','a551ffff-0000-4000-8000-000000000002','selection',jsonb_build_object('native_prescription_ids',(select jsonb_agg(id order by id) from (select id from boundary_ids union all select id from fx where k='replace-prior') n)),'review_note','Synthetic complete 21-order review'));
+select is((select v->>'package_count' from data where k='manifest21'),'2','Requests partition21 real signed native authorizations into numbered packages');
+reset role;
+select is((select sum(jsonb_array_length(selection->'native_prescription_ids'))::integer from record_request_packages where manifest_id='a551ffff-0000-4000-8000-000000000002'),21,'Numbered package union contains all21 native authorizations');
+select ok(not exists(select 1 from record_request_packages where manifest_id='a551ffff-0000-4000-8000-000000000002' and jsonb_array_length(selection->'native_prescription_ids')>20),'Numbered packages respect20 native sources per family');
+set local role authenticated;
 insert into data select 'replace-selection',jsonb_build_object('native_prescription_ids',jsonb_build_array(id)) from fx where k='replace-prior';
 insert into data select 'replace-preview',pg_temp.preview_native_release(v) from data where k='replace-selection';
 select pg_temp.confirm_native_release((select id from fx where k='replace-release'),(select v from data where k='replace-selection'),(select v from data where k='replace-preview'));

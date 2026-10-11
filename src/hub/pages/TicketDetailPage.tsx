@@ -140,6 +140,7 @@ export default function TicketDetailPage() {
             {ticket && ` · ${formTypeLabel(ticket.form_type)}`}
           </p>
         </div>
+        {ticket && <Button asChild variant="outline" size="sm"><Link to={`/hub/tools/record-requests?ticket_id=${ticket.id}`}>Records requests</Link></Button>}
         {ticket?.conversation_id && (
           <Button asChild variant="outline" size="sm" className="shrink-0 gap-1.5">
             <Link to={`/hub/conversation/${ticket.conversation_id}`}>

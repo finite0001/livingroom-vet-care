@@ -252,6 +252,12 @@ interface PhotoFixture {
 }
 async function photos(page: Page, lose?: string) {
   await fixture(page);
+  // Keep the mocked original independent of a page that may be reloading.
+  const pixelBytes = Buffer.from(await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    return canvas.toDataURL("image/png").split(",")[1];
+  }), "base64");
   const state: PhotoFixture = {
     version: 0,
     current: null,
@@ -361,14 +367,7 @@ async function photos(page: Page, lose?: string) {
         });
       }
       return route.fulfill({
-        body: Buffer.from(
-          await page.evaluate(() => {
-            const c = document.createElement("canvas");
-            c.width = c.height = 1;
-            return c.toDataURL("image/png").split(",")[1];
-          }),
-          "base64",
-        ),
+        body: pixelBytes,
         contentType: "image/png",
       });
     }
