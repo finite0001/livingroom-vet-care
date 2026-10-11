@@ -3,10 +3,10 @@
 import hashlib, sys, unittest, zlib
 from pathlib import Path
 
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[2] / "services/diagnostic-renderer")
-)
-sys.path.insert(0, "/opt/lrv-renderer")
+renderer = Path("/opt/lrv-renderer")
+if not renderer.exists():
+    renderer = Path(__file__).resolve().parents[2] / "services/diagnostic-renderer"
+sys.path.insert(0, str(renderer))
 from pdf_admission import admit, validate_file, Rejected, MAX_INFLATE
 
 
