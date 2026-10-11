@@ -42,7 +42,7 @@ try:
         assert re.match(r'^\d{14}_',migration.name)
         hashes[migration.name]=hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration,project/'supabase/migrations'/migration.name)
-    assert len(hashes)==174 and '20261011181722_manual_diagnostic_panels.sql' in hashes
+    assert len(hashes)==175 and '20261011181722_manual_diagnostic_panels.sql' in hashes and '20261011203250_diagnostic_pdf_jobs.sql' in hashes
     harness=root/'tests/diagnostics/local-roundtrip.ts'
     harness_hash=hashlib.sha256(harness.read_bytes()).hexdigest()
     (project/'supabase/config.toml').write_text(f'''project_id = "{identity}"
