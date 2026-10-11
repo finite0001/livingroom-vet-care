@@ -66,6 +66,8 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify diagnostic PDF job contention and captured-byte restore
+        run: python3 -B supabase/tests/diagnostic_pdf_jobs_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify diagnostic review and correction contention
         run: python3 -B supabase/tests/manual_diagnostics_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify recurring care review, completion and final delivery eligibility races
@@ -267,3 +269,5 @@ jobs:
           RECORDS_RUN_SYNTHETIC_LOCAL: "true"
       - name: Verify diagnostic Auth, private originals and real Patient 360 in an owned runtime
         run: python3 -B tests/diagnostics/local-disposable.py --run-synthetic-local
+      - name: Verify diagnostic PDF jobs, exact-byte recovery and Patient360 in an owned runtime
+        run: python3 -B tests/diagnostics/pdf-jobs-disposable.py --run-synthetic-local
