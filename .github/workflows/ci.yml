@@ -271,3 +271,32 @@ jobs:
         run: python3 -B tests/diagnostics/local-disposable.py --run-synthetic-local
       - name: Verify diagnostic PDF jobs, exact-byte recovery and Patient360 in an owned runtime
         run: python3 -B tests/diagnostics/pdf-jobs-disposable.py --run-synthetic-local
+
+  diagnostic-renderer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --experimental-strip-types scripts/diagnostics/generate-synthetic-input.ts
+      - name: Build pinned native amd64 renderer
+        run: docker build --platform linux/amd64 -t lrv-diagnostic-renderer:20261011 services/diagnostic-renderer
+      - name: Prove restricted Chromium, actual PDF admission and whole-container cleanup
+        run: python3 -B tests/diagnostics/renderer_local.py --run-synthetic-local
+      - name: Run malformed-PDF counterexamples inside credential-free image
+        run: >-
+          docker run --rm --user 12001:12001 --network none --read-only
+          --cap-drop ALL --security-opt no-new-privileges --memory 512m --cpus 1
+          --tmpfs /tmp:rw,nosuid,nodev,noexec,size=32m
+          --mount type=bind,src=${{ github.workspace }}/tests/diagnostics,dst=/proof,readonly
+          --entrypoint python3 lrv-diagnostic-renderer:20261011 -B /proof/pdf_admission_test.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-diagnostic-renderer-proof
+          path: output/renderer-proof/
+          retention-days: 7
