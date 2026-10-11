@@ -7,8 +7,7 @@ import { PatientRecordReleases } from "@/hub/features/record-releases/PatientRec
 import { PatientAnesthesiaRecords } from "@/hub/features/anesthesia/PatientAnesthesiaRecords";
 import { PatientCertificates } from "@/hub/features/certificates/PatientCertificates";
 import { PatientExternalRecords } from "@/hub/features/external-records/PatientExternalRecords";
-import { PatientLabWork } from "@/hub/features/lab-work/PatientLabWork";
-import { useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { PatientPrescriptions } from "@/hub/features/prescriptions/PatientPrescriptions";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -43,6 +42,8 @@ import {
   deriveNextSteps, formatCents, formatDateTime, householdHref, resolvePatientTab, scheduleHref, conversationHref,
   type PatientTab,
 } from "@/hub/features/patient-360/model";
+
+const PatientLabWorkspace = lazy(() => import("@/hub/features/diagnostics/PatientLabWorkspace").then(m => ({default:m.PatientLabWorkspace})));
 
 export default function PatientPage() {
   const { id } = useParams<{ id: string }>();
@@ -161,7 +162,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
             <Section360 id="treatments"><PatientTreatments petId={petId} clientId={patient.client_id} /></Section360>
             <Section360 id="care-plans"><PatientCarePlans petId={petId} inactive={inactive} disabled={dirty && !carePlanDirty} onDirtyChange={setCarePlanDirty} /></Section360>
             <Section360 id="vaccine-plans"><PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} /></Section360>
-            <Section360 id="labs"><PatientLabWork key={`lab-${petId}`} petId={petId} onDirtyChange={setLabDirty} /></Section360>
+            <Section360 id="labs"><Suspense fallback={<p role="status">Loading lab workspace…</p>}><PatientLabWorkspace key={`lab-${petId}`} petId={petId} disabled={dirty && !labDirty} onDirtyChange={setLabDirty} /></Suspense></Section360>
             <Section360 id="care-charts"><PatientCareCharts petId={petId} onDirtyChange={setCareDirty} /></Section360>
             <Section360 id="dental"><PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} /></Section360>
             <Section360 id="anesthesia"><PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} clientId={patient.client_id} onDirtyChange={setAnesthesiaDirty} /></Section360>

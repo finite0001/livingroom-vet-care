@@ -66,6 +66,8 @@ jobs:
           version: 2.115.0
       - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
+      - name: Verify diagnostic review and correction contention
+        run: python3 -B supabase/tests/manual_diagnostics_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify recurring care review, completion and final delivery eligibility races
         run: python3 -B supabase/tests/care_plan_recurrence_concurrency.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify concurrent service completion, correction and patient archival
@@ -263,3 +265,5 @@ jobs:
         env:
           RECORDS_TEST_PROJECT: ${{ github.workspace }}
           RECORDS_RUN_SYNTHETIC_LOCAL: "true"
+      - name: Verify diagnostic Auth, private originals and real Patient 360 in an owned runtime
+        run: python3 -B tests/diagnostics/local-disposable.py --run-synthetic-local
