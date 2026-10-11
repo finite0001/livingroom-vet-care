@@ -111,6 +111,7 @@ export async function buildReleaseEmailPayload(
     );
   const report = renderRecordRelease({
     preview: bundle.release,
+    package_context: bundle.package_context,
     confirmed: {
       id: bundle.release.id,
       created_at: bundle.release.created_at,

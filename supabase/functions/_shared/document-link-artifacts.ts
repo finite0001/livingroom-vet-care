@@ -67,6 +67,7 @@ export async function buildDocumentLinkArtifacts(
     sourceByteBound = [5, 6, 7, 8, 9, 10, 11, 12, 13].includes(b.release.snapshot.schema_version);
     report = renderRecordRelease({
       preview: b.release,
+      package_context: b.package_context,
       confirmed: {
         id: b.release.id,
         created_at: b.release.created_at,

@@ -39,6 +39,7 @@ function canonicalReleaseValue(value: unknown): string {
 function artifactFor(bundle: ReleaseBundle): ReleaseArtifact {
   return {
     preview: bundle.release,
+    package_context: bundle.package_context,
     confirmed: {
       id: bundle.release.id,
       created_at: bundle.release.created_at,
