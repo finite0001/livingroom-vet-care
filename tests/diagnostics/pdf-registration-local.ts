@@ -382,6 +382,36 @@ const processingOwner = z
 assert.equal(processingOwner.capture_actor_id, actor);
 assert.equal(processingOwner.processing_actor_id, nextActor);
 checks += 3;
+
+const privateObject = z
+  .object({ bucket_id: z.string(), object_path: z.string() })
+  .parse(result.artifact);
+const direct = await staff.storage
+  .from(privateObject.bucket_id)
+  .download(privateObject.object_path);
+assert.ok(direct.error);
+assert.equal(direct.data, null);
+checks += 2;
+const originalObject = await service.download(
+  privateObject.bucket_id,
+  privateObject.object_path,
+);
+const { provePdfDownload } = await import("./pdf-download-local.ts");
+assert.ok(nextSigned.data.session);
+const downloadChecks = await provePdfDownload({
+  url: status.API_URL,
+  anon: status.ANON_KEY,
+  secret: status.SERVICE_ROLE_KEY,
+  actor: nextActor,
+  session: nextSigned.data.session,
+  project,
+  job,
+  pet: pet.id,
+  staff,
+  admin,
+  bytes: originalObject,
+  sql,
+});
 const restored = execFileSync(
   "python3",
   [
@@ -397,21 +427,8 @@ const restored = execFileSync(
   ],
   { encoding: "utf8", timeout: 180000 },
 );
-assert.match(restored, /populated restore passed: 7 checks/);
-checks += 7;
-const privateObject = z
-  .object({ bucket_id: z.string(), object_path: z.string() })
-  .parse(result.artifact);
-const direct = await staff.storage
-  .from(privateObject.bucket_id)
-  .download(privateObject.object_path);
-assert.ok(direct.error);
-assert.equal(direct.data, null);
-checks += 2;
-const originalObject = await service.download(
-  privateObject.bucket_id,
-  privateObject.object_path,
-);
+assert.match(restored, /populated restore passed: 9 checks/);
+checks += 9;
 const replacement = Buffer.from(originalObject);
 replacement[replacement.length - 1] ^= 1;
 const swapped = await admin.storage
@@ -470,6 +487,7 @@ writeFileSync(
   JSON.stringify(
     {
       checked_at: new Date().toISOString(),
+      download_checks: downloadChecks,
       runtime:
         mode === "sandbox" ? "native-vercel-sandbox" : "native-amd64-docker",
       checks,
@@ -485,7 +503,7 @@ writeFileSync(
       owner_handoff: true,
       original_capture_actor_preserved: true,
       observed_lock_checks: 8,
-      populated_restore_checks: 7,
+      populated_restore_checks: 9,
       restored_storage_body_backup_claimed: false,
       private_storage_http_roundtrip: true,
       staff_download_denied: true,

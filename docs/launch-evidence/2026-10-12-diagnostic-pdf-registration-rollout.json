@@ -1,0 +1,142 @@
+{
+  "pr": 242,
+  "approved_head": "0af5c25a2561391fbcc53f13d6f01d8a75a329be",
+  "merge": "ef12883e2a86c99c80ecaecec9f8facc791bbc73",
+  "merged_at": "2026-10-12T15:30:18Z",
+  "approved_tree": "6377f5da53286a47798f4f37d7097ee6490b0110",
+  "merge_tree": "6377f5da53286a47798f4f37d7097ee6490b0110",
+  "staging_installation": {
+    "project": "kothoqicubowyhwfsrte",
+    "migration": "20261012035948_diagnostic_pdf_artifact_processing.sql",
+    "migration_sha256": "d1d72601b9756b71e381179f3c6ad715b77668e1a7a7f92025173b1bb6d1483a",
+    "migrations": 176,
+    "pending": 0,
+    "protected_backup": true,
+    "baseline_unchanged": true,
+    "state": {
+      "disclosure": 0,
+      "outbox": 0,
+      "payment_profiles": 1,
+      "release": 0,
+      "worker": 0
+    },
+    "runtime_policy": "empty/off",
+    "skip_vault": true,
+    "legacy_writes": 0
+  },
+  "primary_installation": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migration": "20261012035948_diagnostic_pdf_artifact_processing.sql",
+    "migration_sha256": "d1d72601b9756b71e381179f3c6ad715b77668e1a7a7f92025173b1bb6d1483a",
+    "migrations": 176,
+    "pending": 0,
+    "protected_backup": true,
+    "baseline_unchanged": true,
+    "state": {
+      "disclosure": 0,
+      "outbox": 3,
+      "payment_profiles": 0,
+      "release": 0,
+      "worker": 0
+    },
+    "runtime_policy": "empty/off",
+    "skip_vault": true,
+    "legacy_writes": 0
+  },
+  "staging_rollback": {
+    "project": "kothoqicubowyhwfsrte",
+    "migrations": {
+      "count": 176,
+      "latest": "20261012035948"
+    },
+    "checks": 43,
+    "canonical_function_bodies": 16,
+    "private_rls_ledgers_and_policy": 13,
+    "all_synthetic_writes_rolled_back": true,
+    "baseline_unchanged": true,
+    "worker_policy": "empty/off",
+    "provider_requests": 0,
+    "proof": [
+      {
+        "proof": {
+          "checks": 43,
+          "provider_requests": 0,
+          "synthetic_transaction": true
+        }
+      }
+    ]
+  },
+  "primary_rollback": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migrations": {
+      "count": 176,
+      "latest": "20261012035948"
+    },
+    "checks": 43,
+    "canonical_function_bodies": 16,
+    "private_rls_ledgers_and_policy": 13,
+    "all_synthetic_writes_rolled_back": true,
+    "baseline_unchanged": true,
+    "worker_policy": "empty/off",
+    "provider_requests": 0,
+    "proof": [
+      {
+        "proof": {
+          "checks": 43,
+          "provider_requests": 0,
+          "synthetic_transaction": true
+        }
+      }
+    ]
+  },
+  "genuine_staging": {
+    "project": "kothoqicubowyhwfsrte",
+    "checks": 21,
+    "genuine_auth": true,
+    "generated": 1,
+    "validated": 2,
+    "byte_length": 30000,
+    "exact_http_readback": true,
+    "direct_staff_storage_denied": true,
+    "deleted_object_unavailable": true,
+    "regeneration": 0,
+    "provider_requests": 0,
+    "cleanup": {
+      "active_patients": 0,
+      "active_profiles": 0,
+      "objects": 0,
+      "open_sessions": 0
+    },
+    "policies": {
+      "disclosure": 0,
+      "outbox": 0,
+      "release": 0,
+      "runtime": 0,
+      "worker": 0
+    },
+    "all_run_fixture_cleanup_verified": true
+  },
+  "production": {
+    "id": "dpl_294y9ZRJtGRnDQsfkAbRiUuNn8SM",
+    "url": "livingroom-vet-care-kqyu40vn8-daves-projects-e0da43ba.vercel.app",
+    "ready_state": "READY",
+    "target": "production",
+    "commit": "ef12883e2a86c99c80ecaecec9f8facc791bbc73",
+    "deployment_method": "scoped CLI from clean exact-merge worktree",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7"
+  },
+  "public_signin": {
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "fresh_sign_in_form": true,
+    "page_errors": 0,
+    "entry": "/assets/index-Dd1CZU7O.js",
+    "staff_session_used": false,
+    "provider_messages_sent": false
+  },
+  "edge_functions_changed": false,
+  "legacy_writes": 0,
+  "provider_requests": 0,
+  "clinical_acceptance_claimed": false
+}

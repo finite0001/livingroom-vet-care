@@ -9,6 +9,7 @@
     "tests/diagnostics/renderer-template.test.ts",
     "tests/diagnostics/renderer-fixture.ts",
     "tests/diagnostics/pdf-registration-local.ts",
+    "tests/diagnostics/pdf-download-local.ts",
     "tests/diagnostics/registration-docker.ts",
     "tests/diagnostics/pdf-registration.test.ts"
   ]
