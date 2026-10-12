@@ -72,6 +72,9 @@ async function isolated(raw: unknown, bytes?: Uint8Array) {
     const mounts: string[] = [];
     for (const [file, content, destination] of files) {
       await writeFile(dir + "/" + file, content, { mode: 0o644 });
+      // The owned parent uses umask 077. These synthetic-only read-only binds
+      // must be readable by guest UID 12001 rather than the host runner UID.
+      await chmod(dir + "/" + file, 0o644);
       mounts.push(
         "--mount",
         `type=bind,src=${dir}/${file},dst=${destination},readonly`,

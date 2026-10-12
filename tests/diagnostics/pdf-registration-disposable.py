@@ -34,6 +34,21 @@ def command(argv, timeout=240, **kwargs):
     log.write("COMMAND " + str(argv) + "\n" + result.stdout + result.stderr + "\n")
     log.flush()
     if result.returncode:
+        if os.environ.get("CI") == "true" and argv[0] == "node":
+            # Only the explicitly synthetic harness stderr, never CLI startup/status
+            # output. Redact credential formats before emitting bounded CI diagnostics.
+            diagnostic = re.sub(
+                r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+",
+                "[REDACTED JWT]",
+                result.stderr,
+            )
+            diagnostic = re.sub(
+                r"sb_(?:secret|publishable)_[A-Za-z0-9_-]+",
+                "[REDACTED KEY]",
+                diagnostic,
+            )
+            diagnostic = re.sub(r"(?i)Bearer\s+\S+", "Bearer [REDACTED]", diagnostic)
+            print(diagnostic[-4000:], flush=True)
         raise RuntimeError(
             "Owned diagnostic command failed; protected log: "
             + str(work / "commands.log")
