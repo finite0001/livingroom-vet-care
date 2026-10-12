@@ -31,6 +31,8 @@ const bundle = buildSync({
 }).outputFiles[0].text;
 interface RpcArgs {
   p_id: string;
+  p_job?: string;
+  p_pet?: string;
   p_action_id: string;
   p_kind: "draft" | "finalize";
   p_values: DiagnosticValues;
@@ -67,6 +69,31 @@ async function fixture(page: Page, baseURL: string | undefined, role = "DVM") {
       return ok({ items: state.details, next: null });
     if (name === "read_diagnostic_panel")
       return ok(state.details.find((d) => d.panel.id === args.p_id) ?? null);
+    if (name === "read_diagnostic_pdf_review") {
+      const version = state.history.find(
+        (v) => v.id === args.p_job && v.pet_id === args.p_pet,
+      );
+      return ok(
+        version
+          ? {
+              job_id: version.id,
+              pet_id: version.pet_id,
+              version: version.number,
+              reviewed_at: version.reviewed_at,
+              historical: state.history.some(
+                (v) =>
+                  v.panel_id === version.panel_id && v.number > version.number,
+              ),
+              state: "off",
+              last_error: "",
+              download_available: false,
+              sha256: null,
+              byte_length: null,
+              export_eligible: false,
+            }
+          : null,
+      );
+    }
     if (name === "list_diagnostic_history")
       return ok({
         items: state.history.filter((v) => v.panel_id === args.p_id),
@@ -201,9 +228,9 @@ async function saveDraft(page: Page) {
   await page
     .getByRole("button", { name: "Save diagnostic draft", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText(
-    "Diagnostic draft saved",
-  );
+  await expect(
+    page.getByRole("status").filter({ hasText: "Diagnostic draft saved" }),
+  ).toContainText("Diagnostic draft saved");
 }
 async function finalizePanel(page: Page, correction = false) {
   await page
@@ -222,9 +249,11 @@ async function finalizePanel(page: Page, correction = false) {
       exact: true,
     })
     .click();
-  await expect(page.getByRole("status")).toContainText(
-    "Reviewed diagnostic version saved",
-  );
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Reviewed diagnostic version saved" }),
+  ).toContainText("Reviewed diagnostic version saved");
 }
 test("numeric zero and text findings save/reopen/finalize with a source-linked trend", async ({
   page,
@@ -254,8 +283,14 @@ test("numeric zero and text findings save/reopen/finalize with a source-linked t
     page.getByRole("img", { name: /ALT reviewed values/ }),
   ).toBeVisible();
   await expect(
-    page.getByText("PDF unavailable · Excluded from outgoing record packages"),
+    page
+      .getByRole("region", { name: "Diagnostic PDF", exact: true })
+      .first()
+      .getByText("PDF preparation is off.", { exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Download verified PDF", exact: true }),
+  ).toHaveCount(0);
 });
 test("ordinary staff draft findings but cannot finalize them", async ({
   page,
