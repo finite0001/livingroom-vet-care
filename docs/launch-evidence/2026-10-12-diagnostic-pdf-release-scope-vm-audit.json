@@ -1,0 +1,132 @@
+{
+  "checked_at": "2026-10-12T21:12:19.462Z",
+  "count": 18,
+  "sandboxes": [
+    {
+      "name": "lrv-pdf-f81fd720-5b77-4367-9805-16951bf2ebad",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-d5512488-bad9-467c-80d9-236c2d64dc6c",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-c30bf9bd-b9fd-47ea-b917-6eb56eefdf9e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-bdfa7288-e45f-40a9-b154-58c304c808af",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-ab13df38-214b-473d-a335-cdb901be41fa",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-a7668a0b-61e3-4ab5-aa1b-22e31f2bf70b",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-a4d3d90f-d67d-44aa-8db5-1d8ba2ca3965",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-837474ca-7191-41b1-a87e-6507643afd01",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-778e8c99-4440-4424-9dcd-96a92d945dda",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-7103c1b9-9b6a-4d7c-bca9-64772c25f250",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-672d4fc4-a637-4b9c-ad40-7d9620cdbef1",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-5cc479c7-eb16-4e82-b711-6d327e2d8bf6",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-3c08d622-ecba-4ade-90bc-0e36d7bb2e3c",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-3b504b80-0301-4311-8cd4-f2350f733ccc",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-2f51b75e-bc78-4140-8836-85d5a2bea175",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-2b2945f0-cf19-4cc2-824f-cbff197e0978",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-18499b9b-4a46-4b97-a01b-674c706c4204",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-0f27cd62-94bd-4c18-be55-59dee5f82987",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    }
+  ]
+}

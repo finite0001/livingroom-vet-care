@@ -1,0 +1,192 @@
+{
+  "approved_head": "e6f7c900bf419fc2f00247f757984ad62c1734e1",
+  "merge_commit": "deb836e3e69cc1ed4ab4a6f40dff54208c345c9a",
+  "merged_at": "2026-10-12T20:51:09Z",
+  "merge_tree_equals_approved_tree": true,
+  "projects": {
+    "staging": {
+      "installation": {
+        "project": "kothoqicubowyhwfsrte",
+        "migration": "20261012153518_diagnostic_pdf_staff_review.sql",
+        "migration_sha256": "26c1beb0b728a6da251a2e61cd522cb2f6fd85814b1797e6851cb9b62655b97e",
+        "migrations": 177,
+        "pending": 0,
+        "protected_backup": true,
+        "baseline_unchanged": true,
+        "state": {
+          "disclosure": 0,
+          "outbox": 0,
+          "payment_profiles": 1,
+          "release": 0,
+          "worker": 0
+        },
+        "runtime_policy": "empty/off",
+        "skip_vault": true,
+        "legacy_writes": 0
+      },
+      "rollback_probe": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": {
+          "count": 177,
+          "latest": "20261012153518"
+        },
+        "checks": 19,
+        "canonical_function_bodies": 6,
+        "private_rls_ledgers_and_policy": 16,
+        "all_synthetic_writes_rolled_back": true,
+        "baseline_unchanged": true,
+        "worker_policy": "empty/off",
+        "provider_requests": 0,
+        "proof": [
+          {
+            "proof": {
+              "checks": 19,
+              "provider_requests": 0,
+              "synthetic_transaction": true
+            }
+          }
+        ]
+      },
+      "function": {
+        "slug": "download-diagnostic-pdf",
+        "version": 1,
+        "verify_jwt": true,
+        "status": "ACTIVE",
+        "ezbr_sha256": "11400058f59e68defb254c1a6f05a9c942b312eda5782b160401ba0d084192de"
+      },
+      "security_advisors": {
+        "error_count": 0,
+        "warning_count": 464
+      }
+    },
+    "primary": {
+      "installation": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migration": "20261012153518_diagnostic_pdf_staff_review.sql",
+        "migration_sha256": "26c1beb0b728a6da251a2e61cd522cb2f6fd85814b1797e6851cb9b62655b97e",
+        "migrations": 177,
+        "pending": 0,
+        "protected_backup": true,
+        "baseline_unchanged": true,
+        "state": {
+          "disclosure": 0,
+          "outbox": 3,
+          "payment_profiles": 0,
+          "release": 0,
+          "worker": 0
+        },
+        "runtime_policy": "empty/off",
+        "skip_vault": true,
+        "legacy_writes": 0
+      },
+      "rollback_probe": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migrations": {
+          "count": 177,
+          "latest": "20261012153518"
+        },
+        "checks": 19,
+        "canonical_function_bodies": 6,
+        "private_rls_ledgers_and_policy": 16,
+        "all_synthetic_writes_rolled_back": true,
+        "baseline_unchanged": true,
+        "worker_policy": "empty/off",
+        "provider_requests": 0,
+        "proof": [
+          {
+            "proof": {
+              "checks": 19,
+              "provider_requests": 0,
+              "synthetic_transaction": true
+            }
+          }
+        ]
+      },
+      "function": {
+        "slug": "download-diagnostic-pdf",
+        "version": 1,
+        "verify_jwt": true,
+        "status": "ACTIVE",
+        "ezbr_sha256": "11400058f59e68defb254c1a6f05a9c942b312eda5782b160401ba0d084192de"
+      },
+      "security_advisors": {
+        "error_count": 0,
+        "warning_count": 464
+      }
+    }
+  },
+  "staging_acceptance": {
+    "project": "kothoqicubowyhwfsrte",
+    "checks": 48,
+    "genuine_auth": true,
+    "review": {
+      "checks": 27,
+      "native_deployed_edge": true,
+      "browser": [
+        "desktop",
+        "mobile"
+      ],
+      "byte_equality": true,
+      "page_errors": 0,
+      "original_owner_inactive": true,
+      "historical_retained": true,
+      "real_expiry_seconds": 30,
+      "token_in_receipt": false,
+      "protection_changed": false,
+      "origin": "https://livingroom-vet-care-1442bptsq-daves-projects-e0da43ba.vercel.app"
+    },
+    "generated": 1,
+    "validated": 2,
+    "byte_length": 29948,
+    "exact_http_readback": true,
+    "direct_staff_storage_denied": true,
+    "deleted_object_unavailable": true,
+    "regeneration": 0,
+    "provider_requests": 0,
+    "cleanup": {
+      "active_patients": 0,
+      "active_profiles": 0,
+      "objects": 0,
+      "open_sessions": 0
+    },
+    "policies": {
+      "disclosure": 0,
+      "outbox": 0,
+      "release": 0,
+      "runtime": 0,
+      "worker": 0
+    }
+  },
+  "attempt_count": 2,
+  "first_attempt_failure": "Separate preview bundle request lacked origin-scoped OIDC header; native Edge transport checks before browser passed. Fixture retired in finally.",
+  "aggregate_cleanup": {
+    "active_patients": 0,
+    "active_profiles": 0,
+    "objects": 0,
+    "open_sessions": 0,
+    "temporary_policies": 0
+  },
+  "production": {
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-PBUrqPeG.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "production_deployment": {
+    "id": "dpl_Hvp9iJCn3N1DQbjnEcucDbJPmBYQ",
+    "url": "livingroom-vet-care-6atpgz9uf-daves-projects-e0da43ba.vercel.app",
+    "state": "READY",
+    "source": "deb836e3e69cc1ed4ab4a6f40dff54208c345c9a",
+    "git_deployment": true
+  },
+  "clinical_disclosure": "off",
+  "record_release": "off",
+  "financial_configuration_changed": false,
+  "legacy_writes": 0,
+  "provider_requests": 0
+}

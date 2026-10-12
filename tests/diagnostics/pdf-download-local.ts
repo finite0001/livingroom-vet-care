@@ -29,7 +29,8 @@ interface Input {
 export async function provePdfDownload(a: Input) {
   assert.equal(a.url, "http://127.0.0.1:64521");
   const quote = (s: string) => "'" + s.replaceAll("'", "''") + "'";
-  let checks = 0;
+  let checks = 0,
+    scopeChecks = 0;
   const handler = createDiagnosticPdfDownloadHandler({
     authenticate: async (token) => {
       const { data, error } = await a.admin.auth.getUser(token);
@@ -215,6 +216,54 @@ export async function provePdfDownload(a: Input) {
       .getByText("Verified PDF stored privately.", { exact: true })
       .waitFor();
     checks++;
+    await section
+      .getByRole("button", { name: "Review sharing scope", exact: true })
+      .click();
+    const scope = section.getByRole("region", {
+      name: "Diagnostic PDF sharing scope",
+      exact: true,
+    });
+    await scope
+      .getByText("Current reviewed PDF · Version 1", { exact: true })
+      .waitFor();
+    await scope
+      .getByText(
+        "Sharing is awaiting record-package integration. This review does not authorize sending records.",
+        { exact: true },
+      )
+      .waitFor();
+    assert.equal(await scope.locator("li").count(), 1);
+    scopeChecks += 3;
+    const scopeRaces = execFileSync(
+      "python3",
+      [
+        "-B",
+        "supabase/tests/diagnostic_pdf_release_scope_concurrency.py",
+        "--run-synthetic-local",
+        "--project-config",
+        a.project + "/supabase/config.toml",
+        "--job",
+        a.job,
+        "--actor",
+        a.actor,
+      ],
+      { encoding: "utf8", timeout: 45000 },
+    );
+    assert.match(scopeRaces, /observed-lock proof passed: 4 checks/);
+    scopeChecks += 4;
+    const binding = a.sql(
+      `select diagnostic_pdf_release_binding(${quote(a.job)},${quote(a.pet)},'current')::text;`,
+    );
+    a.sql(
+      `select verify_diagnostic_pdf_release_bytes(${quote(binding)}::jsonb,decode(${quote(Buffer.from(a.bytes).toString("base64"))},'base64'));`,
+    );
+    scopeChecks++;
+    assert.throws(() =>
+      a.sql(
+        `select verify_diagnostic_pdf_release_bytes(${quote(binding)}::jsonb,decode(${quote(Buffer.from(a.bytes).fill(0, 20, 21).toString("base64"))},'base64'));`,
+      ),
+    );
+    scopeChecks++;
     for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 1000 });
       const event = page.waitForEvent("download");
@@ -286,6 +335,29 @@ export async function provePdfDownload(a: Input) {
     if (historical.error) throw historical.error;
     assert.equal(historical.data.historical, true);
     checks++;
+    const currentScope = await a.staff.rpc(
+      "read_diagnostic_pdf_release_scope",
+      { p_job: a.job, p_pet: a.pet, p_mode: "current" },
+    );
+    assert.equal(currentScope.error?.code, "PT409");
+    scopeChecks++;
+    const oldScope = await a.staff.rpc("read_diagnostic_pdf_release_scope", {
+      p_job: a.job,
+      p_pet: a.pet,
+      p_mode: "historical",
+    });
+    if (oldScope.error) throw oldScope.error;
+    assert.equal(oldScope.data.version, 1);
+    assert.equal(oldScope.data.mode, "historical");
+    assert.equal(oldScope.data.export_available, false);
+    scopeChecks += 3;
+    assert.throws(() =>
+      a.sql(
+        `select verify_diagnostic_pdf_release_bytes(${quote(binding)}::jsonb,decode(${quote(Buffer.from(a.bytes).toString("base64"))},'base64'));`,
+      ),
+    );
+    scopeChecks++;
+
     a.sql(
       `update pets set archived_at=clock_timestamp(),deceased_at=clock_timestamp() where id=${quote(a.pet)};`,
     );
@@ -319,6 +391,7 @@ export async function provePdfDownload(a: Input) {
         {
           checked_at: new Date().toISOString(),
           checks,
+          release_scope_checks: scopeChecks,
           genuine_auth: true,
           genuine_private_storage: true,
           http_shared_handler: true,

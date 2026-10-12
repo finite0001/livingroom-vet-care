@@ -11,6 +11,9 @@
     "tests/diagnostics/pdf-registration-local.ts",
     "tests/diagnostics/pdf-download-local.ts",
     "tests/diagnostics/registration-docker.ts",
-    "tests/diagnostics/pdf-registration.test.ts"
+    "tests/diagnostics/pdf-registration.test.ts",
+    "scripts/rollout/pdf-review-staging-auth.ts",
+    "scripts/rollout/pdf-review-staging-browser.ts",
+    "tests/diagnostics/release-scope.test.ts"
   ]
 }

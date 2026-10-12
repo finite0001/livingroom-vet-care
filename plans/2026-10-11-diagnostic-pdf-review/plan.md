@@ -32,3 +32,8 @@ Existing finalized versions remain visible for archived/deceased pets. Their aut
 ## Next dependency
 
 3A2 adds reviewed diagnostic artifacts to selected record-release packages, including vaccine-only versus diagnostic selections and verified client contacts or explicitly authorized third parties. Internal staff download does not enable sending records. Object-body disaster recovery, cleanup, operational monitoring and clinical worker commissioning remain explicit follow-ups.
+
+
+## 2026-10-12 completion
+
+#243 approved and merged as `deb836e3e69cc1ed4ab4a6f40dff54208c345c9a`; all four required checks passed at exact approved head `e6f7c900bf419fc2f00247f757984ad62c1734e1`. Default-off migration177 and JWT-protected download function are installed on staging and primary, with48 genuine staging checks,19 rollback assertions per backend and unchanged provider/history baselines. [Rollout receipt](../../docs/launch-evidence/2026-10-12-diagnostic-pdf-review-rollout.md). Next is [3A2 sharing-scope and record-release integration](../2026-10-12-diagnostic-pdf-release/plan.md).
