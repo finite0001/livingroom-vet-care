@@ -1,0 +1,9 @@
+{
+  "checked_at": "2026-10-12T05:07:56.010Z",
+  "name": "lrv-pdf-5281d73e-fd78-4304-b994-33c42e137d69",
+  "deadline_ms": 15000,
+  "expired_session_command_denied": true,
+  "status_after_attempt": "stopped",
+  "persistent": false,
+  "snapshot_created": false
+}

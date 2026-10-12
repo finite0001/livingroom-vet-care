@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, writeFile, chmod, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import { z } from "zod";
 import {
   admissionSchema,
   type RendererAdapters,
@@ -54,8 +55,34 @@ async function isolated(raw: unknown, bytes?: Uint8Array) {
     : [["input.json", JSON.stringify(input), "/home/lrv-render/input.json"]];
   let created = false;
   const owned = async () => {
-    const d = JSON.parse((await docker(["inspect", name])).toString())[0];
+    const format =
+      '{"Config":{"Labels":{{json .Config.Labels}},"User":{{json .Config.User}}},"HostConfig":{"NetworkMode":{{json .HostConfig.NetworkMode}},"ReadonlyRootfs":{{json .HostConfig.ReadonlyRootfs}},"Privileged":{{json .HostConfig.Privileged}},"CapDrop":{{json .HostConfig.CapDrop}},"IpcMode":{{json .HostConfig.IpcMode}},"PortBindings":{{json .HostConfig.PortBindings}}}}';
+    const d = z
+      .object({
+        Config: z
+          .object({ Labels: z.record(z.string()), User: z.string() })
+          .strict(),
+        HostConfig: z
+          .object({
+            NetworkMode: z.string(),
+            ReadonlyRootfs: z.boolean(),
+            Privileged: z.boolean(),
+            CapDrop: z.array(z.string()).nullable(),
+            IpcMode: z.string(),
+            PortBindings: z.record(z.unknown()).nullable(),
+          })
+          .strict(),
+      })
+      .strict()
+      .parse(
+        JSON.parse(
+          (await docker(["inspect", "--format", format, name])).toString(),
+        ),
+      );
     assert.equal(d.Config.Labels["com.lrv.registration"], nonce);
+    return d;
+  };
+  const assertIsolated = (d: Awaited<ReturnType<typeof owned>>) => {
     assert.equal(d.HostConfig.NetworkMode, "none");
     assert.equal(d.HostConfig.ReadonlyRootfs, true);
     assert.equal(d.HostConfig.Privileged, false);
@@ -66,7 +93,6 @@ async function isolated(raw: unknown, bytes?: Uint8Array) {
       !d.HostConfig.PortBindings ||
         Object.keys(d.HostConfig.PortBindings).length === 0,
     );
-    return d;
   };
   try {
     const mounts: string[] = [];
@@ -122,7 +148,7 @@ async function isolated(raw: unknown, bytes?: Uint8Array) {
       "60",
     ]);
     created = true;
-    await owned();
+    assertIsolated(await owned());
     await docker(["start", name]);
     const p = trustedProvenance();
     const hashes = (

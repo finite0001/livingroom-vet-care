@@ -1,7 +1,14 @@
 {
-  "checked_at": "2026-10-12T04:50:50.706Z",
-  "count": 19,
+  "checked_at": "2026-10-12T05:10:04.090Z",
+  "count": 25,
   "sandboxes": [
+    {
+      "name": "lrv-pdf-fd58ced7-d261-4a39-996e-2ea717de2241",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
     {
       "name": "lrv-pdf-f9a45196-bba5-480f-b41b-890c960162bc",
       "status": "stopped",
@@ -80,7 +87,42 @@
       "network_policy": "deny-all"
     },
     {
+      "name": "lrv-pdf-725d5fd6-404a-47f4-b5d0-caa035daf80e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
       "name": "lrv-pdf-62cf2119-ab67-4978-b072-8673ad5a25dc",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-57a32783-bcb6-4cd5-90cb-1aa067207963",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-5281d73e-fd78-4304-b994-33c42e137d69",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-4cf21ef6-497d-4e8c-a10c-657f0a6fd44a",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-4448a655-25a2-445b-9c9a-1f3623ff3e29",
       "status": "stopped",
       "persistent": false,
       "snapshot_created": false,
