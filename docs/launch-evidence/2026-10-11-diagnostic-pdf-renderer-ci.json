@@ -1,0 +1,91 @@
+{
+  "pr": 241,
+  "head": "b54d4428219526c090cfe0841e8380b88332f44c",
+  "run_id": 38185801275,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38185801275",
+  "native_docker_proof": {
+    "version": 1,
+    "job_id": "b3100000-0000-4000-8000-000000000010",
+    "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshot_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "html_sha256": "f707931ff6cdf2d216948eede8c4b6c6018847f110f54d7df5efbb0917319341",
+    "validation": {
+      "sha256": "e7731d242e6329e6ab063c2f9b50170c09439a39565830c57751e7c3e14a821e",
+      "byte_length": 112710,
+      "page_count": 22,
+      "object_count": 67,
+      "stream_count": 28,
+      "inflated_bytes": 1290340,
+      "admission": "chromium-classic-pdf1.4-v1",
+      "qpdf_clean": true
+    },
+    "node": "v24.20.0",
+    "chromium": "153.0.8010.12",
+    "browser_sandbox": "Sandbox Status\nLayer 1 Sandbox\tNamespace\nPID namespaces\tYes\nNetwork namespaces\tYes\nSeccomp-BPF sandbox\tYes\nSeccomp-BPF sandbox supports TSYNC\tYes\nPtrace Protection with Yama LSM (Broker)\tYes\nPtrace Protection with Yama LSM (Non-broker)\tNo\n\nYou are adequately sandboxed.",
+    "uid": 12001,
+    "credentials_absent": true,
+    "sudo_denied": true,
+    "network": {
+      "dns_denied": true,
+      "tcp_denied": true,
+      "metadata_denied": true
+    },
+    "semantic_text_checks": 205,
+    "docker_image": "sha256:99dc82aab8ea677362033e06b79c7bb744167baf7693d253aab24a82a77715e4",
+    "host_arch": "x86_64",
+    "native_amd64": true,
+    "elapsed_seconds": 2.262
+  },
+  "verified_at": "2026-10-12T00:12:05.915141+00:00",
+  "all_required_checks": "passed",
+  "jobs": [
+    {
+      "name": "diagnostic-renderer",
+      "conclusion": "success",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38185801275/job/114607780076",
+      "startedAt": "2026-10-11T23:51:09Z",
+      "completedAt": "2026-10-11T23:52:17Z"
+    },
+    {
+      "name": "frontend",
+      "conclusion": "success",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38185801275/job/114607780155",
+      "startedAt": "2026-10-11T23:51:09Z",
+      "completedAt": "2026-10-12T00:09:06Z"
+    },
+    {
+      "name": "edge",
+      "conclusion": "success",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38185801275/job/114607780178",
+      "startedAt": "2026-10-11T23:51:09Z",
+      "completedAt": "2026-10-11T23:51:38Z"
+    },
+    {
+      "name": "database",
+      "conclusion": "success",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38185801275/job/114607780339",
+      "startedAt": "2026-10-11T23:51:09Z",
+      "completedAt": "2026-10-12T00:10:56Z"
+    }
+  ],
+  "unit_tests": 1320,
+  "browser_passed": 521,
+  "browser_skipped": 1,
+  "browser_retry_required": false,
+  "pdf_counterexamples": 20,
+  "vercel_preview_smoke": {
+    "origin": "https://livingroom-vet-care-8djtsdlwx-daves-projects-e0da43ba.vercel.app",
+    "path": "/hub/login",
+    "status": 200,
+    "fresh_sign_in_form": true,
+    "page_errors": 0,
+    "entry": "/assets/index-BQYSMRvl.js",
+    "staff_session_used": false,
+    "provider_messages_sent": false
+  },
+  "pr_state": "open_pending_specific_merge_approval",
+  "sql_files": 142,
+  "sql_assertions": 5791,
+  "pdf_job_contention_restore_checks": 34,
+  "pdf_jobs_real_auth_browser_checks": 54
+}

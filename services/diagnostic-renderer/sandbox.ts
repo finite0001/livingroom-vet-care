@@ -159,18 +159,36 @@ export async function renderInSandbox(
     assert.equal(sandbox.memory, 2048);
     assert.equal(sandbox.currentSnapshotId, undefined);
     assert.deepEqual(sandbox.mounts ?? {}, {});
-    const user = sandbox.asUser("lrv-render");
-    await user.writeFiles([
+    const session = sandbox.currentSession();
+    await session.writeFiles([
       {
         path: "/home/lrv-render/input.json",
         content: JSON.stringify(input),
         mode: 0o600,
       },
     ]);
+    const setup = await session.runCommand({
+      cmd: "chown",
+      args: ["12001:12001", "/home/lrv-render/input.json"],
+      timeoutMs: 2000,
+    });
+    assert.equal(setup.exitCode, 0);
     trace("input-written");
-    const result = await user.runCommand({
-      cmd: "node",
+    const result = await session.runCommand({
+      cmd: "sudo",
       args: [
+        "-u",
+        "lrv-render",
+        "--",
+        "/usr/bin/env",
+        "-i",
+        "PATH=/usr/local/bin:/usr/bin:/bin",
+        "HOME=/home/lrv-render",
+        "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright",
+        "NODE_ENV=production",
+        "TZ=UTC",
+        "LANG=C.UTF-8",
+        "node",
         "--max-old-space-size=256",
         "/opt/lrv-renderer/worker.mjs",
         ...(syntheticProof ? ["--proof"] : []),
@@ -188,7 +206,7 @@ export async function renderInSandbox(
     if (result.exitCode !== 0) {
       if (syntheticProof) {
         const detail = await readBounded(
-          await sandbox.currentSession().readFile({
+          await session.readFile({
             path: "/home/lrv-render/work/failure.json",
           }),
           16384,
@@ -200,15 +218,11 @@ export async function renderInSandbox(
       throw new Error("Renderer failed closed");
     }
     const bytes = await readBounded(
-      await sandbox
-        .currentSession()
-        .readFile({ path: "/home/lrv-render/work/report.pdf" }),
+      await session.readFile({ path: "/home/lrv-render/work/report.pdf" }),
       3145728,
     );
     const metadata = await readBounded(
-      await sandbox
-        .currentSession()
-        .readFile({ path: "/home/lrv-render/work/receipt.json" }),
+      await session.readFile({ path: "/home/lrv-render/work/receipt.json" }),
       16384,
     );
     trace("output-read");

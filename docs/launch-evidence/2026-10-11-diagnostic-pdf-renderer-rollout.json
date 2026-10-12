@@ -1,0 +1,26 @@
+{
+  "pr": 241,
+  "approved_head": "b54d4428219526c090cfe0841e8380b88332f44c",
+  "merge_commit": "9456f515613cc3a132583763d55007161e1cedfc",
+  "merged_at": "2026-10-12T03:54:01Z",
+  "ci_run": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38185801275",
+  "production": {
+    "id": "dpl_CeDUiNB96s922QnLkcutQNApXxBq",
+    "url": "livingroom-vet-care-5xy1klh33-daves-projects-e0da43ba.vercel.app",
+    "readyState": "READY",
+    "target": "production"
+  },
+  "public_sign_in": {
+    "url": "https://thelivingroom.vet/hub/login",
+    "http_status": 200,
+    "page_errors": 0,
+    "entry": "/assets/index-Dd1CZU7O.js",
+    "staff_session_used": false,
+    "provider_delivery": false,
+    "checked_at": "2026-10-12T04:36:14.596Z"
+  },
+  "new_backend_migrations": 0,
+  "edge_function_deployments": 0,
+  "pdf_worker_commissioned": false,
+  "outbound_changes": false
+}

@@ -294,6 +294,13 @@ jobs:
           --tmpfs /tmp:rw,nosuid,nodev,noexec,size=32m
           --mount type=bind,src=${{ github.workspace }}/tests/diagnostics,dst=/proof,readonly
           --entrypoint python3 lrv-diagnostic-renderer:20261011 -B /proof/pdf_admission_test.py
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.115.0
+      - name: Verify genuine PDF registration, lost replies, observed locks and populated restore
+        run: python3 -B tests/diagnostics/pdf-registration-disposable.py --run-synthetic-local
+        env:
+          DIAGNOSTICS_RENDERER_MODE: docker
       - uses: actions/upload-artifact@v4
         if: always()
         with:
