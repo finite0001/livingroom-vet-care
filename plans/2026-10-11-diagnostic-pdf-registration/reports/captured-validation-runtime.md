@@ -1,0 +1,50 @@
+# Captured-byte validation and recovery runtime
+
+Read-only implementation research against merged renderer PR #241 (`9456f515613cc3a132583763d55007161e1cedfc`). No runtime, image, hosted resource, credential or application code was changed. Only this assigned report was written. The approved image is `lrv-diagnostic-pdf@sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0`.
+
+## Reuse the existing validator without rendering
+
+The approved image already contains `/opt/lrv-renderer/pdf_admission.py`, `/usr/bin/python3`, qpdf and pdftotext. Its admission CLI accepts a file path and derives its output from actual bytes. It enforces Linux execution, a 512 MiB address-space ceiling, ten CPU seconds, a 2 MiB file-output ceiling, an eight-second qpdf timeout, and existing narrow PDF limits: 3 MiB input, 40 Letter pages, 5,000 objects, depth 32, 2 MiB per inflated stream and 16 MiB total inflated bytes. qpdf must return zero with recovery suppressed; pre/post validation hashes must match. No image rebuild or new validator module is required.
+
+Recover exact capture bytes from the private journal first. Strictly bind decoded byte count/hash to the SQL-derived capture receipt before using any parser. Transfer only those bytes and the already-frozen rendering/expected-text manifest into a fresh offline VM. Do not invoke `worker.mjs`, launch Chromium, provide HTML as a rendering input, reconstruct history from mutable current roots, or render again under the old capture identity.
+
+A validator adapter should return a distinct `captured-validation-v1` receipt: capture/job/manifest identity, actual validation measurements, expected-text count, fixed validation-command hash, image digest, user/runtime isolation evidence and shutdown receipt. It must not fabricate a fresh Chromium version or `browser_sandbox` observation for a validator-only execution. The original rendering manifest/receipt supplies generation provenance; new validation proves only that the saved bytes still satisfy the current accepted policy and text checks.
+
+## Exact-session SDK operations
+
+The installed/published SDK pin is `@vercel/sandbox@3.6.1`. Its tarball was inspected in memory. `currentSession()` returns the existing Session; `Session.writeFiles()`/`readFile()`/`runCommand()` address its exact ID. By contrast, Sandbox-level file/command methods use `withResume()`, and `asUser()` delegates to those methods. A stopped Sandbox can therefore implicitly start another session. Guarding a Sandbox-level call with a prior status check alone leaves a race.
+
+Retain `const session = sandbox.currentSession()` immediately after creation and use that exact handle for the whole attempt. Session writes accept `Uint8Array` directly; Session reads return a binary `NodeJS.ReadableStream` and accept an AbortSignal. Reuse `readBounded()` for PDF/receipt limits. A failed/expired exact session must fail the attempt; do not resume it or reopen a different session to retrieve output.
+
+`asUser("lrv-render")` is the supported fixed-user convenience API. Its source builds a fixed `sudo -u <username> -- bash -c` positional-argument wrapper, not an interpolated caller shell. For exact-session execution, reproduce only the fixed equivalent using Session.runCommand: a reviewed static argv sequence selecting UID 12001, a fixed cwd/allowlisted environment, and the fixed executable. The controller may perform a fixed ownership setup for the two scratch paths; it must not execute PDF parsing as root. Do not use the SDK's private `buildUserCommand()` implementation or allow caller-selected commands, cwd, user, executable, path or flags.
+
+References: [official SDK reference](https://vercel.com/docs/sandbox/sdk-reference), [published exact SDK package](https://registry.npmjs.org/@vercel/sandbox/3.6.1), [SDK source repository](https://github.com/vercel/sandbox/tree/main/packages/vercel-sandbox). The exact tarball, rather than the moving repository branch, established the Session/withResume behavior above.
+
+## Bounded fixed command
+
+Write the capture to a fixed path such as `/home/lrv-render/work/captured.pdf` and its strict manifest to `/home/lrv-render/work/validation-input.json`; permissions 0600, owner 12001. Use a fixed trusted Node command from the coordinator source, hashed/versioned with the processing policy. This is command logic, not a change to the approved image. It should:
+
+1. Verify Linux/x64, UID 12001, allowlisted environment and absence of credential-like variables. Verify input length/hash against the manifest using a bounded file read.
+2. Invoke `/usr/bin/python3 /opt/lrv-renderer/pdf_admission.py <fixed capture path>` through `execFileSync`, with a 15-second wall timeout, `maxBuffer: 16384`, and no shell. Parse its exact bounded JSON schema and bind measured hash/length to the bytes already checked by the coordinator.
+3. Invoke fixed `/usr/bin/pdftotext -layout <capture path> -` through `execFileSync`, with an eight-second timeout and `maxBuffer: 1048576`, to keep extracted text in a bounded pipe. Use the existing normalization from `worker.mjs` and verify every frozen expected text. Do not persist/log the extracted medical text or arbitrary stderr. This is stricter than the current worker's file-then-length-check: a file-length check after extraction does not prevent large temporary output while the native process is running.
+4. Rehash the capture and write a bounded validation receipt; never modify or rewrite the PDF. Stream the receipt and unchanged PDF back through the exact Session and bind their byte identity again in the coordinator.
+
+The existing `worker.mjs` uses precisely these native validator/text tools and limits. Factoring equivalent validation-only command logic into the coordinator is preferable to calling the complete rendering worker on recovery. An even smaller Python-only invocation can prove structural admission, but it cannot be represented as proof that the saved bytes still contain all frozen expected medical text.
+
+Use the existing VM boundary: approved image digest, one vCPU/2 GiB, deny-all DNS/network, no exposed ports/mounts/secrets, persistent false, 60-second VM timeout. Give the fixed Node command a total timeout around 30 seconds so native validator/text deadlines and controller read/capture/upload have explicit margin. Whole-VM shutdown remains mandatory in finally; command SIGKILL alone does not prove descendant cleanup. Inspect stopped state with `Sandbox.get({name, resume:false})`; assert no snapshot and preserve exact session identity in the safe receipt.
+
+[qpdf documentation](https://qpdf.readthedocs.io/en/stable/cli.html) states exit zero means no detected errors/warnings, while acknowledging that some problems are not detectable. The narrow parser supplies the stricter producer admission; qpdf corroborates structure. Neither proves medical correctness or universal absence of viewer vulnerabilities. No native host validator is needed for production when these checks run inside the approved VM.
+
+## Genuine test path
+
+Extend the owned-runtime pattern in `tests/diagnostics/pdf-jobs-disposable.py` and `pdf-jobs-local.ts`, without relaxing their Docker project/workdir identity checks, migration hash checks, temporary private logs, local-only API assertions or cleanup. The current jobs harness intentionally captures a small marker-only PDF to prove the journal, not PDF registration. It must not become the new valid-artifact fixture.
+
+New coverage should create real local Auth STAFF/DVM/ADMIN actors, finalize a real manual panel with zero/qualitative findings, freeze its generation manifest/history through real RPCs and select the exact approved image/settings/validator policy only in the owned disposable database. Generate one PDF from that actual DB-frozen manifest. On native amd64 CI, reuse the restricted Docker image proof as a local runtime adapter; on this arm64 Mac, use an explicitly bounded synthetic native Sandbox proof if authorized. Do not represent QEMU as native sandbox parity or use hosted clinical records.
+
+Capture the actual generated bytes once via the real service RPC. Then instantiate a fresh coordinator whose generation adapter throws if called. Recover the exact journal bytes, invoke validator-only processing, reserve a unique private Storage path, upload with upsert false, download actual bytes, compare length/hash, and register under the current fenced attempt. The PDF and validation hashes must remain identical across capture, recovery, private upload, readback and registration. Confirm real authenticated staff access according to the new read contract, anonymous/wrong-patient denial, and no outbox or provider call.
+
+Inject lost acknowledgements after each irreversible boundary: byte capture, upload, and registration. Retry from a new coordinator instance and prove the same artifact/capture identity and stored bytes are recovered; count generation calls (one total) separately from validator calls (revalidation permitted). Assert exact retry receipts, changed-input conflicts, policy/actor offboarding rejection, stale fencing after waits, Storage mismatch/overwrite rejection, safe handling of an existing identical object, and rejection of a different object at the reserved path. Restore clone coverage must show the journal can recover the original PDF when a prior upload/registration receipt is unavailable.
+
+Use malformed/active-content PDFs from `pdf_admission_test.py` for rejection; they must remain unregistered/unavailable. For semantic substitution, use another structurally valid PDF with a different manifest text and recomputed byte hash so the failure specifically exercises frozen expected-text binding. Simulated validator stdout cannot count as genuine validation. VM/Storage integration proof should use the actual approved tools on actual saved bytes, while focused unit tests may mock the adapter to exercise coordinator state transitions.
+
+Keep worker policy/scheduling and release eligibility off outside the disposable proof. Backend artifact registration is not clinician PDF review or external release approval.

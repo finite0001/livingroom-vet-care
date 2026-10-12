@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-10-12T04:46:33.559Z",
+  "runtime": "native-vercel-sandbox",
+  "checks": 45,
+  "generated": 1,
+  "validated": 3,
+  "sha256": "55266e5bea8c2d811870b2e53fabba1ad243adc7f216655002e2ee1f757b4fcd",
+  "byte_length": 29945,
+  "page_count": 1,
+  "lost_acknowledgements": [
+    "preparation",
+    "capture",
+    "upload",
+    "registration"
+  ],
+  "owner_handoff": true,
+  "original_capture_actor_preserved": true,
+  "observed_lock_checks": 8,
+  "populated_restore_checks": 7,
+  "restored_storage_body_backup_claimed": false,
+  "private_storage_http_roundtrip": true,
+  "staff_download_denied": true,
+  "object_loss_reported_unavailable": true,
+  "export_eligible": false,
+  "provider_requests": 0,
+  "hosted_sql_writes": 0,
+  "owned_local_runtime_removed_by_launcher": true
+}

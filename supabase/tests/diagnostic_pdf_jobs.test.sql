@@ -61,7 +61,7 @@ select is(read_diagnostic_pdf_job('b3100000-0000-4000-8000-000000000053',(select
 reset role;select is((select count(*)::integer from diagnostic_pdf_jobs),2,'One job per immutable reviewed version');
 select throws_ok($$update diagnostic_pdf_jobs set snapshot='{}' where id='b3100000-0000-4000-8000-000000000051'$$,'23514','PDF source evidence is immutable','Privileged source overwrite denied');
 select throws_ok($$delete from diagnostic_pdf_captures$$,'23514','Diagnostic evidence is immutable','Byte captures cannot be deleted');
-select throws_ok($$truncate diagnostic_pdf_captures$$,'23514','Diagnostic evidence is immutable','Truncate cannot erase byte evidence');
+select throws_ok($$truncate diagnostic_pdf_captures cascade$$,'23514','Diagnostic evidence is immutable','Truncate cannot erase byte evidence');
 select set_config('request.jwt.claims','{"role":"service_role"}',true);set local role service_role;
 insert into data select 'claim2',claim_diagnostic_pdf_job('b3100000-0000-4000-8000-000000000053','b3100000-0000-4000-8000-000000000062');
 reset role;update diagnostic_pdf_jobs set lease_until=clock_timestamp()-interval '1 second' where id='b3100000-0000-4000-8000-000000000053';set local role service_role;
