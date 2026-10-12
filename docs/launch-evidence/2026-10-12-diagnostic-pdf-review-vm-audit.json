@@ -1,0 +1,153 @@
+{
+  "checked_at": "2026-10-12T16:04:34.696Z",
+  "count": 21,
+  "sandboxes": [
+    {
+      "name": "lrv-pdf-f1c681e6-e06b-4d55-9806-adc286b10761",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-eaac4a3e-21b1-42b1-ad0a-309e5849e8fc",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-e10bd7a3-cecd-4acb-999c-e737e7fc7622",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-dffbfa39-0955-49ca-b9c0-f160ed98008d",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-dc20e9bb-28be-4ef6-82fc-a957dd397fca",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-d006c80c-dc83-4147-ad28-ccdf866091f3",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-c20e4a18-af23-41c0-ba8b-eead179e100e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-c191e003-1a8d-4483-b35e-cb9e217a3d03",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-bc542567-1352-4359-9fbb-e2f186b0e4d8",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-b0625807-ca7e-4267-990b-6c10ffafdd88",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-910fbad8-e5ea-4859-9e1c-35710367ca1f",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-8770d9e4-4e24-4f75-9744-7ee49f1ccc90",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-802ff29c-c994-427b-880f-46c744251ec6",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-6ffb30b4-c352-437a-abc9-abd6ddc21d58",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-6d9d0a26-b542-47f6-b205-222c169edd3d",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-2a251e08-ed63-460d-9d6d-02a859b341b6",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-23373eb0-0cdd-4f2b-aa5f-12f30d6b7915",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-16fa9874-6eb2-4544-a484-67decd6bff54",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-122a0359-1796-444c-8504-15402f3d26e1",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-0ebf37df-f587-4b63-812a-46da1da690de",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-0ea96104-2637-4b2c-bcae-6945a3366ef1",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    }
+  ]
+}

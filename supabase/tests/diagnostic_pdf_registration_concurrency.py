@@ -168,7 +168,7 @@ if a.mode == "locks":
 else:
     assert claim["state"] == "stored"
     original = select_json(
-        f"jsonb_build_object('sha',encode(sha256(bytes),'hex'),'base64',replace(encode(bytes,'base64'),E'\\n',''),'manifest',(select to_jsonb(m) from diagnostic_pdf_manifests m where job_id='{job}'),'artifact',(select to_jsonb(x) from diagnostic_pdf_artifacts x where job_id='{job}'),'attempts',(select jsonb_agg(to_jsonb(t) order by fence) from diagnostic_pdf_processing_attempts t where job_id='{job}'),'intent',(select to_jsonb(i) from diagnostic_pdf_upload_intents i where job_id='{job}')) from diagnostic_pdf_captures where job_id='{job}'"
+        f"jsonb_build_object('sha',encode(sha256(bytes),'hex'),'base64',replace(encode(bytes,'base64'),E'\\n',''),'manifest',(select to_jsonb(m) from diagnostic_pdf_manifests m where job_id='{job}'),'artifact',(select to_jsonb(x) from diagnostic_pdf_artifacts x where job_id='{job}'),'attempts',(select jsonb_agg(to_jsonb(t) order by fence) from diagnostic_pdf_processing_attempts t where job_id='{job}'),'intent',(select to_jsonb(i) from diagnostic_pdf_upload_intents i where job_id='{job}'),'downloads',(select jsonb_agg(to_jsonb(d) order by id) from diagnostic_pdf_download_authorities d where job_id='{job}'),'responses',(select jsonb_agg(to_jsonb(r) order by authority_id) from diagnostic_pdf_download_responses r join diagnostic_pdf_download_authorities d on d.id=r.authority_id where d.job_id='{job}')) from diagnostic_pdf_captures where job_id='{job}'"
     )
     dump = subprocess.run(
         [
@@ -212,7 +212,7 @@ else:
         )
         recovered = json.loads(
             sql(
-                f"select jsonb_build_object('sha',encode(sha256(bytes),'hex'),'base64',replace(encode(bytes,'base64'),E'\\n',''),'manifest',(select to_jsonb(m) from diagnostic_pdf_manifests m where job_id='{job}'),'artifact',(select to_jsonb(x) from diagnostic_pdf_artifacts x where job_id='{job}'),'attempts',(select jsonb_agg(to_jsonb(t) order by fence) from diagnostic_pdf_processing_attempts t where job_id='{job}'),'intent',(select to_jsonb(i) from diagnostic_pdf_upload_intents i where job_id='{job}')) from diagnostic_pdf_captures where job_id='{job}';",
+                f"select jsonb_build_object('sha',encode(sha256(bytes),'hex'),'base64',replace(encode(bytes,'base64'),E'\\n',''),'manifest',(select to_jsonb(m) from diagnostic_pdf_manifests m where job_id='{job}'),'artifact',(select to_jsonb(x) from diagnostic_pdf_artifacts x where job_id='{job}'),'attempts',(select jsonb_agg(to_jsonb(t) order by fence) from diagnostic_pdf_processing_attempts t where job_id='{job}'),'intent',(select to_jsonb(i) from diagnostic_pdf_upload_intents i where job_id='{job}'),'downloads',(select jsonb_agg(to_jsonb(d) order by id) from diagnostic_pdf_download_authorities d where job_id='{job}'),'responses',(select jsonb_agg(to_jsonb(r) order by authority_id) from diagnostic_pdf_download_responses r join diagnostic_pdf_download_authorities d on d.id=r.authority_id where d.job_id='{job}')) from diagnostic_pdf_captures where job_id='{job}';",
                 command,
             )
         )

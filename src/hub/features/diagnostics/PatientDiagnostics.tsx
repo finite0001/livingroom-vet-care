@@ -25,6 +25,7 @@ import {
 } from "./model";
 import { NumericFindingInput } from "./NumericFindingInput";
 import { DiagnosticTrends } from "./DiagnosticTrends";
+import { DiagnosticPdfReview } from "./pdf-jobs/DiagnosticPdfReview";
 interface Props {
   petId: string;
   disabled: boolean;
@@ -106,7 +107,7 @@ function Workspace({
     Boolean(pending) ||
     Boolean(
       draft &&
-      (JSON.stringify(draft) !== baseline || review || reason || attest),
+        (JSON.stringify(draft) !== baseline || review || reason || attest),
     );
   useEffect(() => {
     onDirtyChange(dirty);
@@ -509,7 +510,7 @@ function Workspace({
                       {d.current && d.panel.draft
                         ? " · Correction draft pending"
                         : ""}{" "}
-                      · PDF unavailable
+                      · Open the report for PDF status
                     </p>
                   </div>
                   <Button
@@ -1025,10 +1026,10 @@ function Workspace({
                   {current.current.correction_reason && (
                     <p>Correction: {current.current.correction_reason}</p>
                   )}
-                  <p>
-                    PDF unavailable · Excluded from outgoing record packages
-                    until verified PDF support is ready.
-                  </p>
+                  <DiagnosticPdfReview
+                    jobId={current.current.id}
+                    petId={petId}
+                  />
                   {current.current.original_current_available === false && (
                     <p role="alert">
                       The original linked at review is no longer available at
@@ -1080,6 +1081,11 @@ function Workspace({
                         <p className="break-all text-xs">
                           Source fingerprint: {v.source_hash}
                         </p>
+                        <DiagnosticPdfReview
+                          jobId={v.id}
+                          petId={petId}
+                          loadOnDemand
+                        />
                       </details>
                     ))}
                   {history.hasNextPage && (
