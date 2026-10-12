@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"]
+  },
+  "include": [
+    "services/diagnostic-renderer/*.ts",
+    "scripts/diagnostics/*.ts",
+    "tests/diagnostics/renderer-template.test.ts",
+    "tests/diagnostics/renderer-fixture.ts"
+  ]
+}

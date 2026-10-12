@@ -1,0 +1,123 @@
+{
+  "pr": 240,
+  "approved_head": "e7777f0455293c5d2ba0cb56aa36fa9090340efa",
+  "merge": "14be15205456af9ce98930b4d62b5c4ee3adff09",
+  "merged_at": "2026-10-11T21:41:47Z",
+  "tree": "c814fb7df76f070b78f6d4260c1c346313796a07",
+  "migration": "20261011203250_diagnostic_pdf_jobs.sql",
+  "migration_sha256": "c91203146119b8e5bc5689b58e4cc32433c9f07343eab61caeb33da0cda24543",
+  "migrations_each": 175,
+  "staging_rollback": {
+    "project": "kothoqicubowyhwfsrte",
+    "migrations": {
+      "count": 175,
+      "latest": "20261011203250"
+    },
+    "checks": 46,
+    "canonical_function_bodies": 14,
+    "private_rls_ledgers_and_policy": 6,
+    "all_synthetic_writes_rolled_back": true,
+    "baseline_unchanged": true,
+    "worker_policy": "empty/off",
+    "provider_requests": 0,
+    "proof": [
+      {
+        "proof": {
+          "checks": 46,
+          "provider_requests": 0,
+          "synthetic_transaction": true
+        }
+      }
+    ]
+  },
+  "primary_rollback": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migrations": {
+      "count": 175,
+      "latest": "20261011203250"
+    },
+    "checks": 46,
+    "canonical_function_bodies": 14,
+    "private_rls_ledgers_and_policy": 6,
+    "all_synthetic_writes_rolled_back": true,
+    "baseline_unchanged": true,
+    "worker_policy": "empty/off",
+    "provider_requests": 0,
+    "proof": [
+      {
+        "proof": {
+          "checks": 46,
+          "provider_requests": 0,
+          "synthetic_transaction": true
+        }
+      }
+    ]
+  },
+  "genuine_deployed_staging_checks": 60,
+  "staging_cleanup": {
+    "active_pets": 0,
+    "active_profiles": 0,
+    "captures": 1,
+    "jobs": 3,
+    "open_sessions": 0
+  },
+  "staging_state": {
+    "attempts": 1,
+    "captures": 1,
+    "disclosure_policies": 0,
+    "jobs": 3,
+    "outbox": 0,
+    "outgoing_attempts": 0,
+    "payment_profiles": 1,
+    "release_policies": 0,
+    "worker_policies": 0
+  },
+  "primary_state": {
+    "attempts": 0,
+    "captures": 0,
+    "disclosure_policies": 0,
+    "jobs": 0,
+    "outbox": 3,
+    "outgoing_attempts": 3,
+    "payment_profiles": 0,
+    "release_policies": 0,
+    "worker_policies": 0
+  },
+  "frontend_pair": {
+    "production": "https://thelivingroom.vet",
+    "entry": "/assets/index-Dd1CZU7O.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "staging": "https://livingroom-vet-care-daves-projects-e0da43ba.vercel.app",
+    "staging_entry": "/assets/index-BQYSMRvl.js",
+    "staging_backend": "kothoqicubowyhwfsrte",
+    "fresh_public_signin_page": true,
+    "page_errors": 0,
+    "owner_session": false
+  },
+  "deployments": {
+    "production": {
+      "id": "dpl_9dkasfFavVqhJsiY6PHYbqV268Hp",
+      "url": "livingroom-vet-care-7mg3g46hj-daves-projects-e0da43ba.vercel.app",
+      "state": "READY",
+      "build_seconds": 111.739
+    },
+    "staging": {
+      "id": "dpl_Fgcvk2G4CPBVbBEKpp7WMXXARi7D",
+      "url": "livingroom-vet-care-ia33hg1t0-daves-projects-e0da43ba.vercel.app",
+      "state": "READY"
+    }
+  },
+  "advisors_errors_each": 0,
+  "production_deployment_error_logs": 0,
+  "captures_validated": false,
+  "captures_uploaded": false,
+  "captures_exportable": false,
+  "worker_policy": "empty/off",
+  "provider_requests": 0,
+  "edge_functions_changed": false,
+  "owner_session_verified": false,
+  "helper_hashes": {
+    "scripts/rollout/pdf-jobs-hosted-probe.py": "18789caab16455e1a8c2204a60134b1334dfd9d104005e3860ff60ae3e71b5c0",
+    "scripts/rollout/pdf-jobs-staging-auth.ts": "c1c8568640ec890a6946966a055aff9a825781d2f6879856a1001800778bbde9"
+  }
+}

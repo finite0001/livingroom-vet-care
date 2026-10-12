@@ -1,0 +1,316 @@
+{
+  "recorded_at": "2026-10-11T23:42:18.742559+00:00",
+  "package": "3B2A",
+  "baseline_merge": "14be15205456af9ce98930b4d62b5c4ee3adff09",
+  "clinical_worker_activated": false,
+  "patient_record_pdf_available": false,
+  "hosted_migrations_added": 0,
+  "image": {
+    "image": "lrv-diagnostic-pdf@sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0",
+    "inspection": {
+      "id": "image_3ZTibI9tnMSnmpn9ztBBnfMTMnZC",
+      "manifestDigest": "sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0",
+      "status": "ready",
+      "sizeInBytes": 926216515,
+      "arch": "amd64",
+      "platform": "linux"
+    }
+  },
+  "image_inputs": {
+    "project": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "team": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+    "repository": "lrv-diagnostic-pdf",
+    "tag": "proof-20261011-b91e6453a4cd",
+    "source_sha256": "b91e6453a4cd999706dfa3c8862441e8c063614c361235c5257d2f9d6ed4ece1",
+    "file_hashes": {
+      "Dockerfile": "039095c47681fa4897f81ada7c4be9d9cd059b78d45ff8925d3c4ff8d59961a3",
+      "worker.mjs": "9cc103aa331e71e6160ba92b705152d6da514bc95a2a66333b535fbfd3b6fd5f",
+      "pdf_admission.py": "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
+      "package.json": "754474937f02bb1bed089639a58c6ffdd9aed0fdeaf5deb6d5e0fdea3b968151",
+      "package-lock.json": "527e3e1f0e1dc729e07616f1160aeca4a9bae341d0e65e3a97eac2db61210314"
+    }
+  },
+  "binary_provenance": {
+    "binaries": {
+      "/usr/bin/qpdf": "10fc302c4ca9860f24b8d2cb7f8a4cc454ba59d4a91e7a8e40f6b2c229486df7",
+      "/usr/bin/pdftotext": "88263e2333fa712d6eadfc69dd2daf826792a67abb14f4d2110673d5f195b154",
+      "/usr/bin/python3": "a92f0f95e883390c7256b2e441484aac06b1002dbe1d924141a77c8d82f96223",
+      "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d"
+    },
+    "packages": "fonts-noto-core\t20201225-2\npoppler-utils\t24.02.0-1ubuntu9.10\nqpdf\t11.9.0-1.1ubuntu0.1\nsudo\t1.9.15p5-3ubuntu5.24.04.4\n"
+  },
+  "native_report": {
+    "receipt": {
+      "version": 1,
+      "job_id": "b3100000-0000-4000-8000-000000000010",
+      "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "snapshot_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "html_sha256": "f707931ff6cdf2d216948eede8c4b6c6018847f110f54d7df5efbb0917319341",
+      "validation": {
+        "sha256": "b085af2c0f1823e7f2098769f6258190c508bee6cb7332d5321b8673e2e4c585",
+        "byte_length": 112710,
+        "page_count": 22,
+        "object_count": 67,
+        "stream_count": 28,
+        "inflated_bytes": 1290340,
+        "admission": "chromium-classic-pdf1.4-v1",
+        "qpdf_clean": true
+      },
+      "node": "v24.20.0",
+      "chromium": "153.0.8010.12",
+      "browser_sandbox": "Sandbox Status\nLayer 1 Sandbox\tNamespace\nPID namespaces\tYes\nNetwork namespaces\tYes\nSeccomp-BPF sandbox\tYes\nSeccomp-BPF sandbox supports TSYNC\tYes\nPtrace Protection with Yama LSM (Broker)\tNo\nPtrace Protection with Yama LSM (Non-broker)\tNo\n\nYou are adequately sandboxed.",
+      "uid": 12001,
+      "credentials_absent": true,
+      "sudo_denied": true,
+      "network": {
+        "dns_denied": true,
+        "tcp_denied": true,
+        "metadata_denied": true
+      },
+      "semantic_text_checks": 205
+    },
+    "runtime": {
+      "name": "lrv-pdf-5ea183d3-3f18-4b1c-b615-6640cc925dce",
+      "image": "lrv-diagnostic-pdf@sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0",
+      "network_policy": "deny-all",
+      "persistent": false,
+      "ports": [],
+      "vcpus": 1,
+      "timeout_ms": 120000,
+      "status": "stopped",
+      "snapshot_created": false
+    },
+    "independent_validation": {
+      "sha256": "b085af2c0f1823e7f2098769f6258190c508bee6cb7332d5321b8673e2e4c585",
+      "byte_length": 112710,
+      "page_count": 22,
+      "object_count": 67,
+      "stream_count": 28,
+      "inflated_bytes": 1290340,
+      "admission": "chromium-classic-pdf1.4-v1",
+      "qpdf_clean": true
+    },
+    "elapsed_ms": 9982,
+    "clinical_worker_activated": false
+  },
+  "lifecycle": {
+    "image": "lrv-diagnostic-pdf@sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0",
+    "name": "lrv-pdf-lifecycle-37468c64-2111-445e-be18-7eda70915b9e",
+    "whole_vm_deadline_ms": 15000,
+    "detached_descendant_verified_before_expiry": true,
+    "status": "stopped",
+    "persistent": false,
+    "snapshot_created": false,
+    "clinical_input": false
+  },
+  "owned_vm_audit": [
+    {
+      "name": "lrv-pdf-lifecycle-37468c64-2111-445e-be18-7eda70915b9e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-5ea183d3-3f18-4b1c-b615-6640cc925dce",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-lifecycle-66f0a0cf-2e15-4d91-aa7d-22a0f58102e6",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-55bf79da-e131-41bc-a880-1b4e59f0cc3b",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-lifecycle-1e2fda66-e4df-4d30-99af-544408be97fd",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-lifecycle-11f88185-9393-4c96-9510-3169a1fad47e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-4901741c-1708-4128-82f5-0ffaa9b8c28a",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-853dff8d-e425-4622-9517-fcd839ad3e62",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-37d95c15-5a2e-4493-97c9-7518c66616c1",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-63d39713-b660-473e-a8d0-8105f88cf31e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-a706ef9f-5395-4fe6-9331-55fa32f94b9e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-7da02415-6f3d-405c-8ae3-59d1407e848f",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-fac85b0a-d1f7-4c50-9ef9-bad383105675",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-adfe8ff0-810f-4349-ab94-873df628c051",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-af2025b2-3fc4-4930-a4c3-f7989c3d2106",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "vcpus": 1,
+      "memory_mb": 2048,
+      "network_policy": "deny-all"
+    }
+  ],
+  "candidate_cleanup": {
+    "deleted": [
+      {
+        "id": "image_yBKOVCzDhtuT5k0A12u6oqGf0ugP",
+        "kind": "index",
+        "deleted": true
+      },
+      {
+        "id": "image_KulK5GbGPZddyRaJ3uneyvnMTOMW",
+        "kind": "manifest",
+        "deleted": true
+      },
+      {
+        "id": "image_9K9LhM2RG4Osa5IaX7PZwarasnVg",
+        "kind": "index",
+        "deleted": true
+      },
+      {
+        "id": "image_ZWvA8hLiJK70HI1JwBujskRjGqlk",
+        "kind": "manifest",
+        "deleted": true
+      },
+      {
+        "id": "image_zKdSd5OxKoXMbAUWoTRg1njNMdiy",
+        "kind": "index",
+        "deleted": true
+      },
+      {
+        "id": "image_Z5NqoTSHQrF8qdHR6Xc1ZEtTvQvR",
+        "kind": "manifest",
+        "deleted": true
+      },
+      {
+        "id": "image_XTiJM33pn5MhU6IaLjBgPDfoBTCT",
+        "kind": "index",
+        "deleted": true
+      },
+      {
+        "id": "image_1GCG4bldR7Fn5u6fRWHffi7RCETb",
+        "kind": "manifest",
+        "deleted": true
+      }
+    ],
+    "retained": [
+      "image_3ZTibI9tnMSnmpn9ztBBnfMTMnZC",
+      "image_mOIhGbGQTPmzZ2N9yqIfdcegNiFa"
+    ]
+  },
+  "local_checks": {
+    "unit_tests": 1320,
+    "pdf_admission_tests": 20,
+    "typecheck": "passed",
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "build": "passed",
+    "audit": {
+      "existing_moderate": 5,
+      "existing_high": 13,
+      "critical": 0
+    }
+  },
+  "source_hashes": {
+    "services/diagnostic-renderer/template.ts": "683ae492a698f06eabcdca24d7023c96c60ae5d8bb311fa9783b41b2a1f9b5d4",
+    "services/diagnostic-renderer/sandbox.ts": "d32bf4f95bba7b82466d38225423bd95a3c2bc5838b76e88eb9da34c9c57f384",
+    "scripts/diagnostics/generate-synthetic-input.ts": "4619967451899f7bb6e9501894b094e09373cdc7fa80567205e2c58f343dca3f",
+    "scripts/diagnostics/native-runtime-audit.ts": "3be7056b85a7a9a8422f4f2bf6bedf26f25fc9ae19a8cae4de72edecfe2289ce",
+    "scripts/diagnostics/native-lifecycle-proof.ts": "8ecbdad5d3e70e2985398b2b055af4d3c3eae4e3f5084b2a436f964b1b4c4300",
+    "scripts/diagnostics/native-renderer-proof.ts": "e2a2715abd2fafcdff0fb69c6ed36c5b48d7a10184a39a6a8575d4e62be1f5b7",
+    "tests/diagnostics/renderer-template.test.ts": "e6e6194c2c6e75758da1152d1a4ba84300014fc909846402a136c00212c5107c",
+    "tests/diagnostics/renderer-fixture.ts": "4e04558d4519850fab1aa3f3c6d065608b4a360a2f9ca10fc57ee3bd95c15a5a",
+    "services/diagnostic-renderer/seccomp-profile.json": "fbaed3a21f2946814ea58e8e19e8b53c8720c8c416bfa0b9d80f72e0ccf1d69d",
+    "tests/diagnostics/fixtures/chromium-16-page.pdf": "b6d040504dce9714d059257ce4496853f1d122132602c2c7c8932e197358f771"
+  }
+}
