@@ -1,0 +1,48 @@
+{
+  "migration": "20261013214300_catalog_patient_eligibility_lock.sql",
+  "sha256": "b17c32aa14d54966fc56f598591272fcf6900e9a0abccee166e94577f305332c",
+  "original180_unchanged": true,
+  "before": {
+    "observed_care_lock_queue": true,
+    "dog_only_booking_after_committed_cat_edit": "incorrectly_succeeded",
+    "expected_regression_failure": true
+  },
+  "after": {
+    "sql_files": 147,
+    "sql_assertions": 5990,
+    "auth_checks": 59,
+    "observed_lock_queues": 7,
+    "browser_checks": 20,
+    "populated_restore_checks": 9,
+    "provider_requests": 0,
+    "owned_runtime_removed": true
+  },
+  "lint": {
+    "errors": 0,
+    "existing_warnings": 4
+  },
+  "typecheck": "pass",
+  "hosted_staging": {
+    "project": "kothoqicubowyhwfsrte",
+    "migration": "20261013181721_appointment_catalog_and_bindings.sql",
+    "migration_sha256": "8407cccde4d7f39c84a8515677d54f2c79213c4c185c512dfaadc173fd1fe7ab",
+    "migrations": 181,
+    "corrective_migration": "20261013214300_catalog_patient_eligibility_lock.sql",
+    "corrective_sha256": "b17c32aa14d54966fc56f598591272fcf6900e9a0abccee166e94577f305332c",
+    "pending": 0,
+    "protected_backup": true,
+    "baseline_unchanged": true,
+    "state": {
+      "disclosure": 0,
+      "outbox": 0,
+      "payment_profiles": 1,
+      "release": 0,
+      "worker": 0
+    },
+    "runtime_policy": "empty/off",
+    "skip_vault": true,
+    "legacy_writes": 0
+  },
+  "primary": "not_yet_applied",
+  "merge": "not_yet_performed"
+}

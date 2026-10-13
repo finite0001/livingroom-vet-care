@@ -173,6 +173,46 @@ async function waiters(number: number) {
   );
   observed++;
 }
+async function heldPatientEdit(person: Actor, client: string, pet: string) {
+  const marker = "owned_species_edit_" + randomUUID().replaceAll("-", "");
+  const transaction = spawn(
+    "docker",
+    [
+      "exec",
+      "-i",
+      container,
+      "psql",
+      "-X",
+      "-qAt",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-v",
+      "ON_ERROR_STOP=1",
+    ],
+    { stdio: ["pipe", "ignore", "ignore"] },
+  );
+  transaction.stdin.write(
+    `set application_name='${marker}';begin;set local role authenticated;set local request.jwt.claims='{"sub":"${person.id}","role":"authenticated"}';select save_patient('${pet}','${client}',1,'Synthetic Catalog Dog','Cat','Mixed',null,'unknown',null,'unknown','unknown',null,null,null);\n`,
+  );
+  await waitUntil(
+    () =>
+      sql(
+        `select count(*) from pg_stat_activity where application_name='${marker}' and state='idle in transaction';`,
+      ) === "1",
+    "owned pending patient species edit",
+  );
+  return async () => {
+    const exited = new Promise<void>((resolve, reject) =>
+      transaction.on("exit", (code) =>
+        code === 0 ? resolve() : reject(new Error("Owned patient edit failed")),
+      ),
+    );
+    transaction.stdin.end("commit;\n");
+    await exited;
+  };
+}
 let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null,
   vite: ReturnType<typeof spawn> | null = null;
 try {
@@ -314,6 +354,38 @@ try {
     p_expected_version: null,
     p_values: { ...values, scheduled_at: time },
   });
+  // A real save_patient edit holds the care gate while the booking queues.
+  // Species must be read after that gate, rather than from the old committed row.
+  const speciesArgs = args("2030-01-11T16:00:00Z");
+  const commitSpecies = await heldPatientEdit(staff, client, pet);
+  const speciesBooking = staff.db
+    .rpc("save_catalog_appointment", speciesArgs)
+    .then((value) => value);
+  try {
+    await waiters(1);
+  } finally {
+    await commitSpecies();
+  }
+  check((await speciesBooking).error?.code, "23514");
+  check(
+    sql(
+      `select count(*) from appointments where pet_id='${pet}' and scheduled_at='2030-01-11T16:00:00Z';`,
+    ),
+    "0",
+  );
+  check(
+    sql(
+      `select count(*) from appointment_booking_actions where id='${speciesArgs.p_action_id}';`,
+    ),
+    "0",
+  );
+  check(
+    sql(
+      `select count(*) from appointment_catalog_bindings where snapshot#>>'{fields,pet_id}'='${pet}';`,
+    ),
+    "0",
+  );
+  sql(`update pets set species='Dog' where id='${pet}';`);
   await denied(
     staff.db,
     "save_catalog_appointment",
@@ -474,10 +546,19 @@ try {
     ),
   );
   const originalAddress = "Synthetic original housecall destination";
-  const originalHousecall = bookingReceiptSchema.parse(await rpc(staff.db, "save_catalog_appointment", {
-    ...args("2030-01-06T16:00:00Z"), p_values: { ...values, type_version_id: current.published!.id,
-      resource_version_id: renamedRoom.published!.id, scheduled_at: "2030-01-06T16:00:00Z", visit_type: "housecall", address_snapshot: originalAddress }
-  }));
+  const originalHousecall = bookingReceiptSchema.parse(
+    await rpc(staff.db, "save_catalog_appointment", {
+      ...args("2030-01-06T16:00:00Z"),
+      p_values: {
+        ...values,
+        type_version_id: current.published!.id,
+        resource_version_id: renamedRoom.published!.id,
+        scheduled_at: "2030-01-06T16:00:00Z",
+        visit_type: "housecall",
+        address_snapshot: originalAddress,
+      },
+    }),
+  );
   // Real browser data: only intercept one successful response to simulate lost acknowledgment.
   vite = spawn(
     process.execPath,
@@ -526,11 +607,12 @@ try {
         ? route.continue()
         : route.abort();
     });
-    context.setDefaultTimeout(60000); context.setDefaultNavigationTimeout(90000);
+    context.setDefaultTimeout(60000);
+    context.setDefaultNavigationTimeout(90000);
     const page = await context.newPage();
-    await page.goto(
-      `http://127.0.0.1:47281/hub/schedule`, { waitUntil: "domcontentloaded" },
-    );
+    await page.goto(`http://127.0.0.1:47281/hub/schedule`, {
+      waitUntil: "domcontentloaded",
+    });
     await page
       .getByRole("button", { name: "Book appointment", exact: true })
       .click();
@@ -575,10 +657,22 @@ try {
     });
     if (width === 1280) {
       sql(`update profiles set is_active=false where id='${staff.id}';`);
-      await page.getByRole("button", { name: "Retry unchanged review", exact: true }).click();
-      await page.getByRole("alert").filter({ hasText: "Your current account cannot make this change" }).waitFor();
-      check(await page.locator("#booking-duration").isDisabled(), true); browserChecks++;
-      check(await page.getByRole("button", { name: "Check saved action", exact: true }).count(), 1); browserChecks++;
+      await page
+        .getByRole("button", { name: "Retry unchanged review", exact: true })
+        .click();
+      await page
+        .getByRole("alert")
+        .filter({ hasText: "Your current account cannot make this change" })
+        .waitFor();
+      check(await page.locator("#booking-duration").isDisabled(), true);
+      browserChecks++;
+      check(
+        await page
+          .getByRole("button", { name: "Check saved action", exact: true })
+          .count(),
+        1,
+      );
+      browserChecks++;
       sql(`update profiles set is_active=true where id='${staff.id}';`);
     }
     await page
@@ -594,7 +688,9 @@ try {
       true,
     );
     browserChecks++;
-    await page.goto("http://127.0.0.1:47281/hub/tools/appointment-catalog", { waitUntil: "domcontentloaded" });
+    await page.goto("http://127.0.0.1:47281/hub/tools/appointment-catalog", {
+      waitUntil: "domcontentloaded",
+    });
     await page.getByRole("heading", { name: type.name, exact: true }).waitFor();
     check(
       await page
@@ -608,22 +704,61 @@ try {
       fullPage: true,
     });
     if (width === 390) {
-      await page.goto("http://127.0.0.1:47281/hub/schedule?date=2030-01-06", { waitUntil: "domcontentloaded" });
+      await page.goto("http://127.0.0.1:47281/hub/schedule?date=2030-01-06", {
+        waitUntil: "domcontentloaded",
+      });
       await page.getByRole("button", { name: "Edit", exact: true }).click();
-      await page.locator("#booking-catalog-type").selectOption(current.published!.id);
+      await page
+        .locator("#booking-catalog-type")
+        .selectOption(current.published!.id);
       await page.locator("#booking-type").selectOption("clinic");
-      check(await page.getByRole("button", { name: "Save appointment", exact: true }).isDisabled(), true); browserChecks++;
-      await page.getByRole("button", { name: "Restore original reviewed settings", exact: true }).click();
-      check(await page.locator("#booking-address").inputValue(), originalAddress); browserChecks++;
-      check(await page.locator("#booking-type").inputValue(), "housecall"); browserChecks++;
-      await page.locator("#booking-catalog-type").selectOption(current.published!.id);
+      check(
+        await page
+          .getByRole("button", { name: "Save appointment", exact: true })
+          .isDisabled(),
+        true,
+      );
+      browserChecks++;
+      await page
+        .getByRole("button", {
+          name: "Restore original reviewed settings",
+          exact: true,
+        })
+        .click();
+      check(
+        await page.locator("#booking-address").inputValue(),
+        originalAddress,
+      );
+      browserChecks++;
+      check(await page.locator("#booking-type").inputValue(), "housecall");
+      browserChecks++;
+      await page
+        .locator("#booking-catalog-type")
+        .selectOption(current.published!.id);
       await page.locator("#booking-client").selectOption(client);
-      check(await page.locator("#booking-pet").isDisabled(), false); browserChecks++;
-      await page.getByRole("button", { name: "Restore original reviewed settings", exact: true }).click();
-      await page.locator("#booking-notes").fill("Synthetic unchanged frozen review");
-      await page.getByRole("button", { name: "Save appointment", exact: true }).click();
+      check(await page.locator("#booking-pet").isDisabled(), false);
+      browserChecks++;
+      await page
+        .getByRole("button", {
+          name: "Restore original reviewed settings",
+          exact: true,
+        })
+        .click();
+      await page
+        .locator("#booking-notes")
+        .fill("Synthetic unchanged frozen review");
+      await page
+        .getByRole("button", { name: "Save appointment", exact: true })
+        .click();
       await page.getByRole("dialog").waitFor({ state: "hidden" });
-      check(bindingSchema.parse(await rpc(staff.db,"read_appointment_catalog_binding",{p_id:originalHousecall.appointment.id})),originalHousecall.binding);
+      check(
+        bindingSchema.parse(
+          await rpc(staff.db, "read_appointment_catalog_binding", {
+            p_id: originalHousecall.appointment.id,
+          }),
+        ),
+        originalHousecall.binding,
+      );
     }
     await context.close();
   }
@@ -641,9 +776,12 @@ try {
       ? route.continue()
       : route.abort(),
   );
-  context.setDefaultTimeout(60000); context.setDefaultNavigationTimeout(90000);
+  context.setDefaultTimeout(60000);
+  context.setDefaultNavigationTimeout(90000);
   const page = await context.newPage();
-  await page.goto("http://127.0.0.1:47281/hub/tools/appointment-catalog", { waitUntil: "domcontentloaded" });
+  await page.goto("http://127.0.0.1:47281/hub/tools/appointment-catalog", {
+    waitUntil: "domcontentloaded",
+  });
   await page.getByRole("button", { name: "New draft", exact: true }).click();
   await page.locator("#catalog-name").fill("Synthetic browser type");
   await page.locator("#catalog-species").fill("Dog");
@@ -684,14 +822,12 @@ try {
   await page.getByRole("dialog").waitFor({ state: "hidden" });
   check(draftLost, true);
   browserChecks++;
-  const card = page
-    .getByRole("listitem")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Synthetic browser type",
-        exact: true,
-      }),
-    });
+  const card = page.getByRole("listitem").filter({
+    has: page.getByRole("heading", {
+      name: "Synthetic browser type",
+      exact: true,
+    }),
+  });
   await card
     .getByRole("button", { name: "Review configuration", exact: true })
     .click();

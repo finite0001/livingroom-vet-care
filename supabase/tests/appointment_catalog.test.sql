@@ -2,6 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+select ok(position('perform public.care_eligibility_lock();' in pg_get_functiondef('public.save_catalog_appointment(uuid,uuid,uuid,integer,jsonb)'::regprocedure))<position('select * into patient from pets' in pg_get_functiondef('public.save_catalog_appointment(uuid,uuid,uuid,integer,jsonb)'::regprocedure)) and position('perform public.care_eligibility_lock();' in pg_get_functiondef('public.save_catalog_appointment(uuid,uuid,uuid,integer,jsonb)'::regprocedure))>position('return old.receipt;' in pg_get_functiondef('public.save_catalog_appointment(uuid,uuid,uuid,integer,jsonb)'::regprocedure)),'Care gate precedes patient validation and follows exact receipt recovery');
 insert into auth.users(id,email,raw_user_meta_data) values
  ('48000000-0000-4000-8000-000000000001','catalog-dvm@example.test','{"first_name":"Catalog","last_name":"Vet"}'),
  ('48000000-0000-4000-8000-000000000002','catalog-staff@example.test','{"first_name":"Catalog","last_name":"Staff"}');

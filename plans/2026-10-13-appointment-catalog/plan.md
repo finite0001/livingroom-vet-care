@@ -9,3 +9,5 @@ Base: #246 merge `ba2b1c734448f679db0e39fb77081e683ff05251`; hosted179, permanen
 5. Strict Zod DTOs; unit/boundary tests, SQL full replay, observed legacy/typed/alias/publication/action races, genuine local Auth+PostgREST plus desktop/mobile. Update all six180 migration counters and restore inventory. No hosted180/function changes before the new PR approval.
 
 Implementation owner: root. Planning skill authorized two read-only research agents; reports verified latest17/10/guard/cancel, existing fixtures and navigation. Project-specific React Router7/shadcn/warm tokens override generic skill templates. All45 launch requirements and Susan's practice review remain required.
+
+Approved #247 rollout: canonical180 installed on staging. Additive181 corrects patient-species validation ordering (schedule → care → row), after reproducing the race in genuine local Auth. New replay147/5,990 and native59/7/20/9 passed; no seeds/providers. Primary and merge remain gated on final hosted acceptance and corrected-head CI. See [correction receipt](../../docs/launch-evidence/2026-10-13-appointment-catalog-eligibility-correction.json).
