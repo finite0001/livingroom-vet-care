@@ -1,0 +1,141 @@
+{
+  "repository": "finite0001/livingroom-vet-care",
+  "pull_request": 244,
+  "head": "515fa21a19bd659423874b310f6d9c70c7c6974f",
+  "run_id": 38309354527,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38309354527",
+  "status": "completed",
+  "checks": [
+    {
+      "name": "database",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115011025139,
+      "startedAt": "2026-10-12T21:14:21Z",
+      "completedAt": "2026-10-12T21:40:35Z"
+    },
+    {
+      "name": "edge",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115011025306,
+      "startedAt": "2026-10-12T21:14:21Z",
+      "completedAt": "2026-10-12T21:15:57Z"
+    },
+    {
+      "name": "diagnostic-renderer",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115011025385,
+      "startedAt": "2026-10-12T21:14:21Z",
+      "completedAt": "2026-10-12T21:19:19Z"
+    },
+    {
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115011025408,
+      "startedAt": "2026-10-12T21:14:21Z",
+      "completedAt": "2026-10-12T21:29:34Z"
+    }
+  ],
+  "local": {
+    "unit_tests": 1351,
+    "sql_files": 145,
+    "sql_assertions": 5879,
+    "registration_checks": 47,
+    "download_checks": 29,
+    "release_scope_checks": 14,
+    "owned_runtime_cleanup": true
+  },
+  "preview": {
+    "origin": "https://livingroom-vet-care-o1wrhxn0m-daves-projects-e0da43ba.vercel.app",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-CbmmzyrO.js",
+    "backend": "kothoqicubowyhwfsrte",
+    "fresh_signin_form": true,
+    "page_errors": 0,
+    "staff_session_used": false,
+    "protection_changed": false,
+    "provider_requests": 0,
+    "token_in_receipt": false,
+    "temporary_cli_env_removed": true,
+    "deployment_id": "dpl_6SBsXqvL1YRtbhDtnDTyPonm8Zud",
+    "source_head": "515fa21a19bd659423874b310f6d9c70c7c6974f",
+    "backend_migrations": 177,
+    "scope_rpc_hosted": false
+  },
+  "migration178_hosted": false,
+  "recipient_export_enabled": false,
+  "provider_requests": 0,
+  "native_ci": {
+    "download": {
+      "checked_at": "2026-10-12T21:18:52.827Z",
+      "checks": 29,
+      "release_scope_checks": 14,
+      "genuine_auth": true,
+      "genuine_private_storage": true,
+      "http_shared_handler": true,
+      "native_deno_runtime_claimed": false,
+      "browser": [
+        "desktop",
+        "mobile"
+      ],
+      "exact_bytes": true,
+      "sha256": "1001288c75f15fb45077e3d4f11d7db14bfdd2e6e0dfbdf11fb780bc6f9a5645",
+      "byte_length": 29910,
+      "original_owner_inactive": true,
+      "audit_outcome": "response_prepared",
+      "historical_correction_download": true,
+      "archived_deceased_records_retained": true,
+      "observed_download_lock_checks": 8,
+      "page_errors": 0,
+      "provider_requests": 0,
+      "hosted_writes": 0
+    },
+    "registration": {
+      "checked_at": "2026-10-12T21:18:57.401Z",
+      "download_checks": 29,
+      "runtime": "native-amd64-docker",
+      "checks": 47,
+      "generated": 1,
+      "validated": 3,
+      "sha256": "1001288c75f15fb45077e3d4f11d7db14bfdd2e6e0dfbdf11fb780bc6f9a5645",
+      "byte_length": 29910,
+      "page_count": 1,
+      "lost_acknowledgements": [
+        "preparation",
+        "capture",
+        "upload",
+        "registration"
+      ],
+      "owner_handoff": true,
+      "original_capture_actor_preserved": true,
+      "observed_lock_checks": 8,
+      "populated_restore_checks": 9,
+      "restored_storage_body_backup_claimed": false,
+      "private_storage_http_roundtrip": true,
+      "staff_download_denied": true,
+      "object_loss_reported_unavailable": true,
+      "export_eligible": false,
+      "provider_requests": 0,
+      "hosted_sql_writes": 0,
+      "owned_local_runtime_removed_by_launcher": true
+    }
+  },
+  "frontend_ci": {
+    "unit_tests": 1351,
+    "browser_passed": 521,
+    "browser_skipped": 1,
+    "existing_cloudtalk_gate_skip": true,
+    "failed": 0
+  },
+  "conclusion": "success",
+  "database_ci": {
+    "sql_files": 145,
+    "sql_assertions": 5879,
+    "all_required_auth_storage_concurrency_restore_steps_passed": true
+  },
+  "approval": "Specific #244 approval pending"
+}

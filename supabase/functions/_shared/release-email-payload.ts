@@ -150,7 +150,7 @@ export async function buildReleaseEmailPayload(
   ];
   for (const [index, d] of originals.entries()) {
     if (
-      (d.bucket !== "patient-documents" && d.bucket !== "ezyvet-attachment-originals") ||
+      (d.bucket !== "patient-documents" && d.bucket !== "ezyvet-attachment-originals" && d.bucket !== "diagnostic-pdfs") ||
       !d.file_path ||
       d.file_path.includes("..")
     )
@@ -160,7 +160,7 @@ export async function buildReleaseEmailPayload(
       throw new Error(
         "Original document bytes differ from the reviewed type or size.",
       );
-    if ([5, 6, 7, 8, 9, 10, 11, 12, 13].includes(bundle.release.snapshot.schema_version) && d.content_sha256 !== undefined && await sha256Hex(bytes) !== d.content_sha256)
+    if ([5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(bundle.release.snapshot.schema_version) && d.content_sha256 !== undefined && await sha256Hex(bytes) !== d.content_sha256)
       throw new Error("Original bytes differ from captured source provenance.");
     attachments.push({
       filename: releaseAttachmentFilename(index + 1, d.file_name, d.mime_type),

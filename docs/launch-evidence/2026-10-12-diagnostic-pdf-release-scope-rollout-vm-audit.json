@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-10-13T00:42:50.340Z",
+  "count": 3,
+  "sandboxes": [
+    {
+      "name": "lrv-pdf-df875294-d32b-467c-aeac-283c60671da9",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-72f52dd5-303a-4098-9b8b-c993010746ae",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-5f8e91f8-24d7-4f3c-97b0-711aa0747500",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    }
+  ]
+}

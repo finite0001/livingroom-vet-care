@@ -1,7 +1,10 @@
 {
   "extends": "./tsconfig.node.json",
   "compilerOptions": {
-    "lib": ["ES2023", "DOM"]
+    "lib": [
+      "ES2023",
+      "DOM"
+    ]
   },
   "include": [
     "services/diagnostic-renderer/*.ts",
@@ -14,6 +17,10 @@
     "tests/diagnostics/pdf-registration.test.ts",
     "scripts/rollout/pdf-review-staging-auth.ts",
     "scripts/rollout/pdf-review-staging-browser.ts",
-    "tests/diagnostics/release-scope.test.ts"
+    "tests/diagnostics/release-scope.test.ts",
+    "tests/diagnostics/pdf-record-packages-local.ts",
+    "tests/diagnostics/record-packages.test.ts",
+    "scripts/rollout/pdf-scope-staging-auth.ts",
+    "scripts/rollout/pdf-scope-staging-browser.ts"
   ]
 }

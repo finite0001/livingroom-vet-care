@@ -1,0 +1,16 @@
+{
+  "checks": 54,
+  "mode": "current",
+  "genuine_auth": true,
+  "genuine_private_storage": true,
+  "native_admitted_pdf": true,
+  "byte_equality": true,
+  "sql_capture": true,
+  "altered_bytes_denied": true,
+  "numbered_packages": true,
+  "third_party_revocation": true,
+  "client_cancellation": true,
+  "exact_receipt_recovery": true,
+  "provider_requests": 0,
+  "hosted_writes": 0
+}

@@ -8,7 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadReviewedOriginal } from "../imports/attachment-chart-api";
-import { sourceLabels, type SourceKind } from "../record-releases/selection";
+import {
+  requestSourceLabels as sourceLabels,
+  type RequestSourceKind as SourceKind,
+} from "./model";
+import { readPdfReview, downloadPdf } from "../diagnostics/pdf-jobs/review-api";
+import { diagnosticPdfReleaseRecordSchema } from "../../../../supabase/functions/_shared/record-release-diagnostics";
 import { readRelease } from "../record-releases/api";
 import { RecordReleaseArtifact } from "../record-releases/RecordReleaseArtifact";
 import { ReleaseEmailComposer } from "../record-releases/ReleaseEmailComposer";
@@ -246,6 +251,11 @@ export function RequestWorkspace({
                             {sourceLabels[family]} ·{" "}
                             {String(item.label ?? "Record")} ·{" "}
                             {String(item.recorded_at ?? "")}
+                            {item.diagnostic_pdf ? (
+                              <DiagnosticSelectionScope
+                                value={item.diagnostic_pdf}
+                              />
+                            ) : null}
                           </span>
                         </label>
                       );
@@ -636,7 +646,7 @@ export function RequestWorkspace({
                   <p>
                     {p.confirmed ? "Confirmed" : "Needs review"}
                     {p.scope_expansion
-                      ? " · Required original/provenance expands laboratory scope"
+                      ? " · Additional originals or embedded diagnostic history require scope review"
                       : ""}
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -897,25 +907,27 @@ function PackagePanel({
           <span>{d.file_name}</span>
           <Button
             variant="outline"
-            className="ml-2"
+            className="ml-2 min-h-11"
             disabled={disabled}
             onClick={() =>
               void (
-                d.api_attachment_ref
-                  ? downloadReviewedOriginal(
-                      actorId,
-                      r.pet_id,
-                      d.api_attachment_ref.record_id,
-                      d.api_attachment_ref.capture_hash,
-                    ).then((file) => {
-                      const url = URL.createObjectURL(file.blob);
-                      const link = document.createElement("a");
-                      link.href = url;
-                      link.download = file.filename;
-                      link.click();
-                      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-                    })
-                  : openOriginal(d.id, r.pet_id, d.version)
+                d.diagnostic_pdf_ref
+                  ? openDiagnosticOriginal(d.id, r.pet_id, actorId)
+                  : d.api_attachment_ref
+                    ? downloadReviewedOriginal(
+                        actorId,
+                        r.pet_id,
+                        d.api_attachment_ref.record_id,
+                        d.api_attachment_ref.capture_hash,
+                      ).then((file) => {
+                        const url = URL.createObjectURL(file.blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = file.filename;
+                        link.click();
+                        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+                      })
+                    : openOriginal(d.id, r.pet_id, d.version)
               ).catch((e) => setError(e.message))
             }
           >
@@ -943,8 +955,8 @@ function PackagePanel({
                 disabled={disabled}
                 onChange={(e) => setExpanded(e.target.checked)}
               />
-              I approve the additional required original and provenance
-              disclosure.
+              I approve the additional required originals, provenance and
+              embedded diagnostic history.
             </label>
           )}
           <Button
@@ -1035,4 +1047,55 @@ async function openOriginal(id: string, pet: string, version: number) {
   link.rel = "noopener noreferrer";
   link.download = data.file_name;
   link.click();
+}
+
+interface DiagnosticSelectionScopeProps {
+  value: unknown;
+}
+function DiagnosticSelectionScope({ value }: DiagnosticSelectionScopeProps) {
+  const record = diagnosticPdfReleaseRecordSchema.parse(value);
+  const b = record.binding;
+  return (
+    <span className="block break-words text-sm">
+      <span className="font-medium">
+        {b.mode === "current"
+          ? "Current reviewed PDF"
+          : "Explicit historical PDF"}{" "}
+        · Version {b.version}
+      </span>
+      <span className="block">
+        Contains {b.embedded_versions.length} reviewed panels:
+      </span>
+      {b.embedded_versions.map((v) => (
+        <span className="block" key={v.id}>
+          {v.label} · Version {v.version} · Reviewed {v.reviewed_at}
+        </span>
+      ))}
+      {b.embedded_versions.length > 1 ? (
+        <span className="block font-medium">
+          Additional diagnostic history requires scope-expansion review.
+        </span>
+      ) : null}
+      {b.total_panels > b.embedded_versions.length ? (
+        <span className="block">
+          This PDF includes the listed panels from a chart with {b.total_panels}{" "}
+          panels.
+        </span>
+      ) : null}
+    </span>
+  );
+}
+async function openDiagnosticOriginal(job: string, pet: string, actor: string) {
+  const review = await readPdfReview(job, pet);
+  if (!review?.download_available)
+    throw new Error(
+      "PDF download is unavailable. Review the original in Patient 360 once downloads are enabled.",
+    );
+  const file = await downloadPdf(review, actor);
+  const url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `diagnostic-${job}.pdf`;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

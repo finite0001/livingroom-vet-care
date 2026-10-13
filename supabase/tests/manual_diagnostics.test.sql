@@ -54,7 +54,7 @@ select throws_ok($$select save_diagnostic_panel(gen_random_uuid(),gen_random_uui
 select throws_ok($$select save_diagnostic_panel(gen_random_uuid(),gen_random_uuid(),(select id from fx where k='pet'),null,'draft',(select jsonb_set(v,'{observations,0,value_number}','1e-200') from data where k='values'))$$,'23514','Diagnostic value exceeds numeric capacity','Tiny nonzero finding is rejected before JSON clients round it to zero');
 reset role;
 select set_config('request.jwt.claims','{"sub":"b3100000-0000-4000-8000-000000000801","role":"authenticated"}',true);
-select ok(exists(select 1 from jsonb_array_elements(record_request_inventory((select id from fx where k='pet'))->'exclusions') x where x->>'family'='diagnostic_panel_ids'),'Complete release census visibly excludes unsupported diagnostic PDFs');
+select ok(exists(select 1 from jsonb_array_elements(record_request_inventory((select id from fx where k='pet'))->'exclusions') x where x->>'family'='diagnostic_pdf_ids'),'Complete release census visibly excludes unregistered current diagnostic PDFs');
 update profiles set full_name='Changed current profile display name' where id='b3100000-0000-4000-8000-000000000801';
 select is(read_diagnostic_panel('b3100000-0000-4000-8000-000000000100',(select id from fx where k='pet'))#>>'{current,reviewer_name}','Synthetic diagnostic reviewer','Historical reviewer name is frozen despite a later profile edit');
 select throws_ok($$update diagnostic_panel_versions set snapshot='{}' where id='b3100000-0000-4000-8000-000000000051'$$,'23514','Diagnostic evidence is immutable','Privileged edits cannot overwrite finalized evidence');

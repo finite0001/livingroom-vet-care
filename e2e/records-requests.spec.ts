@@ -1,3 +1,4 @@
+import { diagnosticPackageFixture } from "../tests/diagnostics/record-packages-fixture.ts";
 import { test, expect, type Page } from "@playwright/test";
 import { releaseArtifact } from "../tests/record-releases/fixture.ts";
 const backend = "http://127.0.0.1:54321",
@@ -69,6 +70,7 @@ async function fixture(
     authorization: null as Record<string, unknown> | null,
     rejectConfirm: false,
     malformedPackage: false,
+    diagnosticMode: null as "current" | "historical" | null,
     requests: existing ? [structuredClone(request)] : [],
     saved: new Map<string, Saved>(),
     submitted: [] as Record<string, unknown>[],
@@ -145,8 +147,32 @@ async function fixture(
         authorization: state.authorization,
       });
     if (name === "list_record_request_documents") return ok([]);
-    if (name === "list_record_request_evidence")
+    if (name === "list_record_request_evidence") {
+      if (state.diagnosticMode && body.p_kind === "sources") {
+        const b = await diagnosticPackageFixture(
+          state.diagnosticMode,
+          pet,
+          client,
+        );
+        const record = b.release.snapshot.diagnostic_pdfs![0];
+        return ok({
+          items: [
+            {
+              family:
+                state.diagnosticMode === "current"
+                  ? "diagnostic_pdf_ids"
+                  : "diagnostic_pdf_historical_ids",
+              id: record.binding.job_id,
+              label: "Synthetic reviewed chemistry",
+              recorded_at: record.binding.reviewed_at,
+              diagnostic_pdf: record,
+            },
+          ],
+          next: null,
+        });
+      }
       return ok({ items: [], next: null });
+    }
     if (name === "list_record_request_packages")
       return ok({
         items: [
@@ -164,20 +190,31 @@ async function fixture(
         next: null,
       });
     if (name === "read_record_request_package") {
-      const preview = structuredClone(releaseArtifact.preview);
+      let preview = structuredClone(releaseArtifact.preview);
+      if (state.diagnosticMode) {
+        const b = await diagnosticPackageFixture(
+          state.diagnosticMode,
+          pet,
+          client,
+        );
+        preview = {
+          snapshot: b.release.snapshot,
+          source_hash: b.release.source_hash,
+        };
+      }
       preview.snapshot.patient.id = pet;
       preview.snapshot.patient.name = "Synthetic Juniper";
       preview.snapshot.recipient.client_id = client;
       preview.snapshot.recipient.name = "Synthetic clinic";
       preview.snapshot.recipient.address = "synthetic-clinic@example.test";
-      preview.snapshot.attachments = [];
+      if (!state.diagnosticMode) preview.snapshot.attachments = [];
       if (!state.malformedPackage) preview.snapshot.lab_results = [];
       preview.snapshot.certificates = [];
-      preview.snapshot.encounters[0].id = pet;
+      if (!state.diagnosticMode) preview.snapshot.encounters[0].id = pet;
       return ok({
         id: body.p_package_id,
         release_id: "aabb0000-0000-4000-8000-000000000009",
-        scope_expansion: false,
+        scope_expansion: !!state.diagnosticMode,
         confirmed: false,
         preview,
         package_context: {
@@ -508,4 +545,81 @@ test("Malformed numbered report stays a local error and preserves the request dr
   await expect(
     page.getByRole("button", { name: "Confirm package 1", exact: true }),
   ).toHaveCount(0);
+});
+
+for (const mode of ["current", "historical"] as const)
+  test(`Diagnostic ${mode} selection shows complete embedded scope on mobile`, async ({
+    page,
+    baseURL,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const state = await fixture(page, baseURL, true);
+    state.diagnosticMode = mode;
+    Object.assign(state.requests[0], {
+      direction: "outgoing",
+      subset: "custom",
+      channel: "EMAIL",
+      recipient: "synthetic-client@example.test",
+      status: "requested",
+    });
+    await page.goto(`/hub/tools/record-requests/${id}`);
+    const selection = page.getByLabel("Exact source selection");
+    await expect(
+      selection.getByText(
+        mode === "current"
+          ? "Current reviewed PDF · Version 1"
+          : "Explicit historical PDF · Version 1",
+        { exact: false },
+      ),
+    ).toBeVisible();
+    await expect(
+      selection.getByText("Earlier panel", { exact: false }),
+    ).toBeVisible();
+    await expect(
+      selection.getByText(
+        "Additional diagnostic history requires scope-expansion review.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await selection.getByRole("checkbox").check();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+    ).toBe(true);
+  });
+test("Diagnostic numbered review exposes embedded history and requires expansion attestation", async ({
+  page,
+  baseURL,
+}) => {
+  const state = await fixture(page, baseURL, true);
+  thirdParty(state, true);
+  state.diagnosticMode = "historical";
+  await page.goto(`/hub/tools/record-requests/${id}`);
+  await page
+    .getByRole("button", { name: "Review package 1", exact: true })
+    .click();
+  const review = page.getByRole("region", {
+    name: "Numbered package review",
+    exact: true,
+  });
+  await expect(
+    review
+      .frameLocator('iframe[title="Medical-record release artifact"]')
+      .getByText("Explicit historical selection", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    review
+      .frameLocator('iframe[title="Medical-record release artifact"]')
+      .getByText("Earlier panel", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    review.getByRole("checkbox", { name: /embedded diagnostic history/ }),
+  ).toBeVisible();
+  await review
+    .getByRole("checkbox", { name: /I reviewed this entire/ })
+    .check();
+  await expect(
+    review.getByRole("button", { name: "Confirm package 1", exact: true }),
+  ).toBeDisabled();
 });
