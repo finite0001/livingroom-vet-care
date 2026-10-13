@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useBlocker } from 'react-router-dom';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
-export function useUnsavedChanges(dirty: boolean) {
+export function useUnsavedChanges(dirty: boolean, description = 'Unsaved changes in this patient record will be lost. Save them before leaving if you want to keep them.') {
   // Switching tabs or sections inside the same record keeps every draft mounted;
   // only leaving the record (a different path) needs confirmation.
   const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname);
@@ -12,5 +12,5 @@ export function useUnsavedChanges(dirty: boolean) {
     window.addEventListener('beforeunload', beforeUnload);
     return () => window.removeEventListener('beforeunload', beforeUnload);
   }, [dirty]);
-  return <AlertDialog open={blocker.state === 'blocked'}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Leave with unsaved changes?</AlertDialogTitle><AlertDialogDescription>Unsaved changes in this patient record will be lost. Save them before leaving if you want to keep them.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel onClick={() => blocker.state === 'blocked' && blocker.reset()}>Keep editing</AlertDialogCancel><AlertDialogAction onClick={() => blocker.state === 'blocked' && blocker.proceed()}>Discard and leave</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>;
+  return <AlertDialog open={blocker.state === 'blocked'}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Leave with unsaved changes?</AlertDialogTitle><AlertDialogDescription>{description}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel onClick={() => blocker.state === 'blocked' && blocker.reset()}>Keep editing</AlertDialogCancel><AlertDialogAction onClick={() => blocker.state === 'blocked' && blocker.proceed()}>Discard and leave</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>;
 }

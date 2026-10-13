@@ -42,7 +42,7 @@ try:
         assert re.match(r'^\d{14}_',migration.name)
         hashes[migration.name]=hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration,project/'supabase/migrations'/migration.name)
-    assert len(hashes)==179 and '20261011181722_manual_diagnostic_panels.sql' in hashes and '20261011203250_diagnostic_pdf_jobs.sql' in hashes and '20261012035948_diagnostic_pdf_artifact_processing.sql' in hashes and '20261012153518_diagnostic_pdf_staff_review.sql' in hashes and '20261012210016_diagnostic_pdf_release_scope.sql' in hashes and '20261013003556_diagnostic_pdf_record_packages.sql' in hashes
+    assert len(hashes)==181 and '20261011181722_manual_diagnostic_panels.sql' in hashes and '20261011203250_diagnostic_pdf_jobs.sql' in hashes and '20261012035948_diagnostic_pdf_artifact_processing.sql' in hashes and '20261012153518_diagnostic_pdf_staff_review.sql' in hashes and '20261012210016_diagnostic_pdf_release_scope.sql' in hashes and '20261013003556_diagnostic_pdf_record_packages.sql' in hashes and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes
     harness=root/'tests/diagnostics/local-roundtrip.ts'
     harness_hash=hashlib.sha256(harness.read_bytes()).hexdigest()
     (project/'supabase/config.toml').write_text(f'''project_id = "{identity}"

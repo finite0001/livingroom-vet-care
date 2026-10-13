@@ -37,6 +37,8 @@ test("housecall booking shows alerts, retains conflicts and saves Denver instant
   );
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path === "/rest/v1/rpc/list_appointment_catalog") return route.fulfill({ json: { items: [], next: null } });
+    if (path === "/rest/v1/rpc/read_appointment_catalog_binding") return route.fulfill({ json: null });
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/rest/v1/profiles")
@@ -88,6 +90,7 @@ test("housecall booking shows alerts, retains conflicts and saves Denver instant
             id: pet,
             client_id: client,
             name: "Synthetic Juniper",
+            species: "Dog",
             archived_at: null,
             deceased_at: null,
             allergies: "Legacy penicillin reaction",

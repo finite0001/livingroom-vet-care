@@ -1,0 +1,72 @@
+{
+  "pr": 247,
+  "head": "5909236055fc774106b08c2874a66aea47a206b0",
+  "run": 38452103928,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38452103928",
+  "required_checks": [
+    {
+      "name": "database",
+      "conclusion": "success",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38452103928/job/115485342141",
+      "completedAt": "2026-10-13T19:27:32Z"
+    },
+    {
+      "name": "diagnostic-renderer",
+      "conclusion": "success",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38452103928/job/115485342397",
+      "completedAt": "2026-10-13T19:11:39Z"
+    },
+    {
+      "name": "frontend",
+      "conclusion": "success",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38452103928/job/115485342436",
+      "completedAt": "2026-10-13T19:23:28Z"
+    },
+    {
+      "name": "edge",
+      "conclusion": "success",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38452103928/job/115485342564",
+      "completedAt": "2026-10-13T19:07:33Z"
+    }
+  ],
+  "frontend": {
+    "unit_tests": 1375,
+    "browser_passed": 524,
+    "browser_existing_skip": 1
+  },
+  "database": {
+    "sql_files": 147,
+    "sql_assertions": 5989
+  },
+  "scheduling_native": {
+    "checks": 55,
+    "observed_lock_queues": 6,
+    "browser_checks": 20,
+    "populated_restore_checks": 9,
+    "owned_containers_volumes_removed": true,
+    "provider_requests": 0
+  },
+  "preview": {
+    "deployment_id": "dpl_7Yt8LQTm84MixvfF7GNof5WXVL1n",
+    "head": "5909236055fc774106b08c2874a66aea47a206b0",
+    "origin": "https://livingroom-vet-care-egfh6uc5t-daves-projects-e0da43ba.vercel.app",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-D3PGQZcq.js",
+    "backend": "kothoqicubowyhwfsrte",
+    "backend_migrations": 179,
+    "page_errors": 0,
+    "unauthenticated_catalog_redirect": true,
+    "protection_changed": false,
+    "staff_session_used": false,
+    "hosted_180_rpc_acceptance_claimed": false,
+    "provider_requests": 0,
+    "token_in_receipt": false
+  },
+  "migration_sha256": "8407cccde4d7f39c84a8515677d54f2c79213c4c185c512dfaadc173fd1fe7ab",
+  "repository_migrations": 180,
+  "hosted_migrations": 179,
+  "hosted_180_applied": false,
+  "practice_templates_seeded": false,
+  "specific_merge_approval_pending": true
+}

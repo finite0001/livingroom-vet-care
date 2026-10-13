@@ -77,13 +77,17 @@ test("the scheduler runs the canonical reminder and outbox workers only", () => 
 });
 
 test("appointment reminders choose their channel instead of hard-coding SMS", () => {
-  const sql = latestDefinition(
-    /function public\.save_appointment\(p_actor_id uuid/,
-  );
-  const body = sql.slice(sql.indexOf("function public.save_appointment(p_actor_id"));
+  // The catalog wrapper delegates reminder creation to the retained canonical core.
+  const wrapper = latestDefinition(/function public\.save_appointment\(p_actor_id uuid/);
+  assert.match(wrapper, /return public\.save_appointment_before_catalog\(/);
+  const sql = read("supabase/migrations/20260928190000_no_retryable_sqlstate_for_permanent_conditions.sql");
+  const start = sql.toLowerCase().indexOf("function public.save_appointment(p_actor_id");
+  const end = sql.indexOf("end $function$;", start);
+  assert.ok(start >= 0 && end > start, "Canonical reminder core must be present");
+  const body = sql.slice(start, end);
   assert.match(body, /public\.appointment_reminder_channel\(c\.id\)/);
   assert.doesNotMatch(
-    body.slice(0, body.indexOf("end $$;")),
+    body,
     /remind_at,channel,status\)\s*values\([^;]*'SMS'\s*,\s*case/,
   );
   const resolver = latestDefinition(
