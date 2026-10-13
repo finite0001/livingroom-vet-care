@@ -1,0 +1,37 @@
+{
+  "package": "4A2a next-visit foundation",
+  "migration": "20261013220500_next_visit_outcomes.sql",
+  "migration_sha256": "35566cc0e316b4a884c58eabd1333203800e5fcedecec1d7edd7676679e83374",
+  "canonical_migrations": 182,
+  "sql": {
+    "files": 148,
+    "assertions": 6056,
+    "pass": true
+  },
+  "existing_catalog_native": {
+    "checks": 59,
+    "observed_lock_queues": 7,
+    "browser_checks": 20,
+    "populated_restore_checks": 9,
+    "pass": true
+  },
+  "next_visit_native": {
+    "checks": 36,
+    "observed_lock_queues": 5,
+    "populated_outcome_restore": true,
+    "pass": true
+  },
+  "owned_runtime_removed": true,
+  "provider_requests": 0,
+  "hosted_182_applied": false,
+  "staff_prompt_implemented": false,
+  "backend_baseline": 181,
+  "lint": {
+    "errors": 0,
+    "existing_warnings": 4
+  },
+  "unit_total": 1381,
+  "typecheck": "pass",
+  "build": "pass",
+  "storage_body_restore_claimed": false
+}

@@ -43,7 +43,7 @@ try:
         assert re.match(r'^\d{14}_',migration.name)
         hashes[migration.name]=hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration,project/'supabase/migrations'/migration.name)
-    assert len(hashes)==181 and '20261011181722_manual_diagnostic_panels.sql' in hashes and '20261011203250_diagnostic_pdf_jobs.sql' in hashes and '20261012035948_diagnostic_pdf_artifact_processing.sql' in hashes and '20261012153518_diagnostic_pdf_staff_review.sql' in hashes and '20261012210016_diagnostic_pdf_release_scope.sql' in hashes and '20261013003556_diagnostic_pdf_record_packages.sql' in hashes and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes
+    assert len(hashes)==182 and '20261011181722_manual_diagnostic_panels.sql' in hashes and '20261011203250_diagnostic_pdf_jobs.sql' in hashes and '20261012035948_diagnostic_pdf_artifact_processing.sql' in hashes and '20261012153518_diagnostic_pdf_staff_review.sql' in hashes and '20261012210016_diagnostic_pdf_release_scope.sql' in hashes and '20261013003556_diagnostic_pdf_record_packages.sql' in hashes and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes
     if args.include_sql_regression:shutil.copytree(root/'supabase/tests',project/'supabase/tests')
     harness=root/'tests/diagnostics/pdf-jobs-local.ts'
     harness_hash=hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -74,8 +74,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         sql_result=command(['supabase','test','db','--workdir',str(project)],cwd=root,timeout=180)
-        assert 'All tests successful.' in sql_result and 'Files=147, Tests=5990' in sql_result
-        print('Canonical SQL regression passed: 147 files /5990 assertions.',flush=True)
+        assert 'All tests successful.' in sql_result and 'Files=148, Tests=6056' in sql_result
+        print('Canonical SQL regression passed: 148 files /6056 assertions.',flush=True)
     env={**os.environ,'DIAGNOSTICS_TEST_PROJECT':str(project),'DIAGNOSTICS_RUN_SYNTHETIC_LOCAL':'true'}
     result=command(['node','--experimental-strip-types',str(harness)],cwd=root,env=env,timeout=180)
     match=re.search(r'Genuine local PDF jobs.*54 assertions; no provider requests\.',result)

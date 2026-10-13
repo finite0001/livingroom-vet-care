@@ -1,0 +1,25 @@
+# 4A2a — Durable completion and atomic next-visit foundation
+
+N24 needs a scheduling prompt after an appointment completes. Completion currently happens on Home, Schedule cards and both appointment-editor save paths. This package implements the shared database contract; **the staff prompt is not implemented here**. [Staff workflow plan](../../plans/2026-10-13-next-visit/plan.md). It does not satisfy full N24 acceptance by itself.
+
+## Result
+
+Every real transition into COMPLETED creates an immutable occurrence through the appointment trigger. Completed inserts and10/17/catalog saves are covered; notes-only changes do not create another occurrence. Snapshot identity, exact appointment revision and catalog binding remain truthful after later patient/status edits or catalog retirement. Trusted operator rows can have unknown actor/clinician provenance; patientless historical slots do not become inferred patient visits. Existing historical records are not backfilled.
+
+An actor-scoped completion RPC recovers an exact saved acknowledgment before current-state validation. A fresh action cannot acknowledge a superseded/mismatched occurrence. Outcomes keep immutable attribution and revisions: schedule later can be revisited, while booked/declined resolves that occurrence. Closing a future UI prompt will leave the occurrence pending. Source completion is never undone by a scheduling decision.
+
+Book-now and its decision commit in one schedule → care → row transaction. Custom booking retains existing conflict/reminder/client/patient checks; catalog booking freezes the reviewed binding. Another action/tab cannot book a second follow-up against the resolved version. Existing future appointment selection validates exact patient/status/version. Final future eligibility uses wall-clock time after lock waits, not the request start time. Recovery only reads receipts and never saves another appointment.
+
+Private RLS occurrence/head/decision/action tables and seven authenticated RPCs; two helpers are private. Strict Zod/API boundaries reject contradictory decisions, cross-patient receipts and stale completion acknowledgments. Retained unassigned bookings stay readable. Queue pagination is independent of calendar selection. Future appointments have a fixed server as-of and explicit keyset continuation; due care is bounded separately. Source-current reviewed care and vaccine plans with no stale-anchor flags are distinct from planned/ordered lab work. No clinical dates, decisions, recurrence completions, provider policies or messages are inferred.
+
+## Verification
+
+[Local evidence](2026-10-13-next-visit-foundation-local.json): fresh182 replay and148 SQL files /6,056 assertions. Existing catalog proof still passes59 Auth checks,7 observed lock queues,20 real desktop/mobile browser checks and9 populated restore checks. New genuine Auth/PostgREST proof passes36 checks and5 observed lock queues: duplicate completion recovery, competing follow-up decisions, conflict rollback, retired binding completion, an appointment expiring while a request waits, stale patient identity and current-access denial. A populated dump/restore preserved all four outcome tables, their private privileges and exact saved receipts. Owned containers/volumes were removed; other runtimes were untouched. No Storage-body restore is claimed.
+
+All1,381 units pass, as do typecheck/lint/build; four existing lint warnings remain. The due-care SQL cases distinguish current/proposed clinical plans, planned/ordered labs, bounded continuation and loss of source-current approval. Broad browser, Edge and full native suites remain required in exact-head CI. New staff-prompt browser acceptance belongs to4A2b; existing catalog browser proof does not establish that missing workflow.
+
+## Rollout
+
+Approved #247 installed canonical180 plus additive181 on staging/primary. [Rollout evidence](2026-10-13-appointment-catalog-rollout.json): each passed73 rollback assertions without changing baseline rows; staging passed43 genuine Auth checks and20 browser checks, with all synthetic publications/bookings/actors/patients/sessions retired. No primary synthetic fixtures or provider calls. All four corrected-head CI checks passed; #247 merged as `96dc40ee1295390b11e5cafa72dc4269d2db27d5`, production READY and public smoke passed against primary181 with zero page errors. This is public availability proof, separate from authenticated staging acceptance.
+
+This new foundation requires its own specific PR approval before hosted182 or merge. Apply staging first and run bounded genuine acceptance, then primary rollback-only proof before deploying its frontend consumer. The existing staff screens remain on their current completion flow until4A2b connects the new contract. No Edge Functions, delivery or task workers are enabled here. Susan's practice review and all45 original launch requirements remain required; daily task templates/generation/list follow4B/4C. The disregarded Weave request is outside this repository.

@@ -1,0 +1,199 @@
+{
+  "pr": 247,
+  "approved": true,
+  "head": "bfca6a7e3d5db818873035294e3cd02c2320916a",
+  "staging": {
+    "installation": {
+      "project": "kothoqicubowyhwfsrte",
+      "migration": "20261013181721_appointment_catalog_and_bindings.sql",
+      "migration_sha256": "8407cccde4d7f39c84a8515677d54f2c79213c4c185c512dfaadc173fd1fe7ab",
+      "migrations": 181,
+      "corrective_migration": "20261013214300_catalog_patient_eligibility_lock.sql",
+      "corrective_sha256": "b17c32aa14d54966fc56f598591272fcf6900e9a0abccee166e94577f305332c",
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 0,
+        "payment_profiles": 1,
+        "release": 0,
+        "worker": 0
+      },
+      "runtime_policy": "empty/off",
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "kothoqicubowyhwfsrte",
+      "migrations": {
+        "count": 181,
+        "latest": "20261013214300"
+      },
+      "checks": 73,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 73,
+            "provider_requests": 0
+          }
+        }
+      ]
+    },
+    "genuine_acceptance": {
+      "proof": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 181,
+        "auth_checks": 43,
+        "browser_checks": 20,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "cleanup": {
+        "active_actors": 0,
+        "active_bookings": 0,
+        "active_patients": 0,
+        "open_sessions": 0,
+        "published_catalog": 0,
+        "pending_reminders": 0
+      },
+      "baseline_unchanged": true,
+      "retained_synthetic_history": true
+    }
+  },
+  "primary": {
+    "installation": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migration": "20261013181721_appointment_catalog_and_bindings.sql",
+      "migration_sha256": "8407cccde4d7f39c84a8515677d54f2c79213c4c185c512dfaadc173fd1fe7ab",
+      "migrations": 181,
+      "corrective_migration": "20261013214300_catalog_patient_eligibility_lock.sql",
+      "corrective_sha256": "b17c32aa14d54966fc56f598591272fcf6900e9a0abccee166e94577f305332c",
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 3,
+        "payment_profiles": 0,
+        "release": 0,
+        "worker": 0
+      },
+      "runtime_policy": "empty/off",
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migrations": {
+        "count": 181,
+        "latest": "20261013214300"
+      },
+      "checks": 73,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 73,
+            "provider_requests": 0
+          }
+        }
+      ]
+    },
+    "persisted_synthetic_fixtures": false
+  },
+  "protected_preview": {
+    "deployment_id": "dpl_6S73oZGjJjQZnDqBiBUVYUNLiG4G",
+    "head": "bfca6a7e3d5db818873035294e3cd02c2320916a",
+    "origin": "https://livingroom-vet-care-9awi6fftq-daves-projects-e0da43ba.vercel.app",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-D3PGQZcq.js",
+    "backend": "kothoqicubowyhwfsrte",
+    "backend_migrations": 181,
+    "page_errors": 0,
+    "unauthenticated_catalog_redirect": true,
+    "protection_changed": false,
+    "staff_session_used": false,
+    "hosted_180_181_acceptance_separate": true,
+    "provider_requests": 0,
+    "token_in_receipt": false
+  },
+  "merge": {
+    "headRefOid": "bfca6a7e3d5db818873035294e3cd02c2320916a",
+    "mergeCommit": {
+      "oid": "96dc40ee1295390b11e5cafa72dc4269d2db27d5"
+    },
+    "mergedAt": "2026-10-13T22:08:05Z",
+    "state": "MERGED"
+  },
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "published_practice_defaults": 0,
+  "production": {
+    "id": "dpl_9jChtb66aznztfgNJpSfhX8fZsZd",
+    "readyState": "READY",
+    "url": "livingroom-vet-care-3f7rpp7kc-daves-projects-e0da43ba.vercel.app",
+    "target": "production",
+    "projectId": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "head": "96dc40ee1295390b11e5cafa72dc4269d2db27d5",
+    "public_alias_matches": true,
+    "public_smoke": {
+      "backend_migrations": 181,
+      "unauthenticated_catalog_redirect": true,
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-CrOOHqcM.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  },
+  "ci": {
+    "databaseId": 38472719671,
+    "headSha": "bfca6a7e3d5db818873035294e3cd02c2320916a",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38472719671",
+    "jobs": [
+      {
+        "name": "diagnostic-renderer",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-13T21:44:09Z",
+        "completedAt": "2026-10-13T21:50:31Z",
+        "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38472719671/job/115555915791"
+      },
+      {
+        "name": "database",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-13T21:44:09Z",
+        "completedAt": "2026-10-13T22:05:26Z",
+        "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38472719671/job/115555916053"
+      },
+      {
+        "name": "frontend",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-13T21:44:09Z",
+        "completedAt": "2026-10-13T22:00:10Z",
+        "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38472719671/job/115555916132"
+      },
+      {
+        "name": "edge",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-13T21:44:09Z",
+        "completedAt": "2026-10-13T21:45:41Z",
+        "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38472719671/job/115555916152"
+      }
+    ]
+  }
+}
