@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-10-13T17:32:27.861Z",
+  "count": 12,
+  "sandboxes": [
+    {
+      "name": "lrv-pdf-f0082230-9b28-4869-b794-a9932fe47517",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-eaeb2d7c-c908-4543-a685-9b5485454443",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-d69121c0-4aed-4bc0-9fe6-f94c044d4796",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-98d051d3-92e1-4079-a018-a2789462c0b4",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-7b12fb4d-8cd5-4be9-9626-f2bd47a9129a",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-58af2037-8025-4fc5-8c45-37c87d708243",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-30a83098-34ec-4e4f-a254-e9e3491924c1",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-2e303394-53a1-400c-9890-3e158acc0e13",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-1c8a6966-6a8d-4b5b-b0bb-40b28394ce16",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-1bb55975-9eba-4de5-97df-90197e623928",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-06a9d391-7f52-4db7-bd2a-abd83ae5eeff",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-01af07ef-a041-4563-a16a-fbcf94c61f73",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    }
+  ]
+}

@@ -52,6 +52,8 @@ jobs:
         run: deno check --frozen supabase/functions/*/index.ts supabase/functions/ezyvet-import/attachment-metadata.ts
       - name: Verify invoice handler without root Node dependencies
         run: python3 scripts/verify-invoice-edge-isolation.py
+      - name: Verify every diagnostic-record consumer without root Node dependencies
+        run: python3 scripts/verify-record-edge-isolation.py
       - name: Verify patient photo handler without root Node dependencies
         run: python3 scripts/verify-patient-photo-edge-isolation.py
       - name: Verify diagnostic PDF handler without root Node dependencies

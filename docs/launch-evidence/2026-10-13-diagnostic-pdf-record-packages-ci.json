@@ -1,0 +1,92 @@
+{
+  "repository": "finite0001/livingroom-vet-care",
+  "pull_request": 245,
+  "head": "11f642a56c3244c95dfaf13657b99a05b4ab84ed",
+  "run_id": 38424894122,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38424894122",
+  "status": "completed",
+  "conclusion": "success",
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-13T16:05:30Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38424894122/job/115391573473",
+      "name": "frontend",
+      "startedAt": "2026-10-13T15:46:18Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-13T15:47:41Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38424894122/job/115391573743",
+      "name": "edge",
+      "startedAt": "2026-10-13T15:46:18Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-13T16:09:54Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38424894122/job/115391573291",
+      "name": "database",
+      "startedAt": "2026-10-13T15:46:18Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-13T15:50:45Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38424894122/job/115391572993",
+      "name": "diagnostic-renderer",
+      "startedAt": "2026-10-13T15:46:18Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "unit_tests": 1370,
+  "browser_passed": 524,
+  "existing_cloudtalk_gated_skip": 1,
+  "browser_flaky_cases_reported": 0,
+  "sql_files": 146,
+  "sql_assertions": 5917,
+  "native_registration_checks": 56,
+  "native_current_package_checks": 54,
+  "native_historical_package_checks": 56,
+  "native_download_checks": 37,
+  "native_scope_checks": 14,
+  "native_restore_checks": 18,
+  "new_observed_races": 3,
+  "provider_requests": 0,
+  "preview": {
+    "deployment_id": "dpl_CotA1QEE8uKvooCgY8s6e9ibV7La",
+    "head": "11f642a56c3244c95dfaf13657b99a05b4ab84ed",
+    "origin": "https://livingroom-vet-care-bh3l920ro-daves-projects-e0da43ba.vercel.app",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-DFPgbtns.js",
+    "backend": "kothoqicubowyhwfsrte",
+    "backend_migrations": 178,
+    "page_errors": 0,
+    "protection_changed": false,
+    "staff_session_used": false,
+    "schema14_hosted_rpc_claimed": false,
+    "token_in_receipt": false
+  },
+  "hosted_migration_count": 178,
+  "179_deployed": false,
+  "specific_245_merge_approval": "pending",
+  "clinical_provider_commissioning": "off",
+  "native_artifact": {
+    "runtime": "native-amd64-docker",
+    "sha256": "eb4d0a6994d8203b541cc4ddbcc136a419a06e36e005ec3c3caaa0a0748bc10a",
+    "byte_length": 29934,
+    "page_count": 1,
+    "generated": 1,
+    "validated": 3
+  }
+}
