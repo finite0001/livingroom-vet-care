@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-13",
+  "base_merge": "ba2b1c734448f679db0e39fb77081e683ff05251",
+  "repository_migrations": 180,
+  "hosted_migrations": 179,
+  "migration_sha256": "8407cccde4d7f39c84a8515677d54f2c79213c4c185c512dfaadc173fd1fe7ab",
+  "local": {
+    "sql_files": 147,
+    "sql_assertions": 5989,
+    "unit_tests": 1375,
+    "typecheck": "passed",
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "build": "passed",
+    "broad_browser": {
+      "passed": 522,
+      "failed": 2,
+      "existing_skip": 1
+    },
+    "focused_browser_recheck": {
+      "passed": 50,
+      "failed": 0
+    },
+    "genuine_auth_postgrest_checks": 55,
+    "observed_lock_queues": 6,
+    "genuine_browser_checks": 20,
+    "populated_restore_checks": 9,
+    "owned_containers_volumes_removed": true,
+    "provider_requests": 0
+  },
+  "hosted_180_applied": false,
+  "practice_templates_seeded": false,
+  "clinical_acceptance_claimed": false,
+  "exact_head_ci": "pending"
+}

@@ -23,6 +23,10 @@ import { useScheduleDay } from "./use-schedule-day";
 import { useAppointmentStatus } from "./use-appointment-status";
 import { StatusChip } from "@/hub/components/shared/StatusChip";
 import { cn } from "@/lib/utils";
+import { appointmentBinding, catalogList } from "./catalog-api";
+import { matchesType, requiresTimeReview, type TypeDefinition, type ResourceDefinition } from "./catalog-model";
+import { useBookingAction } from "./use-reviewed-action";
+import { useUnsavedChanges } from "../clinical/use-unsaved-changes";
 import { householdHref, patientHref } from "@/hub/features/patient-360/model";
 
 type Appointment = Tables<"appointments">;
@@ -34,7 +38,7 @@ const statusLabels = {
   NO_SHOW: "No show",
 };
 const selectClass =
-  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
+  "flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 const baseAddress = practiceBaseAddress;
 
 function visitTypeLabel(visitType: string): string {
@@ -430,14 +434,22 @@ interface EditorProps {
   initialPetId?: string;
   close: () => void;
 }
-function AppointmentEditor({ appointment, initialDay, initialClientId, initialPetId, close }: EditorProps) {
+function AppointmentEditor({
+  appointment,
+  initialDay,
+  initialClientId,
+  initialPetId,
+  close,
+}: EditorProps) {
   const { session } = useAuth();
   const cache = useQueryClient();
   const lock = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [householdSearch, setHouseholdSearch] = useState("");
-  const [clientId, setClientId] = useState(appointment?.client_id ?? initialClientId ?? "");
+  const [clientId, setClientId] = useState(
+    appointment?.client_id ?? initialClientId ?? "",
+  );
   const [petId, setPetId] = useState(appointment?.pet_id ?? initialPetId ?? "");
   const [clinician, setClinician] = useState(
     appointment?.assigned_dvm_id ?? "",
@@ -479,7 +491,7 @@ function AppointmentEditor({ appointment, initialDay, initialClientId, initialPe
         }),
         supabase
           .from("pets")
-          .select("id,name,client_id,archived_at,deceased_at,allergies")
+          .select("id,name,species,client_id,archived_at,deceased_at,allergies")
           .eq("client_id", clientId || "00000000-0000-0000-0000-000000000000"),
         supabase.rpc("schedule_clinicians"),
         clientId
@@ -502,10 +514,176 @@ function AppointmentEditor({ appointment, initialDay, initialClientId, initialPe
       };
     },
   });
+  const [typeId, setTypeId] = useState(""),
+    [resourceId, setResourceId] = useState(""),
+    [reviewNote, setReviewNote] = useState("");
+  const [notice, setNotice] = useState(""),
+    [done, setDone] = useState(false);
+  const managed = useBookingAction(session?.user.id ?? "");
+  const catalog = useQuery({
+    queryKey: ["appointment-catalog", "booking"],
+    queryFn: async () => {
+      const [types, resources] = await Promise.all([
+        catalogList("type"),
+        catalogList("resource"),
+      ]);
+      return { types, resources };
+    },
+  });
+  const binding = useQuery({
+    queryKey: [
+      "appointment-catalog-binding",
+      appointment?.id,
+      appointment?.version,
+    ],
+    queryFn: () => appointmentBinding(appointment!.id),
+    enabled: Boolean(appointment),
+  });
+  const [replacing, setReplacing] = useState(false);
+  const selectedType = catalog.data?.types.find(
+    (entry) => entry.published?.id === typeId,
+  )?.published;
+  const definition = selectedType?.definition as TypeDefinition | undefined;
+  const frozen = Boolean(binding.data && !replacing);
+  const staleResource = Boolean(resourceId && !catalog.data?.resources.some((entry) => entry.published?.id === resourceId));
+  const blocked = busy || managed.busy || managed.unconfirmed;
+  const fields = JSON.stringify({
+    clientId,
+    petId,
+    clinician,
+    visitType,
+    address,
+    local,
+    duration,
+    before,
+    after,
+    reason,
+    status,
+    room,
+    notes,
+    offsets,
+    typeId,
+    resourceId,
+    reviewNote,
+    replacing,
+  });
+  const baseline = useRef(fields);
+  const dirty = !done && (fields !== baseline.current || blocked);
+  const guard = useUnsavedChanges(
+    dirty,
+    "This appointment has unsaved or unconfirmed changes. Keep it open to save or check the action.",
+  );
+  function dismiss() {
+    if (busy || managed.busy) return;
+    if (
+      !dirty ||
+      window.confirm(
+        managed.unconfirmed
+          ? "This save is unconfirmed. Leave and lose its recovery action?"
+          : "Discard this unsaved appointment?",
+      )
+    )
+      close();
+  }
+  function clearChoice() {
+    if (typeId) {
+      setTypeId("");
+      setResourceId("");
+      setReason("");
+      setRoom("");
+      setReviewNote("");
+      setNotice(
+        "The patient or location changed. Your entered times are retained; choose and review a matching appointment type.",
+      );
+    }
+  }
+  function chooseType(id: string) {
+    const selected = catalog.data?.types.find(
+      (entry) => entry.published?.id === id,
+    )?.published;
+    setTypeId(id);
+    setReplacing(Boolean(id));
+    setResourceId("");
+    setReviewNote("");
+    setNotice("");
+    if (!selected) {
+      if (binding.data) {
+        const saved = binding.data.fields;
+        setClientId(saved.client_id);
+        setPetId(saved.pet_id);
+        setVisitType(saved.visit_type);
+        setAddress(appointment?.address_snapshot ?? baseAddress);
+        setReason(saved.appointment_type);
+        setRoom(saved.resource_name ?? "");
+        setDuration(String(saved.duration_minutes));
+        setBefore(String(saved.travel_before_minutes));
+        setAfter(String(saved.travel_after_minutes));
+      } else {
+        setReason("");
+        setRoom("");
+      }
+      return;
+    }
+    const proposal = selected.definition as TypeDefinition;
+    setReason(proposal.name);
+    setRoom("");
+    setDuration(
+      proposal.duration_minutes === null
+        ? ""
+        : String(proposal.duration_minutes),
+    );
+    setBefore(String(proposal.travel_before_minutes));
+    setAfter(String(proposal.travel_after_minutes));
+  }
+  async function completeManaged(result: unknown) {
+    if (!result) return;
+    setDone(true);
+    void cache.invalidateQueries({ queryKey: ["schedule"] });
+    close();
+  }
   const alerts = usePatientAlertReview(petId);
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (lock.current || !session?.user.id) return;
+    if (
+      lock.current ||
+      blocked ||
+      !session?.user.id ||
+      staleResource ||
+      ((typeId || replacing) && !selectedType)
+    )
+      return;
+    if (selectedType) {
+      try {
+        await completeManaged(
+          await managed.save({
+            id: appointment?.id ?? null,
+            expectedVersion: appointment?.version ?? null,
+            values: {
+              type_version_id: selectedType.id,
+              resource_version_id: resourceId || null,
+              client_id: clientId,
+              pet_id: petId,
+              scheduled_at: denverInstant(local),
+              duration_minutes: Number(duration),
+              status,
+              assigned_dvm_id: clinician,
+              visit_type: visitType as "clinic" | "housecall",
+              address_snapshot: visitType === "clinic" ? baseAddress : address,
+              travel_before_minutes: Number(before),
+              travel_after_minutes: Number(after),
+              notes,
+              reminder_offsets: reminderOffsets(offsets),
+              override_note: reviewNote.trim(),
+            },
+          }),
+        );
+      } catch {
+        managed.setError(
+          "Review the patient, time, staff, resource and review note before saving.",
+        );
+      }
+      return;
+    }
     lock.current = true;
     setBusy(true);
     setError("");
@@ -530,7 +708,8 @@ function AppointmentEditor({ appointment, initialDay, initialClientId, initialPe
         p_reminder_offsets: reminderOffsets(offsets),
       });
       if (error) throw error;
-      await cache.invalidateQueries({ queryKey: ["schedule"] });
+      setDone(true);
+      void cache.invalidateQueries({ queryKey: ["schedule"] });
       close();
     } catch (cause) {
       setError(
@@ -545,333 +724,572 @@ function AppointmentEditor({ appointment, initialDay, initialClientId, initialPe
     }
   }
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open && !busy) close();
-      }}
-    >
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {appointment ? "Edit appointment" : "Book appointment"}
-          </DialogTitle>
-        </DialogHeader>
-        <div>
-          <Label htmlFor="booking-search">Find household by name</Label>
-          <Input
-            id="booking-search"
-            disabled={busy}
-            value={householdSearch}
-            onChange={(event) => setHouseholdSearch(event.target.value)}
-          />
-          <p className="text-sm text-muted-foreground">
-            Showing up to 50 matches. Refine the name to find a household.
-          </p>
-        </div>
-        {lookups.isPending ? (
-          <p role="status">Loading booking details…</p>
-        ) : lookups.isError ? (
-          <div role="alert">
-            Booking details unavailable.{" "}
-            <Button onClick={() => void lookups.refetch()}>Retry</Button>
+    <>
+      <Dialog
+        open
+        onOpenChange={(open) => {
+          if (!open) dismiss();
+        }}
+      >
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {appointment ? "Edit appointment" : "Book appointment"}
+            </DialogTitle>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="booking-search">Find household by name</Label>
+            <Input
+              id="booking-search"
+              disabled={blocked}
+              value={householdSearch}
+              onChange={(event) => setHouseholdSearch(event.target.value)}
+            />
+            <p className="text-sm text-muted-foreground">
+              Showing up to 50 matches. Refine the name to find a household.
+            </p>
           </div>
-        ) : (
-          <form onSubmit={save} className="space-y-4">
-            <fieldset disabled={busy} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="booking-client">Household</Label>
-                  <select
-                    id="booking-client"
-                    required
-                    className={selectClass}
-                    value={clientId}
-                    onChange={(event) => {
-                      setClientId(event.target.value);
-                      setPetId("");
-                      if (visitType === "housecall")
-                        setAddress(
-                          lookups.data.clients.find(
-                            (c) => c.id === event.target.value,
-                          )?.housecall_address ?? "",
-                        );
-                    }}
-                  >
-                    <option value="">Select household</option>
-                    {lookups.data.clients.map((client) => (
-                      <option key={client.id} value={client.id}>
-                        {client.full_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="booking-pet">Patient</Label>
-                  <select
-                    id="booking-pet"
-                    required
-                    className={selectClass}
-                    value={petId}
-                    onChange={(event) => setPetId(event.target.value)}
-                  >
-                    <option value="">Select patient</option>
-                    {lookups.data.pets
-                      .filter(
-                        (pet) =>
-                          pet.client_id === clientId &&
-                          ((!pet.archived_at && !pet.deceased_at) ||
-                            pet.id === appointment?.pet_id),
-                      )
-                      .map((pet) => (
-                        <option key={pet.id} value={pet.id}>
-                          {pet.name}
+          {lookups.isPending ||
+          catalog.isPending ||
+          Boolean(appointment && binding.isPending) ? (
+            <p role="status">Loading booking details…</p>
+          ) : lookups.isError ||
+            catalog.isError ||
+            Boolean(appointment && binding.isError) ? (
+            <div role="alert">
+              Booking details unavailable.{" "}
+              <Button
+                onClick={() => {
+                  void lookups.refetch();
+                  void catalog.refetch();
+                  if (appointment) void binding.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={save} className="space-y-4">
+              <fieldset disabled={blocked} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="booking-client">Household</Label>
+                    <select
+                      id="booking-client"
+                      required
+                      className={selectClass}
+                      value={clientId}
+                      disabled={frozen}
+                      onChange={(event) => {
+                        clearChoice();
+                        setClientId(event.target.value);
+                        setPetId("");
+                        if (visitType === "housecall")
+                          setAddress(
+                            lookups.data.clients.find(
+                              (c) => c.id === event.target.value,
+                            )?.housecall_address ?? "",
+                          );
+                      }}
+                    >
+                      <option value="">Select household</option>
+                      {lookups.data.clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.full_name}
                         </option>
                       ))}
-                  </select>
-                </div>
-              </div>
-              {petId && alerts.data?.snapshot.legacy_allergies.text?.trim() && (
-                <div
-                  role="note"
-                  aria-label="Recorded patient allergies"
-                  className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
-                >
-                  <p className="font-semibold">Recorded patient allergies</p>
-                  <p>{alerts.data?.snapshot.legacy_allergies.text}</p>
-                </div>
-              )}
-              {petId &&
-                (alerts.isPending ? (
-                  <p role="status">Loading patient alerts…</p>
-                ) : alerts.isError ? (
-                  <div role="alert">
-                    Patient alerts unavailable.{" "}
-                    <Button type="button" onClick={() => void alerts.refetch()}>
-                      Retry alerts
-                    </Button>
+                    </select>
                   </div>
-                ) : (
-                  Boolean(alerts.data?.snapshot.important_problems.length) && (
+                  <div>
+                    <Label htmlFor="booking-pet">Patient</Label>
+                    <select
+                      id="booking-pet"
+                      required
+                      className={selectClass}
+                      value={petId}
+                      disabled={frozen}
+                      onChange={(event) => {
+                        clearChoice();
+                        setPetId(event.target.value);
+                      }}
+                    >
+                      <option value="">Select patient</option>
+                      {lookups.data.pets
+                        .filter(
+                          (pet) =>
+                            pet.client_id === clientId &&
+                            ((!pet.archived_at && !pet.deceased_at) ||
+                              pet.id === appointment?.pet_id),
+                        )
+                        .map((pet) => (
+                          <option key={pet.id} value={pet.id}>
+                            {pet.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+                {petId &&
+                  alerts.data?.snapshot.legacy_allergies.text?.trim() && (
                     <div
                       role="note"
+                      aria-label="Recorded patient allergies"
                       className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
                     >
-                      <p className="font-semibold">Important patient history</p>
-                      {alerts.data?.snapshot.important_problems.map((alert) => (
-                        <p key={alert.id}>
-                          {alert.title}
-                          {alert.status === "resolved" ? " (resolved)" : ""}
-                        </p>
-                      ))}
+                      <p className="font-semibold">
+                        Recorded patient allergies
+                      </p>
+                      <p>{alerts.data?.snapshot.legacy_allergies.text}</p>
                     </div>
-                  )
-                ))}
-              <div>
-                <Label htmlFor="booking-reason">Visit reason</Label>
-                <Input
-                  id="booking-reason"
-                  required
-                  maxLength={150}
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value)}
-                />
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
+                  )}
+                {petId &&
+                  (alerts.isPending ? (
+                    <p role="status">Loading patient alerts…</p>
+                  ) : alerts.isError ? (
+                    <div role="alert">
+                      Patient alerts unavailable.{" "}
+                      <Button
+                        type="button"
+                        onClick={() => void alerts.refetch()}
+                      >
+                        Retry alerts
+                      </Button>
+                    </div>
+                  ) : (
+                    Boolean(
+                      alerts.data?.snapshot.important_problems.length,
+                    ) && (
+                      <div
+                        role="note"
+                        className="rounded-md border border-destructive bg-destructive/10 p-3 text-clinical-alert"
+                      >
+                        <p className="font-semibold">
+                          Important patient history
+                        </p>
+                        {alerts.data?.snapshot.important_problems.map(
+                          (alert) => (
+                            <p key={alert.id}>
+                              {alert.title}
+                              {alert.status === "resolved" ? " (resolved)" : ""}
+                            </p>
+                          ),
+                        )}
+                      </div>
+                    )
+                  ))}
                 <div>
-                  <Label htmlFor="booking-clinician">Assigned staff</Label>
+                  <Label htmlFor="booking-catalog-type">
+                    Reviewed appointment type
+                  </Label>
                   <select
-                    id="booking-clinician"
-                    required
+                    id="booking-catalog-type"
                     className={selectClass}
-                    value={clinician}
-                    onChange={(event) => setClinician(event.target.value)}
+                    value={typeId}
+                    onChange={(event) => chooseType(event.target.value)}
                   >
-                    <option value="">Select assigned staff</option>
-                    {appointment?.assigned_dvm_id &&
-                      !lookups.data.staff.some(
-                        (staff) => staff.id === appointment.assigned_dvm_id,
-                      ) && (
-                        <option value={appointment.assigned_dvm_id}>
-                          Previously assigned staff (inactive)
+                    <option value="">
+                      {binding.data && !replacing
+                        ? `Keep frozen type: ${binding.data.type.definition.name} (revision ${binding.data.type.version})`
+                        : "Custom visit / select a reviewed type"}
+                    </option>
+                    {catalog
+                      .data!.types.filter(
+                        (entry) =>
+                          entry.published &&
+                          matchesType(
+                            entry.published.definition as TypeDefinition,
+                            lookups.data.pets.find((pet) => pet.id === petId)
+                              ?.species ?? "",
+                            visitType,
+                          ),
+                      )
+                      .map((entry) => (
+                        <option key={entry.id} value={entry.published!.id}>
+                          {entry.published!.definition.name} · revision{" "}
+                          {entry.published!.version}
                         </option>
-                      )}
-                    {lookups.data.staff.map((staff) => (
-                      <option key={staff.id} value={staff.id}>
-                        {staff.full_name?.trim() || `Staff ${staff.id.slice(0, 8)}`}
-                      </option>
-                    ))}
+                      ))}
                   </select>
+                  <p className="text-sm text-muted-foreground">
+                    {definition
+                      ? `${definition.category} visit · ${definition.staffing === "dvm" ? "Veterinarian required" : "Active staff"}. Choosing a type proposes its reviewed times.`
+                      : frozen
+                        ? "Reviewed fields are preserved. Choose a current published type to review changes to them."
+                        : "Only published types matching this patient’s species and location are shown. Custom visits require manual review."}
+                  </p>
+                  <Link
+                    to="/hub/tools/appointment-catalog"
+                    className="inline-flex min-h-11 items-center text-sm text-primary underline"
+                  >
+                    Review appointment catalog
+                  </Link>
+                </div>
+                {binding.data && replacing && <Button type="button" variant="outline" onClick={() => chooseType("")}>Restore original reviewed settings</Button>}
+                {staleResource && <p role="alert">The selected resource is no longer published. Clear it or choose a current resource before saving.</p>}
+                {notice && (
+                  <p role="status" className="text-sm text-muted-foreground">
+                    {notice}
+                  </p>
+                )}
+                {typeId && !selectedType && (
+                  <p role="alert">
+                    The selected type is no longer published. Choose a current
+                    type or explicitly keep the original booking.
+                  </p>
+                )}
+                <div>
+                  <Label htmlFor="booking-reason">Visit reason</Label>
+                  <Input
+                    id="booking-reason"
+                    readOnly={frozen || Boolean(selectedType)}
+                    required
+                    maxLength={150}
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                  />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="booking-clinician">Assigned staff</Label>
+                    <select
+                      id="booking-clinician"
+                      required
+                      className={selectClass}
+                      value={clinician}
+                      onChange={(event) => setClinician(event.target.value)}
+                    >
+                      <option value="">Select assigned staff</option>
+                      {appointment?.assigned_dvm_id &&
+                        !lookups.data.staff.some(
+                          (staff) => staff.id === appointment.assigned_dvm_id,
+                        ) && (
+                          <option value={appointment.assigned_dvm_id}>
+                            Previously assigned staff (inactive)
+                          </option>
+                        )}
+                      {lookups.data.staff.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.full_name?.trim() ||
+                            `Staff ${staff.id.slice(0, 8)}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="booking-status">Status</Label>
+                    <select
+                      id="booking-status"
+                      className={selectClass}
+                      value={status}
+                      onChange={(event) =>
+                        setStatus(event.target.value as Appointment["status"])
+                      }
+                    >
+                      {Object.entries(statusLabels).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="booking-time">
+                      Date and time (America/Denver)
+                    </Label>
+                    <Input
+                      id="booking-time"
+                      type="datetime-local"
+                      required
+                      value={local}
+                      onChange={(event) => setLocal(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="booking-duration">Duration (minutes)</Label>
+                    <Input
+                      id="booking-duration"
+                      readOnly={
+                        frozen ||
+                        Boolean(
+                          definition &&
+                            definition.duration_minutes !== null &&
+                            !definition.allow_override,
+                        )
+                      }
+                      type="number"
+                      min={15}
+                      max={480}
+                      required
+                      value={duration}
+                      onChange={(event) => setDuration(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="booking-type">Location</Label>
+                    <select
+                      id="booking-type"
+                      className={selectClass}
+                      value={visitType}
+                      disabled={frozen}
+                      onChange={(event) => {
+                        clearChoice();
+                        setVisitType(event.target.value);
+                        setAddress(
+                          event.target.value === "clinic"
+                            ? baseAddress
+                            : (lookups.data.clients.find(
+                                (c) => c.id === clientId,
+                              )?.housecall_address ?? ""),
+                        );
+                      }}
+                    >
+                      <option value="clinic">Clinic</option>
+                      <option value="housecall">Housecall</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="booking-room">
+                      Shared room/resource (optional)
+                    </Label>
+                    {selectedType ? (
+                      <select
+                        id="booking-room"
+                        className={selectClass}
+                        required={Boolean(definition?.resource_kind)}
+                        value={resourceId}
+                        onChange={(event) => {
+                          setResourceId(event.target.value);
+                          setRoom(
+                            catalog.data!.resources.find(
+                              (entry) =>
+                                entry.published?.id === event.target.value,
+                            )?.published?.definition.name ?? "",
+                          );
+                        }}
+                      >
+                        <option value="">
+                          {definition?.resource_kind
+                            ? "Select required resource"
+                            : "No shared resource"}
+                        </option>
+                        {staleResource && <option value={resourceId}>Selected resource unavailable — choose again</option>}
+                        {catalog
+                          .data!.resources.filter((entry) => {
+                            const resource = entry.published?.definition as
+                              | ResourceDefinition
+                              | undefined;
+                            return (
+                              resource &&
+                              resource.visit_types.some(
+                                (mode) => mode === visitType,
+                              ) &&
+                              (!definition?.resource_kind ||
+                                resource.resource_kind ===
+                                  definition.resource_kind)
+                            );
+                          })
+                          .map((entry) => (
+                            <option key={entry.id} value={entry.published!.id}>
+                              {entry.published!.definition.name}
+                            </option>
+                          ))}
+                      </select>
+                    ) : (
+                      <Input
+                        id="booking-room"
+                        readOnly={frozen}
+                        value={room}
+                        maxLength={150}
+                        onChange={(event) => setRoom(event.target.value)}
+                      />
+                    )}
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="booking-status">Status</Label>
-                  <select
-                    id="booking-status"
-                    className={selectClass}
-                    value={status}
-                    onChange={(event) =>
-                      setStatus(event.target.value as Appointment["status"])
+                  <Label htmlFor="booking-address">Visit address</Label>
+                  <Input
+                    id="booking-address"
+                    required
+                    readOnly={visitType === "clinic"}
+                    maxLength={1000}
+                    value={address}
+                    onChange={(event) => setAddress(event.target.value)}
+                  />
+                  {visitType === "housecall" && address && (
+                    <a
+                      className="text-sm text-primary underline"
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open directions in Google Maps
+                    </a>
+                  )}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="booking-before">
+                      Travel buffer before (minutes)
+                    </Label>
+                    <Input
+                      id="booking-before"
+                      readOnly={
+                        frozen ||
+                        Boolean(definition && !definition.allow_override)
+                      }
+                      type="number"
+                      min={0}
+                      max={240}
+                      required
+                      value={before}
+                      onChange={(event) => setBefore(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="booking-after">
+                      Travel buffer after (minutes)
+                    </Label>
+                    <Input
+                      id="booking-after"
+                      readOnly={
+                        frozen ||
+                        Boolean(definition && !definition.allow_override)
+                      }
+                      type="number"
+                      min={0}
+                      max={240}
+                      required
+                      value={after}
+                      onChange={(event) => setAfter(event.target.value)}
+                    />
+                  </div>
+                </div>
+                {selectedType && (
+                  <div>
+                    <Label htmlFor="booking-review">
+                      Booking time review note
+                    </Label>
+                    <Textarea
+                      id="booking-review"
+                      maxLength={2000}
+                      required={Boolean(
+                        definition &&
+                          requiresTimeReview(
+                            definition,
+                            Number(duration),
+                            Number(before),
+                            Number(after),
+                          ),
+                      )}
+                      value={reviewNote}
+                      onChange={(event) => setReviewNote(event.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Required for case-specific duration or permitted changes
+                      to the reviewed times.
+                    </p>
+                  </div>
+                )}
+                {frozen && binding.data?.override_note && (
+                  <p className="text-sm text-muted-foreground">
+                    Saved time review: {binding.data.override_note}
+                  </p>
+                )}
+                <div>
+                  <Label htmlFor="booking-reminders">
+                    Reminders (hours before, comma separated)
+                  </Label>
+                  <Input
+                    id="booking-reminders"
+                    value={offsets}
+                    onChange={(event) => setOffsets(event.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Default 48,24. Leave blank to disable. Delivery requires
+                    messaging setup.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="booking-notes">
+                    Access and appointment notes
+                  </Label>
+                  <Textarea
+                    id="booking-notes"
+                    maxLength={10000}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                  />
+                </div>
+                {error && (
+                  <p role="alert" className="text-destructive">
+                    {error}
+                  </p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={dismiss}>
+                    Close
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      !petId ||
+                      alerts.isPending ||
+                      alerts.isError ||
+                      (Boolean((typeId || replacing) && !selectedType) || staleResource)
                     }
                   >
-                    {Object.entries(statusLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
+                    {busy || managed.busy ? "Saving…" : "Save appointment"}
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="booking-time">
-                    Date and time (America/Denver)
-                  </Label>
-                  <Input
-                    id="booking-time"
-                    type="datetime-local"
-                    required
-                    value={local}
-                    onChange={(event) => setLocal(event.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="booking-duration">Duration (minutes)</Label>
-                  <Input
-                    id="booking-duration"
-                    type="number"
-                    min={5}
-                    max={480}
-                    required
-                    value={duration}
-                    onChange={(event) => setDuration(event.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="booking-type">Location</Label>
-                  <select
-                    id="booking-type"
-                    className={selectClass}
-                    value={visitType}
-                    onChange={(event) => {
-                      setVisitType(event.target.value);
-                      setAddress(
-                        event.target.value === "clinic"
-                          ? baseAddress
-                          : (lookups.data.clients.find((c) => c.id === clientId)
-                              ?.housecall_address ?? ""),
-                      );
-                    }}
-                  >
-                    <option value="clinic">Clinic</option>
-                    <option value="housecall">Housecall</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="booking-room">
-                    Shared room/resource (optional)
-                  </Label>
-                  <Input
-                    id="booking-room"
-                    value={room}
-                    maxLength={150}
-                    onChange={(event) => setRoom(event.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="booking-address">Visit address</Label>
-                <Input
-                  id="booking-address"
-                  required
-                  readOnly={visitType === "clinic"}
-                  maxLength={1000}
-                  value={address}
-                  onChange={(event) => setAddress(event.target.value)}
-                />
-                {visitType === "housecall" && address && (
-                  <a
-                    className="text-sm text-primary underline"
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open directions in Google Maps
-                  </a>
-                )}
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="booking-before">
-                    Travel buffer before (minutes)
-                  </Label>
-                  <Input
-                    id="booking-before"
-                    type="number"
-                    min={0}
-                    max={240}
-                    required
-                    value={before}
-                    onChange={(event) => setBefore(event.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="booking-after">
-                    Travel buffer after (minutes)
-                  </Label>
-                  <Input
-                    id="booking-after"
-                    type="number"
-                    min={0}
-                    max={240}
-                    required
-                    value={after}
-                    onChange={(event) => setAfter(event.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="booking-reminders">
-                  Reminders (hours before, comma separated)
-                </Label>
-                <Input
-                  id="booking-reminders"
-                  value={offsets}
-                  onChange={(event) => setOffsets(event.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Default 48,24. Leave blank to disable. Delivery requires
-                  messaging setup.
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="booking-notes">
-                  Access and appointment notes
-                </Label>
-                <Textarea
-                  id="booking-notes"
-                  maxLength={10000}
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                />
-              </div>
-              {error && (
+              </fieldset>
+              {managed.error && (
                 <p role="alert" className="text-destructive">
-                  {error}
+                  {managed.error}
                 </p>
               )}
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={close}>
-                  Close
-                </Button>
+              {managed.error && !managed.unconfirmed && (
                 <Button
-                  type="submit"
-                  disabled={!petId || alerts.isPending || alerts.isError}
+                  type="button"
+                  variant="outline"
+                  disabled={managed.busy}
+                  onClick={() => void catalog.refetch()}
                 >
-                  {busy ? "Saving…" : "Save appointment"}
+                  Reload published catalog
                 </Button>
-              </div>
-            </fieldset>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+              )}
+              {managed.unconfirmed && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    disabled={managed.busy}
+                    onClick={() => void managed.retry().then(completeManaged)}
+                  >
+                    Retry unchanged review
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={managed.busy}
+                    onClick={() =>
+                      void managed.checkSaved().then(completeManaged)
+                    }
+                  >
+                    Check saved action
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={managed.busy}
+                    onClick={dismiss}
+                  >
+                    Close
+                  </Button>
+                </div>
+              )}
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+      {guard}
+    </>
   );
 }

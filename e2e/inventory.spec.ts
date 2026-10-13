@@ -61,6 +61,8 @@ async function fixture(
 
   await page.route(`${backend}/**`, async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path === "/rest/v1/rpc/list_appointment_catalog") return route.fulfill({ json: { items: [], next: null } });
+    if (path === "/rest/v1/rpc/read_appointment_catalog_binding") return route.fulfill({ json: null });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/rest/v1/profiles")

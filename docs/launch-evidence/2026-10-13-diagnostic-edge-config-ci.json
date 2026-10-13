@@ -1,0 +1,88 @@
+{
+  "pr": 246,
+  "head": "d4670f7fc580620dafefd0807452a9418869671f",
+  "run": 38440418999,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38440418999",
+  "required_checks": [
+    {
+      "name": "frontend",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38440418999/job/115445243660",
+      "completedAt": "2026-10-13T17:59:11Z"
+    },
+    {
+      "name": "edge",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38440418999/job/115445243790",
+      "completedAt": "2026-10-13T17:41:32Z"
+    },
+    {
+      "name": "database",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38440418999/job/115445243247",
+      "completedAt": "2026-10-13T18:06:02Z"
+    },
+    {
+      "name": "diagnostic-renderer",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38440418999/job/115445243753",
+      "completedAt": "2026-10-13T17:44:21Z"
+    }
+  ],
+  "unit_tests": 1370,
+  "browser": {
+    "passed": 524,
+    "existing_skip": 1,
+    "failed": 0
+  },
+  "sql": {
+    "files": 146,
+    "assertions": 5917
+  },
+  "all_eight_functions_only_frozen_checks_and_bundles": true,
+  "native_artifact": {
+    "artifact_id": 11836230070,
+    "name": "synthetic-diagnostic-renderer-proof",
+    "runtime": "native-amd64-docker",
+    "registration_checks": 56,
+    "current_package_checks": 54,
+    "historical_package_checks": 56,
+    "download_checks": 37,
+    "scope_checks": 14,
+    "restore_checks": 18,
+    "sha256": "b00ac76d1b4187a78799875d9f3f38259ca930082d54c5f740390788c257af2b",
+    "byte_length": 29912,
+    "generated": 1,
+    "validated": 3,
+    "page_errors": 0,
+    "provider_requests": 0,
+    "hosted_sql_writes": 0
+  },
+  "preview": {
+    "deployment_id": "dpl_41Li4U4ixnDvWSxHdKjwYfN593D8",
+    "head": "d4670f7fc580620dafefd0807452a9418869671f",
+    "origin": "https://livingroom-vet-care-j5aiy9nfr-daves-projects-e0da43ba.vercel.app",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-DFPgbtns.js",
+    "backend": "kothoqicubowyhwfsrte",
+    "backend_migrations": 179,
+    "page_errors": 0,
+    "protection_changed": false,
+    "staff_session_used": false,
+    "schema14_hosted_rpc_claimed": false,
+    "token_in_receipt": false
+  },
+  "rollout_245": "Complete on both179 backends; permanent policies off",
+  "all_staging_attempts_cleanup": {
+    "active_patients": 0,
+    "active_profiles": 0,
+    "objects": 0,
+    "open_sessions": 0,
+    "owned_actors": 8,
+    "owned_processing_actors": 4,
+    "refresh_tokens": 0
+  },
+  "specific_246_merge_approval": "Pending Dave; not merged",
+  "next_batch": "Appointment types, next visits and daily tasks; Dave chose draft defaults for Susan review"
+}

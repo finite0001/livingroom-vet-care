@@ -1,0 +1,26 @@
+{
+  "pr": 246,
+  "head": "d4670f7fc580620dafefd0807452a9418869671f",
+  "merge": "ba2b1c734448f679db0e39fb77081e683ff05251",
+  "merged_at": "2026-10-13T18:11:05Z",
+  "production": {
+    "id": "dpl_CQqHRmFoikFCL8ANstHYydAhZyRC",
+    "url": "livingroom-vet-care-nxig4f68s-daves-projects-e0da43ba.vercel.app",
+    "readyState": "READY",
+    "head": "ba2b1c734448f679db0e39fb77081e683ff05251"
+  },
+  "public_smoke": {
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-2N2CWv3r.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "hosted_migrations": 179,
+  "backend_or_function_writes_required": false,
+  "permanent_gates_enabled": false
+}
