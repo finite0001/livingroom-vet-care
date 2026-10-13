@@ -1,0 +1,49 @@
+{
+  "package": "4A2a next-visit foundation",
+  "migration": "20261013220500_next_visit_outcomes.sql",
+  "migration_sha256": "3ba3bb48a68be9b875128358c064f923468034d6c860f6c7a488822f270575f7",
+  "canonical_migrations": 182,
+  "sql": {
+    "files": 148,
+    "assertions": 6057,
+    "pass": true
+  },
+  "existing_catalog_native": {
+    "checks": 59,
+    "observed_lock_queues": 7,
+    "browser_checks": 20,
+    "populated_restore_checks": 9,
+    "pass": true
+  },
+  "next_visit_native": {
+    "checks": 44,
+    "observed_lock_queues": 6,
+    "populated_outcome_restore": true,
+    "pass": true
+  },
+  "owned_runtime_removed": true,
+  "provider_requests": 0,
+  "hosted_182_applied": false,
+  "staff_prompt_implemented": false,
+  "backend_baseline": 181,
+  "lint": {
+    "errors": 0,
+    "existing_warnings": 4
+  },
+  "unit_total": 1381,
+  "typecheck": "pass",
+  "build": "pass",
+  "storage_body_restore_claimed": false,
+  "compatibility_lock_regression": {
+    "before": "care holder SHARE NOWAIT fails while slim save waits for care",
+    "after": "holder shares row before releasing care; slim save succeeds",
+    "original_failure_reproduced": true,
+    "schedule_care_row_order_preserved": true
+  },
+  "inactive_patient_completion": {
+    "existing_unchanged_patient_visit_can_complete": true,
+    "follow_up_decisions_blocked": true,
+    "new_inactive_patient_completed_insert_denied": true,
+    "switch_to_inactive_patient_denied": true
+  }
+}
