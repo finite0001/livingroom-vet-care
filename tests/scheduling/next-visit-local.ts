@@ -627,6 +627,53 @@ try {
     "42501",
   );
   sql(`update profiles set is_active=true where id='${staff.id}';`);
+  // A deceased patient can have a completed visit; only follow-up decisions stop.
+  const inactiveSource = await rpc(staff.db, "save_appointment", {
+    ...base,
+    p_scheduled_at: "2032-03-01T16:00:00Z",
+  });
+  sql(
+    `update pets set deceased_at=(clock_timestamp() at time zone 'America/Denver')::date where id='${pet}';`,
+  );
+  const inactiveCompletion = nextVisitCompletionReceiptSchema.parse(
+    await rpc(staff.db, "complete_appointment", {
+      ...completedArgs,
+      p_action_id: randomUUID(),
+      p_id: inactiveSource.id,
+    }),
+  );
+  check(inactiveCompletion.appointment.status, "COMPLETED");
+  check(inactiveCompletion.context.current, false);
+  await denied(
+    staff.db,
+    "save_next_visit_outcome",
+    {
+      ...firstArgs,
+      p_action_id: randomUUID(),
+      p_occurrence_id: inactiveCompletion.context.occurrence.id,
+      p_values: {
+        action: "later",
+        note: "Synthetic inactive patient",
+        followup_on: null,
+        booking: null,
+        appointment_id: null,
+        appointment_version: null,
+      },
+    },
+    "PT409",
+  );
+  await denied(
+    staff.db,
+    "save_appointment",
+    { ...base, p_scheduled_at: "2032-04-01T16:00:00Z", p_status: "COMPLETED" },
+    "23514",
+  );
+  await denied(
+    staff.db,
+    "save_appointment",
+    { ...base, p_id: source.id, p_expected_version: 3, p_status: "COMPLETED" },
+    "23514",
+  );
   // Populated state is restored together with canonical functions and private privileges.
   const restored =
       "owned_next_restore_" + randomUUID().replaceAll("-", "").slice(0, 12),

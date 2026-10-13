@@ -288,7 +288,7 @@ export const nextVisitCompletionReceiptSchema = z
       value.appointment.pet_id !== value.context.occurrence.pet_id ||
       value.appointment.client_id !== value.context.occurrence.client_id ||
       value.appointment.status !== "COMPLETED" ||
-      !value.context.current
+      value.context.source_status !== "COMPLETED"
     )
       ctx.addIssue({
         code: "custom",

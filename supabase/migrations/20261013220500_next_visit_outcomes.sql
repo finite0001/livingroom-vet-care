@@ -6,6 +6,13 @@ do $$declare body text;needle text:='perform pg_advisory_xact_lock(73260123);';b
  if position('public.care_eligibility_lock()' in body)>0 or position(needle in body)=0 then raise exception 'Unexpected compatibility save lock contract';end if;
  execute replace(body,needle,needle||'perform public.care_eligibility_lock();');
 end $$;
+-- Closure of an existing unchanged patient is distinct from scheduling a new
+-- visit. Keep the inactive-patient exception narrow, as with cancellation.
+do $$declare body text;needle text:='p_status=''CANCELLED'' and previous.pet_id=p_pet_id and previous.client_id=p_client_id';begin
+ body:=pg_get_functiondef('public.save_appointment_before_catalog(uuid,uuid,integer,uuid,uuid,timestamptz,integer,text,appointment_status,uuid,text,text,integer,integer,text,text,integer[])'::regprocedure);
+ if position(needle in body)=0 then raise exception 'Unexpected canonical patient closure contract';end if;
+ execute replace(body,needle,'p_status in (''CANCELLED'',''COMPLETED'') and previous.pet_id=p_pet_id and previous.client_id=p_client_id');
+end $$;
 create table public.appointment_completion_occurrences(
  id uuid primary key default gen_random_uuid(),appointment_id uuid not null references public.appointments(id) on delete restrict,
  appointment_version integer not null check(appointment_version>0),client_id uuid not null references public.clients(id),
@@ -103,7 +110,9 @@ declare actor uuid:=public.clinical_require_staff();req jsonb:=jsonb_build_objec
   row:=public.save_appointment(actor,row.id,row.version,row.client_id,row.pet_id,row.scheduled_at,row.duration_minutes,row.appointment_type,'COMPLETED',row.assigned_dvm_id,row.visit_type,row.address_snapshot,row.travel_before_minutes,row.travel_after_minutes,row.resource_name,row.notes,row.reminder_offsets);
  end if;
  select id into occurrence from appointment_completion_occurrences where appointment_id=row.id order by appointment_version desc limit 1;
- if occurrence is null or not public.next_visit_occurrence_current(occurrence) then raise exception 'Historical or changed completion needs explicit workflow review; no inferred occurrence' using errcode='23514';end if;
+ -- Patient inactivity stops follow-up decisions, not recording a completed visit.
+ -- A fresh acknowledgment must still match the exact latest patient's identity.
+ if occurrence is null or not exists(select 1 from appointment_completion_occurrences o where o.id=occurrence and o.client_id=row.client_id and o.pet_id=row.pet_id) then raise exception 'Historical or changed completion needs explicit workflow review; no inferred occurrence' using errcode='23514';end if;
  receipt:=jsonb_build_object('appointment',to_jsonb(row),'context',public.read_next_visit_context(occurrence));
  insert into appointment_next_visit_actions(id,actor_id,operation,request,receipt) values(p_action_id,actor,'complete',req,receipt);
  return receipt;

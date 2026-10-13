@@ -1,7 +1,7 @@
 {
   "package": "4A2a next-visit foundation",
   "migration": "20261013220500_next_visit_outcomes.sql",
-  "migration_sha256": "65090374115c6bf40a102275390471940be96d50df21e66addbcd2420d4b83b5",
+  "migration_sha256": "3ba3bb48a68be9b875128358c064f923468034d6c860f6c7a488822f270575f7",
   "canonical_migrations": 182,
   "sql": {
     "files": 148,
@@ -16,7 +16,7 @@
     "pass": true
   },
   "next_visit_native": {
-    "checks": 39,
+    "checks": 44,
     "observed_lock_queues": 6,
     "populated_outcome_restore": true,
     "pass": true
@@ -39,5 +39,11 @@
     "after": "holder shares row before releasing care; slim save succeeds",
     "original_failure_reproduced": true,
     "schedule_care_row_order_preserved": true
+  },
+  "inactive_patient_completion": {
+    "existing_unchanged_patient_visit_can_complete": true,
+    "follow_up_decisions_blocked": true,
+    "new_inactive_patient_completed_insert_denied": true,
+    "switch_to_inactive_patient_denied": true
   }
 }

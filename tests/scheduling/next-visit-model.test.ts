@@ -90,9 +90,16 @@ test("Fresh completion receipt cannot acknowledge a different patient or stale o
   assert.equal(
     nextVisitCompletionReceiptSchema.safeParse({
       appointment,
-      context: { ...context, current: false },
+      context: { ...context, current: false, source_status: "CANCELLED" },
     }).success,
     false,
+  );
+  assert.equal(
+    nextVisitCompletionReceiptSchema.safeParse({
+      appointment,
+      context: { ...context, current: false },
+    }).success,
+    true,
   );
   assert.equal(
     nextVisitContextSchema.safeParse({

@@ -4,7 +4,7 @@ Foundation: [PR #248](https://github.com/finite0001/livingroom-vet-care/pull/248
 
 ## Completion and durable access
 
-Use one shared `NextVisitOutcomeDialog` and `PendingNextVisitOutcomes` on Home and Schedule. The queue is independent of selected calendar date. Show Pending and Schedule later with saved attribution/date; completed booked/declined receipts remain accessible from the patient/visit. Closing an untouched prompt leaves the occurrence pending. Completion never rolls back merely because staff close or defer the scheduling prompt.
+Use one shared `NextVisitOutcomeDialog` and `PendingNextVisitOutcomes` on Home and Schedule. The queue is independent of selected calendar date. Show Pending and Schedule later with saved attribution/date; completed booked/declined receipts remain accessible from the patient/visit. Closing an untouched prompt leaves the occurrence pending. Completion never rolls back merely because staff close or defer the scheduling prompt. A confirmed completion may have follow-up eligibility false because the patient is deceased/archived: keep the saved completion and disable scheduling; do not describe it as a failed completion.
 
 `useAppointmentStatus` must retain the confirmed completion receipt and invoke `onCompleted(context)` instead of discarding RPC data. Home's Complete visit and Schedule's Complete use the actor/action/expected-version completion RPC. Check-in stays on its existing canonical path. Handle duplicate clicks/unknown acknowledgment with the same stable request/action, not a fresh status save.
 
