@@ -1,0 +1,330 @@
+{
+  "repository": "finite0001/livingroom-vet-care",
+  "pr": 245,
+  "tested_head": "11f642a56c3244c95dfaf13657b99a05b4ab84ed",
+  "merge_commit": "20b035f1e93ac4629b4051dedbff736952cc267f",
+  "merged_at": "2026-10-13T17:15:57Z",
+  "migration": "20261013003556_diagnostic_pdf_record_packages.sql",
+  "migration_sha256": "d2724dd9d8be1d6b6f96eabd88025ac0548d7a3b1f602a77a272c69076510ce7",
+  "migrations": 179,
+  "projects": {
+    "staging": {
+      "installation": {
+        "project": "kothoqicubowyhwfsrte",
+        "migration": "20261013003556_diagnostic_pdf_record_packages.sql",
+        "migration_sha256": "d2724dd9d8be1d6b6f96eabd88025ac0548d7a3b1f602a77a272c69076510ce7",
+        "migrations": 179,
+        "pending": 0,
+        "protected_backup": true,
+        "baseline_unchanged": true,
+        "state": {
+          "disclosure": 0,
+          "outbox": 0,
+          "payment_profiles": 1,
+          "release": 0,
+          "worker": 0
+        },
+        "runtime_policy": "empty/off",
+        "skip_vault": true,
+        "legacy_writes": 0
+      },
+      "rollback_probe": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": {
+          "count": 179,
+          "latest": "20261013003556"
+        },
+        "checks": 38,
+        "canonical_function_bodies": 7,
+        "private_rls_ledgers_and_policy": 16,
+        "all_synthetic_writes_rolled_back": true,
+        "baseline_unchanged": true,
+        "worker_policy": "empty/off",
+        "provider_requests": 0,
+        "proof": [
+          {
+            "proof": {
+              "checks": 38,
+              "provider_requests": 0,
+              "synthetic_transaction": true
+            }
+          }
+        ]
+      },
+      "edge": {
+        "project": "kothoqicubowyhwfsrte",
+        "functions": [
+          {
+            "slug": "prepare-document-link",
+            "before_version": 22,
+            "after_version": 25,
+            "verify_jwt": true
+          },
+          {
+            "slug": "prepare-invoice-email",
+            "before_version": 21,
+            "after_version": 24,
+            "verify_jwt": true
+          },
+          {
+            "slug": "prepare-payment-delivery",
+            "before_version": 22,
+            "after_version": 23,
+            "verify_jwt": true
+          },
+          {
+            "slug": "capture-conversation-email",
+            "before_version": 12,
+            "after_version": 13,
+            "verify_jwt": true
+          },
+          {
+            "slug": "retrieve-document-link",
+            "before_version": 22,
+            "after_version": 25,
+            "verify_jwt": false
+          },
+          {
+            "slug": "dispatch-outbox",
+            "before_version": 26,
+            "after_version": 27,
+            "verify_jwt": false
+          },
+          {
+            "slug": "prepare-release-email",
+            "before_version": 23,
+            "after_version": 24,
+            "verify_jwt": true
+          },
+          {
+            "slug": "recover-document-link",
+            "before_version": 22,
+            "after_version": 25,
+            "verify_jwt": true
+          }
+        ],
+        "protected_source_backups": true,
+        "unaffected_versions_unchanged": true,
+        "explicit_pinned_import_map": "npm:zod@3.25.76",
+        "prune": false,
+        "secrets_changed": false
+      }
+    },
+    "primary": {
+      "installation": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migration": "20261013003556_diagnostic_pdf_record_packages.sql",
+        "migration_sha256": "d2724dd9d8be1d6b6f96eabd88025ac0548d7a3b1f602a77a272c69076510ce7",
+        "migrations": 179,
+        "pending": 0,
+        "protected_backup": true,
+        "baseline_unchanged": true,
+        "state": {
+          "disclosure": 0,
+          "outbox": 3,
+          "payment_profiles": 0,
+          "release": 0,
+          "worker": 0
+        },
+        "runtime_policy": "empty/off",
+        "skip_vault": true,
+        "legacy_writes": 0
+      },
+      "rollback_probe": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migrations": {
+          "count": 179,
+          "latest": "20261013003556"
+        },
+        "checks": 38,
+        "canonical_function_bodies": 7,
+        "private_rls_ledgers_and_policy": 16,
+        "all_synthetic_writes_rolled_back": true,
+        "baseline_unchanged": true,
+        "worker_policy": "empty/off",
+        "provider_requests": 0,
+        "proof": [
+          {
+            "proof": {
+              "checks": 38,
+              "provider_requests": 0,
+              "synthetic_transaction": true
+            }
+          }
+        ]
+      },
+      "edge": {
+        "project": "mgadheotkdnrsatfivjy",
+        "functions": [
+          {
+            "slug": "capture-conversation-email",
+            "before_version": 17,
+            "after_version": 18,
+            "verify_jwt": true
+          },
+          {
+            "slug": "dispatch-outbox",
+            "before_version": 27,
+            "after_version": 28,
+            "verify_jwt": false
+          },
+          {
+            "slug": "prepare-document-link",
+            "before_version": 19,
+            "after_version": 20,
+            "verify_jwt": true
+          },
+          {
+            "slug": "prepare-invoice-email",
+            "before_version": 22,
+            "after_version": 23,
+            "verify_jwt": true
+          },
+          {
+            "slug": "prepare-payment-delivery",
+            "before_version": 19,
+            "after_version": 20,
+            "verify_jwt": true
+          },
+          {
+            "slug": "prepare-release-email",
+            "before_version": 23,
+            "after_version": 24,
+            "verify_jwt": true
+          },
+          {
+            "slug": "recover-document-link",
+            "before_version": 19,
+            "after_version": 20,
+            "verify_jwt": true
+          },
+          {
+            "slug": "retrieve-document-link",
+            "before_version": 19,
+            "after_version": 20,
+            "verify_jwt": false
+          }
+        ],
+        "protected_source_backups": true,
+        "unaffected_versions_unchanged": true,
+        "prune": false,
+        "secrets_changed": false,
+        "explicit_pinned_import_map": "npm:zod@3.25.76"
+      }
+    }
+  },
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "clinical_commissioning": "off; Susan acceptance pending",
+  "object_body_backup_claimed": false,
+  "staging_acceptance": {
+    "project": "kothoqicubowyhwfsrte",
+    "checks": 193,
+    "genuine_auth": true,
+    "currentPackageChecks": 63,
+    "historicalPackageChecks": 63,
+    "review": {
+      "checks": 46,
+      "native_deployed_edge": true,
+      "browser": [
+        "desktop",
+        "mobile"
+      ],
+      "byte_equality": true,
+      "page_errors": 0,
+      "original_owner_inactive": true,
+      "historical_retained": true,
+      "real_expiry_seconds": 30,
+      "token_in_receipt": false,
+      "protection_changed": false,
+      "origin": "https://livingroom-vet-care-bh3l920ro-daves-projects-e0da43ba.vercel.app"
+    },
+    "generated": 1,
+    "validated": 2,
+    "byte_length": 32745,
+    "exact_http_readback": true,
+    "direct_staff_storage_denied": true,
+    "deleted_object_unavailable": true,
+    "regeneration": 0,
+    "provider_requests": 0,
+    "cleanup": {
+      "active_patients": 0,
+      "active_profiles": 0,
+      "objects": 0,
+      "open_sessions": 0
+    },
+    "policies": {
+      "disclosure": 0,
+      "outbox": 0,
+      "release": 0,
+      "runtime": 0,
+      "worker": 0
+    }
+  },
+  "artifact": {
+    "byte_length": 32745,
+    "sha256": "07d8d0dace405824874dba07b3619d0243ff3f85be82ba6163e84a730f16b2ad"
+  },
+  "temporary_runtime_cleanup": {
+    "temporary_settings": [
+      "RESEND_FROM",
+      "DOCUMENT_LINK_ORIGIN",
+      "DOCUMENT_LINK_KEYS",
+      "DOCUMENT_LINK_ACTIVE_KEY_VERSION",
+      "DOCUMENT_LINK_PUBLIC_ENABLED"
+    ],
+    "preexisting_settings_overwritten": false,
+    "all_removed": true,
+    "provider_credentials_changed": false,
+    "outbound_mode_changed": false
+  },
+  "advisors": {
+    "staging": {
+      "levels": {
+        "WARN": 465
+      },
+      "added": 0,
+      "removed": 0
+    },
+    "primary": {
+      "levels": {
+        "WARN": 465
+      },
+      "added": 0,
+      "removed": 0
+    }
+  },
+  "production_deployment": {
+    "id": "dpl_7aWMceh97ivaZV959kjVzeJbWKsU",
+    "url": "livingroom-vet-care-an9mv9ozm-daves-projects-e0da43ba.vercel.app",
+    "readyState": "READY",
+    "target": "production",
+    "head": "20b035f1e93ac4629b4051dedbff736952cc267f",
+    "ref": "main"
+  },
+  "production_smoke": {
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-2N2CWv3r.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "vm_audit": "2026-10-13-diagnostic-pdf-packages-rollout-vm-audit.json",
+  "import_map_recovery": {
+    "missing_per_function_configs": [
+      "capture-conversation-email",
+      "dispatch-outbox",
+      "prepare-payment-delivery",
+      "prepare-release-email"
+    ],
+    "deployment_map": "npm:zod@3.25.76",
+    "four_configured_staging_consumers_updated_during_failed_batch": true,
+    "all_eight_final_deployment_succeeded": true,
+    "jwt_settings_preserved": true,
+    "follow_up": "Add each missing config/lock and isolate every consumer in CI"
+  }
+}
