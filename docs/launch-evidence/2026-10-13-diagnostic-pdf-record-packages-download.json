@@ -1,0 +1,24 @@
+{
+  "checked_at": "2026-10-13T15:41:01.906Z",
+  "checks": 37,
+  "release_scope_checks": 14,
+  "genuine_auth": true,
+  "genuine_private_storage": true,
+  "http_shared_handler": true,
+  "native_deno_runtime_claimed": false,
+  "browser": [
+    "desktop",
+    "mobile"
+  ],
+  "exact_bytes": true,
+  "sha256": "0ec7786423bb6afd9f779df9c07aafb3f6436cb61e3ea548a7d1146c7056d693",
+  "byte_length": 29918,
+  "original_owner_inactive": true,
+  "audit_outcome": "response_prepared",
+  "historical_correction_download": true,
+  "archived_deceased_records_retained": true,
+  "observed_download_lock_checks": 8,
+  "page_errors": 0,
+  "provider_requests": 0,
+  "hosted_writes": 0
+}

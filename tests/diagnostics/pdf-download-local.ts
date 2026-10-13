@@ -196,11 +196,16 @@ export async function provePdfDownload(a: Input) {
       viewport: { width: 1280, height: 1000 },
     });
     await context.addInitScript((session) => {
+      if (window.top !== window) return;
       localStorage.setItem("sb-127-auth-token", JSON.stringify(session));
     }, a.session);
     const page = await context.newPage();
     let pageErrors = 0;
-    page.on("pageerror", () => pageErrors++);
+    const pageErrorMessages: string[] = [];
+    page.on("pageerror", (error) => {
+      pageErrors++;
+      pageErrorMessages.push(error.message);
+    });
     await page.goto(`http://127.0.0.1:64581/hub/patient/${a.pet}?tab=medical`);
     await page
       .getByRole("button", { name: "Open in-house diagnostics", exact: true })
@@ -228,7 +233,7 @@ export async function provePdfDownload(a: Input) {
       .waitFor();
     await scope
       .getByText(
-        "Sharing is awaiting record-package integration. This review does not authorize sending records.",
+        "Use Records requests to review and confirm a numbered package. This scope preview does not authorize sending records.",
         { exact: true },
       )
       .waitFor();
@@ -285,11 +290,67 @@ export async function provePdfDownload(a: Input) {
       assert.ok(bounds && bounds.height >= 44);
       checks += 4;
     }
-    assert.equal(pageErrors, 0);
+    assert.equal(pageErrors, 0, JSON.stringify(pageErrorMessages));
     checks++;
     mkdirSync("output/renderer-proof", { recursive: true });
     await page.screenshot({
       path: "output/renderer-proof/pdf-review-mobile.png",
+      fullPage: false,
+    });
+    const packageRequest = a.sql(
+      `select r.id from record_requests r join record_request_manifests m on m.id=r.active_manifest_id where r.pet_id=${quote(a.pet)} and r.recipient_kind='client' and r.channel='EMAIL' and exists(select 1 from record_request_packages p where p.manifest_id=m.id and p.selection->'diagnostic_pdf_ids' @> jsonb_build_array(${quote(a.job)}::text)) order by r.id limit 1;`,
+    );
+    assert.match(packageRequest, /^[a-f0-9-]{36}$/);
+    for (const width of [1280, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(
+        `http://127.0.0.1:64581/hub/tools/record-requests/${packageRequest}`,
+      );
+      await page
+        .getByRole("button", { name: "Review package 1", exact: true })
+        .click();
+      const review = page.getByRole("region", {
+        name: "Numbered package review",
+        exact: true,
+      });
+      const frame = review.frameLocator(
+        'iframe[title="Medical-record release artifact"]',
+      );
+      await frame
+        .getByText("Current reviewed selection", { exact: false })
+        .waitFor();
+      await frame
+        .getByRole("heading", {
+          name: "INVALIDATED RELEASE — HISTORICAL COPY",
+          exact: true,
+        })
+        .waitFor();
+      const open = review.getByRole("button", {
+        name: "Open original",
+        exact: true,
+      });
+      const downloadEvent = page.waitForEvent("download");
+      await open.click();
+      const saved = await downloadEvent;
+      const path = await saved.path();
+      assert.ok(path);
+      assert.deepEqual(
+        new Uint8Array(readFileSync(path)),
+        new Uint8Array(a.bytes),
+      );
+      const bounds = await open.boundingBox();
+      assert.ok(bounds && bounds.height >= 44);
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth + 1,
+        ),
+        true,
+      );
+      checks += 4;
+    }
+    assert.equal(pageErrors, 0, JSON.stringify(pageErrorMessages));
+    await page.screenshot({
+      path: "output/renderer-proof/pdf-record-package-mobile.png",
       fullPage: false,
     });
     const source = finalizedSchema.parse(

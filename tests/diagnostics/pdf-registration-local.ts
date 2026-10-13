@@ -396,6 +396,20 @@ const originalObject = await service.download(
   privateObject.bucket_id,
   privateObject.object_path,
 );
+const { proveDiagnosticRecordPackages } = await import(
+  "./pdf-record-packages-local.ts"
+);
+const currentPackageChecks = await proveDiagnosticRecordPackages({
+  staff,
+  admin,
+  actor: nextActor,
+  job,
+  pet: pet.id,
+  bytes: originalObject,
+  sql,
+  project,
+  mode: "current",
+});
 const { provePdfDownload } = await import("./pdf-download-local.ts");
 assert.ok(nextSigned.data.session);
 const downloadChecks = await provePdfDownload({
@@ -412,6 +426,17 @@ const downloadChecks = await provePdfDownload({
   bytes: originalObject,
   sql,
 });
+const historicalPackageChecks = await proveDiagnosticRecordPackages({
+  staff,
+  admin,
+  actor: nextActor,
+  job,
+  pet: pet.id,
+  bytes: originalObject,
+  sql,
+  project,
+  mode: "historical",
+});
 const restored = execFileSync(
   "python3",
   [
@@ -427,8 +452,8 @@ const restored = execFileSync(
   ],
   { encoding: "utf8", timeout: 180000 },
 );
-assert.match(restored, /populated restore passed: 9 checks/);
-checks += 9;
+assert.match(restored, /populated restore passed: 18 checks/);
+checks += 18;
 const replacement = Buffer.from(originalObject);
 replacement[replacement.length - 1] ^= 1;
 const swapped = await admin.storage
@@ -488,6 +513,8 @@ writeFileSync(
     {
       checked_at: new Date().toISOString(),
       download_checks: downloadChecks,
+      current_package_checks: currentPackageChecks,
+      historical_package_checks: historicalPackageChecks,
       runtime:
         mode === "sandbox" ? "native-vercel-sandbox" : "native-amd64-docker",
       checks,
@@ -503,7 +530,7 @@ writeFileSync(
       owner_handoff: true,
       original_capture_actor_preserved: true,
       observed_lock_checks: 8,
-      populated_restore_checks: 9,
+      populated_restore_checks: 18,
       restored_storage_body_backup_claimed: false,
       private_storage_http_roundtrip: true,
       staff_download_denied: true,

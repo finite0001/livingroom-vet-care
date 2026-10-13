@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { sourceLabels } from "../record-releases/selection.ts";
+export const requestSourceLabels = {
+  ...sourceLabels,
+  diagnostic_pdf_ids: "Current diagnostic PDFs",
+  diagnostic_pdf_historical_ids: "Historical diagnostic PDFs",
+} as const;
+export type RequestSourceKind = keyof typeof requestSourceLabels;
 const uuid = z.string().uuid(),
   version = z.number().int().positive();
 export const statuses = [
@@ -15,7 +21,7 @@ export const statuses = [
 export const selectionSchema = z
   .object(
     Object.fromEntries(
-      Object.keys(sourceLabels).map((k) => [
+      Object.keys(requestSourceLabels).map((k) => [
         k,
         z
           .array(uuid)
@@ -25,7 +31,18 @@ export const selectionSchema = z
       ]),
     ),
   )
-  .strict();
+  .strict()
+  .superRefine((v, ctx) => {
+    if (
+      (v.diagnostic_pdf_ids || []).some((id) =>
+        (v.diagnostic_pdf_historical_ids || []).includes(id),
+      )
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Select a diagnostic PDF in one explicit mode only",
+      });
+  });
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 export const saveValuesSchema = z
   .object({

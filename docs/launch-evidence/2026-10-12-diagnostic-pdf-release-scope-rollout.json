@@ -1,0 +1,124 @@
+{
+  "approved_pr": 244,
+  "approved_head": "515fa21a19bd659423874b310f6d9c70c7c6974f",
+  "merge_commit": "8bb1592bb49c8084d47b026cb20ba2c6f2c4e70b",
+  "migration": "20261012210016_diagnostic_pdf_release_scope.sql",
+  "migration_sha256": "bfb99625e39205307918aea1647d1d6548f5324f9bcdf10f98a9d8ab6e24a516",
+  "staging": {
+    "project": "kothoqicubowyhwfsrte",
+    "migrations": {
+      "count": 178,
+      "latest": "20261012210016"
+    },
+    "checks": 26,
+    "canonical_function_bodies": 3,
+    "private_rls_ledgers_and_policy": 16,
+    "all_synthetic_writes_rolled_back": true,
+    "baseline_unchanged": true,
+    "worker_policy": "empty/off",
+    "provider_requests": 0,
+    "proof": [
+      {
+        "proof": {
+          "checks": 26,
+          "provider_requests": 0,
+          "synthetic_transaction": true
+        }
+      }
+    ]
+  },
+  "primary": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migrations": {
+      "count": 178,
+      "latest": "20261012210016"
+    },
+    "checks": 26,
+    "canonical_function_bodies": 3,
+    "private_rls_ledgers_and_policy": 16,
+    "all_synthetic_writes_rolled_back": true,
+    "baseline_unchanged": true,
+    "worker_policy": "empty/off",
+    "provider_requests": 0,
+    "proof": [
+      {
+        "proof": {
+          "checks": 26,
+          "provider_requests": 0,
+          "synthetic_transaction": true
+        }
+      }
+    ]
+  },
+  "production": {
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-BG8A0gxW.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "native_vm_count": 3,
+  "all_provider_requests": 0,
+  "permanent_policies": "worker/runtime/staff-disclosure/release/recipient-disclosure empty/off",
+  "next_migration_deployed": false,
+  "staging_acceptance": {
+    "project": "kothoqicubowyhwfsrte",
+    "checks": 59,
+    "genuine_auth": true,
+    "review": {
+      "checks": 38,
+      "native_deployed_edge": true,
+      "browser": [
+        "desktop",
+        "mobile"
+      ],
+      "byte_equality": true,
+      "page_errors": 0,
+      "original_owner_inactive": true,
+      "historical_retained": true,
+      "real_expiry_seconds": 30,
+      "token_in_receipt": false,
+      "protection_changed": false,
+      "origin": "https://livingroom-vet-care-o1wrhxn0m-daves-projects-e0da43ba.vercel.app"
+    },
+    "generated": 1,
+    "validated": 2,
+    "byte_length": 32740,
+    "exact_http_readback": true,
+    "direct_staff_storage_denied": true,
+    "deleted_object_unavailable": true,
+    "regeneration": 0,
+    "provider_requests": 0,
+    "cleanup": {
+      "active_patients": 0,
+      "active_profiles": 0,
+      "objects": 0,
+      "open_sessions": 0
+    },
+    "policies": {
+      "disclosure": 0,
+      "outbox": 0,
+      "release": 0,
+      "runtime": 0,
+      "worker": 0
+    }
+  },
+  "advisors": {
+    "staging": {
+      "WARN": 465
+    },
+    "primary": {
+      "WARN": 465
+    }
+  },
+  "advisor_delta": {
+    "WARN": 1,
+    "ERROR": 0,
+    "routine": "read_diagnostic_pdf_release_scope",
+    "reason": "Intentional authenticated metadata endpoint; staff guard, private-path projection and active-reader recheck covered by hosted probes."
+  }
+}

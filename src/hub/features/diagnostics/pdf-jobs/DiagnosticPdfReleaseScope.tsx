@@ -76,8 +76,8 @@ export function DiagnosticPdfReleaseScope({
             </p>
           )}
           <p className="text-sm text-muted-foreground">
-            Sharing is awaiting record-package integration. This review does not
-            authorize sending records.
+            Use Records requests to review and confirm a numbered package. This
+            scope preview does not authorize sending records.
           </p>
         </>
       ) : null}
