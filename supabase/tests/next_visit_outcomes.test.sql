@@ -2,6 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+select ok(position('public.care_eligibility_lock()' in pg_get_functiondef('public.save_appointment(uuid,integer,uuid,uuid,timestamptz,integer,text,appointment_status,uuid,text)'::regprocedure))>position('pg_advisory_xact_lock(73260123)' in pg_get_functiondef('public.save_appointment(uuid,integer,uuid,uuid,timestamptz,integer,text,appointment_status,uuid,text)'::regprocedure)) and position('public.care_eligibility_lock()' in pg_get_functiondef('public.save_appointment(uuid,integer,uuid,uuid,timestamptz,integer,text,appointment_status,uuid,text)'::regprocedure))<position('select * into r from appointments' in pg_get_functiondef('public.save_appointment(uuid,integer,uuid,uuid,timestamptz,integer,text,appointment_status,uuid,text)'::regprocedure)),'Compatibility save takes schedule then care before the appointment row');
 insert into auth.users(id,email,raw_user_meta_data) values
  ('49000000-0000-4000-8000-000000000001','next-visit-staff@example.test','{"first_name":"Next","last_name":"Staff"}'),
  ('49000000-0000-4000-8000-000000000002','next-visit-vet@example.test','{"first_name":"Next","last_name":"Vet"}');

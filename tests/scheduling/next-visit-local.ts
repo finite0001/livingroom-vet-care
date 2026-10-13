@@ -368,6 +368,71 @@ try {
     }),
     null,
   );
+  // Compatibility save must wait for care before locking the appointment row.
+  const slimSource = await rpc(staff.db, "save_appointment", {
+    ...base,
+    p_scheduled_at: "2032-02-01T16:00:00Z",
+  });
+  const careMarker = "owned_slim_care_" + randomUUID().replaceAll("-", "");
+  const careHolder = spawn(
+    "docker",
+    [
+      "exec",
+      "-i",
+      container,
+      "psql",
+      "-X",
+      "-qAt",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-v",
+      "ON_ERROR_STOP=1",
+    ],
+    { stdio: ["pipe", "ignore", "ignore"] },
+  );
+  careHolder.stdin.write(
+    `set application_name='${careMarker}';begin;select care_eligibility_lock();\n`,
+  );
+  await waitUntil(
+    () =>
+      sql(
+        `select count(*) from pg_stat_activity where application_name='${careMarker}' and state='idle in transaction';`,
+      ) === "1",
+    "owned compatibility care holder",
+  );
+  const slim = staff.db
+    .rpc("save_appointment", {
+      p_id: slimSource.id,
+      p_expected_version: 1,
+      p_client_id: client,
+      p_pet_id: pet,
+      p_scheduled_at: slimSource.scheduled_at,
+      p_duration_minutes: 30,
+      p_appointment_type: slimSource.appointment_type,
+      p_status: "SCHEDULED",
+      p_assigned_dvm_id: dvm.id,
+      p_notes: "Synthetic slim note",
+    })
+    .then((v) => v);
+  try {
+    await waiters(1);
+  } catch (error) {
+    careHolder.kill("SIGTERM");
+    throw error;
+  }
+  const holderExit = new Promise<number | null>((resolve) =>
+    careHolder.on("exit", resolve),
+  );
+  careHolder.stdin.end(
+    `select id from appointments where id='${slimSource.id}' for share nowait;commit;\n`,
+  );
+  const code = await holderExit,
+    slimResult = await slim;
+  check(code, 0);
+  check(slimResult.error, null);
+  check(slimResult.data.version, 2);
   // Retired source binding survives completion; new follow-up uses current reviewed publication.
   const typeId = randomUUID(),
     definition = {

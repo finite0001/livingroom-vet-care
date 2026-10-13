@@ -80,8 +80,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=148, Tests=6056' in result
-        print('Canonical SQL regression passed: 148 files /6056 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=148, Tests=6057' in result
+        print('Canonical SQL regression passed: 148 files /6057 assertions.', flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
     match = re.search(r'Genuine local appointment catalog passed: \d+ checks; 7 observed lock queues; 20 browser checks; 9 populated restore checks; no provider requests\.', result)
@@ -92,7 +92,7 @@ enabled = false
     next_harness = root/'tests/scheduling/next-visit-local.ts'
     next_hash = hashlib.sha256(next_harness.read_bytes()).hexdigest()
     result = command(['node','--experimental-strip-types',str(next_harness)], cwd=root, env=env, timeout=240)
-    match = re.search(r'Genuine local next-visit foundation passed: \d+ checks; 5 observed lock queues; populated outcome restore; no provider requests\.', result)
+    match = re.search(r'Genuine local next-visit foundation passed: \d+ checks; 6 observed lock queues; populated outcome restore; no provider requests\.', result)
     assert match, result[-1000:]
     assert hashlib.sha256(next_harness.read_bytes()).hexdigest() == next_hash
     assert all(hashlib.sha256((root/'supabase/migrations'/name).read_bytes()).hexdigest() == digest for name,digest in hashes.items())

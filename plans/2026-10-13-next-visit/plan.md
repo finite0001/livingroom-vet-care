@@ -4,6 +4,8 @@ Build from the approved #247 catalog/eligibility correction. N24 requires a prom
 
 ## Foundation package (4A2a)
 
+Preserve schedule → care → row order in the compatibility10-argument wrapper as well; reminder preparation takes care before sharing the row.
+
 Capture every actual transition into COMPLETED with an AFTER trigger, including completed inserts and 10/17/managed saves. Freeze appointment version, patient/household, actor/time and current catalog binding. Notes-only edits do not create another occurrence. Keep historical occurrences after cancellation or another completion; old occurrences cannot make new decisions. No historical backfill.
 
 Private RLS completion occurrences, outcome heads, immutable outcome revisions and actor/exact-request receipts. Completion RPC provides acknowledgment recovery. Outcome RPC holds schedule → care → occurrence/appointment row locks; replay precedes current-state validation. Later can be revisited; booked/declined are final for that occurrence. Book now invokes the existing catalog or custom canonical booking and saves the link in one transaction. Existing future appointment selection validates exact patient, version and active status. Another tab/action cannot book a second follow-up for the same occurrence.

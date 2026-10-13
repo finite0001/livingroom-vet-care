@@ -1,4 +1,11 @@
 -- Durable completion capture and atomic follow-up outcomes. No backfill or sends.
+-- The compatibility wrapper must not take an appointment row before care:
+-- reminder preparation already takes care before sharing that same row.
+do $$declare body text;needle text:='perform pg_advisory_xact_lock(73260123);';begin
+ body:=pg_get_functiondef('public.save_appointment(uuid,integer,uuid,uuid,timestamptz,integer,text,appointment_status,uuid,text)'::regprocedure);
+ if position('public.care_eligibility_lock()' in body)>0 or position(needle in body)=0 then raise exception 'Unexpected compatibility save lock contract';end if;
+ execute replace(body,needle,needle||'perform public.care_eligibility_lock();');
+end $$;
 create table public.appointment_completion_occurrences(
  id uuid primary key default gen_random_uuid(),appointment_id uuid not null references public.appointments(id) on delete restrict,
  appointment_version integer not null check(appointment_version>0),client_id uuid not null references public.clients(id),
