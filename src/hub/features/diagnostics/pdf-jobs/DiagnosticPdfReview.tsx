@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hub/contexts/auth-context";
+import { DiagnosticPdfReleaseScope } from "./DiagnosticPdfReleaseScope";
 import { downloadPdf, readPdfReview } from "./review-api";
 interface Props {
   jobId: string;
@@ -109,6 +110,14 @@ function Review({ jobId, petId, actor, loadOnDemand }: ReviewProps) {
             !query.data.download_available && (
               <p className="text-sm">Staff PDF downloads are off.</p>
             )}
+          {query.data.state === "stored_private" && (
+            <DiagnosticPdfReleaseScope
+              jobId={jobId}
+              petId={petId}
+              actor={actor}
+              historical={query.data.historical}
+            />
+          )}
           {query.data.download_available && (
             <Button
               className="min-h-11"

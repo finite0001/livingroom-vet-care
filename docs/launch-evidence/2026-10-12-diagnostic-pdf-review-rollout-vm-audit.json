@@ -1,0 +1,48 @@
+{
+  "checked_at": "2026-10-12T20:59:30.623Z",
+  "count": 6,
+  "sandboxes": [
+    {
+      "name": "lrv-pdf-d5512488-bad9-467c-80d9-236c2d64dc6c",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-c30bf9bd-b9fd-47ea-b917-6eb56eefdf9e",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-bdfa7288-e45f-40a9-b154-58c304c808af",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-ab13df38-214b-473d-a335-cdb901be41fa",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-3c08d622-ecba-4ade-90bc-0e36d7bb2e3c",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    },
+    {
+      "name": "lrv-pdf-2b2945f0-cf19-4cc2-824f-cbff197e0978",
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "network_policy": "deny-all"
+    }
+  ]
+}
