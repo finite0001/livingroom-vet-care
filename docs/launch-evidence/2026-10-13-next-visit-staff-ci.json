@@ -1,0 +1,85 @@
+{
+  "pull_request": 249,
+  "head": "8da836534664784c883b708ff8fb7df63e35f9f3",
+  "run_id": 38492545786,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38492545786",
+  "required_checks": [
+    {
+      "name": "frontend",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-10-14T00:51:53Z",
+      "completedAt": "2026-10-14T01:11:27Z",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38492545786/job/115620906938"
+    },
+    {
+      "name": "edge",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-10-14T00:51:52Z",
+      "completedAt": "2026-10-14T00:53:40Z",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38492545786/job/115620907072"
+    },
+    {
+      "name": "database",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-10-14T00:51:53Z",
+      "completedAt": "2026-10-14T01:15:01Z",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38492545786/job/115620907017"
+    },
+    {
+      "name": "diagnostic-renderer",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-10-14T00:51:53Z",
+      "completedAt": "2026-10-14T00:58:21Z",
+      "detailsUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38492545786/job/115620907023"
+    }
+  ],
+  "all_required_checks_passed": true,
+  "unit_tests": 1384,
+  "sql": {
+    "files": 149,
+    "assertions": 6106,
+    "pass": true
+  },
+  "general_browser": {
+    "passed_without_retry": 523,
+    "passed_on_retry": 1,
+    "existing_skipped": 1,
+    "retry_test": "e2e/hub-linkage.spec.ts:100 cold-load section deep link (390px)",
+    "targeted_local_recheck": {
+      "passed": 2,
+      "failed": 0
+    }
+  },
+  "catalog_native": {
+    "checks": 59,
+    "observed_lock_queues": 7,
+    "browser_checks": 20,
+    "populated_restore_checks": 9
+  },
+  "foundation_native": {
+    "checks": 44,
+    "observed_lock_queues": 6,
+    "populated_envelope_restore": true
+  },
+  "staff_native": {
+    "checks": 25,
+    "browser_checks": 19,
+    "patient_summary_refresh_verified": true
+  },
+  "records_contention": {
+    "forward_checks": 32,
+    "reverse_checks": 31,
+    "pass": true,
+    "observed_ready_holder_and_waiter": true
+  },
+  "owned_runtimes_removed": true,
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "hosted_183_applied": false,
+  "prior_run": {
+    "id": 38490335015,
+    "head": "6f8f730a4358ab3d3e1d9b9e705be36e7fe235c1",
+    "database_failed_in_existing_fixed_sleep_lock_observation": true,
+    "corrected_by_observed_ready_transaction_and_nonblocking_output": true
+  }
+}

@@ -24,4 +24,4 @@ Full replay, both closed-status changes/recompletion, frozen household, retired 
 
 ## Current package
 
-4A2b staff prompt, private reviewed envelopes and exact custom/catalog editor completion recovery are implemented in the review package. Repository183, hosted182. [Staff evidence](../../docs/launch-evidence/2026-10-13-next-visit-staff.md). Final tests and the specific PR approval govern rollout; no hosted183 or provider activation is implied.
+4A2b staff prompt, private reviewed envelopes and exact custom/catalog editor completion recovery are implemented in the review package. [PR #249](https://github.com/finite0001/livingroom-vet-care/pull/249) is approved and merged; repository/staging/primary183 and production/domain verified. [Staff evidence](../../docs/launch-evidence/2026-10-13-next-visit-staff.md), [hosted receipt](../../docs/launch-evidence/2026-10-13-next-visit-staff-rollout.json). Next is [4B operational task templates/use/generation](../2026-10-13-operational-tasks/plan.md); that package is planned, not implemented or enabled.

@@ -27,6 +27,6 @@ Exact appointment names/lengths, supported species, room/resource identities, cl
 
 [Original scheduling requirements](../2026-10-08-vet-feedback/phase-04-scheduling-tasks.md). [Completed diagnostic rollout](../../docs/launch-evidence/2026-10-13-diagnostic-pdf-record-packages-rollout.md).
 
-4A1 is merged and rolled out on staging/primary181; [rollout receipt](../../docs/launch-evidence/2026-10-13-appointment-catalog-rollout.json). Its implementation is in [the catalog package](../2026-10-13-appointment-catalog/plan.md). Next-visit outcomes and daily-task packages remain pending.
+4A1 is merged and rolled out on staging/primary181; [rollout receipt](../../docs/launch-evidence/2026-10-13-appointment-catalog-rollout.json). Its implementation is in [the catalog package](../2026-10-13-appointment-catalog/plan.md). Next-visit outcomes are now complete through #249; daily-task packages remain pending.
 
-4A2a foundation is implemented and locally verified in [the next-visit plan](../2026-10-13-next-visit/plan.md). Specific PR approval and hosted182 remain pending. The staff prompt is4A2b; daily tasks remain4B/4C.
+4A2a foundation is implemented and locally verified in [the next-visit plan](../2026-10-13-next-visit/plan.md). Foundation #248 and staff prompt #249 are approved, merged and hosted183/production verified. Daily tasks remain4B/4C; [4B design](../2026-10-13-operational-tasks/plan.md) is prepared. Earlier foundation paragraphs describe the preparation baseline, not current availability.

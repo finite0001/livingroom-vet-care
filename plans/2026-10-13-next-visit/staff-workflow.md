@@ -1,6 +1,6 @@
 # 4A2b — Staff prompt handoff
 
-Foundation: [PR #248](https://github.com/finite0001/livingroom-vet-care/pull/248). The foundation is merged and hosted182/production verified. The staff prompt and reviewed recovery are implemented in the4A2b review package; hosted183 is not installed. [Package plan](plan.md).
+Foundation: [PR #248](https://github.com/finite0001/livingroom-vet-care/pull/248). The foundation is merged and hosted182/production verified. The staff prompt and reviewed recovery are approved and merged in [#249](https://github.com/finite0001/livingroom-vet-care/pull/249); both hosted backends183 and production/domain verified. [Hosted receipt](../../docs/launch-evidence/2026-10-13-next-visit-staff-rollout.json). [Package plan](plan.md).
 
 ## Completion and durable access
 
