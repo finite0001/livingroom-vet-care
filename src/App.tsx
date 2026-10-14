@@ -53,6 +53,8 @@ const OperationsPage = lazy(() => import("@/hub/features/operations/OperationsPa
 const RecordsRequestsPage = lazy(() => import("@/hub/features/records-requests/RecordsRequestsPage").then(module => ({ default: module.RecordsRequestsPage })));
 const CareRemindersPage = lazy(() => import("@/hub/features/care-reminders/CareRemindersPage").then(module => ({ default: module.CareRemindersPage })));
 const SchedulePage = lazy(() => import("./hub/features/scheduling/SchedulePage"));
+const OperationalTaskTemplatesPage = lazy(() => import("./hub/features/daily-tasks/OperationalTaskTemplatesPage"));
+const DailyTasksPage = lazy(() => import("./hub/features/daily-tasks/DailyTasksPanel"));
 const AppointmentCatalogPage = lazy(() => import("./hub/features/scheduling/AppointmentCatalogPage"));
 const PatientPage = lazy(() => import("@/hub/features/patients/PatientPage"));
 const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
@@ -118,6 +120,8 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/inbox/processing" element={<ProcessingQueuePage />} />
                   <Route path="/hub/conversation/:id" element={<ConversationDetailPage />} />
                   <Route path="/hub/schedule" element={<SchedulePage />} />
+          <Route path="/hub/tools/task-templates" element={<OperationalTaskTemplatesPage />} />
+          <Route path="/hub/tasks" element={<DailyTasksPage />} />
                   <Route path="/hub/tools/appointment-catalog" element={<AppointmentCatalogPage />} />
                   <Route path="/hub/appointments" element={<Navigate to="/hub/schedule" replace />} />
                   <Route path="/hub/deliveries" element={<DeliveriesPage />} />

@@ -1,3 +1,6 @@
+import { DailyTasksPanel } from "../daily-tasks/DailyTasksPanel";
+import { ResourceUseWorkspace } from "../daily-tasks/ResourceUseWorkspace";
+import { OperationalRecovery } from "../daily-tasks/OperationalRecovery";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,9 +48,15 @@ interface ScheduleAppointment extends Tables<"appointments"> {
 interface AppointmentCardProps {
   row: ScheduleAppointment;
   onEdit: () => void;
+  onUse: () => void;
   onCompleted: (context: NextVisitContext) => void;
 }
-function AppointmentCard({ row, onEdit, onCompleted }: AppointmentCardProps) {
+function AppointmentCard({
+  row,
+  onEdit,
+  onUse,
+  onCompleted,
+}: AppointmentCardProps) {
   const update = useAppointmentStatus({ onCompleted });
   const busy = update.isPending;
   const address = visitAddress(row.address_snapshot);
@@ -64,6 +73,7 @@ function AppointmentCard({ row, onEdit, onCompleted }: AppointmentCardProps) {
 
   return (
     <div
+      data-appointment-id={row.id}
       className={cn(
         "grid items-center gap-3 rounded-2xl border bg-card p-4 shadow-card md:grid-cols-[92px_1fr_auto] md:gap-5 md:px-5",
         row.status === "CONFIRMED" && "border-primary/50",
@@ -160,6 +170,14 @@ function AppointmentCard({ row, onEdit, onCompleted }: AppointmentCardProps) {
             Complete
           </Button>
         )}
+        <Button
+          size="sm"
+          className="min-h-11"
+          variant="outline"
+          onClick={onUse}
+        >
+          Resource use
+        </Button>
         <Button size="sm" variant="ghost" onClick={onEdit}>
           Edit
         </Button>
@@ -212,6 +230,7 @@ export default function SchedulePage() {
     );
   };
   const [nextVisit, setNextVisit] = useState<NextVisitContext | null>(null);
+  const [useId, setUseId] = useState<string | null>(null);
   const [week, setWeek] = useState(false);
   const [editing, setEditing] = useState<Appointment | null | undefined>(() =>
     booking ? null : undefined,
@@ -429,6 +448,7 @@ export default function SchedulePage() {
                             key={row.id}
                             row={row}
                             onEdit={() => setEditing(row)}
+                            onUse={() => setUseId(row.id)}
                             onCompleted={setNextVisit}
                           />
                         ))}
@@ -470,6 +490,14 @@ export default function SchedulePage() {
               );
             }
           }}
+        />
+      )}
+      <OperationalRecovery />
+      <DailyTasksPanel day={day} />
+      {useId && (
+        <ResourceUseWorkspace
+          appointmentId={useId}
+          close={() => setUseId(null)}
         />
       )}
       <NextVisitWorkspace context={nextVisit} onContext={setNextVisit} />

@@ -1,0 +1,18 @@
+{
+  "deployment_id": "dpl_KoQxtAwshmDzgnGwPJgWc2hReRYM",
+  "head": "8da836534664784c883b708ff8fb7df63e35f9f3",
+  "origin": "https://livingroom-vet-care-90r125vr2-daves-projects-e0da43ba.vercel.app",
+  "path": "/hub/login",
+  "status": 200,
+  "entry": "/assets/index-BhiX5V8o.js",
+  "backend": "kothoqicubowyhwfsrte",
+  "backend_migrations": 182,
+  "page_errors": 0,
+  "unauthenticated_catalog_redirect": true,
+  "protection_changed": false,
+  "staff_session_used": false,
+  "hosted_183_rpc_acceptance_claimed": false,
+  "staff_prompt_implemented": true,
+  "provider_requests": 0,
+  "token_in_receipt": false
+}

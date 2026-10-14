@@ -34,3 +34,5 @@
 - [ ] Extend scheduling SQL/browser tests and add task-generation idempotency/concurrency tests.
 
 **Open configuration:** exact type list/durations, species rules, rooms, task templates and assigning roles. Collect these from Dr. Edler/staff during configuration; do not hardcode guessed clinical operating times.
+
+Current staff next-visit/#249 status: approved, merged and production/domain verified; repository/staging/primary183. Both passed49 rollback assertions; staging25 Auth/API +19 browser checks. [Hosted receipt](../../docs/launch-evidence/2026-10-13-next-visit-staff-rollout.json). [4B detailed design](../2026-10-13-operational-tasks/plan.md) is prepared, not implemented or enabled. 4C daily tasks and Susan acceptance remain open. All45 original requirements retained.

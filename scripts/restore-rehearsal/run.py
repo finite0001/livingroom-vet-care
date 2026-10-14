@@ -48,12 +48,12 @@ def fixture_source_hashes():
 source_hashes = fixture_source_hashes()
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 versions = [p.name.split('_')[0] for p in migration_files]
-CURRENT_RESTORE_MIGRATION_COUNT = 183
+CURRENT_RESTORE_MIGRATION_COUNT = 184
 assert len(versions) == len(set(versions)) == CURRENT_RESTORE_MIGRATION_COUNT, 'Review canonical restore migration inventory'
 assert {'20260916010000','20260916020000','20260916033310','20260916043949','20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000'} <= set(versions), 'Canonical identity, weight, resolution and native prescription migrations required'
 assert {'20260916100001','20260916110001','20260916120000','20260916130000','20260916110000','20260916120716','20260916123017'} <= set(versions), 'Combined communication, finance and estimate migrations required'
 assert {'20260919120000','20260921120000','20260921130000','20260922120000','20260922170000','20260922183000','20260922190000','20260922203000','20260922210000','20260922213000','20260922220000','20260922223000','20260922224500','20260922230000'} <= set(versions), 'Current auth, scheduler, appointment, outbound delivery and contact-readiness migrations required'
-assert {'20261013181721','20261013214300','20261013220500','20261013233839'} <= set(versions), 'Reviewed scheduling catalog and eligibility lock migrations required'
+assert {'20261013181721','20261013214300','20261013220500','20261013233839','20261014022511'} <= set(versions), 'Reviewed scheduling catalog and eligibility lock migrations required'
 assert '20260916040000' not in versions, 'Alternate identity receipt migration is not canonical'
 initial_files = [p for p in migration_files if p.name.split('_')[0] <= '20260913270000' or p.name.split('_')[0] in {'20260913300000','20260913310000','20260913330000','20260913340000'}]
 baseline_path = Path(__file__).with_name('staging-baseline-20260914.json')
@@ -213,7 +213,7 @@ def functions_snapshot(project):
         from pg_default_acl d where d.defaclnamespace='public'::regnamespace));"""))
 
 def vaccination_snapshot(project):
-    tables = ['appointment_next_visit_reviews','appointment_next_visit_review_cancellations','appointment_completion_occurrences','appointment_next_visit_heads','appointment_next_visit_decisions','appointment_next_visit_actions','appointment_catalog_entries','appointment_catalog_versions','appointment_resource_aliases','appointment_catalog_actions','appointment_catalog_bindings','appointment_booking_actions','ezyvet_migration_resolutions', 'ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings', 'ezyvet_migration_attempt_events',
+    tables = ['operational_task_templates', 'operational_task_template_versions', 'operational_resource_uses', 'operational_resource_use_events', 'operational_task_enrollments', 'operational_tasks', 'operational_task_revisions', 'operational_task_use_coverage', 'operational_task_generation_policy', 'operational_task_actions', 'operational_task_reviews', 'operational_task_review_cancellations','appointment_next_visit_reviews','appointment_next_visit_review_cancellations','appointment_completion_occurrences','appointment_next_visit_heads','appointment_next_visit_decisions','appointment_next_visit_actions','appointment_catalog_entries','appointment_catalog_versions','appointment_resource_aliases','appointment_catalog_actions','appointment_catalog_bindings','appointment_booking_actions','ezyvet_migration_resolutions', 'ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings', 'ezyvet_migration_attempt_events',
               'ezyvet_import_runs', 'ezyvet_import_snapshots', 'ezyvet_import_pages',
               'ezyvet_import_page_items', 'ezyvet_identity_heads', 'ezyvet_record_links',
               'ezyvet_clinical_runs', 'ezyvet_clinical_pages', 'ezyvet_clinical_page_observations',

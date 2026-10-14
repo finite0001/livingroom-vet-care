@@ -1,0 +1,157 @@
+{
+  "pull_request": 249,
+  "approved_head": "8da836534664784c883b708ff8fb7df63e35f9f3",
+  "merge_commit": "1b5b6a9bda816b840fdf32ccd724187edb7c1d23",
+  "merged_at": "2026-10-14T01:39:43Z",
+  "approval": "Dave explicitly approved #249 before staging/primary rollout and merge",
+  "staging": {
+    "installation": {
+      "project": "kothoqicubowyhwfsrte",
+      "migration": "20261013233839_next_visit_staff_recovery.sql",
+      "migration_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+      "migrations": 183,
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 0,
+        "payment_profiles": 1,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "worker": 0
+      },
+      "private_table_acl_verified": true,
+      "rpc_grants_verified": true,
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "kothoqicubowyhwfsrte",
+      "migrations": {
+        "count": 183,
+        "latest": "20261013233839"
+      },
+      "checks": 49,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 49,
+            "provider_requests": 0
+          }
+        }
+      ]
+    },
+    "auth_acceptance": {
+      "proof": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 183,
+        "auth_checks": 25,
+        "browser_checks": 19,
+        "staff_prompt_implemented": true,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "cleanup": {
+        "active_actors": 0,
+        "active_bookings": 0,
+        "active_patients": 0,
+        "open_sessions": 0,
+        "published_catalog": 0
+      },
+      "baseline_unchanged": true,
+      "retained_synthetic_history": true,
+      "cleanup_harness_correction": "Reviewer qualified by either DVM or ADMIN; original DVM held both roles. One synthetic publication retired using genuine Auth and canonical RPC; all workflow checks had passed before cleanup."
+    },
+    "advisors": {
+      "total_notices": 484,
+      "levels": {
+        "WARN": 484
+      },
+      "package_notices": 6,
+      "package_explanation": "Intentional authenticated SECURITY DEFINER entry points; active actor/live-session/private ACL denial proved by SQL and staging Auth acceptance",
+      "anonymous_or_private_helper_package_notices": 0,
+      "baseline_notices_resolved_by_this_package": false
+    }
+  },
+  "primary": {
+    "installation": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migration": "20261013233839_next_visit_staff_recovery.sql",
+      "migration_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+      "migrations": 183,
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 3,
+        "payment_profiles": 0,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "worker": 0
+      },
+      "private_table_acl_verified": true,
+      "rpc_grants_verified": true,
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migrations": {
+        "count": 183,
+        "latest": "20261013233839"
+      },
+      "checks": 49,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 49,
+            "provider_requests": 0
+          }
+        }
+      ]
+    },
+    "advisors": {
+      "total_notices": 484,
+      "levels": {
+        "WARN": 484
+      },
+      "package_notices": 6,
+      "package_explanation": "Intentional authenticated SECURITY DEFINER entry points; active actor/live-session/private ACL denial proved by SQL and staging Auth acceptance",
+      "anonymous_or_private_helper_package_notices": 0,
+      "baseline_notices_resolved_by_this_package": false
+    }
+  },
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "new_edge_deployments": 0,
+  "staff_prompt_installed": true,
+  "production": {
+    "deployment_id": "dpl_euy83Hpf9tGLxiynvUpXjaQa3LXN",
+    "state": "READY",
+    "alias": "thelivingroom.vet",
+    "alias_matches": true,
+    "commit": "1b5b6a9bda816b840fdf32ccd724187edb7c1d23",
+    "public_smoke": {
+      "unauthenticated_schedule_redirect": true,
+      "backend_migrations": 183,
+      "unauthenticated_catalog_redirect": true,
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-BoA4Uk2q.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  }
+}

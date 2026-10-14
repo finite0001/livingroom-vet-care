@@ -1,0 +1,22 @@
+{
+  "project": "kothoqicubowyhwfsrte",
+  "hosted_migrations": 183,
+  "pending": [
+    "20261014022511_operational_tasks.sql"
+  ],
+  "migration_sha256": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+  "protected_backup": true,
+  "state": {
+    "disclosure": 0,
+    "outbox": 0,
+    "payment_profiles": 1,
+    "release": 0,
+    "runtime": 0,
+    "staff_download": 0,
+    "worker": 0
+  },
+  "skip_vault": true,
+  "schema_writes": 0,
+  "provider_requests": 0,
+  "legacy_writes": 0
+}

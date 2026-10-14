@@ -51,7 +51,7 @@ try:
         assert re.match(r'^\d{14}_', migration.name)
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project/'supabase/migrations'/migration.name)
-    assert len(hashes) == 183 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes
+    assert len(hashes) == 184 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes
     if args.include_sql_regression: shutil.copytree(root/'supabase/tests', project/'supabase/tests')
     harness = root/'tests/scheduling/catalog-local.ts'
     harness_hash = hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=149, Tests=6106' in result
-        print('Canonical SQL regression passed: 149 files /6106 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=150, Tests=6184' in result
+        print('Canonical SQL regression passed: 150 files /6184 assertions.', flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     if not args.staff_only:
         result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
@@ -106,6 +106,17 @@ enabled = false
     match = re.search(r'Genuine local next-visit staff passed: \d+ checks; \d+ browser checks; no provider requests\.', result)
     assert match, result[-1000:]
     assert hashlib.sha256(staff_harness.read_bytes()).hexdigest() == staff_hash
+    print(match.group(0), flush=True)
+    task_harness = root/'tests/scheduling/operational-tasks-local.ts'
+    task_hash = hashlib.sha256(task_harness.read_bytes()).hexdigest()
+    task_browser = root/'tests/scheduling/operational-tasks-browser.ts'
+    task_browser_hash = hashlib.sha256(task_browser.read_bytes()).hexdigest()
+    result = command(['node','--experimental-strip-types',str(task_harness)], cwd=root, env=env, timeout=420)
+    match = re.search(r'Genuine local operational tasks passed: \d+ checks; 2 observed lock queues; \d+ browser checks; populated task restore; no provider requests\.', result)
+    assert match, result[-1000:]
+    assert hashlib.sha256(task_harness.read_bytes()).hexdigest() == task_hash
+    assert hashlib.sha256(task_browser.read_bytes()).hexdigest() == task_browser_hash
+    assert all(hashlib.sha256((root/'supabase/migrations'/name).read_bytes()).hexdigest() == digest for name,digest in hashes.items())
     print(match.group(0), flush=True)
     success = True
 finally:

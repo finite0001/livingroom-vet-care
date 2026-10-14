@@ -105,6 +105,8 @@ async function openSchedule(page: Page, options: FixtureOptions = {}) {
     const request = route.request();
     const url = new URL(request.url());
     const path = url.pathname;
+    if (path === "/rest/v1/rpc/list_operational_tasks" || path === "/rest/v1/rpc/list_operational_templates" || path === "/rest/v1/rpc/list_appointment_catalog") return route.fulfill({json:{items:[],next:null}});
+    if (path === "/rest/v1/rpc/read_operational_generation_policy") return route.fulfill({json:null});
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     // The shared navigation reads unread totals through a POST RPC.

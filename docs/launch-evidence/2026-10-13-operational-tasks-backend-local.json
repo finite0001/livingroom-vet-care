@@ -1,0 +1,49 @@
+{
+  "checkpoint": "4B backend in progress; not a complete staff feature or hosted rollout",
+  "checked_at": "2026-10-14T03:10:55.988313+00:00",
+  "base_main": "1b5b6a9bda816b840fdf32ccd724187edb7c1d23",
+  "migration": "20261014022511_operational_tasks.sql",
+  "migration_sha256": "553ef1e95830b6a1ae5cdf668e6f7313b0deb9cc4c258e41519e42ff031197d1",
+  "local_migrations": 184,
+  "hosted_migrations_last_verified": 183,
+  "sql_files": 150,
+  "sql_assertions": 6168,
+  "new_package_sql_assertions": 62,
+  "native_auth_api_checks": 54,
+  "observed_lock_queues": 2,
+  "populated_restore": {
+    "relations": 12,
+    "includes": "template versions, use events, coverage, completed history, reviews/receipts, pending review and cancellation marker",
+    "private_acl_and_recovery_verified": true,
+    "owned_restore_database_removed": true
+  },
+  "model_unit_tests": 8,
+  "typescript_check": true,
+  "changed_files_lint": true,
+  "browser_checks_for_new_feature": 0,
+  "new_provider_requests": 0,
+  "hosted_writes_for_migration184": 0,
+  "new_worker_or_delivery_activation": false,
+  "local_advisors": {
+    "notices": 1,
+    "names": [
+      "extension_in_public"
+    ],
+    "new_package_notices": []
+  },
+  "remaining": [
+    "template/use staff UI",
+    "daily task views and transitions",
+    "full browser/CI/peer review",
+    "staging-first migration184 acceptance and exact production merge verification",
+    "4C reconciliation worker and all remaining original phases5\u20138"
+  ],
+  "owned_runtime_cleanup_verified": true,
+  "repository_check": {
+    "lint": true,
+    "typescript": true,
+    "unit_tests": 1392,
+    "production_build": true,
+    "command": "npm run check"
+  }
+}

@@ -7,12 +7,7 @@ import { cn } from "@/lib/utils";
  * reuse the identical mapping.
  */
 export type StatusTone =
-  | "neutral"
-  | "info"
-  | "terracotta"
-  | "success"
-  | "warning"
-  | "destructive";
+  "neutral" | "info" | "terracotta" | "success" | "warning" | "destructive";
 
 interface StatusMeta {
   label: string;
@@ -32,6 +27,13 @@ const STATUS_META: Record<string, StatusMeta> = {
   COMPLETED: { label: "Completed", tone: "success" },
   CANCELLED: { label: "Cancelled", tone: "destructive" },
   NO_SHOW: { label: "No show", tone: "warning" },
+  "task:pending": { label: "Pending", tone: "info" },
+  "task:started": { label: "Started", tone: "terracotta" },
+  "task:blocked": { label: "Blocked", tone: "warning" },
+  "task:needs_review": { label: "Needs review", tone: "warning" },
+  "task:completed": { label: "Completed", tone: "success" },
+  "task:superseded": { label: "Superseded", tone: "neutral" },
+  "task:overdue": { label: "Overdue", tone: "warning" },
   // Conceptual aliases (not in the DB enum) kept for grammar completeness.
   unconfirmed: { label: "Unconfirmed", tone: "neutral" },
   booked: { label: "Booked", tone: "info" },

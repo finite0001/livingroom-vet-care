@@ -1,0 +1,52 @@
+{
+  "head": "8da836534664784c883b708ff8fb7df63e35f9f3",
+  "migration": "20261013233839_next_visit_staff_recovery.sql",
+  "migration_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+  "staging": {
+    "project": "kothoqicubowyhwfsrte",
+    "hosted_migrations": 182,
+    "pending": [
+      "20261013233839_next_visit_staff_recovery.sql"
+    ],
+    "migration_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+    "protected_backup": true,
+    "state": {
+      "disclosure": 0,
+      "outbox": 0,
+      "payment_profiles": 1,
+      "release": 0,
+      "runtime": 0,
+      "staff_download": 0,
+      "worker": 0
+    },
+    "skip_vault": true,
+    "schema_writes": 0,
+    "provider_requests": 0,
+    "legacy_writes": 0
+  },
+  "primary": {
+    "project": "mgadheotkdnrsatfivjy",
+    "hosted_migrations": 182,
+    "pending": [
+      "20261013233839_next_visit_staff_recovery.sql"
+    ],
+    "migration_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+    "protected_backup": true,
+    "state": {
+      "disclosure": 0,
+      "outbox": 3,
+      "payment_profiles": 0,
+      "release": 0,
+      "runtime": 0,
+      "staff_download": 0,
+      "worker": 0
+    },
+    "skip_vault": true,
+    "schema_writes": 0,
+    "provider_requests": 0,
+    "legacy_writes": 0
+  },
+  "hosted_183_applied": false,
+  "schema_writes": 0,
+  "private_backups_included": false
+}

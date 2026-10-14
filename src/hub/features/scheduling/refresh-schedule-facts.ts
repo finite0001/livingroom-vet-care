@@ -8,6 +8,7 @@ export function refreshScheduleFacts(
 ) {
   for (const queryKey of [
     ["schedule"],
+    ["operational", actorId],
     ["hub-today"],
     ["next-visits"],
     ["household-360", actorId, clientId],
