@@ -130,7 +130,7 @@ export async function operationalBrowserProof(
         name: new RegExp(room.published.definition.name),
       })
       .check();
-    await page.locator("#task-template-offset").fill("5");
+    await page.locator("#task-template-offset").fill("0");
     await page
       .getByRole("checkbox", { name: "Technician", exact: true })
       .check();
@@ -164,6 +164,19 @@ export async function operationalBrowserProof(
         .isDisabled(),
       true,
     );
+    const attestation = page.getByRole("checkbox", {
+      name: /I reviewed this exact saved checklist/,
+    });
+    await attestation.check();
+    await page.locator("#task-template-offset").fill("");
+    check(await attestation.isDisabled(), true);
+    check(
+      await page
+        .getByRole("button", { name: "Publish reviewed template", exact: true })
+        .isDisabled(),
+      true,
+    );
+    await page.locator("#task-template-offset").fill("0");
     await page
       .locator("#task-template-review-note")
       .fill("Synthetic exact saved draft attestation");

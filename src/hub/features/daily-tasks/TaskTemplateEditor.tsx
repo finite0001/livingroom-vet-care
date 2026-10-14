@@ -112,7 +112,11 @@ export function TaskTemplateEditor({
     due: {
       ...definition.due,
       offset_minutes:
-        definition.trigger === "resource_day" ? 0 : Number(offset),
+        definition.trigger === "resource_day"
+          ? 0
+          : offset.trim() === ""
+            ? Number.NaN
+            : Number(offset),
     },
   };
   const unchanged =

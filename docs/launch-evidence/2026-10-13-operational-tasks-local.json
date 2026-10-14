@@ -11,7 +11,7 @@
   "package_sql_assertions": 78,
   "native_auth_api_checks": 54,
   "observed_lock_queues": 2,
-  "native_browser_checks": 22,
+  "native_browser_checks": 24,
   "populated_restore_relations": 12,
   "restore_private_acl_and_saved_and_pending_recovery": true,
   "model_unit_tests": 11,
@@ -92,12 +92,12 @@
     "src/hub/features/daily-tasks/OperationalTaskTemplatesPage.tsx": "e85d725090ee7c61d0f22185204078ba7969293b611310175fddea14d10bb428",
     "src/hub/features/daily-tasks/task-api.ts": "693179763fe5f865c3d301c238a449bdcfb74e63566d37f9c1c2fdb00d4187a0",
     "src/hub/features/daily-tasks/OperationalGenerationSettings.tsx": "41122d6d9d4cb954a6e229caeedf5cfe7acbcd2bd4ab03812db21a27623ac0bb",
-    "src/hub/features/daily-tasks/TaskTemplateEditor.tsx": "cc93fa9605e1546a6a4c1eb7db85fa713ac1e23c600c6c4b291d322ab5ba954e",
+    "src/hub/features/daily-tasks/TaskTemplateEditor.tsx": "195f728b0a180859d426f17b334cbd635f8964880abef2592d467fb49aa5bfdf",
     "src/hub/features/daily-tasks/task-model.ts": "f3b46d697af81d57cb9dea44c1f3162d5971bddf9ef4754be95e1ef0bdcd149a",
     "src/hub/features/daily-tasks/use-task-action.ts": "84c1cbc5c3450828e5812c1635f484a5cd48d18241b8c026bc59d49742815910",
     "supabase/migrations/20261014022511_operational_tasks.sql": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
     "tests/scheduling/operational-tasks-local.ts": "959b5130f1c33ed6eeaeaea90a09be097dd135c4e4741327021d0d22f9803308",
-    "tests/scheduling/operational-tasks-browser.ts": "a2423fcec4226d5e348f9bcfc9bbb0123a2f22a56f8e1e6cbc424ceb584b00fb"
+    "tests/scheduling/operational-tasks-browser.ts": "6e9a61b25b9f10d9fa7129b2add20b498bbe8f231b48f20b1fcc8baa55b8cae9"
   },
   "runtime_acceptance_source_sha256": {
     "src/hub/features/daily-tasks/TaskDetailDialog.tsx": "19d335ea7693a82df7b715bb73fca4d72600affbc33f3e237f6b13064db2bd7b",
@@ -124,6 +124,22 @@
     "swc_runtime_javascript_identical": true,
     "lint_and_typecheck": true,
     "model_unit_tests": 11,
+    "exact_head_ci": "pending"
+  },
+  "final_publication_guard": {
+    "blank_saved_zero_offset_rejects_review_and_publication": true,
+    "focused_next_visit_staff": {
+      "auth_api": 25,
+      "browser": 19
+    },
+    "focused_operational": {
+      "auth_api": 54,
+      "observed_locks": 2,
+      "browser": 24,
+      "populated_restore_relations": 12
+    },
+    "owned_containers_and_volumes_removed": true,
+    "repository_check": "passed; 1395 units",
     "exact_head_ci": "pending"
   }
 }
