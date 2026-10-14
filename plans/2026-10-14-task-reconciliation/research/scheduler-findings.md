@@ -1,0 +1,13 @@
+# Scheduler and reconciliation research
+
+Read-only research on PR250 head2a257457, building on migration184. The research agent inspected existing registration, authentication, run receipts and materializers; no hosted changes or code edits.
+
+- `scheduler_job_runs.job` CHECK is in `20260922120000_b1_scheduler.sql:38`; latest `scheduler_dispatch()` whitelist is `20260930130000_scheduler_timeout_and_payload_purge.sql:38`. Both permit five current jobs. The dispatcher uses Vault `project_url` and `scheduler_worker_key`, an API-key header, empty body and30-second timeout.
+- Cron registration must respect `cron.database_name`; explicit cadence belongs in `operations_scheduler_jobs()` (`20260922120000…sql:164`). Missing cadence would incorrectly report one minute. Frontend `OperationsState.ts:143` contains a separate job-name enum.
+- `_shared/worker-auth.ts` supports a configured `sb_secret_*` API key or exact legacy service bearer. An explicit bad API key never falls back. `queue-reminders/index.ts` sets its own authentication with `verify_jwt=false`; the shared handler returns disabled before creating a database client and requires staging/production environment.
+- Reuse `communication_require_service()` and service-only start/execute/recover boundaries, following `20260913440000_operations_visibility.sql:75–105`. Do not expose private materializers or call the staff-session-gated migration184 `reconcile_operational_tasks()`.
+- That staff reconciler scans a31-day appointment window and all uses underneath each appointment. It misses old actual-use backlog and does not bound total uses or template/task fan-out.
+- Migration184 materializers already preserve completed evidence and reconcile safety obligations with new generation off. System-generated revisions permit a null staff actor. Workers must not record actual use, sign checklist completion, update stock, or send communications.
+- Schedule → care → run/source/task lock order is required. Commit materialization, terminal run result and cursor checkpoint together. Failed subtransactions roll back task changes before recording failure. A reused UUID with changed request fails; recovery is read-only.
+- Scan appointments and actual-use IDs in separate cursor lanes with a fixed sweep boundary. Reset after completion so changes behind the cursor are revisited. Observe materializer fan-out and bound transaction time.
+- Scheduler HTTP results prove transport acknowledgement only. Operations must display separate committed reconciliation results. Responses contain IDs, limits, cursor/counts/outcome; no checklist/source/patient/contact payloads.
