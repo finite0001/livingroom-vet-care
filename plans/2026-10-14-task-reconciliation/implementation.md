@@ -2,6 +2,10 @@
 
 ## Service boundary and policy
 
+October14 checkpoint: shared Zod request/receipt contracts and a default-off service handler pass47 boundary counterexamples and the full repository check with1,442 units. [Receipt](../../docs/launch-evidence/2026-10-14-task-reconciliation-contract-local.json). This is unit-level protocol evidence, not a deployed worker or genuine database reconciliation. No additive migration or Edge entrypoint exists yet. Engineering ceilings are25 sources,256 task fan-out and5,000ms per batch; the current request default is5 sources. Final captured fan-out/budget values still need measured SQL fixtures and timeout proof before publication.
+
+Use the existing reviewed operational action protocol for a separate reconciliation-policy operation, preserving exact actor/session/UUID recovery. Keep the template-generation policy independent. Service run receipts must match the shared contract, including frozen policy/window/sweep/cursor/request metadata across start, execute and recover. Lost acknowledgments only read recovery; another scheduled attempt must resume the original unresolved request before creating a successor. A successful HTTP acknowledgement is not a committed run result.
+
 Add private immutable run requests/results, a durable cursor head and append-only policy. Reconciliation defaults off; template generation remains its independent reviewed policy. Staff DVM/ADMIN policy review uses a live matched session and exact actor/version/action receipt. Do not infer activation from migration, cron registration or template publication.
 
 A dedicated service RPC validates service identity, exact run UUID and bounded request. It takes schedule73260123 → care → run/source/task locks and rechecks gates after waiting. Materializers remain private. Workers never assert room use or checklist completion. Read-only recovery returns the stored result before changed-state validation. Another request cannot reuse a run UUID; completed or failed runs never execute again.

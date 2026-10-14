@@ -1,0 +1,32 @@
+{
+  "scope": "4C shared HTTP and receipt contracts only; service SQL, Edge entrypoint, scheduler, Operations UI and real acceptance unfinished",
+  "base": "e4282c5a2d1fa1ac958ddab678f21208dfb1440b",
+  "tests": {
+    "counterexamples": 47,
+    "full_repository_units": 1442,
+    "full_check": "passed",
+    "strict_standalone_typecheck": "passed",
+    "focused_lint": "passed"
+  },
+  "source_sha256": {
+    "supabase/functions/_shared/operational-reconciliation-contract.ts": "d2a6e1c1dda41fb016bb551ab35bb4682f44e74e0010e62d894b01febd78f07c",
+    "supabase/functions/_shared/operational-reconciliation-handler.ts": "1279f4e3069e96f6cd039d746608f4667741c8fb884279aacb33729b49004284",
+    "tests/scheduling/operational-reconciliation.test.ts": "b1e14e3499afc00364aedc2d615ba5adf602399f398cbd7ebb7a2d04b74a1086"
+  },
+  "baseline_warnings": {
+    "react_refresh": 4,
+    "large_build_chunk": true
+  },
+  "dependency_changes": false,
+  "npm_ci_audit": {
+    "moderate": 5,
+    "high": 13,
+    "launch_review_pending": true
+  },
+  "new_migrations": 0,
+  "hosted_migrations": 184,
+  "new_edge_deployments": 0,
+  "provider_requests": 0,
+  "practice_generation_enabled": false,
+  "real_reconciliation_database_acceptance": "not yet implemented or claimed"
+}

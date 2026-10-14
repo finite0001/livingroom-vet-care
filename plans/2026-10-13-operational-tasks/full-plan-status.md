@@ -6,13 +6,13 @@ The original scope is all25 October requests and20 substantive housecall request
 
 | Remaining package | Current evidence / next work |
 |---|---|
-| 4B operational templates, resource use and generation | Local migration184, reviewed template/use staff UI and strict recovery contracts implemented. 150 SQL files/6,184 assertions,54 Auth/API checks,24 genuine browser checks,2 observed lock queues,12-table populated restore,11 model tests and the full repository check with1,395 units pass. Exact-head CI and staged rollout remain required. |
-| 4C daily tasks and reconciliation | Home/Schedule queues, full task list, role/assignee/overdue/completion controls are included in the current local staff package. Bounded reconciliation worker/run receipts and commissioning remain pending. |
+| 4B operational templates, resource use and generation | PR250 merged as e4282c5a; staging/primary184 and exact production/domain verified. Four exact-head CI checks pass;78 rollback assertions on each hosted project;48 staging API/access and24 browser checks; canonical cleanup all zero. Local150 SQL files/6,184 assertions,54 API checks,24 browser checks,2 observed locks and12-table populated restore also pass. Practice templates/generation remain uncommissioned. [Receipt](../../docs/launch-evidence/2026-10-14-operational-tasks-rollout.md). |
+| 4C daily tasks and reconciliation | Home/Schedule queues, full task list and role/assignee/overdue/completion controls are released. Shared worker request/receipt contracts and47 unit counterexamples implemented locally; service-only SQL, cursor/run evidence, Edge/scheduler integration and actual acceptance remain pending. [Plan](../2026-10-14-task-reconciliation/plan.md). |
 | 5 supplier imports, iPhone scanning, controlled drugs | Inspect current ledgers; implement native preview/mapping/barcode/witness workflows; actual supplier samples and label/witness acceptance remain required. |
 | 6 unpaid reminders, production and financing | Native terms/final-balance reminders and net-invoiced effective-rate attribution pending. Stripe selected; verify actual supported financing and settlement/refund route. |
 | 7 clinical assistance, imaging, anesthesia and Gusto | Native reviewed draft workflows and connector contracts pending; actual supported account/device exchanges required. |
 | 8 full release acceptance | Every original row, clinical register, actual vendor proofs, multi-pet rehearsal, restore/rollback and production verification must be audited on the final revision. |
 
-Previous goal turn made progress: #249 was merged, both hosted backends183 and exact production/domain verified; the next package plan was saved. Current work has added real local implementation and tests; it is not a hosted deployment or clinical sign-off.
+Current progress includes PR250's completed hosted rollout and the next worker boundary implementation. This is not completion of all45 requirements or Susan's clinical sign-off. Remaining native packages can proceed while vendor details are pending.
 
 [Provider inputs](provider-status.md), [4B plan](plan.md), [acceptance](acceptance.md).
