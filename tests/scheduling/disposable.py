@@ -51,7 +51,7 @@ try:
         assert re.match(r'^\d{14}_', migration.name)
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project/'supabase/migrations'/migration.name)
-    assert len(hashes) == 184 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes
+    assert len(hashes) == 185 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes
     if args.include_sql_regression: shutil.copytree(root/'supabase/tests', project/'supabase/tests')
     harness = root/'tests/scheduling/catalog-local.ts'
     harness_hash = hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=150, Tests=6184' in result
-        print('Canonical SQL regression passed: 150 files /6184 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=151, Tests=6257' in result
+        print('Canonical SQL regression passed: 151 files /6257 assertions.', flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     if not args.staff_only:
         result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
@@ -118,6 +118,29 @@ enabled = false
     assert hashlib.sha256(task_browser.read_bytes()).hexdigest() == task_browser_hash
     assert all(hashlib.sha256((root/'supabase/migrations'/name).read_bytes()).hexdigest() == digest for name,digest in hashes.items())
     print(match.group(0), flush=True)
+    reconciliation = root/'tests/scheduling/operational-reconciliation-local.ts'
+    reconciliation_hash = hashlib.sha256(reconciliation.read_bytes()).hexdigest()
+    result = command(['node','--experimental-strip-types',str(reconciliation)], cwd=root,
+                     env={**env,'RECONCILIATION_TEST_PROJECT':str(project),'RECONCILIATION_RUN_SYNTHETIC_LOCAL':'true'}, timeout=180)
+    receipt = json.loads(result.strip().splitlines()[-1])
+    assert receipt['api_checks']==42 and receipt['real_auth_postgrest'] and receipt['owned_accounts_deactivated'] and receipt['private_timeout_helper_restored'] and receipt['provider_requests']==0
+    assert 4500<=receipt['timeout_elapsed_ms']<5800
+    assert hashlib.sha256(reconciliation.read_bytes()).hexdigest()==reconciliation_hash
+    print('Genuine reconciliation API passed:42 checks; actual5s timeout; owned account cleanup; no provider requests.',flush=True)
+    lock_harness = root/'supabase/tests/operational_reconciliation_concurrency.py'
+    lock_hash = hashlib.sha256(lock_harness.read_bytes()).hexdigest()
+    result = command(['python3','-B',str(lock_harness),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=90)
+    lock_receipt = json.loads(result.strip().splitlines()[-1])
+    assert lock_receipt['checks']==3 and lock_receipt['observed_lock_queues']==4 and lock_receipt['policy_pause_after_wait'] and lock_receipt['same_uuid_execute_replay'] and lock_receipt['owned_staff_deactivated'] and lock_receipt['provider_requests']==0
+    assert hashlib.sha256(lock_harness.read_bytes()).hexdigest()==lock_hash
+    print('Observed reconciliation concurrency passed:4 real lock queues; pause/replay receipts; no provider requests.',flush=True)
+    restore_harness = root/'supabase/tests/operational_reconciliation_restore.py'
+    restore_hash = hashlib.sha256(restore_harness.read_bytes()).hexdigest()
+    result = command(['python3','-B',str(restore_harness),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180)
+    restored = json.loads(result.strip().splitlines()[-1])
+    assert restored['populated_relations']==4 and restored['exact_snapshot_restored'] and restored['exact_readonly_recovery'] and restored['private_table_and_helper_grants'] and restored['owned_restore_database_removed'] and restored['provider_requests']==0
+    assert hashlib.sha256(restore_harness.read_bytes()).hexdigest()==restore_hash
+    print('Populated reconciliation restore passed:4 ledger families, exact recovery and private grants; owned database removed.',flush=True)
     success = True
 finally:
     if started:

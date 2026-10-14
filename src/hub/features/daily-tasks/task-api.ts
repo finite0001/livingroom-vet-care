@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { reconciliationRunSchema } from "../../../../supabase/functions/_shared/operational-reconciliation-contract.ts";
 import {
   operationalMetadataSchema,
   operationalAppointmentSchema,
@@ -7,6 +8,7 @@ import {
   verifyOperationalReceipt,
   operationalOperationSchema,
   operationalPolicySchema,
+  operationalReconciliationPolicySchema,
   operationalTaskSchema,
   operationalTemplateSchema,
   operationalUseSchema,
@@ -30,6 +32,17 @@ async function rpc(name: string, args: Record<string, unknown>) {
 }
 const uuid = z.string().uuid(),
   instant = z.string().datetime({ offset: true });
+const reconciliationCursorSchema = z.object({ before: instant, before_id: uuid }).strict();
+export interface ReconciliationCursor extends z.infer<typeof reconciliationCursorSchema> {}
+export async function operationalReconciliationPolicy() {
+  return operationalReconciliationPolicySchema.nullable().parse(await rpc("read_operational_reconciliation_policy", {}));
+}
+export async function operationalReconciliationRuns(cursor: ReconciliationCursor | null = null) {
+  const position = reconciliationCursorSchema.nullable().parse(cursor);
+  return z.object({ items: z.array(reconciliationRunSchema).max(25), next: reconciliationCursorSchema.nullable() }).strict().parse(
+    await rpc("list_operational_reconciliation_runs", { p_before: position?.before ?? null, p_before_id: position?.before_id ?? null, p_limit: 25 }),
+  );
+}
 export async function operationalTemplatesPage(after: string | null = null) {
   return z
     .object({

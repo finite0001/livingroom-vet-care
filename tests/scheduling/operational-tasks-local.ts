@@ -21,7 +21,7 @@ const identity = readFileSync(`${project}/supabase/config.toml`, "utf8").match(
 )?.[1];
 assert.ok(
   identity &&
-    (identity.startsWith("lrv-tasks-") || identity.startsWith("lrv-catalog-")),
+    (identity.startsWith("lrv-tasks-") || identity.startsWith("lrv-catalog-") || identity.startsWith("lrv-reconcile-")),
 );
 const container = "supabase_db_" + identity;
 const labels = JSON.parse(
@@ -236,7 +236,7 @@ try {
         "select jsonb_build_object('count',count(*),'latest',max(version)) from supabase_migrations.schema_migrations;",
       ),
     ),
-    { count: 184, latest: "20261014022511" },
+    { count: 185, latest: "20261014154223" },
   );
   const household = randomUUID(),
     pet = randomUUID();
