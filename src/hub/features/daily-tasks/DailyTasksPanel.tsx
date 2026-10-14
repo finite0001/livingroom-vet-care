@@ -22,12 +22,11 @@ interface DailyTasksProps {
   day: string;
   full?: boolean;
 }
+interface ActorTasksProps extends DailyTasksProps {
+  actor: string;
+}
 const openStates = ["pending", "started", "blocked", "needs_review"];
-function ActorTasks({
-  actor,
-  day,
-  full = false,
-}: DailyTasksProps & { actor: string }) {
+function ActorTasks({ actor, day, full = false }: ActorTasksProps) {
   const [filter, setFilter] = useState("open"),
     [role, setRole] = useState(""),
     [resource, setResource] = useState(""),

@@ -23,15 +23,12 @@ interface GenerationProps {
   close: () => void;
 }
 type Policy = Awaited<ReturnType<typeof operationalGenerationPolicy>>;
-function GenerationForm({
-  policy,
-  close,
-  reload,
-}: {
+interface GenerationFormProps {
   policy: Policy;
   close: () => void;
   reload: () => void;
-}) {
+}
+function GenerationForm({ policy, close, reload }: GenerationFormProps) {
   const { session, hasRole } = useAuth(),
     reviewer = hasRole("DVM") || hasRole("ADMIN"),
     actor = session?.user.id ?? "",

@@ -18,7 +18,10 @@ import {
 import { operationalChangeEvent } from "./use-task-action";
 import { operationalActionError, operationalTimeLabel } from "./task-ui";
 import { refreshOperationalFacts } from "./task-invalidation";
-function RecoveryItem({ meta }: { meta: OperationalMetadata }) {
+interface RecoveryItemProps {
+  meta: OperationalMetadata;
+}
+function RecoveryItem({ meta }: RecoveryItemProps) {
   const { refreshProfile } = useAuth();
   const [review, setReview] = useState<OperationalReview | null>(null),
     [busy, setBusy] = useState(false),
@@ -173,7 +176,10 @@ function RecoveryItem({ meta }: { meta: OperationalMetadata }) {
     </li>
   );
 }
-function ActorRecovery({ actor }: { actor: string }) {
+interface ActorRecoveryProps {
+  actor: string;
+}
+function ActorRecovery({ actor }: ActorRecoveryProps) {
   const [items, setItems] = useState(() =>
     storedOperationalReviews(localStorage, actor),
   );

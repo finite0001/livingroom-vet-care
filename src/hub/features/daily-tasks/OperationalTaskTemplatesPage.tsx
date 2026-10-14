@@ -10,13 +10,11 @@ import { TaskTemplateEditor } from "./TaskTemplateEditor";
 import { OperationalRecovery } from "./OperationalRecovery";
 import { operationalTimeLabel } from "./task-ui";
 import { OperationalGenerationSettings } from "./OperationalGenerationSettings";
-function ActorTemplates({
-  actor,
-  reviewer,
-}: {
+interface ActorTemplatesProps {
   actor: string;
   reviewer: boolean;
-}) {
+}
+function ActorTemplates({ actor, reviewer }: ActorTemplatesProps) {
   const [editing, setEditing] = useState<
       OperationalTemplate | null | undefined
     >(),

@@ -40,6 +40,9 @@ interface ResourceUseWorkspaceProps {
   appointmentId: string;
   close: () => void;
 }
+interface ActorUsesProps extends ResourceUseWorkspaceProps {
+  actor: string;
+}
 interface UseEditorProps {
   source: OperationalAppointment;
   existing: OperationalUse | null;
@@ -382,11 +385,7 @@ function UseEditor({ source, existing, mode, close, reload }: UseEditorProps) {
     </OperationalDialog>
   );
 }
-function ActorUses({
-  actor,
-  appointmentId,
-  close,
-}: ResourceUseWorkspaceProps & { actor: string }) {
+function ActorUses({ actor, appointmentId, close }: ActorUsesProps) {
   const { hasRole } = useAuth(),
     reviewer = hasRole("DVM") || hasRole("ADMIN");
   const [editing, setEditing] = useState<{

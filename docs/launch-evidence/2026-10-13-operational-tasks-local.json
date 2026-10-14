@@ -83,6 +83,24 @@
   },
   "source_sha256": {
     "src/hub/features/daily-tasks/TaskDetailDialog.tsx": "19d335ea7693a82df7b715bb73fca4d72600affbc33f3e237f6b13064db2bd7b",
+    "src/hub/features/daily-tasks/ResourceUseWorkspace.tsx": "c2815283e7c82555ef426fecf5f5c5744a483bf48a3bd10dec1f9495b61bca93",
+    "src/hub/features/daily-tasks/OperationalDialog.tsx": "e92497192e1b02aa7d8fe97ea6f49d634f6ea3b0f9a28971e2cefa8787961d68",
+    "src/hub/features/daily-tasks/task-invalidation.ts": "5a2e3323122ada946f263dcb760ac2d2af7c39b822f251504c2efdfd88e628f0",
+    "src/hub/features/daily-tasks/OperationalRecovery.tsx": "f7c725bb9ab47267ba141eede135965e0ab00911620764e33cea1c6cb3d41dcb",
+    "src/hub/features/daily-tasks/task-ui.ts": "35acffee7520121b201fb6a6bda7f87035fea539b372ec4bc42d4aab8eaabf95",
+    "src/hub/features/daily-tasks/DailyTasksPanel.tsx": "ff2f8adaf1507ef1bb01efe7f92fb773e0610e837e9675b9ca5276a2225319b9",
+    "src/hub/features/daily-tasks/OperationalTaskTemplatesPage.tsx": "e85d725090ee7c61d0f22185204078ba7969293b611310175fddea14d10bb428",
+    "src/hub/features/daily-tasks/task-api.ts": "693179763fe5f865c3d301c238a449bdcfb74e63566d37f9c1c2fdb00d4187a0",
+    "src/hub/features/daily-tasks/OperationalGenerationSettings.tsx": "41122d6d9d4cb954a6e229caeedf5cfe7acbcd2bd4ab03812db21a27623ac0bb",
+    "src/hub/features/daily-tasks/TaskTemplateEditor.tsx": "cc93fa9605e1546a6a4c1eb7db85fa713ac1e23c600c6c4b291d322ab5ba954e",
+    "src/hub/features/daily-tasks/task-model.ts": "f3b46d697af81d57cb9dea44c1f3162d5971bddf9ef4754be95e1ef0bdcd149a",
+    "src/hub/features/daily-tasks/use-task-action.ts": "84c1cbc5c3450828e5812c1635f484a5cd48d18241b8c026bc59d49742815910",
+    "supabase/migrations/20261014022511_operational_tasks.sql": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+    "tests/scheduling/operational-tasks-local.ts": "959b5130f1c33ed6eeaeaea90a09be097dd135c4e4741327021d0d22f9803308",
+    "tests/scheduling/operational-tasks-browser.ts": "a2423fcec4226d5e348f9bcfc9bbb0123a2f22a56f8e1e6cbc424ceb584b00fb"
+  },
+  "runtime_acceptance_source_sha256": {
+    "src/hub/features/daily-tasks/TaskDetailDialog.tsx": "19d335ea7693a82df7b715bb73fca4d72600affbc33f3e237f6b13064db2bd7b",
     "src/hub/features/daily-tasks/ResourceUseWorkspace.tsx": "809d7343381d0ac4e3eeaef7c37f421387a9ebdf818865ea80428b918e032c26",
     "src/hub/features/daily-tasks/OperationalDialog.tsx": "e92497192e1b02aa7d8fe97ea6f49d634f6ea3b0f9a28971e2cefa8787961d68",
     "src/hub/features/daily-tasks/task-invalidation.ts": "5a2e3323122ada946f263dcb760ac2d2af7c39b822f251504c2efdfd88e628f0",
@@ -98,5 +116,14 @@
     "supabase/migrations/20261014022511_operational_tasks.sql": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
     "tests/scheduling/operational-tasks-local.ts": "959b5130f1c33ed6eeaeaea90a09be097dd135c4e4741327021d0d22f9803308",
     "tests/scheduling/operational-tasks-browser.ts": "a2423fcec4226d5e348f9bcfc9bbb0123a2f22a56f8e1e6cbc424ceb584b00fb"
+  },
+  "interface_only_followup": {
+    "runtime_acceptance_head": "71154f3e25b39e90a0679ab33144015d91b60a85",
+    "components_corrected": 6,
+    "files": 5,
+    "swc_runtime_javascript_identical": true,
+    "lint_and_typecheck": true,
+    "model_unit_tests": 11,
+    "exact_head_ci": "pending"
   }
 }
