@@ -2,7 +2,7 @@
 
 Status: shared provider module and tests only. No deployed payment endpoint, webhook inbox, staff payment UI, live keys or actual Stripe transactions are included in this increment.
 
-`supabase/functions/_shared/stripe-provider.ts` creates fixed USD/card Checkout Sessions from an already committed immutable ledger intent. It verifies the configured account before every provider operation, pins API version `2026-08-26.dahlia`, and refuses wrong-mode credentials. Payments remain disabled unless `STRIPE_PAYMENTS_ENABLED=true`; commissioning also requires `STRIPE_SECRET_KEY`, `STRIPE_ACCOUNT_ID`, explicit `STRIPE_LIVEMODE=true|false` and an exact HTTPS `STRIPE_RETURN_ORIGIN`.
+`supabase/functions/_shared/stripe-provider.ts` creates fixed USD Checkout Sessions from an already committed immutable ledger intent. Payment methods follow the Stripe account's default Dashboard configuration, allowing eligible Affirm offers without a code-level card-only restriction. It verifies the configured account before every provider operation, pins API version `2026-08-26.dahlia`, and refuses wrong-mode credentials. Payments remain disabled unless `STRIPE_PAYMENTS_ENABLED=true`; commissioning also requires `STRIPE_SECRET_KEY`, `STRIPE_ACCOUNT_ID`, explicit `STRIPE_LIVEMODE=true|false` and an exact HTTPS `STRIPE_RETURN_ORIGIN`.
 
 Return destinations are exactly `/payment/return` and `/payment/cancel` on that origin. These are future neutral return routes, not implemented client status capabilities. Never infer payment from arrival at either route.
 

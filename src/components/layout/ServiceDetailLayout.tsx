@@ -234,6 +234,13 @@ const ServiceDetailLayout = ({
           </div>
         </section>
 
+        <aside aria-label="Payment information" className="container py-8 text-center text-sm text-muted-foreground">
+          Questions about costs? We can discuss your estimate before treatment.{" "}
+          <Link to="/payment-options" className="text-primary underline underline-offset-4">
+            Explore payment options
+          </Link>.
+        </aside>
+
         {/* CTA */}
         <section className="py-20 bg-gradient-warm">
           <div className="container">

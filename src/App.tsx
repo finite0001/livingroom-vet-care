@@ -21,6 +21,7 @@ const Surgery = lazy(() => import("./pages/services/Surgery"));
 const Diagnostics = lazy(() => import("./pages/services/Diagnostics"));
 const IllnessCare = lazy(() => import("./pages/services/IllnessCare"));
 const About = lazy(() => import("./pages/About"));
+const PaymentOptions = lazy(() => import("./pages/PaymentOptions"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -102,6 +103,7 @@ const router = createBrowserRouter(createRoutesFromElements(
               <Route path="/services/vaccinations" element={<MarketingErrorBoundary><Vaccinations /></MarketingErrorBoundary>} />
               <Route path="/about" element={<MarketingErrorBoundary><About /></MarketingErrorBoundary>} />
               <Route path="/contact" element={<MarketingErrorBoundary><Contact /></MarketingErrorBoundary>} />
+              <Route path="/payment-options" element={<MarketingErrorBoundary><PaymentOptions /></MarketingErrorBoundary>} />
               <Route path="/privacy" element={<MarketingErrorBoundary><Privacy /></MarketingErrorBoundary>} />
               <Route path="/terms" element={<MarketingErrorBoundary><Terms /></MarketingErrorBoundary>} />
 

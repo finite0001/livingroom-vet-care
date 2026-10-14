@@ -30,6 +30,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 { label: "Services", href: "/services" },
                 { label: "About Us", href: "/about" },
                 { label: "Contact", href: "/contact" },
+                { label: "Payment Options", href: "/payment-options" },
               ].map((link) => (
                 <Link
                   key={link.href}

@@ -137,7 +137,8 @@ export function createStripeProvider(env: StripeEnvironment, fetcher: typeof fet
       // Account lookup can consume time; never cross the expiry/retry boundary during it.
       if (now() >= retry || expiry - now() < 31 * 60_000) fail("reconcile");
       const params = new URLSearchParams({
-        mode: "payment", "payment_method_types[0]": "card",
+        // Use the account's Dashboard configuration so eligible Affirm offers can appear.
+        mode: "payment",
         "line_items[0][quantity]": "1", "line_items[0][price_data][currency]": "usd",
         "line_items[0][price_data][unit_amount]": intent.amount_cents,
         "line_items[0][price_data][product_data][name]": "Living Room Vet payment",

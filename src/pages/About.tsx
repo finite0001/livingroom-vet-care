@@ -214,6 +214,11 @@ const About = () => {
                           </li>
                         ))}
                       </ul>
+                      {index === 0 && (
+                        <Link to="/payment-options" className="inline-block mt-6 text-primary underline underline-offset-4">
+                          Learn about payment options and Affirm
+                        </Link>
+                      )}
                     </CardContent>
                   </Card>
                 </ScrollReveal>

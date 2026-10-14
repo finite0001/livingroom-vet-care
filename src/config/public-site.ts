@@ -126,6 +126,13 @@ export const publicRoutes = [
     priority: 0.8,
   },
   {
+    path: "/payment-options",
+    title: "Payment Options",
+    description: "Information about estimates, planned payment options, and paying over time with Affirm at The Living Room Vet.",
+    changeFrequency: "monthly",
+    priority: 0.6,
+  },
+  {
     path: "/privacy",
     title: "Privacy Policy",
     description:
