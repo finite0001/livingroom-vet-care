@@ -10,6 +10,7 @@ import { TaskTemplateEditor } from "./TaskTemplateEditor";
 import { OperationalRecovery } from "./OperationalRecovery";
 import { operationalTimeLabel } from "./task-ui";
 import { OperationalGenerationSettings } from "./OperationalGenerationSettings";
+import { OperationalReconciliationPanel } from "./OperationalReconciliationPanel";
 interface ActorTemplatesProps {
   actor: string;
   reviewer: boolean;
@@ -82,6 +83,7 @@ function ActorTemplates({ actor, reviewer }: ActorTemplatesProps) {
         </Link>
       </div>
       <OperationalRecovery />
+      <OperationalReconciliationPanel />
       {error && <p role="alert">{error}</p>}
       {query.isPending ? (
         <p role="status">Loading operational templates…</p>

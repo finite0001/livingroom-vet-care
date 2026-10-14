@@ -2,21 +2,22 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { reconciliationRunSchema } from "../../../../supabase/functions/_shared/operational-reconciliation-contract.ts";
 import {
-  operationalMetadataSchema,
   operationalAppointmentSchema,
   operationalHistoryItemSchema,
-  verifyOperationalReceipt,
+  type OperationalMetadata,
+  operationalMetadataSchema,
   operationalOperationSchema,
   operationalPolicySchema,
+  type OperationalReceipt,
   operationalReconciliationPolicySchema,
+  operationalReconciliationStatusSchema,
+  type OperationalRequest,
   operationalTaskSchema,
   operationalTemplateSchema,
   operationalUseSchema,
   parseOperationalReceipt,
   validateOperationalRequest,
-  type OperationalMetadata,
-  type OperationalReceipt,
-  type OperationalRequest,
+  verifyOperationalReceipt,
 } from "./task-model";
 interface OperationalRpc {
   rpc(
@@ -32,15 +33,35 @@ async function rpc(name: string, args: Record<string, unknown>) {
 }
 const uuid = z.string().uuid(),
   instant = z.string().datetime({ offset: true });
-const reconciliationCursorSchema = z.object({ before: instant, before_id: uuid }).strict();
-export interface ReconciliationCursor extends z.infer<typeof reconciliationCursorSchema> {}
+const reconciliationCursorSchema = z.object({
+  before: instant,
+  before_id: uuid,
+}).strict();
+export interface ReconciliationCursor
+  extends z.infer<typeof reconciliationCursorSchema> {}
 export async function operationalReconciliationPolicy() {
-  return operationalReconciliationPolicySchema.nullable().parse(await rpc("read_operational_reconciliation_policy", {}));
+  return operationalReconciliationPolicySchema.nullable().parse(
+    await rpc("read_operational_reconciliation_policy", {}),
+  );
 }
-export async function operationalReconciliationRuns(cursor: ReconciliationCursor | null = null) {
+export async function operationalReconciliationStatus() {
+  return operationalReconciliationStatusSchema.parse(
+    await rpc("read_operational_reconciliation_status", {}),
+  );
+}
+export async function operationalReconciliationRuns(
+  cursor: ReconciliationCursor | null = null,
+) {
   const position = reconciliationCursorSchema.nullable().parse(cursor);
-  return z.object({ items: z.array(reconciliationRunSchema).max(25), next: reconciliationCursorSchema.nullable() }).strict().parse(
-    await rpc("list_operational_reconciliation_runs", { p_before: position?.before ?? null, p_before_id: position?.before_id ?? null, p_limit: 25 }),
+  return z.object({
+    items: z.array(reconciliationRunSchema).max(25),
+    next: reconciliationCursorSchema.nullable(),
+  }).strict().parse(
+    await rpc("list_operational_reconciliation_runs", {
+      p_before: position?.before ?? null,
+      p_before_id: position?.before_id ?? null,
+      p_limit: 25,
+    }),
   );
 }
 export async function operationalTemplatesPage(after: string | null = null) {
@@ -66,8 +87,9 @@ export async function operationalTemplates() {
     const result = await operationalTemplatesPage(after);
     entries.push(...result.items);
     if (!result.next) return entries;
-    if (seen.has(result.next))
+    if (seen.has(result.next)) {
       throw new Error("Operational template pagination did not advance");
+    }
     seen.add(result.next);
     after = result.next;
   }
@@ -177,8 +199,9 @@ function parseReview(
     value.actor_id !== metadata.actor_id ||
     value.operation !== metadata.operation ||
     (value.state === "saved") !== (value.receipt !== null)
-  )
+  ) {
     throw new Error("Operational review identity/receipt mismatch");
+  }
   return {
     id: value.id,
     actor_id: value.actor_id,
@@ -186,14 +209,11 @@ function parseReview(
     expires_at: value.expires_at,
     state: value.state,
     request: validateOperationalRequest(value.operation, value.request),
-    receipt:
-      value.receipt === null
-        ? null
-        : verifyOperationalReceipt(
-            metadata,
-            validateOperationalRequest(value.operation, value.request),
-            value.receipt,
-          ),
+    receipt: value.receipt === null ? null : verifyOperationalReceipt(
+      metadata,
+      validateOperationalRequest(value.operation, value.request),
+      value.receipt,
+    ),
   };
 }
 export async function prepareOperationalReview(
@@ -232,12 +252,14 @@ export async function cancelOperationalReview(metadata: OperationalMetadata) {
     if (
       value.receipt !== null ||
       (value.operation !== null && value.operation !== metadata.operation)
-    )
+    ) {
       throw new Error("Operational cancellation identity mismatch");
+    }
     return null;
   }
-  if (value.operation !== metadata.operation || value.receipt === null)
+  if (value.operation !== metadata.operation || value.receipt === null) {
     throw new Error("Saved operational receipt required before releasing work");
+  }
   return parseOperationalReceipt(metadata.operation, value.receipt);
 }
 
@@ -269,7 +291,8 @@ export async function operationalTaskHistory(
         p_limit: 50,
       }),
     );
-  if (value.items.some((item) => item.revision.task_id !== id))
+  if (value.items.some((item) => item.revision.task_id !== id)) {
     throw new Error("Task history identity mismatch");
+  }
   return value;
 }

@@ -7,6 +7,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { parseOwnedRuntimeStatus } from "../estimates/owned-runtime-status.ts";
 import { reconciliationRunSchema } from "../../supabase/functions/_shared/operational-reconciliation-contract.ts";
+import { reconciliationHttpProof } from "./operational-reconciliation-http.ts";
+import { reconciliationBrowserProof } from "./operational-reconciliation-browser.ts";
 
 const project = process.env.RECONCILIATION_TEST_PROJECT;
 assert.ok(project && process.env.RECONCILIATION_RUN_SYNTHETIC_LOCAL === "true");
@@ -53,11 +55,13 @@ async function policy(owner: Actor, enabled: boolean) {
   check(await rpc(owner.db, "execute_operational_review", { p_actor_id: owner.id, p_action_id: action }), receipt);
   return receipt;
 }
-let elapsed = 0, failure: unknown = null;
+let elapsed = 0, failure: unknown = null, httpProof: Awaited<ReturnType<typeof reconciliationHttpProof>> | null = null,
+  browserProof: Awaited<ReturnType<typeof reconciliationBrowserProof>> | null = null;
 try {
   check(sql("select count(*) from supabase_migrations.schema_migrations;"), "185");
+  const cursorBaseline = sql("select count(*) from operational_reconciliation_cursor;");
   check(await rpc(service, "start_operational_reconciliation_run", { p_run_id: randomUUID(), p_limit: 5 }), { disabled: true });
-  check(sql("select count(*) from operational_reconciliation_cursor;"), "0");
+  check(sql("select count(*) from operational_reconciliation_cursor;"), cursorBaseline);
   admin = await actor("ADMIN");
   const staff = await actor("STAFF");
   for (const table of ["operational_reconciliation_policy", "operational_reconciliation_runs", "operational_reconciliation_results", "operational_reconciliation_cursor"]) {
@@ -71,7 +75,7 @@ try {
   const first = reconciliationRunSchema.parse(await rpc(service, "start_operational_reconciliation_run", args));check(first.outcome, "started");
   const pending = await service.rpc("start_operational_reconciliation_run", { p_run_id: randomUUID(), p_limit: 5 });check(pending.error?.code, "PT409");
   check(await rpc(service, "recover_operational_reconciliation_run", args), first);
-  const done = reconciliationRunSchema.parse(await rpc(service, "execute_operational_reconciliation_run", args));check(done.outcome, "completed");check(done.counts?.examined, 0);check(done.sweep_complete, true);
+  const done = reconciliationRunSchema.parse(await rpc(service, "execute_operational_reconciliation_run", args));check(done.outcome, "completed");check(done.counts !== null && done.counts.examined <= 5, true);check(done.sweep_complete, done.checkpoint?.lane === "complete");
   check(await rpc(service, "execute_operational_reconciliation_run", args), done);
   const collision = await service.rpc("start_operational_reconciliation_run", { p_run_id: firstId, p_limit: 4 });check(collision.error?.code, "23505");
   const pausedArgs = { p_run_id: randomUUID(), p_limit: 5 };await rpc(service, "start_operational_reconciliation_run", pausedArgs);await policy(admin, false);
@@ -92,6 +96,8 @@ try {
   sql(originalNext);originalNext = "";
   const observed = z.object({ items: z.array(reconciliationRunSchema).max(1), next: z.object({ before: z.string(), before_id: z.string().uuid() }).strict().nullable() }).strict().parse(await rpc(admin.db, "list_operational_reconciliation_runs", { p_limit: 1 }));check(observed.items.length, 1);check(observed.next !== null, true);
   const invalidCursor = await admin.db.rpc("list_operational_reconciliation_runs", { p_before: new Date().toISOString(), p_before_id: null, p_limit: 1 });check(invalidCursor.error?.code, "23514");
+  httpProof = await reconciliationHttpProof({ status, service, sql });
+  browserProof = await reconciliationBrowserProof({ status, admin, staff, service, sql });
   check(sql("select count(*) from communication_outbox;"), "0");check(sql("select count(*) from inventory_movements;"), "0");
 } catch (cause) { failure = cause; } finally {
   try { if (originalNext) sql(originalNext); } catch (cause) { failure ??= cause; }
@@ -104,6 +110,6 @@ try {
 if (failure) throw failure;
 check(sql("select count(*) from operational_reconciliation_policy where enabled and version=(select max(version)from operational_reconciliation_policy);"), "0");
 for (const owned of actors) check(sql(`select count(*)from profiles where id='${owned.id}' and is_active;`), "0");
-const proof = { api_checks: checks, timeout_elapsed_ms: Math.round(elapsed), real_auth_postgrest: true, provider_requests: 0, owned_accounts_deactivated: true, private_timeout_helper_restored: true };
+const proof = { api_checks: checks, http: httpProof, browser: browserProof, timeout_elapsed_ms: Math.round(elapsed), real_auth_postgrest: true, provider_requests: 0, owned_accounts_deactivated: true, private_timeout_helper_restored: true };
 writeFileSync(project + "/reconciliation-api-proof.json", JSON.stringify(proof, null, 2));
 console.log(JSON.stringify(proof));

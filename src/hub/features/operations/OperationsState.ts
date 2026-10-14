@@ -45,11 +45,12 @@ export const runSchema = z
         (!r.finished_at ||
           r.counts !== null ||
           r.failure_code !== "queue_transaction_rolled_back"))
-    )
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Contradictory run evidence",
       });
+    }
   });
 export const overviewSchema = z.object({
   observed_at: time,
@@ -123,7 +124,8 @@ export const candidateSchema = z.object({
   eligible_at: time,
 });
 export const blockSchema = z.object({
-  source_kind: z.enum(["lab", "vaccine", "appointment", "care_plan"]).nullable(),
+  source_kind: z.enum(["lab", "vaccine", "appointment", "care_plan"])
+    .nullable(),
   source_id: id.nullable(),
   pet_id: id.nullable(),
   appointment_id: id.nullable(),
@@ -148,12 +150,15 @@ export const schedulerJobSchema = z
       "process-stripe-events",
       "queue-reminders",
       "cleanup-abandoned-attachment",
+      "reconcile-operational-tasks",
     ]),
     requested_at: time,
     outcome: z.enum(["dispatched", "ok", "failed", "configuration_missing"]),
     status_code: z.number().int().nullable(),
     error_message: z.string().nullable(),
     stale: z.boolean(),
+    cadence_seconds: z.number().int().positive().optional(),
+    reconciliation_run_id: id.nullable().optional(),
   })
   .superRefine((j, ctx) => {
     // The same rule the database enforces on the outcome it records: a job that
@@ -166,12 +171,16 @@ export const schedulerJobSchema = z
           j.error_message !== null)) ||
       (j.outcome === "configuration_missing" &&
         (j.status_code !== null || j.error_message === null)) ||
-      (j.outcome === "dispatched" && j.status_code !== null)
-    )
+      (j.outcome === "dispatched" && j.status_code !== null) ||
+      (j.reconciliation_run_id != null &&
+        j.job !== "reconcile-operational-tasks") ||
+      (j.job === "reconcile-operational-tasks" && j.cadence_seconds !== 300)
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Contradictory scheduler evidence",
       });
+    }
   });
 export const schedulerStatusSchema = z.object({
   observed_at: time,
@@ -215,6 +224,8 @@ export function patientLink(idValue: string) {
 }
 export function displayTime(value: string | null) {
   return value
-    ? `${new Date(value).toLocaleString("en-US", { timeZone: "America/Denver" })} Mountain`
+    ? `${
+      new Date(value).toLocaleString("en-US", { timeZone: "America/Denver" })
+    } Mountain`
     : "Not recorded";
 }

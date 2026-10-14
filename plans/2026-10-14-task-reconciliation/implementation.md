@@ -1,3 +1,5 @@
+Current integration checkpoint: the pinned service Edge worker, inactive five-minute scheduler, original-UUID reservation/retry and reviewed Operations controls are implemented. [Final local release proof](../../docs/launch-evidence/2026-10-14-task-reconciliation-release-local.json) includes151 suites/6,288 SQL assertions,42 real API/28 HTTP/21 browser checks,4 observed queues,16 populated task/ledger families across18 restored relations,36 hosted-probe rehearsal checks and1,447 units. Hosted backends remain184; CI and rollout are pending. Historical checkpoints below retain their measured scope.
+
 # 4C implementation and acceptance
 
 ## Service boundary and policy

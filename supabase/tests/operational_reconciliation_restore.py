@@ -22,10 +22,14 @@ def sql(query, database='postgres'):
     assert result.returncode == 0, result.stderr[-1200:]
     return result.stdout.strip()
 
-tables = ['operational_reconciliation_policy','operational_reconciliation_runs','operational_reconciliation_results','operational_reconciliation_cursor']
+ledger_tables = ['operational_reconciliation_policy','operational_reconciliation_runs','operational_reconciliation_results','operational_reconciliation_cursor']
+task_tables = ['operational_task_templates','operational_task_template_versions','operational_resource_uses','operational_resource_use_events',
+               'operational_task_enrollments','operational_tasks','operational_task_revisions','operational_task_use_coverage',
+               'operational_task_generation_policy','operational_task_actions','operational_task_reviews','operational_task_review_cancellations']
+tables = ledger_tables + task_tables + ['scheduler_job_runs','scheduler_job_results']
 snapshot = 'select jsonb_build_object(' + ','.join("'%s',(select jsonb_build_object('count',count(*),'hash',md5(coalesce(string_agg(to_jsonb(t)::text,'|' order by to_jsonb(t)::text),'')))from %s t)" % (table,table) for table in tables) + ');'
 before = sql(snapshot)
-assert all(value['count']>0 for value in json.loads(before).values()), 'All four ledger families must be populated'
+assert all(value['count']>0 for name,value in json.loads(before).items() if name in ledger_tables + task_tables), 'All sixteen task/ledger families must be populated'
 run = json.loads(sql("select jsonb_build_object('id',run_id,'limit',requested_limit)from operational_reconciliation_runs order by started_at limit 1;"))
 recover = "set role service_role;set request.jwt.claims='{\"role\":\"service_role\"}';select recover_operational_reconciliation_run('%s',%s);" % (run['id'],run['limit'])
 expected = sql(recover)
@@ -48,6 +52,6 @@ try:
 finally:
     assert sql(f"select shobj_description(oid,'pg_database')from pg_database where datname='{database}';")==marker
     sql(f'drop database {database};')
-proof = {'populated_relations':4,'exact_snapshot_restored':True,'exact_readonly_recovery':True,'private_table_and_helper_grants':True,'owned_restore_database_removed':True,'provider_requests':0}
+proof = {'populated_relations':16,'snapshot_relations':18,'exact_snapshot_restored':True,'exact_readonly_recovery':True,'private_table_and_helper_grants':True,'owned_restore_database_removed':True,'provider_requests':0}
 (project/'reconciliation-restore-proof.json').write_text(json.dumps(proof,indent=2))
 print(json.dumps(proof))

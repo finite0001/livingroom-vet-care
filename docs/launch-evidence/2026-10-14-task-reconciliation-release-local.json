@@ -1,0 +1,128 @@
+{
+  "canonical_migrations": 185,
+  "migration185_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+  "sql_regression": {
+    "files": 151,
+    "assertions": 6288
+  },
+  "staff_only": false,
+  "api": {
+    "api_checks": 42,
+    "http": {
+      "http_checks": 28,
+      "actual_edge_entrypoint": true,
+      "genuine_postgrest": true,
+      "lost_response_recovery": true,
+      "unknown_response_replay": true,
+      "provider_requests": 0
+    },
+    "browser": {
+      "browser_checks": 21,
+      "genuine_staff_api": true,
+      "committed_ack_loss_recovered": true,
+      "dst_and_window_review": true,
+      "mobile_overflow_checked": true,
+      "dirty_navigation_guard": true,
+      "provider_requests": 0
+    },
+    "timeout_elapsed_ms": 5016,
+    "real_auth_postgrest": true,
+    "provider_requests": 0,
+    "owned_accounts_deactivated": true,
+    "private_timeout_helper_restored": true
+  },
+  "concurrency": {
+    "checks": 3,
+    "observed_lock_queues": 4,
+    "policy_pause_after_wait": true,
+    "same_uuid_execute_replay": true,
+    "provider_requests": 0,
+    "owned_staff_deactivated": true
+  },
+  "restore": {
+    "populated_relations": 16,
+    "snapshot_relations": 18,
+    "exact_snapshot_restored": true,
+    "exact_readonly_recovery": true,
+    "private_table_and_helper_grants": true,
+    "owned_restore_database_removed": true,
+    "provider_requests": 0
+  },
+  "rollback_probe": {
+    "checks": 36,
+    "rollback_only": true,
+    "provider_requests": 0
+  },
+  "cleanup_baseline": {
+    "outbox": 0,
+    "cron_active": false,
+    "pending_run": null,
+    "active_staff": 0,
+    "inventory_movements": 0,
+    "reconciliation_enabled": false
+  },
+  "package": "4C bounded operational reconciliation",
+  "hosted_migrations": 184,
+  "hosted_schema_changed": false,
+  "review": {
+    "remaining_package_critical_findings": 0,
+    "elapsed_dst_ceiling_corrected": true,
+    "legacy_constraint_test_targeted": true
+  },
+  "frontend": {
+    "units": 1447,
+    "lint": "pass with4 existing React-refresh warnings",
+    "typecheck": "pass",
+    "build": "pass with existing large-chunk warning"
+  },
+  "edge": {
+    "root_frozen_check": true,
+    "isolated_frozen_check_and_bundle": true,
+    "sdk_pin": "2.110.3",
+    "zod_pin": "3.25.76",
+    "entrypoint": "reconcile-operational-tasks",
+    "commissioned": false
+  },
+  "security": {
+    "local_advisors": [
+      "existing pg_net extension_in_public warning"
+    ],
+    "npm_lockfile_changed": false,
+    "existing_audit": {
+      "moderate": 5,
+      "high": 13
+    }
+  },
+  "parent_regression": {
+    "catalog": {
+      "api": 59,
+      "observed_locks": 7,
+      "browser": 20,
+      "restore": 9
+    },
+    "next_visit": {
+      "api": 44,
+      "observed_locks": 6,
+      "populated_restore": true
+    },
+    "next_visit_staff": {
+      "api": 25,
+      "browser": 19
+    },
+    "operational_tasks": {
+      "api": 54,
+      "observed_locks": 2,
+      "browser": 24,
+      "populated_relations": 12
+    }
+  },
+  "known_preverification_failures": [
+    "Legacy constraint test selected an arbitrary CHECK; now targets the job CHECK",
+    "Deno bundle required runtime-module lock entries; frozen isolated bundle now passes",
+    "TypeScript ES2020 does not support replaceAll; used split/join",
+    "HTTP transport repeated a lost POST; same UUID and one stored result verified",
+    "Chromium datetime input format and SPA navigation settling corrected before final browser proof"
+  ],
+  "owned_runtime_removed": true,
+  "remaining": "Exact-head CI, staging/primary rollout and the full original45/vendor/clinical requirements remain required."
+}

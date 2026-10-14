@@ -82,8 +82,17 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=151, Tests=6257' in result
-        print('Canonical SQL regression passed: 151 files /6257 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=151, Tests=6288' in result
+        print('Canonical SQL regression passed: 151 files /6288 assertions.', flush=True)
+    # Rehearse the exact staged/primary rollback probe while the freshly replayed
+    # policy is still empty, before any Auth/browser acceptance changes it.
+    probe = root/'scripts/task-reconciliation/rollback-probe.sql'
+    probe_hash = hashlib.sha256(probe.read_bytes()).hexdigest()
+    output = command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=probe.read_text())
+    rollback_receipt = json.loads(next(line for line in reversed(output.splitlines())if line.startswith('{"checks"')))
+    assert rollback_receipt == {'checks':36,'provider_requests':0,'rollback_only':True}
+    assert hashlib.sha256(probe.read_bytes()).hexdigest()==probe_hash
+    print('Exact hosted rollback probe rehearsed:36 checks; no provider request or persisted fixture.',flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     if not args.staff_only:
         result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
@@ -124,6 +133,8 @@ enabled = false
                      env={**env,'RECONCILIATION_TEST_PROJECT':str(project),'RECONCILIATION_RUN_SYNTHETIC_LOCAL':'true'}, timeout=180)
     receipt = json.loads(result.strip().splitlines()[-1])
     assert receipt['api_checks']==42 and receipt['real_auth_postgrest'] and receipt['owned_accounts_deactivated'] and receipt['private_timeout_helper_restored'] and receipt['provider_requests']==0
+    assert receipt['http']['actual_edge_entrypoint'] and receipt['http']['lost_response_recovery'] and receipt['http']['unknown_response_replay']
+    assert receipt['browser']['genuine_staff_api'] and receipt['browser']['committed_ack_loss_recovered'] and receipt['browser']['mobile_overflow_checked'] and receipt['browser']['dirty_navigation_guard']
     assert 4500<=receipt['timeout_elapsed_ms']<5800
     assert hashlib.sha256(reconciliation.read_bytes()).hexdigest()==reconciliation_hash
     print('Genuine reconciliation API passed:42 checks; actual5s timeout; owned account cleanup; no provider requests.',flush=True)
@@ -138,9 +149,19 @@ enabled = false
     restore_hash = hashlib.sha256(restore_harness.read_bytes()).hexdigest()
     result = command(['python3','-B',str(restore_harness),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180)
     restored = json.loads(result.strip().splitlines()[-1])
-    assert restored['populated_relations']==4 and restored['exact_snapshot_restored'] and restored['exact_readonly_recovery'] and restored['private_table_and_helper_grants'] and restored['owned_restore_database_removed'] and restored['provider_requests']==0
+    assert restored['populated_relations']==16 and restored['snapshot_relations']==18 and restored['exact_snapshot_restored'] and restored['exact_readonly_recovery'] and restored['private_table_and_helper_grants'] and restored['owned_restore_database_removed'] and restored['provider_requests']==0
     assert hashlib.sha256(restore_harness.read_bytes()).hexdigest()==restore_hash
-    print('Populated reconciliation restore passed:4 ledger families, exact recovery and private grants; owned database removed.',flush=True)
+    print('Populated reconciliation restore passed:16 task/ledger families and18 relation snapshots, exact recovery and private grants; owned database removed.',flush=True)
+    verify()
+    baseline = json.loads(command(['docker','exec','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-c',
+      "select jsonb_build_object('active_staff',(select count(*)from profiles where is_active),'reconciliation_enabled',coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false),'pending_run',(select pending_run_id from operational_reconciliation_cursor),'outbox',(select count(*)from communication_outbox),'inventory_movements',(select count(*)from inventory_movements),'cron_active',(select active from cron.job where jobname='reconcile-operational-tasks'));" ]))
+    assert baseline == {'active_staff':0,'reconciliation_enabled':False,'pending_run':None,'outbox':0,'inventory_movements':0,'cron_active':False}
+    proof = {'canonical_migrations':len(hashes),'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
+             'sql_regression':{'files':151,'assertions':6288} if args.include_sql_regression else None,
+             'staff_only':args.staff_only,'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'cleanup_baseline':baseline}
+    proof_path=root/'tmp/reconciliation-release-disposable-proof.json'
+    proof_path.parent.mkdir(exist_ok=True)
+    proof_path.write_text(json.dumps(proof,indent=2)+'\n')
     success = True
 finally:
     if started:

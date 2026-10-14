@@ -11,9 +11,17 @@ import {
   forgetOperationalReview,
   verifyOperationalReceipt,
   reconciliationPolicyRequestSchema,
+  operationalReconciliationStatusSchema,
 } from "../../src/hub/features/daily-tasks/task-model.ts";
 const id = (n: number) =>
   `54000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+test("An unobserved timetable cannot masquerade as active or registered", () => {
+  const row = { cadence_seconds: 300, cron_registered: false, cron_active: null, pending_run_id: null };
+  assert.equal(operationalReconciliationStatusSchema.safeParse(row).success, true);
+  assert.equal(operationalReconciliationStatusSchema.safeParse({ ...row, cron_active: true }).success, false);
+  assert.equal(operationalReconciliationStatusSchema.safeParse({ ...row, cron_registered: true }).success, false);
+  assert.equal(operationalReconciliationStatusSchema.safeParse({ ...row, cron_registered: true, cron_active: false }).success, true);
+});
 const definition = {
   name: "Reviewed room turnover",
   category: "turnover",

@@ -5,7 +5,7 @@ create table public.operational_reconciliation_policy (
  window_from timestamptz, window_until timestamptz,
  review_note text not null check(length(review_note) between 1 and 2000),
  actor_id uuid not null references auth.users(id), recorded_at timestamptz not null default clock_timestamp(),
- check((enabled and window_from is not null and window_until>window_from and window_until<=window_from+interval '31 days') or
+ check((enabled and window_from is not null and window_until>window_from and window_until-window_from<=interval '31 days') or
        (not enabled and window_from is null and window_until is null))
 );
 create table public.operational_reconciliation_runs (
@@ -17,7 +17,7 @@ create table public.operational_reconciliation_runs (
  checkpoint_version integer not null check(checkpoint_version>=0),
  before_lane text not null check(before_lane in('appointment','use')), before_after_id uuid,
  started_at timestamptz not null default clock_timestamp(),
- check(window_until>window_from and window_until<=window_from+interval '31 days'),check(started_at>=sweep_started_at)
+ check(window_until>window_from and window_until-window_from<=interval '31 days'),check(started_at>=sweep_started_at)
 );
 create table public.operational_reconciliation_results (
  run_id uuid primary key references public.operational_reconciliation_runs(run_id),
@@ -47,6 +47,9 @@ do $$declare t text;begin
  end loop;
 end $$;
 
+-- Scheduler integration is below the service run functions at the end of this
+-- unpublished migration. No job or practice activation is implied by installation.
+
 -- Reuse the exact prepared-action/session protocol, with a separate policy.
 alter table public.operational_task_actions drop constraint operational_task_actions_operation_check;
 alter table public.operational_task_actions add check(operation in('template','use','task','policy','reconciliation_policy'));
@@ -63,7 +66,7 @@ declare actor uuid:=public.operational_actor(null,true);p operational_reconcilia
  if q->'enabled'='true'::jsonb then
   if q->>'window_from' ~ '\.[0-9]{7}' or q->>'window_until' ~ '\.[0-9]{7}' then raise exception 'Supported microsecond precision required' using errcode='23514';end if;
   lo:=public.appointment_catalog_instant(q->'window_from');hi:=public.appointment_catalog_instant(q->'window_until');
-  if hi<=lo or hi>lo+interval '31 days' then raise exception 'Reviewed appointment window of at most31 days required' using errcode='23514';end if;
+  if hi<=lo or hi-lo>interval '31 days' then raise exception 'Reviewed appointment window of at most31 days required' using errcode='23514';end if;
  elsif q->'window_from' is distinct from 'null'::jsonb or q->'window_until' is distinct from 'null'::jsonb then raise exception 'Paused reconciliation has no window' using errcode='23514';end if;
  insert into operational_reconciliation_policy values(coalesce(p.version,0)+1,(q->>'enabled')::boolean,lo,hi,q->>'review_note',actor,clock_timestamp());
  return(select to_jsonb(s) from operational_reconciliation_policy s order by version desc limit 1);
@@ -256,4 +259,89 @@ do $$declare f record;begin
   if f.proname in('read_operational_reconciliation_policy','list_operational_reconciliation_runs') then execute format('grant execute on function %s to authenticated',f.signature);end if;
   if f.proname in('recover_operational_reconciliation_run','start_operational_reconciliation_run','execute_operational_reconciliation_run') then execute format('grant execute on function %s to service_role',f.signature);end if;
  end loop;
+end $$;
+
+-- Transport evidence remains distinct from committed reconciliation evidence.
+alter table public.scheduler_job_runs drop constraint scheduler_job_runs_job_check;
+alter table public.scheduler_job_runs add check(job in('dispatch-outbox','process-inbound','process-stripe-events','queue-reminders','cleanup-abandoned-attachment','reconcile-operational-tasks'));
+alter table public.scheduler_job_runs add column reconciliation_run_id uuid references public.operational_reconciliation_runs(run_id);
+alter table public.scheduler_job_runs add check(reconciliation_run_id is null or job='reconcile-operational-tasks');
+
+-- Preserve unrelated jobs exactly; delegate only the new job to a private wrapper.
+create function public.scheduler_dispatch_operational_reconciliation() returns jsonb
+language plpgsql security definer set search_path=public,extensions set lock_timeout='2s' as $$
+declare project_url text;worker_key text;missing text;transport_id uuid;request_id bigint;
+ run_id uuid;requested_limit integer:=5;receipt jsonb;previous_claims text:=current_setting('request.jwt.claims',true);
+begin
+ perform pg_advisory_xact_lock(73260123);
+ -- Pause/default-off checks precede Vault access, run reservation and HTTP.
+ if not coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false) then
+  return jsonb_build_object('job','reconcile-operational-tasks','outcome','disabled');
+ end if;
+ select decrypted_secret into project_url from vault.decrypted_secrets where name='project_url';
+ select decrypted_secret into worker_key from vault.decrypted_secrets where name='scheduler_worker_key';
+ missing:=nullif(concat_ws(', ',case when project_url is null then 'project_url' end,case when worker_key is null then 'scheduler_worker_key' end),'');
+ if missing is not null then
+  if not exists(select 1 from scheduler_job_results s join scheduler_job_runs r on r.id=s.run_id where r.job='reconcile-operational-tasks' and s.outcome='configuration_missing' and s.recorded_at>now()-interval '1 hour') then
+   insert into scheduler_job_runs(job,url_path) values('reconcile-operational-tasks','/functions/v1/reconcile-operational-tasks') returning id into transport_id;
+   insert into scheduler_job_results(run_id,outcome,error_message) values(transport_id,'configuration_missing','Missing Vault secret(s): '||missing);
+  end if;
+  return jsonb_build_object('job','reconcile-operational-tasks','outcome','configuration_missing','run_id',transport_id);
+ end if;
+ if project_url !~ '^(https://(mgadheotkdnrsatfivjy|kothoqicubowyhwfsrte)\.supabase\.co|http://(127\.0\.0\.1|localhost|kong)(:[0-9]{1,5})?)$' then
+  raise exception 'Known practice scheduler backend required' using errcode='23514';
+ end if;
+ -- Reserve BEFORE async transport. If the worker never receives the call, the
+ -- next cadence still resumes this same UUID and original limit.
+ select r.run_id,r.requested_limit into run_id,requested_limit from operational_reconciliation_cursor c join operational_reconciliation_runs r on r.run_id=c.pending_run_id where c.singleton;
+ if run_id is null then run_id:=gen_random_uuid();requested_limit:=5;end if;
+ begin
+  perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+  receipt:=public.start_operational_reconciliation_run(run_id,requested_limit);
+  perform set_config('request.jwt.claims',coalesce(previous_claims,''),true);
+ exception when others then
+  perform set_config('request.jwt.claims',coalesce(previous_claims,''),true);raise;
+ end;
+ if receipt->'disabled'='true'::jsonb then return jsonb_build_object('job','reconcile-operational-tasks','outcome','disabled');end if;
+ request_id:=net.http_post(url:=project_url||'/functions/v1/reconcile-operational-tasks',
+  headers:=jsonb_build_object('apikey',worker_key,'Content-Type','application/json'),
+  body:=jsonb_build_object('run_id',run_id,'limit',requested_limit),timeout_milliseconds:=30000);
+ insert into scheduler_job_runs(job,url_path,request_id,reconciliation_run_id)
+ values('reconcile-operational-tasks','/functions/v1/reconcile-operational-tasks',request_id,run_id) returning id into transport_id;
+ return jsonb_build_object('job','reconcile-operational-tasks','outcome','dispatched','request_id',request_id,'run_id',transport_id,'reconciliation_run_id',run_id);
+end $$;
+revoke all on function public.scheduler_dispatch_operational_reconciliation() from public,anon,authenticated,service_role;
+
+do $$declare definition text;needle text;begin
+ definition:=pg_get_functiondef('public.scheduler_dispatch(text)'::regprocedure);
+ needle:='if p_job is null or p_job not in (';
+ if position(needle in definition)=0 then raise exception 'Review canonical scheduler dispatcher before extending';end if;
+ execute replace(definition,needle,'if p_job=''reconcile-operational-tasks'' then return public.scheduler_dispatch_operational_reconciliation();end if;'||E'\n  '||needle);
+ definition:=pg_get_functiondef('public.operations_scheduler_jobs()'::regprocedure);
+ if position('select r.job, r.requested_at, r.id as run_id,' in definition)=0 or position('when ''cleanup-abandoned-attachment'' then interval ''30 minutes''' in definition)=0 then raise exception 'Review canonical scheduler projection before extending';end if;
+ definition:=replace(definition,'select r.job, r.requested_at, r.id as run_id,','select r.job, r.requested_at, r.id as run_id, r.reconciliation_run_id,');
+ definition:=replace(definition,'select l.job, l.requested_at, s.outcome,','select l.job, l.requested_at, l.reconciliation_run_id, s.outcome,');
+ definition:=replace(definition,'when ''cleanup-abandoned-attachment'' then interval ''30 minutes''','when ''cleanup-abandoned-attachment'' then interval ''30 minutes'' when ''reconcile-operational-tasks'' then interval ''5 minutes''');
+ definition:=replace(definition,'''status_code'', status_code,','''status_code'', status_code, ''cadence_seconds'', extract(epoch from cadence)::integer, ''reconciliation_run_id'', reconciliation_run_id,');
+ execute definition;
+end $$;
+
+create function public.read_operational_reconciliation_status() returns jsonb
+language plpgsql stable security definer set search_path=public as $$
+declare registered boolean:=false;active boolean;begin
+ perform public.operational_actor(null,true);
+ if to_regclass('cron.job') is not null then
+  execute 'select true,active from cron.job where jobname=$1' into registered,active using 'reconcile-operational-tasks';
+ end if;
+ return jsonb_build_object('cadence_seconds',300,'cron_registered',coalesce(registered,false),'cron_active',active,
+  'pending_run_id',(select pending_run_id from operational_reconciliation_cursor where singleton));
+end $$;
+revoke all on function public.read_operational_reconciliation_status() from public,anon,authenticated,service_role;
+grant execute on function public.read_operational_reconciliation_status() to authenticated;
+
+do $$declare job_id bigint;begin
+ if current_database()<>coalesce(current_setting('cron.database_name',true),'postgres') then return;end if;
+ create extension if not exists pg_cron;
+ job_id:=cron.schedule('reconcile-operational-tasks','*/5 * * * *',$cmd$select public.scheduler_dispatch('reconcile-operational-tasks')$cmd$);
+ perform cron.alter_job(job_id,active:=false);
 end $$;

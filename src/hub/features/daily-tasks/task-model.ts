@@ -571,6 +571,10 @@ export const operationalReconciliationPolicySchema = z.object({
   window_until: value.window_until, review_note: value.review_note, attest_review: true,
 }).success, "Saved reconciliation policy contradicts its reviewed window");
 export interface OperationalReconciliationPolicy extends z.infer<typeof operationalReconciliationPolicySchema> {}
+export const operationalReconciliationStatusSchema = z.object({
+  cadence_seconds: z.literal(300), cron_registered: z.boolean(),
+  cron_active: z.boolean().nullable(), pending_run_id: uuid.nullable(),
+}).strict().refine((value) => value.cron_registered === (value.cron_active !== null), "Registered timetable requires its observed activation state");
 export function parseOperationalReceipt(
   operation: z.infer<typeof operationalOperationSchema>,
   data: unknown,

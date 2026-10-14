@@ -1,9 +1,9 @@
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,12 +13,14 @@ import { scheduleHref } from "@/hub/features/patient-360/model";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hub/contexts/auth-context";
 import * as api from "./OperationsApi";
+import { OperationalReconciliationPanel } from "../daily-tasks/OperationalReconciliationPanel";
+import { OperationalRecovery } from "../daily-tasks/OperationalRecovery";
 import {
-  displayTime,
   conversationLink,
+  type Cursor,
+  displayTime,
   householdBillingLink,
   patientLink,
-  type Cursor,
 } from "./OperationsState";
 interface PageData<T> {
   items: T[];
@@ -138,9 +140,11 @@ function QueueSection<T>({
   );
 }
 function Overview() {
-  const [data, setData] = useState<Awaited<
-      ReturnType<typeof api.overview>
-    > | null>(null),
+  const [data, setData] = useState<
+      Awaited<
+        ReturnType<typeof api.overview>
+      > | null
+    >(null),
     [error, setError] = useState(false),
     [busy, setBusy] = useState(false);
   const generation = useRef(0);
@@ -184,7 +188,8 @@ function Overview() {
             <div>
               <dt className="font-semibold">Outgoing messages</dt>
               <dd>
-                {data.outbox.pending} pending · {data.outbox.expired_claims}{" "}
+                {data.outbox.pending} pending · {data.outbox.expired_claims}
+                {" "}
                 expired claims · {data.outbox.uncertain} uncertain ·{" "}
                 {data.outbox.failed} failed
               </dd>
@@ -226,7 +231,11 @@ function Overview() {
               </dd>
               <dd>
                 {data.reminders.last_run
-                  ? `Latest run: ${data.reminders.last_run.outcome === "started" ? "started; outcome unknown" : data.reminders.last_run.outcome}`
+                  ? `Latest run: ${
+                    data.reminders.last_run.outcome === "started"
+                      ? "started; outcome unknown"
+                      : data.reminders.last_run.outcome
+                  }`
                   : "No recorded run"}
               </dd>
             </div>
@@ -262,10 +271,20 @@ function OperationsSession() {
           <Link to="/hub/inbox/review">Review unmatched messages</Link>
           <Link to="/hub/inbox/processing">Review incoming processing</Link>
           <Link to="/hub/tools/care-reminders">Care reminders</Link>
-          <Link to="/hub/admin">Payment processing recovery (Admin dashboard)</Link>
+          <Link
+            className="inline-flex min-h-11 items-center"
+            to="/hub/tools/task-templates"
+          >
+            Operational templates
+          </Link>
+          <Link to="/hub/admin">
+            Payment processing recovery (Admin dashboard)
+          </Link>
         </nav>
       </header>
       <Overview />
+      <OperationalRecovery />
+      <OperationalReconciliationPanel />
       <QueueSection
         key={filter}
         title="Outgoing work"
@@ -418,8 +437,8 @@ function OperationsSession() {
               {r.outcome === "started"
                 ? "Started; outcome unknown"
                 : r.outcome === "failed"
-                  ? "Queue transaction rolled back"
-                  : "Completed queue transaction"}
+                ? "Queue transaction rolled back"
+                : "Completed queue transaction"}
             </p>
             <p className="break-all text-sm">
               Run reference: {r.run_id} · requested limit {r.requested_limit}
@@ -428,14 +447,14 @@ function OperationsSession() {
               Started {displayTime(r.started_at)} · finished{" "}
               {displayTime(r.finished_at)}
             </p>
-            {r.counts ? (
-              <p>
-                {r.counts.queued} queued · {r.counts.blocked} blocked ·{" "}
-                {r.counts.skipped} skipped · no provider dispatch
-              </p>
-            ) : (
-              <p>Queue counts unknown.</p>
-            )}
+            {r.counts
+              ? (
+                <p>
+                  {r.counts.queued} queued · {r.counts.blocked} blocked ·{" "}
+                  {r.counts.skipped} skipped · no provider dispatch
+                </p>
+              )
+              : <p>Queue counts unknown.</p>}
           </>
         )}
       >
@@ -454,15 +473,27 @@ function OperationsSession() {
               {j.outcome === "ok"
                 ? "Worker accepted the call"
                 : j.outcome === "dispatched"
-                  ? "Sent; no answer recorded yet"
-                  : j.outcome === "configuration_missing"
-                    ? "Installed but not configured"
-                    : "Worker refused or failed the call"}
+                ? "Sent; no answer recorded yet"
+                : j.outcome === "configuration_missing"
+                ? "Installed but not configured"
+                : "Worker refused or failed the call"}
             </p>
             <p className="break-all text-sm">
               {j.job} ·{" "}
               {j.status_code === null ? "no status" : `HTTP ${j.status_code}`}
             </p>
+            {j.cadence_seconds && (
+              <p>
+                Cadence: every {j.cadence_seconds / 60} minutes when active.
+              </p>
+            )}
+            {j.reconciliation_run_id && (
+              <p className="break-all text-sm">
+                Task run:{" "}
+                {j.reconciliation_run_id}. Check its saved reconciliation result
+                above.
+              </p>
+            )}
             <p>
               Requested {displayTime(j.requested_at)}
               {j.stale ? " · overdue for its cadence" : ""}
@@ -483,11 +514,9 @@ function OperationsSession() {
 }
 export default function OperationsPage() {
   const { session, profile, hasRole } = useAuth();
-  return session && profile?.is_active && hasRole("ADMIN") ? (
-    <OperationsSession key={session.user.id} />
-  ) : (
-    <p className="p-4">Administrator access required.</p>
-  );
+  return session && profile?.is_active && hasRole("ADMIN")
+    ? <OperationsSession key={session.user.id} />
+    : <p className="p-4">Administrator access required.</p>;
 }
 
 /**
@@ -513,8 +542,13 @@ function AppointmentScheduleLink({ appointmentId }: { appointmentId: string }) {
     ? denverLocal(appointment.data.scheduled_at).slice(0, 10)
     : null;
   return (
-    <Link className="block text-primary underline" to={scheduleHref({ date: day })}>
-      {day ? `Open schedule on ${day} to locate appointment` : "Open schedule to locate appointment"}
+    <Link
+      className="block text-primary underline"
+      to={scheduleHref({ date: day })}
+    >
+      {day
+        ? `Open schedule on ${day} to locate appointment`
+        : "Open schedule to locate appointment"}
     </Link>
   );
 }

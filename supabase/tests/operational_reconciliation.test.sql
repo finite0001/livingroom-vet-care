@@ -55,6 +55,11 @@ set local role authenticated;select pg_temp.set_actor(1);
 select is(read_operational_reconciliation_policy(),null::jsonb,'Reconciliation is empty/off initially');
 reset role;
 grant all on task_fixture to service_role;
+select is((select schedule from cron.job where jobname='reconcile-operational-tasks'),'*/5 * * * *','Explicit five-minute engineering cadence installed');
+select is((select active from cron.job where jobname='reconcile-operational-tasks'),false,'Timetable stays inactive on installation');
+select is(scheduler_dispatch('reconcile-operational-tasks')->>'outcome','disabled','Empty policy stops dispatch before missing Vault configuration');
+select is((select count(*) from scheduler_job_runs where job='reconcile-operational-tasks'),0::bigint,'Default-off creates no transport receipt');
+select ok(not has_function_privilege('service_role','scheduler_dispatch_operational_reconciliation()','EXECUTE'),'Worker cannot invoke cron wrapper');
 select ok(not has_table_privilege('service_role','operational_reconciliation_cursor','UPDATE'),'Worker cannot directly advance cursor');
 select ok(not has_table_privilege('authenticated','operational_reconciliation_results','SELECT'),'Results private without reviewed read path');
 select ok(not has_function_privilege('authenticated','execute_operational_reconciliation_run(uuid,integer)','EXECUTE'),'Staff cannot execute service worker');
@@ -70,6 +75,14 @@ select pg_temp.set_actor(1);
 insert into task_fixture select 'reconciliation-policy',pg_temp.op('reconciliation_policy',jsonb_build_object('expected_version',null,'enabled',true,'window_from',clock_timestamp()-interval '1 day','window_until',clock_timestamp()+interval '1 day','review_note','Synthetic reviewed reconciliation','attest_review',true),'74000000-0000-4000-8000-000000000010');
 select throws_ok($$select pg_temp.op('reconciliation_policy',jsonb_build_object('expected_version',1,'enabled',true,'window_from','2026-10-14T00:00:00.000001Z','window_until','2026-11-14T00:00:00.000002Z','review_note','Synthetic over-limit microsecond','attest_review',true))$$,'23514',null,'Appointment window rejects31 days plus one microsecond');
 select throws_ok($$select pg_temp.op('reconciliation_policy',jsonb_build_object('expected_version',1,'enabled',true,'window_from','2026-10-14T00:00:00.0000001Z','window_until','2026-10-15T00:00:00Z','review_note','Synthetic unsupported precision','attest_review',true))$$,'23514',null,'Unsupported precision cannot change attested window through rounding');
+-- Prefer/timezone settings must not turn a31-day elapsed ceiling into31days
+-- plus a repeated hour. Both the reviewed RPC and stored constraints agree.
+set local timezone='America/Denver';
+select throws_ok($$select pg_temp.op('reconciliation_policy',jsonb_build_object('expected_version',1,'enabled',true,'window_from','2026-10-14T00:00:00Z','window_until','2026-11-14T01:00:00Z','review_note','Synthetic elapsed DST bound','attest_review',true))$$,'23514',null,'Repeated-hour timezone cannot enlarge reviewed31-day elapsed bound');
+reset role;
+select throws_ok($$insert into operational_reconciliation_policy(version,enabled,window_from,window_until,review_note,actor_id)values(999,true,'2026-10-14T00:00:00Z','2026-11-14T01:00:00Z','Synthetic over-limit private row','52000000-0000-4000-8000-000000000001')$$,'23514',null,'Private policy constraint enforces the same elapsed ceiling');
+select throws_ok($$insert into operational_reconciliation_runs values(gen_random_uuid(),1,1,'2026-10-14T00:00:00Z','2026-11-14T01:00:00Z',256,5000,gen_random_uuid(),clock_timestamp(),0,'appointment',null,clock_timestamp())$$,'23514',null,'Private run constraint cannot capture an oversized DST window');
+set local timezone='UTC';set local role authenticated;select pg_temp.set_actor(1);
 select is(execute_operational_review(auth.uid(),'74000000-0000-4000-8000-000000000010'),(select value from task_fixture where key='reconciliation-policy'),'Policy lost ACK recovers exact committed receipt');
 select is(read_operational_generation_policy(),null::jsonb,'Reconciliation does not activate ordinary task generation');
 set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
@@ -173,6 +186,42 @@ reset role;
 select is((select r.state from operational_tasks t join operational_task_revisions r on r.id=t.head_id where t.use_id='74600000-0000-4000-8000-000000000001'),'needs_review','Worker does not sign completion for ineligible assignee');
 select is((select r.actor_id from operational_tasks t join operational_task_revisions r on r.id=t.head_id where t.use_id='74600000-0000-4000-8000-000000000001'),null::uuid,'System revision never impersonates staff');
 select is((select to_jsonb(r) from operational_task_revisions r where id=(select (value#>>'{current,id}')::uuid from task_fixture where key='old-prep-completed')),(select value->'current' from task_fixture where key='old-prep-completed'),'Repeated sweeps still preserve completed old evidence');
+-- More than two maximum-size batches of actual uses from an old appointment.
+-- Staff facts are recorded through the real action protocol, generation off.
+update profiles set is_active=true where id='52000000-0000-4000-8000-000000000002';
+set local role authenticated;select pg_temp.set_actor(2);
+do $$declare n integer;u uuid;at_time timestamptz;begin for n in 1..64 loop
+ u:=('74700000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid;
+ at_time:=clock_timestamp()-interval '40 days'+interval '1 hour'+n*interval '15 minutes';
+ perform pg_temp.op('use',jsonb_build_object('id',u,'expected_version',null,'action','start','appointment_id',(select value#>>'{appointment,id}' from task_fixture where key='old-booking'),'appointment_version',1,'resource_version_id',(select value#>>'{published,id}' from task_fixture where key='room'),'started_at',at_time,'ended_at',null,'reason','Synthetic independently paged old use','allow_overlap',false,'attest_closed_source',false));
+ perform pg_temp.op('use',jsonb_build_object('id',u,'expected_version',1,'action','end','appointment_id',(select value#>>'{appointment,id}' from task_fixture where key='old-booking'),'appointment_version',1,'resource_version_id',(select value#>>'{published,id}' from task_fixture where key='room'),'started_at',at_time,'ended_at',at_time+interval '5 minutes','reason','Synthetic ended old use','allow_overlap',false,'attest_closed_source',false));
+end loop;end $$;
+reset role;
+create temp table paged_runs(value jsonb);grant all on paged_runs to service_role;
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+do $$declare n integer:=0;rid uuid;receipt jsonb;begin loop
+ n:=n+1;if n>20 then raise exception 'Bounded source pages failed to finish';end if;
+ rid:=gen_random_uuid();perform start_operational_reconciliation_run(rid,7);receipt:=execute_operational_reconciliation_run(rid,7);
+ if receipt->>'outcome'<>'completed' then raise exception 'Synthetic backlog page failed';end if;
+ insert into paged_runs values(receipt);
+ exit when receipt->>'sweep_complete'='true';
+end loop;end $$;
+select ok((select count(*) from paged_runs)>9,'Large old-use backlog advances across multiple bounded pages');
+select ok((select bool_and((value#>>'{counts,examined}')::integer<=7)from paged_runs),'Each real batch obeys its seven-source limit');
+select is((select sum((value#>>'{counts,examined}')::integer)from paged_runs),68::bigint,'All three window appointments and65 independent old-use sources examined once');
+select is((select count(distinct value->>'sweep_id')from paged_runs),1::bigint,'All pages retain their fixed sweep identity');
+reset role;
+select is((select lane from operational_reconciliation_cursor),'complete','Backlog ends with durable complete checkpoint');
+select is((select to_jsonb(r) from operational_task_revisions r where id=(select (value#>>'{current,id}')::uuid from task_fixture where key='old-prep-completed')),(select value->'current' from task_fixture where key='old-prep-completed'),'Large sweep preserves completed evidence');
+-- Correct the first use behind a completed cursor, then run a new sweep.
+set local role authenticated;select pg_temp.set_actor(1);
+select pg_temp.op('use',jsonb_build_object('id','74600000-0000-4000-8000-000000000001','expected_version',2,'action','correct','appointment_id',(select value#>>'{appointment,id}' from task_fixture where key='old-booking'),'appointment_version',1,'resource_version_id',(select value#>>'{published,id}' from task_fixture where key='room'),'started_at',(select value#>>'{current,facts,started_at}' from task_fixture where key='old-use'),'ended_at',(select (value#>>'{current,facts,ended_at}')::timestamptz+interval '1 minute' from task_fixture where key='old-ended'),'reason','Synthetic corrected use behind prior cursor','allow_overlap',false,'attest_closed_source',false));
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+insert into task_fixture select 'behind-start',start_operational_reconciliation_run('74000000-0000-4000-8000-000000000008',4);
+insert into task_fixture select 'behind-result',execute_operational_reconciliation_run('74000000-0000-4000-8000-000000000008',4);
+select isnt((select value->>'sweep_id' from task_fixture where key='behind-start'),(select value->>'sweep_id' from paged_runs limit 1),'Next sweep revisits changes behind completed cursor');
+select is((select value#>>'{checkpoint,after_id}' from task_fixture where key='behind-result'),'74600000-0000-4000-8000-000000000001','Corrected oldest use is examined again after three window appointments');
+reset role;
 -- Owned test-only publications exceed the conductor's conservative read/write
 -- budget. No live template or clinical default is seeded by this fixture.
 do $$declare n integer;tid uuid;vid uuid;begin for n in 1..65 loop
@@ -189,5 +238,35 @@ select is((select value->'checkpoint' from task_fixture where key='fanout-result
 reset role;
 select is(pg_temp.task_snapshot(),(select value from task_fixture where key='before-fanout'),'Fan-out refusal preserves all task evidence');
 select is((select count(*)from communication_outbox),0::bigint,'Failure and safety sweeps still send nothing');
+-- pg_net does not dispatch until COMMIT; this fixture always rolls back. The
+-- queued payload and its reservation prove scheduler behavior without HTTP.
+select set_config('request.jwt.claims','{}',true);
+select is(scheduler_dispatch('reconcile-operational-tasks')->>'outcome','configuration_missing','Enabled policy with missing credentials reserves no run');
+select is((select pending_run_id from operational_reconciliation_cursor),null::uuid,'Missing configuration cannot strand a reservation');
+select vault.create_secret('http://127.0.0.1:1','project_url');
+select vault.create_secret('sb_secret_synthetic_queue_only','scheduler_worker_key');
+insert into task_fixture select 'transport-first',scheduler_dispatch('reconcile-operational-tasks');
+select is((select value->>'outcome' from task_fixture where key='transport-first'),'dispatched','Configured scheduler queues bounded transport');
+select is(current_setting('request.jwt.claims',true),'{}','Cron wrapper restores caller claims');
+insert into task_fixture select 'transport-retry',scheduler_dispatch('reconcile-operational-tasks');
+select is((select value->>'reconciliation_run_id' from task_fixture where key='transport-retry'),(select value->>'reconciliation_run_id' from task_fixture where key='transport-first'),'Lost acknowledgment retries original reserved UUID');
+select is((select count(*) from operational_reconciliation_runs where run_id=(select (value->>'reconciliation_run_id')::uuid from task_fixture where key='transport-first')),1::bigint,'Repeated dispatch makes one immutable request');
+select is((select convert_from(body,'UTF8')::jsonb from net.http_request_queue where id=(select (value->>'request_id')::bigint from task_fixture where key='transport-retry')),
+ jsonb_build_object('run_id',(select value->>'reconciliation_run_id' from task_fixture where key='transport-first'),'limit',5),'Payload retains exact UUID/limit without source or patient snapshots');
+insert into net._http_response(id,status_code,content_type,headers,content,timed_out,error_msg)
+select (value->>'request_id')::bigint,202,'application/json','{}'::jsonb,'{}',false,null from task_fixture where key='transport-first';
+select scheduler_reconcile();
+select is((select outcome from scheduler_job_results where run_id=(select (value->>'run_id')::uuid from task_fixture where key='transport-first')),'ok','Accepted transport has separate HTTP receipt');
+select is((select count(*) from operational_reconciliation_results where run_id=(select (value->>'reconciliation_run_id')::uuid from task_fixture where key='transport-first')),0::bigint,'HTTP202 cannot invent a committed result');
+set local role authenticated;select pg_temp.set_actor(1);
+select is(read_operational_reconciliation_status()->>'cron_active','false','Reviewer sees real inactive timetable');
+select is((select j->>'cadence_seconds' from jsonb_array_elements(operations_scheduler_jobs()->'jobs')j where j->>'job'='reconcile-operational-tasks'),'300','Operations uses actual job cadence');
+select is((select j->>'reconciliation_run_id' from jsonb_array_elements(operations_scheduler_jobs()->'jobs')j where j->>'job'='reconcile-operational-tasks'),(select value->>'reconciliation_run_id' from task_fixture where key='transport-first'),'Operations links transport to original task run');
+select pg_temp.op('reconciliation_policy',jsonb_build_object('expected_version',3,'enabled',false,'window_from',null,'window_until',null,'review_note','Synthetic scheduler pause','attest_review',true));
+reset role;select set_config('request.jwt.claims','{}',true);
+select is(scheduler_dispatch('reconcile-operational-tasks')->>'outcome','disabled','Paused policy creates no further queued request');
+select is((select count(*) from net.http_request_queue where url like '%reconcile-operational-tasks'),2::bigint,'Pause preserves original two transports without another call');
+set local role service_role;select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select is(execute_operational_reconciliation_run((select (value->>'reconciliation_run_id')::uuid from task_fixture where key='transport-first'),5)->>'outcome','paused','Original reserved run terminally pauses on changed policy');
 select * from finish();
 rollback;

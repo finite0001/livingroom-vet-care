@@ -38,6 +38,10 @@ verify_jwt = false
 [functions.queue-reminders]
 verify_jwt = false
 
+# Dedicated service worker authorization; both environment and reviewed DB policy default off.
+[functions.reconcile-operational-tasks]
+verify_jwt = false
+
 # Public liveness probe for an uptime monitor, which holds no credential. The
 # handler reports only whether the database answered and when it was asked: it
 # never returns an error text, a version or a count. See
