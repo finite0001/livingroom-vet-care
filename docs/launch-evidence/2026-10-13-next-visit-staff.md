@@ -29,3 +29,5 @@ After approval: pin the reviewed migration hash, dry-run only183 with `--skip-va
 Susan's default appointment/task templates remain review proposals. Daily task templates/generation are4B and the daily task list/reconciliation is4C. All45 original launch requirements and Susan's final workflow acceptance remain required. The disregarded Weave request is not queued here.
 
 [Phone screenshot — synthetic local records](screenshots/2026-10-13-next-visit-staff-mobile.png). Date labels include the year because the queue spans calendar years.
+
+Patient/household scheduling signals and appointment timelines refresh after completion or follow-up saves. A real-browser check verifies the patient summary updates after booking within the record. The existing records contention harness now observes a ready idle transaction and holds it until its waiter is visible, with nonblocking output capture; forward32/reverse31 assertions pass. Owned local security advisors report only the pre-existing `pg_net` public-extension warning, with no notices for this package.

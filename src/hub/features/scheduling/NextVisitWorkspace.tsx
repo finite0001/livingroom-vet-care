@@ -1,3 +1,4 @@
+import { refreshScheduleFacts } from "./refresh-schedule-facts";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -85,11 +86,17 @@ function outcomeLabel(context: NextVisitContext) {
         : "Next visit pending";
 }
 function useRefreshNextVisits() {
+  const { session } = useAuth();
   const cache = useQueryClient();
-  return () => {
-    void cache.invalidateQueries({ queryKey: ["next-visits"] });
-    void cache.invalidateQueries({ queryKey: ["schedule"] });
-    void cache.invalidateQueries({ queryKey: ["hub-today"] });
+  return (context?: NextVisitContext) => {
+    if (context && session?.user.id)
+      refreshScheduleFacts(
+        cache,
+        session.user.id,
+        context.occurrence.pet_id,
+        context.occurrence.client_id,
+      );
+    else void cache.invalidateQueries({ queryKey: ["next-visits"] });
   };
 }
 export function NextVisitWorkspace(props: WorkspaceProps) {
@@ -142,7 +149,7 @@ function ActorWorkspace({
           actor={actor}
           close={() => onContext(null)}
           onSaved={(value) => {
-            refresh();
+            refresh(value);
             open(value);
           }}
           onBook={() => setBooking(true)}
@@ -156,7 +163,7 @@ function ActorWorkspace({
           onDirtyChange={onDirtyChange}
           followup={context}
           onOutcome={(value) => {
-            refresh();
+            refresh(value);
             open(value);
           }}
           close={() => setBooking(false)}
@@ -344,11 +351,11 @@ function RecoveryRow({
       if (receipt || action === "release") {
         forgetReview(localStorage, meta);
         window.dispatchEvent(new Event(reviewChangeEvent));
-        refresh();
         if (receipt) {
           const restored = receiptContext(receipt);
+          refresh(restored ?? undefined);
           if (restored) onOpen(restored);
-        }
+        } else refresh();
       } else if (!result)
         setError(
           "No prepared review is confirmed yet. Check again, or check and release this identifier to stop any pending preparation.",

@@ -35,7 +35,7 @@
   },
   "staff_native": {
     "checks": 25,
-    "browser_checks": 18,
+    "browser_checks": 19,
     "real_auth_postgrest": true,
     "pass": true,
     "coverage": [
@@ -56,7 +56,8 @@
       "new same-actor session restores original receipt",
       "linked cancellation displays current status",
       "calendar date-independent queue",
-      "390px no overflow and44px close target"
+      "390px no overflow and44px close target",
+      "Patient next-visit summary refreshes after booking in the record"
     ]
   },
   "owned_runtime_removed": true,
@@ -71,5 +72,19 @@
   "legacy_writes": 0,
   "storage_body_restore_claimed": false,
   "susan_defaults_published": false,
-  "review_notes": "Final layout review made the year explicit on cross-calendar queue and booking dates; the focused real-browser suite was rerun after this change."
+  "review_notes": "Final layout review made the year explicit on cross-calendar queue and booking dates; the focused real-browser suite was rerun after this change.",
+  "records_release_contention": {
+    "forward_checks": 32,
+    "reverse_checks": 31,
+    "observed_ready_holder_before_waiter": true,
+    "release_only_after_observed_waiter": true,
+    "nonblocking_output_capture": true,
+    "pass": true
+  },
+  "security_advisors": {
+    "local_owned_canonical_183": true,
+    "new_package_notices": 0,
+    "existing_warning": "pg_net extension in public",
+    "pass": true
+  }
 }

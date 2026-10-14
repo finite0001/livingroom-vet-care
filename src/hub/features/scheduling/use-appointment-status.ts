@@ -1,3 +1,4 @@
+import { refreshScheduleFacts } from "./refresh-schedule-facts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,10 +86,13 @@ export function useAppointmentStatus({ onCompleted }: StatusOptions = {}) {
       });
       if (error) throw error;
     },
-    onSuccess: (_data, { status }) => {
-      void cache.invalidateQueries({ queryKey: ["schedule"] });
-      void cache.invalidateQueries({ queryKey: ["hub-today"] });
-      void cache.invalidateQueries({ queryKey: ["next-visits"] });
+    onSuccess: (_data, { appointment, status }) => {
+      refreshScheduleFacts(
+        cache,
+        session?.user.id ?? "",
+        appointment.pet_id,
+        appointment.client_id,
+      );
       toast.success(`${statusLabel(status)} saved`);
     },
     onError: (error) => toast.error(failureMessage(error)),

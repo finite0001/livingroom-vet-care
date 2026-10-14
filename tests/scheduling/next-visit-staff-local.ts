@@ -770,6 +770,36 @@ try {
     .first()
     .waitFor();
   browserChecks++;
+  // Patient summary and timeline refresh immediately after a follow-up booked in this record.
+  await page.goto(`http://127.0.0.1:47281/hub/patient/${pet}?tab=schedule`);
+  await page
+    .getByRole("region", { name: "Next visit decisions" })
+    .getByRole("listitem")
+    .filter({ hasText: "Schedule later" })
+    .first()
+    .getByRole("button", { name: "Review next visit", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Schedule next visit", exact: true })
+    .click();
+  await page
+    .locator("#booking-reason")
+    .fill("Synthetic refreshed patient follow-up");
+  await page.locator("#booking-clinician").selectOption(dvm.id);
+  await page.locator("#booking-time").fill("2034-01-01T09:00");
+  await page
+    .getByRole("button", { name: "Book and record next visit", exact: true })
+    .click();
+  await page.getByRole("region", { name: "Recorded next booking" }).waitFor();
+  await page
+    .getByRole("button", { name: "Close next visit review", exact: true })
+    .click();
+  await page
+    .getByRole("heading", { name: "Next visit", exact: true })
+    .locator("..")
+    .getByText(/2034.*Synthetic refreshed patient follow-up/)
+    .waitFor();
+  browserChecks++;
   await context.close();
   console.log(
     `Genuine local next-visit staff passed: ${checks} checks; ${browserChecks} browser checks; no provider requests.`,

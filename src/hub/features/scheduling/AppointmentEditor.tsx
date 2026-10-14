@@ -1,3 +1,4 @@
+import { refreshScheduleFacts } from "./refresh-schedule-facts";
 import { editorCompletionReceiptSchema } from "./next-visit-review-model";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -194,8 +195,12 @@ export function AppointmentEditor({
   function outcomeSaved(receipt: ReviewReceipt) {
     if (!("occurrence" in receipt)) return;
     setDone(true);
-    void cache.invalidateQueries({ queryKey: ["schedule"] });
-    void cache.invalidateQueries({ queryKey: ["next-visits"] });
+    refreshScheduleFacts(
+      cache,
+      session?.user.id ?? "",
+      receipt.occurrence.pet_id,
+      receipt.occurrence.client_id,
+    );
     onOutcome?.(receipt);
     close();
   }
@@ -210,9 +215,12 @@ export function AppointmentEditor({
     (receipt) => {
       const saved = editorCompletionReceiptSchema.parse(receipt);
       setDone(true);
-      void cache.invalidateQueries({ queryKey: ["schedule"] });
-      void cache.invalidateQueries({ queryKey: ["hub-today"] });
-      void cache.invalidateQueries({ queryKey: ["next-visits"] });
+      refreshScheduleFacts(
+        cache,
+        session?.user.id ?? "",
+        saved.appointment.pet_id,
+        saved.appointment.client_id,
+      );
       close();
       if (saved.context) onCompleted?.(saved.context);
       else
@@ -328,10 +336,14 @@ export function AppointmentEditor({
   async function completeManaged(result: unknown) {
     if (!result) return;
     setDone(true);
-    void cache.invalidateQueries({ queryKey: ["schedule"] });
-    void cache.invalidateQueries({ queryKey: ["hub-today"] });
-    close();
     const saved = (result as BookingReceipt).appointment;
+    refreshScheduleFacts(
+      cache,
+      session?.user.id ?? "",
+      saved.pet_id,
+      saved.client_id,
+    );
+    close();
     if (saved.status === "COMPLETED") {
       try {
         const context = await appointmentCompletion(saved.id, saved.version);
