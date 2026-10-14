@@ -31,7 +31,7 @@ test("fixed collection request has no clinical data, identical retries and pinne
   const post = calls[1]; const body = post.init.body as URLSearchParams;
   assert.equal(post.url, "https://api.stripe.com/v1/checkout/sessions");
   assert.equal(body.get("line_items[0][price_data][unit_amount]"), "12500");
-  assert.equal(body.get("payment_method_types[0]"), "card");
+  assert.equal([...body.keys()].some((key) => key.startsWith("payment_method_types")), false);
   assert.equal(body.get("adaptive_pricing[enabled]"), "false");
   assert.equal(body.get("after_expiration[recovery][enabled]"), "false");
   assert.equal(body.get("invoice_creation[enabled]"), "false");
