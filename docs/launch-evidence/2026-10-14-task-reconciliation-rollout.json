@@ -1,0 +1,235 @@
+{
+  "package": "4C bounded operational task reconciliation",
+  "observed_at": "2026-10-14T20:12:17.071685+00:00",
+  "pr": 251,
+  "approved_head": "c2db1ca044c40fa2f76b686cb0067a2785935a0d",
+  "merge_commit": "d273144163e6dbb8ed101289bb430877faefd160",
+  "merged_at": "2026-10-14T20:07:09Z",
+  "required_ci": {
+    "run_id": 38623725209,
+    "head": "c2db1ca044c40fa2f76b686cb0067a2785935a0d",
+    "frontend": "SUCCESS",
+    "edge": "SUCCESS",
+    "database": "SUCCESS",
+    "diagnostic-renderer": "SUCCESS"
+  },
+  "projects": {
+    "kothoqicubowyhwfsrte": {
+      "installation": {
+        "project": "kothoqicubowyhwfsrte",
+        "approved_head": "c2db1ca044c40fa2f76b686cb0067a2785935a0d",
+        "pr": 251,
+        "migration": "20261014154223_operational_task_reconciliation.sql",
+        "migration_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+        "migrations": 185,
+        "pending": 0,
+        "inactive_cron": true,
+        "empty_off_policy": true,
+        "private_tables_verified": true,
+        "rpc_grants_verified": true,
+        "baseline_unchanged": true,
+        "state": {
+          "disclosure": 0,
+          "generation_enabled": 0,
+          "outbox": 0,
+          "payment_profiles": 1,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "protected_backup": true,
+        "skip_vault": true,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "rollback-proof": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 185,
+        "checks": 36,
+        "exact_rollback_snapshot_relations": 27,
+        "baseline_unchanged": true,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "edge-proof": {
+        "project": "kothoqicubowyhwfsrte",
+        "migration_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+        "approved_head": "c2db1ca044c40fa2f76b686cb0067a2785935a0d",
+        "worker": "reconcile-operational-tasks",
+        "version": 1,
+        "function_id": "1ba5edf6-3f85-48c6-bfe7-712210ab07c4",
+        "status": "ACTIVE",
+        "verify_jwt": false,
+        "entrypoint_sha256": "018fe6ee0269f39f27432dab8cd34db95f08c38bce205a6af7329dc102c07f1c",
+        "downloaded_entrypoint_matches": true,
+        "disabled": true,
+        "anonymous_denied": true,
+        "invalid_explicit_key_denied": true,
+        "authorized_disabled_response": true,
+        "worker_auth": "current_secret_apikey",
+        "http_checks": 3,
+        "database_unchanged": true,
+        "other_function_sources_and_config_unchanged": true,
+        "shared_secret_revision_functions": 48,
+        "other_secrets_unchanged": true,
+        "inactive_cron": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "downloaded_shared_modules": {
+          "operational-reconciliation-handler.ts": "1279f4e3069e96f6cd039d746608f4667741c8fb884279aacb33729b49004284",
+          "operational-reconciliation-contract.ts": "d2a6e1c1dda41fb016bb551ab35bb4682f44e74e0010e62d894b01febd78f07c",
+          "worker-auth.ts": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896"
+        }
+      },
+      "acceptance": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 185,
+        "auth_checks": 38,
+        "browser_checks": 21,
+        "canonical_cleanup": true,
+        "cleanup": {
+          "active_owned": 0,
+          "cron_active": false,
+          "open_owned_sessions": 0,
+          "pending": 0,
+          "policy_enabled": 0
+        },
+        "baseline_unchanged": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "retained_synthetic_history": true
+      }
+    },
+    "mgadheotkdnrsatfivjy": {
+      "installation": {
+        "project": "mgadheotkdnrsatfivjy",
+        "approved_head": "c2db1ca044c40fa2f76b686cb0067a2785935a0d",
+        "pr": 251,
+        "migration": "20261014154223_operational_task_reconciliation.sql",
+        "migration_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+        "migrations": 185,
+        "pending": 0,
+        "inactive_cron": true,
+        "empty_off_policy": true,
+        "private_tables_verified": true,
+        "rpc_grants_verified": true,
+        "baseline_unchanged": true,
+        "state": {
+          "disclosure": 0,
+          "generation_enabled": 0,
+          "outbox": 3,
+          "payment_profiles": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "protected_backup": true,
+        "skip_vault": true,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "rollback-proof": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migrations": 185,
+        "checks": 36,
+        "exact_rollback_snapshot_relations": 27,
+        "baseline_unchanged": true,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "edge-proof": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migration_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+        "approved_head": "c2db1ca044c40fa2f76b686cb0067a2785935a0d",
+        "worker": "reconcile-operational-tasks",
+        "version": 1,
+        "function_id": "979f033b-6460-4ddd-918a-b15c54dec392",
+        "status": "ACTIVE",
+        "verify_jwt": false,
+        "entrypoint_sha256": "018fe6ee0269f39f27432dab8cd34db95f08c38bce205a6af7329dc102c07f1c",
+        "downloaded_entrypoint_matches": true,
+        "downloaded_shared_modules": {
+          "operational-reconciliation-handler.ts": "1279f4e3069e96f6cd039d746608f4667741c8fb884279aacb33729b49004284",
+          "operational-reconciliation-contract.ts": "d2a6e1c1dda41fb016bb551ab35bb4682f44e74e0010e62d894b01febd78f07c",
+          "worker-auth.ts": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896"
+        },
+        "disabled": true,
+        "anonymous_denied": true,
+        "invalid_explicit_key_denied": true,
+        "authorized_disabled_response": true,
+        "worker_auth": "current_secret_apikey",
+        "http_checks": 3,
+        "database_unchanged": true,
+        "other_function_sources_and_config_unchanged": true,
+        "shared_secret_revision_functions": 49,
+        "other_secrets_unchanged": true,
+        "inactive_cron": true,
+        "provider_requests": 0,
+        "legacy_writes": 0
+      }
+    }
+  },
+  "production": {
+    "deployment_id": "dpl_ALAXPAfqyLtKvkFduS3VKyWaVSC5",
+    "state": "READY",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "commit": "d273144163e6dbb8ed101289bb430877faefd160",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ],
+    "smoke": {
+      "observed_at": "2026-10-14T20:10:08.668Z",
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-Bo7UjM8Z.js",
+      "app_chunk": "./App-2Q0Gg4_0.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "backend_migrations": 185,
+      "protected_redirects": [
+        "/hub/tools/task-templates",
+        "/hub/tasks",
+        "/hub/schedule",
+        "/hub/admin/operations"
+      ],
+      "task_routes_bundled": true,
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  },
+  "security": {
+    "baseline_preserved": true,
+    "new_expected_reviewer_notices": [
+      "list_operational_reconciliation_runs",
+      "read_operational_reconciliation_policy",
+      "read_operational_reconciliation_status"
+    ],
+    "counts": {
+      "extension_in_public": 1,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 490,
+      "auth_leaked_password_protection": 1
+    }
+  },
+  "commissioned": false,
+  "generation_enabled": false,
+  "reconciliation_enabled": false,
+  "cron_active": false,
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "scope": "Engineering release only; all45 original requirements and practice/vendor/device launch acceptance remain required",
+  "rollout_observations": [
+    "Setting the new project flag advanced existing function version metadata once:48 staging and49 primary; every prior code hash/JWT/source/config and other secret digest remained identical.",
+    "Read-only verification used current secret apikey credentials:default on staging,scheduler_worker on primary. Initial legacy-bearer and default-name harness assumptions were corrected without repeat deploy or key changes.",
+    "Only the new reconcile-operational-tasks function was deployed; downloaded entrypoint and all three shared modules match reviewed source."
+  ]
+}

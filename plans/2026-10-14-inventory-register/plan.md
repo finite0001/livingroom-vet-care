@@ -1,6 +1,6 @@
 # Phase 5 — Native inventory, supplier imports, iPhone scanning and controlled register
 
-Status: researched implementation plan; no Phase 5 feature or vendor acceptance claimed. Requirements N01, N02, N19, H11, H12 remain launch scope. Supplements the original October 8 Phase 5; does not replace any of the original 45 requirements. Baseline c2db1ca0/PR251; rebase implementation onto its eventual verified merge.
+Status: researched implementation plan; no Phase 5 feature or vendor acceptance claimed. Requirements N01, N02, N19, H11, H12 remain launch scope. Supplements the original October 8 Phase 5; does not replace any of the original 45 requirements. PR251 merged as d273144163e6dbb8ed101289bb430877faefd160; implementation starts from that merge. Research describes its unchanged c2db1ca0 feature source.
 
 | Package | Work | Dependency / completion evidence |
 |---|---|---|
