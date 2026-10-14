@@ -1,0 +1,202 @@
+{
+  "pull_request": 250,
+  "approved_head": "db859ab3a8531f8199cc444073462d9c67457b07",
+  "merge_commit": "e4282c5a2d1fa1ac958ddab678f21208dfb1440b",
+  "merged_at": "2026-10-14T06:28:53Z",
+  "approval": "Dave standing approval to review and merge additional PRs while completing the full original plan",
+  "exact_head_ci": {
+    "run": 38519308685,
+    "frontend": "SUCCESS",
+    "edge": "SUCCESS",
+    "database": "SUCCESS",
+    "diagnostic-renderer": "SUCCESS"
+  },
+  "staging": {
+    "installation": {
+      "project": "kothoqicubowyhwfsrte",
+      "migration": "20261014022511_operational_tasks.sql",
+      "migration_sha256": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+      "migrations": 184,
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 0,
+        "payment_profiles": 1,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "worker": 0
+      },
+      "private_table_acl_verified": true,
+      "rpc_grants_verified": true,
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "kothoqicubowyhwfsrte",
+      "migrations": {
+        "count": 184,
+        "latest": "20261014022511"
+      },
+      "checks": 78,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 78,
+            "provider_requests": 0
+          }
+        }
+      ]
+    },
+    "acceptance": {
+      "proof": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 184,
+        "auth_checks": 48,
+        "browser_checks": 24,
+        "provider_requests": 0,
+        "local_lock_and_restore_proofs_retained": true
+      },
+      "cleanup": {
+        "active_actors": 0,
+        "active_bookings": 0,
+        "active_patient": 0,
+        "generation_enabled": 0,
+        "open_sessions": 0,
+        "open_uses": 0,
+        "published_catalog": 0,
+        "published_templates": 0,
+        "unfinished_tasks": 0
+      },
+      "baseline_unchanged": true,
+      "retained_synthetic_history": true
+    },
+    "initial_harness_failures": [
+      {
+        "cause": "CLI boolean true vs local psql t",
+        "canonical_cleanup": {
+          "active_actors": 0,
+          "active_bookings": 0,
+          "active_patient": 0,
+          "generation_enabled": 0,
+          "open_sessions": 0,
+          "open_uses": 0,
+          "published_catalog": 0,
+          "published_templates": 0,
+          "unfinished_tasks": 0
+        }
+      },
+      {
+        "cause": "Browser Back attempted before Router/form render settled; waiting for the real route and render passed",
+        "canonical_cleanup": {
+          "active_actors": 0,
+          "active_bookings": 0,
+          "active_patient": 0,
+          "generation_enabled": 0,
+          "open_sessions": 0,
+          "open_uses": 0,
+          "published_catalog": 0,
+          "published_templates": 0,
+          "unfinished_tasks": 0
+        }
+      }
+    ]
+  },
+  "primary": {
+    "installation": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migration": "20261014022511_operational_tasks.sql",
+      "migration_sha256": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+      "migrations": 184,
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 3,
+        "payment_profiles": 0,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "worker": 0
+      },
+      "private_table_acl_verified": true,
+      "rpc_grants_verified": true,
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migrations": {
+        "count": 184,
+        "latest": "20261014022511"
+      },
+      "checks": 78,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 78,
+            "provider_requests": 0
+          }
+        }
+      ]
+    }
+  },
+  "security_advisors": {
+    "before": {
+      "extension_in_public": 1,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 474,
+      "auth_leaked_password_protection": 1
+    },
+    "after": {
+      "extension_in_public": 1,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 487,
+      "auth_leaked_password_protection": 1
+    },
+    "new_notices": "13 intended authenticated entrypoints with role/current-session guards verified",
+    "new_anon_notices": 0
+  },
+  "production": {
+    "deployment_id": "dpl_4Z3sTCaMD5p68dt7JB95hP71aa3K",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "state": "READY",
+    "alias": "thelivingroom.vet",
+    "alias_matches": true,
+    "commit": "e4282c5a2d1fa1ac958ddab678f21208dfb1440b",
+    "public_smoke": {
+      "observed_at": "2026-10-14T06:33:57.178Z",
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-0JeWWHuB.js",
+      "app_chunk": "./App-DYeXpzC3.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "backend_migrations": 184,
+      "protected_redirects": [
+        "/hub/tools/task-templates",
+        "/hub/tasks",
+        "/hub/schedule"
+      ],
+      "task_routes_bundled": true,
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  },
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "new_edge_deployments": 0,
+  "practice_generation_enabled": false,
+  "reconciliation_worker_implemented": false,
+  "original_requirements": 45,
+  "clinical_acceptance": "Susan practice configuration and workflow sign-off remain required"
+}

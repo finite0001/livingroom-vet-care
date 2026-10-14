@@ -19,7 +19,7 @@ select throws_ok($$select * from public.enqueue_due_appointment_reminders(1,now(
 select ok(obj_description('public.enqueue_due_appointment_reminders(integer,timestamptz)'::regprocedure,'pg_proc') like 'DEPRECATED%','Retired enqueue is labelled deprecated');
 select ok(has_function_privilege('service_role','public.queue_due_reminders(integer)','EXECUTE'),'Canonical queue stays service-callable');
 select ok(not has_function_privilege('authenticated','public.queue_due_reminders(integer)','EXECUTE'),'Canonical queue stays closed to staff');
-select ok(pg_get_constraintdef((select oid from pg_constraint where conrelid='public.scheduler_job_runs'::regclass and contype='c' limit 1)) like '%queue-reminders%','Scheduler dispatches the canonical queue-reminders worker');
+select ok(pg_get_constraintdef((select oid from pg_constraint where conrelid='public.scheduler_job_runs'::regclass and conname='scheduler_job_runs_job_check')) like '%queue-reminders%','Scheduler dispatches the canonical queue-reminders worker');
 select ok(not has_function_privilege('authenticated','public.appointment_reminder_channel(uuid)','EXECUTE') and not has_function_privilege('service_role','public.appointment_reminder_channel(uuid)','EXECUTE'),'Channel resolver is internal');
 
 set local role authenticated;select set_config('request.jwt.claims','{"sub":"af000000-0000-4000-8000-000000000001","role":"authenticated"}',true);

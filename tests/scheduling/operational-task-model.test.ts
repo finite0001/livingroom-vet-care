@@ -10,9 +10,18 @@ import {
   storedOperationalReviews,
   forgetOperationalReview,
   verifyOperationalReceipt,
+  reconciliationPolicyRequestSchema,
+  operationalReconciliationStatusSchema,
 } from "../../src/hub/features/daily-tasks/task-model.ts";
 const id = (n: number) =>
   `54000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+test("An unobserved timetable cannot masquerade as active or registered", () => {
+  const row = { cadence_seconds: 300, cron_registered: false, cron_active: null, pending_run_id: null };
+  assert.equal(operationalReconciliationStatusSchema.safeParse(row).success, true);
+  assert.equal(operationalReconciliationStatusSchema.safeParse({ ...row, cron_active: true }).success, false);
+  assert.equal(operationalReconciliationStatusSchema.safeParse({ ...row, cron_registered: true }).success, false);
+  assert.equal(operationalReconciliationStatusSchema.safeParse({ ...row, cron_registered: true, cron_active: false }).success, true);
+});
 const definition = {
   name: "Reviewed room turnover",
   category: "turnover",
@@ -25,6 +34,25 @@ const definition = {
   checklist: [{ id: id(3), label: "Approved SOP check", required: true }],
   sop_reference: "Reviewed SOP",
 };
+const reconciliationRequest = reconciliationPolicyRequestSchema.parse({ expected_version: null, enabled: true, window_from: "2026-10-14T00:00:00.000001Z", window_until: "2026-11-14T00:00:00.000001Z", review_note: "Reviewed bounded source window", attest_review: true });
+test("Reconciliation window keeps the exact31-day microsecond boundary", () => {
+  assert.equal(reconciliationPolicyRequestSchema.safeParse(reconciliationRequest).success, true);
+  assert.equal(reconciliationPolicyRequestSchema.safeParse({ ...reconciliationRequest, window_until: "2026-11-14T00:00:00.000002Z" }).success, false);
+  assert.equal(reconciliationPolicyRequestSchema.safeParse({ ...reconciliationRequest, window_from: "not-a-time" }).success, false);
+  assert.equal(reconciliationPolicyRequestSchema.safeParse({ ...reconciliationRequest, window_from: "2026-10-14T00:00:00.0000001Z" }).success, false);
+});
+test("Paused reconciliation clears its window and requires exact attestation", () => {
+  assert.equal(reconciliationPolicyRequestSchema.safeParse({ ...reconciliationRequest, enabled: false }).success, false);
+  assert.equal(reconciliationPolicyRequestSchema.safeParse({ ...reconciliationRequest, enabled: false, window_from: null, window_until: null }).success, true);
+  assert.equal(reconciliationPolicyRequestSchema.safeParse({ ...reconciliationRequest, attest_review: false }).success, false);
+});
+test("Reconciliation receipt binds actor, exact version and sub-millisecond window", () => {
+  const meta = { id: id(70), actor_id: id(71), operation: "reconciliation_policy" as const };
+  const saved = { version: 1, enabled: true, window_from: "2026-10-13T18:00:00.000001-06:00", window_until: reconciliationRequest.window_until, actor_id: meta.actor_id, review_note: reconciliationRequest.review_note, recorded_at: "2026-10-14T00:00:00Z" };
+  assert.deepEqual(verifyOperationalReceipt(meta, reconciliationRequest, saved), saved);
+  for (const changed of [{ ...saved, actor_id: id(72) }, { ...saved, version: 2 }, { ...saved, window_from: "2026-10-14T00:00:00.000002Z" }, { ...saved, review_note: "Different review" }])
+    assert.throws(() => verifyOperationalReceipt(meta, reconciliationRequest, changed));
+});
 test("Surgical preparation requires explicit reviewed type identities", () => {
   assert.equal(taskDefinitionSchema.safeParse(definition).success, true);
   assert.equal(

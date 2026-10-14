@@ -1,0 +1,90 @@
+{
+  "base": "e4282c5a2d1fa1ac958ddab678f21208dfb1440b",
+  "scope": "4C local backend foundation and typed staff recovery/read contracts; Edge/scheduler/Operations controls/complete release acceptance unfinished",
+  "migration": "20261014154223_operational_task_reconciliation.sql",
+  "local_migrations": 185,
+  "hosted_migrations": 184,
+  "canonical_sql": {
+    "files": 151,
+    "assertions": 6257,
+    "package_assertions": 73,
+    "status": "passed"
+  },
+  "real_api": {
+    "api_checks": 42,
+    "timeout_elapsed_ms": 5013,
+    "real_auth_postgrest": true,
+    "provider_requests": 0,
+    "owned_accounts_deactivated": true,
+    "private_timeout_helper_restored": true
+  },
+  "new_worker_concurrency": {
+    "checks": 3,
+    "observed_lock_queues": 4,
+    "policy_pause_after_wait": true,
+    "same_uuid_execute_replay": true,
+    "provider_requests": 0,
+    "owned_staff_deactivated": true
+  },
+  "new_worker_restore": {
+    "populated_relations": 4,
+    "exact_snapshot_restored": true,
+    "exact_readonly_recovery": true,
+    "private_table_and_helper_grants": true,
+    "owned_restore_database_removed": true,
+    "provider_requests": 0
+  },
+  "parent_task_regression": {
+    "api_checks": 54,
+    "observed_locks": 2,
+    "browser_checks": 24,
+    "populated_relations": 12,
+    "status": "passed"
+  },
+  "models": {
+    "task_model": 14,
+    "worker_protocol": 47,
+    "full_repository_units": 1445,
+    "full_check": "passed",
+    "standalone_api_typecheck": "passed"
+  },
+  "local_security_advisors": {
+    "existing_extension_in_public": "pg_net",
+    "new_package_notices": 0
+  },
+  "synthetic_cleanup": {
+    "outbox": 0,
+    "pending_run": null,
+    "active_staff": 0,
+    "inventory_moves": 0,
+    "reconciliation_enabled": false
+  },
+  "owned_runtime_removed": true,
+  "source_sha256": {
+    "supabase/migrations/20261014154223_operational_task_reconciliation.sql": "1283db93c5766b1c57b7b2ab9bfd8031141f84a0a521be1ab63ea0cfdd43abbe",
+    "supabase/tests/operational_reconciliation.test.sql": "5b3c6cf7d04b0c9050f99c6dc5b615a4311f70a5513ed50ae70b327be09936b7",
+    "supabase/tests/operational_reconciliation_concurrency.py": "7f4a7fcc591a3b5c5a759458fad47b441e116e53535f1db71b4cec77d2516923",
+    "supabase/tests/operational_reconciliation_restore.py": "887211986097390004ab92f89199db70251d44682f874e18d326055c39db3b65",
+    "tests/scheduling/operational-reconciliation-local.ts": "707ba78cacf2b32237641ea210bb221f71ecf87996d13c028976723bdae7d5d5",
+    "src/hub/features/daily-tasks/task-model.ts": "dc3c874fb02a289656b42d9b3144ed46baf37c7dada94984311b2e021c3fbe6b",
+    "src/hub/features/daily-tasks/task-api.ts": "fd0ed04221197cd0e9c0ebbf8fd98eb0326cd38956bc876c85890040eec612c4",
+    "tests/scheduling/disposable.py": "bd385db1fbe7efea3658edd6cdce388278f2d675dbf0f48d044a0f9a2476c953"
+  },
+  "source_history_notes": [
+    "Initial local SQL concatenation and alias errors corrected before final canonical replay",
+    "Old completed prep fixture correctly represents existing source-trigger materialization; worker does not backfill it",
+    "Final API proof uses real PostgREST function-level5s timeout and restores its owned private delay helper"
+  ],
+  "provider_requests": 0,
+  "new_edge_deployments": 0,
+  "hosted185_installations": 0,
+  "practice_commissioning": false,
+  "original_requirements": 45,
+  "remaining": [
+    "Default-off Edge entrypoint and inactive scheduler with original pending UUID/cadence",
+    "Rendered reviewed policy and Operations run controls with actor-safe recovery",
+    "Large backlog/checkpoint/correction and whole-package browser/restore acceptance",
+    "Exact-head CI, staging/primary/new-disabled-Edge rollout, merge and exact production proof",
+    "Remaining native/vendor/clinical45-row acceptance"
+  ]
+}

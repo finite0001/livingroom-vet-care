@@ -1,0 +1,4 @@
+{
+  "imports": { "zod": "npm:zod@3.25.76" },
+  "lock": "./deno.lock"
+}

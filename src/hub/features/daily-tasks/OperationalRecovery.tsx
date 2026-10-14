@@ -94,6 +94,7 @@ function RecoveryItem({ meta }: RecoveryItemProps) {
     use: "Resource-use record",
     task: "Task action",
     policy: "Generation review",
+    reconciliation_policy: "Reconciliation review",
   }[meta.operation];
   const id =
     review?.request && "id" in review.request ? review.request.id : null;

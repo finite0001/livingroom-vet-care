@@ -1,5 +1,7 @@
 # Reviewed operational tasks — local staff acceptance
 
+This is the historical local checkpoint. October14's completed staging/primary rollout, exact-head CI and production verification are recorded in [the hosted receipt](2026-10-14-operational-tasks-rollout.md). Statements below about pending hosted work describe the earlier checkpoint.
+
 The current package adds reviewed cleaning, preparation, restocking and housecall templates; explicit actual resource-use start/end/correction; Home/Schedule daily queues and the complete task list; role/assignee/resource/day filters; required checklist completion and historical evidence. Generation starts empty/off. Susan’s proposed practice defaults remain drafts.
 
 An appointment cancellation preserves actual use and cleanup work. A veterinarian or administrator can explicitly attest actual use of a closed visit without reopening it. Staff can still end that use. New template publication preserves completed checklists; each historical revision retains its original frozen enrollment. Restock completion does not adjust inventory.

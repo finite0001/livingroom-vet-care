@@ -4,6 +4,17 @@ import { bindingSchema } from "../scheduling/catalog-model.ts";
 const uuid = z.string().uuid();
 const version = z.number().int().positive().max(2147483647);
 const instant = z.string().datetime({ offset: true });
+const reconciliationInstant = instant.refine((value) =>
+  Number.isFinite(Date.parse(value)) && (value.match(/\.(\d+)/)?.[1].length ?? 0) <= 6,
+"Use a valid instant with at most six fractional digits");
+function reconciliationMicros(time: string) {
+  return BigInt(Date.parse(time)) * 1000n + BigInt((time.match(/\.(\d+)(?:Z|[+-]\d{2}:\d{2})$/i)?.[1] ?? "").padEnd(6, "0").slice(3, 6));
+}
+function reconciliationWindow(from: string | null, until: string | null) {
+  if (from === null || until === null || !Number.isFinite(Date.parse(from)) || !Number.isFinite(Date.parse(until))) return false;
+  const duration = reconciliationMicros(until) - reconciliationMicros(from);
+  return duration > 0n && duration <= 31n * 86400000000n;
+}
 const clean = (max: number) =>
   z
     .string()
@@ -25,6 +36,7 @@ export const operationalOperationSchema = z.enum([
   "use",
   "task",
   "policy",
+  "reconciliation_policy",
 ]);
 const selector = z.object({ entry_id: uuid, version_id: uuid }).strict();
 const selectors = (min: number) =>
@@ -245,13 +257,23 @@ export const policyRequestSchema = z
     "Use a reviewed effective interval of at most 366 days",
   );
 export interface PolicyRequest extends z.infer<typeof policyRequestSchema> {}
+export const reconciliationPolicyRequestSchema = z.object({
+  expected_version: version.nullable(), enabled: z.boolean(),
+  window_from: reconciliationInstant.nullable(), window_until: reconciliationInstant.nullable(),
+  review_note: clean(2000), attest_review: z.literal(true),
+}).strict().refine((value) => value.enabled
+  ? reconciliationWindow(value.window_from, value.window_until)
+  : value.window_from === null && value.window_until === null,
+"Review an appointment window of at most 31 days; paused reconciliation has no window");
+export interface ReconciliationPolicyRequest extends z.infer<typeof reconciliationPolicyRequestSchema> {}
 export type OperationalRequest =
-  TemplateRequest | UseRequest | TaskRequest | PolicyRequest;
+  TemplateRequest | UseRequest | TaskRequest | PolicyRequest | ReconciliationPolicyRequest;
 const requestSchemas = {
   template: templateRequestSchema,
   use: useRequestSchema,
   task: taskRequestSchema,
   policy: policyRequestSchema,
+  reconciliation_policy: reconciliationPolicyRequestSchema,
 };
 export function validateOperationalRequest(
   operation: z.infer<typeof operationalOperationSchema>,
@@ -539,7 +561,20 @@ export type OperationalReceipt =
   | OperationalTemplate
   | OperationalUse
   | OperationalTask
-  | z.infer<typeof operationalPolicySchema>;
+  | z.infer<typeof operationalPolicySchema>
+  | OperationalReconciliationPolicy;
+export const operationalReconciliationPolicySchema = z.object({
+  version, enabled: z.boolean(), window_from: reconciliationInstant.nullable(), window_until: reconciliationInstant.nullable(),
+  review_note: clean(2000), actor_id: uuid, recorded_at: instant,
+}).strict().refine((value) => reconciliationPolicyRequestSchema.safeParse({
+  expected_version: null, enabled: value.enabled, window_from: value.window_from,
+  window_until: value.window_until, review_note: value.review_note, attest_review: true,
+}).success, "Saved reconciliation policy contradicts its reviewed window");
+export interface OperationalReconciliationPolicy extends z.infer<typeof operationalReconciliationPolicySchema> {}
+export const operationalReconciliationStatusSchema = z.object({
+  cadence_seconds: z.literal(300), cron_registered: z.boolean(),
+  cron_active: z.boolean().nullable(), pending_run_id: uuid.nullable(),
+}).strict().refine((value) => value.cron_registered === (value.cron_active !== null), "Registered timetable requires its observed activation state");
 export function parseOperationalReceipt(
   operation: z.infer<typeof operationalOperationSchema>,
   data: unknown,
@@ -549,6 +584,7 @@ export function parseOperationalReceipt(
     use: operationalUseSchema,
     task: operationalTaskSchema,
     policy: operationalPolicySchema,
+    reconciliation_policy: operationalReconciliationPolicySchema,
   }[operation].parse(data);
 }
 export const operationalMetadataSchema = z
@@ -652,7 +688,7 @@ export function verifyOperationalReceipt(
 ): OperationalReceipt {
   const value = parseOperationalReceipt(meta.operation, data);
   const q = validateOperationalRequest(meta.operation, request);
-  if (meta.operation !== "policy") {
+  if (meta.operation !== "policy" && meta.operation !== "reconciliation_policy") {
     const entity = q as TemplateRequest | UseRequest | TaskRequest;
     const receipt = value as
       OperationalTemplate | OperationalUse | OperationalTask;
@@ -746,6 +782,16 @@ export function verifyOperationalReceipt(
       v.review_note !== a.review_note
     )
       throw new Error("Saved generation review mismatch");
+  }
+  if (meta.operation === "reconciliation_policy") {
+    const a = q as ReconciliationPolicyRequest, v = value as OperationalReconciliationPolicy;
+    const sameInstant = (first: string | null, second: string | null) => {
+      if (first === null || second === null) return first === second;
+      return reconciliationMicros(first) === reconciliationMicros(second);
+    };
+    if (v.version !== (a.expected_version ?? 0) + 1 || v.actor_id !== meta.actor_id || v.enabled !== a.enabled ||
+      !sameInstant(v.window_from, a.window_from) || !sameInstant(v.window_until, a.window_until) || v.review_note !== a.review_note)
+      throw new Error("Saved reconciliation review mismatch");
   }
   return value;
 }

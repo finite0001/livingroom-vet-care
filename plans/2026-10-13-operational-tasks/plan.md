@@ -1,15 +1,15 @@
 # Operational task templates and generation — 4B
 
-Prepared October13,2026 from merged main `1b5b6a9bda816b840fdf32ccd724187edb7c1d23` (#249). Next-visit staff workflows are merged; staging and primary have183 migrations. See [rollout](../../docs/launch-evidence/2026-10-13-next-visit-staff-rollout.json). The backend, strict DTO/API contracts, staff template/use screens and Home/Schedule/full-list task UI are implemented in the work branch. Complete exact-head CI and hosted acceptance remain pending; no184 hosted migration or practice automation is enabled. [Backend receipt](../../docs/launch-evidence/2026-10-13-operational-tasks-backend-local.json).
+Prepared October13,2026 from merged main `1b5b6a9bda816b840fdf32ccd724187edb7c1d23` (#249). Updated October14: PR250 merged as `e4282c5a2d1fa1ac958ddab678f21208dfb1440b`; both hosted backends184 and exact production/domain verification pass. The backend, strict DTO/API contracts, staff template/use screens and Home/Schedule/full-list task UI are released. Practice generation remains off. [Hosted rollout](../../docs/launch-evidence/2026-10-14-operational-tasks-rollout.md), [historical backend checkpoint](../../docs/launch-evidence/2026-10-13-operational-tasks-backend-local.json).
 
 ## Scope and order
 
 | Step | Deliverable | Status |
 |---|---|---|
-| 4B.1 | Reviewed operational templates, exact publication and private action recovery | Staff implementation and local acceptance pass; CI/hosted acceptance pending |
-| 4B.2 | Explicit actual resource-use occurrences, ending use after cancellation | Staff implementation and local acceptance pass; CI/hosted acceptance pending |
-| 4B.3 | Atomic materialization, frozen enrollment, safety revisions and default-off generation | Staff implementation and local acceptance pass; CI/hosted acceptance pending |
-| 4B.4 | Meaningful SQL/Auth/browser/concurrency/restore acceptance and staged rollout | Local acceptance passes; staged rollout pending |
+| 4B.1 | Reviewed operational templates, exact publication and private action recovery | Local/exact-head CI/hosted acceptance pass; released |
+| 4B.2 | Explicit actual resource-use occurrences, ending use after cancellation | Local/exact-head CI/hosted acceptance pass; released |
+| 4B.3 | Atomic materialization, frozen enrollment, safety revisions and default-off generation | Local/exact-head CI/hosted acceptance pass; released, generation off |
+| 4B.4 | Meaningful SQL/Auth/browser/concurrency/restore acceptance and staged rollout | Local and hosted acceptance pass; exact production verified |
 | 4C | Home/Schedule daily queues, assignment/completion UX and bounded reconciliation worker | Staff queues and completion included here; worker remains subsequent |
 
 The4B steps form one coherent package. Do not claim automatic cleaning or restocking generation complete while actual-use evidence or canonical scheduling hooks remain absent. See [implementation](implementation.md), [acceptance](acceptance.md), [research](research/codebase-findings.md).

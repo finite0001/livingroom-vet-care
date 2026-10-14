@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   runSchema,
+  schedulerJobSchema,
   blockSchema,
   outboxSchema,
   conversationLink,
@@ -12,6 +13,13 @@ import {
 import { stripeQueuePage } from "../../src/hub/features/payments/StripeRetryState.ts";
 const id = "11111111-1111-4111-8111-111111111111",
   time = "2026-09-12T12:00:00.123456+00:00";
+test("task transport evidence keeps its cadence and run identity separate from commitment", () => {
+  const row = { job: "reconcile-operational-tasks", requested_at: time, outcome: "ok", status_code: 202, error_message: null, stale: false, cadence_seconds: 300, reconciliation_run_id: id };
+  assert.equal(schedulerJobSchema.parse(row).status_code, 202);
+  assert.equal("counts" in schedulerJobSchema.parse(row), false);
+  assert.throws(() => schedulerJobSchema.parse({ ...row, cadence_seconds: 60 }));
+  assert.throws(() => schedulerJobSchema.parse({ ...row, job: "queue-reminders" }));
+});
 test("recurring care blocks remain readable and unknown sources remain invalid", () => {
   const row = { source_kind: "care_plan", source_id: id, pet_id: id, appointment_id: null, job_kind: "care", job_id: id,
     policy_id: id, outbox_id: id, state: "blocked", reason: "final_preflight_source_or_recipient_ineligible", created_at: time, invalidated_at: time };
