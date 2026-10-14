@@ -78,7 +78,5 @@ verification remains outstanding because computer-use reported no available brow
 Preview uses placeholder credentials for a local backend only; no production keys
 or ignored configuration files were copied or modified.
 
-The 48 focused Stripe tests passed again after the website edits. The initial
-application type check passed, but the full check found missing `@vercel/sandbox`
-in the older checkout's shared dependencies. Installing the worktree's locked
-dependencies separately avoids changing the original checkout.
+Final validation: full TypeScript checks, production build, targeted ESLint, and
+48 focused Stripe tests passed using this worktree’s locked dependencies.
