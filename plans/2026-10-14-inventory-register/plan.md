@@ -1,6 +1,6 @@
 # Phase 5 — Native inventory, supplier imports, iPhone scanning and controlled register
 
-Status: researched implementation plan; no Phase 5 feature or vendor acceptance claimed. Requirements N01, N02, N19, H11, H12 remain launch scope. Supplements the original October 8 Phase 5; does not replace any of the original 45 requirements. PR251 merged as d273144163e6dbb8ed101289bb430877faefd160; implementation starts from that merge. Research describes its unchanged c2db1ca0 feature source.
+Status: 5A1 native reviewed mappings implemented and locally verified; exact-head CI and hosted release pending. Real supplier, iPhone and controlled-register acceptance remain required. Requirements N01, N02, N19, H11, H12 remain launch scope. Supplements the original October 8 Phase 5; does not replace any of the original 45 requirements. PR251 merged as d273144163e6dbb8ed101289bb430877faefd160; implementation starts from that merge. Research describes its unchanged c2db1ca0 feature source.
 
 | Package | Work | Dependency / completion evidence |
 |---|---|---|
@@ -16,3 +16,5 @@ Implementation details: [supplier identity/import](phase-01-supplier-identity-im
 Do 5A1 first. It is useful native work without inventing either supplier's schema and does not activate controlled drugs. Then implement the bounded neutral import and scanner foundation while actual samples/device access are pending. Controlled enforcement can be built unactivated, but reviewed opening quantities and operational policy require Dr. Edler. Do not call that foundation a usable controlled register.
 
 Decisions still needed: untouched supplier files/labels; Midwest supported interface; package/canonical units and concentration conversions; controlled products/containers/mobile locations; event-specific actor/witness permissions and timing; physical count workflow; real iPhone models/builds; import budgets derived from samples. Current Colorado/federal authoritative record requirements must be verified before register activation; no certification claim follows from implementation.
+
+5A1 local proof:1,459 units;152 SQL files/6,387 assertions;38 genuine Auth/API and15 browser checks including lost committed acknowledgement followed by reload/read-only recovery;5 observed queues;7 populated relations restored with exact original receipt and caller-timezone invariance. The31-check hosted rollback probe was rehearsed locally. Parent scheduling/task workflows pass,all owned actors/runtimes cleaned,stock/outbox/billing unchanged and provider requests0. [Evidence](../../docs/launch-evidence/2026-10-14-inventory-identity-local.json). [Server design](server-design.md). Hosted186 remains pending at this checkpoint.

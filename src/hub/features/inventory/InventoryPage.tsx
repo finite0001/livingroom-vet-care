@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { products, lots, type Product, type LotBalance } from "./api";
+import { SupplierIdentityPanel } from "./supplier-imports/SupplierIdentityPanel";
 import { useStockMutation } from "./useStockMutation";
 import { readVaccineProfiles } from "../vaccines/api";
 import { VaccineProfileForm } from "../vaccines/VaccineProfileForm";
@@ -378,12 +379,13 @@ export function InventoryPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
       <header>
-        <h1 className="text-2xl font-semibold">Inventory</h1>
+        <h1 className="text-2xl font-display">Inventory</h1>
         <p className="text-muted-foreground">
           Medication and vaccine stock by lot, expiry and location.
         </p>
         <Button asChild variant="outline" className="mt-3"><Link to="/hub/whogot">Whogot</Link></Button>
       </header>
+      <SupplierIdentityPanel />
       <Card>
         <CardHeader>
           <CardTitle>Product catalog</CardTitle>

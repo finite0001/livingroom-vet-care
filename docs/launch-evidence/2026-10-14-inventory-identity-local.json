@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-14",
+  "scope": "Native reviewed supplier namespaces, packages, identifiers and lookup; no vendor import, camera or controlled register acceptance",
+  "canonical_migrations": 186,
+  "migration186_sha256": "693a974f59a86f50c4fabaf9253a1f579bacdade545171c74a17231e812e6df4",
+  "unit_tests": 1459,
+  "sql_regression": {
+    "files": 152,
+    "assertions": 6387
+  },
+  "inventory": {
+    "api": {
+      "api_checks": 38,
+      "genuine_auth_postgrest": true,
+      "private_tables_denied": true,
+      "exact_receipt_replay": true,
+      "owned_actors_retired": true,
+      "baseline_unchanged": true,
+      "provider_requests": 0,
+      "browser": {
+        "browser_checks": 15,
+        "genuine_staff_api": true,
+        "committed_ack_loss_recovered": true,
+        "reload_readonly_recovery": true,
+        "mobile_overflow_checked": true,
+        "touch_targets_checked": true,
+        "staff_lookup_only": true,
+        "provider_requests": 0
+      }
+    },
+    "concurrency": {
+      "checks": 10,
+      "observed_lock_queues": 5,
+      "same_uuid_single_version": true,
+      "namespace_rechecked_after_wait": true,
+      "live_session_rechecked_after_wait": true,
+      "identifier_collision_atomic": true,
+      "owned_staff_deactivated": true,
+      "provider_requests": 0
+    },
+    "restore": {
+      "populated_relations": 7,
+      "private_identity_families": 6,
+      "exact_snapshot_restored": true,
+      "exact_original_review_recovered": true,
+      "caller_timezone_invariant": true,
+      "private_grants_restored": true,
+      "owned_restore_database_removed": true,
+      "provider_requests": 0
+    }
+  },
+  "inventory_rollback_probe": {
+    "checks": 31,
+    "rollback_only": true,
+    "provider_requests": 0,
+    "rehearsed_separately_on_same_owned_runtime": true
+  },
+  "parent_scheduling_and_task_layers": "passed",
+  "cleanup_baseline": {
+    "outbox": 0,
+    "cron_active": false,
+    "pending_run": null,
+    "active_staff": 0,
+    "inventory_movements": 0,
+    "reconciliation_enabled": false
+  },
+  "owned_containers_and_volumes_removed": true,
+  "provider_requests": 0,
+  "hosted_changes": 0,
+  "remaining": [
+    "exact-head CI",
+    "staged migration/Auth/browser and rollback proof",
+    "primary migration/rollback and production verification",
+    "actual supported supplier files and reviewed imports",
+    "real iPhone labels/devices",
+    "controlled register and practice acceptance"
+  ],
+  "known_baseline": [
+    "Four existing React-refresh warnings",
+    "Existing large-chunk build warning",
+    "Dependency lockfile unchanged"
+  ]
+}
