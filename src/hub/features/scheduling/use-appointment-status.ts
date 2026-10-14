@@ -1,8 +1,12 @@
+import { refreshScheduleFacts } from "./refresh-schedule-facts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
 import type { Tables } from "@/integrations/supabase/types";
+import { useNextVisitReview } from "./use-next-visit-review";
+import { nextVisitCompletionRequest } from "./next-visit-api";
+import type { NextVisitContext } from "./next-visit-model";
 import { statusLabel } from "@/hub/components/shared/StatusChip";
 
 type Appointment = Tables<"appointments">;
@@ -32,13 +36,33 @@ function failureMessage(error: unknown): string {
  * revoked), so this reuses the same save_appointment RPC the dialog uses,
  * passing the unchanged row back with only the status swapped.
  */
-export function useAppointmentStatus() {
+interface StatusOptions {
+  onCompleted?: (context: NextVisitContext) => void;
+}
+export function useAppointmentStatus({ onCompleted }: StatusOptions = {}) {
   const { session } = useAuth();
   const cache = useQueryClient();
-  return useMutation({
+  const review = useNextVisitReview(
+    session?.user.id ?? "",
+    "complete",
+    (receipt) => {
+      if ("context" in receipt) onCompleted?.(receipt.context);
+    },
+  );
+  const mutation = useMutation({
     mutationFn: async ({ appointment, status }: StatusChange) => {
       const actor = session?.user.id;
       if (!actor) throw new Error("Sign in before updating the schedule.");
+      if (status === "COMPLETED") {
+        const saved = await review.save(
+          nextVisitCompletionRequest(appointment.id, appointment.version),
+        );
+        if (!saved)
+          throw new Error(
+            "Completion is unconfirmed or needs review. Check the recovery panel before submitting new work.",
+          );
+        return saved;
+      }
       if (!appointment.pet_id || !appointment.assigned_dvm_id)
         throw new Error("This visit is missing its patient or assigned staff.");
       const { error } = await supabase.rpc("save_appointment", {
@@ -62,11 +86,21 @@ export function useAppointmentStatus() {
       });
       if (error) throw error;
     },
-    onSuccess: (_data, { status }) => {
-      void cache.invalidateQueries({ queryKey: ["schedule"] });
-      void cache.invalidateQueries({ queryKey: ["hub-today"] });
+    onSuccess: (_data, { appointment, status }) => {
+      refreshScheduleFacts(
+        cache,
+        session?.user.id ?? "",
+        appointment.pet_id,
+        appointment.client_id,
+      );
       toast.success(`${statusLabel(status)} saved`);
     },
     onError: (error) => toast.error(failureMessage(error)),
   });
+  return {
+    ...mutation,
+    isPending: mutation.isPending || review.busy,
+    reviewPending: review.pending,
+    reviewError: review.error,
+  };
 }

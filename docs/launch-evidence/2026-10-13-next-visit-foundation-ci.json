@@ -1,0 +1,55 @@
+{
+  "databaseId": 38481652165,
+  "headSha": "1b0e1f6ccefe5dcb398c621f4a613f110c2edf66",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38481652165",
+  "jobs": [
+    {
+      "name": "diagnostic-renderer",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-13T23:01:47Z",
+      "completedAt": "2026-10-13T23:08:29Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38481652165/job/115585407270"
+    },
+    {
+      "name": "edge",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-13T23:01:47Z",
+      "completedAt": "2026-10-13T23:03:20Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38481652165/job/115585407596"
+    },
+    {
+      "name": "database",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-13T23:01:48Z",
+      "completedAt": "2026-10-13T23:26:37Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38481652165/job/115585407759"
+    },
+    {
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-13T23:01:47Z",
+      "completedAt": "2026-10-13T23:17:57Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/38481652165/job/115585407779"
+    }
+  ],
+  "hosted_migrations": 181,
+  "hosted_182_applied": false,
+  "next_visit_native_checks": 44,
+  "observed_next_visit_lock_queues": 6,
+  "sql_files": 148,
+  "sql_assertions": 6057,
+  "local_unit_total": 1381,
+  "provider_requests": 0,
+  "ci_unit_total": 1381,
+  "ci_browser_passed": 524,
+  "ci_browser_existing_skips": 1,
+  "ci_native_next_visit_verified": true,
+  "ci_catalog_native_verified": true,
+  "ci_sql_inventory_verified": true
+}

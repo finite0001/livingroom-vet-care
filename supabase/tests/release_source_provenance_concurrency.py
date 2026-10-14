@@ -5,6 +5,7 @@ import json
 import subprocess
 import time
 import uuid
+import tempfile
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
@@ -61,33 +62,51 @@ def contended(first_query, second_query, second_expected):
     """Wait for an observed lock holder and then an observed lock waiter."""
     tag = 'lrv_release_source_' + uuid.uuid4().hex
     owned_sessions.extend([tag + '_holder', tag + '_waiter'])
-    first = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    first.stdin.write(f"set application_name='{tag}_holder';begin;{first_query}select pg_sleep(2);commit;")
-    first.stdin.close()
-    deadline = time.monotonic() + 8
-    while time.monotonic() < deadline:
-        if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_holder' and wait_event='PgSleep';").stdout.strip() == '1':
-            break
-        time.sleep(.03)
-    else:
-        raise AssertionError('Did not observe transaction holding locks')
-    second = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    second.stdin.write(f"set application_name='{tag}_waiter';begin;{second_query}commit;")
-    second.stdin.close()
-    waiting = False
-    while time.monotonic() < deadline:
-        if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_waiter' and wait_event_type='Lock';").stdout.strip() == '1':
-            waiting = True
-            break
-        time.sleep(.03)
-    check(waiting, 'Second operation actually waits on the first transaction lock')
-    first.wait(timeout=10)
-    second.wait(timeout=10)
-    first_error = first.stderr.read()
-    second_output = second.stdout.read()
-    second_error = second.stderr.read()
-    check(first.returncode == 0, first_error)
-    check(second_expected(second.returncode, second_output, second_error), second_error or second_output)
+    # Preview JSON can exceed a Linux pipe's capacity. Capture it without an
+    # unread PIPE, and keep the transaction open until the waiter is observed.
+    with tempfile.TemporaryFile(mode='w+', encoding='utf8') as first_out, tempfile.TemporaryFile(mode='w+', encoding='utf8') as first_err, tempfile.TemporaryFile(mode='w+', encoding='utf8') as second_out, tempfile.TemporaryFile(mode='w+', encoding='utf8') as second_err:
+        first = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=first_out, stderr=first_err, text=True)
+        second = None
+        try:
+            first.stdin.write(f"set application_name='{tag}_holder';begin;{first_query}select '{tag}_ready';\n")
+            first.stdin.flush()
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if first.poll() is not None:
+                    first_err.seek(0)
+                    raise AssertionError('Lock holder exited before observation: ' + first_err.read())
+                if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_holder' and state='idle in transaction' and query like '%{tag}_ready%';").stdout.strip() == '1':
+                    break
+                time.sleep(.03)
+            else:
+                raise AssertionError('Did not observe transaction holding locks')
+            second = subprocess.Popen(COMMAND, stdin=subprocess.PIPE, stdout=second_out, stderr=second_err, text=True)
+            second.stdin.write(f"set application_name='{tag}_waiter';begin;{second_query}commit;")
+            second.stdin.close()
+            waiting = False
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if sql(f"select count(*) from pg_stat_activity where application_name='{tag}_waiter' and wait_event_type='Lock';").stdout.strip() == '1':
+                    waiting = True
+                    break
+                time.sleep(.03)
+            check(waiting, 'Second operation actually waits on the first transaction lock')
+            first.stdin.write('commit;\n')
+            first.stdin.close()
+            first.wait(timeout=10)
+            second.wait(timeout=10)
+            first_err.seek(0);second_out.seek(0);second_err.seek(0)
+            check(first.returncode == 0, first_err.read())
+            second_output = second_out.read()
+            second_error = second_err.read()
+            check(second_expected(second.returncode, second_output, second_error), second_error or second_output)
+        finally:
+            for process in [first, second]:
+                if process is not None and process.poll() is None:
+                    process.terminate()
+                    try: process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill();process.wait(timeout=5)
 
 # A fresh schema-only database keeps all synthetic clinical acceptance away from
 # foundation and exposes no Auth/Storage/Edge API or provider worker.

@@ -1,3 +1,6 @@
+import {useState} from "react";
+import {NextVisitWorkspace} from "@/hub/features/scheduling/NextVisitWorkspace";
+import type {NextVisitContext} from "@/hub/features/scheduling/next-visit-model";
 import { Link } from "react-router-dom";
 import {
   BellRing,
@@ -259,7 +262,8 @@ export default function HubHomePage() {
 
   const today = denverLocal(new Date()).slice(0, 10);
   const schedule = useScheduleDay(today, 1);
-  const updateStatus = useAppointmentStatus();
+  const [nextVisit,setNextVisit]=useState<NextVisitContext|null>(null);
+  const updateStatus = useAppointmentStatus({onCompleted:setNextVisit});
 
   const visits = schedule.data?.appointments ?? [];
   const liveVisits = visits.filter(
@@ -915,6 +919,7 @@ export default function HubHomePage() {
           ))}
         </div>
       </section>
+      <NextVisitWorkspace context={nextVisit} onContext={setNextVisit}/>
     </PageShell>
   );
 }
