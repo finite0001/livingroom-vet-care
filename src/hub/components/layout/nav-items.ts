@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CalendarRange,
   Clock,
+  ClipboardList,
   DatabaseZap,
   FileText,
   FolderOpen,
@@ -11,6 +12,7 @@ import {
   Home,
   Inbox,
   LayoutDashboard,
+  ListChecks,
   MessageSquare,
   Package,
   Send,
@@ -57,6 +59,7 @@ export const navItems: NavItem[] = [
   ...(cloudtalkEnabled ? [{ path: "/hub/call", label: "Phone", icon: Phone, section: "workspace" as const, activePrefixes: ["/hub/voicemails"] }] : []),
   { path: "/hub/tickets", label: "Tickets", icon: Ticket, section: "workspace", tab: true, activePrefixes: ["/hub/ticket/"] },
   { path: "/hub/schedule", label: "Schedule", icon: CalendarDays, section: "workspace", tab: true },
+  { path: "/hub/tasks", label: "Daily tasks", icon: ListChecks, section: "workspace" },
   { path: "/hub/inventory", label: "Inventory", icon: Package, section: "workspace" },
   { path: "/hub/inquiries", label: "New inquiries", icon: Inbox, section: "workspace" },
   { path: "/hub/clients", label: "Clients", icon: Users, section: "workspace", activePrefixes: ["/hub/client/"] },
@@ -65,6 +68,7 @@ export const navItems: NavItem[] = [
   { path: "/hub/timesheet", label: "Timesheet", icon: History, section: "workspace" },
 
   // Tools
+  { path: "/hub/tools/task-templates", label: "Operational templates", icon: ClipboardList, section: "tools" },
   { path: "/hub/tools/appointment-catalog", label: "Appointment catalog", icon: CalendarRange, section: "tools" },
   { path: "/hub/tools/record-requests", label: "Records requests", icon: FolderOpen, section: "tools" },
   { path: "/hub/tools/care-reminders", label: "Care reminders", icon: BellRing, section: "tools" },

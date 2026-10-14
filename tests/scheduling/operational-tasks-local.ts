@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type Session } from "@supabase/supabase-js";
 import { parseOwnedRuntimeStatus } from "../estimates/owned-runtime-status.ts";
 import { catalogEntrySchema } from "../../src/hub/features/scheduling/catalog-model.ts";
 import {
@@ -61,7 +61,13 @@ function sql(query: string, database = "postgres") {
 }
 const options = { auth: { persistSession: false, autoRefreshToken: false } },
   service = createClient(status.API_URL, status.SERVICE_ROLE_KEY, options);
-const actors: { id: string; db: ReturnType<typeof createClient> }[] = [];
+const actors: {
+  id: string;
+  db: ReturnType<typeof createClient>;
+  session: Session | null;
+  email: string;
+  password: string;
+}[] = [];
 let checks = 0,
   observedLocks = 0,
   dropNext = false,
@@ -104,9 +110,10 @@ async function actor(role: string) {
       },
     },
   });
-  actors.push({ id, db });
+  actors.push({ id, db, session: null, email, password });
   const login = await db.auth.signInWithPassword({ email, password });
   if (login.error) throw login.error;
+  actors[actors.length - 1].session = login.data.session;
   return actors[actors.length - 1];
 }
 async function rpc(
@@ -215,7 +222,11 @@ let failure: unknown;
 try {
   const admin = await actor("ADMIN"),
     staff = await actor("STAFF"),
-    other = await actor("STAFF");
+    other = await actor("STAFF"),
+    tech = await actor("TECH");
+  sql(
+    `delete from user_roles where user_id='${tech.id}';insert into user_roles(user_id,role) values('${tech.id}','TECH');update profiles set role='TECH' where id='${tech.id}';`,
+  );
   sql(
     `insert into user_roles(user_id,role) values('${admin.id}','DVM') on conflict do nothing;`,
   );
@@ -407,6 +418,7 @@ try {
     ended_at: null,
     reason: "Synthetic staff actual-use assertion",
     allow_overlap: false,
+    attest_closed_source: false,
   };
   const started = operationalUseSchema.parse(
     await op(staff, "use", useRequest),
@@ -428,7 +440,7 @@ try {
       expected_version: 1,
       appointment_version: 2,
       action: "end",
-      ended_at: new Date().toISOString(),
+      ended_at: new Date(sql("select clock_timestamp();")).toISOString(),
       reason: "Synthetic explicit end after cancellation",
     }),
   );
@@ -510,7 +522,7 @@ try {
       expected_version: 2,
       appointment_version: 2,
       action: "correct",
-      ended_at: new Date().toISOString(),
+      ended_at: new Date(sql("select clock_timestamp();")).toISOString(),
       reason: "Synthetic corrected use while generation paused",
     }),
   );
@@ -533,6 +545,24 @@ try {
     ),
     inventoryBefore,
   );
+  const { operationalBrowserProof } =
+    await import("./operational-tasks-browser.ts");
+  const browserChecks = await operationalBrowserProof({
+    status,
+    admin,
+    staff,
+    other,
+    tech,
+    client: household,
+    pet,
+    room: room as unknown as {
+      id: string;
+      published: { id: string; definition: { name: string } };
+    },
+    type: type as unknown as { published: { id: string } },
+    sql,
+    rpc,
+  });
   const cancelledId = randomUUID();
   await rpc(staff, "cancel_operational_review", {
     p_actor_id: staff.id,
@@ -688,7 +718,7 @@ try {
   }
   check(observedLocks, 2);
   console.log(
-    `Genuine local operational tasks passed: ${checks} checks; ${observedLocks} observed lock queues; populated task restore; no provider requests.`,
+    `Genuine local operational tasks passed: ${checks} checks; ${observedLocks} observed lock queues; ${browserChecks} browser checks; populated task restore; no provider requests.`,
   );
 } catch (cause) {
   failed = true;

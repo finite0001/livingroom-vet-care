@@ -27,6 +27,8 @@ async function fixture(page: Page, { signedIn = true, patientDelayMs = 0, role =
   await page.route(`${backend}/**`, async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
+    if (path === "/rest/v1/rpc/list_operational_tasks" || path === "/rest/v1/rpc/list_operational_templates" || path === "/rest/v1/rpc/list_appointment_catalog") return route.fulfill({json:{items:[],next:null}});
+    if (path === "/rest/v1/rpc/read_operational_generation_policy") return route.fulfill({json:null});
     calls.push(path);
     if (path === "/auth/v1/token") return route.fulfill({ json: current });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });

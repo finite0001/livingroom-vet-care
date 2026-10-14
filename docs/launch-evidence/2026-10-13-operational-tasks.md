@@ -1,0 +1,13 @@
+# Reviewed operational tasks — local staff acceptance
+
+The current package adds reviewed cleaning, preparation, restocking and housecall templates; explicit actual resource-use start/end/correction; Home/Schedule daily queues and the complete task list; role/assignee/resource/day filters; required checklist completion and historical evidence. Generation starts empty/off. Susan’s proposed practice defaults remain drafts.
+
+An appointment cancellation preserves actual use and cleanup work. A veterinarian or administrator can explicitly attest actual use of a closed visit without reopening it. Staff can still end that use. New template publication preserves completed checklists; each historical revision retains its original frozen enrollment. Restock completion does not adjust inventory.
+
+Private review envelopes retain exact requests and receipts. Browser storage holds only actor/action/operation identifiers. Lost acknowledgments freeze fields and recover the original saved action; another account cannot adopt it. Current active staff and a live session remain required after permission changes or lock waits. Technician-only eligibility is distinct from ordinary staff and reviewer authority.
+
+[Local receipt](2026-10-13-operational-tasks-local.json) records150 SQL files/6,184 assertions,78 package assertions,54 genuine Auth/API checks,22 real browser checks,2 observed task lock waits and a12-table populated restore. The full parent scheduling regression also passed. The repository check passes lint/type checking,1,395 units and the production build. The full existing browser suite had522 passes,2 failures and1 skip; both failed cases passed focused rechecks without code changes. The local security advisor reported the existing public `pg_net` extension warning and no task-package notices. Owned runtimes and volumes were removed.
+
+[Phone screenshot — synthetic records](screenshots/2026-10-13-operational-tasks-mobile.png). [Staging preflight](2026-10-13-operational-tasks-staging-preflight.json) identifies exactly one pending canonical migration and a protected backup. No hosted migration184 has been applied yet. Exact-head CI, staging Auth/browser acceptance and cleanup, primary rollback-only acceptance and production/domain verification remain required.
+
+The bounded reconciliation worker and run receipts are the next package. No task generation, worker, delivery or payment commissioning is implied. Every original launch requirement and Susan’s clinical/practice acceptance remain open where their required evidence has not been established. [Full remaining plan](../../plans/2026-10-13-operational-tasks/full-plan-status.md).

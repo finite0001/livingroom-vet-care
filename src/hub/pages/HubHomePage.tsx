@@ -1,3 +1,5 @@
+import {DailyTasksPanel} from "@/hub/features/daily-tasks/DailyTasksPanel";
+import {OperationalRecovery} from "@/hub/features/daily-tasks/OperationalRecovery";
 import {useState} from "react";
 import {NextVisitWorkspace} from "@/hub/features/scheduling/NextVisitWorkspace";
 import type {NextVisitContext} from "@/hub/features/scheduling/next-visit-model";
@@ -919,6 +921,8 @@ export default function HubHomePage() {
           ))}
         </div>
       </section>
+      <OperationalRecovery/>
+      <DailyTasksPanel day={denverLocal(new Date()).slice(0,10)}/>
       <NextVisitWorkspace context={nextVisit} onContext={setNextVisit}/>
     </PageShell>
   );

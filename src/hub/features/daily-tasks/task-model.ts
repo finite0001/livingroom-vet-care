@@ -19,7 +19,7 @@ const clean = (max: number) =>
       "Use clean reviewed text",
     );
 const distinct = (values: string[]) => new Set(values).size === values.length;
-export const operationalRoleSchema = z.enum(["STAFF", "DVM", "ADMIN"]);
+export const operationalRoleSchema = z.enum(["STAFF", "TECH", "DVM", "ADMIN"]);
 export const operationalOperationSchema = z.enum([
   "template",
   "use",
@@ -62,7 +62,7 @@ export const taskDefinitionSchema = z
     eligible_roles: z
       .array(operationalRoleSchema)
       .min(1)
-      .max(3)
+      .max(4)
       .refine(distinct),
     assignment: z.enum(["unassigned", "named"]),
     assignee_id: uuid.nullable(),
@@ -148,6 +148,7 @@ export const useRequestSchema = z
     ended_at: instant.nullable(),
     reason: clean(2000),
     allow_overlap: z.boolean(),
+    attest_closed_source: z.boolean(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -277,6 +278,8 @@ export const operationalTemplateSchema = z
     version,
     current: templateVersionSchema,
     published: templateVersionSchema.nullable(),
+    reviewer_name: z.string().nullable(),
+    published_reviewer_name: z.string().nullable(),
   })
   .strict()
   .refine(
@@ -302,6 +305,7 @@ export const useFactsSchema = z
     appointment_version: version,
     reason: clean(2000),
     overlap_reviewed: z.boolean(),
+    closed_source_attested: z.boolean(),
   })
   .strict()
   .refine(
@@ -329,6 +333,8 @@ export const operationalUseSchema = z
     resource_id: uuid,
     version,
     current: useEventSchema,
+    actor_name: z.string().nullable(),
+    resource_name: z.string().nullable(),
   })
   .strict()
   .refine(
@@ -371,6 +377,7 @@ const coverageSchema = z
 const contextSchema = z
   .object({
     appointment: appointmentContextSchema.nullable(),
+    appointment_uses: z.array(operationalUseSchema),
     use: operationalUseSchema.nullable(),
     coverage: z.array(coverageSchema),
   })
@@ -434,6 +441,7 @@ const revisionSchema = z
   .object({
     id: uuid,
     task_id: uuid,
+    enrollment_id: uuid,
     version,
     event: z.enum([
       "generated",
@@ -477,6 +485,10 @@ export const operationalTaskSchema = z
     batch: z.number().int().nonnegative().nullable(),
     enrollment: enrollmentSchema,
     current: revisionSchema,
+    actor_name: z.string().nullable(),
+    assignee_name: z.string().nullable(),
+    assignee_eligible: z.boolean().nullable(),
+    resource_name: z.string().nullable(),
     context: contextSchema,
     context_hash: z.string().regex(/^[a-f0-9]{32}$/),
   })
@@ -484,6 +496,7 @@ export const operationalTaskSchema = z
   .superRefine((value, ctx) => {
     if (
       value.current.task_id !== value.id ||
+      value.current.enrollment_id !== value.enrollment.id ||
       value.current.version !== value.version ||
       value.enrollment.template_id !== value.template_id ||
       (value.day_key === null) !== (value.batch === null)
@@ -588,4 +601,151 @@ export function forgetOperationalReview(
       ),
     ),
   );
+}
+
+export const operationalAppointmentSchema = z
+  .object({
+    id: uuid,
+    version,
+    status: appointmentContextSchema.shape.status,
+    scheduled_at: instant,
+    appointment_type: z.string(),
+    visit_type: appointmentContextSchema.shape.visit_type,
+    patient_name: z.string().nullable(),
+  })
+  .strict();
+export interface OperationalAppointment extends z.infer<
+  typeof operationalAppointmentSchema
+> {}
+export const operationalHistoryItemSchema = z
+  .object({
+    revision: revisionSchema,
+    enrollment: enrollmentSchema,
+    actor_name: z.string().nullable(),
+  })
+  .strict()
+  .refine(
+    (value) => value.revision.enrollment_id === value.enrollment.id,
+    "History must retain its frozen checklist",
+  );
+export function canonicalOperationalValue(value: unknown): string {
+  if (Array.isArray(value))
+    return "[" + value.map(canonicalOperationalValue).join(",") + "]";
+  if (value !== null && typeof value === "object")
+    return (
+      "{" +
+      Object.entries(value)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(
+          ([key, item]) =>
+            JSON.stringify(key) + ":" + canonicalOperationalValue(item),
+        )
+        .join(",") +
+      "}"
+    );
+  return JSON.stringify(value);
+}
+export function verifyOperationalReceipt(
+  meta: OperationalMetadata,
+  request: OperationalRequest,
+  data: unknown,
+): OperationalReceipt {
+  const value = parseOperationalReceipt(meta.operation, data);
+  const q = validateOperationalRequest(meta.operation, request);
+  if (meta.operation !== "policy") {
+    const entity = q as TemplateRequest | UseRequest | TaskRequest;
+    const receipt = value as
+      OperationalTemplate | OperationalUse | OperationalTask;
+    if (entity.id !== receipt.id)
+      throw new Error("Saved operational work belongs to another record");
+    const expected = entity.expected_version ?? 0;
+    if (receipt.version !== expected + 1)
+      throw new Error("Saved operational revision mismatch");
+  }
+  if (meta.operation === "template") {
+    const a = q as TemplateRequest,
+      v = value as OperationalTemplate;
+    if (
+      v.current.actor_id !== meta.actor_id ||
+      canonicalOperationalValue(a.definition) !==
+        canonicalOperationalValue(v.current.definition) ||
+      v.current.state !==
+        ({ draft: "draft", publish: "published", retire: "retired" } as const)[
+          a.action
+        ]
+    )
+      throw new Error("Saved template review mismatch");
+  }
+  if (meta.operation === "use") {
+    const a = q as UseRequest,
+      v = value as OperationalUse;
+    if (
+      v.current.actor_id !== meta.actor_id ||
+      v.appointment_id !== a.appointment_id ||
+      v.current.action !== a.action ||
+      v.current.facts.resource_version_id !== a.resource_version_id ||
+      v.current.facts.appointment_version !== a.appointment_version ||
+      v.current.facts.reason !== a.reason ||
+      (a.action === "start" &&
+        (v.current.facts.closed_source_attested !== a.attest_closed_source ||
+          v.current.facts.overlap_reviewed !== a.allow_overlap)) ||
+      Date.parse(v.current.facts.started_at) !== Date.parse(a.started_at) ||
+      (v.current.facts.ended_at === null) !== (a.ended_at === null) ||
+      (a.ended_at !== null &&
+        Date.parse(v.current.facts.ended_at!) !== Date.parse(a.ended_at))
+    )
+      throw new Error("Saved physical use mismatch");
+  }
+  if (meta.operation === "task") {
+    const a = q as TaskRequest,
+      v = value as OperationalTask;
+    if (
+      v.current.actor_id !== meta.actor_id ||
+      v.current.event !== a.action ||
+      v.current.note !== a.note
+    )
+      throw new Error("Saved task action mismatch");
+    if (
+      (a.action === "claim" || a.action === "assign") &&
+      v.current.assignee_id !== a.assignee_id
+    )
+      throw new Error("Saved task assignment mismatch");
+    if (
+      a.action === "resolve" &&
+      (v.current.state !== "pending" ||
+        Date.parse(v.current.due_at!) !== Date.parse(a.due_at!))
+    )
+      throw new Error("Saved task resolution mismatch");
+    if (
+      a.action === "replace" &&
+      v.enrollment.template_version_id !== a.template_version_id
+    )
+      throw new Error("Saved task replacement mismatch");
+    if (
+      a.action === "complete" &&
+      (v.current.state !== "completed" ||
+        v.current.actor_id !== meta.actor_id ||
+        canonicalOperationalValue(a.checked_ids) !==
+          canonicalOperationalValue(v.current.checked_ids))
+    )
+      throw new Error("Saved checklist completion mismatch");
+  }
+  if (meta.operation === "policy") {
+    const a = q as PolicyRequest,
+      v = value as z.infer<typeof operationalPolicySchema>;
+    if (
+      v.version !== (a.expected_version ?? 0) + 1 ||
+      v.actor_id !== meta.actor_id ||
+      v.enabled !== a.enabled ||
+      (v.effective_from === null) !== (a.effective_from === null) ||
+      (a.effective_from !== null &&
+        Date.parse(v.effective_from!) !== Date.parse(a.effective_from)) ||
+      (v.effective_until === null) !== (a.effective_until === null) ||
+      (a.effective_until !== null &&
+        Date.parse(v.effective_until!) !== Date.parse(a.effective_until)) ||
+      v.review_note !== a.review_note
+    )
+      throw new Error("Saved generation review mismatch");
+  }
+  return value;
 }

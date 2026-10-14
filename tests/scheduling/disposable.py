@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=150, Tests=6168' in result
-        print('Canonical SQL regression passed: 150 files /6168 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=150, Tests=6184' in result
+        print('Canonical SQL regression passed: 150 files /6184 assertions.', flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     if not args.staff_only:
         result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
@@ -109,10 +109,13 @@ enabled = false
     print(match.group(0), flush=True)
     task_harness = root/'tests/scheduling/operational-tasks-local.ts'
     task_hash = hashlib.sha256(task_harness.read_bytes()).hexdigest()
+    task_browser = root/'tests/scheduling/operational-tasks-browser.ts'
+    task_browser_hash = hashlib.sha256(task_browser.read_bytes()).hexdigest()
     result = command(['node','--experimental-strip-types',str(task_harness)], cwd=root, env=env, timeout=420)
-    match = re.search(r'Genuine local operational tasks passed: \d+ checks; 2 observed lock queues; populated task restore; no provider requests\.', result)
+    match = re.search(r'Genuine local operational tasks passed: \d+ checks; 2 observed lock queues; \d+ browser checks; populated task restore; no provider requests\.', result)
     assert match, result[-1000:]
     assert hashlib.sha256(task_harness.read_bytes()).hexdigest() == task_hash
+    assert hashlib.sha256(task_browser.read_bytes()).hexdigest() == task_browser_hash
     assert all(hashlib.sha256((root/'supabase/migrations'/name).read_bytes()).hexdigest() == digest for name,digest in hashes.items())
     print(match.group(0), flush=True)
     success = True

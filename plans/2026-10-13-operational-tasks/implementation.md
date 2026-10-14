@@ -13,7 +13,8 @@ Create an additive migration with `supabase migration new operational_tasks`; us
 | `operational_resource_use_events` | Immutable start/end/correction facts, actual times, actor and correction reason |
 | `operational_task_enrollments` | Frozen template/checklist/rule and source resource/type versions at first applicability |
 | `operational_tasks` | Stable logical slot and head revision; one slot per template root/resource/source occurrence |
-| `operational_task_revisions` | Immutable due time, lifecycle state, source evidence, assignment and completion attribution |
+| `operational_task_revisions` | Immutable due time, lifecycle state, source evidence, assignment and completion attribution; each revision binds its own frozen enrollment |
+| `operational_task_reviews` / `operational_task_review_cancellations` | Frozen server-side review and cancellation marker; browser retains metadata only |
 | `operational_task_use_coverage` | Actual-use occurrences covered by a resource/local-day restock slot; exact deduplication |
 | `operational_task_generation_policy` | Private versioned default-false policy; explicit reviewed effective range, no seeded activation |
 
@@ -54,11 +55,11 @@ Do not call inventory adjustment, change vaccines/lab due dates or dispatch comm
 
 ## UI and files
 
-Create `src/hub/features/daily-tasks/task-model.ts`, `task-api.ts`, `use-task-action.ts`, `OperationalTaskTemplatesPage.tsx`, `TaskTemplateEditor.tsx`, `ResourceUseDialog.tsx` and a minimal source use/obligation summary. Register `/hub/tools/task-templates` in the existing protected route tree and `src/hub/components/layout/nav-items.ts`. Keep the role-aware server boundary independent of nav visibility.
+Create `src/hub/features/daily-tasks/task-model.ts`, `task-api.ts`, `use-task-action.ts`, `OperationalTaskTemplatesPage.tsx`, `TaskTemplateEditor.tsx`, `ResourceUseWorkspace.tsx`, `TaskDetailDialog.tsx`, `DailyTasksPanel.tsx` and source use/obligation summaries. Register `/hub/tools/task-templates` in the existing protected route tree and `src/hub/components/layout/nav-items.ts`. Keep the role-aware server boundary independent of nav visibility.
 
 Template UI lists drafts/published/retired states and exact saved reviewer/version. Show selected catalog human labels plus published revisions; loading/failed/partial pagination cannot masquerade as an empty catalog. Default system starts empty; Susan's proposals are review context only. Fieldsets freeze for unknown actions. Use brand semantic tokens,44px targets, readable Denver dates/times and explicit dirty close/Escape/outside/back/filter guards. Keep focused source-use controls distinct from appointment check-in/completion.
 
-4C adds shared Home/Schedule daily panels, a complete `/hub/tasks` queue, role/resource/day/My tasks/Unassigned/Needs review/Overdue/Completed filters, claim/reassignment and frozen checklist completion with mandatory-item evidence. Every task transition still needs expected version and action receipt. Surface current source condition beside original task evidence; avoid diagnosis/contact details on room lists.
+The current staff package also includes the4C shared Home/Schedule daily panels, a complete `/hub/tasks` queue, role/resource/day/My tasks/Unassigned/Needs review/Overdue/Completed filters, claim/reassignment and frozen checklist completion with mandatory-item evidence. Every task transition still needs expected version and action receipt. Surface current source condition beside original task evidence; avoid diagnosis/contact details on room lists.
 
 ## Build and handoff sequence
 

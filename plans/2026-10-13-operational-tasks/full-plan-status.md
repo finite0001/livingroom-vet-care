@@ -6,8 +6,8 @@ The original scope is all25 October requests and20 substantive housecall request
 
 | Remaining package | Current evidence / next work |
 |---|---|
-| 4B operational templates, resource use and generation | Local backend184 and strict DTO/API implementation in progress. 150 SQL files/6,168 assertions,54 Auth/API checks,2 observed lock queues,12-table populated restore,8 model tests and the full repository check pass; staff UI and hosted rollout still required. |
-| 4C daily tasks and reconciliation | Home/Schedule queues, role/assignee/overdue/completion controls and bounded worker/run receipts pending. |
+| 4B operational templates, resource use and generation | Local migration184, reviewed template/use staff UI and strict recovery contracts implemented. 150 SQL files/6,184 assertions,54 Auth/API checks,22 genuine browser checks,2 observed lock queues,12-table populated restore,11 model tests and the full repository check with1,395 units pass. Exact-head CI and staged rollout remain required. |
+| 4C daily tasks and reconciliation | Home/Schedule queues, full task list, role/assignee/overdue/completion controls are included in the current local staff package. Bounded reconciliation worker/run receipts and commissioning remain pending. |
 | 5 supplier imports, iPhone scanning, controlled drugs | Inspect current ledgers; implement native preview/mapping/barcode/witness workflows; actual supplier samples and label/witness acceptance remain required. |
 | 6 unpaid reminders, production and financing | Native terms/final-balance reminders and net-invoiced effective-rate attribution pending. Stripe selected; verify actual supported financing and settlement/refund route. |
 | 7 clinical assistance, imaging, anesthesia and Gusto | Native reviewed draft workflows and connector contracts pending; actual supported account/device exchanges required. |

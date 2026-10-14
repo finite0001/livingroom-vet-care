@@ -1,0 +1,102 @@
+{
+  "checkpoint": "Staff templates, actual use and daily-task UI locally verified; hosted rollout and reconciliation worker remain pending",
+  "checked_at": "2026-10-14T04:47:17.941796+00:00",
+  "base_main": "1b5b6a9bda816b840fdf32ccd724187edb7c1d23",
+  "migration": "20261014022511_operational_tasks.sql",
+  "migration_sha256": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+  "local_migrations": 184,
+  "hosted_migrations_last_verified": 183,
+  "sql_files": 150,
+  "sql_assertions": 6184,
+  "package_sql_assertions": 78,
+  "native_auth_api_checks": 54,
+  "observed_lock_queues": 2,
+  "native_browser_checks": 22,
+  "populated_restore_relations": 12,
+  "restore_private_acl_and_saved_and_pending_recovery": true,
+  "model_unit_tests": 11,
+  "repository_check": {
+    "command": "npm run check",
+    "lint": "passed; four pre-existing React-refresh warnings",
+    "typecheck": true,
+    "unit_tests": 1395,
+    "production_build": true,
+    "existing_large_chunk_warning": true
+  },
+  "browser_regression": {
+    "full_run": {
+      "passed": 522,
+      "failed": 2,
+      "skipped": 1
+    },
+    "focused_failed_case_recheck": {
+      "passed": 2,
+      "failed": 0
+    },
+    "cases": "prescription scan lost acknowledgment; Stripe administrator retry before lost response",
+    "code_changes_for_recheck": false,
+    "focused_schedule_navigation_route_checks": 12
+  },
+  "local_advisors": {
+    "migrations": 184,
+    "total_notices": 1,
+    "notice_names": [
+      "extension_in_public"
+    ],
+    "package_notices": []
+  },
+  "owned_task_runtime_cleanup_verified": true,
+  "provider_requests": 0,
+  "hosted_schema_writes": 0,
+  "remaining": [
+    "Exact-head PR CI and review",
+    "Staging migration, genuine Auth/browser and canonical fixture cleanup",
+    "Primary rollback-only acceptance and exact production deployment",
+    "Bounded reconciliation worker and all original phases5\u20138"
+  ],
+  "full_owned_scheduling_regression": {
+    "canonical_migrations": 184,
+    "sql_files": 150,
+    "sql_assertions": 6184,
+    "catalog": {
+      "auth_api": 59,
+      "observed_locks": 7,
+      "browser": 20,
+      "populated_restore": 9
+    },
+    "next_visit_foundation": {
+      "auth_api": 44,
+      "observed_locks": 6,
+      "populated_restore": true
+    },
+    "next_visit_staff": {
+      "auth_api": 25,
+      "browser": 19
+    },
+    "operational_tasks": {
+      "auth_api": 54,
+      "observed_locks": 2,
+      "browser": 22,
+      "populated_restore_relations": 12
+    },
+    "containers_and_volumes_removed": true
+  },
+  "source_sha256": {
+    "src/hub/features/daily-tasks/TaskDetailDialog.tsx": "19d335ea7693a82df7b715bb73fca4d72600affbc33f3e237f6b13064db2bd7b",
+    "src/hub/features/daily-tasks/ResourceUseWorkspace.tsx": "809d7343381d0ac4e3eeaef7c37f421387a9ebdf818865ea80428b918e032c26",
+    "src/hub/features/daily-tasks/OperationalDialog.tsx": "e92497192e1b02aa7d8fe97ea6f49d634f6ea3b0f9a28971e2cefa8787961d68",
+    "src/hub/features/daily-tasks/task-invalidation.ts": "5a2e3323122ada946f263dcb760ac2d2af7c39b822f251504c2efdfd88e628f0",
+    "src/hub/features/daily-tasks/OperationalRecovery.tsx": "383213067562e2ab66bb4b2a6b14e7231cee44eebea2377f8c83eeaffa6d51c3",
+    "src/hub/features/daily-tasks/task-ui.ts": "35acffee7520121b201fb6a6bda7f87035fea539b372ec4bc42d4aab8eaabf95",
+    "src/hub/features/daily-tasks/DailyTasksPanel.tsx": "1d6f838faa711e1398a53cd0f7e036999be6e53b4f463d2f3df36f7b81a842a5",
+    "src/hub/features/daily-tasks/OperationalTaskTemplatesPage.tsx": "e38d3147da0b5cc1cd5905e21bdd916580f5467dfad7897b56c46d79b9a9c369",
+    "src/hub/features/daily-tasks/task-api.ts": "693179763fe5f865c3d301c238a449bdcfb74e63566d37f9c1c2fdb00d4187a0",
+    "src/hub/features/daily-tasks/OperationalGenerationSettings.tsx": "f24fe02f8076be9071e2bc5a44b72c4db02073a93b6139e45cb36aa1fb6806ba",
+    "src/hub/features/daily-tasks/TaskTemplateEditor.tsx": "cc93fa9605e1546a6a4c1eb7db85fa713ac1e23c600c6c4b291d322ab5ba954e",
+    "src/hub/features/daily-tasks/task-model.ts": "f3b46d697af81d57cb9dea44c1f3162d5971bddf9ef4754be95e1ef0bdcd149a",
+    "src/hub/features/daily-tasks/use-task-action.ts": "84c1cbc5c3450828e5812c1635f484a5cd48d18241b8c026bc59d49742815910",
+    "supabase/migrations/20261014022511_operational_tasks.sql": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+    "tests/scheduling/operational-tasks-local.ts": "959b5130f1c33ed6eeaeaea90a09be097dd135c4e4741327021d0d22f9803308",
+    "tests/scheduling/operational-tasks-browser.ts": "a2423fcec4226d5e348f9bcfc9bbb0123a2f22a56f8e1e6cbc424ceb584b00fb"
+  }
+}

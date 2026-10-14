@@ -63,7 +63,7 @@ insert into task_fixture select 'consult-booking',pg_temp.booking((select value 
 reset role;select set_config('request.jwt.claims','{}',true);
 select is((select count(*) from operational_tasks),1::bigint,'Consultation name does not infer surgery preparation');
 set local role authenticated;select pg_temp.set_actor(2);
-insert into task_fixture select 'use-request',jsonb_build_object('id','52600000-0000-4000-8000-000000000001','expected_version',null,'action','start','appointment_id',value#>>'{appointment,id}','appointment_version',1,'resource_version_id',(select value#>>'{published,id}' from task_fixture where key='room'),'started_at',clock_timestamp()-interval '2 minutes','ended_at',null,'reason','Synthetic explicit actual room use','allow_overlap',false) from task_fixture where key='first';
+insert into task_fixture select 'use-request',jsonb_build_object('id','52600000-0000-4000-8000-000000000001','expected_version',null,'action','start','appointment_id',value#>>'{appointment,id}','appointment_version',1,'resource_version_id',(select value#>>'{published,id}' from task_fixture where key='room'),'started_at',clock_timestamp()-interval '2 minutes','ended_at',null,'reason','Synthetic explicit actual room use','allow_overlap',false,'attest_closed_source',false) from task_fixture where key='first';
 insert into task_fixture select 'started-use',pg_temp.op('use',(select value from task_fixture where key='use-request'),'52700000-0000-4000-8000-000000000002');
 select is((select value#>>'{current,facts,state}' from task_fixture where key='started-use'),'open','Use is explicitly open');
 select is(execute_operational_review(auth.uid(),'52700000-0000-4000-8000-000000000002'),(select value from task_fixture where key='started-use'),'Lost start response cannot duplicate use');
@@ -143,6 +143,46 @@ insert into task_fixture select 'renamed-room',save_appointment_catalog(auth.uid
 reset role;select set_config('request.jwt.claims','{}',true);
 select ok(operational_matches(pg_temp.definition('after_use'),null,(select (value#>>'{published,id}')::uuid from task_fixture where key='renamed-room')),'Resource rename preserves selected stable identity and reviewed semantics');
 select ok(operational_matches(pg_temp.definition('before_visit'),(select (value#>>'{published,id}')::uuid from task_fixture where key='type'),(select (value#>>'{published,id}')::uuid from task_fixture where key='renamed-room')),'Preparation still recognizes renamed physical room');
+
+-- Closed-source actual use is reviewer-attested without reopening the appointment.
+set local role authenticated;select pg_temp.set_actor(2);
+insert into task_fixture select 'closed-use-request',jsonb_build_object('id','52600000-0000-4000-8000-000000000002','expected_version',null,'action','start','appointment_id',value#>>'{appointment,id}','appointment_version',3,'resource_version_id',(select value#>>'{published,id}' from task_fixture where key='renamed-room'),'started_at',clock_timestamp(),'ended_at',null,'reason','Synthetic room used despite closed visit','allow_overlap',false,'attest_closed_source',false) from task_fixture where key='active-second';
+select throws_ok($$select pg_temp.op('use',(select value from task_fixture where key='closed-use-request'))$$,'23514',null,'Closed source requires explicit actual-use attestation');
+select throws_ok($$select pg_temp.op('use',(select value from task_fixture where key='closed-use-request')||'{"attest_closed_source":true}')$$,'42501',null,'Staff cannot attest new physical use of a closed visit');
+select pg_temp.set_actor(1);
+insert into task_fixture select 'closed-use',pg_temp.op('use',(select value from task_fixture where key='closed-use-request')||'{"attest_closed_source":true}');
+select is((select value#>>'{current,facts,closed_source_attested}' from task_fixture where key='closed-use'),'true','Closed-source physical use retains reviewer attestation');
+select is(read_operational_appointment((select (value#>>'{appointment,id}')::uuid from task_fixture where key='active-second'))->>'status','CANCELLED','Attested actual use never reopens cancelled appointment');
+select is(read_operational_task((select (value->>'id')::uuid from task_fixture where key='second-task'))#>>'{current,state}','needs_review','Actual use after cancellation revives outstanding preparation for explicit review while generation off');
+select pg_temp.set_actor(2);
+select lives_ok($$select pg_temp.op('use',(select value from task_fixture where key='closed-use-request')||jsonb_build_object('expected_version',1,'action','end','ended_at',clock_timestamp()))$$,'Ordinary staff can end reviewed closed-source use');
+reset role;select set_config('request.jwt.claims','{}',true);
+-- A replacement binds every revision to its own historical frozen checklist.
+insert into auth.users(id,email,raw_user_meta_data) values('52000000-0000-4000-8000-000000000004','task-tech@example.test','{}');
+update profiles set is_active=true where id='52000000-0000-4000-8000-000000000004';
+delete from user_roles where user_id='52000000-0000-4000-8000-000000000004';
+insert into user_roles(user_id,role) values('52000000-0000-4000-8000-000000000004','TECH');
+insert into auth.sessions(id,user_id,created_at,updated_at) values('52100000-0000-4000-8000-000000000004','52000000-0000-4000-8000-000000000004',now(),now());
+insert into task_fixture select 'replacement-target',operational_task_view(id) from operational_tasks where source_key like 'review:%';
+insert into task_fixture select 'tech-definition',pg_temp.definition('after_use')||jsonb_build_object('eligible_roles',jsonb_build_array('TECH'),'selectors',jsonb_build_object('types','[]'::jsonb,'resources',jsonb_build_array(jsonb_build_object('entry_id',(select value->>'id' from task_fixture where key='renamed-room'),'version_id',(select value#>>'{published,id}' from task_fixture where key='renamed-room')))),'checklist',jsonb_build_array(jsonb_build_object('id','53000000-0000-4000-8000-000000000002','label','Synthetic revised technician SOP check','required',true)));
+set local role authenticated;select pg_temp.set_actor(1);
+select pg_temp.op('template',pg_temp.templateq('52500000-0000-4000-8000-000000000002',2,'draft',(select value from task_fixture where key='tech-definition')));
+insert into task_fixture select 'tech-template',pg_temp.op('template',pg_temp.templateq('52500000-0000-4000-8000-000000000002',3,'publish',(select value from task_fixture where key='tech-definition')));
+insert into task_fixture select 'replaced-task',pg_temp.op('task',pg_temp.taskq((select value from task_fixture where key='replacement-target'),'replace')||jsonb_build_object('template_version_id',(select value#>>'{published,id}' from task_fixture where key='tech-template')));
+select isnt((select value#>>'{current,enrollment_id}' from task_fixture where key='replaced-task'),(select value#>>'{current,enrollment_id}' from task_fixture where key='replacement-target'),'Template replacement creates a distinct frozen enrollment');
+select is((list_operational_task_history((select (value->>'id')::uuid from task_fixture where key='replaced-task'))#>>'{items,1,enrollment,definition,checklist,0,label}'),'Synthetic approved SOP check','History returns earlier revision with its original checklist');
+select is((list_operational_task_history((select (value->>'id')::uuid from task_fixture where key='replaced-task'))#>>'{items,0,enrollment,definition,checklist,0,label}'),'Synthetic revised technician SOP check','History returns replacement revision with new checklist');
+insert into task_fixture select 'tech-assigned',pg_temp.op('task',pg_temp.taskq((select value from task_fixture where key='replaced-task'),'assign')||'{"assignee_id":"52000000-0000-4000-8000-000000000004"}');
+select is((select value#>>'{current,assignee_id}' from task_fixture where key='tech-assigned'),'52000000-0000-4000-8000-000000000004','Reviewer may assign a technician-only task without completion eligibility');
+select throws_ok($$select pg_temp.op('task',pg_temp.taskq((select value from task_fixture where key='tech-assigned'),'complete','["53000000-0000-4000-8000-000000000002"]'))$$,'42501',null,'Administrator is not implicitly eligible to complete technician-only work');
+select pg_temp.set_actor(2);
+select throws_ok($$select pg_temp.op('task',pg_temp.taskq((select value from task_fixture where key='tech-assigned'),'start'))$$,'42501',null,'Staff role is not implicitly eligible for technician-only work');
+select pg_temp.set_actor(4);
+select lives_ok($$select pg_temp.op('task',pg_temp.taskq((select value from task_fixture where key='tech-assigned'),'complete','["53000000-0000-4000-8000-000000000002"]'))$$,'Technician-only actor completes the revised mandatory checklist');
+select is((list_operational_task_history((select (value->>'id')::uuid from task_fixture where key='completed-cleanup'))#>>'{items,0,enrollment,definition,checklist,0,label}'),'Synthetic approved SOP check','Earlier completed cleanup retains the original checklist after new publication');
+select ok(exists(select 1 from jsonb_array_elements(list_operational_tasks(now()+interval '2 days',now()+interval '3 days',p_include_backlog=>true)->'items') t where t->>'id'=(select value->>'id' from task_fixture where key='second-task')),'Future daily list includes earlier unfinished review work');
+select ok(not exists(select 1 from jsonb_array_elements(list_operational_tasks(now()+interval '2 days',now()+interval '3 days')->'items') t where t->>'id'=(select value->>'id' from task_fixture where key='second-task')),'Bounded historical list omits earlier work unless backlog explicitly requested');
+reset role;select set_config('request.jwt.claims','{}',true);
 update profiles set is_active=false where id='52000000-0000-4000-8000-000000000002';
 set local role authenticated;select pg_temp.set_actor(2);
 select throws_ok($$select list_operational_templates()$$,'42501',null,'Inactive actor cannot read operational work');

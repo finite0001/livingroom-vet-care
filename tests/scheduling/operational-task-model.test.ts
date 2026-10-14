@@ -9,6 +9,7 @@ import {
   rememberOperationalReview,
   storedOperationalReviews,
   forgetOperationalReview,
+  verifyOperationalReceipt,
 } from "../../src/hub/features/daily-tasks/task-model.ts";
 const id = (n: number) =>
   `54000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -111,6 +112,7 @@ test("Actual use cannot be manufactured from an unordered interval or a start wi
     ended_at: null,
     reason: "Actual staff assertion",
     allow_overlap: false,
+    attest_closed_source: false,
   };
   assert.equal(useRequestSchema.safeParse(use).success, true);
   assert.equal(
@@ -231,4 +233,125 @@ test("Recovery pointer capacity cannot overwrite outstanding work", () => {
     }),
   );
   assert.deepEqual(storedOperationalReviews(storage, actor), records);
+});
+
+test("Actual Denver timestamps preserve seconds and require explicit fallback resolution", async () => {
+  const { operationalInstant, operationalLocal } =
+    await import("../../src/hub/features/daily-tasks/task-ui.ts");
+  assert.equal(
+    operationalInstant("2026-10-13T12:34:56"),
+    "2026-10-13T18:34:56.000Z",
+  );
+  assert.equal(operationalLocal("2026-10-13T18:34:56Z"), "2026-10-13T12:34:56");
+  assert.throws(() => operationalInstant("2026-11-01T01:30:12"));
+  assert.equal(
+    operationalInstant("2026-11-01T01:30:12", "earlier"),
+    "2026-11-01T07:30:12.000Z",
+  );
+  assert.equal(
+    operationalInstant("2026-11-01T01:30:12", "later"),
+    "2026-11-01T08:30:12.000Z",
+  );
+  assert.throws(() => operationalInstant("2026-03-08T02:30:00", "later"));
+});
+
+test("Saved actual-use receipts must bind actor, interval, source version and review flags", () => {
+  const meta = { id: id(1), actor_id: id(2), operation: "use" as const };
+  const q = useRequestSchema.parse({
+    id: id(3),
+    expected_version: null,
+    action: "start",
+    appointment_id: id(4),
+    appointment_version: 2,
+    resource_version_id: id(5),
+    started_at: "2026-10-13T18:34:56Z",
+    ended_at: null,
+    reason: "Actual reviewed closed-source use",
+    allow_overlap: true,
+    attest_closed_source: true,
+  });
+  const saved = {
+    id: q.id,
+    appointment_id: q.appointment_id,
+    resource_id: id(6),
+    version: 1,
+    actor_name: "Reviewer",
+    resource_name: "Procedure room",
+    current: {
+      id: id(7),
+      use_id: q.id,
+      version: 1,
+      action: "start",
+      actor_id: meta.actor_id,
+      recorded_at: "2026-10-13T18:35:00Z",
+      facts: {
+        state: "open",
+        started_at: q.started_at,
+        ended_at: null,
+        resource_version_id: q.resource_version_id,
+        type_version_id: null,
+        appointment_version: q.appointment_version,
+        reason: q.reason,
+        overlap_reviewed: true,
+        closed_source_attested: true,
+      },
+    },
+  };
+  assert.deepEqual(verifyOperationalReceipt(meta, q, saved), saved);
+  for (const patch of [
+    { appointment_version: 1 },
+    { closed_source_attested: false },
+    { overlap_reviewed: false },
+    { started_at: "2026-10-13T18:34:55Z" },
+    { reason: "Another reason" },
+  ])
+    assert.throws(() =>
+      verifyOperationalReceipt(meta, q, {
+        ...saved,
+        current: {
+          ...saved.current,
+          facts: { ...saved.current.facts, ...patch },
+        },
+      }),
+    );
+  assert.throws(() =>
+    verifyOperationalReceipt(meta, q, {
+      ...saved,
+      current: { ...saved.current, actor_id: id(9) },
+    }),
+  );
+});
+
+test("Saved generation receipts retain the exact reviewed interval across equivalent timestamp formats", () => {
+  const meta = { id: id(1), actor_id: id(2), operation: "policy" as const };
+  const q = policyRequestSchema.parse({
+    expected_version: null,
+    enabled: true,
+    effective_from: "2026-10-13T00:00:00Z",
+    effective_until: "2026-10-14T00:00:00Z",
+    review_note: "Reviewed effective interval",
+    attest_review: true,
+  });
+  const saved = {
+    version: 1,
+    enabled: true,
+    effective_from: "2026-10-13T00:00:00+00:00",
+    effective_until: "2026-10-14T00:00:00+00:00",
+    review_note: q.review_note,
+    actor_id: meta.actor_id,
+    recorded_at: "2026-10-13T18:35:00Z",
+  };
+  assert.deepEqual(verifyOperationalReceipt(meta, q, saved), saved);
+  assert.throws(() =>
+    verifyOperationalReceipt(meta, q, {
+      ...saved,
+      effective_until: "2026-10-15T00:00:00Z",
+    }),
+  );
+  assert.throws(() =>
+    verifyOperationalReceipt(meta, q, {
+      ...saved,
+      review_note: "Unrelated review",
+    }),
+  );
 });

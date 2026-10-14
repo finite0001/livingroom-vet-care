@@ -35,13 +35,13 @@ create table public.operational_tasks(
  unique(template_id,resource_id,source_key),check((day_key is null)=(batch is null)),check(batch is null or batch>=0)
 );
 create table public.operational_task_revisions(
- id uuid primary key,task_id uuid not null references public.operational_tasks(id) deferrable initially deferred,version integer not null check(version>0),
+ id uuid primary key,task_id uuid not null references public.operational_tasks(id) deferrable initially deferred,enrollment_id uuid not null references public.operational_task_enrollments(id),version integer not null check(version>0),
  event text not null,state text not null check(state in('pending','started','blocked','needs_review','completed','superseded')),
  due_at timestamptz,assignee_id uuid references public.profiles(id),checked_ids uuid[] not null default '{}',note text not null,
  source_snapshot jsonb not null,actor_id uuid references auth.users(id),recorded_at timestamptz not null default clock_timestamp(),
- unique(task_id,version),unique(id,task_id),check(due_at is not null or state in('needs_review','superseded'))
+ unique(task_id,version),unique(id,task_id,enrollment_id),check(due_at is not null or state in('needs_review','superseded'))
 );
-alter table public.operational_tasks add foreign key(head_id,id) references public.operational_task_revisions(id,task_id) deferrable initially deferred;
+alter table public.operational_tasks add foreign key(head_id,id,enrollment_id) references public.operational_task_revisions(id,task_id,enrollment_id) deferrable initially deferred;
 create index operational_tasks_appointment on public.operational_tasks(appointment_id,id);
 create index operational_tasks_use on public.operational_tasks(use_id,id);
 create index operational_tasks_day on public.operational_tasks(day_key,resource_id,batch);
@@ -104,7 +104,7 @@ declare x jsonb;k text;roles text[];ids uuid[];entry uuid;v uuid;begin
  if d->>'trigger'='resource_day' then
   if jsonb_typeof(d#>'{due,local_time}') is distinct from 'string' or d#>>'{due,local_time}' !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' or d#>'{due,offset_minutes}'<>'0'::jsonb then raise exception 'Explicit local restock time required' using errcode='23514';end if;
  elsif d#>'{due,local_time}' is distinct from 'null'::jsonb then raise exception 'Relative tasks use an explicit minute offset' using errcode='23514';end if;
- roles:=public.appointment_catalog_strings(d->'eligible_roles',1,3,10);if not roles<@array['STAFF','DVM','ADMIN'] then raise exception 'Eligible practice roles required' using errcode='23514';end if;
+ roles:=public.appointment_catalog_strings(d->'eligible_roles',1,4,10);if not roles<@array['STAFF','TECH','DVM','ADMIN'] then raise exception 'Eligible practice roles required' using errcode='23514';end if;
  if d->>'assignment' is null or d->>'assignment' not in('unassigned','named') or (d->>'assignment'='unassigned' and d->'assignee_id' is distinct from 'null'::jsonb) then raise exception 'Exact assignment rule required' using errcode='23514';end if;
  if p_current and d->>'assignment'='named' and not public.operational_eligible(public.native_rx_uuid(d->'assignee_id'),d) then raise exception 'Active eligible assignee required' using errcode='23514';end if;
  if jsonb_typeof(d->'checklist') is distinct from 'array' or jsonb_array_length(d->'checklist') not between 1 and 50 then raise exception 'Bounded approved checklist required' using errcode='23514';end if;
@@ -114,7 +114,7 @@ declare x jsonb;k text;roles text[];ids uuid[];entry uuid;v uuid;begin
  end loop;
 end $$;
 create function public.operational_template_view(p_id uuid) returns jsonb language sql stable security definer set search_path=public as $$
- select jsonb_build_object('id',t.id,'version',t.version,'current',to_jsonb(v),'published',to_jsonb(p)) from operational_task_templates t join operational_task_template_versions v on v.id=t.current_version_id left join operational_task_template_versions p on p.id=t.published_version_id where t.id=p_id
+ select jsonb_build_object('id',t.id,'version',t.version,'current',to_jsonb(v),'published',to_jsonb(p),'reviewer_name',(select full_name from profiles where id=v.actor_id),'published_reviewer_name',(select full_name from profiles where id=p.actor_id)) from operational_task_templates t join operational_task_template_versions v on v.id=t.current_version_id left join operational_task_template_versions p on p.id=t.published_version_id where t.id=p_id
 $$;
 create function public.list_operational_templates(p_after uuid default null,p_limit integer default 50) returns jsonb language plpgsql stable security definer set search_path=public as $$
 declare result jsonb;begin perform public.operational_actor();if p_limit is null or p_limit not between 1 and 100 then raise exception 'Bounded page required' using errcode='23514';end if;
@@ -122,14 +122,14 @@ declare result jsonb;begin perform public.operational_actor();if p_limit is null
  select jsonb_build_object('items',coalesce((select jsonb_agg(public.operational_template_view(id) order by id) from page),'[]'),'next',case when(select count(*) from candidates)>p_limit then(select id from page order by id desc limit 1) end) into result;return result;
 end $$;
 create function public.operational_use_view(p_id uuid) returns jsonb language sql stable security definer set search_path=public as $$
- select jsonb_build_object('id',u.id,'appointment_id',u.appointment_id,'resource_id',u.resource_id,'version',u.version,'current',to_jsonb(e)) from operational_resource_uses u join operational_resource_use_events e on e.id=u.head_id where u.id=p_id
+ select jsonb_build_object('id',u.id,'appointment_id',u.appointment_id,'resource_id',u.resource_id,'version',u.version,'current',to_jsonb(e),'actor_name',(select full_name from profiles where id=e.actor_id),'resource_name',(select definition->>'name' from appointment_catalog_versions where id=(e.facts->>'resource_version_id')::uuid)) from operational_resource_uses u join operational_resource_use_events e on e.id=u.head_id where u.id=p_id
 $$;
 create function public.operational_task_context(p_id uuid) returns jsonb language sql stable security definer set search_path=public as $$
- select jsonb_build_object('appointment',case when t.appointment_id is null then null else jsonb_build_object('id',a.id,'version',a.version,'status',a.status,'scheduled_at',a.scheduled_at,'visit_type',a.visit_type,'travel_before_minutes',a.travel_before_minutes,'binding',(select snapshot from appointment_catalog_bindings where appointment_id=a.id and appointment_version<=a.version order by appointment_version desc limit 1)) end,'use',public.operational_use_view(t.use_id),'coverage',coalesce((select jsonb_agg(jsonb_build_object('use_id',c.use_id,'covered_version',c.use_version,'current',public.operational_use_view(c.use_id)) order by c.use_id,c.use_version) from operational_task_use_coverage c where c.task_id=t.id),'[]'))
- from operational_tasks t left join appointments a on a.id=t.appointment_id where t.id=p_id
+ select jsonb_build_object('appointment',case when a.id is null then null else jsonb_build_object('id',a.id,'version',a.version,'status',a.status,'scheduled_at',a.scheduled_at,'visit_type',a.visit_type,'travel_before_minutes',a.travel_before_minutes,'binding',(select snapshot from appointment_catalog_bindings where appointment_id=a.id and appointment_version<=a.version order by appointment_version desc limit 1)) end,'appointment_uses',coalesce((select jsonb_agg(public.operational_use_view(recorded.id) order by recorded.id) from operational_resource_uses recorded where recorded.appointment_id=a.id),'[]'),'use',public.operational_use_view(t.use_id),'coverage',coalesce((select jsonb_agg(jsonb_build_object('use_id',c.use_id,'covered_version',c.use_version,'current',public.operational_use_view(c.use_id)) order by c.use_id,c.use_version) from operational_task_use_coverage c where c.task_id=t.id),'[]'))
+ from operational_tasks t left join operational_resource_uses used_source on used_source.id=t.use_id left join appointments a on a.id=coalesce(t.appointment_id,used_source.appointment_id) where t.id=p_id
 $$;
 create function public.operational_task_view(p_id uuid) returns jsonb language sql stable security definer set search_path=public as $$
- select jsonb_build_object('id',t.id,'version',t.version,'template_id',t.template_id,'resource_id',t.resource_id,'source_key',t.source_key,'appointment_id',t.appointment_id,'use_id',t.use_id,'day_key',t.day_key,'batch',t.batch,'enrollment',to_jsonb(e),'current',to_jsonb(r),'context',public.operational_task_context(t.id),'context_hash',md5(public.operational_task_context(t.id)::text))
+ select jsonb_build_object('id',t.id,'version',t.version,'template_id',t.template_id,'resource_id',t.resource_id,'source_key',t.source_key,'appointment_id',t.appointment_id,'use_id',t.use_id,'day_key',t.day_key,'batch',t.batch,'enrollment',to_jsonb(e),'current',to_jsonb(r),'actor_name',(select full_name from profiles where id=r.actor_id),'assignee_name',(select full_name from profiles where id=r.assignee_id),'assignee_eligible',case when r.assignee_id is null then null else public.operational_eligible(r.assignee_id,e.definition) end,'resource_name',(select definition->>'name' from appointment_catalog_versions where entry_id=t.resource_id and state='published' order by version desc limit 1),'context',public.operational_task_context(t.id),'context_hash',md5(public.operational_task_context(t.id)::text))
  from operational_tasks t join operational_task_enrollments e on e.id=t.enrollment_id join operational_task_revisions r on r.id=t.head_id where t.id=p_id
 $$;
 create function public.operational_due(d jsonb,anchor timestamptz) returns timestamptz language plpgsql stable set search_path=public as $$
@@ -144,8 +144,8 @@ create function public.operational_revision(p_task uuid,p_event text,p_state tex
 declare t operational_tasks;r operational_task_revisions;rid uuid:=gen_random_uuid();begin
  select * into t from operational_tasks where id=p_task for update;select * into r from operational_task_revisions where id=t.head_id;
  if r.state='completed' then return;end if;
- if (r.state,r.due_at,r.assignee_id,r.checked_ids,r.note,r.source_snapshot) is not distinct from (p_state,p_due,p_assignee,p_checked,p_note,p_source) then return;end if;
- insert into operational_task_revisions(id,task_id,version,event,state,due_at,assignee_id,checked_ids,note,source_snapshot,actor_id) values(rid,t.id,t.version+1,p_event,p_state,p_due,p_assignee,coalesce(p_checked,'{}'),p_note,p_source,auth.uid());
+ if p_event='source_changed' and (r.enrollment_id,r.state,r.due_at,r.assignee_id,r.checked_ids,r.note,r.source_snapshot) is not distinct from (t.enrollment_id,p_state,p_due,p_assignee,p_checked,p_note,p_source) then return;end if;
+ insert into operational_task_revisions(id,task_id,enrollment_id,version,event,state,due_at,assignee_id,checked_ids,note,source_snapshot,actor_id) values(rid,t.id,t.enrollment_id,t.version+1,p_event,p_state,p_due,p_assignee,coalesce(p_checked,'{}'),p_note,p_source,auth.uid());
  update operational_tasks set version=version+1,head_id=rid where id=t.id;
 end $$;
 create function public.operational_ensure_task(p_template uuid,p_version uuid,p_resource uuid,p_key text,p_appointment uuid,p_use uuid,p_day date,p_batch integer,p_anchor timestamptz,p_source jsonb,p_review boolean default false) returns uuid language plpgsql security definer set search_path=public as $$
@@ -158,7 +158,7 @@ declare t operational_tasks;v operational_task_template_versions;eid uuid:=gen_r
  if assignee is not null and not public.operational_eligible(assignee,v.definition) then assignee:=null;state:='needs_review';note:='Reviewed assignee is no longer eligible';end if;
  if p_review then state:='needs_review';note:='Source or checklist requires explicit reviewer confirmation';end if;
  insert into operational_task_enrollments values(eid,p_template,p_version,v.definition,p_source,clock_timestamp());
- insert into operational_task_revisions(id,task_id,version,event,state,due_at,assignee_id,note,source_snapshot,actor_id) values(rid,tid,1,'generated',state,due,assignee,note,p_source,auth.uid());
+ insert into operational_task_revisions(id,task_id,enrollment_id,version,event,state,due_at,assignee_id,note,source_snapshot,actor_id) values(rid,tid,eid,1,'generated',state,due,assignee,note,p_source,auth.uid());
  insert into operational_tasks(id,enrollment_id,template_id,resource_id,source_key,appointment_id,use_id,day_key,batch,version,head_id) values(tid,eid,p_template,p_resource,p_key,p_appointment,p_use,p_day,p_batch,1,rid);return tid;
 end $$;
 create function public.operational_identity_matches(d jsonb,p_type uuid,p_resource uuid) returns boolean language sql stable security definer set search_path=public as $$
@@ -177,8 +177,9 @@ declare a appointments;b appointment_catalog_bindings;tv operational_task_templa
  select * into b from appointment_catalog_bindings where appointment_id=a.id and appointment_version<=a.version order by appointment_version desc limit 1;
  source:=jsonb_build_object('appointment_id',a.id,'appointment_version',a.version,'scheduled_at',a.scheduled_at,'status',a.status,'type_version_id',b.type_version_id,'resource_version_id',b.resource_version_id,'visit_type',a.visit_type,'travel_before_minutes',a.travel_before_minutes);
  for t in select * from operational_tasks where appointment_id=a.id and use_id is null and day_key is null order by id loop
-  select * into r from operational_task_revisions where id=t.head_id;select * into e from operational_task_enrollments where id=t.enrollment_id;if r.state in('completed','superseded') then continue;end if;
+  select * into r from operational_task_revisions where id=t.head_id;select * into e from operational_task_enrollments where id=t.enrollment_id;if r.state='completed' then continue;end if;
   select exists(select 1 from operational_resource_uses where appointment_id=a.id and resource_id=t.resource_id) into has_use;
+  if r.state='superseded' and not has_use then continue;end if;
   state:=r.state;due:=r.due_at;
   if a.status in('CANCELLED','NO_SHOW') or not public.operational_identity_matches(e.definition,b.type_version_id,b.resource_version_id) then
    state:=case when r.state='pending' and not has_use then 'superseded' else 'needs_review' end;
@@ -264,7 +265,7 @@ declare actor uuid:=public.operational_actor(null,true);t operational_task_templ
 end $$;
 create function public.operational_execute_use(q jsonb) returns jsonb language plpgsql security definer set search_path=public as $$
 declare actor uuid:=public.operational_actor();u operational_resource_uses;e operational_resource_use_events;a appointments;b appointment_catalog_bindings;rv appointment_catalog_versions;target_use uuid;expected integer;aid uuid;av integer;rid uuid;start_at timestamptz;end_at timestamptz;action text;facts jsonb;eid uuid:=gen_random_uuid();allow_overlap boolean;begin
- perform public.native_rx_keys(q,array['id','expected_version','action','appointment_id','appointment_version','resource_version_id','started_at','ended_at','reason','allow_overlap']);
+ perform public.native_rx_keys(q,array['id','expected_version','action','appointment_id','appointment_version','resource_version_id','started_at','ended_at','reason','allow_overlap','attest_closed_source']);
  target_use:=public.native_rx_uuid(q->'id');aid:=public.native_rx_uuid(q->'appointment_id');av:=public.appointment_catalog_integer(q->'appointment_version',1,2147483647);rid:=public.native_rx_uuid(q->'resource_version_id');start_at:=public.appointment_catalog_instant(q->'started_at');action:=q->>'action';
  perform public.native_rx_text(q->'reason',2000);if jsonb_typeof(q->'allow_overlap') is distinct from 'boolean' then raise exception 'Explicit overlap review flag required' using errcode='23514';end if;allow_overlap:=(q->>'allow_overlap')::boolean;
  if q->'ended_at'<>'null'::jsonb then end_at:=public.appointment_catalog_instant(q->'ended_at');end if;
@@ -275,21 +276,24 @@ declare actor uuid:=public.operational_actor();u operational_resource_uses;e ope
  select * into u from operational_resource_uses where operational_resource_uses.id=target_use for update;
  if action='start' then
   if u.id is not null or expected is not null then raise exception 'New use identity required' using errcode='PT409';end if;
-  if a.status in('CANCELLED','NO_SHOW') or not exists(select 1 from appointment_catalog_entries where appointment_catalog_entries.id=rv.entry_id and published_version_id=rv.id) or not rv.definition->'visit_types' @> to_jsonb(array[a.visit_type]) then raise exception 'Current eligible resource and visit required for new use' using errcode='23514';end if;
+  if jsonb_typeof(q->'attest_closed_source') is distinct from 'boolean' then raise exception 'Explicit closed-source attestation flag required' using errcode='23514';end if;
+  if a.status in('CANCELLED','NO_SHOW') then if q->'attest_closed_source'<>'true'::jsonb then raise exception 'Actual use of a closed visit requires reviewer attestation' using errcode='23514';end if;perform public.operational_actor(null,true);elsif q->'attest_closed_source'<>'false'::jsonb then raise exception 'Closed-source override only applies to a closed source' using errcode='23514';end if;
+  if not exists(select 1 from appointment_catalog_entries where appointment_catalog_entries.id=rv.entry_id and published_version_id=rv.id) or not rv.definition->'visit_types' @> to_jsonb(array[a.visit_type]) then raise exception 'Current eligible resource and visit required for new use' using errcode='23514';end if;
   select * into b from appointment_catalog_bindings where appointment_id=aid and appointment_version<=a.version order by appointment_version desc limit 1;
-  facts:=jsonb_build_object('state','open','started_at',start_at,'ended_at',null,'resource_version_id',rv.id,'type_version_id',b.type_version_id,'appointment_version',av,'reason',q->>'reason','overlap_reviewed',allow_overlap);
+  facts:=jsonb_build_object('state','open','started_at',start_at,'ended_at',null,'resource_version_id',rv.id,'type_version_id',b.type_version_id,'appointment_version',av,'reason',q->>'reason','overlap_reviewed',allow_overlap,'closed_source_attested',(q->>'attest_closed_source')::boolean);
  else
+  if q->'attest_closed_source' is distinct from 'false'::jsonb then raise exception 'Closed-source attestation only accompanies new use' using errcode='23514';end if;
   if u.version is distinct from expected or u.appointment_id<>aid or u.resource_id<>rv.entry_id then raise exception 'Use identity/version changed' using errcode='PT409';end if;select * into e from operational_resource_use_events where operational_resource_use_events.id=u.head_id;
   if e.facts->>'resource_version_id'<>rid::text or (action='end' and (e.facts->>'state'<>'open' or start_at<>(e.facts->>'started_at')::timestamptz)) then raise exception 'End the exact open physical-use occurrence' using errcode='23514';end if;
   if action='correct' then perform public.operational_actor(null,true);end if;
-  facts:=e.facts||jsonb_build_object('state',case when end_at is null then 'open' else 'ended' end,'started_at',start_at,'ended_at',end_at,'appointment_version',av,'reason',q->>'reason','overlap_reviewed',allow_overlap);
+  facts:=e.facts||jsonb_build_object('state',case when end_at is null then 'open' else 'ended' end,'started_at',start_at,'ended_at',end_at,'appointment_version',av,'reason',q->>'reason','overlap_reviewed',case when action='end' then (e.facts->>'overlap_reviewed')::boolean else allow_overlap end);
  end if;
  if exists(select 1 from operational_resource_uses other join operational_resource_use_events oe on oe.id=other.head_id where other.resource_id=rv.entry_id and other.id<>target_use and (oe.facts->>'started_at')::timestamptz<coalesce(end_at,'infinity'::timestamptz) and coalesce((oe.facts->>'ended_at')::timestamptz,'infinity'::timestamptz)>start_at) then
-  if not allow_overlap then raise exception 'Overlapping physical use requires explicit reviewer attestation' using errcode='23P01';end if;perform public.operational_actor(null,true);
+  if action='end' and (e.facts->>'overlap_reviewed')::boolean then null;else if not allow_overlap then raise exception 'Overlapping physical use requires explicit reviewer attestation' using errcode='23P01';end if;perform public.operational_actor(null,true);end if;
  end if;
  insert into operational_resource_use_events values(eid,target_use,coalesce(u.version,0)+1,action,facts,actor,clock_timestamp());
  if u.id is null then insert into operational_resource_uses values(target_use,aid,rv.entry_id,1,eid,actor,clock_timestamp());else update operational_resource_uses set version=version+1,head_id=eid where operational_resource_uses.id=target_use;end if;
- perform public.operational_materialize_use(target_use);return public.operational_use_view(target_use);
+ perform public.operational_materialize_use(target_use);perform public.operational_materialize_appointment(a.id);return public.operational_use_view(target_use);
 end $$;
 create function public.operational_execute_task(q jsonb) returns jsonb language plpgsql security definer set search_path=public as $$
 declare actor uuid:=public.operational_actor();t operational_tasks;r operational_task_revisions;e operational_task_enrollments;v operational_task_template_versions;state text;action text;assignee uuid;checked uuid[]:='{}';x jsonb;context jsonb;due timestamptz;eid uuid;anchor timestamptz;begin
@@ -299,7 +303,7 @@ declare actor uuid:=public.operational_actor();t operational_tasks;r operational
  context:=public.operational_task_context(t.id);if q->>'context_hash' is distinct from md5(context::text) then raise exception 'Source or use evidence changed; review task again' using errcode='PT409';end if;
  select * into r from operational_task_revisions where id=t.head_id;select * into e from operational_task_enrollments where id=t.enrollment_id;
  action:=q->>'action';if action is null or action not in('claim','assign','start','block','complete','resolve','replace') or r.state in('completed','superseded') then raise exception 'Open exact task transition required' using errcode='23514';end if;
- if action in('resolve','replace') then perform public.operational_actor(null,true);
+ if action in('resolve','replace') or (action='assign' and exists(select 1 from user_roles where user_id=actor and role in('DVM','ADMIN'))) then perform public.operational_actor(null,true);
  elsif not public.operational_eligible(actor,e.definition) then raise exception 'Current eligible task role required' using errcode='42501';end if;
  assignee:=public.native_rx_uuid(q->'assignee_id',true);due:=r.due_at;
  if jsonb_typeof(q->'checked_ids') is distinct from 'array' or jsonb_array_length(q->'checked_ids')>50 then raise exception 'Typed checklist evidence required' using errcode='23514';end if;
@@ -343,14 +347,14 @@ declare actor uuid:=public.operational_actor(null,true);p operational_task_gener
  if jsonb_typeof(q->'enabled') is distinct from 'boolean' or q->'attest_review' is distinct from 'true'::jsonb then raise exception 'Explicit generation review required' using errcode='23514';end if;
  if q->'expected_version'<>'null'::jsonb then expected:=public.appointment_catalog_integer(q->'expected_version',1,2147483647);end if;
  select * into p from operational_task_generation_policy order by version desc limit 1;if p.version is distinct from expected then raise exception 'Generation policy changed' using errcode='PT409';end if;
- if q->'enabled'='true'::jsonb then lo:=public.appointment_catalog_instant(q->'effective_from');hi:=public.appointment_catalog_instant(q->'effective_until');if hi<=lo or hi>lo+interval '366 days' then raise exception 'Bounded reviewed generation interval required' using errcode='23514';end if;
+ if q->'enabled'='true'::jsonb then if not exists(select 1 from operational_task_templates where published_version_id is not null) then raise exception 'Publish reviewed checklists before activation' using errcode='23514';end if;lo:=public.appointment_catalog_instant(q->'effective_from');hi:=public.appointment_catalog_instant(q->'effective_until');if hi<=lo or hi>lo+interval '366 days' then raise exception 'Bounded reviewed generation interval required' using errcode='23514';end if;
  elsif q->'effective_from' is distinct from 'null'::jsonb or q->'effective_until' is distinct from 'null'::jsonb then raise exception 'Disabled policy has no generation interval' using errcode='23514';end if;
  insert into operational_task_generation_policy values(coalesce(p.version,0)+1,(q->>'enabled')::boolean,lo,hi,q->>'review_note',actor,clock_timestamp());return(select to_jsonb(s) from operational_task_generation_policy s order by version desc limit 1);
 end $$;
 create function public.operational_validate_request(op text,q jsonb) returns void language plpgsql security definer set search_path=public as $$begin
  if jsonb_typeof(q) is distinct from 'object' or octet_length(q::text)>65536 then raise exception 'Bounded exact operational request required' using errcode='23514';end if;
  if op='template' then perform public.native_rx_keys(q,array['id','expected_version','action','definition','review_note','attest_review']);perform public.native_rx_uuid(q->'id');perform public.operational_validate_definition(q->'definition');
- elsif op='use' then perform public.native_rx_keys(q,array['id','expected_version','action','appointment_id','appointment_version','resource_version_id','started_at','ended_at','reason','allow_overlap']);perform public.native_rx_uuid(q->'id');perform public.native_rx_uuid(q->'appointment_id');perform public.native_rx_uuid(q->'resource_version_id');perform public.appointment_catalog_instant(q->'started_at');
+ elsif op='use' then perform public.native_rx_keys(q,array['id','expected_version','action','appointment_id','appointment_version','resource_version_id','started_at','ended_at','reason','allow_overlap','attest_closed_source']);perform public.native_rx_uuid(q->'id');perform public.native_rx_uuid(q->'appointment_id');perform public.native_rx_uuid(q->'resource_version_id');perform public.appointment_catalog_instant(q->'started_at');
  elsif op='task' then perform public.native_rx_keys(q,array['id','expected_version','context_hash','action','assignee_id','checked_ids','note','due_at','template_version_id']);perform public.native_rx_uuid(q->'id');perform public.appointment_catalog_integer(q->'expected_version',1,2147483647);if jsonb_typeof(q->'context_hash') is distinct from 'string' or q->>'context_hash' !~ '^[a-f0-9]{32}$' then raise exception 'Exact task source context required' using errcode='23514';end if;
  elsif op='policy' then perform public.native_rx_keys(q,array['expected_version','enabled','effective_from','effective_until','review_note','attest_review']);
  else raise exception 'Operational action required' using errcode='23514';end if;
@@ -394,7 +398,7 @@ declare actor uuid:=public.operational_actor(p_actor_id);r operational_task_revi
 end $$;
 create function public.read_operational_generation_policy() returns jsonb language plpgsql stable security definer set search_path=public as $$begin perform public.operational_actor();return(select to_jsonb(p) from operational_task_generation_policy p order by version desc limit 1);end $$;
 create function public.list_operational_assignees(p_roles text[]) returns jsonb language plpgsql stable security definer set search_path=public as $$begin
- perform public.operational_actor();if p_roles is null or cardinality(p_roles) not between 1 and 3 or not p_roles<@array['STAFF','DVM','ADMIN'] or cardinality(p_roles)<>(select count(distinct r) from unnest(p_roles)r) then raise exception 'Distinct eligible roles required' using errcode='23514';end if;
+ perform public.operational_actor();if p_roles is null or cardinality(p_roles) not between 1 and 4 or not p_roles<@array['STAFF','TECH','DVM','ADMIN'] or cardinality(p_roles)<>(select count(distinct r) from unnest(p_roles)r) then raise exception 'Distinct eligible roles required' using errcode='23514';end if;
  return(select coalesce(jsonb_agg(jsonb_build_object('id',p.id,'name',p.full_name,'roles',(select jsonb_agg(role::text order by role::text) from user_roles where user_id=p.id)) order by p.full_name,p.id),'[]') from profiles p where p.is_active and exists(select 1 from user_roles where user_id=p.id and role::text=any(p_roles)));
 end $$;
 create function public.list_operational_uses(p_appointment_id uuid,p_after uuid default null,p_limit integer default 50) returns jsonb language plpgsql stable security definer set search_path=public as $$
@@ -402,10 +406,21 @@ declare result jsonb;begin perform public.operational_actor();if p_appointment_i
  with candidates as materialized(select id from operational_resource_uses where appointment_id=p_appointment_id and (p_after is null or id>p_after) order by id limit p_limit+1),page as materialized(select id from candidates order by id limit p_limit)
  select jsonb_build_object('items',coalesce((select jsonb_agg(public.operational_use_view(id) order by id) from page),'[]'),'next',case when(select count(*) from candidates)>p_limit then(select id from page order by id desc limit 1) end) into result;return result;
 end $$;
-create function public.list_operational_tasks(p_from timestamptz,p_until timestamptz,p_resource_id uuid default null,p_after uuid default null,p_limit integer default 50) returns jsonb language plpgsql stable security definer set search_path=public as $$
-declare result jsonb;begin perform public.operational_actor();if p_from is null or p_until is null or p_until<=p_from or p_until>p_from+interval '31 days' or p_limit is null or p_limit not between 1 and 100 then raise exception 'Bounded operational date range required' using errcode='23514';end if;
- with candidates as materialized(select t.id from operational_tasks t join operational_task_revisions r on r.id=t.head_id where (p_resource_id is null or t.resource_id=p_resource_id) and (p_after is null or t.id>p_after) and ((r.due_at>=p_from and r.due_at<p_until) or (r.state='needs_review' and r.due_at is null and t.created_at>=p_from and t.created_at<p_until)) order by t.id limit p_limit+1),page as materialized(select id from candidates order by id limit p_limit)
+create function public.list_operational_tasks(p_from timestamptz,p_until timestamptz,p_resource_id uuid default null,p_after uuid default null,p_limit integer default 50,p_include_backlog boolean default false) returns jsonb language plpgsql stable security definer set search_path=public as $$
+declare result jsonb;begin perform public.operational_actor();if p_include_backlog is null or p_from is null or p_until is null or p_until<=p_from or p_until>p_from+interval '31 days' or p_limit is null or p_limit not between 1 and 100 then raise exception 'Bounded operational date range required' using errcode='23514';end if;
+ with candidates as materialized(select t.id from operational_tasks t join operational_task_revisions r on r.id=t.head_id where (p_resource_id is null or t.resource_id=p_resource_id) and (p_after is null or t.id>p_after) and ((r.due_at>=p_from and r.due_at<p_until) or (r.state='needs_review' and r.due_at is null and t.created_at>=p_from and t.created_at<p_until) or (p_include_backlog and r.state in('pending','started','blocked','needs_review') and (r.due_at<p_from or r.due_at is null))) order by t.id limit p_limit+1),page as materialized(select id from candidates order by id limit p_limit)
  select jsonb_build_object('items',coalesce((select jsonb_agg(public.operational_task_view(id) order by id) from page),'[]'),'next',case when(select count(*) from candidates)>p_limit then(select id from page order by id desc limit 1) end) into result;return result;
+end $$;
+create function public.read_operational_task(p_id uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$begin perform public.operational_actor();if p_id is null then raise exception 'Task identity required' using errcode='23514';end if;return public.operational_task_view(p_id);end $$;
+create index operational_task_open_due on public.operational_task_revisions(due_at,task_id) where state in('pending','started','blocked','needs_review');
+create function public.read_operational_appointment(p_id uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$begin
+ perform public.operational_actor();if p_id is null then raise exception 'Appointment identity required' using errcode='23514';end if;
+ return(select jsonb_build_object('id',a.id,'version',a.version,'status',a.status,'scheduled_at',a.scheduled_at,'appointment_type',a.appointment_type,'visit_type',a.visit_type,'patient_name',p.name) from appointments a left join pets p on p.id=a.pet_id where a.id=p_id);
+end $$;
+create function public.list_operational_task_history(p_id uuid,p_before_version integer default null,p_limit integer default 50) returns jsonb language plpgsql stable security definer set search_path=public as $$
+declare result jsonb;begin perform public.operational_actor();if p_id is null or p_limit is null or p_limit not between 1 and 100 or (p_before_version is not null and p_before_version<1) then raise exception 'Bounded task history required' using errcode='23514';end if;
+ with candidates as materialized(select * from operational_task_revisions where task_id=p_id and (p_before_version is null or version<p_before_version) order by version desc limit p_limit+1),page as materialized(select * from candidates order by version desc limit p_limit)
+ select jsonb_build_object('items',coalesce((select jsonb_agg(jsonb_build_object('revision',to_jsonb(r),'enrollment',to_jsonb(e),'actor_name',(select full_name from profiles where id=r.actor_id)) order by r.version desc) from page r join operational_task_enrollments e on e.id=r.enrollment_id),'[]'),'next',case when(select count(*) from candidates)>p_limit then(select min(version) from page) end) into result;return result;
 end $$;
 create function public.reconcile_operational_tasks(p_from timestamptz,p_until timestamptz,p_after uuid default null,p_limit integer default 50) returns jsonb language plpgsql security definer set search_path=public as $$
 declare ids uuid[];candidate_id uuid;next_id uuid;actor uuid:=public.operational_actor(null,true);begin
@@ -417,7 +432,7 @@ declare ids uuid[];candidate_id uuid;next_id uuid;actor uuid:=public.operational
  return jsonb_build_object('examined',coalesce(cardinality(ids),0),'next',next_id,'generation_enabled',coalesce((select enabled from operational_task_generation_policy order by version desc limit 1),false));
 end $$;
 do $$declare f record;begin
- for f in select p.oid::regprocedure::text signature,p.proname from pg_proc p where p.pronamespace='public'::regnamespace and (p.proname like 'operational_%' or p.proname in('list_operational_templates','list_operational_uses','list_operational_tasks','list_operational_assignees','read_operational_generation_policy','reconcile_operational_tasks','read_operational_review','prepare_operational_review','execute_operational_review','cancel_operational_review')) loop
+ for f in select p.oid::regprocedure::text signature,p.proname from pg_proc p where p.pronamespace='public'::regnamespace and (p.proname like 'operational_%' or p.proname in('read_operational_appointment','list_operational_task_history','read_operational_task','list_operational_templates','list_operational_uses','list_operational_tasks','list_operational_assignees','read_operational_generation_policy','reconcile_operational_tasks','read_operational_review','prepare_operational_review','execute_operational_review','cancel_operational_review')) loop
   execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
   if f.proname not like 'operational_%' then execute format('grant execute on function %s to authenticated',f.signature);end if;
  end loop;

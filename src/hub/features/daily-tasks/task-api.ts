@@ -2,6 +2,9 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import {
   operationalMetadataSchema,
+  operationalAppointmentSchema,
+  operationalHistoryItemSchema,
+  verifyOperationalReceipt,
   operationalOperationSchema,
   operationalPolicySchema,
   operationalTaskSchema,
@@ -94,11 +97,12 @@ export async function operationalTasksPage(
         p_resource_id: uuid.nullable().parse(resourceId),
         p_after: uuid.nullable().parse(after),
         p_limit: 50,
+        p_include_backlog: true,
       }),
     );
 }
 export async function operationalAssignees(
-  roles: ("STAFF" | "DVM" | "ADMIN")[],
+  roles: ("STAFF" | "TECH" | "DVM" | "ADMIN")[],
 ) {
   return z
     .array(
@@ -113,9 +117,9 @@ export async function operationalAssignees(
     .parse(
       await rpc("list_operational_assignees", {
         p_roles: z
-          .array(z.enum(["STAFF", "DVM", "ADMIN"]))
+          .array(z.enum(["STAFF", "TECH", "DVM", "ADMIN"]))
           .min(1)
-          .max(3)
+          .max(4)
           .refine((values) => new Set(values).size === values.length)
           .parse(roles),
       }),
@@ -172,7 +176,11 @@ function parseReview(
     receipt:
       value.receipt === null
         ? null
-        : parseOperationalReceipt(value.operation, value.receipt),
+        : verifyOperationalReceipt(
+            metadata,
+            validateOperationalRequest(value.operation, value.request),
+            value.receipt,
+          ),
   };
 }
 export async function prepareOperationalReview(
@@ -218,4 +226,37 @@ export async function cancelOperationalReview(metadata: OperationalMetadata) {
   if (value.operation !== metadata.operation || value.receipt === null)
     throw new Error("Saved operational receipt required before releasing work");
   return parseOperationalReceipt(metadata.operation, value.receipt);
+}
+
+export async function readOperationalTask(id: string) {
+  return operationalTaskSchema
+    .nullable()
+    .parse(await rpc("read_operational_task", { p_id: uuid.parse(id) }));
+}
+
+export async function readOperationalAppointment(id: string) {
+  return operationalAppointmentSchema
+    .nullable()
+    .parse(await rpc("read_operational_appointment", { p_id: uuid.parse(id) }));
+}
+export async function operationalTaskHistory(
+  id: string,
+  before: number | null = null,
+) {
+  const value = z
+    .object({
+      items: z.array(operationalHistoryItemSchema).max(50),
+      next: z.number().int().positive().nullable(),
+    })
+    .strict()
+    .parse(
+      await rpc("list_operational_task_history", {
+        p_id: uuid.parse(id),
+        p_before_version: z.number().int().positive().nullable().parse(before),
+        p_limit: 50,
+      }),
+    );
+  if (value.items.some((item) => item.revision.task_id !== id))
+    throw new Error("Task history identity mismatch");
+  return value;
 }
