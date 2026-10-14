@@ -1,0 +1,75 @@
+{
+  "package": "4A2b next-visit staff workflow",
+  "migration": "20261013233839_next_visit_staff_recovery.sql",
+  "migration_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+  "canonical_migrations": 183,
+  "hosted_migrations": 182,
+  "hosted_183_applied": false,
+  "sql": {
+    "files": 149,
+    "assertions": 6106,
+    "new_review_assertions": 49,
+    "pass": true
+  },
+  "unit": {
+    "tests": 1384,
+    "pass": true
+  },
+  "general_browser": {
+    "passed": 524,
+    "existing_skipped": 1,
+    "pass": true
+  },
+  "catalog_native": {
+    "checks": 59,
+    "observed_lock_queues": 7,
+    "browser_checks": 20,
+    "populated_restore_checks": 9,
+    "pass": true
+  },
+  "foundation_native": {
+    "checks": 44,
+    "observed_lock_queues": 6,
+    "populated_outcome_review_cancellation_restore": true,
+    "pass": true
+  },
+  "staff_native": {
+    "checks": 25,
+    "browser_checks": 18,
+    "real_auth_postgrest": true,
+    "pass": true,
+    "coverage": [
+      "Home completion",
+      "Schedule completion",
+      "custom editor completion",
+      "catalog editor completion",
+      "custom atomic follow-up",
+      "catalog atomic follow-up",
+      "existing unassigned appointment",
+      "later and decline preserve completion",
+      "reviewed care and planned lab labels",
+      "dirty navigation keeps draft",
+      "lost successful booking response",
+      "reload exact server receipt",
+      "deactivation retires session and hides draft",
+      "other account cannot see actor review",
+      "new same-actor session restores original receipt",
+      "linked cancellation displays current status",
+      "calendar date-independent queue",
+      "390px no overflow and44px close target"
+    ]
+  },
+  "owned_runtime_removed": true,
+  "typecheck": "pass",
+  "lint": {
+    "errors": 0,
+    "new_warnings": 0,
+    "existing_warnings": 4
+  },
+  "build": "pass",
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "storage_body_restore_claimed": false,
+  "susan_defaults_published": false,
+  "review_notes": "Final layout review made the year explicit on cross-calendar queue and booking dates; the focused real-browser suite was rerun after this change."
+}

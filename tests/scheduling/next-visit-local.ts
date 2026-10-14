@@ -674,6 +674,16 @@ try {
     { ...base, p_id: source.id, p_expected_version: 3, p_status: "COMPLETED" },
     "23514",
   );
+  await rpc(staff.db, "prepare_next_visit_review", {
+    p_actor_id: staff.id,
+    p_action_id: firstArgs.p_action_id,
+    p_operation: "decide",
+    p_request: { occurrence_id: occurrence, expected_version: 0, values },
+  });
+  await rpc(staff.db, "cancel_next_visit_review", {
+    p_actor_id: staff.id,
+    p_action_id: randomUUID(),
+  });
   // Populated state is restored together with canonical functions and private privileges.
   const restored =
       "owned_next_restore_" + randomUUID().replaceAll("-", "").slice(0, 12),
@@ -682,6 +692,8 @@ try {
     `create database "${restored}";comment on database "${restored}" is '${marker}';`,
   );
   const tables = [
+    "appointment_next_visit_reviews",
+    "appointment_next_visit_review_cancellations",
     "appointment_completion_occurrences",
     "appointment_next_visit_heads",
     "appointment_next_visit_decisions",

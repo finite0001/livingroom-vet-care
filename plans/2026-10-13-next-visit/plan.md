@@ -1,6 +1,6 @@
 # 4A2 — Durable next-visit scheduling
 
-Build from the approved #247 catalog/eligibility correction. N24 requires a prompt after completion, reviewed due-care and existing future appointments, and book now / later / declined outcomes. No clinical intervals, messages or practice defaults are inferred.
+Build from the merged #247 catalog/eligibility correction and #248 foundation. Both hosted backends are182; production #248 is verified. N24 requires a prompt after completion, reviewed due-care and existing future appointments, and book now / later / declined outcomes. No clinical intervals, messages or practice defaults are inferred.
 
 ## Foundation package (4A2a)
 
@@ -21,3 +21,7 @@ Shared next-visit dialog and unresolved list on Home/Schedule, triggered after c
 ## Acceptance
 
 Full replay, both closed-status changes/recompletion, frozen household, retired catalog completion, role/session/direct-table denial, expected-version conflicts, exact actor/request replay, observed schedule/care queues, simultaneous decisions, collision rollback, unknown acknowledgement recovery, existing future booking validation/pagination, reviewed/proposed/stale care separation and populated restore. Extend owned local scheduling runtime; preserve provider gates and synthetic cleanup. Susan's practice acceptance and the full45 requirements remain open.
+
+## Current package
+
+4A2b staff prompt, private reviewed envelopes and exact custom/catalog editor completion recovery are implemented in the review package. Repository183, hosted182. [Staff evidence](../../docs/launch-evidence/2026-10-13-next-visit-staff.md). Final tests and the specific PR approval govern rollout; no hosted183 or provider activation is implied.

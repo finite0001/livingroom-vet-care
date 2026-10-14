@@ -1,0 +1,137 @@
+{
+  "pull_request": 248,
+  "approved_head": "1b0e1f6ccefe5dcb398c621f4a613f110c2edf66",
+  "merge_commit": "a368a891f89b4ec1f1aed67c5533c62b2772ec07",
+  "merged_at": "2026-10-13T23:37:58Z",
+  "staging": {
+    "installation": {
+      "project": "kothoqicubowyhwfsrte",
+      "migration": "20261013220500_next_visit_outcomes.sql",
+      "migration_sha256": "3ba3bb48a68be9b875128358c064f923468034d6c860f6c7a488822f270575f7",
+      "migrations": 182,
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 0,
+        "payment_profiles": 1,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "worker": 0
+      },
+      "private_table_acl_verified": true,
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "kothoqicubowyhwfsrte",
+      "migrations": {
+        "count": 182,
+        "latest": "20261013220500"
+      },
+      "checks": 67,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 67,
+            "provider_requests": 0
+          }
+        }
+      ]
+    },
+    "auth_acceptance": {
+      "proof": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 182,
+        "auth_checks": 34,
+        "competing_decisions_one_booking": true,
+        "exact_action_replay": true,
+        "inactive_patient_completion": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "staff_prompt_implemented": false
+      },
+      "cleanup": {
+        "active_actors": 0,
+        "active_bookings": 0,
+        "active_patients": 0,
+        "open_sessions": 0,
+        "published_catalog": 0
+      },
+      "baseline_unchanged": true,
+      "retained_synthetic_history": true
+    },
+    "advisors": {
+      "new_package_notices": "7 intentional authenticated SECURITY DEFINER RPC entry points; active staff/actor checks and private ACL covered by attack tests",
+      "public_or_private_helper_exposure": 0
+    }
+  },
+  "primary": {
+    "installation": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migration": "20261013220500_next_visit_outcomes.sql",
+      "migration_sha256": "3ba3bb48a68be9b875128358c064f923468034d6c860f6c7a488822f270575f7",
+      "migrations": 182,
+      "pending": 0,
+      "protected_backup": true,
+      "baseline_unchanged": true,
+      "state": {
+        "disclosure": 0,
+        "outbox": 3,
+        "payment_profiles": 0,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "worker": 0
+      },
+      "private_table_acl_verified": true,
+      "skip_vault": true,
+      "legacy_writes": 0
+    },
+    "rollback": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migrations": {
+        "count": 182,
+        "latest": "20261013220500"
+      },
+      "checks": 67,
+      "rollback_baseline_unchanged": true,
+      "provider_requests": 0,
+      "proof": [
+        {
+          "proof": {
+            "checks": 67,
+            "provider_requests": 0
+          }
+        }
+      ]
+    }
+  },
+  "production": {
+    "deployment_id": "dpl_C9Gc9Bz4bgqsp3kW9XpSFzWces9D",
+    "state": "READY",
+    "alias": "thelivingroom.vet",
+    "alias_matches": true,
+    "commit": "a368a891f89b4ec1f1aed67c5533c62b2772ec07",
+    "public_smoke": {
+      "backend_migrations": 182,
+      "unauthenticated_catalog_redirect": true,
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-CrOOHqcM.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  },
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "staff_prompt_installed": false
+}

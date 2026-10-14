@@ -216,7 +216,7 @@ export const nextVisitDueCareSchema = z
     next: dueCareCursorSchema.nullable(),
   })
   .strict();
-const customBookingSchema = z
+export const customBookingSchema = z
   .object({
     client_id: uuid,
     pet_id: uuid,

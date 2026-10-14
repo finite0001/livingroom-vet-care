@@ -110,6 +110,9 @@ async function openSchedule(page: Page, options: FixtureOptions = {}) {
     // The shared navigation reads unread totals through a POST RPC.
     if (path === "/rest/v1/rpc/inbox_unread_totals")
       return route.fulfill({ json: [] });
+    // The durable next-visit queue is also a read-only POST RPC.
+    if (path === "/rest/v1/rpc/list_pending_next_visits")
+      return route.fulfill({ json: { items: [], next: null } });
     if (request.method() !== "GET") writes.push(path);
     if (path === "/rest/v1/profiles")
       return route.fulfill({

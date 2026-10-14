@@ -1,6 +1,6 @@
 # 4A2b — Staff prompt handoff
 
-Foundation: [PR #248](https://github.com/finite0001/livingroom-vet-care/pull/248). This is preparation only; no staff prompt or hosted182/183 is installed by this document. [Package plan](plan.md).
+Foundation: [PR #248](https://github.com/finite0001/livingroom-vet-care/pull/248). The foundation is merged and hosted182/production verified. The staff prompt and reviewed recovery are implemented in the4A2b review package; hosted183 is not installed. [Package plan](plan.md).
 
 ## Completion and durable access
 
@@ -31,3 +31,7 @@ Reuse the existing dirty-navigation guard and frozen action UI, extending recove
 ## Acceptance before review
 
 Real Auth/PostgREST/browser tests: Home completion; Schedule completion; editor completion through both save paths; pending recovery after reload/date navigation; custom/catalog follow-up; existing future selection and unassigned rows; reviewed/proposed/stale care display; later/decline without undoing COMPLETED; booking conflict/stale publication; response lost after commit; reload/retry; permission or account change after lost response; one booking across tabs; current cancellation/status display; historical completion identity; dirty navigation; iPhone44px controls and no horizontal overflow. Retain the existing SQL/native/restore coverage and add populated envelope restore. Practice defaults remain Susan proposals; no provider/task gates are enabled.
+
+## Implemented recovery contract
+
+Private reviewed requests support complete / editor / decide operations. A24-hour expiry blocks uncommitted execution, never recovery of a committed receipt. Current live same-actor sessions may restore the immutable request. Cancellation serializes with execution and retains a tombstone for a missing preparation. The editor operation covers custom/catalog COMPLETED saves, including fresh completed inserts and notes edits that capture no new transition. Browser identifiers contain no clinical payload. Patient360 aggregates scheduling dirtiness with its existing clinical guard. [Evidence](../../docs/launch-evidence/2026-10-13-next-visit-staff.md).

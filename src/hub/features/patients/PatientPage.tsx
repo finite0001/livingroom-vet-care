@@ -1,3 +1,5 @@
+import {NextVisitWorkspace} from "../scheduling/NextVisitWorkspace";
+import type {NextVisitContext} from "../scheduling/next-visit-model";
 import { PatientImportedPrescriptions } from "@/hub/features/imports/PatientImportedPrescriptions";
 import { PatientImportedVaccinations } from "@/hub/features/imports/PatientImportedVaccinations";
 import { PatientImportedHistory } from "@/hub/features/imports/PatientImportedHistory";
@@ -66,6 +68,7 @@ const TAB_LABELS: Record<PatientTab, string> = {
  * asks for confirmation.
  */
 function PatientWorkspace({ petId }: { petId: string }) {
+  const [nextVisit,setNextVisit]=useState<NextVisitContext|null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = resolvePatientTab(searchParams.get("tab"));
   const section = searchParams.get("section");
@@ -86,7 +89,8 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [anesthesiaDirty, setAnesthesiaDirty] = useState(false);
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
   const [carePlanDirty, setCarePlanDirty] = useState(false);
-  const dirty = photoDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
+  const [nextVisitDirty,setNextVisitDirty]=useState(false);
+  const dirty = nextVisitDirty || photoDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
   const medicalDirty = nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || clinicalDirty || careDirty || dentalDirty || labDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
   const documentsDirty = externalDirty || releaseDirty || certificateDirty;
   const navigationGuard = useUnsavedChanges(dirty);
@@ -191,6 +195,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
         <TabsContent value="schedule" forceMount className={shown("schedule")}>
           {visited.has("schedule") && <>
             {read && <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-card"><div><h2 className="font-display text-lg">Next visit</h2><p className="text-sm text-muted-foreground">{read.signals.upcoming_appointment ? `${formatDateTime(read.signals.upcoming_appointment.scheduled_at)} · ${read.signals.upcoming_appointment.appointment_type ?? "Appointment"}` : "No upcoming visit booked."}</p></div>{!inactive && <Button asChild><Link to={scheduleHref({ book: true, clientId, petId })}>Book visit</Link></Button>}</div>}
+            <NextVisitWorkspace context={nextVisit} onContext={setNextVisit} patientId={petId} onDirtyChange={setNextVisitDirty}/>
             <Timeline360 scope="patient" id={petId} clientId={clientId} filters={["schedule"]} title="Appointments" />
           </>}
         </TabsContent>
