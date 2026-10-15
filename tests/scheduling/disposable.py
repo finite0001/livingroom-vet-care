@@ -51,7 +51,7 @@ try:
         assert re.match(r'^\d{14}_', migration.name)
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project/'supabase/migrations'/migration.name)
-    assert len(hashes) == 185 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes
+    assert len(hashes) == 186 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes
     if args.include_sql_regression: shutil.copytree(root/'supabase/tests', project/'supabase/tests')
     harness = root/'tests/scheduling/catalog-local.ts'
     harness_hash = hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=151, Tests=6288' in result
-        print('Canonical SQL regression passed: 151 files /6288 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=152, Tests=6387' in result
+        print('Canonical SQL regression passed: 152 files /6387 assertions.', flush=True)
     # Rehearse the exact staged/primary rollback probe while the freshly replayed
     # policy is still empty, before any Auth/browser acceptance changes it.
     probe = root/'scripts/task-reconciliation/rollback-probe.sql'
@@ -93,6 +93,13 @@ enabled = false
     assert rollback_receipt == {'checks':36,'provider_requests':0,'rollback_only':True}
     assert hashlib.sha256(probe.read_bytes()).hexdigest()==probe_hash
     print('Exact hosted rollback probe rehearsed:36 checks; no provider request or persisted fixture.',flush=True)
+    identity_probe = root/'scripts/inventory-identity/rollback-probe.sql'
+    identity_probe_hash = hashlib.sha256(identity_probe.read_bytes()).hexdigest()
+    output = command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=identity_probe.read_text())
+    identity_rollback = json.loads(next(line for line in reversed(output.splitlines())if line.startswith('{"checks"')))
+    assert identity_rollback == {'checks':31,'provider_requests':0,'rollback_only':True}
+    assert hashlib.sha256(identity_probe.read_bytes()).hexdigest()==identity_probe_hash
+    print('Exact supplier identity hosted rollback probe rehearsed:31 checks;no persisted fixture.',flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     if not args.staff_only:
         result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
@@ -152,13 +159,33 @@ enabled = false
     assert restored['populated_relations']==16 and restored['snapshot_relations']==18 and restored['exact_snapshot_restored'] and restored['exact_readonly_recovery'] and restored['private_table_and_helper_grants'] and restored['owned_restore_database_removed'] and restored['provider_requests']==0
     assert hashlib.sha256(restore_harness.read_bytes()).hexdigest()==restore_hash
     print('Populated reconciliation restore passed:16 task/ledger families and18 relation snapshots, exact recovery and private grants; owned database removed.',flush=True)
+    inventory = root/'tests/inventory/native-local.ts'
+    inventory_hash = hashlib.sha256(inventory.read_bytes()).hexdigest()
+    result = command(['node','--experimental-strip-types',str(inventory)],cwd=root,
+      env={**env,'INVENTORY_TEST_PROJECT':str(project),'INVENTORY_RUN_SYNTHETIC_LOCAL':'true'},timeout=180)
+    inventory_receipt=json.loads(result.strip().splitlines()[-1])
+    assert inventory_receipt['api_checks']==38 and inventory_receipt['genuine_auth_postgrest'] and inventory_receipt['owned_actors_retired'] and inventory_receipt['baseline_unchanged'] and inventory_receipt['provider_requests']==0
+    assert inventory_receipt['browser']['browser_checks']>=15 and inventory_receipt['browser']['committed_ack_loss_recovered'] and inventory_receipt['browser']['reload_readonly_recovery'] and inventory_receipt['browser']['mobile_overflow_checked'] and inventory_receipt['browser']['touch_targets_checked']
+    assert hashlib.sha256(inventory.read_bytes()).hexdigest()==inventory_hash
+    print('Genuine supplier identity passed:38 Auth/API checks;15 browser checks;no provider requests.',flush=True)
+    inventory_lock=root/'supabase/tests/supplier_identity_concurrency.py'
+    inventory_lock_hash=hashlib.sha256(inventory_lock.read_bytes()).hexdigest()
+    result=command(['python3','-B',str(inventory_lock),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120)
+    inventory_locks=json.loads(result.strip().splitlines()[-1]);assert inventory_locks['checks']==10 and inventory_locks['observed_lock_queues']==5 and inventory_locks['identifier_collision_atomic'] and inventory_locks['owned_staff_deactivated']
+    assert hashlib.sha256(inventory_lock.read_bytes()).hexdigest()==inventory_lock_hash
+    inventory_restore=root/'supabase/tests/supplier_identity_restore.py'
+    inventory_restore_hash=hashlib.sha256(inventory_restore.read_bytes()).hexdigest()
+    result=command(['python3','-B',str(inventory_restore),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180)
+    inventory_restored=json.loads(result.strip().splitlines()[-1]);assert inventory_restored['populated_relations']==7 and inventory_restored['exact_snapshot_restored'] and inventory_restored['exact_original_review_recovered'] and inventory_restored['owned_restore_database_removed']
+    assert hashlib.sha256(inventory_restore.read_bytes()).hexdigest()==inventory_restore_hash
+    print('Supplier identity observed5 queues and restored7 populated relations with exact original recovery.',flush=True)
     verify()
     baseline = json.loads(command(['docker','exec','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-c',
       "select jsonb_build_object('active_staff',(select count(*)from profiles where is_active),'reconciliation_enabled',coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false),'pending_run',(select pending_run_id from operational_reconciliation_cursor),'outbox',(select count(*)from communication_outbox),'inventory_movements',(select count(*)from inventory_movements),'cron_active',(select active from cron.job where jobname='reconcile-operational-tasks'));" ]))
     assert baseline == {'active_staff':0,'reconciliation_enabled':False,'pending_run':None,'outbox':0,'inventory_movements':0,'cron_active':False}
-    proof = {'canonical_migrations':len(hashes),'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
-             'sql_regression':{'files':151,'assertions':6288} if args.include_sql_regression else None,
-             'staff_only':args.staff_only,'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'cleanup_baseline':baseline}
+    proof = {'canonical_migrations':len(hashes),'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
+             'sql_regression':{'files':152,'assertions':6387} if args.include_sql_regression else None,
+             'staff_only':args.staff_only,'inventory':{'api':inventory_receipt,'concurrency':inventory_locks,'restore':inventory_restored},'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'inventory_rollback_probe':identity_rollback,'cleanup_baseline':baseline}
     proof_path=root/'tmp/reconciliation-release-disposable-proof.json'
     proof_path.parent.mkdir(exist_ok=True)
     proof_path.write_text(json.dumps(proof,indent=2)+'\n')
