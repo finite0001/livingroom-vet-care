@@ -29,7 +29,7 @@ async function actor(role:"DVM"|"STAFF"){
 }
 const uid=()=>randomUUID();const namespace=uid(),packageId=uid(),productId=uid();
 const initialEntries=Number(sql("select count(*)from inventory_identity_entries;"));
-const payload=(BigInt("0x"+productId.split("-").join("").slice(0,10))%10000000000000n).toString().padStart(13,"0");let sum=0;for(let i=12,w=3;i>=0;i--,w=4-w)sum+=Number(payload[i])*w;const fixtureGtin=payload+((10-sum%10)%10).toString();
+const payload="00"+(BigInt("0x"+productId.split("-").join("").slice(0,10))%100000000000n).toString().padStart(11,"0");let sum=0;for(let i=12,w=3;i>=0;i--,w=4-w)sum+=Number(payload[i])*w;const fixtureGtin=payload+((10-sum%10)%10).toString();
 const packet=(id:string,definition:unknown,expected_version:number|null=null)=>({id,definition,expected_version,review_note:"Synthetic genuine API metadata review",attest_review:true});
 async function apply(owner:Actor,operation:"namespace"|"package",request:unknown){
  const action:IdentityActionMetadata={id:uid(),actor_id:owner.id,operation};const checked=parseIdentityRequest(operation,request);
@@ -55,7 +55,7 @@ try{
  receipt((await vet.db.rpc("prepare_inventory_identity_review",{p_actor_id:vet.id,p_action_id:pkg.action.id,p_operation:"package",p_request:{...pkg.request,review_note:"Different immutable request"}})).error?.code,"23505");
  receipt(identityEntrySchema.parse(pkg.saved.entry).version,1);receipt(identityReceiptSchema.parse(pkg.saved).operation,"package");
  receipt(sql("select count(*)from inventory_identity_entries;"),String(initialEntries+2));
- browser=await inventoryBrowserProof({status,vet,staff,productId,sql});
+ browser=await inventoryBrowserProof({status,vet,staff,productId,sql,fixtureDirectory:meta.work,gtin:fixtureGtin});
 }catch(cause){failed=cause;}finally{
  for(const owner of actors){try{sql(`update profiles set is_active=false where id='${owner.id}';update auth.sessions set not_after=clock_timestamp()where user_id='${owner.id}';delete from auth.refresh_tokens where user_id='${owner.id}';`);const result=await owner.db.auth.signOut();if(result.error)failed??=result.error;}catch(cause){failed??=cause;}}
 }

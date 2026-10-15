@@ -165,9 +165,9 @@ enabled = false
       env={**env,'INVENTORY_TEST_PROJECT':str(project),'INVENTORY_RUN_SYNTHETIC_LOCAL':'true'},timeout=180)
     inventory_receipt=json.loads(result.strip().splitlines()[-1])
     assert inventory_receipt['api_checks']==38 and inventory_receipt['genuine_auth_postgrest'] and inventory_receipt['owned_actors_retired'] and inventory_receipt['baseline_unchanged'] and inventory_receipt['provider_requests']==0
-    assert inventory_receipt['browser']['browser_checks']>=15 and inventory_receipt['browser']['committed_ack_loss_recovered'] and inventory_receipt['browser']['reload_readonly_recovery'] and inventory_receipt['browser']['mobile_overflow_checked'] and inventory_receipt['browser']['touch_targets_checked']
+    assert inventory_receipt['browser']['browser_checks']>=15 and inventory_receipt['browser']['committed_ack_loss_recovered'] and inventory_receipt['browser']['scan_resolves_reviewed_package'] and inventory_receipt['browser']['staff_camera_lookup'] and inventory_receipt['browser']['reload_readonly_recovery'] and inventory_receipt['browser']['mobile_overflow_checked'] and inventory_receipt['browser']['touch_targets_checked']
     assert hashlib.sha256(inventory.read_bytes()).hexdigest()==inventory_hash
-    print('Genuine supplier identity passed:38 Auth/API checks;15 browser checks;no provider requests.',flush=True)
+    print(f"Genuine supplier identity passed:38 Auth/API checks;{inventory_receipt['browser']['browser_checks']} browser checks including simulated camera lookup;no provider requests.",flush=True)
     inventory_lock=root/'supabase/tests/supplier_identity_concurrency.py'
     inventory_lock_hash=hashlib.sha256(inventory_lock.read_bytes()).hexdigest()
     result=command(['python3','-B',str(inventory_lock),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120)

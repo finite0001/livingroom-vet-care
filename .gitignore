@@ -31,3 +31,6 @@ test-results/
 *.sw?
 .vercel
 .env.local
+
+# Generated isolated camera harnesses, fixtures and decoder build/cache artifacts.
+/tmp/__tests__/

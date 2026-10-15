@@ -25,7 +25,7 @@ export default function BarcodeScanDialog({ close, onUseCode }: BarcodeScanDialo
   const pause = useCallback((reason: string) => { stop(); setPhase("paused"); setMessage(reason); }, [stop]);
   useEffect(() => {
     const hidden = () => { if (document.hidden) pause("Camera paused while this page is hidden. Start again when ready"); };
-    const leaving = () => stop();
+    const leaving = () => pause("Camera paused while leaving this page. Start again when ready");
     document.addEventListener("visibilitychange", hidden); window.addEventListener("pagehide", leaving);
     return () => { document.removeEventListener("visibilitychange", hidden); window.removeEventListener("pagehide", leaving); stop(); };
   }, [pause, stop]);
@@ -35,7 +35,8 @@ export default function BarcodeScanDialog({ close, onUseCode }: BarcodeScanDialo
     try {
       if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new DOMException("Unavailable", "SecurityError");
       const stream = await lease.current.acquire(() => navigator.mediaDevices.getUserMedia(cameraConstraints(deviceId || undefined)));
-      if (!stream || epoch.current !== current || !video.current) return;
+      if (!stream || epoch.current !== current) return;
+      if (!video.current) { lease.current.stop(); return; }
       video.current.srcObject = stream;
       const startup = window.setTimeout(() => {
         if (epoch.current === current) pause("The camera preview did not start. Retry or enter the code manually");
@@ -98,7 +99,7 @@ export default function BarcodeScanDialog({ close, onUseCode }: BarcodeScanDialo
   return <Dialog open onOpenChange={(open) => { if (!open) dismiss(); }}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl [&_button]:min-h-11 [&_button]:min-w-11 [&>button]:h-auto">
     <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><Camera className="h-5 w-5" aria-hidden="true" />Scan a barcode</DialogTitle><DialogDescription>Confirm a product code for reviewed inventory lookup</DialogDescription></DialogHeader>
     <p role={phase === "error" ? "alert" : "status"} className={phase === "error" ? "text-sm text-destructive" : "text-sm"}>{message}</p>
-    <video ref={video} muted playsInline aria-label="Product barcode camera preview" className="aspect-video w-full rounded-xl border bg-muted object-contain" />
+    <video ref={video} hidden={phase === "found"} muted playsInline aria-label="Product barcode camera preview" className="aspect-video w-full rounded-xl border bg-muted object-contain" />
     {cameras.length > 1 && <div className="grid gap-1 text-sm"><label htmlFor={cameraId}>Camera</label><select id={cameraId} className="min-h-11 w-full rounded-md border border-input bg-background px-3" value={chosenCamera} onChange={(event) => { setChosenCamera(event.target.value); pause("Camera selected. Start again to use it"); }}><option value="">Prefer rear camera</option>{cameras.map((camera) => <option key={camera.id} value={camera.id}>{camera.label}</option>)}</select></div>}
     <div className="flex flex-wrap gap-2"><Button type="button" onClick={() => void start()} disabled={phase === "requesting"}>{phase === "scanning" ? "Restart camera" : "Start camera"}</Button>{(phase === "requesting" || phase === "scanning") && <Button type="button" variant="outline" onClick={() => pause("Camera stopped. Start again or enter the code manually")}><CameraOff className="mr-2 h-4 w-4" aria-hidden="true" />Stop camera</Button>}</div>
     {symbols.length > 0 && <section aria-label="Scanned product codes" className="space-y-3">

@@ -131,7 +131,7 @@ export function SupplierIdentityPanel() {
         {history.data?.history.map((entry) => <div key={entry.version_id} className="border-t pt-3"><p className="text-sm">Version {entry.version} · {entry.actor_name} · {new Date(entry.created_at).toLocaleString()}</p>{entry.kind === "package" ? <PackageSummary entry={entry} /> : <p className="break-words">{entry.definition.account_label} · {entry.definition.catalog_scope} · {entry.definition.active ? "active" : "inactive"}</p>}</div>)}
         <div className="flex gap-2 flex-wrap">{before && <Button type="button" variant="outline" className="min-h-11" onClick={() => setBefore(null)}>Newest mapping history</Button>}{history.data?.next && <Button type="button" variant="outline" className="min-h-11" onClick={() => setBefore(history.data!.next)}>Older mapping history</Button>}<Button type="button" variant="outline" className="min-h-11" onClick={() => setHistoryId(null)}>Close mapping history</Button></div>
       </section>}
-      {scanner && <Suspense fallback={<p role="status">Loading barcode scanner…</p>}><BarcodeScanDialog close={() => setScanner(false)} onUseCode={(symbol, selectedKind) => { setLookupKind(selectedKind); setCode(symbol.text); resetLookup(); }} /></Suspense>}
+      {scanner && enabled && <Suspense fallback={<p role="status">Loading barcode scanner…</p>}><BarcodeScanDialog close={() => setScanner(false)} onUseCode={(symbol, selectedKind) => { setLookupKind(selectedKind); setCode(symbol.text); resetLookup(); }} /></Suspense>}
       {editor && <IdentityForm key={`${actor}:${editor.operation}:${editor.entry?.id ?? "new"}`} operation={editor.operation} entry={editor.entry} scopes={knownScopes} close={() => setEditor(null)} saved={refresh} />}
     </CardContent>}
   </Card>;
