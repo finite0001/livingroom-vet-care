@@ -180,6 +180,15 @@ enabled = false
     assert stock_restore['handoff_extension']['populated_snapshot_relations']==26 and stock_restore['handoff_extension']['additional_source_families']==2 and stock_restore['handoff_extension']['source_drift_rolls_back_all_ddl'] and stock_restore['handoff_extension']['legacy_replay_has_no_backfill']
     assert hashlib.sha256(stock_restore_path.read_bytes()).hexdigest()==stock_restore_hash
     print('Shared stock restore: original5/21 plus handoff2/26;187/188 upgrades and exact legacy receipts.',flush=True)
+    source_reconciliation_path=root/'tests/controlled-drugs/source-reconciliation.py'
+    source_reconciliation_hash=hashlib.sha256(source_reconciliation_path.read_bytes()).hexdigest()
+    source_reconciliation=json.loads(command(['python3','-B',str(source_reconciliation_path),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180))
+    assert source_reconciliation['source_producers']==10 and source_reconciliation['canonical_operations']==136 and source_reconciliation['return_actions']==6 and source_reconciliation['annotation_kinds']==3
+    assert source_reconciliation['checks']==687 and source_reconciliation['missing_reverse_sources_denied']==2 and source_reconciliation['catalog_edits_preserve_original_sources']
+    assert source_reconciliation['sql_only']and not source_reconciliation['authorizes_execution']and not source_reconciliation['controlled_policy_or_opening']and source_reconciliation['provider_requests']==0
+    assert source_reconciliation['owned_clone_removed']and source_reconciliation['source_database_unchanged']and source_reconciliation['populated_clone_unchanged']
+    assert hashlib.sha256(source_reconciliation_path.read_bytes()).hexdigest()==source_reconciliation_hash
+    print('Controlled source oracle:136 operations/687 SQL-only checks;10 producers/6 return actions/3 annotation kinds; owned clone removed.',flush=True)
     restore_path = root / 'tests/prescriptions/restore-native.py'
     restore_hash = hashlib.sha256(restore_path.read_bytes()).hexdigest()
     restore = json.loads(command(['python3', '-B', str(restore_path), '--run-synthetic-local', '--project-config', str(project / 'supabase/config.toml')], cwd=root))
@@ -208,7 +217,8 @@ if success:
                'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash,
                'decision_sql_sha256': decision_sql_hash, 'decision_races_sha256': decision_races_hash, 'publication_sql_sha256': publication_sql_hash, 'publication_races_sha256': publication_races_hash,
                'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':155,'assertions':6540}if args.include_sql_regression else None,
-               'stock_boundary':{'api':stock_api,'concurrency':stock_locks,'restore':stock_restore,'api_sha256':stock_api_hash,'concurrency_sha256':stock_locks_hash,'restore_sha256':stock_restore_hash,'rollback_probe':stock_probe,'rollback_probe_sha256':stock_probe_hash,'handoff_rollback_probe':handoff_probe,'handoff_rollback_probe_sha256':handoff_probe_hash}}
+               'stock_boundary':{'api':stock_api,'concurrency':stock_locks,'restore':stock_restore,'api_sha256':stock_api_hash,'concurrency_sha256':stock_locks_hash,'restore_sha256':stock_restore_hash,'rollback_probe':stock_probe,'rollback_probe_sha256':stock_probe_hash,'handoff_rollback_probe':handoff_probe,'handoff_rollback_probe_sha256':handoff_probe_hash},
+               'controlled_source_reconciliation':source_reconciliation,'controlled_source_reconciliation_sha256':source_reconciliation_hash}
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)

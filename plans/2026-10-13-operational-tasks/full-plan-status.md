@@ -4,6 +4,8 @@ Dave's October13 standing instruction: approve and merge all additional PRs as t
 
 Current release: [PR257](https://github.com/finite0001/livingroom-vet-care/pull/257), both hosted189/none pending and exact production f68a01f6/domain verified. [Hosted evidence](../../docs/launch-evidence/2026-10-14-native-handoff-rollout.md). Next: complete C1b controlled execution, then C2 workflows and C3 actual acceptance; Susan’s rules remain inactive.
 
+Next local engineering checkpoint: [controlled-source reconciliation](../../docs/launch-evidence/2026-10-15-controlled-source-local.md) passes136 canonical operations/687 SQL-only checks across all10 producers, all6 return actions and3 annotation kinds, plus full native parent/application regressions. The clone-only oracle is integrated into the native acceptance runner. No new migration, hosted change or activation is added; C1b’s owned execution and container posting remain unfinished.
+
 The original scope is all25 October requests and20 substantive housecall requests in [the requirements matrix](../2026-10-08-vet-feedback/requirements.md). Preserve every row and the [original phase order](../2026-10-08-vet-feedback/execution-order.md); completing only operational tasks does not finish this goal. Existing implementations still need their required real workflow and practice evidence.
 
 | Remaining package | Current evidence / next work |

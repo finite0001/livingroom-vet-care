@@ -2,6 +2,8 @@
 
 Priority high. C0 draft metadata, C1a stock/custody provenance and the C1b0 pickup/correction extension are released through PR255/256/257. Both hosted backends are189 and exact production f68a01f6/domain are verified. C1b execution, C2 workflows and C3 actual commissioning remain unfinished; no controlled register or clinical rules are activated. Preserve all45 original requirements.
 
+The next local checkpoint adds [source reconciliation evidence](../../docs/launch-evidence/2026-10-15-controlled-source-local.md):136 canonical operations/687 SQL-only checks, all10 producers/6 return actions/3 annotation kinds, exact signed compensation and custody requirements. The full native parent runner and application checks pass; all owned resources are removed. This is a temporary clone-only reference oracle, not a migration or owned controlled execution protocol. C1 remains unchecked below.
+
 Sources: [effective stock/custody writers](research/stock-boundary.md), [event/locking/recovery design](research/event-design-20261014-controlled-register.md), [federal/Colorado research with official citations and version limits](research/regulatory-20261014-controlled-register.md). The newer reports supersede conflicting general return/witness wording in older plans. Recheck effective writer definitions after rebase; the full native definitions in `20260928190000_no_retryable_sqlstate_for_permanent_conditions.sql` supersede early migrations.
 
 ## Design decisions
