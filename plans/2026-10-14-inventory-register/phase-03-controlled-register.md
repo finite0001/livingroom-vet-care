@@ -77,11 +77,11 @@ No files deleted. C1 additionally modifies the effective function definitions th
 ## Success and remaining decisions
 
 - [x] Current writer/custody audit and separate legal/event research reconciled into this plan.
-- [ ] C0 draft-only metadata, real Auth/recovery/concurrency/restore, reviewed CI and staged rollout.
+- [x] C0 draft-only metadata, real Auth/recovery/concurrency/restore, reviewed CI and staged rollout — PR255 merged10a94fab; hosted187 and exact production verified.
 - [ ] C1 every writer admitted/linked atomically, with activation denied.
 - [ ] C2 complete review/witness/correction/transfer/count/report flows.
 - [ ] C3 current authoritative text, actual practice configuration/counts, all proof and Dr.Edler acceptance before activation.
 
 Only commissioning questions remain: (1) actual controlling registrant/site, products/concentrations/units, container/mobile-kit arrangement and opening evidence; (2) event-specific performer/reviewer/physical-witness eligibility/timing, count/investigation ownership and disposal/housecall-residual SOP. Gather privately before C3; do not seed assumptions or stop C0 native engineering for them. Real supplier import/iPhone/device and other original requirements remain separate launch gates.
 
-C0 local proof:1,471 units,153 SQL suites/6,464 assertions including77 new,28 genuine Auth/API+14 browser,8 observed queues,6 populated restored relations and28 rollback checks pass. Parent scheduling/task/inventory layers pass;owned actors/sessions/runtimes/volumes retired. [Scope](../../docs/features/controlled-drug-drafts.md),[machine receipt](../../docs/launch-evidence/2026-10-14-controlled-drafts-local.json). Exact CI/staged hosted release remains pending; C1–C3 are unimplemented.
+C0 local proof:1,471 units,153 SQL suites/6,464 assertions including77 new,28 genuine Auth/API+14 browser,8 observed queues,6 populated restored relations and28 rollback checks pass. Parent scheduling/task/inventory layers pass;owned actors/sessions/runtimes/volumes retired. [Scope](../../docs/features/controlled-drug-drafts.md),[machine receipt](../../docs/launch-evidence/2026-10-14-controlled-drafts-local.json). All four exact-head CI jobs pass. Staging28 Auth/API+14 browser checks, both hosted28-check rollback probes/29 relation fingerprints,187 migrations/none pending and exact production/domain verification pass. [Hosted receipt](../../docs/launch-evidence/2026-10-14-controlled-drafts-rollout.md). C1–C3 remain unfinished; no physical register is activated.

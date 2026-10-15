@@ -1,0 +1,398 @@
+{
+  "pr": 255,
+  "reviewed_head": "3b8c7ce773a82bccb8fc3c159ddcad54baa9cf0c",
+  "merge": "10a94fab9cff7aa9e2fd319df98b4fd198f95ef9",
+  "merged_at": "2026-10-15T02:12:49Z",
+  "scope": "C0 controlled-drug draft configuration only; physical register inactive",
+  "migration": "20261015011200_controlled_draft_configuration.sql",
+  "migration_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+  "ci": {
+    "run": 38667102809,
+    "frontend": "SUCCESS",
+    "edge": "SUCCESS",
+    "database": "SUCCESS",
+    "diagnostic_renderer": "SUCCESS",
+    "units": 1471,
+    "browser_passed": 524,
+    "browser_skipped": 1,
+    "built_camera_checks": 16
+  },
+  "local_evidence": "2026-10-14-controlled-drafts-local.json",
+  "local_sql": {
+    "files": 153,
+    "assertions": 6464,
+    "new_assertions": 77
+  },
+  "staging": {
+    "head": "3b8c7ce773a82bccb8fc3c159ddcad54baa9cf0c",
+    "project": "kothoqicubowyhwfsrte",
+    "migration_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+    "api_checks": 28,
+    "genuine_auth_postgrest": true,
+    "private_tables_denied": true,
+    "exact_receipt_replay": true,
+    "owned_actors_retired": true,
+    "owned_sessions_retired": true,
+    "baseline_unchanged": true,
+    "draft_only": true,
+    "provider_requests": 0,
+    "browser": {
+      "browser_checks": 14,
+      "genuine_staff_api": true,
+      "committed_ack_loss_recovered": true,
+      "reload_readonly_recovery": true,
+      "draft_only": true,
+      "no_default_schedule": true,
+      "mobile_overflow_checked": true,
+      "touch_targets_checked": true,
+      "dirty_close_confirmed": true,
+      "staff_read_only": true,
+      "provider_requests": 0
+    }
+  },
+  "hosted": {
+    "kothoqicubowyhwfsrte": {
+      "installation": {
+        "project": "kothoqicubowyhwfsrte",
+        "head": "3b8c7ce773a82bccb8fc3c159ddcad54baa9cf0c",
+        "pr": 255,
+        "migration_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+        "migrations": 187,
+        "pending": 0,
+        "private_tables": 5,
+        "guarded_apis": 6,
+        "baseline_unchanged": true,
+        "state": {
+          "cron_active": false,
+          "disclosure": 0,
+          "generation": 0,
+          "outbox": 0,
+          "payment_profiles": 1,
+          "reconciliation": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "snapshot_relations": 24,
+        "skip_vault": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "edge_deployments": 0
+      },
+      "rollback": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 187,
+        "checks": 28,
+        "exact_rollback_snapshot_relations": 29,
+        "baseline_unchanged": true,
+        "probe_sha256": "7a79f5fca5ff3062ed6dc4d1f2376919da0269568d9a950c8e0db1cee258b065",
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "security_advisor_comparison": [
+        {
+          "name": "rls_enabled_no_policy",
+          "before": 202,
+          "after": 207,
+          "added": [
+            {
+              "name": "controlled_draft_actions",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_cancellations",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_entries",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_reviews",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_versions",
+              "type": "table",
+              "schema": "public"
+            }
+          ],
+          "removed": 0
+        },
+        {
+          "name": "extension_in_public",
+          "before": 1,
+          "after": 1,
+          "added": [],
+          "removed": 0
+        },
+        {
+          "name": "anon_security_definer_function_executable",
+          "before": 8,
+          "after": 8,
+          "added": [],
+          "removed": 0
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "before": 497,
+          "after": 503,
+          "added": [
+            {
+              "name": "cancel_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid",
+              "security_definer": true
+            },
+            {
+              "name": "execute_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid",
+              "security_definer": true
+            },
+            {
+              "name": "list_controlled_drafts",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_search text, p_after uuid, p_limit integer",
+              "security_definer": true
+            },
+            {
+              "name": "prepare_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid, p_operation text, p_request jsonb",
+              "security_definer": true
+            },
+            {
+              "name": "read_controlled_draft",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_id uuid, p_before_version integer, p_limit integer",
+              "security_definer": true
+            },
+            {
+              "name": "read_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid",
+              "security_definer": true
+            }
+          ],
+          "removed": 0
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "before": 1,
+          "after": 1,
+          "added": [],
+          "removed": 0
+        }
+      ]
+    },
+    "mgadheotkdnrsatfivjy": {
+      "installation": {
+        "project": "mgadheotkdnrsatfivjy",
+        "head": "3b8c7ce773a82bccb8fc3c159ddcad54baa9cf0c",
+        "pr": 255,
+        "migration_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+        "migrations": 187,
+        "pending": 0,
+        "private_tables": 5,
+        "guarded_apis": 6,
+        "baseline_unchanged": true,
+        "state": {
+          "cron_active": false,
+          "disclosure": 0,
+          "generation": 0,
+          "outbox": 3,
+          "payment_profiles": 0,
+          "reconciliation": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "snapshot_relations": 24,
+        "skip_vault": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "edge_deployments": 0
+      },
+      "rollback": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migrations": 187,
+        "checks": 28,
+        "exact_rollback_snapshot_relations": 29,
+        "baseline_unchanged": true,
+        "probe_sha256": "7a79f5fca5ff3062ed6dc4d1f2376919da0269568d9a950c8e0db1cee258b065",
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "security_advisor_comparison": [
+        {
+          "name": "rls_enabled_no_policy",
+          "before": 202,
+          "after": 207,
+          "added": [
+            {
+              "name": "controlled_draft_actions",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_cancellations",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_entries",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_reviews",
+              "type": "table",
+              "schema": "public"
+            },
+            {
+              "name": "controlled_draft_versions",
+              "type": "table",
+              "schema": "public"
+            }
+          ],
+          "removed": 0
+        },
+        {
+          "name": "extension_in_public",
+          "before": 1,
+          "after": 1,
+          "added": [],
+          "removed": 0
+        },
+        {
+          "name": "anon_security_definer_function_executable",
+          "before": 8,
+          "after": 8,
+          "added": [],
+          "removed": 0
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "before": 497,
+          "after": 503,
+          "added": [
+            {
+              "name": "cancel_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid",
+              "security_definer": true
+            },
+            {
+              "name": "execute_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid",
+              "security_definer": true
+            },
+            {
+              "name": "list_controlled_drafts",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_search text, p_after uuid, p_limit integer",
+              "security_definer": true
+            },
+            {
+              "name": "prepare_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid, p_operation text, p_request jsonb",
+              "security_definer": true
+            },
+            {
+              "name": "read_controlled_draft",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_id uuid, p_before_version integer, p_limit integer",
+              "security_definer": true
+            },
+            {
+              "name": "read_controlled_draft_review",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "p_actor_id uuid, p_action_id uuid",
+              "security_definer": true
+            }
+          ],
+          "removed": 0
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "before": 1,
+          "after": 1,
+          "added": [],
+          "removed": 0
+        }
+      ]
+    }
+  },
+  "production": {
+    "deployment": "dpl_Ftnfp76hm7jhyNfRJ1wnaDnMJtED",
+    "ready_state": "READY",
+    "exact_merge_and_domain_verified": true,
+    "observed_at": "2026-10-15T02:15:22.326Z",
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-C-VWbbbP.js",
+    "app_chunk": "./App-CVtkzUmw.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "backend_migrations": 187,
+    "protected_redirects": [
+      "/hub/inventory",
+      "/hub/tools/task-templates",
+      "/hub/tasks",
+      "/hub/schedule",
+      "/hub/admin/operations"
+    ],
+    "task_routes_bundled": true,
+    "inventory_chunk": "./InventoryPage-B9M0wKbC.js",
+    "supplier_mapping_ui_bundled": true,
+    "controlled_draft_ui_bundled": true,
+    "controlled_activation_available": false,
+    "camera_chunk": "./BarcodeScanDialog-BGVTFwBl.js",
+    "worker": "/assets/barcode-worker-CwzrmRbY.js",
+    "wasm": "/assets/zxing_reader-_HcWiliU.wasm",
+    "wasm_sha256": "aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931",
+    "wasm_bytes": 966895,
+    "local_asset_chain_verified": true,
+    "camera_permission_requested": false,
+    "actual_iphone_acceptance": false,
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "edge_deployments": 0,
+  "secret_changes": 0,
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "susan_rules_approved": false,
+  "controlled_register_activated": false,
+  "remaining": [
+    "C1 complete stock/custody admission and physical event/container model",
+    "C2 independent review, actual witness, correction, transfer, count/hold and register reports",
+    "C3 actual practice configuration, physical opening counts, approved SOPs and commissioning",
+    "Real iPhone, supplier files/labels, vendor/device exchanges and all other remaining requirements"
+  ]
+}
