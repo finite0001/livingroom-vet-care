@@ -104,6 +104,8 @@ def operation(name,request_id,request,other=False):return (other_staff if other 
 def receipt(request_id,other=False):return json.loads(scalar('begin;'+(other_staff if other else staff)+'select coalesce(recover_native_prescription_operation('+quote(request_id)+"),'null'::jsonb);commit;"))
 try:
     dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--schema-only','--no-owner','--schema=public','--schema=auth','--schema=storage','--schema=extensions','postgres'],capture_output=True,check=True,timeout=120).stdout
+    # Reviewed code metadata is required by the guard; copy no clinical/admission data.
+    dump+=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--data-only','--no-owner','--table=public.stock_writer_manifests','postgres'],capture_output=True,check=True,timeout=120).stdout
     sql(f'create database "{database}";');created=True
     sql(f"comment on database \"{database}\" is {quote(marker)};")
     COMMAND=FOUNDATION_COMMAND.copy();COMMAND[COMMAND.index('-d')+1]=database

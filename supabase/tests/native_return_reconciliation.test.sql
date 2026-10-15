@@ -125,4 +125,10 @@ select is((select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items 
 select ok(not has_function_privilege('authenticated','native_reconciliation_verified(uuid,uuid,uuid)','execute'),'Verifier private');
 select ok(not has_function_privilege('service_role','record_native_dispense_return_v2(uuid,jsonb)','execute'),'Service role cannot impersonate staff writes');
 select ok(exists(select 1 from audit_logs a join native_return_discrepancy_correction_links l on l.id=a.record_id where a.table_name='native_return_discrepancy_correction_links' and a.action='INSERT' and a.user_id='a5510000-0000-4000-8000-000000000001'),'Correction-to-resolution links have actor-attributed audit identities');
+-- Force the shared source constraints before this fixture rolls back.
+reset role;
+set constraints stock_source_required immediate;
+select is((select count(*)from stock_custody_sources),(select count(*)from native_return_events),'Mixed v1/v2 custody and corrections all have source provenance');
+select is((select count(*)from stock_discrepancy_sources),(select count(*)from native_return_discrepancy_events),'Every actual discrepancy/hold resolution has source provenance');
+select is((select count(*)from stock_movement_sources where writer='record_native_dispense_return_v2'),(select count(*)from native_return_stock_links s join native_return_events e on e.id=s.event_id where e.document->>'version'='2')+(select count(*)from native_return_compensation_links),'v2 restock and retraction quantities each have one source');
 select * from finish();rollback;

@@ -129,4 +129,21 @@ select is((select count(*) from patient_treatments where pet_id=(select id from 
 select throws_ok($$update native_dispenses set document='{}' where id=(select id from fx where k='dispense')$$,'23514',null,'Privileged history mutation blocked');
 select ok(not has_function_privilege('service_role','record_native_dispense(uuid,jsonb)','execute'),'Worker cannot dispense');
 select ok(not has_function_privilege('authenticated','native_fulfillment_finish(uuid,text,jsonb,jsonb)','execute'),'Private receipt writer denied');
+-- Force the shared source constraints before this fixture rolls back.
+reset role;
+-- A privileged future writer cannot attach an extra allocation to an older
+-- immutable dispense receipt, even with genuine current entry admission.
+select throws_ok($test$do $body$declare root uuid:=(select id from fx where k='dispense');who uuid;lot uuid:=gen_random_uuid();movement uuid:=gen_random_uuid();begin
+ select actor_id into who from native_dispenses where id=root;
+ update profiles set is_active=true where id=who;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',who,'role','authenticated')::text,true);
+ insert into inventory_lots(id,product_id,lot_number,expires_on,location,created_by)values(lot,(select id from fx where k='product'),'SYNTHETIC-FORGED-ALLOCATION',current_date+365,'Synthetic clinic',who);
+ perform stock_writer_enter('record_native_dispense',root);
+ insert into inventory_movements(id,lot_id,quantity,kind,reason,created_by)values(movement,lot,-0.001,'dispense','Synthetic forged allocation',who);
+ insert into native_dispense_allocations values(gen_random_uuid(),root,lot,movement,0.001);
+ set constraints stock_source_required immediate;
+end$body$$test$,'23514','Canonical stock source does not match movement','Extra source links cannot borrow a saved dispense receipt');
+select is((select count(*)::int from inventory_movements where reason='Synthetic forged allocation'),0,'Forged native allocation rolls back stock and source together');
+set constraints stock_source_required immediate;
+select is((select count(*)from stock_movement_sources where writer='record_native_dispense'),(select count(*)from native_dispense_allocations),'Every actual native allocation has one dispensing source');
 select * from finish();rollback;
