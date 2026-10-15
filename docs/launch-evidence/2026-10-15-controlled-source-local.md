@@ -1,5 +1,7 @@
 # Controlled stock source reconciliation — local checkpoint
 
+> Historical checkpoint, superseded by the [corrected source and execution-candidate evidence](2026-10-15-controlled-engine-candidate-local.md). The687-check oracle compared anesthesia’s audit link to itself. The corrected961-check gate exercises136 actual canonical retries and verifies the returned treatment row. The original JSON and hashes below remain unchanged as historical evidence; they are not current receipt-contract acceptance.
+
 The [local reference oracle](../../tests/controlled-drugs/engine/README.md) is implemented and integrated into the canonical native prescription acceptance runner. This checkpoint adds verification tooling, not a physical controlled-drug writer. [Machine receipt](2026-10-15-controlled-source-local.json).
 
 The oracle reconciles 136 synthetic canonical operations across ten producers, six return actions and three annotation kinds. Its 687 SQL checks preserve exact receipt/actor/source membership, signed fractional quantities and five distinct negative compensation movements. They reject changed actors/receipts and missing pickup/restock source links, preserve original effects after catalog price/availability edits, and ensure annotations never invent physical quantities or observation times. Conditional return requirements retain the actual intake identity/custody and require checking the original pickup; they do not grant controlled take-back eligibility.
