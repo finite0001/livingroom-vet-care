@@ -1,0 +1,145 @@
+{
+  "scope": "PR258 isolated controlled-stock execution candidate merged; application production deployment verified; no database engine installation",
+  "observed_at": "2026-10-15T22:12:27.385633+00:00",
+  "pr": 258,
+  "pr_url": "https://github.com/finite0001/livingroom-vet-care/pull/258",
+  "reviewed_source_head": "7090ec5d0c40a54e17fa58fcabe601957d529ecf",
+  "merge_commit": "25557067eeff8c79e56284db84a335a50ab92344",
+  "merged_at": "2026-10-15T22:06:19Z",
+  "merged_tree_equals_reviewed_tree": true,
+  "ci": {
+    "run": 38811117484,
+    "head": "7090ec5d0c40a54e17fa58fcabe601957d529ecf",
+    "all_four_success": true,
+    "jobs": [
+      {
+        "name": "edge",
+        "conclusion": "success",
+        "started_at": "2026-10-15T21:37:04Z",
+        "completed_at": "2026-10-15T21:39:03Z"
+      },
+      {
+        "name": "database",
+        "conclusion": "success",
+        "started_at": "2026-10-15T21:37:04Z",
+        "completed_at": "2026-10-15T22:05:57Z"
+      },
+      {
+        "name": "diagnostic-renderer",
+        "conclusion": "success",
+        "started_at": "2026-10-15T21:37:04Z",
+        "completed_at": "2026-10-15T21:44:04Z"
+      },
+      {
+        "name": "frontend",
+        "conclusion": "success",
+        "started_at": "2026-10-15T21:37:04Z",
+        "completed_at": "2026-10-15T21:56:53Z"
+      }
+    ]
+  },
+  "local_candidate_evidence": "2026-10-15-controlled-engine-candidate-local.json",
+  "local_candidate_evidence_sha256": "4623274331ae8b6f7a2af301a9e812dadabcaa4f1ced3e2dc48d6503139c8223",
+  "hosted": {
+    "primary": {
+      "project_id": "mgadheotkdnrsatfivjy",
+      "state": {
+        "outbox": 3,
+        "migrations": 189,
+        "last_migration": "20261015055007",
+        "stock_movements": 0,
+        "payment_profiles": 0,
+        "controlled_draft_entries": 0,
+        "controlled_stock_schema_present": false
+      },
+      "canonical_migration_history_matches": true,
+      "pending_migrations": 0,
+      "migration_version_digest": "d6e16673d361296004807e14c8b2d850"
+    },
+    "staging": {
+      "project_id": "kothoqicubowyhwfsrte",
+      "state": {
+        "outbox": 0,
+        "migrations": 189,
+        "last_migration": "20261015055007",
+        "stock_movements": 0,
+        "payment_profiles": 1,
+        "controlled_draft_entries": 2,
+        "controlled_stock_schema_present": false
+      },
+      "canonical_migration_history_matches": true,
+      "pending_migrations": 0,
+      "migration_version_digest": "d6e16673d361296004807e14c8b2d850"
+    }
+  },
+  "production": {
+    "id": "dpl_8RxYiNkEN3s4Vqjo8GFts3sarTzM",
+    "url": "livingroom-vet-care-46hu2ghmm-daves-projects-e0da43ba.vercel.app",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "team_id": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+    "target": "production",
+    "ready_state": "READY",
+    "git_sha": "25557067eeff8c79e56284db84a335a50ab92344",
+    "domain": "thelivingroom.vet",
+    "domain_deployment_id": "dpl_8RxYiNkEN3s4Vqjo8GFts3sarTzM",
+    "metadata_method": "Vercel MCP404; mapped existing authenticated CLI fallback with explicit verified team/project"
+  },
+  "smoke": {
+    "observed_at": "2026-10-15T22:11:19.351Z",
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-C-VWbbbP.js",
+    "app_chunk": "./App-CVtkzUmw.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "backend_migrations": 189,
+    "deployment_id": "dpl_8RxYiNkEN3s4Vqjo8GFts3sarTzM",
+    "source_sha": "25557067eeff8c79e56284db84a335a50ab92344",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "protected_redirects": [
+      "/hub/inventory",
+      "/hub/tools/task-templates",
+      "/hub/tasks",
+      "/hub/schedule",
+      "/hub/admin/operations"
+    ],
+    "task_routes_bundled": true,
+    "inventory_chunk": "./InventoryPage-B9M0wKbC.js",
+    "supplier_mapping_ui_bundled": true,
+    "controlled_draft_ui_bundled": true,
+    "controlled_activation_available": false,
+    "camera_chunk": "./BarcodeScanDialog-BGVTFwBl.js",
+    "worker": "/assets/barcode-worker-CwzrmRbY.js",
+    "wasm": "/assets/zxing_reader-_HcWiliU.wasm",
+    "wasm_sha256": "aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931",
+    "wasm_bytes": 966895,
+    "local_asset_chain_verified": true,
+    "camera_permission_requested": false,
+    "actual_iphone_acceptance": false,
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "observability": {
+    "deployment_scoped_error_log_query": true,
+    "window": "1h",
+    "limit": 50,
+    "returned_rows": 0,
+    "full_uptime_monitoring_audit": false
+  },
+  "limits": {
+    "canonical_migrations_added": 0,
+    "hosted_database_writes": 0,
+    "controlled_stock_schema_installed": false,
+    "clinical_rules_approved": false,
+    "controlled_register_active": false,
+    "C1b_release_complete": false,
+    "C2_C3_complete": false,
+    "primary_staff_session_used": false,
+    "provider_requests": 0,
+    "secret_changes": 0,
+    "edge_deployments": 0,
+    "legacy_backend_writes": 0
+  }
+}
