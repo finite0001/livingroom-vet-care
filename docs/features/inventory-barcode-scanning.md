@@ -1,0 +1,13 @@
+# Product barcode camera foundation
+
+The Inventory supplier-product lookup has an explicit Scan action. Opening the dialog does not request permission; Start camera requests video only,with a preferred rear camera and optional user-selected device. A confirmed code fills lookup inputs. It does not choose a package,receive goods,dispense medication,alter quantities or post charges. Staff must look up the code and compare the reviewed product,strength/form,package and conversion.
+
+Reader `zxing-wasm@3.1.5` is pinned with npm integrity. The matching locally bundled reader WASM is966,895 bytes,SHA256 `aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931`. A worker fetches only this same-origin artifact,checks byte limit/hash and initializes with its binary; no runtime CDN. At most one bounded1280×960 frame is decoded at once,at most four requests/second and four bounded candidates. Frames and raw decoded bytes remain on the device. MIT/Apache/BSD notices are retained in [the distributed notice](../../public/third-party/barcode-scanner/NOTICE.txt).
+
+Streams stop on close,unmount,pagehide,hidden page,feed interruption,successful read,camera switch,preview startup deadline or scan deadline. Generation checks stop late permission streams and reject old decoder messages. Permission/device/decoder failures offer retry and manual lookup. A new deliberate scan may read the same item again. Multiple codes require explicit selection.
+
+Ordinary EAN/UPC manufacturer identifiers and reviewed supplier SKUs/barcodes are supported as lookup input. Structured GS1 payloads and compressed UPC-E manufacturer normalization require further manual identifier review at this checkpoint; no lot/expiry is inferred. This foundation is not full Phase5B acceptance.
+
+[Local evidence](../launch-evidence/2026-10-14-barcode-camera-local.json):1,464 units,5 lifecycle/contract suites,lint/typechecks/build and13 built-worker browser checks pass. The browser uses a generated barcode video and simulated Chromium camera,including permission cancellation/late tracks,denial/retry,intentional repeat,mobile layout and a stalled-preview deadline. These are not real iPhone or actual supplier-label trials. The separate artifact spike also rejects a bad checksum and blank image without network requests. Existing17 dependency findings and four React-refresh/chunk warnings remain; no decoder-related advisory was found.
+
+Required next: authenticated scan→reviewed-package browser proof,actual intended iPhone/iOS/Safari over HTTPS,labels from both suppliers,GS1/UPC-E handling if present,receiving/dispensing context rehearsal and Susan/staff acceptance. Retain every original requirement in [the Phase5 plan](../../plans/2026-10-14-inventory-register/plan.md).

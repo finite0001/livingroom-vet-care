@@ -1,0 +1,168 @@
+{
+  "observed_at": "2026-10-15T00:30:38.402Z",
+  "pr": 253,
+  "url": "https://github.com/finite0001/livingroom-vet-care/pull/253",
+  "reviewed_head": "273c22009fb0327d2e97eb719020417a4d6c9667",
+  "merge": "45496da453a2afaa7cfd6bc1d911adaf6751f7ab",
+  "merged_at": "2026-10-15T00:26:45Z",
+  "ci_run": 38657300356,
+  "required_ci_jobs": [
+    "frontend",
+    "edge",
+    "database",
+    "diagnostic-renderer"
+  ],
+  "required_ci_result": "SUCCESS on exact reviewed head",
+  "projects": {
+    "kothoqicubowyhwfsrte": {
+      "installation": {
+        "project": "kothoqicubowyhwfsrte",
+        "head": "273c22009fb0327d2e97eb719020417a4d6c9667",
+        "pr": 253,
+        "migration_sha256": "693a974f59a86f50c4fabaf9253a1f579bacdade545171c74a17231e812e6df4",
+        "migrations": 186,
+        "pending": 0,
+        "private_tables": 6,
+        "guarded_apis": 7,
+        "baseline_unchanged": true,
+        "state": {
+          "cron_active": false,
+          "disclosure": 0,
+          "generation": 0,
+          "outbox": 0,
+          "payment_profiles": 1,
+          "reconciliation": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "snapshot_relations": 18,
+        "skip_vault": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "edge_deployments": 0
+      },
+      "rollback": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 186,
+        "checks": 31,
+        "exact_rollback_snapshot_relations": 24,
+        "baseline_unchanged": true,
+        "probe_sha256": "abb6ce6a52d6cf080aa54aa766713bf4682435d77f0b3130d0922ebfcb1d6cd6",
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "advisors": {
+        "rls_enabled_no_policy": 202,
+        "extension_in_public": 1,
+        "anon_security_definer_function_executable": 8,
+        "authenticated_security_definer_function_executable": 497,
+        "auth_leaked_password_protection": 1
+      }
+    },
+    "mgadheotkdnrsatfivjy": {
+      "installation": {
+        "project": "mgadheotkdnrsatfivjy",
+        "head": "273c22009fb0327d2e97eb719020417a4d6c9667",
+        "pr": 253,
+        "migration_sha256": "693a974f59a86f50c4fabaf9253a1f579bacdade545171c74a17231e812e6df4",
+        "migrations": 186,
+        "pending": 0,
+        "private_tables": 6,
+        "guarded_apis": 7,
+        "baseline_unchanged": true,
+        "state": {
+          "cron_active": false,
+          "disclosure": 0,
+          "generation": 0,
+          "outbox": 3,
+          "payment_profiles": 0,
+          "reconciliation": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "snapshot_relations": 18,
+        "skip_vault": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "edge_deployments": 0
+      },
+      "rollback": {
+        "project": "mgadheotkdnrsatfivjy",
+        "migrations": 186,
+        "checks": 31,
+        "exact_rollback_snapshot_relations": 24,
+        "baseline_unchanged": true,
+        "probe_sha256": "abb6ce6a52d6cf080aa54aa766713bf4682435d77f0b3130d0922ebfcb1d6cd6",
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "advisors": {
+        "rls_enabled_no_policy": 202,
+        "extension_in_public": 1,
+        "anon_security_definer_function_executable": 8,
+        "authenticated_security_definer_function_executable": 497,
+        "auth_leaked_password_protection": 1
+      }
+    }
+  },
+  "staging_acceptance": {
+    "api_checks": 38,
+    "genuine_auth_postgrest": true,
+    "private_tables_denied": true,
+    "exact_receipt_replay": true,
+    "owned_actors_retired": true,
+    "baseline_unchanged": true,
+    "provider_requests": 0,
+    "browser": {
+      "browser_checks": 15,
+      "genuine_staff_api": true,
+      "committed_ack_loss_recovered": true,
+      "reload_readonly_recovery": true,
+      "mobile_overflow_checked": true,
+      "touch_targets_checked": true,
+      "staff_lookup_only": true,
+      "provider_requests": 0
+    }
+  },
+  "production": {
+    "deployment": "dpl_AHzhpsDtP8SL9cVn8qmwXXUsZGj5",
+    "state": "READY",
+    "commit": "45496da453a2afaa7cfd6bc1d911adaf6751f7ab",
+    "domain": "thelivingroom.vet",
+    "smoke": {
+      "observed_at": "2026-10-15T00:30:38.402Z",
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-B12Eo6tc.js",
+      "app_chunk": "./App-CGnedzYr.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "backend_migrations": 186,
+      "protected_redirects": [
+        "/hub/inventory",
+        "/hub/tools/task-templates",
+        "/hub/tasks",
+        "/hub/schedule",
+        "/hub/admin/operations"
+      ],
+      "task_routes_bundled": true,
+      "inventory_chunk": "./InventoryPage-Cam9h2Pd.js",
+      "supplier_mapping_ui_bundled": true,
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  },
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "edge_deployments": 0,
+  "scope": "Reviewed supplier namespace/package metadata and lookup; no actual supplier file import, scanner or controlled register acceptance",
+  "remaining": "Actual vendor exports and import adapters, real iPhone/labels, controlled register, later native packages and Susan acceptance remain required"
+}

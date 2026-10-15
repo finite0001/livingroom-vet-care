@@ -1,0 +1,44 @@
+{
+  "checks": 13,
+  "source_sha256": {
+    "src/hub/features/inventory/barcode-scanner/camera-lease.ts": "3b996bfdaeb4f285238af1bdaff2350016829336fabbc4fea97d9173bef114fc",
+    "src/hub/features/inventory/barcode-scanner/decoder-contract.ts": "261a85bf99096dad058f1b0ae8401a3abe9d6ac05bd33beb68224825a961f999",
+    "src/hub/features/inventory/barcode-scanner/barcode-worker.ts": "b78e5ac475af36ec20f5f60ba901e3e782e49665b8ef141e5024a2bb3fef4b33",
+    "src/hub/features/inventory/barcode-scanner/BarcodeScanDialog.tsx": "4bfdb7918e6549867cab8d668bfce6cd815f824da2b424ca7edee12b25eeaea9",
+    "src/hub/features/inventory/supplier-imports/SupplierIdentityPanel.tsx": "feb64acfd5b9804e840b67315298bdfe2c65465527a8f4ddca2c9323daf4143d",
+    "package.json": "6f527f6ac68983c6295e69c3392a82a00ee7e8f789e633e78e99e638f9746965",
+    "package-lock.json": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f"
+  },
+  "built_worker_and_hash_checked_wasm": true,
+  "simulated_camera": true,
+  "real_iphone": false,
+  "real_supplier_labels": false,
+  "local_only_requests": true,
+  "permission_cancel_and_late_tracks": true,
+  "permission_denial_retry": true,
+  "preview_startup_deadline": true,
+  "repeat_scan": true,
+  "original_text": "0036000291452",
+  "page_errors": 0,
+  "scope": "Native simple-code camera lookup foundation, local checkpoint only",
+  "unit_tests": 1464,
+  "lifecycle_unit_suites": 5,
+  "decoder_version": "3.1.5",
+  "decoder_tarball_integrity": "sha512-jmxXvTCR/qZxMz2XwR6V+nL2BlDTD1aux7ZWSH9BV77TG9u4k0VyHba/NCCHBHJ60Wg6VV0QL/SMlJczKhJI4w==",
+  "wasm_bytes": 966895,
+  "wasm_sha256": "aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931",
+  "new_dependency_advisories": 0,
+  "existing_dependency_advisories": {
+    "moderate": 4,
+    "high": 13
+  },
+  "known_build_warnings": "Four existing React-refresh warnings and existing large-chunk warning",
+  "hosted_changes": 0,
+  "not_accepted": [
+    "Actual iPhone/iOS/Safari and supplier labels",
+    "GS1 field parsing and compressed UPC-E manufacturer lookup",
+    "Scan-to-reviewed-package full Auth browser proof",
+    "Receiving/dispensing/context confirmation with actual practice labels",
+    "Susan clinical/device acceptance"
+  ]
+}

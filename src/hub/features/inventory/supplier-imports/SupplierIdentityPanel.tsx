@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Boxes, Search } from "lucide-react";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -12,6 +12,7 @@ import { convertedStockQuantity } from "./quantity-model.ts";
 import { IdentityField, IdentityForm, identitySelectClass } from "./IdentityForms.tsx";
 import { identityError, inventoryIdentityChanged, useIdentityReview } from "./use-identity-review.ts";
 import { IdentityReviewStatus } from "./IdentityReviewDialog.tsx";
+const BarcodeScanDialog = lazy(() => import("../barcode-scanner/BarcodeScanDialog"));
 interface RecoveryProps { actor: string; operation: IdentityOperation; canReview: boolean; saved: () => void }
 function Recovery({ actor, operation, canReview, saved }: RecoveryProps) {
   const action = useIdentityReview(actor, operation, saved);
@@ -43,6 +44,7 @@ export function SupplierIdentityPanel() {
   const [open, setOpen] = useState(false), [kind, setKind] = useState<IdentityOperation>("namespace"), [search, setSearch] = useState("");
   const [after, setAfter] = useState<string | null>(null), [scopeAfter, setScopeAfter] = useState<string | null>(null);
   const [knownScopes, setKnownScopes] = useState<IdentityEntry[]>([]);
+  const [scanner, setScanner] = useState(false);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [lookupKind, setLookupKind] = useState<"supplier_sku" | "supplier_barcode" | "gtin">("supplier_sku"), [code, setCode] = useState(""), [namespaceId, setNamespaceId] = useState("");
   const [matches, setMatches] = useState<Awaited<ReturnType<typeof inventoryIdentityApi.lookup>> | null>(null), [looking, setLooking] = useState(false), [lookupError, setLookupError] = useState("");
@@ -51,7 +53,7 @@ export function SupplierIdentityPanel() {
   const rows = useQuery({ queryKey: ["inventory-identities", actor, kind, search, after], queryFn: () => inventoryIdentityApi.list(actor, kind, search, after), enabled });
   const scopes = useQuery({ queryKey: ["inventory-identity-scopes", actor, scopeAfter], queryFn: () => inventoryIdentityApi.list(actor, "namespace", "", scopeAfter), enabled });
   const history = useQuery({ queryKey: ["inventory-identity-history", actor, historyId, before], queryFn: () => inventoryIdentityApi.history(actor, historyId!, before), enabled: enabled && Boolean(historyId) });
-  useEffect(() => { setKnownScopes([]); setScopeAfter(null); lookupGeneration.current++; setLooking(false); setLookupError(""); setMatches(null); setNamespaceId(""); setEditor(null); }, [actor]);
+  useEffect(() => { setKnownScopes([]); setScopeAfter(null); lookupGeneration.current++; setLooking(false); setLookupError(""); setMatches(null); setNamespaceId(""); setEditor(null); setScanner(false); }, [actor]);
   useEffect(() => {
     if (!scopes.data) return;
     setKnownScopes((current) => {
@@ -100,6 +102,7 @@ export function SupplierIdentityPanel() {
           {lookupKind !== "gtin" && <IdentityField label="Lookup supplier scope"><select className={identitySelectClass} value={namespaceId} onChange={(event) => { setNamespaceId(event.target.value); resetLookup(); }}><option value="">All supplier scopes — show any ambiguity</option>{knownScopes.filter((scope) => scope.kind === "namespace" && scope.definition.active).map((scope) => <option key={scope.id} value={scope.id}>{scope.kind === "namespace" ? `${scope.definition.supplier.toUpperCase()} · ${scope.definition.account_label} · ${scope.definition.catalog_scope}` : ""}</option>)}</select></IdentityField>}
           <Button type="submit" className="min-h-11 md:self-end" disabled={looking || !code || !enabled}>{looking ? "Looking up…" : "Look up reviewed code"}</Button>
         </form>
+        <Button type="button" variant="outline" className="min-h-11" disabled={!enabled} onClick={() => setScanner(true)}>Scan product barcode</Button>
         {scopes.isError && <p role="alert" className="text-destructive">Supplier scopes could not be loaded. Refresh before choosing an account</p>}
         {lookupError && <p role="alert" className="text-destructive">{lookupError}</p>}
         {matches && <div aria-live="polite" className="space-y-3">
@@ -128,6 +131,7 @@ export function SupplierIdentityPanel() {
         {history.data?.history.map((entry) => <div key={entry.version_id} className="border-t pt-3"><p className="text-sm">Version {entry.version} · {entry.actor_name} · {new Date(entry.created_at).toLocaleString()}</p>{entry.kind === "package" ? <PackageSummary entry={entry} /> : <p className="break-words">{entry.definition.account_label} · {entry.definition.catalog_scope} · {entry.definition.active ? "active" : "inactive"}</p>}</div>)}
         <div className="flex gap-2 flex-wrap">{before && <Button type="button" variant="outline" className="min-h-11" onClick={() => setBefore(null)}>Newest mapping history</Button>}{history.data?.next && <Button type="button" variant="outline" className="min-h-11" onClick={() => setBefore(history.data!.next)}>Older mapping history</Button>}<Button type="button" variant="outline" className="min-h-11" onClick={() => setHistoryId(null)}>Close mapping history</Button></div>
       </section>}
+      {scanner && <Suspense fallback={<p role="status">Loading barcode scanner…</p>}><BarcodeScanDialog close={() => setScanner(false)} onUseCode={(symbol, selectedKind) => { setLookupKind(selectedKind); setCode(symbol.text); resetLookup(); }} /></Suspense>}
       {editor && <IdentityForm key={`${actor}:${editor.operation}:${editor.entry?.id ?? "new"}`} operation={editor.operation} entry={editor.entry} scopes={knownScopes} close={() => setEditor(null)} saved={refresh} />}
     </CardContent>}
   </Card>;
