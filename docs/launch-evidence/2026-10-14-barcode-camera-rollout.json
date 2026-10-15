@@ -1,0 +1,135 @@
+{
+  "pr": 254,
+  "reviewed_head": "fceabf9627dd0bcdf9ca61e5142422bd846d559a",
+  "merge": "357e6f93cc2070121fbe890797c827da7a416551",
+  "merged_at": "2026-10-15T01:34:08Z",
+  "scope": "Native simple-code camera-to-reviewed-identifier lookup foundation",
+  "ci": {
+    "run": 38664252009,
+    "frontend": "SUCCESS",
+    "edge": "SUCCESS",
+    "database": "SUCCESS",
+    "diagnostic_renderer": "SUCCESS",
+    "units": 1464,
+    "browser_passed": 524,
+    "browser_skipped": 1,
+    "built_simulated_camera_checks": 16,
+    "restricted_document_and_worker_csp": true,
+    "production_csp_changed": false
+  },
+  "staging": {
+    "api_checks": 38,
+    "genuine_auth_postgrest": true,
+    "private_tables_denied": true,
+    "exact_receipt_replay": true,
+    "owned_actors_retired": true,
+    "baseline_unchanged": true,
+    "provider_requests": 0,
+    "browser": {
+      "browser_checks": 22,
+      "genuine_staff_api": true,
+      "committed_ack_loss_recovered": true,
+      "reload_readonly_recovery": true,
+      "simulated_camera": true,
+      "scan_resolves_reviewed_package": true,
+      "staff_camera_lookup": true,
+      "real_iphone": false,
+      "mobile_overflow_checked": true,
+      "touch_targets_checked": true,
+      "staff_lookup_only": true,
+      "provider_requests": 0
+    },
+    "head": "b0cce072bbd52cc3a8eaa3ab38d79ba8ccfc62ed",
+    "migration_count": 186,
+    "project": "kothoqicubowyhwfsrte",
+    "physical_device": false,
+    "actual_supplier_labels": false,
+    "new_migration_or_edge": false
+  },
+  "staging_to_final_head_changes": [
+    "deno.lock"
+  ],
+  "staging_application_and_harness_sources_identical_to_final_head": true,
+  "schema_migrations": 186,
+  "new_schema_migrations": 0,
+  "edge_deployments": 0,
+  "secret_changes": 0,
+  "legacy_writes": 0,
+  "provider_requests": 0,
+  "production": {
+    "deployment": "dpl_HFRYZmJFMUK2MHTLSdDhZZxKdHm7",
+    "ready_state": "READY",
+    "exact_merge_and_domain_verified": true,
+    "observed_at": "2026-10-15T01:37:22.712Z",
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-9aRGWfjD.js",
+    "app_chunk": "./App-r-WVlVGh.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "backend_migrations": 186,
+    "protected_redirects": [
+      "/hub/inventory",
+      "/hub/tools/task-templates",
+      "/hub/tasks",
+      "/hub/schedule",
+      "/hub/admin/operations"
+    ],
+    "task_routes_bundled": true,
+    "inventory_chunk": "./InventoryPage-DDGHJPix.js",
+    "supplier_mapping_ui_bundled": true,
+    "camera_chunk": "./BarcodeScanDialog-D7jcpSUm.js",
+    "worker": "/assets/barcode-worker-CwzrmRbY.js",
+    "wasm": "/assets/zxing_reader-_HcWiliU.wasm",
+    "wasm_sha256": "aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931",
+    "wasm_bytes": 966895,
+    "local_asset_chain_verified": true,
+    "camera_permission_requested": false,
+    "actual_iphone_acceptance": false,
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "baselines": {
+    "kothoqicubowyhwfsrte": {
+      "latest": "20261014202235",
+      "migrations": 186,
+      "outbox": 0,
+      "payment_profiles": 1,
+      "reconciliation_enabled": 3,
+      "stock_movements": 0,
+      "task_generation_enabled": 6
+    },
+    "mgadheotkdnrsatfivjy": {
+      "latest": "20261014202235",
+      "migrations": 186,
+      "outbox": 3,
+      "payment_profiles": 0,
+      "reconciliation_enabled": 0,
+      "stock_movements": 0,
+      "task_generation_enabled": 0
+    }
+  },
+  "effective_gates": {
+    "kothoqicubowyhwfsrte": {
+      "generation_latest": false,
+      "pending_reconciliation": null,
+      "reconciliation_cron": false,
+      "reconciliation_latest": false
+    },
+    "mgadheotkdnrsatfivjy": {
+      "generation_latest": false,
+      "pending_reconciliation": null,
+      "reconciliation_cron": false,
+      "reconciliation_latest": false
+    }
+  },
+  "baseline_note": "Enabled-policy row counts include historical versions; effective gates come from the latest version. Staging retains its existing sandbox payment profile. Primary outbox3/payment profiles0/stock0 preserved.",
+  "not_accepted": [
+    "Actual iPhone/iOS/Safari and real MWI/Midwest labels",
+    "Structured GS1 and compressed UPC-E context if present",
+    "Receiving/dispensing context and Susan/staff acceptance",
+    "Actual supplier imports and controlled-drug register"
+  ]
+}

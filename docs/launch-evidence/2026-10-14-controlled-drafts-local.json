@@ -1,0 +1,154 @@
+{
+  "scope": "C0 reviewed draft metadata only; no physical/opening/witness/count/activation API",
+  "camera_parent_head": "fceabf9627dd0bcdf9ca61e5142422bd846d559a",
+  "camera_released_merge": "357e6f93cc2070121fbe890797c827da7a416551",
+  "canonical_migrations": 187,
+  "migration": "20261015011200_controlled_draft_configuration.sql",
+  "migration_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+  "unit_tests": 1471,
+  "model_protocol_suites": 7,
+  "new_sql_assertions": 77,
+  "sql_regression": {
+    "files": 153,
+    "assertions": 6464
+  },
+  "controlled_draft": {
+    "api": {
+      "api_checks": 28,
+      "genuine_auth_postgrest": true,
+      "private_tables_denied": true,
+      "exact_receipt_replay": true,
+      "owned_actors_retired": true,
+      "owned_sessions_retired": true,
+      "baseline_unchanged": true,
+      "draft_only": true,
+      "provider_requests": 0,
+      "browser": {
+        "browser_checks": 14,
+        "genuine_staff_api": true,
+        "committed_ack_loss_recovered": true,
+        "reload_readonly_recovery": true,
+        "draft_only": true,
+        "no_default_schedule": true,
+        "mobile_overflow_checked": true,
+        "touch_targets_checked": true,
+        "dirty_close_confirmed": true,
+        "staff_read_only": true,
+        "provider_requests": 0
+      }
+    },
+    "concurrency": {
+      "checks": 5,
+      "observed_lock_queues": 8,
+      "same_uuid_single_receipt": true,
+      "same_product_unique_draft": true,
+      "post_wait_live_session": true,
+      "post_wait_expiry": true,
+      "cancel_execute_serialized": true,
+      "owned_staff_deactivated": true,
+      "provider_requests": 0
+    },
+    "restore": {
+      "populated_relations": 6,
+      "private_draft_families": 5,
+      "exact_snapshot_restored": true,
+      "exact_original_review_recovered": true,
+      "caller_timezone_invariant": true,
+      "private_grants_restored": true,
+      "owned_restore_database_removed": true,
+      "provider_requests": 0
+    }
+  },
+  "rollback_probe": {
+    "checks": 28,
+    "rollback_only": true,
+    "provider_requests": 0
+  },
+  "parent_regressions": {
+    "catalog": {
+      "api": 59,
+      "observed_queues": 7,
+      "browser": 20,
+      "restore": 9
+    },
+    "next_visit": {
+      "api": 44,
+      "queues": 6
+    },
+    "next_visit_staff": {
+      "api": 25,
+      "browser": 19
+    },
+    "operational_tasks": {
+      "api": 54,
+      "queues": 2,
+      "browser": 24,
+      "populated_restore": true
+    },
+    "reconciliation": {
+      "api": 42,
+      "queues": 4,
+      "browser": 21,
+      "restored_relations": 18
+    },
+    "supplier_identity": {
+      "api": 38,
+      "browser": 22,
+      "queues": 5,
+      "restored_relations": 7
+    }
+  },
+  "cleanup_baseline": {
+    "outbox": 0,
+    "cron_active": false,
+    "pending_run": null,
+    "active_staff": 0,
+    "inventory_movements": 0,
+    "reconciliation_enabled": false
+  },
+  "owned_disposable_runtime_removed": true,
+  "secondary_iteration_runtime_removed": true,
+  "source_sha256": {
+    "scripts/controlled-drafts/rollback-probe.sql": "7a79f5fca5ff3062ed6dc4d1f2376919da0269568d9a950c8e0db1cee258b065",
+    "src/hub/features/controlled-drugs/ControlledDraftPanel.tsx": "1cdeb9fa8b2cd244035e2a2f955fb30b8cfaa7ff1f525ddfc608420665b16b2e",
+    "src/hub/features/controlled-drugs/DraftReviewDialog.tsx": "e40243c3816b356693b2f93afe8f410d410c15835ec252deebd94e3e723928ec",
+    "src/hub/features/controlled-drugs/draft-api.ts": "6075eb99c934e4b6d32fd6af9480150c72f80803ccffbf89e13b6d9d28ddded5",
+    "src/hub/features/controlled-drugs/draft-model.ts": "6f0476fc99c410731cd8be97ee15c93b25cedc31ea8ab6d56fddcf70dd7b6ceb",
+    "src/hub/features/controlled-drugs/review-pointer.ts": "9f366c2343e3e70881d2a77d1aa4308744a48ae5367cdd9795fcb6679f4a461a",
+    "src/hub/features/controlled-drugs/use-draft-review.ts": "16db769920975b9b96264dd50b48ee6145e7742ba9def3ab912362732b9ad1cb",
+    "src/hub/features/inventory/InventoryPage.tsx": "8f8412471cbccc0b0398981eda2074d04dbab73155ac416753c15d153d5980f6",
+    "supabase/migrations/20261015011200_controlled_draft_configuration.sql": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+    "supabase/tests/controlled_draft_concurrency.py": "531fe2ea8aa419319c9fb915607e03f25ea02c1b6c0e77f0b816183fb22f0636",
+    "supabase/tests/controlled_draft_configuration.test.sql": "97a7de043401ed9fd6313ec669179615e52c25772df469eeec70f6f2bb1db6f3",
+    "supabase/tests/controlled_draft_restore.py": "5248b908bfb180522dd091d7860f7e39a18974b1d56867a13e0d6f86dc274451",
+    "tests/controlled-drugs/draft-review.test.ts": "110ec874d0a681195be3502b49fbb057cc0e56f4921f4019e66ed2cec08047f7",
+    "tests/controlled-drugs/native-browser.ts": "ad6c860cd358a0f567d5429fe64627b6b3c151244afa01b70bea6adcecf5d500",
+    "tests/controlled-drugs/native-local.ts": "6a7a83e32bd03ef9ca0f6b77752d4919b01612484f94919b35409980372a8b98",
+    "tests/scheduling/disposable.py": "a8712cf55299f3abee4a0a337809f7aff22bb418f29bf02dafa5e3d100ccdfbf"
+  },
+  "local_advisors": {
+    "scope": "CLI default WARN-or-higher scan, not full hosted comparison",
+    "warnings": [
+      "existing pg_net extension in public"
+    ],
+    "new_warn_or_error_findings": 0,
+    "hosted_comparison_pending": true
+  },
+  "known_warnings": "Four existing React-refresh warnings and existing large-chunk warning; inherited dependency findings remain",
+  "hosted_changes": 0,
+  "primary_migrations": 186,
+  "staging_migrations": 186,
+  "provider_requests": 0,
+  "remaining_release_gates": [
+    "Reviewed exact-head CI",
+    "Stage-first187 install/rollback and genuine Auth/browser acceptance",
+    "Primary additive rollout with rollback-only synthetic probe",
+    "Exact production/domain verification"
+  ],
+  "not_implemented": [
+    "C1 full writer/custody admission and physical register",
+    "C2 review/actual witness/corrections/transfers/counts/reports",
+    "C3 real opening/configuration/current-authoritative-text/clinical commissioning",
+    "Actual supplier import and real iPhone/labels"
+  ]
+}

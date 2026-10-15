@@ -1,6 +1,6 @@
 # 5C — Controlled-drug register and independent review
 
-Priority high. Status: researched implementation plan; no controlled schema, activation, clinical acceptance or registration verification follows from these documents. Baseline main `45496da4`, 186 migrations. Preserve all45 original requirements. Camera PR254 is separate and does not activate this register.
+Priority high. Status: researched execution plan; C0 draft metadata implemented locally with verification in progress. No hosted C0 schema, activation, clinical acceptance or registration verification follows from this checkpoint. Research baseline main `45496da4`,186 migrations; implementation includes released camera PR254 `357e6f93`. Preserve all45 original requirements. Camera PR254 is separate and does not activate this register.
 
 Sources: [effective stock/custody writers](research/stock-boundary.md), [event/locking/recovery design](research/event-design-20261014-controlled-register.md), [federal/Colorado research with official citations and version limits](research/regulatory-20261014-controlled-register.md). The newer reports supersede conflicting general return/witness wording in older plans. Recheck effective writer definitions after rebase; the full native definitions in `20260928190000_no_retryable_sqlstate_for_permanent_conditions.sql` supersede early migrations.
 
@@ -81,3 +81,5 @@ No files deleted. C1 additionally modifies the effective function definitions th
 - [ ] C3 current authoritative text, actual practice configuration/counts, all proof and Dr.Edler acceptance before activation.
 
 Only commissioning questions remain: (1) actual controlling registrant/site, products/concentrations/units, container/mobile-kit arrangement and opening evidence; (2) event-specific performer/reviewer/physical-witness eligibility/timing, count/investigation ownership and disposal/housecall-residual SOP. Gather privately before C3; do not seed assumptions or stop C0 native engineering for them. Real supplier import/iPhone/device and other original requirements remain separate launch gates.
+
+C0 local proof:1,471 units,153 SQL suites/6,464 assertions including77 new,28 genuine Auth/API+14 browser,8 observed queues,6 populated restored relations and28 rollback checks pass. Parent scheduling/task/inventory layers pass;owned actors/sessions/runtimes/volumes retired. [Scope](../../docs/features/controlled-drug-drafts.md),[machine receipt](../../docs/launch-evidence/2026-10-14-controlled-drafts-local.json). Exact CI/staged hosted release remains pending; C1–C3 are unimplemented.

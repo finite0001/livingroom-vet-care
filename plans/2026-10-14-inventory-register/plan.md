@@ -1,6 +1,6 @@
 # Phase 5 — Native inventory, supplier imports, iPhone scanning and controlled register
 
-Status: 5A1 released via PR253, both hosted backends186 and exact production verified. Camera PR254 is in review with local and staged simulated-camera proof; actual device acceptance remains pending. Controlled C0–C3 now have an executable researched plan. Real supplier, iPhone and controlled-register acceptance remain required. Requirements N01, N02, N19, H11, H12 remain launch scope. Supplements the original October 8 Phase 5; does not replace any of the original 45 requirements. PR251 merged as d273144163e6dbb8ed101289bb430877faefd160; implementation starts from that merge. Research describes its unchanged c2db1ca0 feature source.
+Status: 5A1 released via PR253, both hosted backends186 and exact production verified. Camera PR254 is released357e6f93 with exact CI/staged source/production verification; actual device acceptance remains pending. Controlled C0–C3 now have an executable researched plan. Real supplier, iPhone and controlled-register acceptance remain required. Requirements N01, N02, N19, H11, H12 remain launch scope. Supplements the original October 8 Phase 5; does not replace any of the original 45 requirements. PR251 merged as d273144163e6dbb8ed101289bb430877faefd160; implementation starts from that merge. Research describes its unchanged c2db1ca0 feature source.
 
 | Package | Work | Dependency / completion evidence |
 |---|---|---|

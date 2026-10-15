@@ -51,7 +51,7 @@ try:
         assert re.match(r'^\d{14}_', migration.name)
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project/'supabase/migrations'/migration.name)
-    assert len(hashes) == 186 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes
+    assert len(hashes) == 187 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes and '20261015011200_controlled_draft_configuration.sql' in hashes
     if args.include_sql_regression: shutil.copytree(root/'supabase/tests', project/'supabase/tests')
     harness = root/'tests/scheduling/catalog-local.ts'
     harness_hash = hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=152, Tests=6387' in result
-        print('Canonical SQL regression passed: 152 files /6387 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=153, Tests=6464' in result
+        print('Canonical SQL regression passed: 153 files /6464 assertions.', flush=True)
     # Rehearse the exact staged/primary rollback probe while the freshly replayed
     # policy is still empty, before any Auth/browser acceptance changes it.
     probe = root/'scripts/task-reconciliation/rollback-probe.sql'
@@ -100,6 +100,13 @@ enabled = false
     assert identity_rollback == {'checks':31,'provider_requests':0,'rollback_only':True}
     assert hashlib.sha256(identity_probe.read_bytes()).hexdigest()==identity_probe_hash
     print('Exact supplier identity hosted rollback probe rehearsed:31 checks;no persisted fixture.',flush=True)
+    controlled_probe = root/'scripts/controlled-drafts/rollback-probe.sql'
+    controlled_probe_hash = hashlib.sha256(controlled_probe.read_bytes()).hexdigest()
+    output = command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=controlled_probe.read_text())
+    controlled_rollback = json.loads(next(line for line in reversed(output.splitlines())if line.startswith('{"checks"')))
+    assert controlled_rollback == {'checks':28,'provider_requests':0,'rollback_only':True}
+    assert hashlib.sha256(controlled_probe.read_bytes()).hexdigest()==controlled_probe_hash
+    print('Exact controlled-draft hosted rollback probe rehearsed:28 checks;no persisted fixture.',flush=True)
     env = {**os.environ, 'SCHEDULING_TEST_PROJECT': str(project), 'SCHEDULING_RUN_SYNTHETIC_LOCAL': 'true'}
     if not args.staff_only:
         result = command(['node','--experimental-strip-types',str(harness)], cwd=root, env=env, timeout=420)
@@ -168,6 +175,25 @@ enabled = false
     assert inventory_receipt['browser']['browser_checks']>=15 and inventory_receipt['browser']['committed_ack_loss_recovered'] and inventory_receipt['browser']['scan_resolves_reviewed_package'] and inventory_receipt['browser']['staff_camera_lookup'] and inventory_receipt['browser']['reload_readonly_recovery'] and inventory_receipt['browser']['mobile_overflow_checked'] and inventory_receipt['browser']['touch_targets_checked']
     assert hashlib.sha256(inventory.read_bytes()).hexdigest()==inventory_hash
     print(f"Genuine supplier identity passed:38 Auth/API checks;{inventory_receipt['browser']['browser_checks']} browser checks including simulated camera lookup;no provider requests.",flush=True)
+    controlled = root/'tests/controlled-drugs/native-local.ts'
+    controlled_hash = hashlib.sha256(controlled.read_bytes()).hexdigest()
+    result = command(['node','--experimental-strip-types',str(controlled)],cwd=root,
+      env={**env,'CONTROLLED_TEST_PROJECT':str(project),'CONTROLLED_RUN_SYNTHETIC_LOCAL':'true'},timeout=180)
+    controlled_receipt=json.loads(result.strip().splitlines()[-1])
+    assert controlled_receipt['api_checks']==28 and controlled_receipt['genuine_auth_postgrest'] and controlled_receipt['owned_actors_retired'] and controlled_receipt['owned_sessions_retired'] and controlled_receipt['baseline_unchanged'] and controlled_receipt['draft_only'] and controlled_receipt['provider_requests']==0
+    assert controlled_receipt['browser']['browser_checks']==14 and controlled_receipt['browser']['committed_ack_loss_recovered'] and controlled_receipt['browser']['reload_readonly_recovery'] and controlled_receipt['browser']['no_default_schedule'] and controlled_receipt['browser']['mobile_overflow_checked'] and controlled_receipt['browser']['staff_read_only']
+    assert hashlib.sha256(controlled.read_bytes()).hexdigest()==controlled_hash
+    controlled_lock=root/'supabase/tests/controlled_draft_concurrency.py'
+    controlled_lock_hash=hashlib.sha256(controlled_lock.read_bytes()).hexdigest()
+    result=command(['python3','-B',str(controlled_lock),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120)
+    controlled_locks=json.loads(result.strip().splitlines()[-1]);assert controlled_locks['checks']==5 and controlled_locks['observed_lock_queues']==8 and controlled_locks['post_wait_live_session'] and controlled_locks['post_wait_expiry'] and controlled_locks['owned_staff_deactivated']
+    assert hashlib.sha256(controlled_lock.read_bytes()).hexdigest()==controlled_lock_hash
+    controlled_restore=root/'supabase/tests/controlled_draft_restore.py'
+    controlled_restore_hash=hashlib.sha256(controlled_restore.read_bytes()).hexdigest()
+    result=command(['python3','-B',str(controlled_restore),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180)
+    controlled_restored=json.loads(result.strip().splitlines()[-1]);assert controlled_restored['populated_relations']==6 and controlled_restored['exact_snapshot_restored'] and controlled_restored['exact_original_review_recovered'] and controlled_restored['owned_restore_database_removed']
+    assert hashlib.sha256(controlled_restore.read_bytes()).hexdigest()==controlled_restore_hash
+    print('Controlled draft passed:28 genuine Auth/API,14 browser,8 observed queues and6 populated restored relations;activation unavailable;provider requests0.',flush=True)
     inventory_lock=root/'supabase/tests/supplier_identity_concurrency.py'
     inventory_lock_hash=hashlib.sha256(inventory_lock.read_bytes()).hexdigest()
     result=command(['python3','-B',str(inventory_lock),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120)
@@ -183,9 +209,9 @@ enabled = false
     baseline = json.loads(command(['docker','exec','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-c',
       "select jsonb_build_object('active_staff',(select count(*)from profiles where is_active),'reconciliation_enabled',coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false),'pending_run',(select pending_run_id from operational_reconciliation_cursor),'outbox',(select count(*)from communication_outbox),'inventory_movements',(select count(*)from inventory_movements),'cron_active',(select active from cron.job where jobname='reconcile-operational-tasks'));" ]))
     assert baseline == {'active_staff':0,'reconciliation_enabled':False,'pending_run':None,'outbox':0,'inventory_movements':0,'cron_active':False}
-    proof = {'canonical_migrations':len(hashes),'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
-             'sql_regression':{'files':152,'assertions':6387} if args.include_sql_regression else None,
-             'staff_only':args.staff_only,'inventory':{'api':inventory_receipt,'concurrency':inventory_locks,'restore':inventory_restored},'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'inventory_rollback_probe':identity_rollback,'cleanup_baseline':baseline}
+    proof = {'canonical_migrations':len(hashes),'migration187_sha256':hashes['20261015011200_controlled_draft_configuration.sql'],'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
+             'sql_regression':{'files':153,'assertions':6464} if args.include_sql_regression else None,
+             'staff_only':args.staff_only,'controlled_draft':{'api':controlled_receipt,'concurrency':controlled_locks,'restore':controlled_restored},'inventory':{'api':inventory_receipt,'concurrency':inventory_locks,'restore':inventory_restored},'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'inventory_rollback_probe':identity_rollback,'controlled_rollback_probe':controlled_rollback,'cleanup_baseline':baseline}
     proof_path=root/'tmp/reconciliation-release-disposable-proof.json'
     proof_path.parent.mkdir(exist_ok=True)
     proof_path.write_text(json.dumps(proof,indent=2)+'\n')
