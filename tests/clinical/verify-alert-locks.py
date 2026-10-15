@@ -34,6 +34,8 @@ try:
     # design and refuses to be created in this clone ('can only create extension
     # in database postgres'). The clone needs no job scheduler.
     schema = subprocess.run(['docker', 'exec', container, 'pg_dump', '-U', 'supabase_admin', '--schema-only', '--no-owner', '--schema=public', '--schema=auth', '--schema=storage', '--schema=extensions', 'postgres'], capture_output=True, text=True, check=True).stdout
+    # Preserve reviewed writer metadata without copying clinical/admission data.
+    schema += subprocess.run(['docker', 'exec', container, 'pg_dump', '-U', 'supabase_admin', '--data-only', '--no-owner', '--table=public.stock_writer_manifests', 'postgres'], capture_output=True, text=True, check=True, timeout=120).stdout
     sql(f'create database {database};', 'postgres')
     created = True
     # A filtered dump creates the public schema explicitly, and a new database

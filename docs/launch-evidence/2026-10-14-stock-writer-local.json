@@ -273,7 +273,15 @@
     "tests/prescriptions/native-disposable.py": "64b836ca2a5548521e7533eac0d1002251659a4fc182e9377b5002be6ec50c4d",
     "tests/scheduling/disposable.py": "c0d73ba129ffb2606f6594ce31f6be9cd784acc54b19bd1083df8126bb2faf08",
     "tests/scheduling/operational-reconciliation-local.ts": "7a78e598e0af3949e8db8a30b72e3ceb41868800a5900a5a67faf973152b1b54",
-    "tests/scheduling/operational-tasks-local.ts": "b7ccef7be898ab15d60fea7f557297a29d007a8c78bcb9e57c6234c5cd23644d"
+    "tests/scheduling/operational-tasks-local.ts": "b7ccef7be898ab15d60fea7f557297a29d007a8c78bcb9e57c6234c5cd23644d",
+    "supabase/tests/inventory_product_locking_concurrency.py": "3f9c690d405282bf379c3805efb196b45e18ad1587f679d1291e9d9238959a57",
+    "supabase/tests/native_fulfillment_concurrency.py": "79ad070094cbaa678ea218a6dc3e51a0660134b025e84ec0551163f34340025e",
+    "supabase/tests/native_record_releases_concurrency.py": "5fa71796128f427269250ffbbe9cd95f412bbb509c26149874bb431d044254c4",
+    "supabase/tests/native_dispense_corrections_concurrency.py": "2ee2894ba48baedb539dafcddecb26959316346d773a7aac0af8357bbca3eb70",
+    "supabase/tests/native_dispense_returns_concurrency.py": "33283e85ad0a5cc747a76e1b1260b7ed68b2195da232351e2c81993cbdd9c410",
+    "tests/prescriptions/native_reconciliation_concurrency.py": "7b0dee18a663ae8cc660ad2c60a70af6656d8b74e6eee14f5cdae28ee096795e",
+    "tests/prescriptions/native_finance_concurrency.py": "f858c321dde2cd42294c7a9675c7c38f8a6b7e1267c336e7dd033981e54ee91b",
+    "tests/clinical/verify-alert-locks.py": "9b88c8c05bb0dfc502c57704855891ca2f976d5180e9bc00d866cff48510f269"
   },
   "existing_warnings": [
     "Four existing React refresh lint warnings",
@@ -290,5 +298,73 @@
     "C2 independent review/physical witnessing/corrections/transfers/counts/reports",
     "C3 actual registration/products/units/counts/SOP acceptance and commissioning",
     "All remaining original requirements and actual vendor/device evidence"
-  ]
+  ],
+  "legacy_stock_contention": {
+    "schema_clones": 8,
+    "counted_checks": 525,
+    "additional_clinical_alert_scenarios": 2,
+    "prior_lock_order_negative_control_detected": true,
+    "source_manifests_unchanged": true,
+    "source_stock_and_admission_rows": 0,
+    "seeded_reference_table": "stock_writer_manifests",
+    "clinical_or_admission_data_copied": false,
+    "files": [
+      {
+        "file": "supabase/tests/inventory_product_locking_concurrency.py",
+        "sha256": "3f9c690d405282bf379c3805efb196b45e18ad1587f679d1291e9d9238959a57",
+        "passed": true,
+        "summary": "Inventory product-lock concurrency: 32 checks passed; no provider calls.",
+        "log_sha256": "4977d0b104511fde38d5ca1fe320763f0c012c4ba2c9843638aa80593428edc0"
+      },
+      {
+        "file": "supabase/tests/native_fulfillment_concurrency.py",
+        "sha256": "79ad070094cbaa678ea218a6dc3e51a0660134b025e84ec0551163f34340025e",
+        "passed": true,
+        "summary": "Native fulfillment concurrency: 67 checks passed; no provider calls.",
+        "log_sha256": "3d64d588fbbcbc3028ad06f6750cd1357f462bcfcdaabb6abd070a007fb4c70c"
+      },
+      {
+        "file": "supabase/tests/native_record_releases_concurrency.py",
+        "sha256": "5fa71796128f427269250ffbbe9cd95f412bbb509c26149874bb431d044254c4",
+        "passed": true,
+        "summary": "Native release concurrency: 54 checks passed; no provider calls.",
+        "log_sha256": "89be2246813b3f22f2270db8720bb999119d171e83c7224d39bb7fcc0b91e0a4"
+      },
+      {
+        "file": "supabase/tests/native_dispense_corrections_concurrency.py",
+        "sha256": "2ee2894ba48baedb539dafcddecb26959316346d773a7aac0af8357bbca3eb70",
+        "passed": true,
+        "summary": "Native correction concurrency: 48 checks passed; no provider calls.",
+        "log_sha256": "4aa26f9ca8d75e768a2c6ed6c9308db58de99cea11a3e32599824b96b2d014cf"
+      },
+      {
+        "file": "supabase/tests/native_dispense_returns_concurrency.py",
+        "sha256": "33283e85ad0a5cc747a76e1b1260b7ed68b2195da232351e2c81993cbdd9c410",
+        "passed": true,
+        "summary": "Native return concurrency: 72 checks passed; no provider calls.",
+        "log_sha256": "734ccd5136e885acbd74c3f2a3698cab00ed2bc433967b50fe39514bd068f281"
+      },
+      {
+        "file": "tests/prescriptions/native_reconciliation_concurrency.py",
+        "sha256": "7b0dee18a663ae8cc660ad2c60a70af6656d8b74e6eee14f5cdae28ee096795e",
+        "passed": true,
+        "summary": "Native reconciliation concurrency: 83 checks passed; no provider calls.",
+        "log_sha256": "d36dfcae1a73d23a3c3326336776067016857e025cacaddc8b8e0b8df88b2819"
+      },
+      {
+        "file": "tests/prescriptions/native_finance_concurrency.py",
+        "sha256": "f858c321dde2cd42294c7a9675c7c38f8a6b7e1267c336e7dd033981e54ee91b",
+        "passed": true,
+        "summary": "Native finance concurrency: 169 checks passed; no provider calls.",
+        "log_sha256": "543a381fe03e6a711c85e61fdd32fcdc465294458707c53af83c7a641c19fe82"
+      },
+      {
+        "file": "tests/clinical/verify-alert-locks.py",
+        "sha256": "9b88c8c05bb0dfc502c57704855891ca2f976d5180e9bc00d866cff48510f269",
+        "passed": true,
+        "summary": "PASS: legacy allergy waited on snapshot lock; committed change rejected stale treatment before stock/billing writes",
+        "log_sha256": "1934c8cc10e1d64b8c133e7741c3372f09208511abb3128cc6c1a301c14803cf"
+      }
+    ]
+  }
 }

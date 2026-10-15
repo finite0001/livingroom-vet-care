@@ -116,6 +116,8 @@ def operation(name,request_id,request,other=False):return (other_staff if other 
 def receipt(request_id,other=False):return json.loads(scalar('begin;'+(other_staff if other else staff)+'select coalesce(recover_native_prescription_operation('+quote(request_id)+"),'null'::jsonb);commit;"))
 try:
     dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--schema-only','--no-owner','--schema=public','--schema=auth','--schema=storage','--schema=extensions','postgres'],capture_output=True,check=True,timeout=120).stdout
+    # Reviewed code metadata is required by the guard; copy no clinical/admission data.
+    dump+=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--data-only','--no-owner','--table=public.stock_writer_manifests','postgres'],capture_output=True,check=True,timeout=120).stdout
     sql(f'create database "{database}";');created=True
     sql(f"comment on database \"{database}\" is {quote(marker)};")
     COMMAND=FOUNDATION_COMMAND.copy();COMMAND[COMMAND.index('-d')+1]=database
@@ -128,8 +130,13 @@ try:
     if args.use_prior_treatment_lock_order:
         amendment=Path(__file__).resolve().parents[1].joinpath('migrations','20260916070108_inventory_product_before_lot_locking.sql').read_text()
         prefix=amendment.split(" select pg_get_functiondef('public.record_patient_treatment")[0]
+        # The later native workflow maps stale conflicts to PT409; preserve that mapping.
+        prefix=prefix.replace("errcode=''40001''","errcode=''PT409''")
         inverse=prefix+" select pg_get_functiondef('public.record_patient_treatment(uuid,jsonb)'::regprocedure) into definition; if position(new_block in definition)=0 then raise exception 'Expected118order absent';end if;definition:=replace(definition,new_block,old_block);execute definition;end $$;"
         sql(inverse)
+        # This explicit negative control reviews only its deliberately modified clone body.
+        # The real manifest and real writer remain untouched in the source database.
+        sql("insert into stock_writer_manifests select writer,version+1,signature,encode(sha256(convert_to(pg_get_functiondef(signature::regprocedure),'UTF8')),'hex'),definition_sha256 from stock_writer_manifests where writer='record_patient_treatment' order by version desc limit 1;")
         print('Negative control: prior treatment lock order reconstructed only in owned scratch database.',flush=True)
 
     saved=json.loads(scalar('begin;set local search_path=public,extensions;'+fixture+"select jsonb_build_object('fx',(select jsonb_object_agg(k,id) from fx),'data',(select jsonb_object_agg(k,v) from data));commit;"))
