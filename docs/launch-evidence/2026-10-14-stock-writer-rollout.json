@@ -1,0 +1,219 @@
+{
+  "pr": 256,
+  "reviewed_head": "cea2a5020de726f1cb15252067da1142bdb22128",
+  "merge_commit": "479e02ef33cbcc14e03a5539a3f6f75fecbae954",
+  "merged_at": "2026-10-15T04:59:34Z",
+  "ci_run": 38681760272,
+  "ci_jobs": [
+    "frontend",
+    "edge",
+    "database",
+    "diagnostic-renderer"
+  ],
+  "unit_tests": 1471,
+  "sql_files": 154,
+  "sql_assertions": 6506,
+  "browser_tests": 524,
+  "existing_browser_skip": 1,
+  "built_simulated_camera_checks": 16,
+  "migration": "20261015020722_stock_writer_provenance.sql",
+  "migration_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+  "projects": {
+    "kothoqicubowyhwfsrte": {
+      "installation_source_head": "608d094a9bcc3022af824dbad781f75c774f3cd5",
+      "reviewed_head": "cea2a5020de726f1cb15252067da1142bdb22128",
+      "migrations": 188,
+      "pending": 0,
+      "installation_preserved_relations": 29,
+      "existing_api_permission_sets_preserved": 8,
+      "private_tables": 5,
+      "private_helpers": 6,
+      "exact_writer_hashes_verified": 8,
+      "rollback_checks": 22,
+      "rollback_preserved_relations": 34,
+      "state": {
+        "cron_active": false,
+        "disclosure": 0,
+        "generation": 0,
+        "outbox": 0,
+        "payment_profiles": 1,
+        "reconciliation": 0,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "stock": 0,
+        "worker": 0
+      },
+      "advisors": {
+        "project": "kothoqicubowyhwfsrte",
+        "added_private_rls_tables": [
+          "stock_custody_sources",
+          "stock_discrepancy_sources",
+          "stock_movement_sources",
+          "stock_writer_admissions",
+          "stock_writer_manifests"
+        ],
+        "removed_findings": 0,
+        "new_authenticated_functions": 0,
+        "other_findings_unchanged": true,
+        "counts": [
+          {
+            "name": "rls_enabled_no_policy",
+            "level": "INFO",
+            "count": 212
+          },
+          {
+            "name": "extension_in_public",
+            "level": "WARN",
+            "count": 1
+          },
+          {
+            "name": "anon_security_definer_function_executable",
+            "level": "WARN",
+            "count": 8
+          },
+          {
+            "name": "authenticated_security_definer_function_executable",
+            "level": "WARN",
+            "count": 503
+          },
+          {
+            "name": "auth_leaked_password_protection",
+            "level": "WARN",
+            "count": 1
+          }
+        ],
+        "clean_scan_claimed": false
+      }
+    },
+    "mgadheotkdnrsatfivjy": {
+      "installation_source_head": "cea2a5020de726f1cb15252067da1142bdb22128",
+      "reviewed_head": "cea2a5020de726f1cb15252067da1142bdb22128",
+      "migrations": 188,
+      "pending": 0,
+      "installation_preserved_relations": 29,
+      "existing_api_permission_sets_preserved": 8,
+      "private_tables": 5,
+      "private_helpers": 6,
+      "exact_writer_hashes_verified": 8,
+      "rollback_checks": 22,
+      "rollback_preserved_relations": 34,
+      "state": {
+        "cron_active": false,
+        "disclosure": 0,
+        "generation": 0,
+        "outbox": 3,
+        "payment_profiles": 0,
+        "reconciliation": 0,
+        "release": 0,
+        "runtime": 0,
+        "staff_download": 0,
+        "stock": 0,
+        "worker": 0
+      },
+      "advisors": {
+        "project": "mgadheotkdnrsatfivjy",
+        "added_private_rls_tables": [
+          "stock_custody_sources",
+          "stock_discrepancy_sources",
+          "stock_movement_sources",
+          "stock_writer_admissions",
+          "stock_writer_manifests"
+        ],
+        "removed_findings": 0,
+        "new_authenticated_functions": 0,
+        "other_findings_unchanged": true,
+        "counts": [
+          {
+            "name": "rls_enabled_no_policy",
+            "level": "INFO",
+            "count": 212
+          },
+          {
+            "name": "extension_in_public",
+            "level": "WARN",
+            "count": 1
+          },
+          {
+            "name": "anon_security_definer_function_executable",
+            "level": "WARN",
+            "count": 8
+          },
+          {
+            "name": "authenticated_security_definer_function_executable",
+            "level": "WARN",
+            "count": 503
+          },
+          {
+            "name": "auth_leaked_password_protection",
+            "level": "WARN",
+            "count": 1
+          }
+        ],
+        "clean_scan_claimed": false
+      }
+    }
+  },
+  "staging_auth": {
+    "project": "kothoqicubowyhwfsrte",
+    "head": "cea2a5020de726f1cb15252067da1142bdb22128",
+    "migration_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+    "api_checks": 32,
+    "all_eight_api_entry_checks": true,
+    "genuine_auth_postgrest": true,
+    "actual_live_session": true,
+    "private_sources_denied": true,
+    "owned_actors_retired": true,
+    "owned_sessions_retired": true,
+    "baseline_unchanged": true,
+    "exact_snapshot_relations": 34,
+    "no_physical_fixtures": true,
+    "provider_requests": 0
+  },
+  "production": {
+    "deployment": "dpl_2ofRDWHqxWssfzZDMtnKXYcMfHWP",
+    "commit": "479e02ef33cbcc14e03a5539a3f6f75fecbae954",
+    "domain": "thelivingroom.vet",
+    "ready": true,
+    "smoke": {
+      "observed_at": "2026-10-15T05:01:56.576Z",
+      "origin": "https://thelivingroom.vet",
+      "path": "/hub/login",
+      "status": 200,
+      "entry": "/assets/index-C-VWbbbP.js",
+      "app_chunk": "./App-CVtkzUmw.js",
+      "backend": "mgadheotkdnrsatfivjy",
+      "backend_migrations": 188,
+      "protected_redirects": [
+        "/hub/inventory",
+        "/hub/tools/task-templates",
+        "/hub/tasks",
+        "/hub/schedule",
+        "/hub/admin/operations"
+      ],
+      "task_routes_bundled": true,
+      "inventory_chunk": "./InventoryPage-B9M0wKbC.js",
+      "supplier_mapping_ui_bundled": true,
+      "controlled_draft_ui_bundled": true,
+      "controlled_activation_available": false,
+      "camera_chunk": "./BarcodeScanDialog-BGVTFwBl.js",
+      "worker": "/assets/barcode-worker-CwzrmRbY.js",
+      "wasm": "/assets/zxing_reader-_HcWiliU.wasm",
+      "wasm_sha256": "aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931",
+      "wasm_bytes": 966895,
+      "local_asset_chain_verified": true,
+      "camera_permission_requested": false,
+      "actual_iphone_acceptance": false,
+      "page_errors": 0,
+      "staff_session_used": false,
+      "anonymous_edge_status": 401,
+      "provider_requests": 0
+    }
+  },
+  "provider_requests": 0,
+  "edge_deployments": 0,
+  "secret_changes": 0,
+  "legacy_writes": 0,
+  "controlled_register_activated": false,
+  "susan_rules_approved": false
+}

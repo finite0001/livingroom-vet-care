@@ -22,6 +22,8 @@ assert Path(labels['com.supabase.cli.workdir']).resolve() == project
 root = Path(__file__).resolve().parents[2]
 migration = root/'supabase/migrations/20261015020722_stock_writer_provenance.sql'
 migration_hash = hashlib.sha256(migration.read_bytes()).hexdigest()
+handoff_migration = root/'supabase/migrations/20261015055007_native_custody_provenance.sql'
+handoff_migration_hash = hashlib.sha256(handoff_migration.read_bytes()).hexdigest()
 log = (project/'stock-source-restore.log').open('w')
 source_tables = ['stock_writer_manifests', 'stock_writer_admissions', 'stock_movement_sources', 'stock_custody_sources', 'stock_discrepancy_sources']
 clinical_tables = ['catalog_products', 'inventory_lots', 'inventory_movements', 'patient_treatments', 'anesthesia_drug_administrations', 'native_dispenses', 'native_dispense_allocations', 'native_return_events', 'native_return_operations', 'native_return_stock_links', 'native_return_compensation_links', 'native_return_discrepancy_events', 'native_return_discrepancy_operations', 'native_fulfillment_operations', 'billing_invoice_items', 'billing_invoices']
@@ -53,6 +55,10 @@ def staff(actor, query, rollback=True):
 
 
 before = snapshot(tables)
+handoff_clinical = clinical_tables + ['native_pickups','native_dispense_correction_events','native_dispense_correction_operations']
+handoff_tables = tables + ['stock_pickup_sources','stock_correction_sources','native_pickups','native_dispense_correction_events','native_dispense_correction_operations']
+handoff_before = snapshot(handoff_tables)
+assert len(handoff_tables)==26 and all(row['count']>0 for row in json.loads(handoff_before).values()), 'Both additional source families and their linked native history must be populated'
 assert len(tables) == 21 and all(row['count'] > 0 for row in json.loads(before).values()), 'All five source families and sixteen linked clinical/stock families must be populated'
 writers = json.loads(sql("select jsonb_agg(writer order by writer)from(select writer from stock_movement_sources union select writer from stock_custody_sources union select 'record_native_return_discrepancy' where exists(select 1 from stock_discrepancy_sources))q;"))
 assert set(writers) == {'receive_inventory','adjust_inventory','record_patient_treatment','record_anesthesia_drug_administration','record_native_dispense','record_native_dispense_return','record_native_dispense_return_v2','record_native_return_discrepancy'}
@@ -80,6 +86,7 @@ def clone(label):
 try:
     restored = clone('restore')
     assert snapshot(tables, restored) == before
+    assert snapshot(handoff_tables, restored) == handoff_before
     assert json.loads(sql(staff(record['actor'], record['query']), restored).splitlines()[-1]) == expected
     assert snapshot(tables, restored) == before
     sql('select stock_source_validate_movement(movement_id)from stock_movement_sources;', restored)
@@ -88,6 +95,20 @@ try:
         assert sql(f"select has_table_privilege('authenticated','{table}','SELECT')or has_table_privilege('service_role','{table}','INSERT');", restored) == 'f'
     for helper in helpers:
         assert sql(f"select has_function_privilege('authenticated','{helper}','EXECUTE')or has_function_privilege('service_role','{helper}','EXECUTE');", restored) == 'f'
+    handoff_receipts=[]
+    for query in [
+        "select jsonb_build_object('actor',actor_id,'query',format('select record_native_pickup(%L::uuid,%L::jsonb)',id,request::text))from native_fulfillment_operations where operation='pickup'order by created_at limit 1;",
+        "select jsonb_build_object('actor',actor_id,'query',format('select append_native_dispense_correction(%L::uuid,%L::jsonb)',id,request::text))from native_dispense_correction_operations where request->>'kind'='operational_annotation'order by created_at limit 1;",
+    ]:
+        item=json.loads(sql(query))
+        item['receipt']=json.loads(sql(staff(item['actor'],item['query'])).splitlines()[-1])
+        assert json.loads(sql(staff(item['actor'],item['query']),restored).splitlines()[-1])==item['receipt']
+        handoff_receipts.append(item)
+    assert snapshot(handoff_tables)==handoff_before and snapshot(handoff_tables,restored)==handoff_before
+    for table in ['stock_pickup_sources','stock_correction_sources']:
+        assert sql(f"select has_table_privilege('authenticated','{table}','SELECT')or has_table_privilege('service_role','{table}','INSERT');",restored)=='f'
+    for helper in ['stock_handoff_guard()','stock_handoff_consistency()']:
+        assert sql(f"select has_function_privilege('authenticated','{helper}','EXECUTE')or has_function_privilege('service_role','{helper}','EXECUTE');",restored)=='f'
     # A restored historical admission must not authorize a new statement, even
     # when privileged fixture SQL supplies otherwise valid current staff claims.
     lot = sql('select lot_id from inventory_movements where not native_reconciliation_lot_held(lot_id)order by id limit 1;', restored)
@@ -98,7 +119,17 @@ try:
 
     upgrade = clone('upgrade')
     manifest = json.loads(sql("select jsonb_agg(jsonb_build_object('writer',writer,'signature',signature,'prior_hash',prior_definition_sha256,'definition',replace(pg_get_functiondef(signature::regprocedure),chr(10)||format(' perform public.stock_writer_enter(%L,p_id);',writer),''))order by writer)from stock_writer_manifests;", upgrade))
-    assert len(manifest) == 8
+    assert len(manifest) == 10
+    handoff_manifest = [entry for entry in manifest if entry['writer'] in ('record_native_pickup','append_native_dispense_correction')]
+    manifest = [entry for entry in manifest if entry not in handoff_manifest]
+    assert len(manifest) == 8 and len(handoff_manifest) == 2
+    # Reconstruct the real pre-C1a (187) boundary in this OWNED clone. The later
+    # handoff extension must be removed too, rather than silently retaining two
+    # hooks whose private admission helper is about to be removed.
+    for entry in handoff_manifest:
+        assert hashlib.sha256(entry['definition'].encode()).hexdigest() == entry['prior_hash']
+        sql(entry['definition'], upgrade)
+    sql('drop function stock_handoff_guard() cascade;drop function stock_handoff_consistency() cascade;drop table stock_pickup_sources;drop table stock_correction_sources;', upgrade)
     for entry in manifest:
         # This is the EXACT canonical pre-migration function text, not a mock
         # old writer. Only the inserted entry line is removed, hash-verified.
@@ -144,13 +175,54 @@ try:
     sql(f"select stock_source_validate_movement('{next_id}');", upgrade)
     assert json.loads(sql(staff(actor, legacy_request), upgrade).splitlines()[-1]) == legacy_receipt
     assert sql(f"select sum(quantity)::text from inventory_movements where lot_id='{next_lot}';", upgrade) == '0.125'
+
+    # Independent 188 -> 189 rehearsal. Retain actual populated old handoffs,
+    # original receipts and all clinical/financial data; remove only the new
+    # coverage inside this marked, disposable clone.
+    handoff_upgrade=clone('handoff_upgrade')
+    for entry in handoff_manifest:
+        sql(entry['definition'],handoff_upgrade)
+    sql("drop function stock_handoff_guard()cascade;drop function stock_handoff_consistency()cascade;drop table stock_pickup_sources;drop table stock_correction_sources;alter table stock_writer_manifests disable trigger immutable;delete from stock_writer_manifests where writer in('record_native_pickup','append_native_dispense_correction');alter table stock_writer_manifests enable trigger immutable;",handoff_upgrade)
+    prior_handoff=snapshot(handoff_clinical,handoff_upgrade)
+    last=next(entry for entry in handoff_manifest if entry['writer']=='append_native_dispense_correction')
+    sql(last['definition'].replace('begin','begin /* synthetic handoff source drift */',1),handoff_upgrade)
+    sql(handoff_migration.read_text(),handoff_upgrade,'Unexpected pre-migration handoff writer definition')
+    assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and relname in('stock_pickup_sources','stock_correction_sources');",handoff_upgrade)=='0'
+    assert sql('select count(*)from stock_writer_manifests;',handoff_upgrade)=='8'
+    first=next(entry for entry in handoff_manifest if entry['writer']=='record_native_pickup')
+    assert sql(f"select encode(sha256(convert_to(pg_get_functiondef('{first['signature']}'::regprocedure),'UTF8')),'hex');",handoff_upgrade)==first['prior_hash']
+    assert snapshot(handoff_clinical,handoff_upgrade)==prior_handoff
+    sql(last['definition'],handoff_upgrade)
+    assert hashlib.sha256(handoff_migration.read_bytes()).hexdigest()==handoff_migration_hash
+    sql(handoff_migration.read_text(),handoff_upgrade)
+    assert snapshot(handoff_clinical,handoff_upgrade)==prior_handoff
+    for item in handoff_receipts:
+        assert json.loads(sql(staff(item['actor'],item['query']),handoff_upgrade).splitlines()[-1])==item['receipt']
+    assert sql('select(select count(*)from stock_pickup_sources)+(select count(*)from stock_correction_sources);',handoff_upgrade)=='0', 'Legacy recovery must never invent source evidence'
+    assert snapshot(handoff_clinical,handoff_upgrade)==prior_handoff
+    item=json.loads(sql("select jsonb_build_object('actor',actor_id,'request',request)from native_dispense_correction_operations where request->>'kind'='operational_annotation'order by created_at limit 1;",handoff_upgrade))
+    new_id=str(uuid.uuid4())
+    request=json.dumps(item['request'],separators=(',',':')).replace("'","''")
+    # Freeze a fresh canonical preview; the physical/correction request remains
+    # the original native API, with no new approval or stock semantics.
+    new_query=f"""do $proof$declare request jsonb:='{request}'::jsonb;preview jsonb;begin
+      preview:=preview_native_dispense_correction((request->>'authorization_id')::uuid,(request->>'pet_id')::uuid,(request->>'dispense_id')::uuid);
+      request:=request||jsonb_build_object('expected_context_hash',preview->>'context_hash','expected_head',preview#>'{{context,head}}');
+      perform append_native_dispense_correction('{new_id}',request);
+    end $proof$"""
+    stock_before=snapshot(['inventory_movements','billing_invoices','billing_invoice_items'],handoff_upgrade)
+    sql(staff(item['actor'],new_query,False),handoff_upgrade)
+    assert sql(f"select count(*)from stock_correction_sources where event_id='{new_id}'and actor_id='{item['actor']}';",handoff_upgrade)=='1'
+    assert snapshot(['inventory_movements','billing_invoices','billing_invoice_items'],handoff_upgrade)==stock_before
 finally:
     for database, marker in owned.items():
         assert sql(f"select shobj_description(oid,'pg_database')from pg_database where datname='{database}';") == marker
         sql('drop database ' + database + ';')
 
 assert snapshot(tables) == before
+assert snapshot(handoff_tables)==handoff_before
 log.close()
 proof = {'populated_source_families': 5, 'snapshot_relations': 21, 'all_eight_writer_sources_present': True, 'exact_snapshot_restored': True, 'exact_native_receipt_replayed': True, 'restored_stale_admission_denied': True, 'private_grants_and_manifest_restored': True, 'upgrade_exact_prior_definition_hashes': 8, 'populated_upgrade_preserved_legacy_history': True, 'unexpected_source_drift_denied_atomically': True, 'legacy_receipt_unchanged_without_backfill': True, 'new_post_upgrade_source_enforced': True, 'owned_clone_databases_removed': True, 'original_database_unchanged': True, 'migration_sha256': migration_hash, 'provider_requests': 0}
+proof['handoff_extension']={'populated_snapshot_relations':26,'additional_source_families':2,'exact_snapshot_restored':True,'original_pickup_and_correction_receipts_restored':True,'upgrade_from_188_preserves_history':True,'source_drift_rolls_back_all_ddl':True,'legacy_replay_has_no_backfill':True,'new_correction_has_one_source_and_no_stock_or_billing_effect':True,'private_grants_restored':True,'migration_sha256':handoff_migration_hash}
 (project/'stock-writer-restore-proof.json').write_text(json.dumps(proof, indent=2))
 print(json.dumps(proof))

@@ -1,0 +1,341 @@
+{
+  "scope": "C1b0 native pickup/correction provenance; controlled execution and activation remain unavailable",
+  "local_only": true,
+  "observed_at": "2026-10-15T06:10:27.245302+00:00",
+  "migrations": 189,
+  "migration": "20261015055007_native_custody_provenance.sql",
+  "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+  "units": 1471,
+  "sql": {
+    "files": 155,
+    "assertions": 6540
+  },
+  "new_sql_assertions": 34,
+  "native_regression": {
+    "checks": 783,
+    "suites": [
+      {
+        "suite": "native-prescription-lifecycle-http",
+        "checks_passed": 82
+      },
+      {
+        "suite": "native-fulfillment-http",
+        "checks_passed": 85
+      },
+      {
+        "suite": "native-fulfillment-and-release-browser",
+        "checks_passed": 77
+      },
+      {
+        "suite": "native-release-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-corrections-local-auth",
+        "checks_passed": 46
+      },
+      {
+        "suite": "native-returns-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-reconciliation-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-finance-local-auth",
+        "checks_passed": 61
+      },
+      {
+        "suite": "native-estimate-drafts-local-auth",
+        "checks_passed": 51
+      },
+      {
+        "suite": "native-estimate-publications-local-auth-http",
+        "checks_passed": 87
+      },
+      {
+        "suite": "native-estimate-decisions-local-auth-http",
+        "checks_passed": 123
+      }
+    ],
+    "populated_restore_checks": 275
+  },
+  "stock_boundary": {
+    "api": {
+      "api_checks": 40,
+      "genuine_auth_postgrest": true,
+      "actual_live_session": true,
+      "source_tables_and_helpers_denied": true,
+      "canonical_receipt_replay": true,
+      "anesthesia_one_debit_one_source": true,
+      "exact_fractional_stock": true,
+      "inactive_actor_denied": true,
+      "owned_actor_and_sessions_retired": true,
+      "non_stock_baselines_unchanged": true,
+      "provider_requests": 0
+    },
+    "concurrency": {
+      "checks": 14,
+      "observed_lock_queues": 16,
+      "all_ten_outer_writers_early": true,
+      "exclusive_drains_prior_stock": true,
+      "new_writers_wait_for_exclusive": true,
+      "post_wait_role_rechecked": true,
+      "shared_concurrency_preserved": true,
+      "same_uuid_one_source_exact_receipt": true,
+      "unsupported_isolation_denied": true,
+      "owned_actor_retired": true,
+      "provider_requests": 0
+    },
+    "restore": {
+      "populated_source_families": 5,
+      "snapshot_relations": 21,
+      "all_eight_writer_sources_present": true,
+      "exact_snapshot_restored": true,
+      "exact_native_receipt_replayed": true,
+      "restored_stale_admission_denied": true,
+      "private_grants_and_manifest_restored": true,
+      "upgrade_exact_prior_definition_hashes": 8,
+      "populated_upgrade_preserved_legacy_history": true,
+      "unexpected_source_drift_denied_atomically": true,
+      "legacy_receipt_unchanged_without_backfill": true,
+      "new_post_upgrade_source_enforced": true,
+      "owned_clone_databases_removed": true,
+      "original_database_unchanged": true,
+      "migration_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+      "provider_requests": 0,
+      "handoff_extension": {
+        "populated_snapshot_relations": 26,
+        "additional_source_families": 2,
+        "exact_snapshot_restored": true,
+        "original_pickup_and_correction_receipts_restored": true,
+        "upgrade_from_188_preserves_history": true,
+        "source_drift_rolls_back_all_ddl": true,
+        "legacy_replay_has_no_backfill": true,
+        "new_correction_has_one_source_and_no_stock_or_billing_effect": true,
+        "private_grants_restored": true,
+        "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe"
+      }
+    },
+    "api_sha256": "b533f4f18c7584c4db0ee340acf3361ce67d49785eecd4ed1bcef3da5b4d538a",
+    "concurrency_sha256": "6d04551ebcdd14ab68df08c12189eb0d96bcf0044b3ba6ce94e7c48202d49a38",
+    "restore_sha256": "b6a59a7f4e315ab16d0d91630a61d61d029df41e92349354bf9d6712241f6430",
+    "rollback_probe": {
+      "checks": 22,
+      "rollback_only": true,
+      "provider_requests": 0
+    },
+    "rollback_probe_sha256": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+    "handoff_rollback_probe": {
+      "checks": 12,
+      "rollback_only": true,
+      "provider_requests": 0,
+      "single_inventory_debit": true,
+      "canonical_pickup_and_amendment": true
+    },
+    "handoff_rollback_probe_sha256": "182515883cf25fbcbdb91720dcf8848f831c14a88ba77ba8c01b7d33792da6cf"
+  },
+  "parent_scheduling_tasks_scanner_and_draft": {
+    "canonical_migrations": 189,
+    "migration189_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+    "migration188_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+    "migration187_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+    "migration186_sha256": "693a974f59a86f50c4fabaf9253a1f579bacdade545171c74a17231e812e6df4",
+    "migration185_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+    "sql_regression": null,
+    "staff_only": false,
+    "controlled_draft": {
+      "api": {
+        "api_checks": 28,
+        "genuine_auth_postgrest": true,
+        "private_tables_denied": true,
+        "exact_receipt_replay": true,
+        "owned_actors_retired": true,
+        "owned_sessions_retired": true,
+        "baseline_unchanged": true,
+        "draft_only": true,
+        "provider_requests": 0,
+        "browser": {
+          "browser_checks": 14,
+          "genuine_staff_api": true,
+          "committed_ack_loss_recovered": true,
+          "reload_readonly_recovery": true,
+          "draft_only": true,
+          "no_default_schedule": true,
+          "mobile_overflow_checked": true,
+          "touch_targets_checked": true,
+          "dirty_close_confirmed": true,
+          "staff_read_only": true,
+          "provider_requests": 0
+        }
+      },
+      "concurrency": {
+        "checks": 5,
+        "observed_lock_queues": 8,
+        "same_uuid_single_receipt": true,
+        "same_product_unique_draft": true,
+        "post_wait_live_session": true,
+        "post_wait_expiry": true,
+        "cancel_execute_serialized": true,
+        "owned_staff_deactivated": true,
+        "provider_requests": 0
+      },
+      "restore": {
+        "populated_relations": 6,
+        "private_draft_families": 5,
+        "exact_snapshot_restored": true,
+        "exact_original_review_recovered": true,
+        "caller_timezone_invariant": true,
+        "private_grants_restored": true,
+        "owned_restore_database_removed": true,
+        "provider_requests": 0
+      }
+    },
+    "inventory": {
+      "api": {
+        "api_checks": 38,
+        "genuine_auth_postgrest": true,
+        "private_tables_denied": true,
+        "exact_receipt_replay": true,
+        "owned_actors_retired": true,
+        "baseline_unchanged": true,
+        "provider_requests": 0,
+        "browser": {
+          "browser_checks": 22,
+          "genuine_staff_api": true,
+          "committed_ack_loss_recovered": true,
+          "reload_readonly_recovery": true,
+          "simulated_camera": true,
+          "scan_resolves_reviewed_package": true,
+          "staff_camera_lookup": true,
+          "real_iphone": false,
+          "mobile_overflow_checked": true,
+          "touch_targets_checked": true,
+          "staff_lookup_only": true,
+          "provider_requests": 0
+        }
+      },
+      "concurrency": {
+        "checks": 10,
+        "observed_lock_queues": 5,
+        "same_uuid_single_version": true,
+        "namespace_rechecked_after_wait": true,
+        "live_session_rechecked_after_wait": true,
+        "identifier_collision_atomic": true,
+        "owned_staff_deactivated": true,
+        "provider_requests": 0
+      },
+      "restore": {
+        "populated_relations": 7,
+        "private_identity_families": 6,
+        "exact_snapshot_restored": true,
+        "exact_original_review_recovered": true,
+        "caller_timezone_invariant": true,
+        "private_grants_restored": true,
+        "owned_restore_database_removed": true,
+        "provider_requests": 0
+      }
+    },
+    "api": {
+      "api_checks": 42,
+      "http": {
+        "http_checks": 28,
+        "actual_edge_entrypoint": true,
+        "genuine_postgrest": true,
+        "lost_response_recovery": true,
+        "unknown_response_replay": true,
+        "provider_requests": 0
+      },
+      "browser": {
+        "browser_checks": 21,
+        "genuine_staff_api": true,
+        "committed_ack_loss_recovered": true,
+        "dst_and_window_review": true,
+        "mobile_overflow_checked": true,
+        "dirty_navigation_guard": true,
+        "provider_requests": 0
+      },
+      "timeout_elapsed_ms": 5019,
+      "real_auth_postgrest": true,
+      "provider_requests": 0,
+      "owned_accounts_deactivated": true,
+      "private_timeout_helper_restored": true
+    },
+    "concurrency": {
+      "checks": 3,
+      "observed_lock_queues": 4,
+      "policy_pause_after_wait": true,
+      "same_uuid_execute_replay": true,
+      "provider_requests": 0,
+      "owned_staff_deactivated": true
+    },
+    "restore": {
+      "populated_relations": 16,
+      "snapshot_relations": 18,
+      "exact_snapshot_restored": true,
+      "exact_readonly_recovery": true,
+      "private_table_and_helper_grants": true,
+      "owned_restore_database_removed": true,
+      "provider_requests": 0
+    },
+    "rollback_probe": {
+      "checks": 36,
+      "rollback_only": true,
+      "provider_requests": 0
+    },
+    "inventory_rollback_probe": {
+      "checks": 31,
+      "rollback_only": true,
+      "provider_requests": 0
+    },
+    "controlled_rollback_probe": {
+      "checks": 28,
+      "rollback_only": true,
+      "provider_requests": 0
+    },
+    "cleanup_baseline": {
+      "outbox": 0,
+      "cron_active": false,
+      "pending_run": null,
+      "active_staff": 0,
+      "inventory_movements": 0,
+      "reconciliation_enabled": false
+    }
+  },
+  "source_sha256": {
+    "supabase/migrations/20261015055007_native_custody_provenance.sql": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+    "supabase/tests/stock_handoff_provenance.test.sql": "24e0562fdc2bb0b35ab3889229270313d8221345b3ab35201c9bbbba9871f6a3",
+    "supabase/tests/native_fulfillment.test.sql": "8198ea74a2d75a706a469135cd4684c1b635ecdb9572e1f0e03d6bbbc2404192",
+    "supabase/tests/native_dispense_corrections.test.sql": "bfeda2f5d9b4005b9821e944cf01b53ccb25f33cb2a293f051bfdbc532ed5197",
+    "supabase/tests/stock_writer_provenance.test.sql": "7c69cd16b3165ab84886c1e62d2ca7af45fd93853cad89cf33739a0aeb0cb122",
+    "supabase/tests/stock_writer_concurrency.py": "6d04551ebcdd14ab68df08c12189eb0d96bcf0044b3ba6ce94e7c48202d49a38",
+    "supabase/tests/stock_writer_restore.py": "b6a59a7f4e315ab16d0d91630a61d61d029df41e92349354bf9d6712241f6430",
+    "tests/inventory/stock-writer-local.ts": "b533f4f18c7584c4db0ee340acf3361ce67d49785eecd4ed1bcef3da5b4d538a",
+    "tests/prescriptions/native-disposable.py": "9829014d64f5f5e0d3f4540b8db0a148a4b634b136e9fde8f93ba2e846a7a199",
+    "tests/scheduling/disposable.py": "722ee826a49ba82a85ce67427c34fa5abb885bc0fab16043af31f8f6da647abe",
+    "scripts/stock-writers/rollback-probe.sql": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+    "scripts/stock-writers/handoff-rollback-probe.sql": "182515883cf25fbcbdb91720dcf8848f831c14a88ba77ba8c01b7d33792da6cf"
+  },
+  "review": {
+    "self_review_completed": true,
+    "unresolved_findings": 0,
+    "accepted_mixed_case_pickup_UUIDs_preserved": true,
+    "eight_released_bodies_unchanged": true,
+    "no_new_public_RPC": true
+  },
+  "cleanup": {
+    "all_owned_runtimes_and_volumes_removed": true,
+    "synthetic_accounts_retired": true,
+    "provider_requests": 0,
+    "hosted_writes": 0
+  },
+  "gates": {
+    "susan_rules_approved": false,
+    "controlled_policy_or_opening_created": false,
+    "controlled_register_active": false,
+    "C1b_execution_complete": false,
+    "C2_complete": false,
+    "C3_complete": false
+  }
+}

@@ -109,9 +109,12 @@ insert into data select 'close3',jsonb_build_object('authorization_id',(select i
 select close_native_fill_slot((select id from fx where k='close3'),(select v from data where k='close3'));
 select is(read_native_fulfillment((select id from fx where k='sign'),(select id from fx where k='pet'))#>>'{usage,forfeited_quantity}','45.000','Historical slot may close after cancellation');
 insert into data select 'pickup-request',jsonb_build_object('authorization_id',(select id from fx where k='sign'),'pet_id',(select id from fx where k='pet'),'dispense_id',(select id from fx where k='dispense'),'expected_context_hash',preview_native_pickup((select id from fx where k='dispense'),(select id from fx where k='pet'),jsonb_build_object('id',(select id from fx where k='refill'),'expected_version',3,'reason','Client received prepared package'))->>'context_hash','recipient_name','Synthetic owner','recipient_relationship','Owner','reason','Recorded historical handoff','attest_handoff',true,'refill_close',jsonb_build_object('id',(select id from fx where k='refill'),'expected_version',3,'reason','Client received prepared package'));
+-- Already accepted spelling must remain accepted; the original payload stays
+-- byte-for-byte JSONB-identical for retries while native documents use UUIDs.
+update data set v=v||jsonb_build_object('authorization_id',upper(v->>'authorization_id'),'pet_id',upper(v->>'pet_id'),'dispense_id',upper(v->>'dispense_id'))where k='pickup-request';
 insert into data select 'pickup-receipt',record_native_pickup((select id from fx where k='pickup'),(select v from data where k='pickup-request'));
 select is(read_native_refill((select id from fx where k='refill'),(select id from fx where k='pet'))#>>'{refill,state}','closed','Pickup may explicitly close its original linked intake');
-select is(record_native_pickup((select id from fx where k='pickup'),(select v from data where k='pickup-request')),(select v from data where k='pickup-receipt'),'Pickup exact retry');
+select is(record_native_pickup((select id from fx where k='pickup'),(select v from data where k='pickup-request')),(select v from data where k='pickup-receipt'),'Exact pickup retry preserves accepted uppercase request UUIDs');
 select throws_ok($$select record_native_pickup(gen_random_uuid(),(select v from data where k='pickup-request'))$$,'23514','Dispense pickup already acknowledged','Different pickup UUID cannot acknowledge twice');
 select is(jsonb_array_length(list_native_pickups((select id from fx where k='sign'),(select id from fx where k='pet'))->'pickups'),1,'Pickup history retained separately');
 select is(jsonb_array_length(list_native_slot_closures((select id from fx where k='sign'),(select id from fx where k='pet'))->'closures'),2,'Explicit closure history retained');
@@ -146,4 +149,39 @@ end$body$$test$,'23514','Canonical stock source does not match movement','Extra 
 select is((select count(*)::int from inventory_movements where reason='Synthetic forged allocation'),0,'Forged native allocation rolls back stock and source together');
 set constraints stock_source_required immediate;
 select is((select count(*)from stock_movement_sources where writer='record_native_dispense'),(select count(*)from native_dispense_allocations),'Every actual native allocation has one dispensing source');
+
+-- Handoff provenance is separate from the earlier stock debit and remains exact
+-- even when a later command shares an already admitted query packet.
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+set constraints all immediate;set constraints all deferred;
+select is((select count(*)::int from stock_pickup_sources s join native_pickups p on p.id=s.event_id where p.dispense_id=(select id from fx where k='dispense')),1,'One original handoff has one immutable source');
+select ok((select s.actor_id=p.actor_id from stock_pickup_sources s join native_pickups p on p.id=s.event_id where p.id=(select id from fx where k='pickup')),'Handoff source preserves actual recorder');
+select throws_ok($test$do $body$declare source native_pickups;begin
+ perform record_native_pickup((select id from fx where k='pickup'),(select v from data where k='pickup-request'));
+ select * into source from native_pickups where id=(select id from fx where k='pickup');
+ source.id:=gen_random_uuid();source.dispense_id:=(select id from fx where k='dispense2');
+ insert into native_pickups select source.*;
+end$body$$test$,'23514','Canonical handoff writer mismatch','A handoff cannot borrow another root admission in the same query packet');
+select throws_ok($test$do $body$begin
+ insert into stock_pickup_sources values(gen_random_uuid(),auth.uid());
+ set constraints stock_handoff_required immediate;
+end$body$$test$,'23514','Canonical handoff source required','Orphan reverse handoff source cannot commit');
+select throws_ok($test$do $body$begin
+ insert into native_fulfillment_operations(id,actor_id,operation,request,request_hash,result,created_at)
+ select gen_random_uuid(),actor_id,operation,request,request_hash,result,created_at from native_fulfillment_operations where id=(select id from fx where k='pickup');
+ set constraints stock_handoff_required immediate;
+end$body$$test$,'23514','Canonical handoff source required','A receipt without its original handoff and source cannot commit');
+select throws_ok($test$do $body$declare definition text;request jsonb;begin
+ definition:=pg_get_functiondef('record_native_pickup(uuid,jsonb)'::regprocedure);
+ execute replace(definition,' perform public.stock_writer_enter(''record_native_pickup'',p_id);','');
+ request:=(select v from data where k='pickup-request')||jsonb_build_object('dispense_id',(select id from fx where k='dispense2'),'refill_close',null,
+ 'expected_context_hash',preview_native_pickup((select id from fx where k='dispense2'),(select id from fx where k='pet'),null)->>'context_hash');
+ perform record_native_pickup(gen_random_uuid(),request);
+end$body$$test$,'23514','Stock writer admission required','An old or uninstrumented pickup body cannot commit a handoff');
+select is((select count(*)::int from native_pickups where dispense_id=(select id from fx where k='dispense2')),0,'Rejected pickup leaves no physical handoff assertion');
+select is((select count(*)::int from stock_pickup_sources),1,'Rejected pickup leaves no orphan audit link');
+select throws_ok($$update stock_pickup_sources set actor_id=actor_id$$,'23514','Stock source evidence is immutable','Handoff recorder cannot be rewritten');
+select throws_ok($$delete from stock_pickup_sources$$,'23514','Stock source evidence is immutable','Handoff provenance cannot be deleted');
+select throws_ok($$truncate stock_pickup_sources$$,'23514','Stock source evidence is immutable','Handoff provenance cannot be truncated');
+
 select * from finish();rollback;

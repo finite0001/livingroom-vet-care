@@ -126,6 +126,7 @@ reset role;
 select is(jsonb_build_object('dispense',(select document from native_dispenses where id=(select id from fx where k='dispense')),'usage',native_rx_usage_context((select id from fx where k='sign')),'movements',(select jsonb_agg(to_jsonb(m) order by id) from inventory_movements m where lot_id=(select id from fx where k='lot')),'items',(select jsonb_agg(to_jsonb(i) order by id) from billing_invoice_items i where invoice_id=(select id from fx where k='invoice')),'invoice',(select to_jsonb(i) from billing_invoices i where id=(select id from fx where k='invoice'))),(select v from data where k='untouched'),'Corrections preserve original dispense, allowance, stock and invoice exactly');
 select is((select count(*)::int from native_pickups where dispense_id=(select id from fx where k='dispense')),1,'Amendments never create second pickup');
 select throws_ok($$update native_dispense_correction_events set record_hash=repeat('a',64)$$,'23514','Native correction history is immutable','Events immutable even privileged direct update');
+set constraints all immediate;set constraints all deferred;
 select throws_ok($$truncate native_dispense_correction_operations$$,'23514','Native correction history is immutable','Operation truncation forbidden');
 select ok(not has_table_privilege('authenticated','native_dispense_correction_events','insert'),'No authenticated direct append');
 select ok(not has_table_privilege('service_role','native_dispense_correction_events','insert'),'No service direct append');
@@ -140,6 +141,7 @@ select is(recover_native_dispense_correction((select id from fx where k='upperca
 reset role;
 -- Synthetic corruption stays entirely inside the expected failing subtransaction.
 -- Rehashing a forged predecessor cannot make the verified chain acceptable.
+set constraints all immediate;set constraints all deferred;
 select throws_ok($probe$do $body$declare forged jsonb;begin
  alter table public.native_dispense_correction_events disable trigger native_correction_immutable;
  alter table public.native_dispense_correction_operations disable trigger native_correction_immutable;
@@ -170,6 +172,31 @@ reset role;
 select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);set local role authenticated;
 select throws_ok($$select recover_native_dispense_correction((select id from fx where k='annotation'))$$,'42501','Correction receipt unavailable','Wrong actor cannot recover receipt');
 select is(recover_native_dispense_correction(gen_random_uuid()),null::jsonb,'Absent UUID recovery explicit null');
+reset role;
+set constraints all immediate;set constraints all deferred;
+select is((select count(*)::int from stock_correction_sources),101,'Every annotation and pickup amendment has exactly one source');
+select ok((select bool_and(s.actor_id=e.actor_id)from stock_correction_sources s join native_dispense_correction_events e on e.id=s.event_id),'All correction sources preserve their actual recorder');
+select throws_ok($test$do $body$begin
+ insert into stock_correction_sources values(gen_random_uuid(),'a5510000-0000-4000-8000-000000000001');
+ set constraints stock_handoff_required immediate;
+end$body$$test$,'23514','Canonical handoff source required','Orphan reverse correction source cannot commit');
+select throws_ok($$update stock_correction_sources set actor_id=actor_id$$,'23514','Stock source evidence is immutable','Correction provenance cannot be rewritten');
+select throws_ok($$delete from stock_correction_sources$$,'23514','Stock source evidence is immutable','Correction provenance cannot be deleted');
+select throws_ok($$truncate stock_correction_sources$$,'23514','Stock source evidence is immutable','Correction provenance cannot be truncated');
+select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($test$do $body$declare definition text;begin
+ definition:=pg_get_functiondef('append_native_dispense_correction(uuid,jsonb)'::regprocedure);
+ execute replace(definition,' perform public.stock_writer_enter(''append_native_dispense_correction'',p_id);','');
+ perform append_native_dispense_correction(gen_random_uuid(),pg_temp.correction_request('operational_annotation'));
+end$body$$test$,'23514','Stock writer admission required','An old correction body cannot commit an unlinked assertion');
+select throws_ok($test$do $body$begin
+ alter table native_dispense_correction_events disable trigger aaa_stock_handoff_capture;
+ perform append_native_dispense_correction(gen_random_uuid(),pg_temp.correction_request('operational_annotation'));
+ set constraints stock_handoff_required immediate;
+end$body$$test$,'23514','Canonical handoff source required','Deferred proof rejects missing capture and rolls back the complete correction');
+select ok((select tgenabled='O'from pg_trigger where tgrelid='native_dispense_correction_events'::regclass and tgname='aaa_stock_handoff_capture'),'Failed corruption probe restores the capture guard');
+select is((select count(*)::int from native_dispense_correction_events),101,'Failed corrections leave the original complete history unchanged');
+select is((select count(*)::int from stock_correction_sources),101,'Failed corrections leave no extra source');
 reset role;select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000001","role":"authenticated"}',true);update profiles set is_active=false where id='a5510000-0000-4000-8000-000000000002';select set_config('request.jwt.claims','{"sub":"a5510000-0000-4000-8000-000000000002","role":"authenticated"}',true);set local role authenticated;
 select throws_ok($$select pg_temp.correction_preview()$$,'42501',null,'Inactive staff denied');
 select * from finish();rollback;
