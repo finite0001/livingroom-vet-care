@@ -1,6 +1,6 @@
 # Native handoff and correction source boundary
 
-Status: locally verified; exact-head CI and staged rollout pending; hosted backends remain at 188. This C1b prerequisite extends [PR256’s eight-writer boundary](stock-writer-boundary.md) to ten producers. It is separate from the unfinished [controlled-stock execution protocol](../../plans/2026-10-14-inventory-register/controlled-stock-context-design.md).
+Status: released in PR257; both hosted backends have189 migrations and the exact production deployment/domain are verified. [Hosted receipt](../launch-evidence/2026-10-14-native-handoff-rollout.md). This C1b prerequisite expands source coverage to ten producers; the controlled execution protocol remains unfinished.
 
 `record_native_pickup` and `append_native_dispense_correction` now enter the existing shared transaction barrier before their old locks. The migration verifies both complete prior definition hashes and all eight existing manifest entries. It adds only the first entry call to each body. Original signatures, request fingerprints, accepted mixed-case pickup UUIDs, server timestamps, role requirements, committed receipts and API grants remain intact; the new entry also requires READ COMMITTED, as the other eight writers do.
 
@@ -16,4 +16,4 @@ Local verification includes the canonical SQL suites, real Auth/native/browser r
 
 Release still requires exact-head CI, stage-first definition/ACL/advisor verification, rollback probes and baseline preservation. No new application endpoint, controlled policy, opening count, witness rule, provider integration or activation is introduced. [Susan’s draft rules](../controlled-drug-rules-susan-review.md) remain pending and inactive. C1b execution, C2 workflows and C3 actual commissioning remain required before the controlled register can be used clinically.
 
-Local proof: 1,471 units; 155 SQL suites / 6,540 assertions; 783 existing genuine native checks plus 40 boundary API checks; 16 observed waits; 26 populated restored relations for the handoff extension; 34 rollback checks. Parent scheduling/task/scanner/C0 regressions pass and all owned runtimes/volumes are removed. [Machine receipt](../launch-evidence/2026-10-14-native-handoff-local.json). Hosted backends remain at188; no controlled activation.
+Local proof: 1,471 units; 155 SQL suites / 6,540 assertions; 783 existing genuine native checks plus 40 boundary API checks; 16 observed waits; 26 populated restored relations for the handoff extension; 34 rollback checks. Parent scheduling/task/scanner/C0 regressions pass and all C1b0 test runtimes/volumes are removed. [Machine receipt](../launch-evidence/2026-10-14-native-handoff-local.json). Both hosted backends are189 and exact production is verified; no controlled activation.

@@ -1,0 +1,400 @@
+{
+  "scope": "C1b0 native pickup/correction source provenance only; controlled execution/C2/C3 remain incomplete",
+  "observed_at": "2026-10-15T06:59:13.148640+00:00",
+  "pr": 257,
+  "pr_url": "https://github.com/finite0001/livingroom-vet-care/pull/257",
+  "reviewed_source_head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+  "merge_commit": "f68a01f6388183677f8680a621bb56279aaaa34e",
+  "merged_at": "2026-10-15T06:48:52Z",
+  "merged_tree_equals_reviewed_tree": true,
+  "migration": "20261015055007_native_custody_provenance.sql",
+  "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+  "ci": {
+    "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+    "run": 38690964887,
+    "jobs": [
+      {
+        "name": "frontend",
+        "job_id": 116276525001,
+        "log_sha256": "2e0e5229ce6a71a51e03a7306b6a941f1ee6bb0a484244c72bfa4a3efd4b1fa6"
+      },
+      {
+        "name": "edge",
+        "job_id": 116276524974,
+        "log_sha256": "98567b84ec93f4269947ebb699720a9bb2e34fa8a77f045dae1ccd18f5d1c617"
+      },
+      {
+        "name": "diagnostic-renderer",
+        "job_id": 116276524698,
+        "log_sha256": "a4e9029c60c3630c25a07e651dd830f13983b362748694fd9c00508e8cad265c"
+      },
+      {
+        "name": "database",
+        "job_id": 116276524990,
+        "log_sha256": "ae87c773e68fac9506202aad95b66aa52efc608bd4edbf7724867fb75eaaa010"
+      }
+    ],
+    "all_four_success": true,
+    "frontend": {
+      "first_pass": 523,
+      "retry_passed": 1,
+      "skipped": 1,
+      "retry_test": "existing 390px deep-link history navigation",
+      "local_targeted_no_retry_passes": 6
+    }
+  },
+  "local_evidence": "2026-10-14-native-handoff-local.json",
+  "local_evidence_sha256": "12eca3238df903d7b420e9e9768604146e32b797e554acbfcac6fff54add0af9",
+  "verified_function_definitions": {
+    "roots": {
+      "adjust_inventory": "1f355ca5d3c143e7d90ffb9a654456e9f0cbd0e1c5764f52d2b99e77bda45578",
+      "receive_inventory": "d45ea19abf9b67e55767763af4a0326d26ce6dbf6c356b0895673806be2fc73e",
+      "record_native_pickup": "aa4023176845db0c86b5c4de4ffc50ba4d5d2fb49a0ae7378da8d6eae12f1655",
+      "record_native_dispense": "f2481ad4c3e15e69e4de62cdc3e8eb64f36e7821be50633adcde6afd4665dacc",
+      "record_patient_treatment": "3a46f3094f78dc2febcb74a48e4a46eca01bbda06585ea7267fb6564dc1ad64b",
+      "record_native_dispense_return": "4dcc354ddea7cb9578ca68fe9143f010c4a15264612fdd4c52ee9cb3aa23a1b9",
+      "record_native_dispense_return_v2": "24ca2bd0a63437a18ea54786c6101755381e12c7225335bc1e117eef9bc0ebf3",
+      "record_native_return_discrepancy": "381af4b509995e9fdff353c736b7c39ad577fb8a83a37e24dd0c5a205e13ec04",
+      "append_native_dispense_correction": "49bc431ec84b82bc2c3e9e328bf68235d7bb2722fe1922ec0d9bc404dfded513",
+      "record_anesthesia_drug_administration": "88a7c11d986991d0efef6c68c245ea302b6f5e0dd003f2c190bb5e931491a150"
+    },
+    "helpers": {
+      "stock_source_guard": "cce5e2fa9dc80260f043babffcc5572055e1fb2dfbd0799df414ebea6e413fb2",
+      "stock_writer_enter": "c322b34bb493cfae87bea36a262aef9132b347618022f2ed664f4d3df30727fc",
+      "stock_handoff_guard": "2aadbb199780c1a4d6a3f20c4dddf42592a46099fb97f62ebe2613fa4e03f2ba",
+      "stock_writer_current": "281c0702ce1654687aed8662de7273a84faca6e16ac8ffcbcf59f0776000adb6",
+      "stock_source_immutable": "11c1c486140c6796ee8a49868166a36b6eaa9cd4c522c74e17e299d98973a782",
+      "stock_source_consistency": "811c0f2bff4a7438c56903e778d4bea221acd7ebfac2d4dee9abae687aa2da4e",
+      "stock_handoff_consistency": "d6e0f65cfef8a3bc32603b820e7ced622120c8e0fb004bc4e91bbe4867c3c636",
+      "stock_source_validate_movement": "01ab70ca9e87c4abb5cf1e3f1a1364d086d10d91c91bb2be7d14ba29b78ad316"
+    },
+    "prior_roots": {
+      "adjust_inventory": "1f355ca5d3c143e7d90ffb9a654456e9f0cbd0e1c5764f52d2b99e77bda45578",
+      "receive_inventory": "d45ea19abf9b67e55767763af4a0326d26ce6dbf6c356b0895673806be2fc73e",
+      "record_native_pickup": "7db5d6bbb01127ff82ed1e09ca1fab8bcf5aac3ec57e92ff664c6a2873495ac1",
+      "record_native_dispense": "f2481ad4c3e15e69e4de62cdc3e8eb64f36e7821be50633adcde6afd4665dacc",
+      "record_patient_treatment": "3a46f3094f78dc2febcb74a48e4a46eca01bbda06585ea7267fb6564dc1ad64b",
+      "record_native_dispense_return": "4dcc354ddea7cb9578ca68fe9143f010c4a15264612fdd4c52ee9cb3aa23a1b9",
+      "record_native_dispense_return_v2": "24ca2bd0a63437a18ea54786c6101755381e12c7225335bc1e117eef9bc0ebf3",
+      "record_native_return_discrepancy": "381af4b509995e9fdff353c736b7c39ad577fb8a83a37e24dd0c5a205e13ec04",
+      "append_native_dispense_correction": "bd19d34d883bb055923058a59f85bc938869480746176d3253a4f70c07528fc5",
+      "record_anesthesia_drug_administration": "88a7c11d986991d0efef6c68c245ea302b6f5e0dd003f2c190bb5e931491a150"
+    }
+  },
+  "hosted": {
+    "staging": {
+      "installation": {
+        "project": "kothoqicubowyhwfsrte",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "pr": 257,
+        "migrations": 189,
+        "latest": "20261015055007",
+        "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+        "exact_roots": 10,
+        "private_helpers": 8,
+        "original_api_acls": 10,
+        "prior_snapshots": 37,
+        "prior_manifest_rows_unchanged": 8,
+        "state": {
+          "cron_active": false,
+          "disclosure": 0,
+          "generation": 0,
+          "outbox": 0,
+          "payment_profiles": 1,
+          "reconciliation": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "new_tables_private": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "edge_deployments": 0
+      },
+      "rollback": {
+        "project": "kothoqicubowyhwfsrte",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "migrations": 189,
+        "checks": 34,
+        "exact_rollback_snapshot_relations": 40,
+        "baseline_unchanged": true,
+        "probes": [
+          {
+            "file": "rollback-probe.sql",
+            "sha256": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+            "checks": 22,
+            "provider_requests": 0,
+            "rollback_only": true
+          },
+          {
+            "file": "handoff-rollback-probe.sql",
+            "sha256": "182515883cf25fbcbdb91720dcf8848f831c14a88ba77ba8c01b7d33792da6cf",
+            "canonical_pickup_and_amendment": true,
+            "checks": 12,
+            "provider_requests": 0,
+            "rollback_only": true,
+            "single_inventory_debit": true
+          }
+        ],
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "advisors": {
+        "project": "kothoqicubowyhwfsrte",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+        "no_unexpected_new_findings": true,
+        "expected_private_info_added": 2,
+        "before": [
+          {
+            "name": "rls_enabled_no_policy",
+            "count": 212
+          },
+          {
+            "name": "extension_in_public",
+            "count": 1
+          },
+          {
+            "name": "anon_security_definer_function_executable",
+            "count": 8
+          },
+          {
+            "name": "authenticated_security_definer_function_executable",
+            "count": 503
+          },
+          {
+            "name": "auth_leaked_password_protection",
+            "count": 1
+          }
+        ],
+        "after": [
+          {
+            "name": "rls_enabled_no_policy",
+            "level": "INFO",
+            "count": 214
+          },
+          {
+            "name": "extension_in_public",
+            "level": "WARN",
+            "count": 1
+          },
+          {
+            "name": "anon_security_definer_function_executable",
+            "level": "WARN",
+            "count": 8
+          },
+          {
+            "name": "authenticated_security_definer_function_executable",
+            "level": "WARN",
+            "count": 503
+          },
+          {
+            "name": "auth_leaked_password_protection",
+            "level": "WARN",
+            "count": 1
+          }
+        ],
+        "existing_findings_unchanged": true
+      },
+      "pending_migrations": 0,
+      "auth_entry_access_acceptance": {
+        "project": "kothoqicubowyhwfsrte",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+        "api_checks": 44,
+        "all_ten_api_entry_checks": true,
+        "genuine_auth_postgrest": true,
+        "actual_live_session": true,
+        "private_sources_denied": true,
+        "owned_actors_retired": true,
+        "owned_sessions_retired": true,
+        "baseline_unchanged": true,
+        "exact_snapshot_relations": 40,
+        "no_physical_fixtures": true,
+        "provider_requests": 0
+      }
+    },
+    "primary": {
+      "installation": {
+        "project": "mgadheotkdnrsatfivjy",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "pr": 257,
+        "migrations": 189,
+        "latest": "20261015055007",
+        "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+        "exact_roots": 10,
+        "private_helpers": 8,
+        "original_api_acls": 10,
+        "prior_snapshots": 37,
+        "prior_manifest_rows_unchanged": 8,
+        "state": {
+          "cron_active": false,
+          "disclosure": 0,
+          "generation": 0,
+          "outbox": 3,
+          "payment_profiles": 0,
+          "reconciliation": 0,
+          "release": 0,
+          "runtime": 0,
+          "staff_download": 0,
+          "stock": 0,
+          "worker": 0
+        },
+        "new_tables_private": true,
+        "provider_requests": 0,
+        "legacy_writes": 0,
+        "edge_deployments": 0
+      },
+      "rollback": {
+        "project": "mgadheotkdnrsatfivjy",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "migrations": 189,
+        "checks": 34,
+        "exact_rollback_snapshot_relations": 40,
+        "baseline_unchanged": true,
+        "probes": [
+          {
+            "file": "rollback-probe.sql",
+            "sha256": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+            "checks": 22,
+            "provider_requests": 0,
+            "rollback_only": true
+          },
+          {
+            "file": "handoff-rollback-probe.sql",
+            "sha256": "182515883cf25fbcbdb91720dcf8848f831c14a88ba77ba8c01b7d33792da6cf",
+            "canonical_pickup_and_amendment": true,
+            "checks": 12,
+            "provider_requests": 0,
+            "rollback_only": true,
+            "single_inventory_debit": true
+          }
+        ],
+        "provider_requests": 0,
+        "legacy_writes": 0
+      },
+      "advisors": {
+        "project": "mgadheotkdnrsatfivjy",
+        "head": "fd94916f5cc89cfd624f79997e3fcb6b5948972e",
+        "migration_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+        "no_unexpected_new_findings": true,
+        "expected_private_info_added": 2,
+        "before": [
+          {
+            "name": "rls_enabled_no_policy",
+            "count": 212
+          },
+          {
+            "name": "extension_in_public",
+            "count": 1
+          },
+          {
+            "name": "anon_security_definer_function_executable",
+            "count": 8
+          },
+          {
+            "name": "authenticated_security_definer_function_executable",
+            "count": 503
+          },
+          {
+            "name": "auth_leaked_password_protection",
+            "count": 1
+          }
+        ],
+        "after": [
+          {
+            "name": "rls_enabled_no_policy",
+            "level": "INFO",
+            "count": 214
+          },
+          {
+            "name": "extension_in_public",
+            "level": "WARN",
+            "count": 1
+          },
+          {
+            "name": "anon_security_definer_function_executable",
+            "level": "WARN",
+            "count": 8
+          },
+          {
+            "name": "authenticated_security_definer_function_executable",
+            "level": "WARN",
+            "count": 503
+          },
+          {
+            "name": "auth_leaked_password_protection",
+            "level": "WARN",
+            "count": 1
+          }
+        ],
+        "existing_findings_unchanged": true
+      },
+      "pending_migrations": 0
+    }
+  },
+  "production": {
+    "id": "dpl_FS4DrJT29DJjLYirXPp7oA493h7r",
+    "url": "livingroom-vet-care-8l82hkitb-daves-projects-e0da43ba.vercel.app",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "ready_state": "READY",
+    "target": "production",
+    "git_sha": "f68a01f6388183677f8680a621bb56279aaaa34e",
+    "actual_domain": "thelivingroom.vet",
+    "domain_deployment_id": "dpl_FS4DrJT29DJjLYirXPp7oA493h7r",
+    "metadata_method": "MCP403/404; mapped authenticated CLI fallback, explicit same team/project; native project/list/inspect then full deployment/alias metadata"
+  },
+  "smoke": {
+    "observed_at": "2026-10-15T06:55:47.227Z",
+    "origin": "https://thelivingroom.vet",
+    "path": "/hub/login",
+    "status": 200,
+    "entry": "/assets/index-C-VWbbbP.js",
+    "app_chunk": "./App-CVtkzUmw.js",
+    "backend": "mgadheotkdnrsatfivjy",
+    "backend_migrations": 189,
+    "deployment_id": "dpl_FS4DrJT29DJjLYirXPp7oA493h7r",
+    "source_sha": "f68a01f6388183677f8680a621bb56279aaaa34e",
+    "project_id": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "protected_redirects": [
+      "/hub/inventory",
+      "/hub/tools/task-templates",
+      "/hub/tasks",
+      "/hub/schedule",
+      "/hub/admin/operations"
+    ],
+    "task_routes_bundled": true,
+    "inventory_chunk": "./InventoryPage-B9M0wKbC.js",
+    "supplier_mapping_ui_bundled": true,
+    "controlled_draft_ui_bundled": true,
+    "controlled_activation_available": false,
+    "camera_chunk": "./BarcodeScanDialog-BGVTFwBl.js",
+    "worker": "/assets/barcode-worker-CwzrmRbY.js",
+    "wasm": "/assets/zxing_reader-_HcWiliU.wasm",
+    "wasm_sha256": "aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931",
+    "wasm_bytes": 966895,
+    "local_asset_chain_verified": true,
+    "camera_permission_requested": false,
+    "actual_iphone_acceptance": false,
+    "page_errors": 0,
+    "staff_session_used": false,
+    "anonymous_edge_status": 401,
+    "provider_requests": 0
+  },
+  "limits": {
+    "clinical_rules_approved": false,
+    "controlled_register_active": false,
+    "C1b_protocol_complete": false,
+    "C2_complete": false,
+    "C3_complete": false,
+    "real_supplier_file_acceptance": false,
+    "real_iphone_acceptance": false,
+    "primary_staff_session_used": false,
+    "provider_requests": 0,
+    "legacy_writes": 0,
+    "edge_deployments": 0,
+    "secret_changes": 0
+  }
+}
