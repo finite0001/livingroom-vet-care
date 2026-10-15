@@ -115,7 +115,8 @@
       "rollback_only": true,
       "provider_requests": 0
     },
-    "rollback_probe_sha256": "82aa0e9537722a374e2df6159e5a2ba84ce41909cae7e4543535de47ca28a083"
+    "rollback_probe_sha256": "d564e5dfab3d6a7569879402801f7057bff3b2e2fb85291c3b29b2cf432d31ea",
+    "rollback_probe_mode": "single_simple_query_packet"
   },
   "parent_regression": {
     "catalog": "59 API /7 queues /20 browser /9 restored relations",
@@ -254,7 +255,7 @@
   },
   "source_sha256": {
     "scripts/restore-rehearsal/run.py": "9cadffb7066eddd23fbc9ec8aadab632c58d3e3fcbddf484efc2ac1935cac146",
-    "scripts/stock-writers/rollback-probe.sql": "82aa0e9537722a374e2df6159e5a2ba84ce41909cae7e4543535de47ca28a083",
+    "scripts/stock-writers/rollback-probe.sql": "d564e5dfab3d6a7569879402801f7057bff3b2e2fb85291c3b29b2cf432d31ea",
     "supabase/migrations/20261015020722_stock_writer_provenance.sql": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
     "supabase/tests/anesthesia_drug_administrations.test.sql": "3792fa03072e224dbd82e5a940e42ef6fc30fb2be48adedf2c7560eea941e20a",
     "supabase/tests/inventory_billing.test.sql": "364c214da7614835ce1bda17ea5a3f3575178c6a4fc582a20e935f91e9c0cece",
@@ -270,7 +271,7 @@
     "tests/diagnostics/pdf-registration-disposable.py": "b09da4f35bddc95c15c3db2e36d30af056105a3fdceaaf7877d12a331b1e7ae2",
     "tests/ezyvet/attachment-metadata-disposable.py": "6c8533aa80491f1c20bbe8dda7afe3e85df7014cfe6d818c9b863da3779b4b67",
     "tests/inventory/stock-writer-local.ts": "31cda4d08ed99eaa730d41e34edae12b63e093c89afafe20de27e8824fa7e7dd",
-    "tests/prescriptions/native-disposable.py": "64b836ca2a5548521e7533eac0d1002251659a4fc182e9377b5002be6ec50c4d",
+    "tests/prescriptions/native-disposable.py": "1f8b8b4c181cb88a6ddb6902ba7cc0b4b48c3975f728f47286de0102d7808a8a",
     "tests/scheduling/disposable.py": "c0d73ba129ffb2606f6594ce31f6be9cd784acc54b19bd1083df8126bb2faf08",
     "tests/scheduling/operational-reconciliation-local.ts": "7a78e598e0af3949e8db8a30b72e3ceb41868800a5900a5a67faf973152b1b54",
     "tests/scheduling/operational-tasks-local.ts": "b7ccef7be898ab15d60fea7f557297a29d007a8c78bcb9e57c6234c5cd23644d",

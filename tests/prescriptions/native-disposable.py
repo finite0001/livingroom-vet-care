@@ -108,7 +108,8 @@ enabled = false
         print('Canonical SQL regression passed:154 files/6506 assertions.',flush=True)
     stock_probe_path=root/'scripts/stock-writers/rollback-probe.sql'
     stock_probe_hash=hashlib.sha256(stock_probe_path.read_bytes()).hexdigest()
-    stock_probe_output=command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=stock_probe_path.read_text())
+    # One simple-query packet matches the hosted SQL API; psql stdin splits commands.
+    stock_probe_output=command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-c',stock_probe_path.read_text()])
     stock_probe=json.loads(next(line for line in reversed(stock_probe_output.splitlines())if line.startswith('{"checks"')))
     assert stock_probe['checks']==22 and stock_probe['rollback_only']and stock_probe['provider_requests']==0
     assert hashlib.sha256(stock_probe_path.read_bytes()).hexdigest()==stock_probe_hash

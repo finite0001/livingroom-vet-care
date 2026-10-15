@@ -15,7 +15,7 @@ create function pg_temp.stock_require(ok boolean,label text)returns void languag
  update stock_probe_count set value=value+1;
 end $$;
 create function pg_temp.stock_reject(query text,expected text,label text)returns void language plpgsql as $$declare code text;begin
- begin execute query;raise exception 'Expected stock denial missing';
+ begin execute query;raise exception 'Expected stock denial missing: %',label;
  exception when others then get stacked diagnostics code=returned_sqlstate;if code<>expected then raise;end if;end;
  perform pg_temp.stock_require(true,label);
 end $$;
@@ -60,7 +60,7 @@ select pg_temp.stock_require((select sum(quantity)=8.125 from inventory_movement
 select pg_temp.stock_require((select count(*)=4 from stock_movement_sources s join inventory_movements m on m.id=s.movement_id where m.lot_id=(select id from stock_probe_ids where key='lot')),'One source per physical effect');
 select pg_temp.stock_require((select writer='record_anesthesia_drug_administration'from stock_movement_sources where movement_id=(select id from stock_probe_ids where key='anesthesia_drug')),'Anesthesia keeps outer identity');
 select pg_temp.stock_require((select count(*)=2 from billing_invoice_items where invoice_id=(select id from stock_probe_ids where key='invoice')),'One charge per clinical event');
-select pg_temp.stock_reject(format('insert into inventory_movements(id,lot_id,quantity,kind,reason,created_by)values(gen_random_uuid(),%L::uuid,1,''adjust'',''Unadmitted'',auth.uid())',(select id from stock_probe_ids where key='lot')),'23514','Earlier statement cannot admit a raw write');
+select pg_temp.stock_reject(format('insert into inventory_movements(id,lot_id,quantity,kind,reason,created_by)values(gen_random_uuid(),%L::uuid,1,''adjust'',''Unadmitted'',auth.uid());set constraints stock_source_required immediate',(select id from stock_probe_ids where key='lot')),'23514','Unrelated raw stock cannot commit, including one query batch');
 select pg_temp.stock_reject($q$update stock_movement_sources set writer='adjust_inventory'where movement_id=(select id from stock_probe_ids where key='receive')$q$,'23514','Source evidence immutable');
 select pg_temp.stock_reject($q$delete from stock_movement_sources where movement_id=(select id from stock_probe_ids where key='receive')$q$,'23514','Source evidence undeletable');
 select pg_temp.stock_require((select row(outbox,payments,drafts,generation,reconciliation)=row((select count(*)from communication_outbox),(select count(*)from payment_provider_profiles),(select count(*)from controlled_draft_entries),(select count(*)from operational_task_generation_policy where enabled),(select count(*)from operational_reconciliation_policy where enabled))from stock_probe_baseline),'No messaging/payment/classification/generation/reconciliation change');
