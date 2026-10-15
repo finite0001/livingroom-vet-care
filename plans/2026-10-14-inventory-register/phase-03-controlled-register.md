@@ -18,6 +18,8 @@ Retain immutable evidence without destructive purge. Federal register minimum an
 
 ## Delivery order and scope
 
+Dave selected **draft rules for Susan to review** on October 14. The [inactive practice-rules draft](../../docs/controlled-drug-rules-susan-review.md) proposes review deadlines, count frequency and mobile-kit handling, distinguishes record review from actual observation, and leaves off-site residual-waste handling unresolved. Susan has not approved it. Merging documentation or engineering PRs does not activate these rules or satisfy C3 commissioning.
+
 | Slice | Deliverable | Gate |
 |---|---|---|
 | C0 | Reviewed draft classification/configuration records, exact owned prepare/execute-metadata/read/cancel recovery, typed staff view | No physical event, opening, count, stock hook or activation; immutable draft-only status |
