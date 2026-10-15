@@ -20,7 +20,7 @@ create function pg_temp.stock_reject(query text,expected text,label text)returns
  perform pg_temp.stock_require(true,label);
 end $$;
 
-select pg_temp.stock_require((select count(*)=8 from stock_writer_manifests),'All eight outer writers');
+select pg_temp.stock_require((select count(*)=10 from stock_writer_manifests),'All ten outer writers');
 select pg_temp.stock_require((select bool_and(definition_sha256=encode(sha256(convert_to(pg_get_functiondef(signature::regprocedure),'UTF8')),'hex'))from stock_writer_manifests),'Exact effective writer coverage');
 select pg_temp.stock_require((select bool_and(prior_definition_sha256=encode(sha256(convert_to(replace(pg_get_functiondef(signature::regprocedure),chr(10)||format(' perform public.stock_writer_enter(%L,p_id);',writer),''),'UTF8')),'hex'))from stock_writer_manifests),'Only reviewed early entry added');
 select pg_temp.stock_require((select count(*)=5 and bool_and(relrowsecurity and not has_table_privilege('anon',oid,'SELECT')and not has_table_privilege('authenticated',oid,'SELECT')and not has_table_privilege('service_role',oid,'INSERT'))from pg_class where relnamespace='public'::regnamespace and relname in('stock_writer_manifests','stock_writer_admissions','stock_movement_sources','stock_custody_sources','stock_discrepancy_sources')),'Five private RLS tables');

@@ -42,7 +42,7 @@ async function rpc(name: string, args: Record<string, unknown>) {
 }
 const baseline = sql("select jsonb_build_object('outbox',(select count(*)from communication_outbox),'payments',(select count(*)from payment_provider_profiles),'generation',(select count(*)from operational_task_generation_policy where enabled),'reconciliation',(select count(*)from operational_reconciliation_policy where enabled));");
 try {
-  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "188");
+  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "189");
   const email = "synthetic-stock-" + randomUUID() + "@example.test", password = randomUUID() + randomUUID();
   const created = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error) throw created.error;
@@ -55,13 +55,20 @@ try {
   check(signed.data.user.id, actor);
   const session = z.object({ session_id: uuid }).passthrough().parse(JSON.parse(Buffer.from(signed.data.session.access_token.split(".")[1], "base64url").toString()));
   check(sql(`select count(*)from auth.sessions where id='${session.session_id}'and user_id='${actor}'and(not_after is null or not_after>clock_timestamp());`), "1");
-  for (const table of ["stock_writer_manifests", "stock_writer_admissions", "stock_movement_sources", "stock_custody_sources", "stock_discrepancy_sources"]) {
+  for (const table of ["stock_writer_manifests", "stock_writer_admissions", "stock_movement_sources", "stock_custody_sources", "stock_discrepancy_sources", "stock_pickup_sources", "stock_correction_sources"]) {
     check((await staff.from(table).select("*")).error?.code, "42501");
   }
   for (const db of [staff, service, anonymous]) {
     const attempted = await db.rpc("stock_writer_enter", { p_writer: "receive_inventory", p_source_id: randomUUID() });
     assert.ok(attempted.error && ["42501", "PGRST202"].includes(attempted.error.code));
     check(attempted.data, null);
+  }
+  for (const db of [staff, service, anonymous]) {
+    for (const helper of ["stock_handoff_guard", "stock_handoff_consistency"]) {
+      const attempted = await db.rpc(helper, {});
+      assert.ok(attempted.error && ["42501", "PGRST202"].includes(attempted.error.code));
+      check(attempted.data, null);
+    }
   }
   const client = row.parse(await rpc("save_client", { p_actor_id: actor, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Stock source", p_primary_phone: "+13035550193", p_primary_email: email, p_preferred_channel: "EMAIL", p_mailing_address: "Synthetic address", p_housecall_address: null }));
   const patient = row.parse(await rpc("save_patient", { p_id: null, p_client_id: client.id, p_expected_version: null, p_name: "Synthetic source patient", p_species: "Dog", p_breed: null, p_dob: null, p_birth_date_precision: "unknown", p_color: null, p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: null, p_deceased_at: null }));

@@ -8,10 +8,10 @@ update profiles set is_active=true,full_name='Synthetic stock source' where id='
 insert into user_roles(user_id,role) values('bc410000-0000-4000-8000-000000000001','STAFF');
 select set_config('request.jwt.claims','{"sub":"bc410000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
-select is((select count(*)::int from stock_writer_manifests),8,'All eight outer stock/custody/hold writers covered');
+select is((select count(*)::int from stock_writer_manifests),10,'All ten stock/custody/hold/handoff writers covered');
 select ok((select bool_and(definition_sha256=encode(sha256(convert_to(pg_get_functiondef(signature::regprocedure),'UTF8')),'hex'))from stock_writer_manifests),'Manifest matches complete effective function definitions');
 select ok((select bool_and(prior_definition_sha256<>definition_sha256)from stock_writer_manifests),'Coverage history preserves a distinct pre-migration definition');
-select ok((select bool_and(prior_definition_sha256=encode(sha256(convert_to(replace(pg_get_functiondef(signature::regprocedure),chr(10)||format(' perform public.stock_writer_enter(%L,p_id);',writer),''),'UTF8')),'hex'))from stock_writer_manifests),'Removing only the inserted entry exactly reconstructs all eight prior function definitions');
+select ok((select bool_and(prior_definition_sha256=encode(sha256(convert_to(replace(pg_get_functiondef(signature::regprocedure),chr(10)||format(' perform public.stock_writer_enter(%L,p_id);',writer),''),'UTF8')),'hex'))from stock_writer_manifests),'Removing only the inserted entry exactly reconstructs all ten prior function definitions');
 select ok((select bool_and(relrowsecurity and not has_table_privilege('anon',oid,'SELECT') and not has_table_privilege('authenticated',oid,'SELECT') and not has_table_privilege('service_role',oid,'INSERT'))from pg_class where relnamespace='public'::regnamespace and relname in('stock_writer_manifests','stock_writer_admissions','stock_movement_sources','stock_custody_sources','stock_discrepancy_sources')),'All five source/admission tables private with RLS');
 select ok((select bool_and(not has_function_privilege('anon',oid,'EXECUTE')and not has_function_privilege('authenticated',oid,'EXECUTE')and not has_function_privilege('service_role',oid,'EXECUTE'))from pg_proc where pronamespace='public'::regnamespace and proname in('stock_source_immutable','stock_writer_current','stock_writer_enter','stock_source_guard','stock_source_validate_movement','stock_source_consistency')),'All six helpers private');
 set local role authenticated;

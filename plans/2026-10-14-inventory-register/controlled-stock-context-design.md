@@ -2,6 +2,8 @@
 
 Status: implementation design, not implemented or commissioned. This refines [phase03](phase-03-controlled-register.md), using the C1a source boundary. It does not approve [Susan’s draft rules](../../docs/controlled-drug-rules-susan-review.md), create a real classification/opening or narrow the [original 45 requirements](../2026-10-08-vet-feedback/requirements.md). C2 workflows and C3 actual practice acceptance remain required.
 
+Implementation split after source inspection: C1b0 first closes the pickup/correction provenance gap in a separate additive migration. Its [implementation boundary](../../docs/features/native-handoff-boundary.md) covers ten early producers without adding unused policy/container tables. The controlled execution schema remains private design work until the complete protocol and its invariants are implemented. C1b0 alone does not complete C1b.
+
 ## Reuse the complete entry boundary
 
 Keep all eight canonical signatures, strict request fingerprints, original committed receipts and existing first-entry hooks. Each writer already enters the shared practice barrier before its old locks. Extend the private common entry helper with controlled-operation reservation checks; do not add a second late barrier or repeat large canonical function bodies merely to accept a new context parameter.
@@ -11,6 +13,10 @@ An owned wrapper stores the original canonical arguments separately from the str
 Prepared packets hold no database locks while a staff member reviews them. Execute reacquires locks and revalidates current facts. Exclusive freeze/opening barriers are short state transitions, not transactions held open during physical counting.
 
 The common early helper denies adoption of an owned pending or cancelled controlled UUID by an unrelated generic stock operation. A committed original receipt can still reach its existing actor/payload retry comparison; this is recovery, not permission for a new physical effect. Nested anesthesia-to-treatment entry requires the actual active outer context and matching C1a writer/root/actor admission; sharing a UUID alone is insufficient. New controlled prepare must reject pre-existing canonical identifiers, including legacy receipts and historical/non-stock clinical records that have no C1a movement-source row.
+
+## Additional custody and correction boundaries
+
+C1a covers the original eight stock/return/hold producers. Current source inspection also finds `record_native_pickup` and `append_native_dispense_correction`: pickup and pickup amendments can change handoff facts without an available-stock movement. C1b must instrument these two entry points before their existing locks and cover their immutable native source tables, preserving all ordinary signatures and receipts. The original eight hooks stay unchanged. A controlled correction subtype that is not complete must fail closed until C2; it cannot fall back to an ordinary unlogged call.
 
 ## Owned physical operation protocol
 
@@ -29,10 +35,10 @@ Only create relations used by the implemented C1b flows. Later review/count/repo
 | Data family | Required invariant |
 | --- | --- |
 | Reviewed policy versions and current product state | Explicit canonical product/unit classification and reviewed configuration snapshot; separate from C0 draft metadata. Frozen/suspended/retired products never regain an ordinary unlogged route. Every lot is covered, including old lots and later legacy returns. |
-| Registered-site/location/container identity | Controlling registrant/site is separate from physical clinic/mobile-kit location and custodian. Stable container identity binds the actual product/lot/unit and initial provenance. Supplier package identity is not a physical vial identity; old lot free-text location is not rewritten. |
+| Registered-site/location/container identity | Controlling registrant/site is separate from physical clinic/mobile-kit location and custodian. Stable container identity binds the actual product/unit and initial provenance, with explicit per-lot cells for native allocations. Supplier package identity is not a physical vial identity; old lot free-text location is not rewritten. |
 | Opening context and membership | Actual dated container allocation, explicit opening evidence and exact per-lot movement membership/head boundary. No timestamp/UUID cutover inference, invented old administrations or automatic backfill. Reviewed reconciliation is included in opening once. Actual opening workflow/acceptance remains C2/C3. |
 | Immutable events and ordered lines | Original root/writer/source, policy/version, actual recorder/session snapshots, observed physical time separately from server recorded time, relevant clinical references and exact signed container effects. Do not infer a dose or concentration conversion from free text. |
-| Movement/custody/discrepancy links | Every managed source maps to the exact event/action and every event line maps back to its actual canonical source. Each physical movement appears once; allocation sums match its exact signed quantity and unit. Custody-only/hold-only events are represented without inventing available-stock deltas. |
+| Movement/custody/discrepancy links | Every managed source maps to the exact event/action and every event line maps back to its actual canonical source. Each available-stock movement appears once; allocation sums match its exact signed quantity and unit. Separate prepared/return-held custody cells preserve drugs that are outside available stock. Pickup or a clinic-retained return must not debit inventory or count held units a second time. Custody-only/hold-only events are represented without inventing available-stock deltas. |
 | Position/head/hold projections | Maintained in the event transaction and reconstructible from opening plus immutable sources. Raw balances are never editable. Controlled holds and native-return holds compose. Expected heads become stale on concurrent movement. |
 | Prepared operations/actions/cancellations | Immutable owned arguments, context, original receipts and cancellation tombstones. No changed-payload retry, shared signer identity or automatic approval. |
 | Execution contexts | Private technical lifecycle only; an earlier completed call in the same query packet cannot authorize a later managed write. |
@@ -51,7 +57,7 @@ Known managed inventory products do not identify arbitrary free-text or off-syst
 
 ## Engineering proof and release order
 
-- Prove managed receive/adjust/treatment/native dispense/anesthesia and every return/custody/discrepancy subtype, ordinary compatibility, exact fractional splits and single debit/charge. Include all-eight early shared-barrier coverage and fresh Auth/session checks after observed waits.
+- Prove managed receive/adjust/treatment/native dispense/anesthesia and every return/custody/discrepancy/pickup/correction subtype, ordinary compatibility, exact fractional splits and single debit/charge. Include all-ten early shared-barrier coverage and fresh Auth/session checks after observed waits.
 - Prove direct generic managed calls fail, private sources cannot be manufactured, one-query-packet context borrowing fails after execute returns, missing/orphan/forged links roll back, opposite compensations retain both real movements, and changed/cancelled/same-UUID/lost-response paths are exact.
 - Prove policy freeze drains admitted writers before changing state, pre-cutover lots remain covered, stale container heads fail and controlled/native holds cannot clear each other. No late global barrier or shared-to-exclusive upgrade.
 - Inject failures after clinical, stock, controlled-line and action inserts; require atomic rollback. Restore populated policy/container/opening/event/action/source data and exact original receipts. Post-backup physical-history reconciliation remains a real C2/C3 requirement, not a claim inferred from restored hashes.

@@ -79,7 +79,7 @@ try:
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / "supabase/migrations" / migration.name)
     assert (
-        len(hashes) == 188
+        len(hashes) == 189
         and "20261011181722_manual_diagnostic_panels.sql" in hashes
         and "20261011203250_diagnostic_pdf_jobs.sql" in hashes
         and "20261012035948_diagnostic_pdf_artifact_processing.sql" in hashes
@@ -95,6 +95,7 @@ try:
         and "20261014202235_supplier_product_identity.sql" in hashes
         and "20261015011200_controlled_draft_configuration.sql" in hashes
         and "20261015020722_stock_writer_provenance.sql" in hashes
+        and "20261015055007_native_custody_provenance.sql" in hashes
     )
     if args.include_sql_regression:
         shutil.copytree(root / "supabase/tests", project / "supabase/tests")
