@@ -1,0 +1,11 @@
+# Barcode camera engineering rollout — October14,2026
+
+[PR254](https://github.com/finite0001/livingroom-vet-care/pull/254) reviewed head`fceabf9627dd0bcdf9ca61e5142422bd846d559a` merged as`357e6f93cc2070121fbe890797c827da7a416551`. All four exact-head CI jobs pass;1,464 units,524 browser tests plus one existing skip,and16 built simulated-camera/CSP checks pass. Production CSP was not changed.
+
+Genuine staged Auth/PostgREST acceptance passes38 API/22 browser checks,including DVM/STAFF scan→confirmation→correct reviewed10mL/vial package,committed-save response loss/reload/read-only recovery,mobile layout and owned-account/session cleanup. It ran on b0cce072; the final head changes only Deno's root workspace dependency manifest. Application and harness sources are identical. No real device or supplier-label claim follows.
+
+Production`dpl_HFRYZmJFMUK2MHTLSdDhZZxKdHm7` isREADY on the exact merge and thelivingroom.vet alias. Anonymous smoke at2026-10-15T01:37:22.712Z verifies login200,five protected redirects,primary-only configuration,new camera/worker/WASM/license assets and zero page errors. The966,895-byte production WASM matches SHA256`aecc1876de036c62c8419f67a5e1a16b1698a325bcd190aa84810d516e263931`. No production staff session or camera permission was used.
+
+Both backends remain186,latest20261014202235. No migration,Edge deployment,secret change,provider call or legacy write. Primary's existing outbox3,payment profiles0,stock0 are preserved; staging's existing sandbox payment profile remains. Latest generation/reconciliation policies areoff,no pending run,and reconciliation cron inactive on both. Historical enabled policy rows are not current activation. Existing security/dependency warnings remain; this package adds no schema advisory surface.
+
+[Machine receipt](2026-10-14-barcode-camera-rollout.json),[feature scope](../features/inventory-barcode-scanning.md),[device/label acceptance](../../plans/2026-10-14-inventory-register/phase-02-iphone-scanning.md). Actual iPhone/Safari and supplier labels,GS1/UPC-E handling as needed,receiving/dispensing context and Susan's acceptance remain required. Actual supplier imports and controlled register remain separate unfinished scope within all45 original requirements.

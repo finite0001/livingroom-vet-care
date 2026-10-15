@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { products, lots, type Product, type LotBalance } from "./api";
+import { ControlledDraftPanel } from "../controlled-drugs/ControlledDraftPanel";
 import { SupplierIdentityPanel } from "./supplier-imports/SupplierIdentityPanel";
 import { useStockMutation } from "./useStockMutation";
 import { readVaccineProfiles } from "../vaccines/api";
@@ -386,6 +387,7 @@ export function InventoryPage() {
         <Button asChild variant="outline" className="mt-3"><Link to="/hub/whogot">Whogot</Link></Button>
       </header>
       <SupplierIdentityPanel />
+      <ControlledDraftPanel />
       <Card>
         <CardHeader>
           <CardTitle>Product catalog</CardTitle>
