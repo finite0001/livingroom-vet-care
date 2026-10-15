@@ -184,11 +184,13 @@ enabled = false
     source_reconciliation_hash=hashlib.sha256(source_reconciliation_path.read_bytes()).hexdigest()
     source_reconciliation=json.loads(command(['python3','-B',str(source_reconciliation_path),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180))
     assert source_reconciliation['source_producers']==10 and source_reconciliation['canonical_operations']==136 and source_reconciliation['return_actions']==6 and source_reconciliation['annotation_kinds']==3
-    assert source_reconciliation['checks']==687 and source_reconciliation['missing_reverse_sources_denied']==2 and source_reconciliation['catalog_edits_preserve_original_sources']
+    assert source_reconciliation['checks']==961 and source_reconciliation['missing_reverse_sources_denied']==2 and source_reconciliation['catalog_edits_preserve_original_sources']
+    assert source_reconciliation['actual_canonical_replays']==136 and source_reconciliation['anesthesia_treatment_receipts']==1 and source_reconciliation['canonical_replay_preserves_stock_and_billing']
+    assert source_reconciliation['retired_recorder_provenance_preserved']
     assert source_reconciliation['sql_only']and not source_reconciliation['authorizes_execution']and not source_reconciliation['controlled_policy_or_opening']and source_reconciliation['provider_requests']==0
     assert source_reconciliation['owned_clone_removed']and source_reconciliation['source_database_unchanged']and source_reconciliation['populated_clone_unchanged']
     assert hashlib.sha256(source_reconciliation_path.read_bytes()).hexdigest()==source_reconciliation_hash
-    print('Controlled source oracle:136 operations/687 SQL-only checks;10 producers/6 return actions/3 annotation kinds; owned clone removed.',flush=True)
+    print('Controlled source oracle:136 actual canonical replays/961 SQL-only checks;10 producers/6 return actions/3 annotation kinds; retired provenance preserved; owned clone removed.',flush=True)
     restore_path = root / 'tests/prescriptions/restore-native.py'
     restore_hash = hashlib.sha256(restore_path.read_bytes()).hexdigest()
     restore = json.loads(command(['python3', '-B', str(restore_path), '--run-synthetic-local', '--project-config', str(project / 'supabase/config.toml')], cwd=root))

@@ -93,8 +93,15 @@ try:
     assert seed in policy_migration
     sql(seed, database)
     assert sql('select count(*)from stock_writer_manifests;', database) == '10'
-    assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and relname in"
-               "('controlled_stock_states','controlled_stock_policy_versions','controlled_stock_openings');", database) == '0'
+    # An inactive candidate may add these private schema families. Never copy
+    # or seed their actual state, policies or openings into ordinary fixtures.
+    sql("""do $$declare name text;n bigint;begin
+foreach name in array array['controlled_stock_states','controlled_stock_policy_versions','controlled_stock_openings']loop
+ if to_regclass('public.'||name)is not null then
+  execute format('select count(*)from public.%I',name)into n;
+  if n<>0 then raise exception 'Ordinary source clone must not contain controlled configuration';end if;
+ end if;
+end loop;end $$;""", database)
     fixtures = [
         ('supabase/tests/native_fulfillment.test.sql', 'fulfillment', 'a5510000', 'b5510000'),
         ('scripts/stock-writers/rollback-probe.sql', 'stock', None, None),

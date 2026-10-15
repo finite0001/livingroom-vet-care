@@ -18,8 +18,11 @@ begin
   select to_jsonb(t),t.created_by into expected,actual_actor
   from public.patient_treatments t where t.id=p_root and not t.historical;
  when 'record_anesthesia_drug_administration'then
-  select to_jsonb(a),a.created_by into expected,actual_actor
-  from public.anesthesia_drug_administrations a where a.id=p_root;
+  -- The outer writer returns its treatment row, not the separate audit link.
+  select to_jsonb(t),a.created_by into expected,actual_actor
+  from public.anesthesia_drug_administrations a
+  join public.patient_treatments t on t.id=a.id and t.created_by=a.created_by
+  where a.id=p_root;
  when 'record_native_dispense'then
   select public.native_fulfillment_receipt(o),d.actor_id,d.id,d.document
   into expected,actual_actor,dispense,native_document
@@ -35,7 +38,15 @@ begin
   where e.id=p_root and e.document->>'version'=case p_writer when 'record_native_dispense_return'then '1'else '2'end;
   if p_writer='record_native_dispense_return'then
    select public.native_return_receipt(o)into expected from public.native_return_operations o where o.id=p_root;
-  else expected:=public.recover_native_dispense_return_v2(p_root);end if;
+  else
+   select jsonb_build_object('version',2,'id',o.id,'actor_id',o.actor_id,'request',o.request,
+    'request_hash',o.request_hash,'result',o.result,'created_at',o.created_at)into expected
+   from public.native_return_operations o where o.id=p_root;
+  end if;
+  -- Provenance remains verifiable after the original recorder retires. This
+  -- private data reader must not borrow an owner-only recovery RPC's Auth gate.
+  perform public.native_reconciliation_verified((native_document#>>'{target,authorization_id}')::uuid,
+   (native_document#>>'{target,pet_id}')::uuid,dispense);
   native_kind:='return';
   select jsonb_build_object('action',e.action,'intake_id',coalesce(e.intake_id,e.id),
    'intake_document',i.document,'intake_reviewed_context',i.reviewed_context)
@@ -50,7 +61,12 @@ begin
    on s.event_id=e.id and s.actor_id=e.actor_id
   join public.native_return_discrepancy_operations o on o.id=e.id and o.actor_id=e.actor_id and o.result=e.document
   where e.id=p_root;
-  expected:=public.recover_native_return_discrepancy(p_root);native_kind:='discrepancy';
+  select jsonb_build_object('version',1,'id',o.id,'actor_id',o.actor_id,'request',o.request,
+   'request_hash',o.request_hash,'result',o.result,'created_at',o.created_at)into expected
+  from public.native_return_discrepancy_operations o where o.id=p_root;
+  perform public.native_reconciliation_verified((native_document#>>'{target,authorization_id}')::uuid,
+   (native_document#>>'{target,pet_id}')::uuid,dispense);
+  native_kind:='discrepancy';
  when 'record_native_pickup'then
   select public.native_fulfillment_receipt(o),e.actor_id,e.dispense_id,e.document
   into expected,actual_actor,dispense,native_document

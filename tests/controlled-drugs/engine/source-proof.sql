@@ -5,6 +5,7 @@ do $$declare r record;receipt jsonb;b jsonb;e jsonb;seen text[]:='{}';actions te
  n integer:=0;actual_available jsonb;actual_total numeric;expected_total numeric;
  quantity numeric;delta numeric;action text;allocation jsonb;line_count integer;
  checks integer:=0;compensations integer:=0;role_name text;annotation_kinds integer;
+ replay jsonb;replay_query text;stock_before bigint;billing_before bigint;anesthesia_replays integer:=0;other_actor uuid;
 begin
  for r in
   select distinct writer,source_id as id,actor_id from stock_movement_sources
@@ -19,7 +20,7 @@ begin
   case r.writer
    when 'receive_inventory','adjust_inventory'then select to_jsonb(m)into receipt from inventory_movements m where m.id=r.id;
    when 'record_patient_treatment'then select to_jsonb(t)into receipt from patient_treatments t where t.id=r.id;
-   when 'record_anesthesia_drug_administration'then select to_jsonb(a)into receipt from anesthesia_drug_administrations a where a.id=r.id;
+   when 'record_anesthesia_drug_administration'then select to_jsonb(t)into receipt from patient_treatments t where t.id=r.id;
    when 'record_native_dispense','record_native_pickup'then select native_fulfillment_receipt(o)into receipt from native_fulfillment_operations o where o.id=r.id;
    when 'record_native_dispense_return'then select native_return_receipt(o)into receipt from native_return_operations o where o.id=r.id;
    when 'record_native_dispense_return_v2'then receipt:=recover_native_dispense_return_v2(r.id);
@@ -27,6 +28,49 @@ begin
    when 'append_native_dispense_correction'then select native_correction_receipt(o)into receipt from native_dispense_correction_operations o where o.id=r.id;
    else raise exception 'Unexpected source fixture';
   end case;
+  case r.writer
+   when 'receive_inventory'then
+    select format('select to_jsonb(receive_inventory(%L::uuid,%L::uuid,%L::uuid,%L,%L::date,%L,%L::numeric,%L))',
+     m.id,m.lot_id,l.product_id,l.lot_number,l.expires_on,l.location,m.quantity,m.reason)into replay_query
+    from inventory_movements m join inventory_lots l on l.id=m.lot_id where m.id=r.id;
+   when 'adjust_inventory'then
+    select format('select to_jsonb(adjust_inventory(%L::uuid,%L::uuid,%L::numeric,%L))',m.id,m.lot_id,m.quantity,m.reason)
+    into replay_query from inventory_movements m where m.id=r.id;
+   when 'record_patient_treatment'then
+    select format('select to_jsonb(record_patient_treatment(%L::uuid,%L::jsonb))',t.id,t.request::text)
+    into replay_query from patient_treatments t where t.id=r.id;
+   when 'record_anesthesia_drug_administration'then
+    select format('select to_jsonb(record_anesthesia_drug_administration(%L::uuid,%L::uuid,%L::uuid,%L::jsonb))',
+     a.id,a.record_id,a.pet_id,(a.request-'pet_id'-'source')::text)into replay_query from anesthesia_drug_administrations a where a.id=r.id;
+   when 'record_native_dispense','record_native_pickup'then
+    select format('select %I(%L::uuid,%L::jsonb)',r.writer,o.id,o.request::text)into replay_query
+    from native_fulfillment_operations o where o.id=r.id;
+   when 'record_native_dispense_return','record_native_dispense_return_v2'then
+    select format('select %I(%L::uuid,%L::jsonb)',r.writer,o.id,o.request::text)into replay_query
+    from native_return_operations o where o.id=r.id;
+   when 'record_native_return_discrepancy'then
+    select format('select record_native_return_discrepancy(%L::uuid,%L::jsonb)',o.id,o.request::text)
+    into replay_query from native_return_discrepancy_operations o where o.id=r.id;
+   when 'append_native_dispense_correction'then
+    select format('select append_native_dispense_correction(%L::uuid,%L::jsonb)',o.id,o.request::text)
+    into replay_query from native_dispense_correction_operations o where o.id=r.id;
+  end case;
+  select count(*)into stock_before from inventory_movements;
+  select count(*)into billing_before from billing_invoice_items;
+  execute replay_query into replay;
+  if replay is distinct from receipt then raise exception 'Canonical producer returned a different receipt: %',r.writer;end if;
+  checks:=checks+1;
+  if(select count(*)from inventory_movements)<>stock_before or(select count(*)from billing_invoice_items)<>billing_before then
+   raise exception 'Canonical receipt replay added stock or billing: %',r.writer;end if;
+  checks:=checks+1;
+  if r.writer='record_anesthesia_drug_administration'then
+   begin
+    perform pg_temp.controlled_stock_source_bundle(r.writer,r.id,r.actor_id,
+     (select to_jsonb(a)from anesthesia_drug_administrations a where a.id=r.id));
+    raise exception 'Anesthesia audit link accepted as the treatment receipt';
+   exception when check_violation then null;end;
+   anesthesia_replays:=anesthesia_replays+1;checks:=checks+1;
+  end if;
   b:=pg_temp.controlled_stock_source_bundle(r.writer,r.id,r.actor_id,receipt);
   e:=pg_temp.controlled_stock_source_effects(r.writer,r.id,r.actor_id,receipt);
   if e->>'root'<>r.id::text or e->>'writer'<>r.writer or e->>'actor_id'<>r.actor_id::text
@@ -100,6 +144,21 @@ begin
   raise exception 'All annotation types, including pickup assertions, must preserve physical balances';end if;
  checks:=checks+1;
 
+ -- Immutable provenance can be verified by private tooling after a recorder
+ -- retires. This is not a grant to another user to recover or execute the action.
+ select writer,root,bundle,effects into r from controlled_source_results where writer='record_native_dispense_return_v2'limit 1;
+ select p.id into other_actor from profiles p where p.id<>(r.bundle->>'actor_id')::uuid and public.is_active_staff(p.id)
+  and exists(select 1 from user_roles roles where roles.user_id=p.id and roles.role='ADMIN')limit 1;
+ if other_actor is null then raise exception 'Different active synthetic verifier required';end if;
+ select jsonb_build_object('version',2,'id',o.id,'actor_id',o.actor_id,'request',o.request,
+  'request_hash',o.request_hash,'result',o.result,'created_at',o.created_at)into receipt from native_return_operations o where o.id=r.root;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',other_actor,'role','authenticated')::text,true);
+ update profiles set is_active=false where id=(r.bundle->>'actor_id')::uuid;
+ if pg_temp.controlled_stock_source_effects(r.writer,r.root,(r.bundle->>'actor_id')::uuid,receipt)is distinct from r.effects then
+  raise exception 'Retired recorder erased immutable source verification';end if;
+ update profiles set is_active=true where id=(r.bundle->>'actor_id')::uuid;
+ checks:=checks+1;
+
  -- Current catalog price/availability is not rewritten into an old source.
  -- Recovery of that source is still not authorization for a fresh operation.
  select o.*,d.document->>'quantity'as quantity into r from native_fulfillment_operations o
@@ -150,6 +209,9 @@ begin
  insert into controlled_source_proof values(jsonb_build_object('source_producers',10,'canonical_operations',n,
   'checks',checks,'return_actions',6,'distinct_negative_compensation_movements',compensations,
   'annotation_kinds',annotation_kinds,'catalog_edits_preserve_original_sources',true,
+  'actual_canonical_replays',n,'anesthesia_treatment_receipts',anesthesia_replays,
+  'canonical_replay_preserves_stock_and_billing',true,
+  'retired_recorder_provenance_preserved',true,
   'missing_reverse_sources_denied',2,'private_acl',true,'authorizes_execution',false,
   'controlled_policy_or_opening',false,'provider_requests',0));
 end $$;

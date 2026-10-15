@@ -1,0 +1,239 @@
+{
+  "kind": "isolated-controlled-execution-candidate-local",
+  "verified_at": "2026-10-15T21:34:39.265665+00:00",
+  "baseline_git_commit": "d6c890abd6c964b81b6bed1fafef97ab218bbe08",
+  "candidate_source_hashes_bind_uncommitted_work": true,
+  "release_boundary": {
+    "last_verified_pr": 257,
+    "baseline_migrations": 189,
+    "canonical_migrations_added": 0,
+    "hosted_writes": 0,
+    "actual_practice_rules_approved": false,
+    "clinical_activation": false,
+    "c1b_release_complete": false,
+    "c2_c3_complete": false
+  },
+  "application_check": {
+    "unit_tests": 1471,
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "typecheck": true,
+    "production_build": true,
+    "log_sha256": "c8e5f7944a0c89136f7d308e63948edf4c41b2a784dd809abb1f92edbb960a21"
+  },
+  "source_oracle": {
+    "checks": 961,
+    "private_acl": true,
+    "return_actions": 6,
+    "annotation_kinds": 3,
+    "source_producers": 10,
+    "provider_requests": 0,
+    "authorizes_execution": false,
+    "canonical_operations": 136,
+    "actual_canonical_replays": 136,
+    "controlled_policy_or_opening": false,
+    "anesthesia_treatment_receipts": 1,
+    "missing_reverse_sources_denied": 2,
+    "retired_recorder_provenance_preserved": true,
+    "catalog_edits_preserve_original_sources": true,
+    "distinct_negative_compensation_movements": 5,
+    "canonical_replay_preserves_stock_and_billing": true,
+    "sql_only": true,
+    "project_id": "lrv-prescription-4fb49a24e837",
+    "owned_clone_removed": true,
+    "source_database_unchanged": true,
+    "populated_clone_unchanged": true,
+    "modules_and_fixture_sha256": {
+      "supabase/migrations/20260916090000_native_dispense_returns.sql": "fc89ac2801bbb39b21c7be5e6f7fffb06a381710a3ff7020c4b77e087373b99b",
+      "supabase/tests/native_fulfillment.test.sql": "8198ea74a2d75a706a469135cd4684c1b635ecdb9572e1f0e03d6bbbc2404192",
+      "scripts/stock-writers/rollback-probe.sql": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+      "supabase/tests/native_return_reconciliation.test.sql": "3af1cf00df34fe2b43109d97af9991263bf7bab02068c8e5001240edb860428f",
+      "supabase/tests/native_dispense_corrections.test.sql": "bfeda2f5d9b4005b9821e944cf01b53ccb25f33cb2a293f051bfdbc532ed5197",
+      "tests/controlled-drugs/engine/source-reader.sql": "ec75bd5346657230cb0c6602589a10d22b0ee880f786118f8342bf57d48788fa",
+      "tests/controlled-drugs/engine/source-effects.sql": "6cb79e0e2cd737652de34e5a8d33b963ab42fa28d369d2b3d7d976f58f653f10",
+      "tests/controlled-drugs/engine/source-proof.sql": "2b027a570dcf11e4095da6720181cfb465d651f023d3bf846dc58bc7cc602d22"
+    },
+    "runner_sha256": "47cb9f9b55cc761cc81ae23e16b839377b519e1c6afaeadfbd1a6dd45a2d5112"
+  },
+  "source_oracle_supersedes": "2026-10-15-controlled-source-local.json:687-check receipt; anesthesia audit link self-comparison replaced by actual canonical treatment receipt/retries",
+  "candidate": {
+    "scheduler_paused_owned_server_only": true,
+    "ordinary_sql_regression": {
+      "files": 155,
+      "assertions": 6540
+    },
+    "smoke": {
+      "sql_only": true,
+      "managed_adjust": true,
+      "synthetic_only": true,
+      "managed_receive": true,
+      "provider_requests": 0,
+      "stale_review_denied": true,
+      "fractional_containers": 2,
+      "cancellation_permanent": true,
+      "changed_payload_denied": true,
+      "private_context_cleared": true,
+      "exact_owned_receipt_recovery": true,
+      "foreign_owner_and_actor_denied": true,
+      "shared_exclusive_upgrade_denied": true,
+      "one_original_movement_per_action": true,
+      "old_receipts_survive_later_heads_and_prices": true,
+      "same_packet_generic_and_raw_bypasses_denied": true,
+      "all_relation_fingerprints_unchanged": 412,
+      "real_practice_configuration": false,
+      "canonical_migration": false
+    },
+    "managed_native": {
+      "prepared": "4.500",
+      "sql_only": true,
+      "available": "100.875",
+      "return_held": "2.100",
+      "billing_cents": 1975,
+      "billing_items": 4,
+      "synthetic_only": true,
+      "managed_producers": 9,
+      "provider_requests": 0,
+      "all_six_return_actions": true,
+      "private_context_cleared": true,
+      "managed_canonical_actions": 24,
+      "all_three_correction_kinds": true,
+      "all_four_discrepancy_actions": true,
+      "mixed_case_pickup_uuid_preserved": true,
+      "anesthesia_one_treatment_debit_charge": true,
+      "pickup_amendment_did_not_restore_custody": true,
+      "native_holds_resolved_without_quantity_change": true,
+      "independent_corruption_failures": 11,
+      "late_injected_fault_points": 4,
+      "all_relations_unchanged_after_each_injected_fault": true,
+      "populated_managed_restore": true,
+      "restored_exact_relation_fingerprints": 412,
+      "restore_validates_without_recorder_session": true,
+      "source_runtime_all_relations_unchanged": 412,
+      "physical_post_backup_reconciliation_proven": false,
+      "storage_binary_restore_proven": false,
+      "canonical_migration": false,
+      "genuine_auth_api": false,
+      "actual_practice_rules": false
+    },
+    "genuine_auth_api": {
+      "synthetic_only": true,
+      "genuine_auth_postgrest": true,
+      "api_checks": 124,
+      "observed_lock_queues": 5,
+      "actual_root_product_final_container_waits": true,
+      "authority_revocation_after_observed_wait": true,
+      "final_container_failure_rolled_back_canonical_source": true,
+      "same_uuid_exact_single_commit": true,
+      "raw_tables_and_helpers_denied": true,
+      "staff_metadata_did_not_grant_role": true,
+      "owned_review_cancel_recovery": true,
+      "new_rpc_grants_owned_local_only": true,
+      "actual_practice_rules": false,
+      "canonical_migration": false,
+      "provider_requests": 0,
+      "owned_actors_and_sessions_retired": true,
+      "non_stock_baselines_unchanged": true
+    },
+    "synthetic_only": true,
+    "canonical_migration": false,
+    "hosted_writes": 0,
+    "provider_requests": 0,
+    "actual_practice_rules": false,
+    "project_id": "lrv-controlled-engine-4f71def708",
+    "all_ten_canonical_root_definitions_unchanged": true,
+    "owned_containers_and_volumes_removed": true
+  },
+  "native_parent_on_canonical_189_baseline": {
+    "genuine_checks": 783,
+    "suites": [
+      {
+        "suite": "native-prescription-lifecycle-http",
+        "checks_passed": 82
+      },
+      {
+        "suite": "native-fulfillment-http",
+        "checks_passed": 85
+      },
+      {
+        "suite": "native-fulfillment-and-release-browser",
+        "checks_passed": 77
+      },
+      {
+        "suite": "native-release-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-corrections-local-auth",
+        "checks_passed": 46
+      },
+      {
+        "suite": "native-returns-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-reconciliation-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-finance-local-auth",
+        "checks_passed": 61
+      },
+      {
+        "suite": "native-estimate-drafts-local-auth",
+        "checks_passed": 51
+      },
+      {
+        "suite": "native-estimate-publications-local-auth-http",
+        "checks_passed": 87
+      },
+      {
+        "suite": "native-estimate-decisions-local-auth-http",
+        "checks_passed": 123
+      }
+    ],
+    "stock_api_checks": 40,
+    "observed_stock_queues": 16,
+    "native_restore_checks": 275,
+    "cleanup_verified": true,
+    "runner_sha256": "398b38e657d1189504dbc3fc88bec54741717b16357fbe0590627dac3b29b500",
+    "result_sha256": "91d1bfee76ee0129bc699d5ee79fd1ccb6239155eb3588948a17868277cee198"
+  },
+  "source_sha256": {
+    "tests/controlled-drugs/engine/candidate/constraints.sql": "6a6d14f0c9ba07e4747057ba0830a0db19bea8983de7bd7b639790d7eb472d42",
+    "tests/controlled-drugs/engine/candidate/effects.sql": "5e210e9c1ccc1ae5ff6f4e9f3b42144a9f6e416ee64ac8b6a68a8e573aec939e",
+    "tests/controlled-drugs/engine/candidate/entry.sql": "9ff33b4f407631d03ca2ff45b3c4986b403d75cf8a2d91ff54cb0ed84923b8be",
+    "tests/controlled-drugs/engine/candidate/fault-probes.sql": "7f988730c3670cd83e01cb2a02d14bfc30d4b00af7934fd61acd87b6232c319d",
+    "tests/controlled-drugs/engine/candidate/guards.sql": "867cb466ec00f6a852c44d7e19e68f3db45cfb8d12ff1384372171d710dd2567",
+    "tests/controlled-drugs/engine/candidate/helpers.sql": "ee07aa22bb075f19c3e5516238953d45f6800fa178dd045850b0b25e97468a79",
+    "tests/controlled-drugs/engine/candidate/integrity-probes.sql": "f3eb1ba0607d5357ed576e7c9cc7992246d1175ba8686aab79e9fada9bef1781",
+    "tests/controlled-drugs/engine/candidate/native-config.sql": "140acb59679831709048bc0a7bafdafecea71a38ce0d9044a002f005ff0a7653",
+    "tests/controlled-drugs/engine/candidate/native-operations.sql": "af6796c3f8f8f0eed42dbf4138c36aa15402a69f841ea2ec64cfc72dc6d46735",
+    "tests/controlled-drugs/engine/candidate/posting.sql": "4f3e9f6829ff148ad2ee355f6535af9627ae6b176e64ff6356028f6a0cd8172b",
+    "tests/controlled-drugs/engine/candidate/protocol.sql": "a09af997dbbb125fca1dbc660dd667d396c0534f334f9a0cb2881260e5a46b60",
+    "tests/controlled-drugs/engine/candidate/review.sql": "8d013b1aa949966d50ccca00ad34dbde1b7bb974dd84de97e550c889757eb2d3",
+    "tests/controlled-drugs/engine/candidate/schema.sql": "5467263c4776ca2ff67454a7086229644e3a6d233fc0a96d2ce831e20dd6fefe",
+    "tests/controlled-drugs/engine/candidate/seal.sql": "552abc4b18cb9d16b89e386376e3aa17af3eaa9ae43044698e06359503b46eb7",
+    "tests/controlled-drugs/engine/candidate/smoke.sql": "13446e9fdaa59c15ef50f9a90a446ea93e0c129aad38552b1c1d242354b0ca53",
+    "tests/controlled-drugs/engine/candidate/probe-api.py": "b235ab4a4830fed47c0e3c9543cf9c322126af1a5cc465c1fa359621e81b4195",
+    "tests/controlled-drugs/engine/candidate/probe-native.py": "0f7d47abb9407a42a202ded9ba2225e6cc911d1d0f20f1f457a549fa9bfafa05",
+    "tests/controlled-drugs/engine/candidate/probe-smoke.py": "980c79cb987f3ca4540dd8f942e3f99cfdd7ec5fcb6a4605c7bacc06904436d9",
+    "tests/controlled-drugs/engine/candidate/run-local.py": "464cd5855aeb9f71cbecb8083e3d548ab964b419355652d4375464a87bf1141c",
+    "tests/controlled-drugs/engine/source-reader.sql": "ec75bd5346657230cb0c6602589a10d22b0ee880f786118f8342bf57d48788fa",
+    "tests/controlled-drugs/engine/source-effects.sql": "6cb79e0e2cd737652de34e5a8d33b963ab42fa28d369d2b3d7d976f58f653f10",
+    "supabase/tests/native_fulfillment.test.sql": "8198ea74a2d75a706a469135cd4684c1b635ecdb9572e1f0e03d6bbbc2404192",
+    "tests/controlled-drugs/source-reconciliation.py": "47cb9f9b55cc761cc81ae23e16b839377b519e1c6afaeadfbd1a6dd45a2d5112",
+    "tests/prescriptions/native-disposable.py": "398b38e657d1189504dbc3fc88bec54741717b16357fbe0590627dac3b29b500",
+    "tests/controlled-drugs/engine/source-proof.sql": "2b027a570dcf11e4095da6720181cfb465d651f023d3bf846dc58bc7cc602d22",
+    ".github/workflows/ci.yml": "e3b7747553f04493d96c3d90524126eb93d6d25bfd4180826e0559a5ccf96f9a"
+  },
+  "canonical_migration_source_count": 189,
+  "canonical_migration_source_set_sha256": "4287ffcf7e054f2d6780232c071f6e8e939ebaddab6efcbd9dcbdbf3a15a054a",
+  "candidate_result_sha256": "8d193cb1dedd80dc969c53de8953640ffe07e19377256ee456f25a097c919887",
+  "limits": [
+    "Candidate installed only in uniquely owned disposable local stack; no production installer or hosted mutation.",
+    "SQL fixture claims are not genuine Auth evidence; genuine Auth proof covers owned receive/adjust protocol and observed waits separately from nine-producer native SQL lifecycle.",
+    "Local technical manifest construction/resealing must not accept hosted drift; pin trusted definitions/ACLs before a production migration.",
+    "Complete freeze/drain, historical-lot/hold/isolation/restored-context coverage, independent release review and exact-head stage-first rollout remain.",
+    "Physical post-backup reconciliation, Storage binary disaster recovery and actual clinical SOP/site/unit/count acceptance are not proven."
+  ]
+}

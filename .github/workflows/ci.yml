@@ -169,6 +169,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Verify native prescribing, real browser dispensing and populated restore
         run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
+      - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression
       - uses: denoland/setup-deno@v2
         with:
           deno-version: 2.9.6
