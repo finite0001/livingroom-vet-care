@@ -1,6 +1,7 @@
 # Controlled-drug rules — Susan’s review draft
 
-**Status: DRAFT · INACTIVE · not an approved practice SOP**  
+**Status: DRAFT · INACTIVE · not an approved practice SOP**
+
 Prepared October 14, 2026. Susan’s approval: **pending**. Effective date: **not assigned**.
 
 Dave requested proposed rules for Susan to review. The recommendations below are practice-policy choices unless specifically identified as a legal constraint. Saving this document, merging its PR, or reviewing a drug’s draft configuration does **not** activate a controlled-drug register or authorize a physical transaction.
@@ -37,7 +38,7 @@ For a veterinarian working alone, subsequent review can check the record. It **c
 ## Legal constraints supporting the design
 
 - Continuing records must be accurate and current, with actual receipt/transfer/destruction dates and attribution to the responsible registered location. Federal law does not universally require a perpetual inventory. The proposed daily counts and second-person review deadlines above are additional practice choices. The Form 41 exception for certain immediate-administration residuals expressly refers to the practitioner’s **registered location**; it is not a general housecall exemption. [21 CFR 1304.21](https://www.ecfr.gov/current/title-21/chapter-II/part-1304/subject-group-ECFRed220d26113f6a5/section-1304.21).
-- The applicable registrant destruction procedure requires personal observation by two employees; the destruction record includes their signatures. A software approval alone does not establish that observation. Preserve the signed official record; the app is not represented as a certified electronic Form 41 filing/signature system. [21 CFR 1317.95](https://www.ecfr.gov/current/title-21/chapter-II/part-1317#p-1317.95), [DEA Form 41 and instructions](https://www.deadiversion.usdoj.gov/21cfr_reports/surrend/41_form.pdf).
+- The applicable registrant destruction procedure requires personal observation by two employees; the destruction record includes their signatures. Transfer for destruction also has specific two-employee loading/unloading observation requirements. A software approval alone does not establish physical observation. Preserve the signed official record; the app is not represented as a certified electronic Form 41 filing/signature system. [21 CFR 1317.95](https://www.ecfr.gov/current/title-21/chapter-II/part-1317#p-1317.95), [DEA Form 41 and instructions](https://www.deadiversion.usdoj.gov/21cfr_reports/surrend/41_form.pdf).
 - Ordinary individual veterinary practitioners are not among the authorized collector categories for routine ultimate-user take-back. DEA distinguishes incidental abandoned medication and advises contacting law enforcement or the local DEA office when it cannot be returned to the ultimate user. [21 CFR 1317.30–.40](https://www.ecfr.gov/current/title-21/chapter-II/part-1317#p-1317.30), [DEA disposal guidance](https://www.deadiversion.usdoj.gov/faq/disp-destr-faq.html).
 - Theft or significant-loss reporting cannot wait for the app’s second approval: the responsible registrant assesses reportability and applicable deadlines, including written notice within one business day of discovery and electronic Form 106 within 45 days. [21 CFR 1301.76(b)](https://www.ecfr.gov/current/title-21/chapter-II/part-1301/subject-group-ECFRa7ff8142033a7a2/section-1301.76).
 
