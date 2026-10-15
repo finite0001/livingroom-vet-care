@@ -1,6 +1,6 @@
 # Phase 5 — Native inventory, supplier imports, iPhone scanning and controlled register
 
-Status: C0 draft configuration and C1a stock/custody provenance are released through PR255/256. Both hosted backends have188 migrations and exact production479e02ef is verified. C1b0 pickup/correction provenance is locally verified; exact-head CI and staged rollout are pending. Supplier identity PR253 and camera PR254 remain released, with real supplier/device acceptance pending. C1b controlled execution, C2 review/witness/count/report workflows and C3 actual commissioning remain required. Preserve N01,N02,N19,H11,H12 and all45 original requirements. Research baseline remains PR251 d273144163e6dbb8ed101289bb430877faefd160 and its c2db1ca0 feature source; this plan supplements the original October8 Phase5.
+Status: C0, C1a and the C1b0 pickup/correction prerequisite are released through PR255/256/257. Both hosted backends have189 migrations and exact productionf68a01f6 is verified. [Latest hosted receipt](../../docs/launch-evidence/2026-10-14-native-handoff-rollout.md). C1b controlled execution, C2 review/witness/count/report workflows and C3 actual commissioning remain unfinished. Supplier/device acceptance and all45 original requirements remain required; Susan’s rules remain unapproved and inactive.
 
 | Package | Work | Dependency / completion evidence |
 |---|---|---|

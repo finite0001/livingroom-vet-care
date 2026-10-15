@@ -2,7 +2,7 @@
 
 Status: implementation design, not implemented or commissioned. This refines [phase03](phase-03-controlled-register.md), using the C1a source boundary. It does not approve [Susan’s draft rules](../../docs/controlled-drug-rules-susan-review.md), create a real classification/opening or narrow the [original 45 requirements](../2026-10-08-vet-feedback/requirements.md). C2 workflows and C3 actual practice acceptance remain required.
 
-Implementation split after source inspection: C1b0 first closes the pickup/correction provenance gap in a separate additive migration. Its [implementation boundary](../../docs/features/native-handoff-boundary.md) covers ten early producers without adding unused policy/container tables. The controlled execution schema remains private design work until the complete protocol and its invariants are implemented. C1b0 alone does not complete C1b.
+Implementation split after source inspection: C1b0 closes the pickup/correction provenance gap in PR257, with both hosted backends189 and exact production/domain verified. Its [implementation boundary](../../docs/features/native-handoff-boundary.md) covers ten early producers without adding unused policy/container tables. The controlled execution schema remains private design work until the complete protocol and its invariants are implemented. C1b0 alone does not complete C1b.
 
 ## Reuse the complete entry boundary
 

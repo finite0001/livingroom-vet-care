@@ -1,8 +1,8 @@
 # Shared stock-writer boundary
 
-Status: released in PR256; both hosted backends have 188 migrations, and the exact production deployment is verified. [Hosted receipt](../launch-evidence/2026-10-14-stock-writer-rollout.md), [local evidence](../launch-evidence/2026-10-14-stock-writer-local.json).
+Status: C1a was released in PR256 at the 188-migration checkpoint. The current ten-producer extension is released in PR257 with both hosted backends189 and exact production/domain verified. [Hosted receipt](../launch-evidence/2026-10-14-stock-writer-rollout.md), [local evidence](../launch-evidence/2026-10-14-stock-writer-local.json).
 
-The separate [handoff/correction extension](native-handoff-boundary.md) is in local verification. It expands coverage to ten producers; it does not change PR256’s historical eight-writer release receipt or activate a controlled register.
+The separate [handoff/correction extension](native-handoff-boundary.md) is released in PR257; both hosted backends are now189 and exact production is verified. It expands coverage to ten producers while preserving PR256’s historical eight-writer receipt. No controlled register is activated.
 
 C1a adds canonical source provenance to existing physical inventory workflows. It does **not** activate a controlled-drug register, classify a medication, establish opening counts or approve Susan’s proposed rules. Controlled events/containers belong to C1b; review/witness/count/report workflows and actual commissioning remain C2/C3 in the [execution plan](../../plans/2026-10-14-inventory-register/phase-03-controlled-register.md).
 
