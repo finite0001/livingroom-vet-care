@@ -33,6 +33,10 @@ jobs:
           node --test tests/restore/storage-metadata.test.mjs
       - run: npm run check
       - run: npx playwright install --with-deps chromium
+      - name: Verify built local barcode worker and simulated camera cleanup
+        run: node tests/inventory/scanner-browser.mjs
+        env:
+          SCANNER_RUN_SYNTHETIC_LOCAL: "true"
       - run: npm run test:e2e
 
   edge:

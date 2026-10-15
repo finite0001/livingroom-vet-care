@@ -1,24 +1,30 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { chromium } from "playwright";
+import { barcodeVideoFixture } from "./barcode-video-fixture.ts";
+import { normalizedGtin } from "../../src/hub/features/inventory/supplier-imports/identifier-model.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 interface Input {
   status: { API_URL: string; ANON_KEY: string };
   vet: { id: string; db: SupabaseClient }; staff: { id: string; db: SupabaseClient };
+  fixtureDirectory: string; gtin: string;
   productId: string; sql: (query: string) => string;
 }
-export async function inventoryBrowserProof({status,vet,staff,productId,sql}:Input){
+export async function inventoryBrowserProof({status,vet,staff,productId,sql,fixtureDirectory,gtin}:Input){
  const origin="http://127.0.0.1:47681",storageKey=`sb-${new URL(status.API_URL).hostname.split(".")[0]}-auth-token`;let checks=0;
  const vite=spawn(process.execPath,["node_modules/vite/bin/vite.js","--host","127.0.0.1","--port","47681","--strictPort"],{cwd:process.cwd(),stdio:"ignore",env:{...process.env,VITE_SUPABASE_URL:status.API_URL,VITE_SUPABASE_PUBLISHABLE_KEY:status.ANON_KEY}});
  let browser:Awaited<ReturnType<typeof chromium.launch>>|null=null;
  async function token(db:SupabaseClient){const{data,error}=await db.auth.getSession();if(error)throw error;assert.ok(data.session);return data.session;}
  try{
   for(let i=0;i<400;i++){if(vite.exitCode!==null)throw new Error("Owned inventory app exited");try{if((await fetch(origin)).ok)break;}catch{/*Own local startup*/}if(i===399)throw new Error("Owned inventory app unavailable");await new Promise(r=>setTimeout(r,25));}
-  browser=await chromium.launch({headless:true});
-  const context=await browser.newContext({viewport:{width:1280,height:900}});
+  const fixture=barcodeVideoFixture(fixtureDirectory,gtin.slice(1));
+  browser=await chromium.launch({headless:true,args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream","--use-file-for-fake-video-capture="+fixture]});
+  const context=await browser.newContext({permissions:["camera"],viewport:{width:1280,height:900}});
   await context.addInitScript(({value,key})=>{if(!localStorage.getItem("synthetic:identity-boot")){localStorage.setItem(key,JSON.stringify(value));localStorage.setItem("synthetic:identity-boot","true");}},{value:await token(vet.db),key:storageKey});
   await context.route("**/*",route=>[origin,status.API_URL].includes(new URL(route.request().url()).origin)?route.continue():route.abort());
+  const faults: {path:string;status:number}[]=[];context.on("response",response=>{if(response.status()>=400&&new URL(response.url()).origin===origin)faults.push({path:new URL(response.url()).pathname,status:response.status()});});
   const page=await context.newPage(),errors:string[]=[];page.setDefaultTimeout(30000);page.on("pageerror",e=>errors.push(e.message));page.on("dialog",dialog=>void dialog.accept());
   await page.goto(origin+"/hub/inventory");await page.getByRole("button",{name:"Open supplier products",exact:true}).click();
   await page.getByRole("button",{name:"New supplier scope",exact:true}).waitFor();checks++;
@@ -50,6 +56,16 @@ export async function inventoryBrowserProof({status,vet,staff,productId,sql}:Inp
   page.off("request",countRecoveryWrites);assert.equal(recoveryWrites,0);checks++;
   assert.equal(sql(`select count(*)from inventory_identity_versions where definition->>'label'='${packageName}';`),"1");checks++;
   await page.getByLabel("Supplier code or barcode",{exact:true}).fill("000987");await page.getByLabel("Lookup supplier scope",{exact:true}).selectOption(scopeId);await page.getByRole("button",{name:"Look up reviewed code",exact:true}).click();await page.getByRole("region",{name:"Supplier product lookup",exact:true}).getByText(packageName,{exact:true}).waitFor();checks++;
+  await page.getByRole("button",{name:"Scan product barcode",exact:true}).click();
+  await page.getByRole("dialog").getByRole("button",{name:"Start camera",exact:true}).click();
+  try { await page.getByRole("region",{name:"Scanned product codes",exact:true}).waitFor(); }
+  catch(cause){writeFileSync(fixtureDirectory+"/camera-diagnostic.json",JSON.stringify({dialog:await page.getByRole("dialog").innerText().catch(()=>"Dialog closed"),faults,errors,gtin},null,2),{mode:0o600});throw cause;}checks++;
+  await page.getByRole("button",{name:"Use code 1 for lookup",exact:true}).click();await page.getByRole("dialog").waitFor({state:"hidden"});
+  assert.equal(normalizedGtin(await page.getByLabel("Supplier code or barcode",{exact:true}).inputValue()),gtin);checks++;
+  assert.equal(await page.getByLabel("Lookup code type",{exact:true}).inputValue(),"gtin");checks++;
+  await page.getByRole("button",{name:"Look up reviewed code",exact:true}).click();
+  const scanned=page.getByRole("region",{name:"Supplier product lookup",exact:true});
+  await scanned.getByText("Synthetic genuine ten mL vial",{exact:true}).waitFor();await scanned.getByText("1 vial = 10.000 mL",{exact:true}).waitFor();checks++;
   await page.getByRole("button",{name:"New supplier scope",exact:true}).click();await page.getByLabel("Purchasing account label",{exact:true}).fill("Unsaved browser draft");await page.getByRole("button",{name:"Close supplier review",exact:true}).click();await page.getByRole("dialog").waitFor({state:"hidden"});checks++;
   await page.setViewportSize({width:375,height:812});await page.getByRole("button",{name:"New product package",exact:true}).click();
   assert.equal(await page.getByRole("dialog").evaluate(element=>element.scrollWidth<=element.clientWidth),true);checks++;
@@ -57,9 +73,13 @@ export async function inventoryBrowserProof({status,vet,staff,productId,sql}:Inp
   const targets=await page.getByRole("dialog").locator("button").evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=43.99));assert.equal(targets,true);checks++;
   await page.getByRole("button",{name:"Close supplier review",exact:true}).click();await page.getByRole("dialog").waitFor({state:"hidden"});
   assert.deepEqual(errors,[]);checks++;
-  const staffContext=await browser.newContext({viewport:{width:1280,height:900}});await staffContext.addInitScript(({value,key})=>localStorage.setItem(key,JSON.stringify(value)),{value:await token(staff.db),key:storageKey});await staffContext.route("**/*",route=>[origin,status.API_URL].includes(new URL(route.request().url()).origin)?route.continue():route.abort());
-  const staffPage=await staffContext.newPage();await staffPage.goto(origin+"/hub/inventory");await staffPage.getByRole("button",{name:"Open supplier products",exact:true}).click();assert.equal(await staffPage.getByRole("button",{name:"New supplier scope",exact:true}).count(),0);checks++;
+  const staffContext=await browser.newContext({permissions:["camera"],viewport:{width:1280,height:900}});await staffContext.addInitScript(({value,key})=>localStorage.setItem(key,JSON.stringify(value)),{value:await token(staff.db),key:storageKey});await staffContext.route("**/*",route=>[origin,status.API_URL].includes(new URL(route.request().url()).origin)?route.continue():route.abort());
+  const staffPage=await staffContext.newPage();staffPage.on("pageerror",error=>errors.push(error.message));await staffPage.goto(origin+"/hub/inventory");await staffPage.getByRole("button",{name:"Open supplier products",exact:true}).click();assert.equal(await staffPage.getByRole("button",{name:"New supplier scope",exact:true}).count(),0);checks++;
   await staffPage.getByLabel("Supplier code or barcode",{exact:true}).fill("000987");await staffPage.getByLabel("Lookup supplier scope",{exact:true}).selectOption(scopeId);await staffPage.getByRole("button",{name:"Look up reviewed code",exact:true}).click();await staffPage.getByRole("region",{name:"Supplier product lookup",exact:true}).getByText(packageName,{exact:true}).waitFor();checks++;
-  return{browser_checks:checks,genuine_staff_api:true,committed_ack_loss_recovered:true,reload_readonly_recovery:true,mobile_overflow_checked:true,touch_targets_checked:true,staff_lookup_only:true,provider_requests:0};
+  await staffPage.getByRole("button",{name:"Scan product barcode",exact:true}).click();await staffPage.getByRole("dialog").getByRole("button",{name:"Start camera",exact:true}).click();await staffPage.getByRole("region",{name:"Scanned product codes",exact:true}).waitFor();checks++;
+  await staffPage.getByRole("button",{name:"Use code 1 for lookup",exact:true}).click();await staffPage.getByRole("dialog").waitFor({state:"hidden"});assert.equal(normalizedGtin(await staffPage.getByLabel("Supplier code or barcode",{exact:true}).inputValue()),gtin);checks++;
+  await staffPage.getByRole("button",{name:"Look up reviewed code",exact:true}).click();await staffPage.getByRole("region",{name:"Supplier product lookup",exact:true}).getByText("Synthetic genuine ten mL vial",{exact:true}).waitFor();checks++;
+  assert.deepEqual(errors,[]);
+  return{browser_checks:checks,genuine_staff_api:true,committed_ack_loss_recovered:true,reload_readonly_recovery:true,simulated_camera:true,scan_resolves_reviewed_package:true,staff_camera_lookup:true,real_iphone:false,mobile_overflow_checked:true,touch_targets_checked:true,staff_lookup_only:true,provider_requests:0};
  }finally{await browser?.close();vite.kill("SIGTERM");}
 }

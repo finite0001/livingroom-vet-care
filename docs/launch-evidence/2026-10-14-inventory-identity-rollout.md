@@ -1,0 +1,13 @@
+# Reviewed supplier identity — hosted release
+
+[PR253](https://github.com/finite0001/livingroom-vet-care/pull/253) merged October14 local / October15 UTC as `45496da453a2afaa7cfd6bc1d911adaf6751f7ab`. Reviewed head `273c22009fb0327d2e97eb719020417a4d6c9667` passes all four required CI jobs in run38657300356. [Machine receipt](2026-10-14-inventory-identity-rollout.json).
+
+Both staging `kothoqicubowyhwfsrte` and primary `mgadheotkdnrsatfivjy` have186 canonical migrations,none pending. Migration `20261014202235_supplier_product_identity.sql` SHA256 `693a974f59a86f50c4fabaf9253a1f579bacdade545171c74a17231e812e6df4` adds six private RLS tables and seven guarded staff APIs. Staging was installed and accepted before primary. No Edge deployment,secret change,provider call or retained legacy write occurred.
+
+Each project passes31 rollback assertions with24 exact relation fingerprints preserved. Staging passes38 genuine Auth/PostgREST and15 browser checks,including lost committed acknowledgement→reload→read-only original recovery,STAFF lookup-only access,mobile375px and44px controls. Synthetic actors/sessions are retired,immutable synthetic metadata retained on staging. Primary receives no persisted fixture. Primary's three existing outbox records,payment profiles0,stock0 and all diagnostic/disclosure/delivery/task activation baselines remain unchanged.
+
+Production deployment `dpl_AHzhpsDtP8SL9cVn8qmwXXUsZGj5` isREADY on that exact merge and `thelivingroom.vet`. Login200,five protected redirects,primary-only bundle,new supplier-mapping code,anonymous diagnostic boundary401 and zero page errors pass. No primary staff session was used.
+
+Security advisor differences are the intended six private RLS/no-policy tables (196→202 informational notices) and seven explicitly guarded authenticated APIs (490→497 notices). Anonymous definer grants remain8,pg_net/public warning1 and leaked-password-protection warning1. This is not a clean security scan. [Private-table notice](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy),[authenticated API notice](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable). Existing dependency,React-refresh and large-chunk findings remain tracked.
+
+[Local proof](2026-10-14-inventory-identity-local.json):1,459 units,152 SQL files/6,387 assertions,38 Auth/API and15 browser checks,5 observed queues,7-relation populated restore and owned-runtime cleanup. The next camera branch is separate; this release does not complete MWI/Midwest import,iPhone scanning,the controlled register,all45 original requirements or Susan's clinical/configuration acceptance.
