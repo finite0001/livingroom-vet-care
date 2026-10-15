@@ -50,17 +50,20 @@ def actor(role):
  login(owner);return owner
 baseline=sql("select jsonb_build_object('outbox',(select count(*)from communication_outbox),'payments',(select count(*)from payment_provider_profiles),'generation',(select count(*)from operational_task_generation_policy where enabled));")
 class Held:
- def __init__(self,expression):
+ def __init__(self,expression,before="",wait=True):
   self.p=subprocess.Popen(['docker','exec','-i',container,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
-  self.p.stdin.write('begin;select pg_backend_pid();select '+expression+";select 'OWNED_HELD';\n");self.p.stdin.flush();self.pid=int(self.p.stdout.readline().strip())
+  self.p.stdin.write('begin;select pg_backend_pid();'+before+'select '+expression+";select 'OWNED_HELD';\n");self.p.stdin.flush();self.pid=int(self.p.stdout.readline().strip())
+  locks.append(self)
+  if wait:self.acquired()
+ def acquired(self):
   while True:
    line=self.p.stdout.readline().strip()
    if line=='OWNED_HELD':break
    if self.p.poll()is not None:raise RuntimeError('Owned lock failed')
-  locks.append(self)
- def release(self):
+ def release(self,commit=False):
   if self.p.poll()is None:
-   self.p.stdin.write('rollback;\n');self.p.stdin.close();self.p.wait(timeout=10)
+   self.p.stdin.write(('commit'if commit else'rollback')+';\n');self.p.stdin.close();self.p.wait(timeout=10)
+   assert self.p.returncode==0,'Owned lock/configuration session failed'
  def __enter__(self):return self
  def __exit__(self,*unused):self.release()
 def observe(blocker):
@@ -167,12 +170,49 @@ try:
  check(sql("select count(*)from inventory_movements where id='"+same+"';"),'1')
  check(sql('select sum(quantity)::text from controlled_stock_positions;'),'1.875')
  check(sql('select count(*)from controlled_stock_events;'),'3')
+ # The private configuration path is exercised only by this owned SQL session;
+ # the writer/replay requests below use genuine Auth and independent HTTP calls.
+ freezing=uid();prepare(freezing,'adjust_inventory',adjust_args())
+ with concurrent.futures.ThreadPoolExecutor(max_workers=4)as pool:
+  container_lock=Held("pg_advisory_xact_lock(hashtextextended('controlled-stock-container:"+ids['bottle_b']+"',0))")
+  writing=pool.submit(http,'/rest/v1/rpc/execute_controlled_stock_action',bound(freezing),vet['token'])
+  observe(container_lock)
+  writer_pid=int(sql('select pid from pg_stat_activity where '+str(container_lock.pid)+'=any(pg_blocking_pids(pid))limit 1;'))
+  claims={'role':'authenticated','sub':vet['id'],'session_id':vet['session']}
+  exclusive=Held('controlled_stock_exclusive()',before="select set_config('request.jwt.claims',"+literal(claims)+"::text,true);",wait=False)
+  acquired=pool.submit(exclusive.acquired)
+  deadline=time.monotonic()+8
+  while time.monotonic()<deadline:
+   if sql('select '+str(writer_pid)+'=any(pg_blocking_pids('+str(exclusive.pid)+'));')=='t':queues+=1;break
+   time.sleep(.03)
+  else:raise AssertionError('Exclusive freeze did not drain the actual admitted managed writer')
+  container_lock.release()
+  writer_code,writer_receipt=writing.result(timeout=15);check(writer_code,200)
+  acquired.result(timeout=15)
+  # A new writer must queue at the original shared practice barrier, before any
+  # native resource lock. It cannot regain an ordinary route after suspension.
+  unowned=uid()
+  generic=pool.submit(http,'/rest/v1/rpc/adjust_inventory',{'p_id':unowned,'p_lot_id':ids['lot'],'p_quantity':-.125,'p_reason':'Synthetic suspended bypass'},vet['token'])
+  observe(exclusive)
+  suspended=uid()
+  exclusive.p.stdin.write("insert into controlled_stock_state_events(id,product_id,version,prior_event_id,state,policy_version_id,opening_id,actor_id,session_id,reason)values('"+suspended+"','"+ids['product']+"',3,'"+ids['active']+"','suspended','"+ids['policy']+"','"+ids['opening']+"','"+vet['id']+"','"+vet['session']+"','Synthetic local freeze only');update controlled_stock_states set head_id='"+suspended+"'where product_id='"+ids['product']+"';\n")
+  exclusive.release(commit=True)
+  generic_code,generic_error=generic.result(timeout=15);assert generic_code>=400;check(generic_error.get('code'),'23514')
+  check(sql("select count(*)from inventory_movements where id='"+unowned+"';"),'0')
+  check(sql("select event_version from controlled_stock_states where product_id='"+ids['product']+"';"),'4')
+  check(rpc('execute_controlled_stock_action',bound(freezing),vet),writer_receipt)
+  check(rpc('read_controlled_stock_action',bound(receive),vet)['receipt'],saved)
+  reject('prepare_controlled_stock_action',{'p_actor_id':vet['id'],'p_action_id':uid(),'p_writer':'adjust_inventory','p_arguments':adjust_args(),'p_context':context('bottle_b')},'PT409',vet)
+  check(sql('select sum(quantity)::text from controlled_stock_positions;'),'1.750')
+  check(sql('select count(*)from controlled_stock_events;'),'4')
  sql("select controlled_stock_validate_event(id)from controlled_stock_events;select controlled_stock_validate_product('"+ids['product']+"');")
  check(sql('select count(*)from controlled_stock_execution_contexts;'),'0')
  proof={'synthetic_only':True,'genuine_auth_postgrest':True,'api_checks':checks,'observed_lock_queues':queues,'actual_root_product_final_container_waits':True,
   'authority_revocation_after_observed_wait':True,'final_container_failure_rolled_back_canonical_source':True,'same_uuid_exact_single_commit':True,
   'raw_tables_and_helpers_denied':True,'staff_metadata_did_not_grant_role':True,'owned_review_cancel_recovery':True,'new_rpc_grants_owned_local_only':True,
-  'actual_practice_rules':False,'canonical_migration':False,'provider_requests':0}
+  'actual_practice_rules':False,'canonical_migration':False,'provider_requests':0,
+  'exclusive_freeze_drains_admitted_managed_writer':True,'new_writer_waits_before_native_resources':True,
+  'suspended_product_has_no_ordinary_fallback':True,'saved_receipts_recover_after_suspension':True,'private_configuration_fixture_sql_only':True}
 
 finally:
  for held in locks:held.release()
