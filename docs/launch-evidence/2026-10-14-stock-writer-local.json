@@ -1,0 +1,294 @@
+{
+  "scope": "C1a complete ordinary stock/custody/hold admission and canonical source provenance; controlled register inactive",
+  "local_only": true,
+  "migrations": 188,
+  "migration": "20261015020722_stock_writer_provenance.sql",
+  "migration_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+  "units": 1471,
+  "sql": {
+    "files": 154,
+    "assertions": 6506,
+    "new_focused": 30,
+    "new_parent": 12
+  },
+  "native_regression": {
+    "suites": [
+      {
+        "suite": "native-prescription-lifecycle-http",
+        "checks_passed": 82
+      },
+      {
+        "suite": "native-fulfillment-http",
+        "checks_passed": 85
+      },
+      {
+        "suite": "native-fulfillment-and-release-browser",
+        "checks_passed": 77
+      },
+      {
+        "suite": "native-release-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-corrections-local-auth",
+        "checks_passed": 46
+      },
+      {
+        "suite": "native-returns-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-reconciliation-local-auth",
+        "checks_passed": 57
+      },
+      {
+        "suite": "native-finance-local-auth",
+        "checks_passed": 61
+      },
+      {
+        "suite": "native-estimate-drafts-local-auth",
+        "checks_passed": 51
+      },
+      {
+        "suite": "native-estimate-publications-local-auth-http",
+        "checks_passed": 87
+      },
+      {
+        "suite": "native-estimate-decisions-local-auth-http",
+        "checks_passed": 123
+      }
+    ],
+    "checks": 783,
+    "existing_populated_restore_checks": 275,
+    "owned_runtime_and_volumes_removed": true
+  },
+  "stock_boundary": {
+    "api": {
+      "api_checks": 32,
+      "genuine_auth_postgrest": true,
+      "actual_live_session": true,
+      "source_tables_and_helpers_denied": true,
+      "canonical_receipt_replay": true,
+      "anesthesia_one_debit_one_source": true,
+      "exact_fractional_stock": true,
+      "inactive_actor_denied": true,
+      "owned_actor_and_sessions_retired": true,
+      "non_stock_baselines_unchanged": true,
+      "provider_requests": 0
+    },
+    "concurrency": {
+      "checks": 12,
+      "observed_lock_queues": 14,
+      "all_eight_outer_writers_early": true,
+      "exclusive_drains_prior_stock": true,
+      "new_writers_wait_for_exclusive": true,
+      "post_wait_role_rechecked": true,
+      "shared_concurrency_preserved": true,
+      "same_uuid_one_source_exact_receipt": true,
+      "unsupported_isolation_denied": true,
+      "owned_actor_retired": true,
+      "provider_requests": 0
+    },
+    "restore": {
+      "populated_source_families": 5,
+      "snapshot_relations": 21,
+      "all_eight_writer_sources_present": true,
+      "exact_snapshot_restored": true,
+      "exact_native_receipt_replayed": true,
+      "restored_stale_admission_denied": true,
+      "private_grants_and_manifest_restored": true,
+      "upgrade_exact_prior_definition_hashes": 8,
+      "populated_upgrade_preserved_legacy_history": true,
+      "unexpected_source_drift_denied_atomically": true,
+      "legacy_receipt_unchanged_without_backfill": true,
+      "new_post_upgrade_source_enforced": true,
+      "owned_clone_databases_removed": true,
+      "original_database_unchanged": true,
+      "migration_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+      "provider_requests": 0
+    },
+    "api_sha256": "31cda4d08ed99eaa730d41e34edae12b63e093c89afafe20de27e8824fa7e7dd",
+    "concurrency_sha256": "7c21ed4a63741549b85e1f59ba0c97f967c020f269f2932b5ea0f862e7e43d76",
+    "restore_sha256": "c23c5cc54ab355c4a1e367ffbf750e0d151d656984ec4375bce396f2724762ef",
+    "rollback_probe": {
+      "checks": 22,
+      "rollback_only": true,
+      "provider_requests": 0
+    },
+    "rollback_probe_sha256": "82aa0e9537722a374e2df6159e5a2ba84ce41909cae7e4543535de47ca28a083"
+  },
+  "parent_regression": {
+    "catalog": "59 API /7 queues /20 browser /9 restored relations",
+    "next_visit": "44 API /6 queues /populated outcome restore",
+    "next_visit_staff": "25 API /19 browser",
+    "tasks": "54 API /2 queues /24 browser /populated restore",
+    "reconciliation": {
+      "api_checks": 42,
+      "concurrency": {
+        "checks": 3,
+        "observed_lock_queues": 4,
+        "policy_pause_after_wait": true,
+        "same_uuid_execute_replay": true,
+        "provider_requests": 0,
+        "owned_staff_deactivated": true
+      },
+      "restore": {
+        "populated_relations": 16,
+        "snapshot_relations": 18,
+        "exact_snapshot_restored": true,
+        "exact_readonly_recovery": true,
+        "private_table_and_helper_grants": true,
+        "owned_restore_database_removed": true,
+        "provider_requests": 0
+      }
+    },
+    "inventory": {
+      "api": {
+        "api_checks": 38,
+        "genuine_auth_postgrest": true,
+        "private_tables_denied": true,
+        "exact_receipt_replay": true,
+        "owned_actors_retired": true,
+        "baseline_unchanged": true,
+        "provider_requests": 0,
+        "browser": {
+          "browser_checks": 22,
+          "genuine_staff_api": true,
+          "committed_ack_loss_recovered": true,
+          "reload_readonly_recovery": true,
+          "simulated_camera": true,
+          "scan_resolves_reviewed_package": true,
+          "staff_camera_lookup": true,
+          "real_iphone": false,
+          "mobile_overflow_checked": true,
+          "touch_targets_checked": true,
+          "staff_lookup_only": true,
+          "provider_requests": 0
+        }
+      },
+      "concurrency": {
+        "checks": 10,
+        "observed_lock_queues": 5,
+        "same_uuid_single_version": true,
+        "namespace_rechecked_after_wait": true,
+        "live_session_rechecked_after_wait": true,
+        "identifier_collision_atomic": true,
+        "owned_staff_deactivated": true,
+        "provider_requests": 0
+      },
+      "restore": {
+        "populated_relations": 7,
+        "private_identity_families": 6,
+        "exact_snapshot_restored": true,
+        "exact_original_review_recovered": true,
+        "caller_timezone_invariant": true,
+        "private_grants_restored": true,
+        "owned_restore_database_removed": true,
+        "provider_requests": 0
+      }
+    },
+    "controlled_draft": {
+      "api": {
+        "api_checks": 28,
+        "genuine_auth_postgrest": true,
+        "private_tables_denied": true,
+        "exact_receipt_replay": true,
+        "owned_actors_retired": true,
+        "owned_sessions_retired": true,
+        "baseline_unchanged": true,
+        "draft_only": true,
+        "provider_requests": 0,
+        "browser": {
+          "browser_checks": 14,
+          "genuine_staff_api": true,
+          "committed_ack_loss_recovered": true,
+          "reload_readonly_recovery": true,
+          "draft_only": true,
+          "no_default_schedule": true,
+          "mobile_overflow_checked": true,
+          "touch_targets_checked": true,
+          "dirty_close_confirmed": true,
+          "staff_read_only": true,
+          "provider_requests": 0
+        }
+      },
+      "concurrency": {
+        "checks": 5,
+        "observed_lock_queues": 8,
+        "same_uuid_single_receipt": true,
+        "same_product_unique_draft": true,
+        "post_wait_live_session": true,
+        "post_wait_expiry": true,
+        "cancel_execute_serialized": true,
+        "owned_staff_deactivated": true,
+        "provider_requests": 0
+      },
+      "restore": {
+        "populated_relations": 6,
+        "private_draft_families": 5,
+        "exact_snapshot_restored": true,
+        "exact_original_review_recovered": true,
+        "caller_timezone_invariant": true,
+        "private_grants_restored": true,
+        "owned_restore_database_removed": true,
+        "provider_requests": 0
+      }
+    },
+    "cleanup_baseline": {
+      "outbox": 0,
+      "cron_active": false,
+      "pending_run": null,
+      "active_staff": 0,
+      "inventory_movements": 0,
+      "reconciliation_enabled": false
+    },
+    "owned_runtime_and_volumes_removed": true
+  },
+  "private_helper_hashes": {
+    "stock_source_guard": "cce5e2fa9dc80260f043babffcc5572055e1fb2dfbd0799df414ebea6e413fb2",
+    "stock_writer_enter": "c322b34bb493cfae87bea36a262aef9132b347618022f2ed664f4d3df30727fc",
+    "stock_writer_current": "281c0702ce1654687aed8662de7273a84faca6e16ac8ffcbcf59f0776000adb6",
+    "stock_source_immutable": "11c1c486140c6796ee8a49868166a36b6eaa9cd4c522c74e17e299d98973a782",
+    "stock_source_consistency": "811c0f2bff4a7438c56903e778d4bea221acd7ebfac2d4dee9abae687aa2da4e",
+    "stock_source_validate_movement": "01ab70ca9e87c4abb5cf1e3f1a1364d086d10d91c91bb2be7d14ba29b78ad316"
+  },
+  "source_sha256": {
+    "scripts/restore-rehearsal/run.py": "9cadffb7066eddd23fbc9ec8aadab632c58d3e3fcbddf484efc2ac1935cac146",
+    "scripts/stock-writers/rollback-probe.sql": "82aa0e9537722a374e2df6159e5a2ba84ce41909cae7e4543535de47ca28a083",
+    "supabase/migrations/20261015020722_stock_writer_provenance.sql": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+    "supabase/tests/anesthesia_drug_administrations.test.sql": "3792fa03072e224dbd82e5a940e42ef6fc30fb2be48adedf2c7560eea941e20a",
+    "supabase/tests/inventory_billing.test.sql": "364c214da7614835ce1bda17ea5a3f3575178c6a4fc582a20e935f91e9c0cece",
+    "supabase/tests/native_dispense_returns.test.sql": "361203d465dd58174227033c000c7e59eefa87cccc3dd37eaafd54dbfbd0edc8",
+    "supabase/tests/native_fulfillment.test.sql": "1c7589b2c5b0d4acc4368f4032c84461f3e149f43c2ee5ff9105beda7eee1027",
+    "supabase/tests/native_return_reconciliation.test.sql": "3af1cf00df34fe2b43109d97af9991263bf7bab02068c8e5001240edb860428f",
+    "supabase/tests/stock_writer_concurrency.py": "7c21ed4a63741549b85e1f59ba0c97f967c020f269f2932b5ea0f862e7e43d76",
+    "supabase/tests/stock_writer_provenance.test.sql": "2934a9655fb27dbc802fe8f8dc2f838bfff405076bde2659b0ab3b8a451d4a6f",
+    "supabase/tests/stock_writer_restore.py": "c23c5cc54ab355c4a1e367ffbf750e0d151d656984ec4375bce396f2724762ef",
+    "tests/controlled-drugs/native-local.ts": "302151c3447b844b50abf562a81553487c959bf1caa49e63e492a47a3878d998",
+    "tests/diagnostics/local-disposable.py": "aea31a44817ac54f5d49282639049af9c02c0d2a9e4205d4ff3b5619ceadaef7",
+    "tests/diagnostics/pdf-jobs-disposable.py": "c81c6aa37a1e3917d0f2dc4ea0bc06b6bc2f8b65db71eeab91a8d8934aa5447d",
+    "tests/diagnostics/pdf-registration-disposable.py": "b09da4f35bddc95c15c3db2e36d30af056105a3fdceaaf7877d12a331b1e7ae2",
+    "tests/ezyvet/attachment-metadata-disposable.py": "6c8533aa80491f1c20bbe8dda7afe3e85df7014cfe6d818c9b863da3779b4b67",
+    "tests/inventory/stock-writer-local.ts": "31cda4d08ed99eaa730d41e34edae12b63e093c89afafe20de27e8824fa7e7dd",
+    "tests/prescriptions/native-disposable.py": "64b836ca2a5548521e7533eac0d1002251659a4fc182e9377b5002be6ec50c4d",
+    "tests/scheduling/disposable.py": "c0d73ba129ffb2606f6594ce31f6be9cd784acc54b19bd1083df8126bb2faf08",
+    "tests/scheduling/operational-reconciliation-local.ts": "7a78e598e0af3949e8db8a30b72e3ceb41868800a5900a5a67faf973152b1b54",
+    "tests/scheduling/operational-tasks-local.ts": "b7ccef7be898ab15d60fea7f557297a29d007a8c78bcb9e57c6234c5cd23644d"
+  },
+  "existing_warnings": [
+    "Four existing React refresh lint warnings",
+    "Existing Vite large-chunk warning"
+  ],
+  "provider_requests": 0,
+  "legacy_writes": 0,
+  "hosted_migration_writes": 0,
+  "susan_rules_approved": false,
+  "controlled_register_activated": false,
+  "remaining": [
+    "Exact-head CI and stage-first C1a hosted verification",
+    "C1b controlled events/containers/opening context",
+    "C2 independent review/physical witnessing/corrections/transfers/counts/reports",
+    "C3 actual registration/products/units/counts/SOP acceptance and commissioning",
+    "All remaining original requirements and actual vendor/device evidence"
+  ]
+}

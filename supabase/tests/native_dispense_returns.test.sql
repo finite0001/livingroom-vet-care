@@ -155,7 +155,10 @@ select ok(not has_table_privilege('service_role','native_return_events','UPDATE'
 select ok(not has_table_privilege('service_role','native_return_stock_links','TRUNCATE'),'Service role cannot truncate stock linkage');
 select throws_ok($$update native_return_events set action='dispose' where id=(select id from fx where k='intake')$$,'23514',null,'Original custody history immutable even to privileged fixture');
 -- Deferred positive movement linkage is enforced even for privileged synthetic inserts.
+-- Privileged fixture deliberately admits this statement so the ORIGINAL native
+-- deferred constraint is still exercised beneath the new common admission guard.
 select throws_ok($test$do $body$begin
+ perform stock_writer_enter('record_native_dispense_return',gen_random_uuid());
  insert into inventory_movements(id,lot_id,quantity,kind,reason,created_by,created_at)
  values(gen_random_uuid(),(select id from fx where k='lot'),0.001,'native_return','Synthetic unlinked movement',auth.uid(),clock_timestamp());
  set constraints native_return_link_required immediate;
@@ -178,4 +181,9 @@ insert into data select 'boundary-page',list_native_dispense_returns((select id 
 select is(jsonb_array_length((select v->'events' from data where k='boundary-page')),100,'First history page remains bounded100');
 select is((select v->>'next_before_version' from data where k='boundary-page'),'2','History sentinel cursor preserves remaining event');
 select is(jsonb_array_length(list_native_dispense_returns((select id from fx where k='sign'),(select id from fx where k='pet'),(select id from fx where k='dispense'),2,100)->'events'),1,'Second page retrieves final original event');
+-- Force the shared source constraints before this fixture rolls back.
+reset role;
+set constraints stock_source_required immediate;
+select is((select count(*)from stock_custody_sources where writer='record_native_dispense_return'),(select count(*)from native_return_events),'All actual v1 intake/disposal/restock custody events have source provenance');
+select is((select count(*)from stock_movement_sources where writer='record_native_dispense_return'),(select count(*)from native_return_stock_links),'Each v1 stock return is linked once');
 select * from finish();rollback;

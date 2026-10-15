@@ -84,5 +84,10 @@ select throws_ok($$select public.record_patient_treatment(gen_random_uuid(),(sel
 select throws_ok($$select public.record_patient_treatment(gen_random_uuid(),(select v||'{"next_due_on":"infinity"}' from requests where k='historical'))$$,'23514',null,'Infinite due date rejected');
 select throws_ok($$select public.receive_inventory(gen_random_uuid(),gen_random_uuid(),(select id from fx where k='product'),'INF','infinity'::date,'Clinic',1,'Bad')$$,'23514',null,'Infinite lot expiry rejected');
 reset role;
+-- Force the shared source constraints before this fixture rolls back.
+reset role;
+set constraints stock_source_required immediate;
+select ok(not exists(select 1 from inventory_movements m left join stock_movement_sources s on s.movement_id=m.id where s.movement_id is null),'Every ordinary receipt/adjustment/treatment movement has canonical provenance');
+select ok(exists(select 1 from stock_movement_sources where writer='record_patient_treatment'),'Actual patient administration passes the shared boundary');
 select * from finish();
 rollback;

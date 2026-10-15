@@ -78,4 +78,9 @@ set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"ad000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select is((select count(*) from public.anesthesia_drug_administrations),0::bigint,'Inactive staff cannot read drug entries');
 select throws_ok($$select pg_temp.drug(gen_random_uuid(),'{}','pet','ad300000-0000-4000-8000-000000000002')$$,'42501',null,'Inactive staff cannot record drugs');
+-- Force the shared source constraints before this fixture rolls back.
+reset role;
+set constraints stock_source_required immediate;
+select is((select count(*)from stock_movement_sources where writer='record_anesthesia_drug_administration'),(select count(*)from anesthesia_drug_administrations),'Outer anesthesia provenance preserves one nested treatment debit');
+select ok(not exists(select 1 from anesthesia_drug_administrations a join stock_movement_sources s on s.movement_id=a.id where s.source_id<>a.id or s.writer<>'record_anesthesia_drug_administration'),'Anesthesia never becomes a duplicate ordinary treatment source');
 select * from finish();rollback;
