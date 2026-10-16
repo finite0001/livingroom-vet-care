@@ -10,7 +10,7 @@ root=Path(__file__).resolve().parents[2];identity='lrv-clinical-audio-'+uuid.uui
 work=Path(tempfile.mkdtemp(prefix=identity+'-'));project=work/'project';(project/'supabase/migrations').mkdir(parents=True)
 evidence=Path(tempfile.mkdtemp(prefix=identity+'-evidence-'));log=(evidence/'commands.log').open('w');started=False;proof=None
 inputs=set((root/'supabase/migrations').glob('*.sql'))|set((root/'supabase/tests').glob('clinical_audio*.test.sql'))
-if not args.sql_only:inputs|=set((root/'src/hub/features/clinical/dictation').rglob('*'))|set((root/'tests/clinical-audio').glob('*'))|{root/'src/hub/features/clinical/ClinicalWorkspace.tsx',root/'src/hub/features/clinical/use-unsaved-changes.tsx',root/'package-lock.json'}
+if not args.sql_only:inputs|=set((root/'src/hub/features/clinical/dictation').rglob('*'))|set((root/'tests/clinical-audio').glob('*'))|set((root/'src/hub/features/clinical/appointment-dictation').glob('*'))|{root/'src/hub/features/scheduling/SchedulePage.tsx',root/'src/hub/features/patients/PatientPage.tsx'}|{root/'src/hub/features/clinical/ClinicalWorkspace.tsx',root/'src/hub/features/clinical/use-unsaved-changes.tsx',root/'package-lock.json'}
 inputs|={root/'supabase/functions/_shared/clinical-veterinary-context.ts'}|set((root/'supabase/functions/_shared').glob('clinical-audio*.ts'))|set((root/'supabase/functions/clinical-audio-process').glob('*'))|{root/'public/audio/clinical-dictation-worklet.js'}
 hashes={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest()for f in sorted(inputs)if f.is_file()}
 def run(argv,**kw):
@@ -22,7 +22,7 @@ def run(argv,**kw):
 try:
  for port in [64920,64921,64922,64924,64981]:
   with socket.socket()as s:s.bind(('127.0.0.1',port))
- files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==195
+ files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==196
  for f in files:shutil.copy2(f,project/'supabase/migrations'/f.name)
  (project/'supabase/tests').mkdir()
  for f in(root/'supabase/tests').glob('*.sql'):
@@ -58,7 +58,7 @@ enabled = false
  if not args.sql_only:
   result=run(['node','--experimental-strip-types',str(root/'tests/clinical-audio/local-roundtrip.ts')],env={**os.environ,'DICTATION_TEST_PROJECT':str(project),'DICTATION_RUN_SYNTHETIC_LOCAL':'true'},timeout=420);print(result.strip(),flush=True)
  assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==digest for name,digest in hashes.items()),'Proof input changed during run'
- proof={'identity':identity,'migrations':195,'sql_summary':summary,'sql_only':args.sql_only,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
+ proof={'identity':identity,'migrations':196,'sql_summary':summary,'sql_only':args.sql_only,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
  if not args.sql_only:proof['auth_browser_restore']=json.loads((root/'tmp/clinical-audio-roundtrip.json').read_text())
 finally:
  if started:
