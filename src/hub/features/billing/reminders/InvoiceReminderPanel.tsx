@@ -5,11 +5,11 @@ import { useAuth } from "@/hub/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ReminderPolicyFields } from "./ReminderPolicyFields";
 import { money } from "../money";
 import {
   defaultPolicy,
-  policySchema,
+  policyFromDraft,
   proposedDueDate,
   reminderReason,
   termsSchema,
@@ -182,15 +182,9 @@ function ReminderSession({
     try {
       let request: Record<string, unknown>;
       if (kind === "policy") {
-        const offsets = days.split(",").map((v) => v.trim());
-        if (offsets.some((v) => !/^\d+$/.test(v)))
-          throw new Error("Enter comma-separated whole overdue days.");
         request = {
           expected_version: versions.policy,
-          definition: policySchema.parse({
-            ...policy,
-            offset_days: offsets.map(Number),
-          }),
+          definition: policyFromDraft(policy, days),
         };
       } else
         request = {
@@ -372,114 +366,16 @@ function ReminderSession({
           <summary className="cursor-pointer py-3 font-medium">
             Practice reminder defaults and wording
           </summary>
-          <fieldset
+          <ReminderPolicyFields
+            prefix={prefix}
+            policy={policy}
+            days={days}
             disabled={unavailable || termsDirty}
-            className="space-y-3 pt-3"
-          >
-            <p className="text-sm text-muted-foreground">
-              These settings apply to enrolled invoices. Turning practice
-              reminders off blocks unattempted sends. Worker and outbound
-              test/live settings are commissioned separately.
-            </p>
-            <label className="flex min-h-11 items-center gap-2">
-              <input
-                type="checkbox"
-                checked={policy.enabled}
-                onChange={(e) =>
-                  setPolicy({ ...policy, enabled: e.target.checked })
-                }
-              />
-              Enable practice invoice reminders
-            </label>
-            <div>
-              <Label htmlFor={`${prefix}-terms`}>
-                Default days until due (0 = due on receipt)
-              </Label>
-              <Input
-                id={`${prefix}-terms`}
-                type="number"
-                min={0}
-                max={365}
-                value={policy.default_due_days}
-                onChange={(e) =>
-                  setPolicy({
-                    ...policy,
-                    default_due_days: Number(e.target.value),
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor={`${prefix}-days`}>
-                Reminder days after due date
-              </Label>
-              <Input
-                id={`${prefix}-days`}
-                value={days}
-                onChange={(e) => setDays(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor={`${prefix}-contact`}>
-                Practice payment/contact instructions
-              </Label>
-              <Input
-                id={`${prefix}-contact`}
-                maxLength={200}
-                value={policy.practice_contact}
-                onChange={(e) =>
-                  setPolicy({ ...policy, practice_contact: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor={`${prefix}-subject`}>Email subject</Label>
-              <Input
-                id={`${prefix}-subject`}
-                value={policy.email_subject}
-                maxLength={200}
-                onChange={(e) =>
-                  setPolicy({ ...policy, email_subject: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor={`${prefix}-body`}>Email reminder wording</Label>
-              <Textarea
-                id={`${prefix}-body`}
-                value={policy.email_body}
-                maxLength={6000}
-                onChange={(e) =>
-                  setPolicy({ ...policy, email_body: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor={`${prefix}-sms`}>Text reminder wording</Label>
-              <Textarea
-                id={`${prefix}-sms`}
-                value={policy.sms_body}
-                maxLength={800}
-                onChange={(e) =>
-                  setPolicy({ ...policy, sms_body: e.target.value })
-                }
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Supported placeholders:{" "}
-              {
-                "{{invoice_reference}}, {{amount_due}}, {{due_date}}, {{practice_contact}}"
-              }
-              . Amount is USD without the dollar symbol. Review wording before
-              saving.
-            </p>
-            <Button
-              onClick={() => save("policy")}
-              disabled={!policyDirty && Boolean(data.data?.policy)}
-            >
-              Save practice reminder policy
-            </Button>
-          </fieldset>
+            canSave={policyDirty || !data.data?.policy}
+            onPolicyChange={setPolicy}
+            onDaysChange={setDays}
+            onSave={() => save("policy")}
+          />
         </details>
       )}
       {data.data && (

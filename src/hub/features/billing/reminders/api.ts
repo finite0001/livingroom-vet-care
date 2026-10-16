@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { detailSchema, policySchema, termsSchema } from "./model";
+import {
+  detailSchema,
+  policySchema,
+  practicePolicySchema,
+  termsSchema,
+} from "./model";
 interface RpcClient {
   rpc(
     name: string,
@@ -16,6 +21,15 @@ async function call(name: string, args: Record<string, unknown>) {
   return data;
 }
 const uuid = z.string().uuid();
+export async function readPracticeReminders(actor: string) {
+  const result = practicePolicySchema.parse(
+    await call("read_invoice_reminder_practice", {
+      p_actor_id: uuid.parse(actor),
+    }),
+  );
+  if (result.actor_id !== actor) throw new Error("Reminder operator differs.");
+  return result;
+}
 export async function readReminders(
   actor: string,
   invoice: string,
@@ -83,7 +97,7 @@ export async function saveReminderAction(action: ReminderAction) {
       })
       .strict()
       .parse(action.request);
-    receipt(
+    return receipt(
       await call("save_invoice_reminder_policy", {
         ...args,
         p_expected_version: request.expected_version,
@@ -101,7 +115,7 @@ export async function saveReminderAction(action: ReminderAction) {
       })
       .strict()
       .parse(action.request);
-    receipt(
+    return receipt(
       await call("save_invoice_reminder_terms", {
         ...args,
         p_invoice_id: request.invoice_id,

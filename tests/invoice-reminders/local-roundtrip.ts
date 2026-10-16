@@ -13,7 +13,9 @@ import { parseOwnedRuntimeStatus } from "../estimates/owned-runtime-status.ts";
 import {
   defaultPolicy,
   detailSchema,
+  practicePolicySchema,
 } from "../../src/hub/features/billing/reminders/model.ts";
+import { provePracticeSettings } from "./practice-settings-browser.ts";
 const project = process.env.INVOICE_REMINDER_TEST_PROJECT;
 assert.ok(
   project && process.env.INVOICE_REMINDER_RUN_SYNTHETIC_LOCAL === "true",
@@ -120,10 +122,62 @@ let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null,
 try {
   check(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "191",
+    "192",
   );
   const admin = await actor("ADMIN"),
     staff = await actor("STAFF");
+  const practiceArgs = { p_actor_id: admin.id };
+  check(
+    (await anon.rpc("read_invoice_reminder_practice", practiceArgs)).error
+      ?.code,
+    "42501",
+  );
+  check(
+    (await service.rpc("read_invoice_reminder_practice", practiceArgs)).error
+      ?.code,
+    "42501",
+  );
+  check(
+    (
+      await staff.db.rpc("read_invoice_reminder_practice", {
+        p_actor_id: staff.id,
+      })
+    ).error?.code,
+    "42501",
+  );
+  check(
+    (
+      await admin.db.rpc("read_invoice_reminder_practice", {
+        p_actor_id: staff.id,
+      })
+    ).error?.code,
+    "42501",
+  );
+  check(
+    practicePolicySchema.parse(
+      await rpc(admin.db, "read_invoice_reminder_practice", practiceArgs),
+    ).policy,
+    null,
+  );
+  check(sql("select count(*)from billing_invoices;"), "0");
+  // Local fixture role only: exercise the existing clinical-policy draft guard
+  // without reviewing/saving that policy, then retire this extra role.
+  sql(`insert into user_roles(user_id,role)values('${admin.id}','DVM');`);
+  let practiceBrowser: Awaited<ReturnType<typeof provePracticeSettings>>;
+  try {
+    practiceBrowser = await provePracticeSettings({
+      apiUrl: status.API_URL,
+      anonKey: status.ANON_KEY,
+      actorId: admin.id,
+      session: admin.session,
+      db: admin.db,
+    });
+  } finally {
+    sql(`delete from user_roles where user_id='${admin.id}'and role='DVM';`);
+  }
+  browserChecks += practiceBrowser.browserChecks;
+  check(sql("select count(*)from billing_invoices;"), "0");
+  check(sql("select count(*)from invoice_reminder_policies;"), "2");
   check(
     (
       await anon.rpc("read_invoice_reminders", {
@@ -149,7 +203,7 @@ try {
   const policyArgs = {
     p_actor_id: admin.id,
     p_id: policyId,
-    p_expected_version: 0,
+    p_expected_version: practiceBrowser.policyVersion,
     p_definition: definition,
   };
   const savedPolicy = await rpc(
@@ -774,6 +828,15 @@ try {
         .at(-1),
       "paused",
     );
+    check(
+      dbSql(
+        `begin;select set_config('request.jwt.claims','{"role":"authenticated","sub":"${admin.id}","session_id":"${sid}"}',true);set local role authenticated;select read_invoice_reminder_practice('${admin.id}')#>>'{policy,id}';rollback;`,
+        clone,
+      )
+        .split("\n")
+        .at(-1),
+      policyId,
+    );
   } finally {
     assert.equal(
       dbSql(
@@ -795,6 +858,7 @@ try {
         reminderFamilies: 5,
         populated: true,
         cloneRemoved: true,
+        practicePolicyRead: true,
         providerRequests: 0,
       },
       null,
@@ -814,6 +878,12 @@ try {
     ).error?.code,
     "42501",
   );
+  sql(`update profiles set is_active=false where id='${admin.id}';`);
+  check(
+    (await admin.db.rpc("read_invoice_reminder_practice", practiceArgs)).error
+      ?.code,
+    "42501",
+  );
   writeFileSync(
     "tmp/invoice-reminder-auth-proof.json",
     JSON.stringify(
@@ -825,6 +895,7 @@ try {
         observedQueues,
         observedInvoiceWaits: 1,
         observedCareGateWaits: 1,
+        practiceSettings: practiceBrowser,
         sqlOnlyIsolationChecks: 2,
         providerRequests: 0,
       },

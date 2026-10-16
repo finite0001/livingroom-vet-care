@@ -58,7 +58,7 @@ async function policy(owner: Actor, enabled: boolean) {
 let elapsed = 0, failure: unknown = null, httpProof: Awaited<ReturnType<typeof reconciliationHttpProof>> | null = null,
   browserProof: Awaited<ReturnType<typeof reconciliationBrowserProof>> | null = null;
 try {
-  check(sql("select count(*) from supabase_migrations.schema_migrations;"), "191");
+  check(sql("select count(*) from supabase_migrations.schema_migrations;"), "192");
   const cursorBaseline = sql("select count(*) from operational_reconciliation_cursor;");
   check(await rpc(service, "start_operational_reconciliation_run", { p_run_id: randomUUID(), p_limit: 5 }), { disabled: true });
   check(sql("select count(*) from operational_reconciliation_cursor;"), cursorBaseline);

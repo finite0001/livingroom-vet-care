@@ -1,4 +1,6 @@
 import { NativeReturnPolicySettings } from "@/hub/features/prescriptions/NativeReturnPolicySettings";
+import { PracticeReminderSettings } from "@/hub/features/billing/reminders/PracticeReminderSettings";
+import { useUnsavedChanges } from "@/hub/features/clinical/use-unsaved-changes";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Pen, Database, Clock, Syringe } from "lucide-react";
@@ -28,15 +30,21 @@ export default function SettingsPage() {
   usePageTitle("Settings");
   const { hasRole } = useAuth();
   const isAdmin = hasRole("ADMIN");
+  const [returnPolicyDirty, setReturnPolicyDirty] = useState(false);
+  const [reminderDirty, setReminderDirty] = useState(false);
+  const guard = useUnsavedChanges(returnPolicyDirty || reminderDirty,
+    "Practice settings have unsaved or unconfirmed changes. Keep editing to save or recover them before leaving.");
 
   return (
     <div className="flex flex-col">
+      {guard}
       <header className="sticky top-0 z-40 flex h-14 items-center border-b bg-card px-4">
         <h1 className="text-lg font-semibold">Settings</h1>
       </header>
       <div className="mx-auto w-full max-w-2xl space-y-4 p-4">
         <SignatureSection />
-        <NativeReturnPolicySettings />
+        <NativeReturnPolicySettings onDirtyChange={setReturnPolicyDirty} />
+        <PracticeReminderSettings onDirtyChange={setReminderDirty} />
         {isAdmin ? (
           <ClinicSettings />
         ) : (

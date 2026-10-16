@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   defaultPolicy,
   policySchema,
+  policyFromDraft,
+  practicePolicySchema,
   proposedDueDate,
   termsSchema,
 } from "../../src/hub/features/billing/reminders/model.ts";
@@ -57,6 +59,29 @@ test("reminder placeholders and subjects cannot smuggle unsupported substitution
 test("due dates use Denver issue date, including UTC rollover and leap years", () => {
   assert.equal(proposedDueDate("2026-10-16T01:30:00Z", 0), "2026-10-15");
   assert.equal(proposedDueDate("2024-02-28T18:00:00Z", 1), "2024-02-29");
+});
+test("both policy editors validate the same cadence draft and practice response", () => {
+  assert.deepEqual(
+    policyFromDraft(defaultPolicy, " 7,14, 30 ").offset_days,
+    [7, 14, 30],
+  );
+  for (const days of ["", "7,", "7.5", "7,7", "14,7", "0", "366", "1e2"])
+    assert.throws(() => policyFromDraft(defaultPolicy, days));
+  assert.ok(
+    practicePolicySchema.safeParse({
+      actor_id: id,
+      policy: null,
+      scheduler: { cron_active: false, last_run: null },
+    }).success,
+  );
+  assert.equal(
+    practicePolicySchema.safeParse({
+      actor_id: id,
+      policy: { id, version: 0, actor_id: id, definition: defaultPolicy },
+      scheduler: { cron_active: false, last_run: null },
+    }).success,
+    false,
+  );
 });
 test("hold reasons and actual calendar dates are validated", () => {
   const t = {

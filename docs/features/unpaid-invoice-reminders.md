@@ -1,6 +1,10 @@
 # Unpaid invoice reminders
 
-Open a household's **Billing** tab, select an issued invoice and find **Unpaid invoice reminders**. Save its due date, channel and enrollment. The starting business defaults are due on receipt and email at 7, 14 and 30 days overdue. Existing invoices are not enrolled automatically. An administrator reviews practice cadence, contact instructions and exact email/text wording in the same panel.
+An administrator can open **Settings → Unpaid invoice reminders** to configure cadence, contact instructions and exact email/text wording before the first invoice exists. The same practice policy is available inside an issued invoice; both editors use one versioned history. The starting business defaults are due on receipt and email at 7, 14 and 30 days overdue. Saving a policy does not enroll invoices or start email delivery.
+
+Open a household's **Billing** tab, select an issued invoice and find **Unpaid invoice reminders**. Save that invoice's due date, channel and enrollment. Existing invoices are not enrolled automatically.
+
+If a save cannot be confirmed, keep the draft and use **Recover reminder save** or retry the same request. Recovery checks the existing receipt. If another administrator changes the policy, your draft remains visible; discard/reload and review the current version before saving again. Leaving Settings with unsaved or unconfirmed changes prompts for confirmation.
 
 Choose **Paused**, **Disputed invoice** or **Bereavement** and enter a reason to stop unattempted reminders. Resuming preserves old settings and delivery history. A deceased patient's routine-care suppression is separate from an invoice hold. Text requires current recorded consent. Affirm handles its financing installments; these reminders concern the balance recorded as owed to the clinic.
 

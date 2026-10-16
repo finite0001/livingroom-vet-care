@@ -129,6 +129,22 @@ export const detailSchema = z.object({
   }),
   has_more: z.boolean(),
 });
+export const practicePolicySchema = z
+  .object({
+    actor_id: uuid,
+    policy: detailSchema.shape.policy,
+    scheduler: detailSchema.shape.scheduler,
+  })
+  .strict();
+export function policyFromDraft(
+  policy: z.infer<typeof policySchema>,
+  days: string,
+) {
+  const offsets = days.split(",").map((v) => v.trim());
+  if (offsets.some((v) => !/^\d+$/.test(v)))
+    throw new Error("Enter comma-separated whole overdue days.");
+  return policySchema.parse({ ...policy, offset_days: offsets.map(Number) });
+}
 export function proposedDueDate(issuedAt: string | null, days: number): string {
   const time = issuedAt ? new Date(issuedAt) : new Date();
   const date = new Intl.DateTimeFormat("en-CA", {

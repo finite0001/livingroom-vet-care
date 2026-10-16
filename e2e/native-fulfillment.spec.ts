@@ -1753,6 +1753,9 @@ test("return policy is reachable in settings, defaults disabled and requires exp
   page,
 }) => {
   await fixture(page, true);
+  await page.route("**/rest/v1/rpc/read_invoice_reminder_practice", (route) =>
+    route.fulfill({ json: { actor_id: actor, policy: null, scheduler: { cron_active: false, last_run: null } } }),
+  );
   await page.route("**/rest/v1/user_roles*", (r) =>
     r.fulfill({
       json: [{ role: "STAFF" }, { role: "ADMIN" }, { role: "DVM" }],
