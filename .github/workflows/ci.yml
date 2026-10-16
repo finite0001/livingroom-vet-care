@@ -247,6 +247,8 @@ jobs:
           PAYMENT_TEST_PROJECT: ${{ github.workspace }}
       - name: Verify unpaid invoice reminders through local Auth, browser, contention and populated restore
         run: python3 -B tests/invoice-reminders/disposable.py --run-synthetic-local
+      - name: Verify source-bound dictation review through real Auth, browser, competing edits and populated restore
+        run: python3 -B tests/clinical-dictation/disposable.py --run-synthetic-local
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage

@@ -1,0 +1,98 @@
+{
+  "project": "kothoqicubowyhwfsrte",
+  "migrations": 193,
+  "latest": "20261016040402",
+  "originalBusinessFingerprintsMatched": 16,
+  "excludedOwnedFixtureRows": [
+    "one new client",
+    "one new patient",
+    "one new retired profile",
+    "owned role rows"
+  ],
+  "originalClinicalEncountersAndAddendaUnchanged": true,
+  "preservedCoreFunctionDefinitions": 6,
+  "exactSourceFunctionBodiesMatched": 5,
+  "functionAclAndSearchPath": [
+    {
+      "proname": "clinical_dictation_actor",
+      "owner": "postgres",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "body_hash": "2223ec980b04d2015fda975d06ce473a",
+      "staff": false,
+      "anon": false,
+      "service": false
+    },
+    {
+      "proname": "clinical_dictation_validate_sections",
+      "owner": "postgres",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "body_hash": "dfe228e1816eac3b73aaa83934ae6c46",
+      "staff": false,
+      "anon": false,
+      "service": false
+    },
+    {
+      "proname": "read_clinical_dictation",
+      "owner": "postgres",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "body_hash": "d080f866d1f7ae2c52cb120df7891b89",
+      "staff": true,
+      "anon": false,
+      "service": false
+    },
+    {
+      "proname": "recover_clinical_dictation_action",
+      "owner": "postgres",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "body_hash": "c4fba814b01e75497965a07ef01623ad",
+      "staff": true,
+      "anon": false,
+      "service": false
+    },
+    {
+      "proname": "save_clinical_dictation_action",
+      "owner": "postgres",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "body_hash": "3e5c6e9d8342d2572013bb7c9f0e5d30",
+      "staff": true,
+      "anon": false,
+      "service": false
+    }
+  ],
+  "authenticatedApiAssertions": 20,
+  "setupOwnershipSqlAssertions": 1,
+  "cleanupSqlAssertions": 2,
+  "rawStagedCombinedAssertionCount": 21,
+  "syntheticProposals": 2,
+  "syntheticReviews": 2,
+  "syntheticActions": 4,
+  "fixtureArchived": true,
+  "fixtureActorRetiredAndBanned": true,
+  "fixtureSessionsRolesRefreshTokens": 0,
+  "providerRequests": 0,
+  "advisors": {
+    "beforeCount": 5,
+    "afterCount": 5,
+    "newWarningErrorCategories": [],
+    "addedFindings": []
+  },
+  "primary": {
+    "migrations": 192,
+    "dictationInstalled": false
+  }
+}

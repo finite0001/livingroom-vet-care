@@ -29,6 +29,7 @@ async function fixture(page: Page, inactive = false) {
     if (path === '/rest/v1/patient_problems') return route.fulfill({ json: [problem] });
     if (path === '/rest/v1/clinical_addenda') return route.fulfill({ json: state.addenda });
     if (path === '/rest/v1/clinical_encounters') return route.fulfill({ json: url.searchParams.has('id') ? state.row : state.row ? [state.row] : [] });
+    if (path === '/rest/v1/rpc/read_clinical_dictation') return route.fulfill({ json: { actor_id: staffId, pet_id: petId, encounter_id: state.row!.id, items: [], has_more: false } });
     if (path === '/rest/v1/rpc/save_clinical_encounter') {
       state.saves++;
       if (state.conflict) { state.conflict = false; return route.fulfill({ status: 409, json: { code: 'PT409', message: 'Encounter version conflict' } }); }
