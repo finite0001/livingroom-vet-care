@@ -94,7 +94,7 @@ enabled = false
   time.sleep(.05)
  else:raise RuntimeError('Owned scheduler pause did not settle')
  proof['scheduler_paused_owned_server_only']=True
- assert sql('select count(*)from supabase_migrations.schema_migrations;').strip()=='194'
+ assert sql('select count(*)from supabase_migrations.schema_migrations;').strip()=='195'
  assert sql('select count(*)from auth.users;').strip()=='0'
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
  assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and left(relname,17)='controlled_stock_';").strip()=='0'
