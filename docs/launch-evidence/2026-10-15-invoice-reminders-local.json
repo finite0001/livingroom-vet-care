@@ -14,8 +14,11 @@
   "hosted_release_completed": false,
   "live_customer_messages_sent": 0,
   "migration": {
-    "file": "20261015235157_unpaid_invoice_reminders.sql",
-    "canonical_count": 190
+    "files": [
+      "20261015235157_unpaid_invoice_reminders.sql",
+      "20261016004714_invoice_reminder_care_gate_order.sql"
+    ],
+    "canonical_count": 191
   },
   "application": {
     "unit_tests": 1480,
@@ -26,18 +29,20 @@
   },
   "canonical_sql": {
     "files": 156,
-    "assertions": 6593,
+    "assertions": 6597,
     "pass": true
   },
   "final_focused_proof": {
-    "identity": "lrv-invoice-reminders-4868935f34",
-    "migrations": 190,
-    "sql_summary": "All tests successful.\nFiles=1, Tests=53,  0 wallclock secs ( 0.02 usr  0.01 sys +  0.00 cusr  0.01 csys =  0.04 CPU)\nResult: PASS",
+    "identity": "lrv-invoice-reminders-0a18a6108b",
+    "migrations": 191,
+    "sql_summary": "All tests successful.\nFiles=156, Tests=6597, 30 wallclock secs ( 0.47 usr  0.22 sys +  0.80 cusr  0.57 csys =  2.06 CPU)\nResult: PASS",
     "auth_browser": {
-      "checks": 44,
+      "checks": 47,
       "checkScope": "Combined Auth/API, SQL isolation and restore assertions; not all genuine HTTP",
       "browserChecks": 11,
-      "observedQueues": 1,
+      "observedQueues": 2,
+      "observedInvoiceWaits": 1,
+      "observedCareGateWaits": 1,
       "sqlOnlyIsolationChecks": 2,
       "providerRequests": 0
     },
@@ -56,7 +61,7 @@
     },
     "source_sha256": {
       "package-lock.json": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f",
-      "scripts/invoice-reminders/rollback-probe.sql": "ba059398ddbd43bbb33d31c2613ed6a0d5e7ffdefcbc24249dcd5eb2b7e9c053",
+      "scripts/invoice-reminders/rollback-probe.sql": "39777cd5c2c754078bf183f8a333ca28e2816e87cb7eed24f94239ff7ddfceb2",
       "src/hub/features/billing/HouseholdInvoices.tsx": "5c2bf50c5d85539fc329ca7c42a018162dbed9397997f04cf16c27af76e6f97b",
       "src/hub/features/billing/reminders/InvoiceReminderPanel.tsx": "a6362a2ad13a8cbedb3ed0df5c9ab011e7f90f53498fd6328f0a43ffbc74d425",
       "src/hub/features/billing/reminders/api.ts": "4c49e5b745927705ccb6bd109741af96e58c111ec824bdf3f15072fe95b95380",
@@ -252,9 +257,10 @@
       "supabase/migrations/20261015020722_stock_writer_provenance.sql": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
       "supabase/migrations/20261015055007_native_custody_provenance.sql": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
       "supabase/migrations/20261015235157_unpaid_invoice_reminders.sql": "0bacad470b67baa0968733235afc5fb846a5995c4c828e80be2116b99a61f584",
-      "supabase/tests/invoice_reminders.test.sql": "e0095ba0a49f422d749736e3a05fc7250f0c719adb8dfb08330e941566f481e7",
-      "tests/invoice-reminders/disposable.py": "5f2aeb10cce7f65226db9b749e307c4001416c82a2571340c91bd28e365c6791",
-      "tests/invoice-reminders/local-roundtrip.ts": "cc26000b1619d6193f4b7a81a4abc1ccd5efb79b2216a1cde6ee82bae6a733fd",
+      "supabase/migrations/20261016004714_invoice_reminder_care_gate_order.sql": "1811eff6a9f485b4f764f89b4557dcd0cddbb57bbae732e9c78141dbf274f456",
+      "supabase/tests/invoice_reminders.test.sql": "21e98cfb1d9cd190ad452112b4cff49214003385b0d6e71847e8a6735d08edc4",
+      "tests/invoice-reminders/disposable.py": "c5d0c6457e5ae54d3c56a46ccd2317d96677d05564342d376e77cb32c8de0208",
+      "tests/invoice-reminders/local-roundtrip.ts": "8510968daf443c6ba584df1d0df3dee16e6516b7f51003a487e25212a00e95dd",
       "tests/invoice-reminders/reminders.test.ts": "f113e431e078c62cfe549862a35fc2c71406f10803dce579159bfa8ad680895b"
     },
     "provider_requests": 0,

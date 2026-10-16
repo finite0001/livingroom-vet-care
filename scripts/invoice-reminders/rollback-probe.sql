@@ -9,6 +9,11 @@ do $$begin
  if exists(select 1 from invoice_reminder_policies) then raise exception 'Rollback probe requires uncommissioned invoice reminder policy';end if;
  if exists(select 1 from clients where primary_phone in('+13035555901','+13035555902'))then raise exception 'Rollback fixture contact collision';end if;
 end $$;
+-- Reuse an existing sandbox profile inside this rollback; never replace it.
+do $$begin if exists(select 1 from payment_provider_profiles where livemode)then raise exception 'Rollback payment probe requires sandbox or unconfigured profile';end if;end$$;
+create function pg_temp.invoice_probe_account()returns text language sql stable security definer set search_path=public as $$select coalesce((select account_id from payment_provider_profiles),'acct_remindersynthetic')$$;
+create function pg_temp.invoice_probe_origin()returns text language sql stable security definer set search_path=public as $$select coalesce((select return_origin from payment_provider_profiles),'https://thelivingroom.vet')$$;
+
 create function pg_temp.invoice_prove(result text)returns void language plpgsql as $$begin
  if result not like 'ok %'then raise exception 'Invoice reminder rollback assertion failed: %',result;end if;
  perform set_config('lrv.invoice_rollback_checks',(coalesce(nullif(current_setting('lrv.invoice_rollback_checks',true),''),'0')::integer+1)::text,true);
@@ -111,7 +116,7 @@ create function pg_temp.ir_claim(invoice uuid)returns jsonb language plpgsql as 
  update communication_outbox set state='claimed',lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()+interval '2 minutes'
  where id=(select outbox_id from invoice_reminder_jobs where invoice_id=invoice order by created_at desc limit 1) and state='pending' returning * into o;return to_jsonb(o);end $$;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);set local role service_role;
-select configure_payment_provider('acct_remindersynthetic',false,'https://thelivingroom.vet');
+select configure_payment_provider(pg_temp.invoice_probe_account(),false,pg_temp.invoice_probe_origin());
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('admin'),'session_id',pg_temp.ir_id('admin_session'))::text,true);set local role authenticated;
 select save_invoice_reminder_terms(pg_temp.ir_id('admin'),gen_random_uuid(),pg_temp.ir_id('invoice3'),pg_temp.ir_id('client'),0,(select v from ir_fx where k='terms_values'));
 select set_config('request.jwt.claims','{"role":"service_role"}',true);set local role service_role;
@@ -121,10 +126,10 @@ update ir_fx set v=pg_temp.ir_claim(pg_temp.ir_id('invoice3'))where k='claim';
 insert into ir_fx(k,id)values('checkout',gen_random_uuid());
 insert into ir_fx(k,v)select 'payment_before',jsonb_build_object('hash',payment_source_hash_internal(pg_temp.ir_id('invoice3'),pg_temp.ir_id('client')));
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('admin'),'session_id',pg_temp.ir_id('admin_session'))::text,true);set local role authenticated;
-select prepare_invoice_checkout(pg_temp.ir_id('checkout'),pg_temp.ir_id('invoice3'),pg_temp.ir_id('client'),(select v->>'hash'from ir_fx where k='payment_before'),10000,'acct_remindersynthetic',false,'https://thelivingroom.vet/payment/return','https://thelivingroom.vet/payment/cancel');
+select prepare_invoice_checkout(pg_temp.ir_id('checkout'),pg_temp.ir_id('invoice3'),pg_temp.ir_id('client'),(select v->>'hash'from ir_fx where k='payment_before'),10000,pg_temp.invoice_probe_account(),false,pg_temp.invoice_probe_origin()||'/payment/return',pg_temp.invoice_probe_origin()||'/payment/cancel');
 select pg_temp.invoice_prove(is(read_invoice_reminders(pg_temp.ir_id('admin'),pg_temp.ir_id('invoice3'),pg_temp.ir_id('client'))#>>'{context,reason}','payment_pending','Pending checkout pauses collection messages'));
 select set_config('request.jwt.claims','{"role":"service_role"}',true);set local role service_role;
-select apply_checkout_evidence('evt_invoice_reminder_paid',pg_temp.ir_id('checkout'),'acct_remindersynthetic',false,'payment_succeeded','cs_reminder_synthetic','pi_remindersynthetic',10000,'usd',(select v->>'hash'from ir_fx where k='payment_before'));
+select apply_checkout_evidence('evt_invoice_reminder_paid',pg_temp.ir_id('checkout'),pg_temp.invoice_probe_account(),false,'payment_succeeded','cs_reminder_synthetic','pi_remindersynthetic',10000,'usd',(select v->>'hash'from ir_fx where k='payment_before'));
 select pg_temp.invoice_prove(is((start_communication_attempt((select(v->>'id')::uuid from ir_fx where k='claim'),(select(v->>'lease_token')::uuid from ir_fx where k='claim'),'{"from":"The Living Room Vet <care@thelivingroom.vet>","reply_to":"admin@thelivingroom.vet"}')).state,'failed','Confirmed payment after queue suppresses message'));
 select pg_temp.invoice_prove(is(execute_invoice_reminder_run(gen_random_uuid(),25)->>'queued','0','Paid invoice cannot regenerate a reminder'));
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('admin'),'session_id',pg_temp.ir_id('admin_session'))::text,true);set local role authenticated;

@@ -120,7 +120,7 @@ let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null,
 try {
   check(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "190",
+    "191",
   );
   const admin = await actor("ADMIN"),
     staff = await actor("STAFF");
@@ -380,29 +380,114 @@ try {
   check((await read()).history[0].amount_cents, "7500");
   const current = await rpc(service, "claim_communication");
   check(current.body.includes("$75.00"), true);
-  await rpc(staff.db, "save_invoice_reminder_terms", {
-    ...termArgs,
-    p_id: randomUUID(),
-    p_expected_version: 1,
-    p_values: {
+  // Reproduce the existing care retry's care-gate -> same-outbox order.
+  // The actual worker HTTP request must wait at care, before owning invoice,
+  // reminder-gate or outbox locks. The SQL competitor is not an Auth request.
+  const careHeld = spawn(
+    "docker",
+    [
+      "exec",
+      "-i",
+      container,
+      "psql",
+      "-X",
+      "-qAt",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-v",
+      "ON_ERROR_STOP=1",
+    ],
+    { stdio: ["pipe", "pipe", "pipe"] },
+  );
+  let careOutput = "",
+    careFailure = "",
+    careClosed = false;
+  careHeld.stdout!.on("data", (b) => {
+    careOutput += b.toString();
+  });
+  careHeld.stderr!.on("data", (b) => {
+    careFailure += b.toString();
+  });
+  const careExit = new Promise<void>((resolve, reject) =>
+    careHeld.once("exit", (code) => {
+      careClosed = true;
+      if (code === 0) resolve();
+      else
+        reject(new Error("Owned care-gate blocker failed; details withheld"));
+    }),
+  );
+  // Attach immediately so an expected test failure is collected during cleanup.
+  void careExit.catch(() => undefined);
+  let careAttempt: Promise<Record<string, unknown>> | null = null;
+  try {
+    careHeld.stdin!.write(
+      "begin;select pg_backend_pid();select public.care_eligibility_lock();select 'CARE_READY';\n",
+    );
+    await until(
+      () => careOutput.includes("CARE_READY"),
+      "care eligibility gate",
+    );
+    const carePid = Number(
+      careOutput.split("\n").find((line) => /^\d+$/.test(line)),
+    );
+    assert.ok(Number.isSafeInteger(carePid) && carePid > 0);
+    let settled = false;
+    careAttempt = rpc(service, "start_communication_attempt", {
+      p_id: current.id,
+      p_lease_token: current.lease_token,
+      p_provider_config: {
+        from: "The Living Room Vet <care@thelivingroom.vet>",
+        reply_to: "admin@thelivingroom.vet",
+      },
+    }).finally(() => {
+      settled = true;
+    });
+    void careAttempt.catch(() => undefined);
+    await until(
+      () =>
+        sql(`select exists(select 1 from pg_stat_activity a join pg_locks l on l.pid=a.pid
+        where ${carePid}=any(pg_blocking_pids(a.pid)) and a.wait_event_type='Lock'
+        and a.query like '%start_communication_attempt%' and l.locktype='advisory'
+        and l.classid=1869440354 and l.objid=1128354373 and l.objsubid=2 and not l.granted);`) ===
+        "t",
+      "actual worker care-gate wait",
+    );
+    check(settled, false);
+    observedQueues++;
+    // Fails on the old inversion: the worker would already own this outbox.
+    // The canonical hold takes care reentrantly, then reminder/invoice locks.
+    const hold = {
       ...values,
       hold_kind: "bereavement",
       hold_reason: "Synthetic family hold",
-    },
-  });
-  check(
-    (
-      await rpc(service, "start_communication_attempt", {
-        p_id: current.id,
-        p_lease_token: current.lease_token,
-        p_provider_config: {
-          from: "The Living Room Vet <care@thelivingroom.vet>",
-          reply_to: "admin@thelivingroom.vet",
-        },
-      })
-    ).state,
-    "failed",
-  );
+    };
+    const staffSessionId = sql(
+      `select id from auth.sessions where user_id='${staff.id}'order by created_at desc limit 1;`,
+    );
+    assert.match(staffSessionId, /^[0-9a-f-]{36}$/);
+    const claims = JSON.stringify({
+      role: "authenticated",
+      sub: staff.id,
+      session_id: staffSessionId,
+    });
+    careHeld.stdin!.write(
+      `set local lock_timeout='1500ms';select id from communication_outbox where id='${current.id}' for update;select 'CARE_OUTBOX_READY';
+       select set_config('request.jwt.claims','${claims}',true);
+       set local role authenticated;select save_invoice_reminder_terms('${staff.id}','${randomUUID()}','${invoiceId}','${client}',1,'${JSON.stringify(hold)}'::jsonb);commit;\\q\n`,
+    );
+    await careExit;
+    check(careFailure, "");
+    check(careOutput.includes("CARE_OUTBOX_READY"), true);
+    check((await careAttempt).state, "failed");
+  } finally {
+    if (!careClosed) {
+      careHeld.stdin!.end("rollback;\\q\n");
+      await careExit;
+    }
+    if (careAttempt) await careAttempt.catch(() => undefined);
+  }
   check((await read()).context.reason, "bereavement");
   // Real UI, live local RPCs, no mocked network results or external traffic.
   const origin = "http://127.0.0.1:64781";
@@ -738,6 +823,8 @@ try {
           "Combined Auth/API, SQL isolation and restore assertions; not all genuine HTTP",
         browserChecks,
         observedQueues,
+        observedInvoiceWaits: 1,
+        observedCareGateWaits: 1,
         sqlOnlyIsolationChecks: 2,
         providerRequests: 0,
       },
@@ -746,7 +833,7 @@ try {
     ),
   );
   console.log(
-    `Invoice reminder combined Auth/API/SQL/restore: ${checks} checks; ${browserChecks} browser checks; ${observedQueues} observed invoice queue; no provider requests.`,
+    `Invoice reminder combined Auth/API/SQL/restore: ${checks} checks; ${browserChecks} browser checks; ${observedQueues} observed invoice/care-gate queues; no provider requests.`,
   );
 } catch (failure) {
   if (browser) {

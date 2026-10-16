@@ -2,6 +2,23 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+select ok(not has_function_privilege('anon','public.invoice_reminder_lock()','EXECUTE')
+ and not has_function_privilege('authenticated','public.invoice_reminder_lock()','EXECUTE')
+ and not has_function_privilege('service_role','public.invoice_reminder_lock()','EXECUTE'),
+ 'Reminder lock remains owner-only after additive correction');
+select ok(not prosecdef and proconfig=array['search_path=public'],
+ 'Reminder lock preserves invoker rights and pinned search path')
+ from pg_proc where oid='public.invoice_reminder_lock()'::regprocedure;
+select ok(position('public.care_eligibility_lock()' in prosrc)>0
+ and position('public.care_eligibility_lock()' in prosrc)<position('pg_advisory_xact_lock(80261015)' in prosrc)
+ and position('transaction_isolation' in prosrc)<position('public.care_eligibility_lock()' in prosrc),
+ 'READ COMMITTED check precedes care gate, then reminder gate')
+ from pg_proc where oid='public.invoice_reminder_lock()'::regprocedure;
+select ok(position('public.invoice_reminder_lock()' in prosrc)<position('from billing_invoices' in prosrc)
+ and position('from billing_invoices' in prosrc)<position('from communication_outbox' in prosrc)
+ and position('from communication_outbox' in prosrc)<position('public.start_communication_attempt_before_invoice_reminders' in prosrc),
+ 'Final attempt retains reminder gate, invoice, outbox, predecessor ordering')
+ from pg_proc where oid='public.start_communication_attempt(uuid,uuid,jsonb)'::regprocedure;
 create temp table ir_fx(k text primary key,id uuid,v jsonb);
 grant all on ir_fx to authenticated,service_role;
 insert into ir_fx(k,id)select k,gen_random_uuid()from unnest(array['admin','staff','admin_session','staff_session','policy','invoice','invoice2','invoice3','invoice4','terms','run'])k;
