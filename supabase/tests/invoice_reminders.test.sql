@@ -2,6 +2,10 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
+select ok(has_function_privilege('authenticated','public.read_invoice_reminder_practice(uuid)','EXECUTE')
+ and not has_function_privilege('anon','public.read_invoice_reminder_practice(uuid)','EXECUTE')
+ and not has_function_privilege('service_role','public.read_invoice_reminder_practice(uuid)','EXECUTE'),
+ 'Practice reminder read is granted only to authenticated callers; ADMIN checked inside');
 select ok(not has_function_privilege('anon','public.invoice_reminder_lock()','EXECUTE')
  and not has_function_privilege('authenticated','public.invoice_reminder_lock()','EXECUTE')
  and not has_function_privilege('service_role','public.invoice_reminder_lock()','EXECUTE'),
@@ -35,9 +39,14 @@ select throws_ok($$select invoice_reminder_validate_policy((select v from ir_fx 
 select is(invoice_reminder_render('Contact {{practice_contact}} / {{amount_due}}',pg_temp.ir_id('invoice'),101,current_date,'x{{amount_due}}'),'Contact x{{amount_due}} / 1.01','Single-pass rendering cannot interpret replacement text');
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('staff'),'session_id',pg_temp.ir_id('staff_session'))::text,true);
 set local role authenticated;
+select throws_ok($$select read_invoice_reminder_practice(pg_temp.ir_id('staff'))$$,'42501',null,'Ordinary staff cannot read practice reminder configuration');
 select throws_ok($$select save_invoice_reminder_policy(pg_temp.ir_id('staff'),gen_random_uuid(),0,(select v from ir_fx where k='definition'))$$,'42501',null,'Ordinary staff cannot set practice policy');
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('admin'),'session_id',pg_temp.ir_id('admin_session'))::text,true);
+select is(read_invoice_reminder_practice(pg_temp.ir_id('admin'))->'policy','null'::jsonb,'ADMIN can load defaults before a policy or invoice exists');
+select is((select count(*)from billing_invoices),0::bigint,'Practice settings require no manufactured invoice');
+select throws_ok($$select read_invoice_reminder_practice(pg_temp.ir_id('staff'))$$,'42501',null,'Practice settings reject mismatched actor');
 insert into ir_fx(k,v)select 'saved_policy',save_invoice_reminder_policy(pg_temp.ir_id('admin'),pg_temp.ir_id('policy'),0,(select v from ir_fx where k='definition'));
+select is(read_invoice_reminder_practice(pg_temp.ir_id('admin'))#>>'{policy,id}',pg_temp.ir_id('policy')::text,'Practice settings and invoice workflow use the same saved policy');
 select is(save_invoice_reminder_policy(pg_temp.ir_id('admin'),pg_temp.ir_id('policy'),0,(select v from ir_fx where k='definition')),(select v from ir_fx where k='saved_policy'),'Policy same UUID returns original receipt');
 select throws_ok($$select save_invoice_reminder_policy(pg_temp.ir_id('admin'),pg_temp.ir_id('policy'),0,(select v from ir_fx where k='definition')||'{"enabled":false}')$$,'23505',null,'Changed immutable policy intent denied');
 select throws_ok($$select save_invoice_reminder_policy(pg_temp.ir_id('admin'),gen_random_uuid(),0,(select v from ir_fx where k='definition'))$$,'PT409',null,'Stale policy version denied');
@@ -55,6 +64,7 @@ select is(save_invoice_reminder_terms(pg_temp.ir_id('admin'),pg_temp.ir_id('term
 select throws_ok($$select save_invoice_reminder_terms(pg_temp.ir_id('admin'),gen_random_uuid(),pg_temp.ir_id('invoice'),pg_temp.ir_id('client'),0,(select v from ir_fx where k='terms_values'))$$,'PT409',null,'Stale invoice terms rejected');
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('admin'))::text,true);
 select throws_ok($$select save_invoice_reminder_terms(pg_temp.ir_id('admin'),gen_random_uuid(),pg_temp.ir_id('invoice'),pg_temp.ir_id('client'),1,(select v from ir_fx where k='terms_values'))$$,'42501',null,'Missing live session denied');
+select throws_ok($$select read_invoice_reminder_practice(pg_temp.ir_id('admin'))$$,'42501',null,'Practice settings require a live session');
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 set local role service_role;
 insert into ir_fx(k,v)select 'run_receipt',execute_invoice_reminder_run(pg_temp.ir_id('run'),25);
@@ -135,6 +145,7 @@ select is((start_communication_attempt((select(v->>'id')::uuid from ir_fx where 
 reset role;update ir_fx set v=pg_temp.ir_claim(pg_temp.ir_id('invoice2'))where k='claim';
 select set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',pg_temp.ir_id('admin'),'session_id',pg_temp.ir_id('admin_session'))::text,true);set local role authenticated;
 select save_invoice_reminder_policy(pg_temp.ir_id('admin'),gen_random_uuid(),1,(select v from ir_fx where k='definition')||'{"enabled":false}');
+select is(read_invoice_reminder_practice(pg_temp.ir_id('admin'))#>>'{policy,definition,enabled}','false','Practice settings read the current policy revision');
 select set_config('request.jwt.claims','{"role":"service_role"}',true);set local role service_role;
 select is((start_communication_attempt((select(v->>'id')::uuid from ir_fx where k='claim'),(select(v->>'lease_token')::uuid from ir_fx where k='claim'),'{"from":"The Living Room Vet <care@thelivingroom.vet>","reply_to":"admin@thelivingroom.vet"}')).state,'failed','Practice disable after queue suppresses message');
 select is(execute_invoice_reminder_run(gen_random_uuid(),25)->>'queued','0','Disabled practice does not queue');

@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-16",
+  "package": "invoice-reminder-practice-settings",
+  "base_merge": "70df10e4da98e16066f5080c845b3c284c675768",
+  "new_migration": "20261016020711_invoice_reminder_practice_settings.sql",
+  "canonical_count": 192,
+  "application": {
+    "tests": 1481,
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "typecheck": true,
+    "build": true
+  },
+  "canonical_sql": {
+    "files": 156,
+    "assertions": 6605,
+    "reminder_assertions": 65
+  },
+  "owned_runtime_receipt": "2026-10-16-invoice-reminder-practice-settings-local.json",
+  "staging": {
+    "project": "kothoqicubowyhwfsrte",
+    "canonical_count": 192,
+    "genuine_auth_api_assertions": 9,
+    "policy_writes": 0,
+    "new_invoices": 0,
+    "original_business_fingerprints_unchanged": 16,
+    "owned_new_profiles_excluded_from_comparison": 2,
+    "owned_profiles_inactive": 2,
+    "owned_users_banned": 2,
+    "owned_roles": 0,
+    "owned_sessions": 0,
+    "reminder_families_unchanged": 5,
+    "security": {
+      "beforeKeys": 5,
+      "afterKeys": 5,
+      "newWarningOrErrorKeys": []
+    }
+  },
+  "primary": {
+    "project": "mgadheotkdnrsatfivjy",
+    "canonical_count": 192,
+    "business_fingerprints_unchanged": 16,
+    "reminder_families_unchanged": 5,
+    "policy_rows": 0,
+    "invoice_enrollments": 0,
+    "cron_active": false,
+    "security": {
+      "beforeKeys": 5,
+      "afterKeys": 5,
+      "newWarningOrErrorKeys": []
+    }
+  },
+  "hosted_reader": {
+    "body_sha256": "45da064b9e3c2089239b8b9e78dc5668b994ff82de57b63818c9c082f50117e3",
+    "matching_both_backends": true,
+    "owner": "postgres",
+    "stable": true,
+    "security_definer": true,
+    "pinned_search_path": "public",
+    "execute_roles": [
+      "postgres",
+      "authenticated"
+    ],
+    "admin_and_live_session_checked_in_body": true
+  },
+  "existing_configuration_preserved": {
+    "primary": {
+      "APP_ENV": "staging",
+      "OUTBOUND_DELIVERY_MODE": "test",
+      "INVOICE_REMINDERS_ENABLED": "absent"
+    },
+    "staging": {
+      "APP_ENV": "staging",
+      "OUTBOUND_DELIVERY_MODE": "disabled",
+      "INVOICE_REMINDERS_ENABLED": "absent"
+    },
+    "verification": "In-process SHA-256 comparison of metadata digests with known non-secret configuration strings"
+  },
+  "frontend_merged": false,
+  "frontend_released": false,
+  "practice_reminders_activated": false,
+  "email_sms_payment_provider_requests": 0,
+  "rea_access": "Private VetRec/VetRocket accounts still outstanding"
+}

@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
-import { useUnsavedChanges } from "../clinical/use-unsaved-changes";
 import {
   createNativeReturnPolicyApi,
   returnPolicyRequestSchema,
@@ -12,30 +11,35 @@ import {
 } from "./fulfillment-returns-api";
 import { usePrescriptionOperation } from "./usePrescriptionOperation";
 import { PrescriptionOperationControls } from "./PrescriptionOperationControls";
-export function NativeReturnPolicySettings() {
+interface NativeReturnPolicySettingsProps {
+  onDirtyChange: (dirty: boolean) => void;
+}
+export function NativeReturnPolicySettings({
+  onDirtyChange,
+}: NativeReturnPolicySettingsProps) {
   const { user, hasRole } = useAuth();
   return user ? (
     <PolicyWorkspace
       key={user.id}
       actor={user.id}
       canConfigure={hasRole("ADMIN") && hasRole("DVM")}
+      onDirtyChange={onDirtyChange}
     />
   ) : null;
 }
 interface PolicyWorkspaceProps {
   actor: string;
   canConfigure: boolean;
+  onDirtyChange: (dirty: boolean) => void;
 }
-function PolicyWorkspace({ actor, canConfigure }: PolicyWorkspaceProps) {
+function PolicyWorkspace({
+  actor,
+  canConfigure,
+  onDirtyChange,
+}: PolicyWorkspaceProps) {
+  const referenceId = useId();
   const cache = useQueryClient(),
-    api = useMemo(
-      () =>
-        createNativeReturnPolicyApi(
-          supabase,
-          actor,
-        ),
-      [actor],
-    );
+    api = useMemo(() => createNativeReturnPolicyApi(supabase, actor), [actor]);
   const alive = useRef(true);
   const [policy, setPolicy] = useState<ReturnPolicy | null>(null),
     [enabled, setEnabled] = useState(false),
@@ -58,7 +62,10 @@ function PolicyWorkspace({ actor, canConfigure }: PolicyWorkspaceProps) {
       void cache.invalidateQueries({ queryKey: ["native-return-policy"] });
     },
   });
-  const guard = useUnsavedChanges(modified || operation.dirty);
+  useEffect(() => {
+    onDirtyChange(modified || operation.dirty);
+    return () => onDirtyChange(false);
+  }, [modified, operation.dirty, onDirtyChange]);
   async function load() {
     setBusy(true);
     setError("");
@@ -155,16 +162,19 @@ function PolicyWorkspace({ actor, canConfigure }: PolicyWorkspaceProps) {
           />
           Enable guarded native restocking
         </label>
-        <label className="block">
-          Policy review reference
+        <div className="space-y-1">
+          <label htmlFor={referenceId} className="block">
+            Policy review reference
+          </label>
           <Textarea
+            id={referenceId}
             value={reference}
             onChange={(e) => {
               setReference(e.target.value);
               setModified(true);
             }}
           />
-        </label>
+        </div>
         <p>
           Every restock still requires an active DVM, clinic-retained custody,
           sealed intact packaging, controlled storage, no original pickup, an
@@ -204,7 +214,6 @@ function PolicyWorkspace({ actor, canConfigure }: PolicyWorkspaceProps) {
           setAck(false);
         }}
       />
-      {guard}
     </section>
   );
 }

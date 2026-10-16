@@ -70,7 +70,7 @@ try:
         shutil.copytree(root/'supabase/tests',project/'supabase/tests',ignore=shutil.ignore_patterns('__pycache__'))
     # 183 through 20261013233839_next_visit_staff_recovery.sql. This count is a tripwire:
     # review it deliberately whenever the migration inventory changes.
-    assert len(versions) == 191 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117','20260924120000','20260924130000','20260926031324','20260926090000','20260927120000','20260928100000','20260928110000','20260928120000','20260928121000','20260928130000','20260928140000','20260928150000','20260928160000','20260928170000','20260928180000','20260928190000','20260930100000','20260930120000','20260930130000','20261009011500','20261009160543','20261010021254','20261010034500','20261010170259','20261011025251','20261011181722','20261011203250','20261012035948','20261012153518','20261012210016','20261013003556','20261013181721','20261013214300','20261013220500','20261013233839','20261014022511','20261014154223','20261014202235','20261015011200','20261015020722','20261015055007','20261015235157','20261016004714'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 192 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117','20260924120000','20260924130000','20260926031324','20260926090000','20260927120000','20260928100000','20260928110000','20260928120000','20260928121000','20260928130000','20260928140000','20260928150000','20260928160000','20260928170000','20260928180000','20260928190000','20260930100000','20260930120000','20260930130000','20261009011500','20261009160543','20261010021254','20261010034500','20261010170259','20261011025251','20261011181722','20261011203250','20261012035948','20261012153518','20261012210016','20261013003556','20261013181721','20261013214300','20261013220500','20261013233839','20261014022511','20261014154223','20261014202235','20261015011200','20261015020722','20261015055007','20261015235157','20261016004714','20261016020711'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521
@@ -104,8 +104,8 @@ enabled = false
     print('Owned runtime status preflight passed.', flush=True)
     if args.include_sql_regression:
         regression=command(['supabase','test','db','--workdir',str(project)],cwd=root,timeout=360)
-        assert 'All tests successful.'in regression and 'Files=156, Tests=6597'in regression
-        print('Canonical SQL regression passed:156 files/6597 assertions.',flush=True)
+        assert 'All tests successful.'in regression and 'Files=156, Tests=6605'in regression
+        print('Canonical SQL regression passed:156 files/6605 assertions.',flush=True)
     stock_probe_path=root/'scripts/stock-writers/rollback-probe.sql'
     stock_probe_hash=hashlib.sha256(stock_probe_path.read_bytes()).hexdigest()
     # One simple-query packet matches the hosted SQL API; psql stdin splits commands.
@@ -218,7 +218,7 @@ if success:
                'harness_sha256': harness_hashes, 'restore_runner_sha256': restore_hash, 'restore': restore,
                'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash,
                'decision_sql_sha256': decision_sql_hash, 'decision_races_sha256': decision_races_hash, 'publication_sql_sha256': publication_sql_hash, 'publication_races_sha256': publication_races_hash,
-               'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':156,'assertions':6597}if args.include_sql_regression else None,
+               'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':156,'assertions':6605}if args.include_sql_regression else None,
                'stock_boundary':{'api':stock_api,'concurrency':stock_locks,'restore':stock_restore,'api_sha256':stock_api_hash,'concurrency_sha256':stock_locks_hash,'restore_sha256':stock_restore_hash,'rollback_probe':stock_probe,'rollback_probe_sha256':stock_probe_hash,'handoff_rollback_probe':handoff_probe,'handoff_rollback_probe_sha256':handoff_probe_hash},
                'controlled_source_reconciliation':source_reconciliation,'controlled_source_reconciliation_sha256':source_reconciliation_hash}
     summary_path = work.parent / (identity + '-result.json')
