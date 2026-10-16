@@ -33,8 +33,8 @@
 | [3 — Diagnostics and PDFs](phase-03-diagnostics-pdfs.md) | Manual observations, comparable trends, stored PDFs and selective sharing | 0; 2 for request linkage | 3A1 merged/deployed; 3B1 in PR #240; renderer/validated PDF/release packages pending |
 | [4 — Scheduling and daily work](phase-04-scheduling-tasks.md) | Appointment templates, next-visit prompts and schedule-derived tasks | 0 | Planned |
 | [5 — Stock and controlled drugs](phase-05-inventory-controlled-drugs.md) | Supplier imports, iPhone scanning and witnessed drug ledger | 0; vendor samples; 1 for Whogot product mappings | Planned |
-| [6 — Payments and production](phase-06-payments-production.md) | External financing, overdue reminders and net-invoiced doctor production | 2; attribution/provider decisions | Planned |
-| [7 — Clinical assistance and devices](phase-07-assistance-integrations.md) | Reviewed voice-generated drafts, VetRocket and automatic anesthesia capture; scoped Gusto exchange | 3; 5 for drug events; 6 for production export; vendor access | Planned |
+| [6 — Payments and production](phase-06-payments-production.md) | External financing, overdue reminders and net-invoiced doctor production | 2; attribution/provider decisions | Affirm installed per owner; reminders/settings merged in PRs260–261; delivery test-only, invoice cron inactive; production planned |
+| [7 — Clinical assistance and devices](phase-07-assistance-integrations.md) | Reviewed voice-generated drafts, VetRocket and automatic anesthesia capture; scoped Gusto exchange | 3; 5 for drug events; 6 for production export; vendor access | [Staff-supplied dictation review](../2026-10-16-clinical-dictation-review/plan.md) verified locally/staging; primary release pending; audio/AI and integrations outstanding |
 | [8 — Full release acceptance](phase-08-release.md) | Every required row demonstrated, reconciled and accepted on the release revision | All required phases | Planned |
 
 ## Findings that drive the design
@@ -52,7 +52,7 @@ Existing patient-specific reminders already check deceased status. Extend and ve
 - Apply the shared contracts before adding features; a drug movement, generated document or external payment must not acquire a second independent source of truth.
 - Use additive migrations and preserve history. Do not regenerate Lovable-managed types locally. Permanent stale/conflict errors use the existing non-retryable pattern (`PT409`), not deliberate `40001` retries.
 - Verify the dedicated staging and primary project references before future rollout. The retained Lovable database is not the target backend.
-- Each implementation change goes through a reviewed PR; Dave merges or explicitly delegates a specific PR merge. Batch 1A was merged and its hosted rollout explicitly authorized. The rollout receipt and reproducible probes are in `/Users/davidedler/Developer/lrv-contact-rollout-20261008` and merged PR #231. Susan's financing choice remains pending.
+- Each implementation change goes through a reviewed PR; Dave merges or explicitly delegates a specific PR merge. Batch 1A was merged and its hosted rollout explicitly authorized. The rollout receipt and reproducible probes are in `/Users/davidedler/Developer/lrv-contact-rollout-20261008` and merged PR #231. Dave confirmed Affirm is installed on October 15; preserve that selection.
 
 ## Completion rule
 

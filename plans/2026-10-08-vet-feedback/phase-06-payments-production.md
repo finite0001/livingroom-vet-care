@@ -1,6 +1,6 @@
 # Phase 6 — Financing, unpaid-balance reminders and doctor production
 
-**Status:** Unpaid reminders in PR260 are merged and production READY; automatic sending remains off. Standalone Settings configuration before the first invoice is in implementation; doctor production remains planned. Affirm installed per Dave October 15. **Priority:** high. **Requirements:** N06–N07, N21; H09. **Depends on:** Phase 2 outbox; financing enrollment/interface and compensation attribution rules. [Confirmed decisions](decisions.md).
+**Status:** Unpaid reminders and standalone Settings configuration in PRs260–261 are merged and production READY. The saved policy is enabled with due-on-receipt terms and email stages7/14/30; global delivery remains test-only and the invoice cron is inactive. Doctor production remains planned. Affirm installed per Dave October 15. **Priority:** high. **Requirements:** N06–N07, N21; H09. **Depends on:** Phase 2 outbox; financing enrollment/interface and compensation attribution rules. [Confirmed decisions](decisions.md).
 
 ## 6A — Third-party financing and settlement
 

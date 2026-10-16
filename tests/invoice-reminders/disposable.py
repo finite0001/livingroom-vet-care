@@ -14,7 +14,7 @@ def run(argv,**kw):
 try:
  for n in [64720,64721,64722,64724,64781]:
   with socket.socket()as s:s.bind(('127.0.0.1',n))
- files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==192
+ files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==193
  for file in files:shutil.copy2(file,project/'supabase/migrations'/file.name)
  (project/'supabase/tests').mkdir()
  for file in (root/'supabase/tests').glob('*.sql'):
@@ -55,7 +55,7 @@ enabled = false
  harness=root/'tests/invoice-reminders/local-roundtrip.ts';assert harness.exists()
  native_result=run(['node','--experimental-strip-types',str(harness)],env={**os.environ,'INVOICE_REMINDER_TEST_PROJECT':str(project),'INVOICE_REMINDER_RUN_SYNTHETIC_LOCAL':'true'},timeout=420);print(native_result.strip(),flush=True)
  assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==digest for name,digest in hashes.items()),'Proof input changed during run'
- proof={'identity':identity,'migrations':192,'sql_summary':sql_result[sql_result.rfind('All tests successful.'):].strip(),'auth_browser':json.loads((root/'tmp/invoice-reminder-auth-proof.json').read_text()),'restore':json.loads((root/'tmp/invoice-reminder-restore-proof.json').read_text()),'rollback_probe':rollback,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
+ proof={'identity':identity,'migrations':193,'sql_summary':sql_result[sql_result.rfind('All tests successful.'):].strip(),'auth_browser':json.loads((root/'tmp/invoice-reminder-auth-proof.json').read_text()),'restore':json.loads((root/'tmp/invoice-reminder-restore-proof.json').read_text()),'rollback_probe':rollback,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
 finally:
  if started:
   run(['supabase','stop','--workdir',str(project),'--no-backup'],timeout=180)

@@ -1,6 +1,6 @@
 # Phase 7 — Clinical assistance, imaging, anesthesia and Gusto
 
-**Status:** Planned. **Priority:** vendor/access proofs start during Phase 0. **Requirements:** N10, N18, N20; H03, H15–H16. **Dependencies:** reviewed chart/PDF model, provider interfaces and Phase 6 approved production output. [Vendor evidence](integrations.md).
+**Status:** First native staff-supplied transcript/SOAP review slice implemented and verified locally and in staging; [scope and acceptance](../2026-10-16-clinical-dictation-review/plan.md). Primary release awaits its specific PR approval. Audio capture, transcription/generation, recap/call/dental assistance and vendor/device exchange remain outstanding. **Priority:** vendor/access proofs start during Phase 0. **Requirements:** N10, N18, N20; H03, H15–H16. **Dependencies:** reviewed chart/PDF model, provider interfaces and Phase 6 approved production output. [Vendor evidence](integrations.md).
 
 These are separate deliverables and should be separate PR sequences. One working connector does not complete the others.
 
