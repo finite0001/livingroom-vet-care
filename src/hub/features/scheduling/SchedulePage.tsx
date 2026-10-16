@@ -27,6 +27,7 @@ import { householdHref, patientHref } from "@/hub/features/patient-360/model";
 import { AppointmentEditor } from "./AppointmentEditor";
 import { NextVisitWorkspace } from "./NextVisitWorkspace";
 import type { NextVisitContext } from "./next-visit-model";
+import { appointmentDictationHref } from "../clinical/appointment-dictation/model";
 type Appointment = Tables<"appointments">;
 function visitTypeLabel(visitType: string): string {
   return visitType === "housecall" ? "House call" : "Clinic";
@@ -145,6 +146,7 @@ function AppointmentCard({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        {row.pet_id && row.status !== "CANCELLED" && row.status !== "NO_SHOW" && <Button asChild variant="outline" size="sm" className="min-h-11"><Link to={appointmentDictationHref(row.pet_id, row.id)}>Open dictation</Link></Button>}
         {row.status === "SCHEDULED" && (
           <Button
             size="sm"
@@ -345,6 +347,7 @@ export default function SchedulePage() {
                       <div
                         className="relative w-full rounded-md border bg-card p-3 text-left hover:bg-accent focus-within:ring-2 focus-within:ring-ring"
                         key={row.id}
+                        data-appointment-id={row.id}
                       >
                         <button
                           type="button"
@@ -382,6 +385,7 @@ export default function SchedulePage() {
                               ? `Staff ${row.assigned_dvm_id.slice(0, 8)}`
                               : "Unassigned")}
                         </p>
+                        {row.pet_id && row.status !== "CANCELLED" && row.status !== "NO_SHOW" && <Button asChild variant="outline" size="sm" className="relative mt-2 min-h-11"><Link to={appointmentDictationHref(row.pet_id, row.id)}>Open dictation</Link></Button>}
                         <div className="pointer-events-none relative mt-1 flex items-center gap-2">
                           <StatusChip status={row.status} />
                           <span className="text-sm text-muted-foreground">

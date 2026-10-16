@@ -17,9 +17,11 @@ import {
 } from "../../../../../../supabase/functions/_shared/clinical-audio-model.ts";
 import { processAudio, readAudio, readAudioJob, reserveAudio } from "./api";
 import { ClinicalPcmRecorder } from "./recorder";
+import { errorText } from "../../editor-state";
 interface AudioProps {
   encounter: Tables<"clinical_encounters">;
   blocked: boolean;
+  beforeStart?: () => Promise<void>;
   onDirtyChange: (value: boolean) => void;
   onBusyChange: (value: boolean) => void;
 }
@@ -53,6 +55,7 @@ function AudioSession({
   actor,
   encounter,
   blocked,
+  beforeStart,
   onDirtyChange,
   onBusyChange,
 }: SessionProps) {
@@ -222,6 +225,12 @@ function AudioSession({
     setNotice("");
     setFrames(0);
     captureVersion.current = encounter.version;
+    try { await beforeStart?.(); }
+    catch (e) {
+      if (active.current) { setPhase("idle"); setError(errorText(e)); }
+      locked.current = false; return;
+    }
+    if (!active.current) { locked.current = false; return; }
     try {
       const instance = new ClinicalPcmRecorder({
         onFrames: (n) => {

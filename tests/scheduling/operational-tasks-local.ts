@@ -236,7 +236,7 @@ try {
         "select jsonb_build_object('count',count(*),'latest',max(version)) from supabase_migrations.schema_migrations;",
       ),
     ),
-    { count: 195, latest: "20261016162448" },
+    { count: 196, latest: "20261016200826" },
   );
   const household = randomUUID(),
     pet = randomUUID();

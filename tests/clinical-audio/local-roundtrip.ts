@@ -341,7 +341,7 @@ let cleanupFailure: unknown = null;
 try {
   sqlCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "195",
+    "196",
   );
   const first = await actor("First"),
     second = await actor("Second");
@@ -397,6 +397,21 @@ try {
   }
   const initial = await encounter(pet),
     uiEncounter = await encounter(uiPet);
+  async function appointment(petId: string, offsetHours: number) {
+    return rpc(first.db, "save_appointment", {
+      p_actor_id: first.id, p_id: null, p_expected_version: null,
+      p_client_id: client, p_pet_id: petId, p_scheduled_at: new Date(Date.now() + offsetHours * 3600000).toISOString(),
+      p_duration_minutes: 30, p_appointment_type: "Synthetic dictation", p_status: "CONFIRMED",
+      p_assigned_dvm_id: first.id, p_visit_type: "clinic", p_address_snapshot: "Synthetic", p_travel_before_minutes: 0,
+      p_travel_after_minutes: 0, p_resource_name: null, p_notes: "Synthetic owned fixture", p_reminder_offsets: [],
+    });
+  }
+  const apiAppointment = await appointment(pet, 2), uiAppointment = await appointment(uiPet, 0);
+  const prepareArgs = { p_pet_id: pet, p_appointment_id: apiAppointment.id, p_expected_version: apiAppointment.version, p_existing_encounter_id: null };
+  const prepared = await Promise.all([first, second].map(a => rpc(a.db, "prepare_appointment_dictation", { ...prepareArgs, p_actor_id: a.id })));
+  apiCheck(prepared[0].id, prepared[1].id);
+  sqlCheck(sql("select count(*)from appointment_clinical_links where appointment_id='" + apiAppointment.id + "';"), "1");
+  apiCheck((await rpc(first.db, "prepare_appointment_dictation", { ...prepareArgs, p_actor_id: first.id })).id, prepared[0].id);
   const source = {
     pet_id: pet,
     encounter_id: initial.id,
@@ -734,14 +749,36 @@ try {
         body,
       });
   });
-  await page.goto(
-    origin + "/hub/patient/" + uiPet + "?tab=medical&section=soap",
-  );
+  let lostPrepare = false;
+  await page.route("**/rest/v1/rpc/prepare_appointment_dictation", async route => {
+    if (!lostPrepare) {
+      const response = await route.fetch();
+      assert.equal(response.status(), 200); lostPrepare = true;
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  const scheduledDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Denver", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(uiAppointment.scheduled_at));
+  await page.goto(origin + "/hub/schedule?date=" + scheduledDay);
+  await page.locator('[data-appointment-id="' + uiAppointment.id + '"]').getByRole("link", { name: "Open dictation", exact: true }).click();
+  const confirmation = page.getByRole("region", { name: "Appointment dictation", exact: true });
+  // Card uses accessible group semantics through an explicit region.
+  await confirmation.getByText("Synthetic Browser Audio · Dog", { exact: true }).waitFor();
+  browserCheck(await page.evaluate(() => (window as unknown as { syntheticStreams: MediaStream[] }).syntheticStreams.length), 0);
+  await confirmation.getByLabel("Encounter for this appointment", { exact: true }).selectOption(uiEncounter.id);
+  await confirmation.getByRole("checkbox", { name: /I confirm the patient/ }).check();
+  await confirmation.getByRole("button", { name: "Confirm patient and open dictation", exact: true }).click();
+  await confirmation.getByText(/If the response was lost/).waitFor();
+  await confirmation.getByRole("button", { name: "Refresh appointment context", exact: true }).click();
+  await confirmation.getByText(/already has a linked draft/).waitFor();
+  await confirmation.getByRole("checkbox", { name: /I confirm the patient/ }).check();
+  await confirmation.getByRole("button", { name: "Confirm patient and open dictation", exact: true }).click();
+  browserCheck(await page.evaluate(() => (window as unknown as { syntheticStreams: MediaStream[] }).syntheticStreams.length), 0);
+  sqlCheck(sql("select encounter_id from appointment_clinical_links where appointment_id='" + uiAppointment.id + "';"), uiEncounter.id);
   const clinical = page.getByRole("region", {
     name: "Clinical records",
     exact: true,
   });
-  await clinical.getByRole("button", { name: /· clinic · draft$/ }).click();
+  await clinical.getByText("Appointment encounter opened. Confirm recording permission below.", { exact: true }).waitFor();
   const panel = clinical.getByRole("region", {
     name: "Audio dictation",
     exact: true,
@@ -754,6 +791,20 @@ try {
       name: /I verified this patient and have permission/,
     })
     .check();
+  sql("update appointments set notes='Synthetic concurrent note change' where id='" + uiAppointment.id + "';");
+  await panel
+    .getByRole("button", { name: "Start dictation recording", exact: true })
+    .click();
+  await panel.getByText(/Appointment changed; refresh and confirm again/).waitFor();
+  browserCheck(await page.evaluate(() => (window as unknown as { syntheticStreams: MediaStream[] }).syntheticStreams.length), 0);
+  page.once("dialog", d => d.accept());
+  await panel.getByRole("button", { name: "Discard local audio and controls", exact: true }).click();
+  await confirmation.getByRole("button", { name: "Refresh appointment context", exact: true }).click();
+  await until(async () => !(await confirmation.getByRole("button", { name: "Refresh appointment context", exact: true }).isDisabled()), "fresh appointment context");
+  await confirmation.getByRole("checkbox", { name: /I confirm the patient/ }).check();
+  await confirmation.getByRole("button", { name: "Confirm patient and open dictation", exact: true }).click();
+  await panel.getByLabel("Dictation source and permission", { exact: true }).fill("Synthetic owned browser microphone; permitted test source.");
+  await panel.getByRole("checkbox", { name: /I verified this patient and have permission/ }).check();
   await panel
     .getByRole("button", { name: "Start dictation recording", exact: true })
     .click();
@@ -965,6 +1016,16 @@ try {
     "tracks closed on cancel",
   );
   browserChecks++;
+  await page.goto(origin + "/hub/schedule?date=" + scheduledDay);
+  await page.getByRole("button", { name: "Week", exact: true }).click();
+  await page.locator('[data-appointment-id="' + uiAppointment.id + '"]').getByRole("link", { name: "Open dictation", exact: true }).click();
+  await confirmation.getByText("Synthetic Browser Audio · Dog", { exact: true }).waitFor();
+  browserCheck(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+  await page.screenshot({ path: "tmp/clinical-audio-browser/mobile-appointment.png", fullPage: false });
+  await confirmation.getByRole("checkbox", { name: /I confirm the patient/ }).check();
+  await confirmation.getByRole("button", { name: "Confirm patient and open dictation", exact: true }).click();
+  await clinical.getByText("Appointment encounter opened. Confirm recording permission below.", { exact: true }).waitFor();
+  browserCheck(await clinical.getByLabel("Subjective", { exact: true }).inputValue(), "Reviewed browser cough history.");
   browserCheck(errors, []);
   await context.close();
 
@@ -1065,7 +1126,9 @@ try {
     restoredRelations: Object.keys(before).length,
     populatedAudioFamilies: 5,
     droppedCommittedBrowserResponses:
-      Number(droppedReserve) + Number(droppedGeneration),
+      Number(lostPrepare) + Number(droppedReserve) + Number(droppedGeneration),
+    appointmentPreparationRecovered: lostPrepare,
+    concurrentAppointmentConfirmationsShareEncounter: prepared[0].id === prepared[1].id,
     fakeProviderRequests: providerRequests,
     realProviderRequests: 0,
     resultSaveRetryProved: true,
