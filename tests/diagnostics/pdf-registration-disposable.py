@@ -79,7 +79,7 @@ try:
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project / "supabase/migrations" / migration.name)
     assert (
-        len(hashes) == 197
+        len(hashes) == 198
         and "20261011181722_manual_diagnostic_panels.sql" in hashes
         and "20261011203250_diagnostic_pdf_jobs.sql" in hashes
         and "20261012035948_diagnostic_pdf_artifact_processing.sql" in hashes

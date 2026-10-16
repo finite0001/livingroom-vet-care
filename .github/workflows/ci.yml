@@ -253,6 +253,8 @@ jobs:
         run: python3 -B tests/clinical-dictation/disposable.py --run-synthetic-local
       - name: Verify audio capture, one-shot provider dispatch, recovery and reviewed SOAP in an owned runtime
         run: python3 -B tests/clinical-audio/disposable.py --run-synthetic-local
+      - name: Verify template note generation, source recovery, revoked-session locks and populated restore
+        run: python3 -B tests/clinical-notes/disposable.py --run-synthetic-local
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage

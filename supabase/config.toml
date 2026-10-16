@@ -160,3 +160,7 @@ verify_jwt = true
 
 [functions.queue-invoice-reminders]
 verify_jwt = false
+
+# Staff JWT plus live actor/session checks; generation remains separately gated.
+[functions.clinical-note-process]
+verify_jwt = true

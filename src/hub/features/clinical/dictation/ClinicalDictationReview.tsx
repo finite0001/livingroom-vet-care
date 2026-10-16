@@ -1,4 +1,10 @@
 import { readAudioProvenance } from "./audio/api";
+import { readNoteProvenance } from "../templates/api";
+import {
+  assembleNoteSections,
+  missingRequiredNoteFields,
+  validateNotePayload,
+} from "../templates/model";
 import {
   validateAudioSoap,
   audioSoapFields,
@@ -88,6 +94,37 @@ function DictationSession({
       return value;
     },
   });
+  const noteProvenance = useQuery({
+    queryKey: ["clinical-note-provenance", actor, selected?.id],
+    enabled: !!selected,
+    queryFn: async () => {
+      const value = await readNoteProvenance(actor, selected!.id);
+      if (value) {
+        validateNotePayload(
+          value.payload,
+          selected!.transcript,
+          value.template_snapshot.definition,
+        );
+        const sections = assembleNoteSections(
+          value.payload,
+          selected!.transcript,
+          value.template_snapshot.definition,
+        );
+        if (
+          value.source_sha256 !== selected!.source_hash ||
+          soapFields.some(
+            (field) =>
+              sections[field].text !== selected!.sections[field].text ||
+              sections[field].quote !== selected!.sections[field].quote,
+          )
+        )
+          throw Error(
+            "Template proposal differs from its retained source or field assembly.",
+          );
+      }
+      return value;
+    },
+  });
   const [chosen, setChosen] = useState<string[]>([]),
     [edits, setEdits] = useState<Record<string, string>>({});
   const [reviewNote, setReviewNote] = useState(""),
@@ -106,11 +143,11 @@ function DictationSession({
       ));
   const reviewDirty = Boolean(
     selected &&
-    !selected.review &&
-    (chosen.length ||
-      reviewNote ||
-      reviewed ||
-      soapFields.some((f) => edits[f] !== selected.sections[f].text)),
+      !selected.review &&
+      (chosen.length ||
+        reviewNote ||
+        reviewed ||
+        soapFields.some((f) => edits[f] !== selected.sections[f].text)),
   );
   const dirty = Boolean(importDirty || reviewDirty || pending || busy);
   const disabled =
@@ -119,7 +156,13 @@ function DictationSession({
     Boolean(pending) ||
     !data.data ||
     data.isError ||
-    Boolean(selected && (provenance.isPending || provenance.isError));
+    Boolean(
+      selected &&
+        (provenance.isPending ||
+          provenance.isError ||
+          noteProvenance.isPending ||
+          noteProvenance.isError),
+    );
   useEffect(() => {
     active.current = true;
     return () => {
@@ -328,8 +371,8 @@ function DictationSession({
       </summary>
       <div className="mt-3 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Import a staff-supplied transcript and proposed SOAP text for review.
-          This tool does not record audio or generate notes. Only explicitly
+          Review generated template notes, audio drafts or imported
+          staff-supplied transcripts and proposed SOAP text. Only explicitly
           accepted sections change the saved encounter draft.
         </p>
         {blocked && (
@@ -614,9 +657,116 @@ function DictationSession({
                   ))}
               </section>
             )}
+            {noteProvenance.isPending && (
+              <p role="status" className="text-sm">
+                Checking template source provenance…
+              </p>
+            )}
+            {noteProvenance.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                Template source provenance could not be verified.{" "}
+                <Button
+                  variant="outline"
+                  onClick={() => void noteProvenance.refetch()}
+                >
+                  Retry template source provenance
+                </Button>
+              </p>
+            )}
+            {noteProvenance.data && (
+              <section
+                aria-label="Template field evidence"
+                className="min-w-0 space-y-3 rounded-md border border-border p-3"
+              >
+                <h4 className="font-medium">
+                  AI-generated template proposal — review every field
+                </h4>
+                <p className="break-words text-sm">
+                  {noteProvenance.data.template_snapshot.definition.name} ·
+                  template v{noteProvenance.data.template_snapshot.version} ·{" "}
+                  {noteProvenance.data.source_kind === "typed"
+                    ? "Typed observations"
+                    : "Completed dictation transcript"}{" "}
+                  · {noteProvenance.data.manifest.provider_model}
+                </p>
+                <p className="break-all text-xs text-muted-foreground">
+                  Template: {noteProvenance.data.template_snapshot.sha256} ·
+                  Source: {noteProvenance.data.source_sha256} · Prompt:{" "}
+                  {noteProvenance.data.manifest.prompt_version} · Veterinary
+                  vocabulary:{" "}
+                  {noteProvenance.data.manifest.language_context.version}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Source excerpts verify where text came from, not whether a
+                  claim is medically correct. Missing findings remain absent;
+                  confirm uncertainty, negation, medication details and patient
+                  attribution.
+                </p>
+                {missingRequiredNoteFields(
+                  noteProvenance.data.payload,
+                  noteProvenance.data.template_snapshot.definition,
+                ).map((field) => (
+                  <p key={field.id} role="note" className="break-words text-sm">
+                    Required information missing: {field.label}. No finding was
+                    supplied.
+                  </p>
+                ))}
+                {noteProvenance.data.payload.review_flags.map((flag, i) => (
+                  <p
+                    key={i}
+                    role="note"
+                    className="whitespace-pre-wrap break-words text-sm"
+                  >
+                    Needs review: {flag}
+                  </p>
+                ))}
+                {noteProvenance.data.payload.fields.map((field, index) => (
+                  <div
+                    key={field.field_id}
+                    className="min-w-0 space-y-2 border-t border-border pt-2"
+                  >
+                    <h5 className="break-words font-medium">
+                      {
+                        noteProvenance.data!.template_snapshot.definition
+                          .fields[index].label
+                      }{" "}
+                      · {field.status}
+                    </h5>
+                    {field.status === "missing" && (
+                      <p className="text-sm text-muted-foreground">
+                        No supported source finding. Omitted from the proposed
+                        SOAP text.
+                      </p>
+                    )}
+                    {field.uncertainty && (
+                      <p
+                        role="note"
+                        className="whitespace-pre-wrap break-words text-sm"
+                      >
+                        Uncertainty: {field.uncertainty}
+                      </p>
+                    )}
+                    {field.claims.map((claim, i) => (
+                      <div key={i} className="space-y-1">
+                        <p className="whitespace-pre-wrap break-words text-sm">
+                          {claim.text}
+                        </p>
+                        <blockquote className="whitespace-pre-wrap break-words border-l-2 border-border pl-2 text-sm text-muted-foreground">
+                          {claim.quote}
+                        </blockquote>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </section>
+            )}
             <div className="grid min-w-0 gap-4 md:grid-cols-2">
               <div className="min-w-0 space-y-2">
-                <h4 className="font-medium">Retained source transcript</h4>
+                <h4 className="font-medium">
+                  {noteProvenance.data?.source_kind === "typed"
+                    ? "Retained typed observations"
+                    : "Retained source transcript"}
+                </h4>
                 <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-md border border-border p-3 font-sans text-sm">
                   {selected.transcript}
                 </pre>

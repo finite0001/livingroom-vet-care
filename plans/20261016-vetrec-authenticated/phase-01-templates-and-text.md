@@ -1,6 +1,8 @@
 # Phase 1: versioned templates and typed-note generation
 
-Priority: next. Status: planned, no implementation in this investigation. Depends on [observations VR-A07–12 and VR-T01](research/authenticated-workflows.md), existing audio/proposal pipeline and current clinical policy. Paths below are relative to this worktree root (`/Users/davidedler/Developer/lrv-vetrec-investigation-20261016`); implementation should use a fresh branch from then-current main.
+Status: implemented on `feat/clinical-note-templates-20261016`; local/staging verification passed; PR review and primary release pending. Depends on [observations VR-A07–12 and VR-T01](research/authenticated-workflows.md), existing audio/proposal pipeline and current clinical policy. The implementation is stacked on imaging PR266. Processing remains inactive pending Susan's review. See the [verification receipt](../../docs/launch-evidence/2026-10-16-clinical-note-templates.md).
+
+The final implementation uses a separate `clinical-note-v1` contract and `clinical-note-process` function. It preserves the strict legacy audio contracts and adapts only an already completed, same-operator audio transcript for the exact encounter. See the [final contract](contract.md) and [staff/release documentation](../../docs/features/clinical-note-templates.md).
 
 ## Outcome and design choice
 
@@ -23,13 +25,13 @@ Choose bounded structured templates mapped to the four existing SOAP fields. Thi
 
 | Action | Path | Purpose |
 | --- | --- | --- |
-| Create | `supabase/migrations/<new>_clinical_note_templates.sql` | Private versioned templates, approved selection and narrowly scoped staff RPCs |
-| Create | `src/hub/features/clinical/templates/{model,api,TemplateSelector,TemplateEditor}.ts[x]` | Schemas, explicit template management and preview |
-| Modify | `src/hub/features/clinical/dictation/{model,api,ClinicalDictationReview}.ts[x]` | Verify actual component name first; typed source and field-aware review while retaining old proposal reads |
-| Modify | `src/hub/features/clinical/dictation/audio/ClinicalDictationAudio.tsx` | Pass pinned template context without changing microphone consent/start semantics |
-| Modify | `supabase/functions/_shared/{clinical-audio-model,clinical-audio-handler}.ts` | Versioned generation contract and durable source-kind handling |
-| Create | `supabase/functions/_shared/clinical-note-template.ts` | Shared strict field assembly/validation; no duplicate prompt logic |
-| Create/modify | `tests/clinical-*` and relevant `src` tests | Meaningful source-fidelity, access, version, recovery and browser assertions |
+| Create | `supabase/migrations/20261016224741_clinical_note_templates.sql` | Private versioned templates, approved selection and narrowly scoped staff RPCs |
+| Create | `src/hub/features/clinical/templates/` | Schemas, source selection, explicit template management and preview |
+| Modify | `src/hub/features/clinical/dictation/ClinicalDictationReview.tsx` | Field evidence and typed-source labeling while retaining old proposal reads |
+| Modify | `src/hub/features/clinical/ClinicalWorkspace.tsx` | Include note/template work in existing encounter and navigation guards |
+| Create | `supabase/functions/_shared/clinical-note-{model,handler}.ts` | Shared strict field validation, assembly and durable source-kind processing |
+| Create | `supabase/functions/clinical-note-process/` | Function entry point with pinned local Deno configuration and lock |
+| Create/modify | `tests/clinical-notes/`, `supabase/tests/clinical_notes.test.sql` and migration inventory checks | Access, version, recovery, browser and restore assertions |
 
 No deletions planned. Verify existing filenames/RPCs and migration inventory pins before changing them; do not generate `types.ts` locally.
 
@@ -45,11 +47,11 @@ No deletions planned. Verify existing filenames/RPCs and migration inventory pin
 
 ## Checklist
 
-- [ ] Confirm schema/backward-compatible job contract against current main.
-- [ ] Implement private template/version RPCs and access/version tests.
-- [ ] Add typed generation and field assembly with synthetic fidelity tests.
-- [ ] Build selector/editor/review and lost-response browser checks.
+- [x] Confirm schema/backward-compatible job contract against current main.
+- [x] Implement private template/version RPCs and access/version tests.
+- [x] Add typed generation and field assembly with stubbed provider contract tests; real model-fidelity acceptance remains pending.
+- [x] Build selector/editor/review and pass lost-response, selective acceptance and populated restore checks.
 - [ ] Susan reviews independently drafted template and processing policy.
 - [ ] Required CI, staging, specific PR approval, production release evidence.
 
-Open decisions: clinical template approval role and typed-source processing policy. Draft implementation may proceed with inactive settings; activation waits for the relevant approval.
+Approval authority follows the existing practice-settings role: ADMIN. Typed-source processing policy and the independently drafted Susan template remain subject to Susan's review. Custom glossary administration, real model-fidelity evaluation and real iPhone recording acceptance are separate remaining work. Activation waits for the relevant approval.

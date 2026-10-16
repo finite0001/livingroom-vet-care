@@ -34,3 +34,7 @@ test-results/
 
 # Generated isolated camera harnesses, fixtures and decoder build/cache artifacts.
 /tmp/__tests__/
+
+# Private synthetic clinical-note receipts, screenshots and local verification helpers.
+/tmp/clinical-notes-*
+/tests/clinical-notes/__pycache__/
