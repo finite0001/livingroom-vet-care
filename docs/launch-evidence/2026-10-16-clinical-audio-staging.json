@@ -1,0 +1,214 @@
+{
+  "attempts": 0,
+  "events": 0,
+  "functions": [
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "20db4a6fa791971cfc5cfef0422377c9",
+      "name": "clinical_audio_current_policy",
+      "owner": "postgres",
+      "service": false,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "33bc78feaf3a38ac026bac2d4bcfb31f",
+      "name": "claim_clinical_audio",
+      "owner": "postgres",
+      "service": false,
+      "staff": true
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "e6f80a901a5e7e1af1980130f31a42df",
+      "name": "clinical_audio_job_view",
+      "owner": "postgres",
+      "service": false,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "8e57b45d039f32c16740d9684db4c522",
+      "name": "clinical_audio_policy_guard",
+      "owner": "postgres",
+      "service": false,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "3ed2af8f85434cf29a59380d8697bfe2",
+      "name": "clinical_audio_row_guard",
+      "owner": "postgres",
+      "service": false,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "016e1c7ae160e67c69473886868b9c60",
+      "name": "clinical_audio_worker_actor",
+      "owner": "postgres",
+      "service": false,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "8fca35703e52bac52f6a108e278fa4dd",
+      "name": "dispatch_clinical_audio",
+      "owner": "postgres",
+      "service": true,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "7970c58900c96773e8068d93b198c65d",
+      "name": "fail_clinical_audio",
+      "owner": "postgres",
+      "service": true,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "eb426ab3fe3fa7295d4f66e1e5c356d5",
+      "name": "finish_clinical_audio",
+      "owner": "postgres",
+      "service": true,
+      "staff": false
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "871404cdd014e5fed1333a124574404d",
+      "name": "read_clinical_audio",
+      "owner": "postgres",
+      "service": false,
+      "staff": true
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "4beefd8de844ad7aa64883b797aa8fce",
+      "name": "read_clinical_audio_job",
+      "owner": "postgres",
+      "service": false,
+      "staff": true
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "42d68e830757cd23e0b6a51c1a3e8a1a",
+      "name": "read_clinical_audio_provenance",
+      "owner": "postgres",
+      "service": false,
+      "staff": true
+    },
+    {
+      "anon": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "hash": "39a8a5c59d6e7b67374280ea0f07b5a9",
+      "name": "reserve_clinical_audio",
+      "owner": "postgres",
+      "service": false,
+      "staff": true
+    }
+  ],
+  "generations": 0,
+  "jobs": 0,
+  "latest": "20261016143618",
+  "migrations": 194,
+  "policies": [
+    {
+      "audio_retention": "not_stored",
+      "status": "draft",
+      "version": 1
+    }
+  ],
+  "tables": [
+    {
+      "name": "clinical_audio_attempts",
+      "rls": true,
+      "service_read": false,
+      "staff_read": false,
+      "staff_write": false
+    },
+    {
+      "name": "clinical_audio_events",
+      "rls": true,
+      "service_read": false,
+      "staff_read": false,
+      "staff_write": false
+    },
+    {
+      "name": "clinical_audio_generations",
+      "rls": true,
+      "service_read": false,
+      "staff_read": false,
+      "staff_write": false
+    },
+    {
+      "name": "clinical_audio_jobs",
+      "rls": true,
+      "service_read": false,
+      "staff_read": false,
+      "staff_write": false
+    },
+    {
+      "name": "clinical_audio_policies",
+      "rls": true,
+      "service_read": false,
+      "staff_read": false,
+      "staff_write": false
+    }
+  ],
+  "project": "kothoqicubowyhwfsrte",
+  "processing_flag": "unset_off",
+  "openai_key_present": true,
+  "preserved_public_relation_fingerprints": 362,
+  "preserved_function_definitions": 1207,
+  "security_advisors": {
+    "existing_findings_preserved": true,
+    "added_info_private_tables": 5,
+    "added_warning_guarded_staff_rpcs": 5,
+    "review": "Five authenticated SECURITY DEFINER RPCs deliberately expose session-bound staff operations over private tables. Owners, search paths, guards and ACLs verified; no anonymous execute or direct table grants. No other added findings."
+  },
+  "source_sha256": {
+    "supabase/migrations/20261016143618_clinical_audio_soap.sql": "ee692da2686b85c3088938b3fd22cb1225bc2232a93bcacfd210e996796ecb1e",
+    "supabase/functions/clinical-audio-process/index.ts": "8ef4da42f73d0b26c3d01150692387765388508f72067fb0917f2c9e16ecb7e4",
+    "supabase/functions/_shared/clinical-audio-handler.ts": "21e1efb19ab886891974d1d1d8e2ad1984afe4ede982505148e6c32cd2003e40",
+    "supabase/functions/_shared/clinical-audio-model.ts": "46972f4be8a45371733698336686fadc85ae6a9c09d870ecf149f671369dafe9"
+  }
+}

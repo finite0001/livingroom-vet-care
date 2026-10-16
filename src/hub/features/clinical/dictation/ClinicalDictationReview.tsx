@@ -1,3 +1,8 @@
+import { readAudioProvenance } from "./audio/api";
+import {
+  validateAudioSoap,
+  audioSoapFields,
+} from "../../../../../supabase/functions/_shared/clinical-audio-model.ts";
 import { useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -70,6 +75,19 @@ function DictationSession({
     [authorized, setAuthorized] = useState(false);
   const [sections, setSections] = useState(emptySections);
   const [selected, setSelected] = useState<Proposal | null>(null);
+  const provenance = useQuery({
+    queryKey: ["clinical-audio-provenance", actor, selected?.id],
+    enabled: !!selected,
+    queryFn: async () => {
+      const value = await readAudioProvenance(actor, selected!.id);
+      if (value) {
+        validateAudioSoap(value.payload, selected!.transcript);
+        if (value.transcript_hash !== selected!.source_hash)
+          throw Error("AI transcript source differs.");
+      }
+      return value;
+    },
+  });
   const [chosen, setChosen] = useState<string[]>([]),
     [edits, setEdits] = useState<Record<string, string>>({});
   const [reviewNote, setReviewNote] = useState(""),
@@ -96,7 +114,12 @@ function DictationSession({
   );
   const dirty = Boolean(importDirty || reviewDirty || pending || busy);
   const disabled =
-    blocked || busy || Boolean(pending) || !data.data || data.isError;
+    blocked ||
+    busy ||
+    Boolean(pending) ||
+    !data.data ||
+    data.isError ||
+    Boolean(selected && (provenance.isPending || provenance.isError));
   useEffect(() => {
     active.current = true;
     return () => {
@@ -504,6 +527,80 @@ function DictationSession({
             <p className="whitespace-pre-wrap break-words text-sm">
               Source: {selected.source_note}
             </p>
+            {provenance.isPending && (
+              <p role="status" className="text-sm">
+                Checking source provenance…
+              </p>
+            )}
+            {provenance.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                Source provenance could not be verified.{" "}
+                <Button
+                  variant="outline"
+                  onClick={() => void provenance.refetch()}
+                >
+                  Retry source provenance
+                </Button>
+              </p>
+            )}
+            {provenance.data && (
+              <section
+                aria-label="AI source provenance"
+                className="min-w-0 space-y-3 rounded-md border border-border p-3"
+              >
+                <h4 className="font-medium">
+                  AI-generated proposal — review every claim and excerpt
+                </h4>
+                <p className="whitespace-pre-wrap break-words text-sm">
+                  Dictation source: {provenance.data.source_note}
+                </p>
+                <p className="text-sm">
+                  OpenAI transcription: {provenance.data.transcription_model}.
+                  SOAP draft: {provenance.data.soap_model}. The app does not
+                  retain the audio file. These checks verify source references,
+                  not medical accuracy.
+                </p>
+                {!!provenance.data.payload.review_flags.length && (
+                  <div role="note">
+                    <p className="font-medium">Needs clinician attention</p>
+                    <ul className="list-disc space-y-1 pl-5">
+                      {provenance.data.payload.review_flags.map((flag, i) => (
+                        <li
+                          className="whitespace-pre-wrap break-words text-sm"
+                          key={i}
+                        >
+                          {flag}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {audioSoapFields
+                  .filter((field) => provenance.data!.payload[field].length > 0)
+                  .map((field) => (
+                    <div key={field}>
+                      <h5 className="font-medium">
+                        {title(field)} claim sources
+                      </h5>
+                      <ul className="space-y-2">
+                        {provenance.data!.payload[field].map((claim, i) => (
+                          <li
+                            className="rounded-md border border-border p-2"
+                            key={i}
+                          >
+                            <p className="whitespace-pre-wrap break-words text-sm">
+                              {claim.text}
+                            </p>
+                            <blockquote className="mt-1 whitespace-pre-wrap break-words border-l-2 border-border pl-2 text-sm text-muted-foreground">
+                              {claim.quote}
+                            </blockquote>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+              </section>
+            )}
             <div className="grid min-w-0 gap-4 md:grid-cols-2">
               <div className="min-w-0 space-y-2">
                 <h4 className="font-medium">Retained source transcript</h4>

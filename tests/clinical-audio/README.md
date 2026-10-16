@@ -1,0 +1,9 @@
+# Clinical audio acceptance
+
+`node --experimental-strip-types --test tests/clinical-audio/model.test.ts` checks actual WAV bytes, worklet sample boundaries, source excerpts, provider contracts and uncertain outcomes. These tests use no real API key.
+
+`python3 -B tests/clinical-audio/disposable.py --run-synthetic-local` creates a uniquely owned Supabase runtime on ports 64920–64924 and a Vite app on 64981. It replays 194 migrations, runs the 53 audio SQL assertions, then exercises real Auth/PostgREST, two observed concurrent HTTP lock waits, the actual shared handler against an owned fake HTTP provider, lost committed result acknowledgements, browser microphone capture, downloaded WAV bytes, source/generation response recovery, selective chart acceptance, cancellation cleanup, narrow layout, and a populated 404-relation restore. All five audio data families are populated. Restored-session reads use SQL-role context, not a second HTTP API. Desktop Chromium is not an actual iPhone test. The runtime and restore clone are removed.
+
+Add `--include-sql-regression` to run all 158 SQL suites / 6,700 assertions. Receipts contain exact source hashes. Production credentials and provider requests are not used by this local proof.
+
+`python3 -B tests/clinical-audio/synthetic-provider.py --run-synthetic-provider` is an explicit, paid, staging-only provider check. It requires authorized Supabase CLI access, macOS `say` and FFmpeg. It embeds only fixed synthetic speech in a temporary service-key-only Edge Function, calls the actual shared adapter once per stage, and removes its endpoint in `finally`. The OpenAI secret stays inside Supabase. It does not use the clinical database, approve the practice recording policy or change clinical flags. Its one fixed example is not clinical model validation. This command is deliberately excluded from CI.

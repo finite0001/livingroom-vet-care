@@ -48,7 +48,9 @@ export default tseslint.config(
     // attach, and none can be produced. In MessageTimeline the machine
     // transcription is rendered directly under the player as the text
     // alternative.
-    files: ["src/hub/components/conversations/MessageTimeline.tsx"],
+    // Local clinician audio is previewed before a transcript exists; the saved
+    // transcript is displayed alongside it after explicit processing.
+    files: ["src/hub/components/conversations/MessageTimeline.tsx", "src/hub/features/clinical/dictation/audio/ClinicalDictationAudio.tsx"],
     rules: { "jsx-a11y/media-has-caption": "off" },
   },
 );

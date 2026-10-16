@@ -29,6 +29,8 @@ async function fixture(page: Page, inactive = false) {
     if (path === '/rest/v1/patient_problems') return route.fulfill({ json: [problem] });
     if (path === '/rest/v1/clinical_addenda') return route.fulfill({ json: state.addenda });
     if (path === '/rest/v1/clinical_encounters') return route.fulfill({ json: url.searchParams.has('id') ? state.row : state.row ? [state.row] : [] });
+    if (path === '/rest/v1/rpc/read_clinical_audio_provenance') return route.fulfill({ json: null });
+    if (path === '/rest/v1/rpc/read_clinical_audio') return route.fulfill({ json: {actor_id:staffId,pet_id:petId,encounter_id:state.row!.id,policy:{version:1,status:'draft',consent_text:'Synthetic draft',audio_retention:'not_stored',transcript_retention:'Clinical source history',transcription_model:'gpt-transcribe',soap_model:'gpt-6-luna',reviewed_by:null,reviewed_at:null,created_at:'2026-10-16T00:00:00Z'},jobs:[]} });
     if (path === '/rest/v1/rpc/read_clinical_dictation') return route.fulfill({ json: { actor_id: staffId, pet_id: petId, encounter_id: state.row!.id, items: [], has_more: false } });
     if (path === '/rest/v1/rpc/save_clinical_encounter') {
       state.saves++;
