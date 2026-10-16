@@ -33,3 +33,15 @@ OpenAI Responses requests use `store:false`, no background processing, no tools 
 ## Current limits
 
 Recordings must be one second to ten minutes, canonical PCM WAV, and audible. Unsupported capture offers a compatible-file alternative. Raw audio is not crash-safe or retained by the app. Saved transcripts cannot be edited in place; make a new source if a correction is needed. Claim/excerpt validation proves source linkage, not medical correctness. Desktop browser testing does not certify actual iPhone hardware. This independently implemented workflow does not establish parity with every VetRec feature.
+
+## Veterinary terminology context
+
+Both transcription and SOAP generation now receive the independently curated `lrv-vet-en-v1` terminology bundle. It contains 54 source-attributed small-animal terms/concepts and 81 spelling hints (including ambiguity-preserving tokens): exam shorthand (BAR/QAR/BCS), clinic language (ADR/rads/recheck), diagnostics (CBC/PCV/PU-PD), vaccine names and 12 medication brand/ingredient pairs. [Source evidence and limits](../../plans/2026-10-16-veterinary-dictation-context/research/vocabulary-sources.md) identify the teaching-hospital glossary, terminology textbook, AAHA, Antech and FDA material used. The older K-State glossary is lexical evidence only, never current clinical protocol guidance.
+
+The bundle is supplied as request context. This is not fine-tuning, a vendor's private dataset, a comprehensive drug formulary or a treatment/dosing reference. The original transcription stays unchanged. SOAP may use unambiguous medical wording with literal source excerpts, but glossary matches cannot supply an unspoken finding, diagnosis, drug/dose, administration, vaccine product, lot or due date. ADR does not establish specific symptoms. BAR does not fill an entire normal exam. R/O stays uncertain. Brand/ingredient references do not authorize substitution.
+
+Ambiguous drug nicknames, laterality, dosing frequencies and overlapping abbreviations receive a deterministic clinician-attention warning in addition to model-generated flags. The model must preserve those source tokens for clarification. Neither flags nor a glossary guarantee detection of every ambiguity or clinical error; review all output. Unknown wording must not be forced into the nearest familiar drug name. Dose/unit calculations and automatic conversions are prohibited by the generation instructions.
+
+Each successful stage retains vocabulary-version, bundle and request SHA256 receipts inside its immutable result history. SOAP review shows both vocabulary versions; earlier results without receipts are labeled accordingly. Vocabulary updates require a new version, source review and regression evaluation; clinician edits do not train or silently alter the shared dictionary.
+
+Before activating real processing, Susan must review the terminology examples alongside the consent/retention policy, and staff must test actual clinician speech, accents, background noise and iPhone hardware. Synthetic fixtures prove only the specific recorded checks. The existing clinical-processing flag and draft policy remain inactive.

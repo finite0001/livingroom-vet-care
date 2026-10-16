@@ -10,7 +10,8 @@ from urllib.error import HTTPError
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--run-synthetic-provider', action='store_true', required=True)
-p.parse_args()
+p.add_argument('--fixture', choices=['baseline','shorthand','medication','vaccines','ambiguity'], default='baseline')
+args=p.parse_args()
 os.umask(0o077)
 root = Path(__file__).resolve().parents[2]
 ref = 'kothoqicubowyhwfsrte'
@@ -21,13 +22,20 @@ speech = ('Synthetic veterinary test. This is a fictional patient named Test Dog
           'No physical examination findings were dictated. '
           'Assessment: cause of cough is undetermined. Plan: schedule an examination. '
           'No medication was prescribed. End of synthetic test.')
+fixtures = {
+ 'shorthand': "Synthetic veterinary test. Fictional patient Test Dog. Subjective: owner says A D R, ain't doing right, with no vomiting. Objective: B A R. Body condition score five of nine. Assessment: cause undetermined. Plan: C B C, chemistry panel, and rads recommended, not yet performed. End of synthetic test.",
+ 'medication': "Synthetic veterinary test. Fictional patient Test Cat. Subjective: owner reports past use of Cerenia, not Convenia. No medication was administered today. Plan: confirm the historical Cerenia dose, written as zero point five milligrams, not five milligrams. No prescription is being issued. No objective examination was dictated. End of synthetic test.",
+ 'vaccines': "Synthetic veterinary test. Fictional patient Test Dog. Plan: rabies and Bordetella vaccines discussed. Owner declined both today. No vaccines were administered. No product, lot number, or due date was dictated. Assessment: vaccination status not verified. No examination findings were dictated. End of synthetic test.",
+ 'ambiguity': "Synthetic veterinary test. Fictional patient Test Cat. Subjective: owner reports A D R. Plan: clarify the note that says dex, S I D, A S. Drug, frequency, and site are unconfirmed. Do not make a prescription. No examination findings were dictated. End of synthetic test.",
+}
+speech=fixtures.get(args.fixture,speech)
 deployed = False
 receipt = None
 
 def command(argv, **kwargs):
     result = subprocess.run(argv, capture_output=True, text=True, timeout=180, **kwargs)
     if result.returncode:
-        raise RuntimeError('Synthetic probe command failed: ' + argv[0] + '; ' + result.stderr[-1500:])
+        raise RuntimeError('Synthetic probe command failed: ' + argv[0] + '; ' + (result.stdout[-2000:] if argv[:3]==['supabase','functions','deploy'] else '') + result.stderr[-1500:])
     return result.stdout
 
 try:
@@ -37,7 +45,7 @@ try:
         f.setnchannels(1); f.setsampwidth(2); f.setframerate(16000); f.writeframes((work/'speech.pcm').read_bytes())
     wav = (work/'speech.wav').read_bytes()
     shared = work/'supabase/functions/_shared'; shared.mkdir(parents=True)
-    for filename in ['clinical-audio-handler.ts', 'clinical-audio-model.ts']:
+    for filename in ['clinical-audio-handler.ts', 'clinical-audio-model.ts', 'clinical-veterinary-context.ts']:
         shutil.copy2(root/'supabase/functions/_shared'/filename, shared/filename)
     target = work/'supabase/functions'/name; target.mkdir()
     shutil.copy2(root/'supabase/functions/clinical-audio-process/deno.json', target/'deno.json')
@@ -73,7 +81,7 @@ Deno.serve(async(request)=>{
         with urlopen(request, timeout=170) as response: receipt=json.load(response)
     except HTTPError as error:
         raise RuntimeError('Synthetic probe HTTP ' + str(error.code)) from None
-    receipt.update({'staging_project':ref,'temporary_function':name,'audio_sha256':hashlib.sha256(wav).hexdigest(),'handler_sha256':hashlib.sha256((shared/'clinical-audio-handler.ts').read_bytes()).hexdigest(),'temporary_function_removed':False})
+    receipt.update({'staging_project':ref,'temporary_function':name,'audio_sha256':hashlib.sha256(wav).hexdigest(),'handler_sha256':hashlib.sha256((shared/'clinical-audio-handler.ts').read_bytes()).hexdigest(),'temporary_function_removed':False,'fixture':args.fixture,'speech':speech})
 finally:
     if deployed:
         command(['supabase', 'functions', 'delete', name, '--project-ref', ref, '--workdir', str(work), '--yes'])
@@ -82,4 +90,4 @@ finally:
     if receipt:
         (root/'tmp').mkdir(exist_ok=True)
         (root/'tmp/clinical-audio-synthetic-provider.json').write_text(json.dumps(receipt,indent=2)+'\n')
-        print(json.dumps({k:receipt[k] for k in ['synthetic_only','clinical_database_used','clinical_flags_changed','statuses','calls','failures','temporary_function_removed']}))
+        print(json.dumps({k:receipt[k] for k in ['fixture','synthetic_only','clinical_database_used','clinical_flags_changed','statuses','calls','failures','temporary_function_removed']}))

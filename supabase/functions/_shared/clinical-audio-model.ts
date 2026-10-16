@@ -162,6 +162,13 @@ export function validateAudioSoap(value: unknown, transcript: string) {
   if (!count) throw new Error("No usable clinical claims were returned.");
   return parsed;
 }
+export const audioLanguageContextSchema = z
+  .object({
+    version: z.string().regex(/^lrv-vet-en-v[1-9]\d{0,3}$/),
+    bundle_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+    request_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict();
 export const audioProvenanceSchema = z
   .object({
     proposal_id: uuid,
@@ -177,6 +184,8 @@ export const audioProvenanceSchema = z
     created_at: z.string(),
     audio_sha256: z.string().regex(/^[a-f0-9]{64}$/),
     source_note: nonempty(1000),
+    transcription_context: audioLanguageContextSchema.nullable().default(null),
+    generation_context: audioLanguageContextSchema.nullable().default(null),
   })
   .strict();
 export function inspectAudioWav(bytes: Uint8Array) {

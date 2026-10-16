@@ -1,0 +1,29 @@
+{
+  "identity": "lrv-clinical-audio-e396718526",
+  "migrations": 195,
+  "sql_summary": "All tests successful.\nFiles=158, Tests=6708, 52 wallclock secs ( 0.81 usr  0.26 sys +  1.25 cusr  0.92 csys =  3.24 CPU)\nResult: PASS",
+  "sql_only": false,
+  "provider_requests": 0,
+  "owned_runtime_removed": true,
+  "auth_browser_restore": {
+    "apiAssertions": 36,
+    "browserAssertions": 16,
+    "sqlRestoreAssertions": 5,
+    "observedHttpLockWaits": 2,
+    "restoredRelations": 404,
+    "populatedAudioFamilies": 5,
+    "droppedCommittedBrowserResponses": 2,
+    "fakeProviderRequests": 6,
+    "realProviderRequests": 0,
+    "resultSaveRetryProved": true,
+    "cloneRemoved": true,
+    "limitations": [
+      "Fake provider proves transport/orchestration, not clinical AI accuracy",
+      "Restored-session read uses SQL role context, not HTTP",
+      "Desktop Chromium emulation is not an iPhone hardware test"
+    ]
+  },
+  "limitations": [
+    "Full app/runtime source was frozen during successful proof; a later change affected only the opt-in evaluation scorer and documentation. CI revalidates final commit."
+  ]
+}
