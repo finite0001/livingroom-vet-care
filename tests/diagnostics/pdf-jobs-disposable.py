@@ -74,8 +74,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         sql_result=command(['supabase','test','db','--workdir',str(project)],cwd=root,timeout=180)
-        assert 'All tests successful.' in sql_result and 'Files=151, Tests=6288' in sql_result
-        print('Canonical SQL regression passed: 150 files /6184 assertions.',flush=True)
+        assert 'All tests successful.' in sql_result and 'Files=158, Tests=6708' in sql_result
+        print('Canonical SQL regression passed: 158 files /6708 assertions.',flush=True)
     env={**os.environ,'DIAGNOSTICS_TEST_PROJECT':str(project),'DIAGNOSTICS_RUN_SYNTHETIC_LOCAL':'true'}
     result=command(['node','--experimental-strip-types',str(harness)],cwd=root,env=env,timeout=180)
     match=re.search(r'Genuine local PDF jobs.*54 assertions; no provider requests\.',result)

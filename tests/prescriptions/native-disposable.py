@@ -104,8 +104,8 @@ enabled = false
     print('Owned runtime status preflight passed.', flush=True)
     if args.include_sql_regression:
         regression=command(['supabase','test','db','--workdir',str(project)],cwd=root,timeout=360)
-        assert 'All tests successful.'in regression and 'Files=158, Tests=6700'in regression
-        print('Canonical SQL regression passed:158 files/6700 assertions.',flush=True)
+        assert 'All tests successful.'in regression and 'Files=158, Tests=6708'in regression
+        print('Canonical SQL regression passed:158 files/6708 assertions.',flush=True)
     stock_probe_path=root/'scripts/stock-writers/rollback-probe.sql'
     stock_probe_hash=hashlib.sha256(stock_probe_path.read_bytes()).hexdigest()
     # One simple-query packet matches the hosted SQL API; psql stdin splits commands.
@@ -218,7 +218,7 @@ if success:
                'harness_sha256': harness_hashes, 'restore_runner_sha256': restore_hash, 'restore': restore,
                'migration_sha256': migration_hashes, 'provider_requests': 0, 'replay_parity': replay_parity, 'replay_parity_runner_sha256': parity_hash,
                'decision_sql_sha256': decision_sql_hash, 'decision_races_sha256': decision_races_hash, 'publication_sql_sha256': publication_sql_hash, 'publication_races_sha256': publication_races_hash,
-               'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':158,'assertions':6700}if args.include_sql_regression else None,
+               'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':158,'assertions':6708}if args.include_sql_regression else None,
                'stock_boundary':{'api':stock_api,'concurrency':stock_locks,'restore':stock_restore,'api_sha256':stock_api_hash,'concurrency_sha256':stock_locks_hash,'restore_sha256':stock_restore_hash,'rollback_probe':stock_probe,'rollback_probe_sha256':stock_probe_hash,'handoff_rollback_probe':handoff_probe,'handoff_rollback_probe_sha256':handoff_probe_hash},
                'controlled_source_reconciliation':source_reconciliation,'controlled_source_reconciliation_sha256':source_reconciliation_hash}
     summary_path = work.parent / (identity + '-result.json')

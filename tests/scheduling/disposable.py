@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=158, Tests=6700' in result
-        print('Canonical SQL regression passed: 158 files /6700 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=158, Tests=6708' in result
+        print('Canonical SQL regression passed: 158 files /6708 assertions.', flush=True)
     # Rehearse the exact staged/primary rollback probe while the freshly replayed
     # policy is still empty, before any Auth/browser acceptance changes it.
     probe = root/'scripts/task-reconciliation/rollback-probe.sql'
@@ -210,7 +210,7 @@ enabled = false
       "select jsonb_build_object('active_staff',(select count(*)from profiles where is_active),'reconciliation_enabled',coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false),'pending_run',(select pending_run_id from operational_reconciliation_cursor),'outbox',(select count(*)from communication_outbox),'inventory_movements',(select count(*)from inventory_movements),'cron_active',(select active from cron.job where jobname='reconcile-operational-tasks'));" ]))
     assert baseline == {'active_staff':0,'reconciliation_enabled':False,'pending_run':None,'outbox':0,'inventory_movements':0,'cron_active':False}
     proof = {'canonical_migrations':len(hashes),'migration189_sha256':hashes['20261015055007_native_custody_provenance.sql'],'migration188_sha256':hashes['20261015020722_stock_writer_provenance.sql'],'migration187_sha256':hashes['20261015011200_controlled_draft_configuration.sql'],'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
-             'sql_regression':{'files':158,'assertions':6700} if args.include_sql_regression else None,
+             'sql_regression':{'files':158,'assertions':6708} if args.include_sql_regression else None,
              'staff_only':args.staff_only,'controlled_draft':{'api':controlled_receipt,'concurrency':controlled_locks,'restore':controlled_restored},'inventory':{'api':inventory_receipt,'concurrency':inventory_locks,'restore':inventory_restored},'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'inventory_rollback_probe':identity_rollback,'controlled_rollback_probe':controlled_rollback,'cleanup_baseline':baseline}
     proof_path=root/'tmp/reconciliation-release-disposable-proof.json'
     proof_path.parent.mkdir(exist_ok=True)
