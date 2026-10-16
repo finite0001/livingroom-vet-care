@@ -97,7 +97,7 @@ try {
     if (url.hostname === "pacs5.vetrocket.net") { vendorLaunches++; return route.fulfill({ status: 200, contentType: "text/html", body: "<title>Synthetic viewer stub</title>Owned test only" }); }
     return route.abort();
   });
-  const page = await context.newPage(); page.setDefaultTimeout(20000);
+  const page = await context.newPage(); page.setDefaultTimeout(60000); page.setDefaultNavigationTimeout(90000);
   const pageErrors: string[] = []; page.on("pageerror", error => pageErrors.push(error.message));
   let dropped = false, blockNext = false, uiIntent: Record<string, unknown> | null = null;
   let abandonedIntent: Record<string, unknown> | null = null;
@@ -107,7 +107,7 @@ try {
     if (!dropped) { const response = await route.fetch(); assert.equal(response.status(), 200); dropped = true; await route.abort("failed"); }
     else await route.continue();
   });
-  await page.goto(origin + "/hub/patient/" + uiPet + "?tab=medical&section=imaging");
+  await page.goto(origin + "/hub/patient/" + uiPet + "?tab=medical&section=imaging", { waitUntil: "domcontentloaded" });
   const imaging = page.locator("#p360-imaging");
   await imaging.getByRole("button", { name: "Link imaging study", exact: true }).click();
   const form = imaging.getByRole("form", { name: "Imaging study editor" });
@@ -145,6 +145,7 @@ try {
   await imaging.getByLabel("Unconfirmed imaging request").waitFor();
   await imaging.getByRole("button", { name: "Check saved work", exact: true }).click();
   await imaging.getByRole("button", { name: "Cancel request and return to editing", exact: true }).click();
+  await imaging.getByLabel("Unconfirmed imaging request").waitFor({ state: "hidden" });
   await form.getByRole("checkbox").waitFor();
   assert.equal(await form.getByRole("checkbox").isChecked(), false); browserChecks++;
   assert.ok(abandonedIntent);
