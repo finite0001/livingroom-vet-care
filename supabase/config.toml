@@ -157,3 +157,6 @@ verify_jwt = false
 verify_jwt = true
 [functions.recover-estimate-decision-grant]
 verify_jwt = true
+
+[functions.queue-invoice-reminders]
+verify_jwt = false
