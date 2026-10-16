@@ -54,3 +54,9 @@ Vendor samples and business choices block their dependent implementation, not pr
 - **Implementation team:** produce the access proofs, proposed mappings, worked production examples and acceptance evidence. Do not turn proposed defaults into confirmed practice policy silently.
 - Store access credentials through the authorized credential workflow, not in this public repository, screenshots, research notes or test fixtures. Receiving a website login does not by itself establish API access.
 - Record each answer here with its date and update the affected phase before its dependent work begins. Unanswered questions do not make the plan incomplete; they keep the affected implementation or activation gate open.
+
+## October 15 owner update
+
+- Affirm is already set up and installed; financing provider selection is resolved by Dave. Do not re-open vendor choice or enrollment implicitly. This records owner confirmation, not a new live transaction test.
+- Unpaid invoices: due on receipt, email reminders at 7, 14 and 30 days overdue, with editable settings and pause/dispute/bereavement controls.
+- Sequence: finish unpaid reminders, then use reverse-engineer-anything for authorized VetRec and VetRocket workflow analysis and native feature recreation.

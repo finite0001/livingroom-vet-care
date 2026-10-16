@@ -1,0 +1,124 @@
+{
+  "project": "kothoqicubowyhwfsrte",
+  "migration": "20261015235157",
+  "canonical_count": 190,
+  "ddl_business_fingerprints_unchanged": 16,
+  "predecessor_hashes": {
+    "start_communication_attempt": "2e43adf17b12f7368281e6ba8d45e24bed8bd269e5e47f4d68d7a45dafcbda22",
+    "daily_communication_rows_internal": "53deb16f0626b8e55908503c79f6ff55df4204848a5a5cc672b053dd807689b5"
+  },
+  "acls": {
+    "functions": [
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "start_communication_attempt_before_invoice_reminders(uuid,uuid,jsonb)"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "daily_communication_rows_before_invoice_reminders()"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres",
+          "service_role=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "start_communication_attempt(uuid,uuid,jsonb)"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "daily_communication_rows_internal()"
+      }
+    ],
+    "private_tables": [
+      {
+        "rls": true,
+        "name": "invoice_reminder_actions",
+        "raw_privileges": [
+          "postgres=arwdDxtm/postgres"
+        ]
+      },
+      {
+        "rls": true,
+        "name": "invoice_reminder_jobs",
+        "raw_privileges": [
+          "postgres=arwdDxtm/postgres"
+        ]
+      },
+      {
+        "rls": true,
+        "name": "invoice_reminder_policies",
+        "raw_privileges": [
+          "postgres=arwdDxtm/postgres"
+        ]
+      },
+      {
+        "rls": true,
+        "name": "invoice_reminder_runs",
+        "raw_privileges": [
+          "postgres=arwdDxtm/postgres"
+        ]
+      },
+      {
+        "rls": true,
+        "name": "invoice_reminder_terms",
+        "raw_privileges": [
+          "postgres=arwdDxtm/postgres"
+        ]
+      }
+    ]
+  },
+  "rollback_assertions": 53,
+  "advisors": {
+    "before": 5,
+    "after": 5,
+    "added": []
+  },
+  "function": {
+    "slug": "queue-invoice-reminders",
+    "version": 1,
+    "verify_jwt": false,
+    "import_map": true,
+    "bundle_sha256": "e792d5fd2823371bd08d8ef7370dfa0ba9dff44b4fb48a34fe7e2dfe28a402f8"
+  },
+  "auth_combined_checks": 18,
+  "browser_checks": 6,
+  "fixture_retirement": {
+    "invoice_voided": true,
+    "product_inactive": true,
+    "actors_banned": true,
+    "active_synthetic_profiles": 0,
+    "synthetic_sessions": 0,
+    "immutable_synthetic_history_retained": true
+  },
+  "gates": {
+    "policy_enabled": false,
+    "worker_enabled": false,
+    "cron_active": false
+  },
+  "reminder_jobs": 0,
+  "queue_runs": 0,
+  "enrolled_current_terms": 0,
+  "provider_requests": 0,
+  "primary_rollout_established": false,
+  "frontend_merge_established": false,
+  "additive_correction": {
+    "migration": "20261016004714",
+    "canonical_count": 191,
+    "unchanged_business_tables": 16,
+    "unchanged_reminder_families": 5,
+    "care_before_reminder_gate": true,
+    "owner_only_helper": true,
+    "existing_warning_keys_unchanged": true,
+    "staged_auth_not_repeated": true
+  }
+}

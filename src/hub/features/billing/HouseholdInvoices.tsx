@@ -1,3 +1,4 @@
+import { InvoiceReminderPanel } from "./reminders/InvoiceReminderPanel";
 import { ReconciliationPanel } from "../payments/ReconciliationPanel";
 import { PaymentDeliveryPanel } from "../payments/PaymentDeliveryPanel";
 import { PaymentCollectionPanel } from "../payments/PaymentCollectionPanel";
@@ -128,9 +129,9 @@ export function HouseholdInvoices({ clientId, onDirtyChange, externalNavigationG
       <CardContent className="space-y-4">
         {!externalNavigationGuard && <InvoiceNavigationGuard dirty={unconfirmed} />}
         <p className="text-sm text-muted-foreground">
-          USD charges and accounting credits. Payment collection is not
-          connected. Issued invoices can be prepared for reviewed email
-          queueing; delivery is tracked separately.
+          USD charges and accounting credits. Review confirmed payments and
+          payment options below. Invoice messages and unpaid reminders have
+          separate delivery histories.
         </p>
         {error && (
           <p role="alert" className="text-destructive">
@@ -225,6 +226,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [emailDirty, setEmailDirty] = useState(false);
+  const [reminderDirty, setReminderDirty] = useState(false);
   const [smsDirty, setSmsDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
   const [collectionDirty, setCollectionDirty] = useState(false);
@@ -242,13 +244,14 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
         smsDirty ||
         paymentDirty ||
         collectionDirty ||
-        reconciliationDirty || deliveryDirty,
+        reconciliationDirty || reminderDirty || deliveryDirty,
     );
     return () => onPending(false);
   }, [
     busy,
     pending,
     emailDirty,
+    reminderDirty,
     smsDirty,
     paymentDirty,
     collectionDirty,
@@ -425,7 +428,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
     smsDirty ||
     paymentDirty ||
     collectionDirty ||
-    reconciliationDirty || deliveryDirty ||
+    reconciliationDirty || reminderDirty || deliveryDirty ||
     readFailed;
   return (
     <section
@@ -671,7 +674,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             smsDirty ||
             paymentDirty ||
             collectionDirty ||
-            reconciliationDirty || deliveryDirty ||
+            reconciliationDirty || reminderDirty || deliveryDirty ||
             readFailed}
           onDirtyChange={setEmailDirty}
           onPaymentHandoff={setAttachmentRequestId}
@@ -688,7 +691,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             paymentDirty ||
             collectionDirty ||
-            reconciliationDirty || deliveryDirty ||
+            reconciliationDirty || reminderDirty || deliveryDirty ||
             readFailed}
           onDirtyChange={setSmsDirty}
         />
@@ -704,7 +707,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             smsDirty ||
             collectionDirty ||
-            reconciliationDirty || deliveryDirty ||
+            reconciliationDirty || reminderDirty || deliveryDirty ||
             readFailed}
           onDirtyChange={setPaymentDirty}
         />
@@ -719,7 +722,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             emailDirty ||
             smsDirty ||
             paymentDirty ||
-            reconciliationDirty || deliveryDirty ||
+            reconciliationDirty || reminderDirty || deliveryDirty ||
             readFailed}
           onDirtyChange={setCollectionDirty}
         />
@@ -737,7 +740,7 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
             paymentDirty ||
             collectionDirty ||
             reconciliationDirty ||
-            readFailed}
+            reminderDirty || readFailed}
           onDirtyChange={setDeliveryDirty}
         />
       )}
@@ -746,8 +749,18 @@ function InvoiceEditor({ invoiceId, clientId, onPending }: InvoiceEditorProps) {
           invoiceId={invoiceId}
           clientId={clientId}
           disabled={busy || Boolean(pending) || emailDirty || smsDirty ||
-            paymentDirty || collectionDirty || deliveryDirty || readFailed}
+            paymentDirty || collectionDirty || deliveryDirty || reminderDirty || readFailed}
           onDirtyChange={setReconciliationDirty}
+        />
+      )}
+      {(record.status === "issued" || record.status === "void") && (
+        <InvoiceReminderPanel
+          invoiceId={invoiceId}
+          clientId={clientId}
+          issuedAt={record.issued_at}
+          canEdit={record.status === "issued"}
+          disabled={busy || Boolean(pending) || emailDirty || smsDirty || paymentDirty || collectionDirty || reconciliationDirty || deliveryDirty || readFailed}
+          onDirtyChange={setReminderDirty}
         />
       )}
       {record.status === "void" && <p>Void reason: {record.void_reason}</p>}

@@ -1,10 +1,10 @@
 # Phase 6 — Financing, unpaid-balance reminders and doctor production
 
-**Status:** Planned. **Priority:** high. **Requirements:** N06–N07, N21; H09. **Depends on:** Phase 2 outbox; financing enrollment/interface and compensation attribution rules. [Confirmed decisions](decisions.md).
+**Status:** Unpaid reminders in implementation; doctor production remains planned. Affirm installed per Dave October 15. **Priority:** high. **Requirements:** N06–N07, N21; H09. **Depends on:** Phase 2 outbox; financing enrollment/interface and compensation attribution rules. [Confirmed decisions](decisions.md).
 
 ## 6A — Third-party financing and settlement
 
-- Await Susan's choice from the revised October 8 [financing infographic](../../output/pdf/living-room-vet-stripe-financing.pdf), which was emailed to her at Dave's request. Native Stripe candidates include Sunbit, Affirm, Klarna, Afterpay and Zip, subject to account eligibility. Scratchpay and CareCredit remain separate financing options. Confirm merchant enrollment and actual available terms.
+- **Resolved October 15:** Dave confirms Affirm is already set up and installed. Stripe remains selected. Do not repeat provider selection or enrollment; preserve installed configuration. The remaining bullets describe accounting/acceptance contracts, not a request to install financing again.
 - For a native Stripe choice, extend the existing card-only Checkout creation and audit payment verification, completion/async events, refunds and reconciliation for that method in staging. Do not assume a Dashboard toggle alone updates this app. For a separate provider, begin with approved application/payment links and audited staff reconciliation; automate only under an available vendor contract.
 - Keep provider application, credit approval, completed transaction and settled payment separate. Application approval does not mark a clinic invoice paid.
 - Native Stripe financing retains the existing Stripe payment/checkout identities and ledger; handle the selected method without creating a second payment. For a separate provider, extend the ledger with explicit external-provider references and audited settlement/reversal evidence. Do not invent Stripe checkout IDs to pass existing constraints. Require idempotent external transaction IDs and invoice allocations, including partial amounts.
@@ -13,7 +13,7 @@
 
 ## 6B — Unpaid-invoice reminders
 
-- Add explicit invoice due date/terms, practice-configured grace/cadence, reminder status, dispute/hold and next action. Preserve existing invoices without silently labeling them overdue until terms are reviewed.
+- Owner-confirmed defaults: due on receipt, email at 7/14/30 overdue. Add explicit invoice due date/terms, editable practice cadence, reminder status, dispute/hold and next action. Preserve existing invoices without silently labeling them overdue until terms are reviewed.
 - Add a canonical outbox reminder source using current unpaid balance and a supported payment link. Check balance, void/dispute/hold, contact consent and financing settlement at final send eligibility, not just initial scheduling.
 - Stop when paid/voided/held; partial payments update the amount. Reminder retries are idempotent and visible in Daily communications. Staff can pause with a reason; bereavement handling is separate from routine deceased-patient care suppression.
 
@@ -51,3 +51,5 @@
 - [ ] Extend payment SQL/concurrency/round-trip suites and add production-calculation, allocation and browser drilldown cases. Dave accepts the compensation formula with worked examples before real payroll use.
 
 No customer lending schedule or automatic payroll execution is introduced by these features.
+
+Current implementation and exact rollout gates: [October 15 unpaid invoice reminders](../2026-10-15-invoice-reminders/plan.md). Automatic reminders use approved clinic balance/contact instructions; reviewed payment links remain available through the existing invoice payment-delivery workflow. No lender installment schedule is imported or chased.

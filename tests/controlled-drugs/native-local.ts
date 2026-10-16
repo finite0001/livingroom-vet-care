@@ -31,7 +31,7 @@ const uid=()=>randomUUID();const productId=uid(),product2=uid(),entryId=uid();
 const packet=(product:string,id=entryId,expected:number|null=null,version=1)=>({id,expected_version:expected,definition:{product_id:product,product_version:version,stock_unit:"mL",generic_name:"Synthetic controlled substance",brand_name:null,schedule:"II",concentration:"10 mg/mL",concentration_source:"Synthetic label; not a real drug",classification_source:"Synthetic reviewed source; no actual schedule claim",configuration_note:"Draft metadata only; register not active"},review_note:"Synthetic genuine draft review",attest_review:true});
 const baseline=sql("select jsonb_build_object('stock',(select count(*)from inventory_movements),'outbox',(select count(*)from communication_outbox),'invoices',(select count(*)from billing_invoices),'payments',(select count(*)from payment_provider_profiles),'generation',(select count(*)from operational_task_generation_policy where enabled))");
 try{
- receipt(sql("select count(*)from supabase_migrations.schema_migrations;"),"189");
+ receipt(sql("select count(*)from supabase_migrations.schema_migrations;"),"191");
  const vet=await actor("DVM"),staff=await actor("STAFF");
  receipt((await service.rpc("list_controlled_drafts")).error?.code,"42501");receipt((await anon.rpc("list_controlled_drafts")).error?.code,"42501");
  for(const table of ["controlled_draft_entries","controlled_draft_reviews","controlled_draft_versions","controlled_draft_actions","controlled_draft_cancellations"]){receipt((await staff.db.from(table).select("*")).error?.code,"42501");}

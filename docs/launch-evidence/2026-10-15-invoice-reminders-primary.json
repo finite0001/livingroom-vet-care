@@ -1,0 +1,114 @@
+{
+  "project": "mgadheotkdnrsatfivjy",
+  "migrations": [
+    "20261015235157",
+    "20261016004714"
+  ],
+  "canonical_count": 191,
+  "protected_business_tables_unchanged": 16,
+  "rollback_probe": {
+    "checks": 53,
+    "rollback_only": true,
+    "fixture_leases": "SQL-only; four new invoices",
+    "provider_requests": 0
+  },
+  "function": {
+    "id": "47ee5448-32cd-47f5-8ce5-d7c144e81da9",
+    "status": "ACTIVE",
+    "version": 1,
+    "verify_jwt": false,
+    "import_map": true,
+    "sha256": "e792d5fd2823371bd08d8ef7370dfa0ba9dff44b4fb48a34fe7e2dfe28a402f8"
+  },
+  "acl": {
+    "functions": [
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "start_communication_attempt_before_invoice_reminders(uuid,uuid,jsonb)"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "daily_communication_rows_before_invoice_reminders()"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "invoice_reminder_lock()"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres",
+          "service_role=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "start_communication_attempt(uuid,uuid,jsonb)"
+      },
+      {
+        "acl": [
+          "postgres=X/postgres"
+        ],
+        "owner": "postgres",
+        "signature": "daily_communication_rows_internal()"
+      }
+    ],
+    "private_tables": [
+      {
+        "acl": [
+          "postgres=arwdDxtm/postgres"
+        ],
+        "rls": true,
+        "name": "invoice_reminder_actions"
+      },
+      {
+        "acl": [
+          "postgres=arwdDxtm/postgres"
+        ],
+        "rls": true,
+        "name": "invoice_reminder_policies"
+      },
+      {
+        "acl": [
+          "postgres=arwdDxtm/postgres"
+        ],
+        "rls": true,
+        "name": "invoice_reminder_terms"
+      },
+      {
+        "acl": [
+          "postgres=arwdDxtm/postgres"
+        ],
+        "rls": true,
+        "name": "invoice_reminder_jobs"
+      },
+      {
+        "acl": [
+          "postgres=arwdDxtm/postgres"
+        ],
+        "rls": true,
+        "name": "invoice_reminder_runs"
+      }
+    ],
+    "lock_definition": "CREATE OR REPLACE FUNCTION public.invoice_reminder_lock()\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if current_setting('transaction_isolation')<>'read committed' then\n  raise exception 'Invoice reminders require READ COMMITTED' using errcode='23514';\n end if;\n perform public.care_eligibility_lock();\n perform pg_advisory_xact_lock(80261015);\nend $function$\n"
+  },
+  "advisors": {
+    "before": 5,
+    "after": 5,
+    "addedWarningKeys": [],
+    "infoPrivateNoPolicyFindingsDelta": 5
+  },
+  "reminder_rows": 0,
+  "policy_enabled": false,
+  "worker_enabled": false,
+  "cron_active": false,
+  "provider_requests": 0,
+  "frontend_merged": false,
+  "practice_commissioned": false
+}
