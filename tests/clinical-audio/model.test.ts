@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import {
+  audioLanguageContextSchema,
   AUDIO_MAX_BYTES,
   AUDIO_RATE,
   audioDigest,
@@ -16,6 +17,12 @@ import {
   createClinicalAudioHandler,
   parseClinicalSoapResponse,
 } from "../../supabase/functions/_shared/clinical-audio-handler.ts";
+import {
+  veterinaryAmbiguityFlag,
+  veterinaryContextReceipt,
+  veterinaryTranscriptionContext,
+  veterinaryVocabulary,
+} from "../../supabase/functions/_shared/clinical-veterinary-context.ts";
 const transcript = "Owner reports cough for two days. No exam was dictated.";
 const claims = {
   subjective: [{ text: "Cough for two days.", quote: "cough for two days" }],
@@ -248,6 +255,7 @@ function fixture() {
     dispatch = true,
     lostSave = false,
     behavior = "success";
+  const receipts: Record<string, unknown>[] = [];
   const failed: { uncertain: boolean; code: string }[] = [];
   const make = createClinicalAudioHandler({
     enabled: true,
@@ -285,6 +293,8 @@ function fixture() {
     dispatch: async () => dispatch,
     finish: async (_id, result) => {
       finishes++;
+      receipts.push(result);
+      audioLanguageContextSchema.parse(result.language_context);
       if (intent.stage === "transcribe")
         job.transcript = (result.payload as { text: string }).text;
       else job.proposal_id = attempt;
@@ -323,6 +333,25 @@ function fixture() {
       if (intent.stage === "transcribe") {
         assert.ok(options?.body instanceof FormData);
         assert.equal(options.body.get("model"), "gpt-transcribe");
+        assert.equal(
+          options.body.get("prompt"),
+          veterinaryTranscriptionContext.prompt,
+        );
+        assert.deepEqual(
+          options.body.getAll("keywords[]"),
+          veterinaryTranscriptionContext.keywords,
+        );
+        assert.deepEqual(options.body.getAll("languages[]"), ["en"]);
+        assert.equal(options.body.has("language"), false);
+        const expected = await veterinaryContextReceipt({
+          model: "gpt-transcribe",
+          response_format: "json",
+          stream: false,
+          audio_sha256: job.sha256,
+          ...veterinaryTranscriptionContext,
+        });
+        // Verified below against the actual saved receipt, not just a standalone builder.
+        receipts.push({ expected_context: expected });
         assert.equal((options.body.get("file") as File).size, 32044);
         return Response.json(
           { text: transcript },
@@ -332,6 +361,10 @@ function fixture() {
       const body = JSON.parse(String(options?.body));
       assert.equal(body.store, false);
       assert.equal(body.model, "gpt-6-luna");
+      assert.ok(body.instructions.includes("PU/PD"));
+      assert.ok(body.instructions.includes("Cerenia"));
+      assert.equal(JSON.parse(body.input).transcript, job.transcript);
+      receipts.push({ expected_context: await veterinaryContextReceipt(body) });
       return Response.json(response(), {
         headers: { "x-request-id": "gen-fixture" },
       });
@@ -359,7 +392,7 @@ function fixture() {
     intent,
     handler: make,
     request,
-    stats: () => ({ calls, finishes, claimed, failed }),
+    stats: () => ({ calls, finishes, claimed, failed, receipts }),
     set: (v: { dispatch?: boolean; lostSave?: boolean; behavior?: string }) => {
       if (v.dispatch !== undefined) dispatch = v.dispatch;
       if (v.lostSave !== undefined) lostSave = v.lostSave;
@@ -459,4 +492,98 @@ test("HTTP200 headers with an interrupted provider body remain an uncertain poss
     { uncertain: true, code: "provider_response_unconfirmed" },
   ]);
   assert.equal(f.job.transcript, null);
+});
+
+test("Both real handler stages persist fingerprints of the exact context sent without rewriting source", async () => {
+  for (const stage of ["transcribe", "generate"] as const) {
+    const f = fixture();
+    f.intent.stage = stage;
+    if (stage === "generate") f.job.transcript = transcript;
+    assert.equal((await f.handler(await f.request())).status, 200);
+    const receipts = f.stats().receipts;
+    assert.deepEqual(
+      receipts[1].language_context,
+      receipts[0].expected_context,
+    );
+    assert.equal(f.job.transcript, transcript);
+  }
+});
+test("Slang and risky medication/frequency/laterality tokens force review even when model omits flags", () => {
+  const source = "Owner says ADR. Note says dex SID AS. No dose is confirmed.";
+  const value = response({
+    ...claims,
+    subjective: [{ text: "Owner says ADR.", quote: "Owner says ADR." }],
+    review_flags: [],
+  });
+  const out = parseClinicalSoapResponse(value, source).payload;
+  assert.equal(out.subjective[0].text, "Owner says ADR.");
+  assert.equal(out.review_flags.length, 1);
+  for (const term of ["ADR", "DEX", "SID", "AS"])
+    assert.ok(out.review_flags[0].includes(term));
+  assert.equal(out.objective.length, 0);
+});
+test("Ambiguity matching respects word boundaries, PU/PD, units and bounds", () => {
+  assert.equal(
+    veterinaryAmbiguityFlag(
+      "Owner reports PU/PD. BAR. Rads discussed, not performed. No vomiting.",
+    ),
+    null,
+  );
+  assert.equal(
+    veterinaryAmbiguityFlag(
+      "Cardiac assessment and past medical history. Written as discussed with owner. An ad was mentioned.",
+    ),
+    null,
+  );
+  for (const source of [
+    "PU alone",
+    "q12h",
+    "0.5 IU",
+    "NAD",
+    "bup",
+    "pred",
+    "OD",
+  ])
+    assert.ok(veterinaryAmbiguityFlag(source));
+  const long = Array.from({ length: 100 }, (_, i) => `q${i}h`).join(" ");
+  assert.ok(veterinaryAmbiguityFlag(long)!.length <= 500);
+  assert.match(veterinaryAmbiguityFlag(long)!, /80 more tokens/);
+});
+test("A full provider flag list cannot silently drop the required terminology warning", () => {
+  assert.throws(() =>
+    parseClinicalSoapResponse(
+      response({
+        ...claims,
+        subjective: [{ text: "ADR", quote: "ADR" }],
+        review_flags: Array(10).fill("Important uncertainty"),
+      }),
+      "ADR",
+    ),
+  );
+});
+test("Vocabulary context is bounded lexical data and receipt changes with the actual request", async () => {
+  assert.equal(
+    new Set(veterinaryVocabulary.map((e) => e.term)).size,
+    veterinaryVocabulary.length,
+  );
+  assert.ok(veterinaryTranscriptionContext.keywords.length <= 96);
+  assert.ok(veterinaryTranscriptionContext.prompt.length <= 1000);
+  for (const keyword of veterinaryTranscriptionContext.keywords)
+    assert.doesNotMatch(keyword, /[<>\r\n]/);
+  const first = await veterinaryContextReceipt({
+    model: "gpt-transcribe",
+    ...veterinaryTranscriptionContext,
+  });
+  const next = await veterinaryContextReceipt({
+    model: "gpt-6-luna",
+    ...veterinaryTranscriptionContext,
+  });
+  assert.equal(first.bundle_sha256, next.bundle_sha256);
+  assert.notEqual(first.request_sha256, next.request_sha256);
+  for (const invalid of [
+    { ...first, version: "unknown" },
+    { ...first, bundle_sha256: "bad" },
+    { ...first, extra: true },
+  ])
+    assert.throws(() => audioLanguageContextSchema.parse(invalid));
 });

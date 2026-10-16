@@ -1,0 +1,181 @@
+{
+  "synthetic_only": true,
+  "maximum_paid_calls_per_run": 10,
+  "provider_calls_this_run": 0,
+  "assertions_revision": 2,
+  "passed": true,
+  "observed_paid_calls_final_corpus": 10,
+  "observed_paid_calls_initial_and_targeted_checks": 12,
+  "fixtures": [
+    {
+      "fixture": "baseline",
+      "seconds": 19.7146875,
+      "audio_sha256": "bbb7ca16d2164bae96c3fe852e979302664f745c79086520ea6aa7cabb7a0f2d",
+      "handler_sha256": "d8bd79e433c38585389e8108daf8793cdc18dbecf47599bed9d8b3f6bbf7b6b4",
+      "context": {
+        "version": "lrv-vet-en-v1",
+        "bundle_sha256": "940e78c763313a3bed0b0b48e5c482d21d082140f434ee1e4e6461615fdf1ef1",
+        "request_sha256": "6ad1e0c797de9f09764f9339f08e442fd004af681a3c5b07cc04760bf798e4f7"
+      },
+      "checks": [
+        {
+          "check": "no unspoken vocabulary leakage",
+          "passed": true
+        },
+        {
+          "check": "no fabricated exam",
+          "passed": true
+        },
+        {
+          "check": "negated symptom preserved",
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "temporary_function_removed": true
+    },
+    {
+      "fixture": "shorthand",
+      "seconds": 21.1775625,
+      "audio_sha256": "c1d3981528bb63473ac861e2710b4141fc96bc1ccab086b2440667857d0d1472",
+      "handler_sha256": "d8bd79e433c38585389e8108daf8793cdc18dbecf47599bed9d8b3f6bbf7b6b4",
+      "context": {
+        "version": "lrv-vet-en-v1",
+        "bundle_sha256": "940e78c763313a3bed0b0b48e5c482d21d082140f434ee1e4e6461615fdf1ef1",
+        "request_sha256": "6668ca903b246b71490f2613f9147d7dae5787c4f2b4a3d71983251fb67a3c60"
+      },
+      "checks": [
+        {
+          "check": "ADR recognized",
+          "passed": true
+        },
+        {
+          "check": "BAR recognized",
+          "passed": true
+        },
+        {
+          "check": "CBC recognized",
+          "passed": true
+        },
+        {
+          "check": "rads recognized",
+          "passed": true
+        },
+        {
+          "check": "negation retained",
+          "passed": true
+        },
+        {
+          "check": "ADR did not invent specific symptoms",
+          "passed": true
+        },
+        {
+          "check": "diagnostics remain planned",
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "temporary_function_removed": true
+    },
+    {
+      "fixture": "medication",
+      "seconds": 23.4995625,
+      "audio_sha256": "193d19f5b1ba95dab180dea1626ac7f8928923eefc438e58d355c02d0ac6c580",
+      "handler_sha256": "d8bd79e433c38585389e8108daf8793cdc18dbecf47599bed9d8b3f6bbf7b6b4",
+      "context": {
+        "version": "lrv-vet-en-v1",
+        "bundle_sha256": "940e78c763313a3bed0b0b48e5c482d21d082140f434ee1e4e6461615fdf1ef1",
+        "request_sha256": "c5967dc45401dfbf34d6ef9272cb4859da6069ee2c17ac5a8dc54328dbb7bf45"
+      },
+      "checks": [
+        {
+          "check": "distinct medication names recognized",
+          "passed": true
+        },
+        {
+          "check": "decimal dose retained without conversion",
+          "passed": true
+        },
+        {
+          "check": "no administration inferred",
+          "passed": true
+        },
+        {
+          "check": "no fabricated exam",
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "temporary_function_removed": true
+    },
+    {
+      "fixture": "vaccines",
+      "seconds": 21.3386875,
+      "audio_sha256": "68c638496798f097bd13eb4fd6b64b68bacdf3d71aef8e0c5041e0bdb50cab4a",
+      "handler_sha256": "d8bd79e433c38585389e8108daf8793cdc18dbecf47599bed9d8b3f6bbf7b6b4",
+      "context": {
+        "version": "lrv-vet-en-v1",
+        "bundle_sha256": "940e78c763313a3bed0b0b48e5c482d21d082140f434ee1e4e6461615fdf1ef1",
+        "request_sha256": "65d3a7f3459343a1b05209399b5acb72e13695badf8c7846fe7ccc088c6a2d6d"
+      },
+      "checks": [
+        {
+          "check": "vaccine names recognized",
+          "passed": true
+        },
+        {
+          "check": "declined care retained",
+          "passed": true
+        },
+        {
+          "check": "status uncertainty retained",
+          "passed": true
+        },
+        {
+          "check": "no fabricated exam",
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "temporary_function_removed": true
+    },
+    {
+      "fixture": "ambiguity",
+      "seconds": 19.0283125,
+      "audio_sha256": "e503e618cfeb5854f3f1ac33ffe91e3c3ebb64904bd8aa0eaa51587ead955afc",
+      "handler_sha256": "d8bd79e433c38585389e8108daf8793cdc18dbecf47599bed9d8b3f6bbf7b6b4",
+      "context": {
+        "version": "lrv-vet-en-v1",
+        "bundle_sha256": "940e78c763313a3bed0b0b48e5c482d21d082140f434ee1e4e6461615fdf1ef1",
+        "request_sha256": "008d9ef33a3dce006978951924fbab3684c07c806170e8eca5d8a08637589374"
+      },
+      "checks": [
+        {
+          "check": "drug nickname preserved",
+          "passed": true
+        },
+        {
+          "check": "deterministic review warning present",
+          "passed": true
+        },
+        {
+          "check": "no guessed drug expansion",
+          "passed": true
+        },
+        {
+          "check": "no fabricated exam",
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "temporary_function_removed": true
+    }
+  ],
+  "limitations": [
+    "Five fixed English synthetic recordings are a smoke evaluation, not clinical accuracy certification or a controlled comparison without vocabulary.",
+    "Initial hints missed dex; ambiguous spellings were added. A targeted intermediate run confused site with SID; the final ambiguity recording rendered side for site. Clinician review of source audio and uncertainty remains necessary.",
+    "One corpus assertion revision initially rejected semantic negation, valid negative source statements and dose detail present in a review flag. Raw results were rechecked locally without paid calls; no clinical finding was fabricated.",
+    "No model fine-tuning, private vendor corpus access or authenticated VetRec parity established.",
+    "Practice clinical-processing policy and flags remain inactive."
+  ]
+}

@@ -341,7 +341,7 @@ let cleanupFailure: unknown = null;
 try {
   sqlCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "194",
+    "195",
   );
   const first = await actor("First"),
     second = await actor("Second");
@@ -548,6 +548,17 @@ try {
     p_proposal_id: generation.attempt_id,
   });
   apiCheck(provenance.payload, payload);
+  apiCheck(provenance.transcription_context.version, "lrv-vet-en-v1");
+  apiCheck(provenance.generation_context.version, "lrv-vet-en-v1");
+  apiCheck(
+    provenance.transcription_context.bundle_sha256,
+    provenance.generation_context.bundle_sha256,
+  );
+  apiCheck(
+    provenance.transcription_context.request_sha256 !==
+      provenance.generation_context.request_sha256,
+    true,
+  );
   // Unknown provider transport is durable, explicit retry is required and late results are fenced.
   const lost = await reserve(),
     lostIntent = intent(lost.id);
@@ -862,6 +873,13 @@ try {
     .getByRole("region", { name: "AI source provenance", exact: true })
     .waitFor();
   browserChecks++;
+  browserCheck(
+    await review
+      .locator('[aria-label="Veterinary vocabulary provenance"]')
+      .textContent()
+      .then((s) => s?.includes("lrv-vet-en-v1")),
+    true,
+  );
   await page.setViewportSize({ width: 390, height: 844 });
   const reviewPanel = review.getByRole("region", {
     name: "Review dictation draft",

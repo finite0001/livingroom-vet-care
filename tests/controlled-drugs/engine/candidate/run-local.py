@@ -29,7 +29,7 @@ project=work/'project'
 result_dir=Path(tempfile.mkdtemp(prefix=identity+'-evidence-'))
 log=(result_dir/'runner.log').open('w')
 started=False
-runtime=dict(identity=identity,work=str(work),project=str(project),root=str(root),baseline_migrations=194,
+runtime=dict(identity=identity,work=str(work),project=str(project),root=str(root),baseline_migrations=195,
  canonical_candidate=None,controlled_policy_or_opening=False,new_rpc_grants=False,removed=False)
 
 def command(argv,input=None,timeout=120):
@@ -47,7 +47,7 @@ def sql(query):
  return command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=query)
 
 files=sorted((root/'supabase/migrations').glob('*.sql'))
-assert len(files)==194,'Candidate targets the exact 194-migration release; review before rebasing'
+assert len(files)==195,'Candidate targets the exact 195-migration release; review before rebasing'
 inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+[
  root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql',
  root/'supabase/tests/native_fulfillment.test.sql']

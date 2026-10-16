@@ -106,11 +106,11 @@ function DictationSession({
       ));
   const reviewDirty = Boolean(
     selected &&
-      !selected.review &&
-      (chosen.length ||
-        reviewNote ||
-        reviewed ||
-        soapFields.some((f) => edits[f] !== selected.sections[f].text)),
+    !selected.review &&
+    (chosen.length ||
+      reviewNote ||
+      reviewed ||
+      soapFields.some((f) => edits[f] !== selected.sections[f].text)),
   );
   const dirty = Boolean(importDirty || reviewDirty || pending || busy);
   const disabled =
@@ -559,6 +559,19 @@ function DictationSession({
                   SOAP draft: {provenance.data.soap_model}. The app does not
                   retain the audio file. These checks verify source references,
                   not medical accuracy.
+                </p>
+                <p
+                  className="text-sm"
+                  aria-label="Veterinary vocabulary provenance"
+                >
+                  Veterinary vocabulary — transcription:{" "}
+                  {provenance.data.transcription_context?.version ??
+                    "not recorded (earlier result)"}
+                  ; SOAP:{" "}
+                  {provenance.data.generation_context?.version ??
+                    "not recorded (earlier result)"}
+                  . Terminology hints do not establish patient facts. Confirm
+                  abbreviations and medication details against the transcript.
                 </p>
                 {!!provenance.data.payload.review_flags.length && (
                   <div role="note">
