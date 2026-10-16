@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { encounterDraft, newEncounter, denverInstant, errorText, type EncounterDraft } from './editor-state';
 import { useClinicalEncounters } from './queries';
 import { PatientProblems } from './PatientProblems';
+import { ClinicalDictationAudio } from './dictation/audio/ClinicalDictationAudio';
 import { ClinicalDictationReview } from './dictation/ClinicalDictationReview';
 
 interface ClinicalWorkspaceProps { petId: string; disabled?: boolean; onDirtyChange?: (dirty: boolean) => void }
@@ -31,13 +32,17 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
   const [serviceDirty, setServiceDirty] = useState(false);
   const [dictationDirty, setDictationDirty] = useState(false);
   const [dictationBusy, setDictationBusy] = useState(false);
+  const [audioDirty, setAudioDirty] = useState(false);
+  const [audioBusy, setAudioBusy] = useState(false);
+  const assistanceDirty = dictationDirty || audioDirty;
+  const assistanceBusy = dictationBusy || audioBusy;
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [confirmSign, setConfirmSign] = useState(false);
   const dirty = !!draft && JSON.stringify(draft) !== baseline;
-  const unsaved = dirty || !!addendum.trim() || problemDirty || serviceDirty || dictationDirty || busy;
+  const unsaved = dirty || !!addendum.trim() || problemDirty || serviceDirty || assistanceDirty || busy;
   useEffect(() => {
     onDirtyChange?.(unsaved);
     return () => onDirtyChange?.(false);
@@ -55,7 +60,7 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
   } });
   const author = (id: string | null) => authors.data?.find(person => person.id === id)?.full_name || (id ? `Staff ${id}` : 'Unknown staff');
   const select = (row: Tables<'clinical_encounters'> | null) => {
-    if (busy || serviceDirty || dictationBusy || ((dirty || addendum.trim() || dictationDirty) && !window.confirm('Discard unsaved clinical changes?'))) return;
+    if (busy || serviceDirty || assistanceBusy || ((dirty || addendum.trim() || assistanceDirty) && !window.confirm('Discard unsaved clinical changes?'))) return;
     const next = row ? encounterDraft(row) : newEncounter();
     setRecord(row); setDraft(next); setBaseline(JSON.stringify(next)); setAddendum(''); setError(''); setMessage('');
   };
@@ -65,7 +70,7 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
     void cache.invalidateQueries({ queryKey: ['clinical-encounters', petId] });
   };
   const run = async (action: () => Promise<void>) => {
-    if (busyRef.current || dictationDirty || dictationBusy) return;
+    if (busyRef.current || assistanceDirty || assistanceBusy) return;
     if (!session?.user.id) { setError('Sign in to save clinical records.'); return; }
     busyRef.current = true; setBusy(true); setError(''); setMessage('');
     try { await action(); } catch (error) { setError(errorText(error)); }
@@ -105,25 +110,26 @@ export function ClinicalWorkspace({ petId, disabled = false, onDirtyChange }: Cl
   return <section className="space-y-6" aria-label="Clinical records">
     <PatientProblems petId={petId} disabled={disabled} onDirtyChange={setProblemDirty} />
     <PerformedServices petId={petId} encounterId={record?.id ?? null} disabled={disabled} onDirtyChange={setServiceDirty} />
-    <Card><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-lg">Clinical encounters</CardTitle><Button disabled={disabled || busy || serviceDirty || dictationBusy} onClick={() => select(null)}>New encounter</Button></CardHeader><CardContent className="space-y-4">
+    <Card><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-lg">Clinical encounters</CardTitle><Button disabled={disabled || busy || serviceDirty || assistanceBusy} onClick={() => select(null)}>New encounter</Button></CardHeader><CardContent className="space-y-4">
       {disabled && <p className="text-sm text-muted-foreground">This patient is inactive. Existing drafts can be corrected; encounter history and signed-record addenda remain available.</p>}
       {encounters.isPending && <p role="status">Loading encounters…</p>}
       {encounters.isError && <p role="alert" className="text-destructive">Could not load encounters. <button className="underline" onClick={() => void encounters.refetch()}>Retry</button></p>}
       {encounters.data?.length === 0 && <p className="text-sm text-muted-foreground">No clinical encounters recorded.</p>}
-      <div className="flex flex-wrap gap-2">{encounters.data?.map(row => <Button key={row.id} variant={record?.id === row.id ? 'secondary' : 'outline'} disabled={busy || serviceDirty || dictationBusy} onClick={() => select(row)}>{dateTime(row.visit_at)} · {row.visit_type} · {row.status}</Button>)}</div>
+      <div className="flex flex-wrap gap-2">{encounters.data?.map(row => <Button key={row.id} variant={record?.id === row.id ? 'secondary' : 'outline'} disabled={busy || serviceDirty || assistanceBusy} onClick={() => select(row)}>{dateTime(row.visit_at)} · {row.visit_type} · {row.status}</Button>)}</div>
       {draft && <div className="space-y-4 border-t pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{signed ? 'Signed encounter' : record ? 'Edit draft encounter' : 'New encounter'}</h3><p role="status" className="text-sm text-muted-foreground">{busy ? 'Saving…' : dirty ? 'Unsaved changes' : message || (record ? 'Saved record' : 'Not saved yet')}</p></div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        {record && <Button size="sm" variant="outline" disabled={busy || dictationDirty} onClick={() => void reload()}>Reload latest saved record</Button>}
+        {record && <Button size="sm" variant="outline" disabled={busy || assistanceDirty} onClick={() => void reload()}>Reload latest saved record</Button>}
         {record && !signed && <p className="text-sm text-muted-foreground">Created by {author(record.created_by)} · Last updated by {author(record.updated_by)} on {dateTime(record.updated_at)} (America/Denver).</p>}
         {signed && <p className="text-sm">Signed by {author(record.signed_by)} on {record.signed_at ? dateTime(record.signed_at) : 'unknown time'} (America/Denver). Original text is locked.</p>}
-        <fieldset disabled={busy || dictationDirty || (disabled && !record)} className="space-y-4"><legend className="sr-only">Encounter details</legend><div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="visit-date">Visit date and time (America/Denver)</Label><Input readOnly={signed} id="visit-date" type="datetime-local" value={draft.visit_at} onChange={event => setDraft({ ...draft, visit_at: event.target.value })} /></div><div className="space-y-2"><Label htmlFor="visit-type">Visit type</Label><select disabled={signed} id="visit-type" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-100" value={draft.visit_type} onChange={event => { const visit_type = event.target.value as 'clinic' | 'housecall'; setDraft({ ...draft, visit_type, location: visit_type === 'clinic' ? practiceAddress : '' }); }}><option value="clinic">Clinic</option><option value="housecall">Housecall</option></select></div></div>
+        <fieldset disabled={busy || assistanceDirty || (disabled && !record)} className="space-y-4"><legend className="sr-only">Encounter details</legend><div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="visit-date">Visit date and time (America/Denver)</Label><Input readOnly={signed} id="visit-date" type="datetime-local" value={draft.visit_at} onChange={event => setDraft({ ...draft, visit_at: event.target.value })} /></div><div className="space-y-2"><Label htmlFor="visit-type">Visit type</Label><select disabled={signed} id="visit-type" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-100" value={draft.visit_type} onChange={event => { const visit_type = event.target.value as 'clinic' | 'housecall'; setDraft({ ...draft, visit_type, location: visit_type === 'clinic' ? practiceAddress : '' }); }}><option value="clinic">Clinic</option><option value="housecall">Housecall</option></select></div></div>
           <div className="space-y-2"><Label htmlFor="visit-location">Visit location</Label><Input readOnly={signed} id="visit-location" maxLength={1000} value={draft.location} onChange={event => setDraft({ ...draft, location: event.target.value })} /></div>
           {(['subjective', 'objective', 'assessment', 'plan'] as const).map(field => <div key={field} className="space-y-2"><Label htmlFor={`soap-${field}`} >{field.charAt(0).toUpperCase() + field.slice(1)}</Label><Textarea readOnly={signed} id={`soap-${field}`} rows={5} maxLength={50000} value={draft[field]} onChange={event => setDraft({ ...draft, [field]: event.target.value })} /></div>)}
         </fieldset>
-        {!signed && <div className="flex flex-wrap gap-2"><Button disabled={busy || dictationDirty || (disabled && !record) || (!!record && !dirty)} onClick={() => void save()}>Save draft</Button><Button variant="outline" disabled={busy || dictationDirty || dirty || !record} onClick={() => setConfirmSign(true)}>Review and sign</Button><p className="w-full text-xs text-muted-foreground">Save explicitly. Clinical text is not automatically saved.</p></div>}
-        {record && <ClinicalDictationReview encounter={record} blocked={disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy} onDirtyChange={setDictationDirty} onBusyChange={setDictationBusy} onAccepted={adopt} />}
-        {signed && <div className="space-y-3"><h4 className="font-semibold">Addenda</h4>{addenda.isPending && <p role="status">Loading addenda…</p>}{addenda.isError && <p role="alert" className="text-destructive">Could not load addenda. <button className="underline" onClick={() => void addenda.refetch()}>Retry</button></p>}{addenda.data?.map(item => <article key={item.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{author(item.created_by)} · {dateTime(item.created_at)} (America/Denver)</p><p className="mt-2 whitespace-pre-wrap text-sm">{item.content}</p></article>)}<Label htmlFor="addendum">Append a correction or additional information</Label><Textarea id="addendum" value={addendum} maxLength={50000} disabled={busy || dictationDirty} onChange={event => setAddendum(event.target.value)} /><Button disabled={busy || dictationDirty || !addendum.trim()} onClick={() => void append()}>Save addendum</Button></div>}
+        {!signed && <div className="flex flex-wrap gap-2"><Button disabled={busy || assistanceDirty || (disabled && !record) || (!!record && !dirty)} onClick={() => void save()}>Save draft</Button><Button variant="outline" disabled={busy || assistanceDirty || dirty || !record} onClick={() => setConfirmSign(true)}>Review and sign</Button><p className="w-full text-xs text-muted-foreground">Save explicitly. Clinical text is not automatically saved.</p></div>}
+        {record && <ClinicalDictationAudio encounter={record} blocked={disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || dictationDirty || dictationBusy} onDirtyChange={setAudioDirty} onBusyChange={setAudioBusy} />}
+        {record && <ClinicalDictationReview encounter={record} blocked={disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || audioDirty || audioBusy} onDirtyChange={setDictationDirty} onBusyChange={setDictationBusy} onAccepted={adopt} />}
+        {signed && <div className="space-y-3"><h4 className="font-semibold">Addenda</h4>{addenda.isPending && <p role="status">Loading addenda…</p>}{addenda.isError && <p role="alert" className="text-destructive">Could not load addenda. <button className="underline" onClick={() => void addenda.refetch()}>Retry</button></p>}{addenda.data?.map(item => <article key={item.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{author(item.created_by)} · {dateTime(item.created_at)} (America/Denver)</p><p className="mt-2 whitespace-pre-wrap text-sm">{item.content}</p></article>)}<Label htmlFor="addendum">Append a correction or additional information</Label><Textarea id="addendum" value={addendum} maxLength={50000} disabled={busy || assistanceDirty} onChange={event => setAddendum(event.target.value)} /><Button disabled={busy || assistanceDirty || !addendum.trim()} onClick={() => void append()}>Save addendum</Button></div>}
       </div>}
     </CardContent></Card>
     <AlertDialog open={confirmSign} onOpenChange={setConfirmSign}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Sign this clinical encounter?</AlertDialogTitle><AlertDialogDescription>The saved SOAP record will be locked and attributed to your account. Review the text before signing. Later corrections must be recorded as addenda.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Keep reviewing</AlertDialogCancel><AlertDialogAction onClick={() => void sign()}>Sign saved encounter</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>

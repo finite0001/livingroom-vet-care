@@ -1,0 +1,84 @@
+{
+  "synthetic_only": true,
+  "clinical_database_used": false,
+  "clinical_flags_changed": false,
+  "seconds": 19.7146875,
+  "statuses": [
+    {
+      "stage": "transcribe",
+      "status": 200
+    },
+    {
+      "stage": "generate",
+      "status": 200
+    }
+  ],
+  "calls": [
+    {
+      "stage": "transcribe",
+      "path": "/v1/audio/transcriptions"
+    },
+    {
+      "stage": "generate",
+      "path": "/v1/responses"
+    }
+  ],
+  "failures": [],
+  "results": [
+    {
+      "stage": "transcribe",
+      "request_id": "req_9f7bb0fecf4c47df9a1722cb3bd0d8ae",
+      "response_id": "",
+      "provider_model": "",
+      "contract_version": "clinical-audio-v1",
+      "payload": {
+        "text": "Synthetic veterinary test. This is a fictional patient named Test Dog. The owner reports coughing for two days, with no vomiting. No physical examination findings were dictated. Assessment: cause of cough is undetermined. Plan: schedule an examination. No medication was prescribed. End of synthetic test."
+      }
+    },
+    {
+      "stage": "generate",
+      "request_id": "req_4008d1578f304df6ac5abae96717e561",
+      "response_id": "resp_0912ff8ccf2060b6016ad2406ba11087d0a25ed26a746830c4",
+      "provider_model": "gpt-6-luna",
+      "payload": {
+        "subjective": [
+          {
+            "text": "Owner reports coughing for two days.",
+            "quote": "The owner reports coughing for two days"
+          },
+          {
+            "text": "Owner reports no vomiting.",
+            "quote": "with no vomiting"
+          }
+        ],
+        "objective": [],
+        "assessment": [
+          {
+            "text": "Cause of cough is undetermined.",
+            "quote": "cause of cough is undetermined"
+          }
+        ],
+        "plan": [
+          {
+            "text": "Schedule an examination.",
+            "quote": "schedule an examination"
+          },
+          {
+            "text": "No medication was prescribed.",
+            "quote": "No medication was prescribed"
+          }
+        ],
+        "review_flags": []
+      },
+      "contract_version": "clinical-audio-v1"
+    }
+  ],
+  "staging_project": "kothoqicubowyhwfsrte",
+  "audio_sha256": "bbb7ca16d2164bae96c3fe852e979302664f745c79086520ea6aa7cabb7a0f2d",
+  "handler_sha256": "21e1efb19ab886891974d1d1d8e2ad1984afe4ede982505148e6c32cd2003e40",
+  "temporary_function_removed": true,
+  "limitations": [
+    "One fixed synthetic example; not clinical validation",
+    "No patient data and no clinical activation"
+  ]
+}
