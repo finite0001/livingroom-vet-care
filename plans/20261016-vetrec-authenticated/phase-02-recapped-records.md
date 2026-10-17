@@ -2,6 +2,8 @@
 
 Priority: after Phase 1. Status: planned; no recap processing activated. Vendor observation VR-A06 establishes a form, not verified OCR or citation behavior. This is an independent native implementation.
 
+Implementation preparation: [strict source/job/review contract](recap-contract.md), [database race and preservation acceptance matrix](recap-db-acceptance.md), [patient workspace and recovery map](recap-ui-map.md), and [synthetic model-fidelity evaluation](recap-model-evaluation.md). These documents define planned behavior and proof; they do not establish implemented recap functionality or completed runtime acceptance.
+
 ## First increment
 
 Patient → Medical → Recap → choose signed encounters and optional native problem-list evidence → review the exact source set → freeze → explicitly generate → check each dated claim and citation → retain a reviewed internal recap. A recap is a summary of the selected records as of capture, never a complete/current chart, diagnosis, SOAP update, medication order, certificate or signature.
