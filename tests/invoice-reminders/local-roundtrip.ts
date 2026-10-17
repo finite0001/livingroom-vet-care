@@ -122,7 +122,7 @@ let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null,
 try {
   check(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "201",
+    "202",
   );
   const admin = await actor("ADMIN"),
     staff = await actor("STAFF");

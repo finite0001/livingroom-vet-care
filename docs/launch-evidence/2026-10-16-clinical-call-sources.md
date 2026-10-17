@@ -1,6 +1,6 @@
 # Clinical call sources — Phase 3A engineering evidence
 
-Date: 2026-10-16. Status: local engineering and staging backend verification passed; exact-head CI and specific PR merge approval remain pending. No primary rollout or real call processing approval is claimed. The [sanitized evidence manifest](2026-10-16-clinical-call-sources.json) preserves each run's original receipt hash and exact input inventory. Source base: `c9edcaa3de19a150d8e77bca14475e924cf6e547`; these proofs bind the subsequent uncommitted package by file hash, before this documentation commit.
+Date: 2026-10-16. Update 2026-10-17: local engineering and staging verification passed; PR 271 passed exact-head CI, received specific owner approval, merged and completed its [primary rollout](2026-10-17-clinical-call-sources-primary-rollout.md). Real call processing remains off and uncommissioned. The [sanitized evidence manifest](2026-10-16-clinical-call-sources.json) preserves each original run's receipt hash and exact input inventory. Source base: `c9edcaa3de19a150d8e77bca14475e924cf6e547`; these proofs bind the subsequent package by file hash, before its documentation commit.
 
 ## Delivered boundary
 
@@ -53,7 +53,7 @@ Staging backend verification passed on `kothoqicubowyhwfsrte`: **201 migrations*
 
 Staging `clinical-call-capture` is **ACTIVE v1**, with JWT verification enabled. Downloaded entrypoint, handler and model bytes match the final proof hashes. All other Edge Functions and secret metadata remain unchanged. The capture flag is **absent/default off** and call policy **v1 draft**. Anonymous HTTP returned **401**; an authenticated closed-gate 503 request was **not tested or claimed**. No real provider request or hosted clinical chart write occurred. Exact sanitized database and Edge receipts, including original receipt hashes, are in the JSON manifest.
 
-Primary remained at **199 migrations** when these staging checks completed; no primary call rollout was performed. Git merge, database migration, Edge deployment, frontend release and processing activation are separate events. Exact-head CI, specific PR merge authorization, Susan's clinical/policy review and authorized provider commissioning remain required; these engineering receipts do not approve clinical use.
+Primary was at **199 migrations** when these staging checks completed. The subsequent [PR 271 primary rollout](2026-10-17-clinical-call-sources-primary-rollout.md) is now verified at **201 migrations**, following PR 270 and exact-head CI/specific merge approval. Git merge, database migration, Edge deployment, frontend release and processing activation remain separate events. Susan's clinical/policy review and authorized provider commissioning remain outstanding; these engineering receipts do not approve clinical use.
 
 ## PR271 CI fixture collision correction — 2026-10-17
 

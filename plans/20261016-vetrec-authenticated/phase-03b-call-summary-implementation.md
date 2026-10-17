@@ -1,8 +1,8 @@
 # Phase 3B — OpenAI call drafts with private source evidence
 
-Status: **plan only**. Inspected against the Phase 3A call-source worktree on 2026-10-16. No feature edits, migrations, runtimes, provider requests, policy approvals or activation are authorized by this document itself. Phase 3A final proof and release must be verified separately.
+Status: **3B.1 local engineering and staging verification passed**, 2026-10-17; exact-head CI, specific merge approval and primary migration 202 remain pending. See [source-bound evidence](../../docs/launch-evidence/2026-10-17-clinical-call-note-sources.md). Generation/review and fidelity evaluation remain planned. The owner authorized continuing implementation; this document does not approve clinical processing or activation. PR 271 passed corrected exact-head CI, merged with specific approval and completed its [primary rollout](../../docs/launch-evidence/2026-10-17-clinical-call-sources-primary-rollout.md), with capture off and policy draft.
 
-Repository root for every path below: `/Users/davidedler/Developer/lrv-clinical-calls-20261016`.
+Implementation worktree: `/Users/davidedler/Developer/lrv-clinical-call-notes-20261017`. Historical file-map paths below identify the inspected Phase 3A checkout; resolve their repository-relative suffixes in the current worktree.
 
 Read with [Phase 3 source plan](phase-03-call-source-implementation.md), [Phases 3–5 scope](phase-03-05-calls-dental-and-parity.md), and [parent plan](plan.md). `docs/development-rules.md` is absent in this checkout; project `AGENTS.md` and the confirmed owner requirements govern implementation.
 
@@ -47,7 +47,7 @@ A separate call generation/proposal persistence lane is the fallback if all shar
 Add a source-discriminated reservation contract:
 
 - `source_kind='call_transcript'` requires a server-resolved `call_source_id`, exact source-manifest hash, one matching `pet_id`, `encounter_id` and expected unsigned encounter version, approved template version/hash, general note-policy version, and call-generation policy version.
-- `source_text` and `audio_job_id` must be null for call reservations. The server loads `clinical_call_sources.document.projection`; the browser cannot supply a transcript, provider URL, call ID override, speaker identity or alternative call time.
+- Preserve the legacy job shape: `source_text` retains the exact server-loaded `clinical_call_sources.document.projection`, while `audio_job_id` and `source_audio_policy_version` remain null. The private sidecar binds that text to its exact captured source; the browser cannot supply a replacement transcript, provider URL, call ID override, speaker identity or alternative call time. Every legacy job/proposal reader must refuse this private source kind before returning text.
 - Retain **two different hashes**: existing `source_sha256` for exact projection text, and the captured call's manifest SHA256 for immutable `{context,document}`. Neither substitutes for the other.
 - Pin the source capture-policy version and original call context, including started/ended time, call/household/conversation/message IDs and assignment version. Capture timestamps and webhook arrival times must not become clinical event dates.
 - Retain actual capture operator, generation operator/session and reviewer separately. A provider `agent` label does not identify a doctor. An old source creator leaving the practice does not by itself erase a completed source; new readers need current ADMIN authority, while live generation/attempt workers must revalidate their recorded initiating sessions.
@@ -115,6 +115,10 @@ Every increment must leave real call generation off. Do not create source-kind r
 - Add versioned call-aware metadata/read APIs. Preserve Phase 3A private source ACLs and immutable manifest semantics.
 - Add role/session/direct-ID/generic-bypass tests, pre-pagination filtering, old-frontend compatibility and populated restore evidence. No OpenAI/clinical chart writes in this increment.
 
+Chosen bounded delivery: migration `20261017135245_clinical_call_note_sources.sql` adds private immutable `clinical_call_note_bindings` and an independent draft `clinical_call_note_policies` table. No call-only columns are added to legacy jobs. Deferred checks enforce the two-way job/binding relationship and exact retained source hash, projection, patient, encounter and capture-policy identity. The new `read_clinical_call_note_job_v1` returns only the versioned job/binding/original-source context after current administrator, unbanned live-session and canonical source-access checks; it does not require the historical operator's session, old template or old policy to remain current.
+
+All legacy direct reads, reflected receipts, cancellation and completed-result replays reject private call jobs/proposals for every role, including administrators. Legacy lists filter them before limits/counts. Shared assembly remains private and is unreachable from call jobs. This first increment adds **no call reservation, generation, policy-edit, acceptance or list API**, no UI entry point and no new provider handler. Owner-only fictional fixtures exercise future private rows, completed attempts, orphan linkage and reflected receipts. The separate 3B.2 release must establish admission, segment-backed generation and review atomically before actual call jobs can be created.
+
 ### 3B.2 — OpenAI generation and private clinical review
 
 - Extend the shared handler/SQL finish validation with the versioned segment-backed call request/result contract and default-off gate.
@@ -169,8 +173,9 @@ No deletion planned. No new CloudTalk outbound dialer or Messages synchronizatio
 
 ## Exit criteria and dependencies
 
-- [ ] 3A exact released schema/ACL/source proof confirmed; migrate from that reviewed revision, not an unverified worktree assumption.
-- [ ] 3B.1 access and database-first compatibility pass before real call jobs can exist.
+- [x] 3A exact released schema/ACL/source proof confirmed at PR 271 merge `9a192f23b8b0509019f1571861f8c51ce9b6b97d`; primary has 201 migrations and the source capture gate remains off.
+- [x] 3B.1 access and database-first compatibility passed locally and on staging; no call admission API exists.
+- [ ] 3B.1 exact-head CI, specific PR merge approval and primary additive rollout complete before 3B.2 admission is introduced.
 - [ ] 3B.2 deterministic + actual local end-to-end proof passes with no automatic signature/billing/delivery.
 - [ ] 3B.3 complete bounded synthetic evaluation passes; failures remain preserved and Susan independently adjudicates clinical fidelity.
 - [ ] Susan approves OpenAI call processing/retention and the private-source versus accepted-chart distinction. Existing approvals are not reused implicitly.

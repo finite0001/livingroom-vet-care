@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-17T14:39:55.012445+00:00",
+  "pr": 271,
+  "merged": {
+    "headRefOid": "365f2a708e2575a46855b81e6e4bd05b9b5f5d4a",
+    "mergeCommit": {
+      "oid": "9a192f23b8b0509019f1571861f8c51ce9b6b97d"
+    },
+    "mergedAt": "2026-10-17T14:34:23Z",
+    "state": "MERGED",
+    "url": "https://github.com/finite0001/livingroom-vet-care/pull/271"
+  },
+  "required_pr_ci": {
+    "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/39038604101",
+    "exact_head": "365f2a708e2575a46855b81e6e4bd05b9b5f5d4a",
+    "checks": [
+      {
+        "name": "frontend",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "edge",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "database",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "diagnostic-renderer",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "Vercel",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "conclusion": "SUCCESS"
+      }
+    ]
+  },
+  "database": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migrations": 201,
+    "latest": "20261017042642",
+    "original_public_tables_preserved": 391,
+    "original_public_routines_permissions_preserved": 1301,
+    "original_table_metadata_preserved": true,
+    "new_private_tables": [
+      "clinical_call_capture_actions",
+      "clinical_call_policies",
+      "clinical_call_policy_actions",
+      "clinical_call_sources"
+    ],
+    "new_function_source_bodies_verified": 21,
+    "new_function_access_verified": true,
+    "original_scheduler_prefixes_preserved": true,
+    "scheduler_appends": {
+      "public.scheduler_job_results": 26,
+      "public.scheduler_job_runs": 26
+    },
+    "existing_audio_policy_unchanged": true,
+    "primary_changed": true,
+    "provider_requests": 0,
+    "existing_clinical_writes": 0
+  },
+  "edge": {
+    "project": "mgadheotkdnrsatfivjy",
+    "name": "clinical-call-capture",
+    "version": 1,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "downloaded_source_sha256": {
+      "supabase/functions/clinical-call-capture/index.ts": "ccc11e4e5a815ea0c48a7d11709825a99e2f8d8d3c7d0b0136058e7968e69176",
+      "supabase/functions/_shared/clinical-call-handler.ts": "5ae8974d7b6f56d907c73a2c8e1415463c7de2f0b384a7d95b942c133b1d39d1",
+      "supabase/functions/_shared/clinical-call-model.ts": "e74057e5d2645c97b5df0475625a2776277aeb9ea1f4aa4d34da02090a321a08"
+    },
+    "other_edge_functions_unchanged": true,
+    "secret_metadata_unchanged": true,
+    "capture_flag_absent_defaults_off": true,
+    "policy": {
+      "status": "draft",
+      "version": 1
+    },
+    "unauthenticated_http_status": 401,
+    "authenticated_closed_gate_http_tested": false,
+    "real_provider_requests": 0,
+    "hosted_clinical_writes": 0,
+    "primary_changed": true
+  },
+  "frontend": {
+    "deployment_id": "dpl_9kx3ZzsrDR7xWLeRQgvpiMg59huU",
+    "state": "READY",
+    "target": "production",
+    "source_commit": "9a192f23b8b0509019f1571861f8c51ce9b6b97d",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ]
+  },
+  "browser": {
+    "target": "https://thelivingroom.vet",
+    "checks": [
+      {
+        "width": 1440,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      },
+      {
+        "width": 390,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      }
+    ],
+    "page_errors": [],
+    "authenticated_clinical_acceptance": false,
+    "clinical_writes": 0,
+    "real_provider_calls": 0,
+    "screenshots_visually_inspected": true,
+    "real_iphone_safari_acceptance": false
+  },
+  "activation": {
+    "capture_policy": "v1 draft",
+    "capture_flag_absent_defaults_off": true,
+    "real_call_capture_commissioned": false,
+    "call_summary_generation_delivered": false,
+    "real_provider_requests": 0
+  },
+  "private_receipt_sha256": {
+    "clinical-calls-pr271-merged.json": "c90721524cde00b113e8bc090d6255b886fbf14503353e937c86fcc384b1cea1",
+    "clinical-calls-pr271-merge-preflight.json": "380f1d109cab82bb6832a347eb6821807a9d77118d195fe682ab073c289b7ebc",
+    "clinical-calls-pr271-primary-db.json": "6397b8ecc3e54569643d7ce0b29ac6126ef2d011a5d9480afe066b9d06e7416d",
+    "clinical-calls-pr271-primary-edge.json": "18bf8e19950e78be8657780e532d29739d18c5096a37e4d874ad49243a39c3b7",
+    "clinical-calls-pr271-primary-browser-verification.json": "e787de5e832be29294987cabdb6382ae789262da68c589391d159f4664e6627a"
+  }
+}

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 import uuid
+from owned_scheduler import paused_owned_scheduler
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true', required=True)
@@ -66,79 +67,82 @@ def read(path):
     return content.decode()
 
 
-before = snapshot()
-try:
-    # Schema-only means no real records, sessions, provider configuration or
-    # historical admissions are copied into this synthetic clone.
-    dump = subprocess.check_output(['docker', 'exec', container, 'pg_dump', '-U', 'postgres',
-                                   '--schema-only', '--no-owner', '--schema=public', '--schema=auth',
-                                   '--schema=storage', '--schema=extensions', 'postgres'], timeout=90)
-    assert len(dump) < 20 * 1024 * 1024
-    schema = '\n'.join(line for line in dump.decode().splitlines()
-                       if not line.startswith('ALTER DEFAULT PRIVILEGES'))
-    schema = schema.replace('CREATE SCHEMA extensions;', 'CREATE SCHEMA IF NOT EXISTS extensions;')
-    manifests = subprocess.check_output(['docker', 'exec', container, 'pg_dump', '-U', 'postgres',
-                                        '--data-only', '--no-owner', '--table=public.stock_writer_manifests',
-                                        'postgres'], timeout=30).decode()
-    sql(f'create database {database};')
-    created = True
-    sql(f"comment on database {database} is '{marker}';")
-    sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;'
-        'create extension "uuid-ossp"with schema extensions;', database)
-    sql(schema + '\n' + manifests, database)
-    # Schema-only dumps omit the migration's disabled version-zero singleton.
-    # Recreate that exact seed; never copy an existing runtime policy decision.
-    policy_migration = read(root / 'supabase/migrations/20260916090000_native_dispense_returns.sql')
-    seed = 'insert into public.native_return_policy_state values(true,0,null);'
-    assert seed in policy_migration
-    sql(seed, database)
-    assert sql('select count(*)from stock_writer_manifests;', database) == '10'
-    # An inactive candidate may add these private schema families. Never copy
-    # or seed their actual state, policies or openings into ordinary fixtures.
-    sql("""do $$declare name text;n bigint;begin
-foreach name in array array['controlled_stock_states','controlled_stock_policy_versions','controlled_stock_openings']loop
- if to_regclass('public.'||name)is not null then
-  execute format('select count(*)from public.%I',name)into n;
-  if n<>0 then raise exception 'Ordinary source clone must not contain controlled configuration';end if;
- end if;
-end loop;end $$;""", database)
-    fixtures = [
-        ('supabase/tests/native_fulfillment.test.sql', 'fulfillment', 'a5510000', 'b5510000'),
-        ('scripts/stock-writers/rollback-probe.sql', 'stock', None, None),
-        ('supabase/tests/native_return_reconciliation.test.sql', 'returns', 'a8510000', 'b8510000'),
-        ('supabase/tests/native_dispense_corrections.test.sql', 'corrections', 'a7510000', 'b7510000'),
-    ]
-    for filename, label, actor_prefix, lot_prefix in fixtures:
-        query = read(root / filename)
-        assert query.rstrip().endswith('rollback;')
-        if actor_prefix:
-            query = query.replace('a5510000', actor_prefix).replace('b5510000', lot_prefix)
-            query = query.replace('@example.test', '+source-' + label + '@example.test')
-        position = query.rfind('rollback;')
-        query = query[:position] + 'commit;' + query[position + len('rollback;'):]
-        sql(query, database, packet=label == 'stock')
-    populated = snapshot(database)
-    modules = [root / 'tests/controlled-drugs/engine' / name
-               for name in ['source-reader.sql', 'source-effects.sql', 'source-proof.sql']]
-    output = sql('begin;set local timezone=\'UTC\';\n' + '\n'.join(read(path) for path in modules)
-                 + '\nrollback;', database, packet=True)
-    proof = json.loads(next(line for line in reversed(output.splitlines()) if line.startswith('{')))
-    assert proof['source_producers'] == 10 and proof['canonical_operations'] == 136
-    assert proof['authorizes_execution'] is False and proof['provider_requests'] == 0
-    assert snapshot(database) == populated, 'Read-only oracle changed canonical rows'
-    assert snapshot() == before, 'Source runtime changed during isolated proof'
-    for filename, expected in hashes.items():
-        assert hashlib.sha256((root / filename).read_bytes()).hexdigest() == expected
-finally:
+# Freeze autonomous ledger writes; retain every table in the equality proof.
+read(root / 'tests/controlled-drugs/owned_scheduler.py')
+with paused_owned_scheduler(project, identity) as scheduler_state:
+    before = snapshot()
     try:
-        if created:
-            assert sql(f"select shobj_description(oid,'pg_database')from pg_database where datname='{database}';") == marker
-            sql(f'drop database {database} with(force);')
-            assert sql(f"select count(*)from pg_database where datname='{database}';") == '0'
+        # Schema-only means no real records, sessions, provider configuration or
+        # historical admissions are copied into this synthetic clone.
+        dump = subprocess.check_output(['docker', 'exec', container, 'pg_dump', '-U', 'postgres',
+                                       '--schema-only', '--no-owner', '--schema=public', '--schema=auth',
+                                       '--schema=storage', '--schema=extensions', 'postgres'], timeout=90)
+        assert len(dump) < 20 * 1024 * 1024
+        schema = '\n'.join(line for line in dump.decode().splitlines()
+                           if not line.startswith('ALTER DEFAULT PRIVILEGES'))
+        schema = schema.replace('CREATE SCHEMA extensions;', 'CREATE SCHEMA IF NOT EXISTS extensions;')
+        manifests = subprocess.check_output(['docker', 'exec', container, 'pg_dump', '-U', 'postgres',
+                                            '--data-only', '--no-owner', '--table=public.stock_writer_manifests',
+                                            'postgres'], timeout=30).decode()
+        sql(f'create database {database};')
+        created = True
+        sql(f"comment on database {database} is '{marker}';")
+        sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;'
+            'create extension "uuid-ossp"with schema extensions;', database)
+        sql(schema + '\n' + manifests, database)
+        # Schema-only dumps omit the migration's disabled version-zero singleton.
+        # Recreate that exact seed; never copy an existing runtime policy decision.
+        policy_migration = read(root / 'supabase/migrations/20260916090000_native_dispense_returns.sql')
+        seed = 'insert into public.native_return_policy_state values(true,0,null);'
+        assert seed in policy_migration
+        sql(seed, database)
+        assert sql('select count(*)from stock_writer_manifests;', database) == '10'
+        # An inactive candidate may add these private schema families. Never copy
+        # or seed their actual state, policies or openings into ordinary fixtures.
+        sql("""do $$declare name text;n bigint;begin
+    foreach name in array array['controlled_stock_states','controlled_stock_policy_versions','controlled_stock_openings']loop
+     if to_regclass('public.'||name)is not null then
+      execute format('select count(*)from public.%I',name)into n;
+      if n<>0 then raise exception 'Ordinary source clone must not contain controlled configuration';end if;
+     end if;
+    end loop;end $$;""", database)
+        fixtures = [
+            ('supabase/tests/native_fulfillment.test.sql', 'fulfillment', 'a5510000', 'b5510000'),
+            ('scripts/stock-writers/rollback-probe.sql', 'stock', None, None),
+            ('supabase/tests/native_return_reconciliation.test.sql', 'returns', 'a8510000', 'b8510000'),
+            ('supabase/tests/native_dispense_corrections.test.sql', 'corrections', 'a7510000', 'b7510000'),
+        ]
+        for filename, label, actor_prefix, lot_prefix in fixtures:
+            query = read(root / filename)
+            assert query.rstrip().endswith('rollback;')
+            if actor_prefix:
+                query = query.replace('a5510000', actor_prefix).replace('b5510000', lot_prefix)
+                query = query.replace('@example.test', '+source-' + label + '@example.test')
+            position = query.rfind('rollback;')
+            query = query[:position] + 'commit;' + query[position + len('rollback;'):]
+            sql(query, database, packet=label == 'stock')
+        populated = snapshot(database)
+        modules = [root / 'tests/controlled-drugs/engine' / name
+                   for name in ['source-reader.sql', 'source-effects.sql', 'source-proof.sql']]
+        output = sql('begin;set local timezone=\'UTC\';\n' + '\n'.join(read(path) for path in modules)
+                     + '\nrollback;', database, packet=True)
+        proof = json.loads(next(line for line in reversed(output.splitlines()) if line.startswith('{')))
+        assert proof['source_producers'] == 10 and proof['canonical_operations'] == 136
+        assert proof['authorizes_execution'] is False and proof['provider_requests'] == 0
+        assert snapshot(database) == populated, 'Read-only oracle changed canonical rows'
         assert snapshot() == before, 'Source runtime changed during isolated proof'
+        for filename, expected in hashes.items():
+            assert hashlib.sha256((root / filename).read_bytes()).hexdigest() == expected
     finally:
-        log.close()
+        try:
+            if created:
+                assert sql(f"select shobj_description(oid,'pg_database')from pg_database where datname='{database}';") == marker
+                sql(f'drop database {database} with(force);')
+                assert sql(f"select count(*)from pg_database where datname='{database}';") == '0'
+            assert snapshot() == before, 'Source runtime changed during isolated proof'
+        finally:
+            log.close()
 print(json.dumps({**proof, 'sql_only': True, 'project_id': identity,
                   'owned_clone_removed': True, 'source_database_unchanged': True,
-                  'populated_clone_unchanged': True, 'modules_and_fixture_sha256': hashes,
+                  'populated_clone_unchanged': True, 'source_scheduler': scheduler_state, 'modules_and_fixture_sha256': hashes,
                   'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}))

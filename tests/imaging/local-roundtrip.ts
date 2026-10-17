@@ -47,7 +47,7 @@ async function until(test: () => Promise<boolean>) { for (let i = 0; i < 400; i+
 let vite: ReturnType<typeof spawn> | null = null, browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 mkdirSync("tmp/imaging-browser", { recursive: true });
 try {
-  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "201");
+  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "202");
   const first = await actor("First"), second = await actor("Second");
   const client = (await rpc(first.db, "save_client", { p_actor_id: first.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Imaging", p_primary_phone: "+13035555582", p_primary_email: "synthetic-imaging@example.test", p_preferred_channel: "EMAIL", p_housecall_address: null, p_mailing_address: null })).id;
   async function pet(name: string) { return (await rpc(first.db, "save_patient", { p_id: null, p_client_id: client, p_expected_version: null, p_name: name, p_species: "Dog", p_breed: "Mixed", p_dob: null, p_birth_date_precision: "unknown", p_color: "", p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: null, p_deceased_at: null })).id as string; }
