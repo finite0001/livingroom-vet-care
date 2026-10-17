@@ -1,6 +1,6 @@
 # Phase 3: patient-linked call sources and reviewed drafts
 
-Status: implementation plan only. Native code inspected 2026-10-16; no provider calls, clinical processing, role expansion or policy activation performed by this investigation. Begin after the recap correction proof settles. This file is not a substitute for implementation/release evidence.
+Status: **3A implemented and frozen local engineering proof passed; staging backend verified with policy draft and gate off. 3B remains planned.** See [exact implementation evidence](../../docs/launch-evidence/2026-10-16-clinical-call-sources.md) and the [separate 3B implementation plan](phase-03b-call-summary-implementation.md). No real provider request, clinical chart write, role expansion or practice policy activation was performed. This file is not a substitute for release evidence.
 
 Read with [parent plan](plan.md), [Phases 3–5 scope](phase-03-05-calls-dental-and-parity.md), [template implementation](phase-01-templates-and-text.md), and [authenticated observations](research/authenticated-workflows.md). Existing CloudTalk code is evidence of the current application contract, not independent verification of the provider's current response schema.
 
@@ -56,7 +56,7 @@ Preferred 3A design uses private call tables/RPCs so unfinished source integrati
 
 ## Immutable source and action design
 
-Proposed private persistence names are design names, not implemented APIs:
+The following records the original design. Implemented 3A persistence is `clinical_call_sources`, `clinical_call_capture_actions`, `clinical_call_policies` and `clinical_call_policy_actions` in migration `20261017042642_clinical_call_sources.sql`; bounded segment/page evidence is inside each immutable document. The evidence receipt and shared Zod model define the delivered API, rather than every proposed name below:
 
 - `clinical_call_sources`: immutable source ID, provider, call UUID/provider ID, originating actor/session, captured household association, patient/encounter/version, source-policy version, transcript schema/projection version, language, capture start/end, canonical document and SHA256.
 - `clinical_call_source_segments` or bounded segments inside the immutable document: ordinal, original provider segment identity if supplied, original speaker label, original start/end if supplied, exact text, segment hash and normalized projection offsets. Do not manufacture end times, speaker identities or provider IDs.
@@ -110,7 +110,7 @@ Use `save_clinical_dictation_action`/existing unsigned encounter save for explic
 
 ## Actionable file map
 
-All repository-relative paths below are under `/Users/davidedler/Developer/lrv-record-recap-20261016/`. Reconfirm names before implementation. No files are deleted.
+All repository-relative paths below are under `/Users/davidedler/Developer/lrv-clinical-calls-20261016/`. The 3A migration is `20261017042642_clinical_call_sources.sql`; 3B rows remain planned. No files are deleted.
 
 | Action | File/module | Responsibility/dependency |
 | --- | --- | --- |
@@ -134,6 +134,8 @@ All repository-relative paths below are under `/Users/davidedler/Developer/lrv-r
 
 ## Acceptance and release checklist
 
+The combined checklist below also includes generation/review and therefore stays open until 3B. Completed 3A engineering acceptance is separately recorded in the [evidence manifest](../../docs/launch-evidence/2026-10-16-clinical-call-sources.json): final 61 SQL, 75 API, 41 browser, 3 STAFF and 5 restore checks, two observed lock waits, exact source/input hashes and owned runtime cleanup. Canonical compatibility passes 164 files / 7,172 assertions. Actual account execution, clinical adjudication, exact-head CI and hosted release remain separate.
+
 - [ ] Confirm provider pagination/schema/revision behavior using authorized documentation and explicitly permitted synthetic/sample data; preserve uncertainty where unsupported.
 - [ ] Anonymous, inactive/banned/revoked-session and non-ADMIN users cannot capture/read/recover/generate/review a call source through any direct or generic RPC/Edge path.
 - [ ] ADMIN demotion/session revocation during observed capture/finish/accept lock waits is rechecked before raw data exposure or commit.
@@ -155,5 +157,5 @@ All repository-relative paths below are under `/Users/davidedler/Developer/lrv-r
 1. The public response/pagination schema is independently documented in the linked official-source research. Actual account behavior and a provider atomic revision protocol remain unverified; complete observed enumeration must not be called a revision-guaranteed snapshot.
 2. Susan must approve call recording/transcript processing, retention and the separation between private full-call evidence and reviewed chart sections. Keep existing ADMIN access meanwhile.
 3. Real calls may mention multiple pets or uncertain speakers. The first increment handles one explicitly selected patient with ambiguity flagged; it does not claim validated multi-pet automatic extraction or diarization.
-4. Choose concrete source/page/time budgets and retention fields during implementation from supported provider samples and existing 60,000-character note limits. Over-budget sources fail visibly.
-5. After recap proof: implement 3A with synthetic page fixtures and complete source/access/recovery proof; then 3B shared generation/acceptance and a separately recorded fidelity evaluation. Proceed to dental dictation after this call workflow's bounded increment is reviewable.
+4. Implemented 3A budgets are 100 segments/page, 10 pages/pass, two passes/20 requests, 1,000 segments, 60,000 UTF16 projection characters, 240,000 UTF8 projection bytes, 512,000 bytes/response, 10 seconds/request, 120 seconds total and a 2 MB document. Unsupported/over-budget sources fail visibly; authorized provider samples remain a commissioning dependency.
+5. Complete exact-head CI and separately evidenced staging/primary rollout of the proven 3A package with its policy draft and gate off. Next implement [3B shared generation/acceptance](phase-03b-call-summary-implementation.md) and its separately recorded fidelity evaluation. [Dental dictation](phase-04-dental-dictation-implementation.md) remains a planned increment.

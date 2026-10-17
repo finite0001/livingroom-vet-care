@@ -168,3 +168,6 @@ verify_jwt = true
 # Historical recap has its own policy and default-off processing flag.
 [functions.clinical-recap-process]
 verify_jwt = true
+
+[functions.clinical-call-capture]
+verify_jwt = true

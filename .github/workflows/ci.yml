@@ -259,6 +259,8 @@ jobs:
         run: python3 -B tests/clinical-notes/disposable.py --run-synthetic-local
       - name: Verify source-cited recap, source-write races and immutable review in an owned runtime
         run: python3 -B tests/clinical-recap/disposable.py --run-synthetic-local
+      - name: Verify private call-source capture through Auth, HTTP and populated restore
+        run: python3 -B tests/clinical-calls/disposable.py --run-synthetic-local
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage
