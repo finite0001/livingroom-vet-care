@@ -124,9 +124,9 @@ select controlled_stock_manifest_required();commit;
  print('Candidate installed locally; all ten canonical root definitions unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:
   output=command(['supabase','test','db','--workdir',str(project)],timeout=420)
-  assert 'All tests successful.'in output and 'Files=160, Tests=6815'in output
-  proof['ordinary_sql_regression']={'files':160,'assertions':6815}
-  print('Ordinary compatibility:160 canonical SQL suites /6815 assertions passed with the candidate installed.',flush=True)
+  assert 'All tests successful.'in output and 'Files=161, Tests=6953'in output
+  proof['ordinary_sql_regression']={'files':161,'assertions':6953}
+  print('Ordinary compatibility:161 canonical SQL suites /6953 assertions passed with the candidate installed.',flush=True)
  environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
  for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-api.py','genuine_auth_api')]:
   p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=360)
