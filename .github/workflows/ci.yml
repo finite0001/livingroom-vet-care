@@ -31,6 +31,8 @@ jobs:
         run: |
           python3 -B -m unittest discover -s tests/restore -p 'test_*.py'
           node --test tests/restore/storage-metadata.test.mjs
+      - name: Verify offline synthetic recap evaluation safeguards
+        run: python3 -B -m unittest discover -s tests/clinical-recap -p 'test_*.py'
       - run: npm run check
       - run: npx playwright install --with-deps chromium
       - name: Verify built local barcode worker and simulated camera cleanup

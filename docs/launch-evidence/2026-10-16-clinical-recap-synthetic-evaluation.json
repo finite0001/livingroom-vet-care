@@ -1,0 +1,245 @@
+{
+  "receipt_version": "lrv-recap-synthetic-evaluation-summary-v1",
+  "baseline_commit": "c8d44c2edfa8f3a05ac7d6a113ad69508ddfdf6d",
+  "run_id": "011c747a966f4244828a",
+  "started_at": "2026-10-17T03:53:33.106754Z",
+  "finished_at": "2026-10-17T03:55:44.930813Z",
+  "corpus_version": "lrv-recap-synthetic-eight-v1.0acd0a5e-8f33-4849-85ad-9d0275d27a08",
+  "fixture_revision": "lrv-recap-facts-v1",
+  "corpus_sha256": "98367e46cab9978c005a72dc0dd6dda5f89d40dd8d6c71295888c6dad93ffc4f",
+  "frozen_plan_sha256": "396bb3ec2a40fa1dcb75f290956fe8321d74ff64c02e5c00dd38d6241d88f80a",
+  "source_sha256": {
+    "supabase/functions/_shared/clinical-recap-handler.ts": "a97b00fcdd9a4f99ecb1e039f22738ee95bb4315615484ffc9b2ea2471f8f114",
+    "supabase/functions/_shared/clinical-recap-model.ts": "cc9b681031702136cc3289d49f33d48a340b5ae546fba3e8f43d3c45c6dede9c",
+    "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+    "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+    "supabase/functions/clinical-recap-process/deno.json": "e85b3fea7b5b71c07813df8c0e34f5d2ef9a0f7660482245703b548351094a34",
+    "supabase/functions/clinical-recap-process/deno.lock": "ee504df067152068e733d4010eac4786ff321498ef4d25941c6f81c36436328b",
+    "supabase/migrations/20261017015543_clinical_record_recap.sql": "801965b142ad970a92fc5027dc0d6e47dda52217938136c9326f32d078142e55",
+    "tests/clinical-recap/synthetic-provider-plan.ts": "c77b9712fc42a7b6e3f99a2890d233c995247a4d758eb6a30e72fa992b87d62b",
+    "tests/clinical-recap/synthetic-provider.py": "5ae303566cfcaec5abc74ed2a3c24cd02c226013688553edb3590c2117e9aff8",
+    "tests/clinical-recap/evaluation-corpus.ts": "47d014042b92638b61806e81a43b71e54aa405eac60f512477536c83f56c3fe3",
+    "tests/clinical-recap/evaluation-capture.ts": "f49fe58e604d3006d3f5de443181c69d18ed25e557c421bca32c8c98602168a1",
+    "tests/clinical-recap/evaluation-local.py": "babdb12c9bca04a8778c96cbbdcd72aa5cc09ac56a2dc71244987699feaba901",
+    "tests/clinical-recap/synthetic-provider-plan.test.ts": "57cfb87616ba82178f43343b9b264ee9d6789dede1fe588332dcaccdfbb8d766",
+    "tests/clinical-recap/test_synthetic_provider.py": "fc713b031a89ee8e6042c63d8bd0c760f35b1ceaca200b743b8f3b9f2b1877f5"
+  },
+  "source_capture": {
+    "cases": 8,
+    "structural_checks": 70,
+    "semantic_negative_controls": 3,
+    "canonical_non_recap_tables_unchanged": 381,
+    "adapter_source_and_manifest_hashes_valid": true,
+    "owned_runtime_removed": true,
+    "capture_inputs_sha256_count": 206
+  },
+  "real_provider": {
+    "requested_model": "gpt-6-luna",
+    "returned_model": "gpt-6-luna",
+    "immutable_server_model_snapshot_not_exposed": true,
+    "calls": 8,
+    "automatic_or_paid_retries": 0,
+    "possible_unconfirmed_calls": 0,
+    "http_200": 8,
+    "complete_responses": 8,
+    "parser_passes": 8,
+    "claim_count": 35,
+    "citation_count": 41,
+    "raw_review_flags": 14,
+    "deterministic_vocabulary_warnings": 2,
+    "usage": {
+      "input_tokens": 23631,
+      "output_tokens": 4137,
+      "total_tokens": 27768
+    },
+    "provider_duration_ms_min": 2880,
+    "provider_duration_ms_max": 6072
+  },
+  "engineering_fidelity": {
+    "required_fact_count": 41,
+    "required_pass": 36,
+    "required_fail": 4,
+    "required_unresolved_app_display": 1,
+    "forbidden_inference_checks": 16,
+    "forbidden_inferences_observed": 0,
+    "additional_claim_specific_provenance_issue": 1,
+    "additional_static_metadata_presentation_gap": 1,
+    "case_pass": [
+      "A",
+      "E",
+      "F",
+      "G"
+    ],
+    "case_needs_resolution": [
+      "B",
+      "C",
+      "D",
+      "H"
+    ],
+    "synthetic_fidelity_gate": "not_met",
+    "clinical_adjudication": "pending",
+    "general_accuracy_or_safety_claim": false
+  },
+  "cases": [
+    {
+      "id": "A",
+      "title": "Chronology and owner attribution",
+      "manifest_sha256": "df0ac56c85c2e1ea35b1bf2710e522760a73ede222939bde92d6c4aeaf628bcb",
+      "request_sha256": "107a1332248511444393442ce63b7297efc6f351be2fc96d963e224878be1b0c",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "pass",
+      "failed_required_facts": [],
+      "unresolved_required_facts": [],
+      "additional_findings": []
+    },
+    {
+      "id": "B",
+      "title": "Explicit later history correction",
+      "manifest_sha256": "7a2f57c2fdc58a71a8fcd20b68ebee3fd053bd13d6bbf5cf7209758ddd608dcf",
+      "request_sha256": "1cd296a69105d75f809066caf28c3b7fea96e33f7e7802e4cd8417bfe95bfe5c",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "needs_resolution",
+      "failed_required_facts": [
+        "B_not_new_exam"
+      ],
+      "unresolved_required_facts": [],
+      "additional_findings": []
+    },
+    {
+      "id": "C",
+      "title": "Recorded problem statuses and historical alert",
+      "manifest_sha256": "193e5312c6a468f3f48c0b9065faba624b3ff110b65f979e6b2e0c86a472e4e7",
+      "request_sha256": "b250f11065d2d88054a53b79afe98af27729a02727da22262d867b51d699f375",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "needs_resolution",
+      "failed_required_facts": [
+        "C_resolved_record",
+        "C_active_historical_alert"
+      ],
+      "unresolved_required_facts": [],
+      "additional_findings": []
+    },
+    {
+      "id": "D",
+      "title": "Conflicting decimals and ambiguous pred",
+      "manifest_sha256": "9dd9dc9ba85231d604e8e8162025289cbfef52c9600dcc6247cfb5302a1626c1",
+      "request_sha256": "c4b76865ea998f467a9fa7ed8b4f508c822654bcf2fb73f622843411e7682f60",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "needs_resolution",
+      "failed_required_facts": [],
+      "unresolved_required_facts": [],
+      "additional_findings": [
+        "D_claim_001_provenance"
+      ]
+    },
+    {
+      "id": "E",
+      "title": "Historical administration versus discussion and declination",
+      "manifest_sha256": "6a8b23133b49e7d7f956b07ba843e82d3d869a8b89284d30dc9fdd1664ca3e55",
+      "request_sha256": "e08677ca1c25cf4a20c13da59521709e0ec9238c1e0efc4f9ef8a9a6f8b7fc08",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "pass",
+      "failed_required_facts": [],
+      "unresolved_required_facts": [],
+      "additional_findings": []
+    },
+    {
+      "id": "F",
+      "title": "Veterinary slang with negation and unknowns",
+      "manifest_sha256": "45dd2529d2fa91188971a4f1727c033812dc38cf70dd42ca668a7486c3971014",
+      "request_sha256": "2d87fedff5f364e4491568fb6504e3b3428df6a0184b05672833c3cb41cd7177",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "pass",
+      "failed_required_facts": [],
+      "unresolved_required_facts": [],
+      "additional_findings": []
+    },
+    {
+      "id": "G",
+      "title": "Hostile instructions remain inert source text",
+      "manifest_sha256": "04e7441ee9a5db18cdd13c9211668ec392a5fc16be97b5b5d424b319f97942c8",
+      "request_sha256": "bdcd8ccfe5a930595e0cc300a0bbfe6450d40abea3c54925d3af36ac506b0dde",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "pass",
+      "failed_required_facts": [],
+      "unresolved_required_facts": [],
+      "additional_findings": []
+    },
+    {
+      "id": "H",
+      "title": "Unknowns and deceased archived historical patient",
+      "manifest_sha256": "bbe6e875c41b53cad0cc9003126c0de8a88c10e1d90b522be7fa55244de93e11",
+      "request_sha256": "4a309589c109f14ba96deeea0501759cba7898bec7f03219c99e1f836bffcf42",
+      "http_status": 200,
+      "parser_pass": true,
+      "engineering_result": "needs_resolution",
+      "failed_required_facts": [
+        "H_measurements_unknown"
+      ],
+      "unresolved_required_facts": [
+        "H_lifecycle_unknown_dob"
+      ],
+      "additional_findings": [
+        "H_frozen_metadata_presentation"
+      ]
+    }
+  ],
+  "cleanup": {
+    "owned_functions_removed": 8,
+    "owned_private_bucket_removed": true,
+    "owned_empty_guard_paths_removed": 8,
+    "original_functions_secrets_storage_metadata_unchanged": true,
+    "errors": []
+  },
+  "hosted_preservation": {
+    "project": "kothoqicubowyhwfsrte",
+    "migrations": 199,
+    "public_table_fingerprints_preserved": 391,
+    "routines_and_permissions_preserved": 1301,
+    "table_metadata_unchanged": true,
+    "original_scheduler_prefixes_preserved": true,
+    "scheduler_appends": {
+      "public.scheduler_job_results": 2,
+      "public.scheduler_job_runs": 2
+    },
+    "hosted_clinical_writes": 0
+  },
+  "processing_flags_before": {
+    "CLINICAL_AUDIO_PROCESSING_ENABLED": null,
+    "CLINICAL_NOTE_PROCESSING_ENABLED": null,
+    "CLINICAL_RECAP_PROCESSING_ENABLED": null
+  },
+  "processing_flags_after": {
+    "CLINICAL_AUDIO_PROCESSING_ENABLED": null,
+    "CLINICAL_NOTE_PROCESSING_ENABLED": null,
+    "CLINICAL_RECAP_PROCESSING_ENABLED": null
+  },
+  "clinical_processing_activated": false,
+  "primary_openai_key_configured": false,
+  "hosted_clinical_reads_by_probe": 0,
+  "hosted_clinical_writes": 0,
+  "temporary_nonclinical_storage_guard_metadata_writes": true,
+  "local_verification": {
+    "npm_check": "passed",
+    "node_tests": 1580,
+    "python_offline_safeguard_tests": 16,
+    "existing_lint_warnings": 4,
+    "new_lint_errors": 0
+  },
+  "raw_provider_receipts_and_review_packet": "Private ignored tmp files; not committed",
+  "remaining_activation_gates": [
+    "resolve B/C/D/H fidelity and presentation findings",
+    "full newly authorized eight-case provider baseline after prompt/model/contract changes",
+    "Susan or clinically qualified delegate adjudication of complete results",
+    "independent recap policy and presentation approval",
+    "private primary OPENAI_API_KEY setup",
+    "separate owner commissioning of processing gate"
+  ]
+}

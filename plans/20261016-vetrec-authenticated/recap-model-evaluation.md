@@ -1,6 +1,6 @@
 # Records recap: synthetic model fidelity and provenance evaluation
 
-Status: evaluation design only. No provider calls, implementation, real patient data or clinical activation. Read with [recap contract](recap-contract.md) and [Phase 2 scope](phase-02-recapped-records.md). Provider choice is OpenAI; a terminology prompt is neither fine-tuning nor clinical validation.
+Status: initial authorized eight-case real OpenAI baseline completed; structural 8/8, synthetic fidelity gate not met. Cases B/C/D/H require resolution, clinical adjudication remains pending, and processing stays off. No extra paid run is authorized by this document. See [actual results](../../docs/launch-evidence/2026-10-16-clinical-recap-synthetic-evaluation.md) and reproducible helpers under `tests/clinical-recap/`. Read with [recap contract](recap-contract.md) and [Phase 2 scope](phase-02-recapped-records.md). Provider choice is OpenAI; a terminology prompt is neither fine-tuning nor clinical validation.
 
 ## Corpus construction
 

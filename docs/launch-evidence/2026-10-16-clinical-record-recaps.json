@@ -361,12 +361,135 @@
     }
   },
   "staging_unauthenticated_edge_http_status": 401,
-  "primary_recap_release": "pending specific PR approval",
+  "primary_recap_release": {
+    "status": "released",
+    "merge_commit": "c8d44c2edfa8f3a05ac7d6a113ad69508ddfdf6d",
+    "tested_head": "c2cbbde0291c49abe19cd63155c5c1fffd13063d",
+    "merge_tree_equals_tested_tree": true,
+    "required_pr_checks": "all passed",
+    "database": {
+      "project": "mgadheotkdnrsatfivjy",
+      "migrations": 199,
+      "original_tables_preserved": 381,
+      "original_routines_and_acls_preserved": 1259,
+      "new_private_tables": 10,
+      "new_functions": 42,
+      "source_trigger_additions": 5,
+      "new_policy": "draft",
+      "hosted_clinical_fixtures_created": 0,
+      "real_provider_requests": 0,
+      "original_scheduler_prefixes_preserved": true,
+      "scheduler_rows_appended_between_snapshots": {
+        "public.scheduler_job_results": 3,
+        "public.scheduler_job_runs": 3
+      }
+    },
+    "edge": {
+      "project": "mgadheotkdnrsatfivjy",
+      "status": "ACTIVE",
+      "version": 1,
+      "verify_jwt": true,
+      "uploaded_assets": [
+        {
+          "path": "supabase/functions/clinical-recap-process/index.ts",
+          "sha256": "0a255e923d8026ec1b9d097d0dbb0e0536d0c7f3b76da859be62d6d2b111d25d"
+        },
+        {
+          "path": "supabase/functions/_shared/clinical-recap-handler.ts",
+          "sha256": "a97b00fcdd9a4f99ecb1e039f22738ee95bb4315615484ffc9b2ea2471f8f114"
+        },
+        {
+          "path": "supabase/functions/_shared/clinical-recap-model.ts",
+          "sha256": "cc9b681031702136cc3289d49f33d48a340b5ae546fba3e8f43d3c45c6dede9c"
+        },
+        {
+          "path": "supabase/functions/_shared/clinical-audio-model.ts",
+          "sha256": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c"
+        },
+        {
+          "path": "supabase/functions/_shared/clinical-veterinary-context.ts",
+          "sha256": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6"
+        },
+        {
+          "path": "supabase/functions/clinical-recap-process/deno.json",
+          "sha256": "e85b3fea7b5b71c07813df8c0e34f5d2ef9a0f7660482245703b548351094a34"
+        }
+      ],
+      "existing_secrets_preserved": 39,
+      "unauthenticated_post": 401,
+      "real_provider_calls": 0
+    },
+    "previous_edge_functions_preserved": 53,
+    "advisor_delta": {
+      "added": 26,
+      "removed": 0,
+      "counts": {
+        "INFO:rls_enabled_no_policy": 10,
+        "WARN:authenticated_security_definer_function_executable": 16
+      }
+    },
+    "frontend": {
+      "id": "dpl_BxKbeNDmmKWLifpAH1BndBhFK9fc",
+      "state": "READY",
+      "target": "production",
+      "build_duration_ms": 108154,
+      "aliases": [
+        "thelivingroom.vet",
+        "www.thelivingroom.vet",
+        "livingroom-vet-care.vercel.app",
+        "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+      ]
+    },
+    "url": "https://thelivingroom.vet",
+    "browser_smoke": {
+      "target": "https://thelivingroom.vet",
+      "checks": [
+        {
+          "width": 1440,
+          "login": 200,
+          "login_rendered": true,
+          "protected_route_redirects": true,
+          "horizontal_overflow": false
+        },
+        {
+          "width": 390,
+          "login": 200,
+          "login_rendered": true,
+          "protected_route_redirects": true,
+          "horizontal_overflow": false
+        }
+      ],
+      "page_errors": [],
+      "authenticated_clinical_acceptance": false,
+      "clinical_writes": 0,
+      "real_provider_calls": 0
+    },
+    "production_error_log_entries_at_rollout": 0,
+    "clinical_policy": {
+      "model": "gpt-6-luna",
+      "status": "draft",
+      "version": 1
+    },
+    "clinical_processing_enabled": false,
+    "primary_openai_key_configured_at_rollout": false
+  },
   "activation": {
     "recap_policy": "draft",
     "recap_processing_enabled": false,
-    "real_provider_evaluation": "not executed",
-    "clinical_fidelity_review": "pending Susan or delegate",
+    "real_provider_evaluation": {
+      "status": "initial eight-case run completed; synthetic fidelity gate not met",
+      "calls": 8,
+      "retry_calls": 0,
+      "structural_passes": 8,
+      "cases_needing_resolution": [
+        "B",
+        "C",
+        "D",
+        "H"
+      ],
+      "receipt": "2026-10-16-clinical-recap-synthetic-evaluation.json"
+    },
+    "clinical_fidelity_review": "Engineering findings unresolved; independent clinical adjudication pending Susan or delegate",
     "real_iphone_hardware": "not evaluated"
   },
   "scope_excludes": [
@@ -375,5 +498,6 @@
     "automatic clinical note background",
     "chart writes/signatures",
     "publication/export/delivery"
-  ]
+  ],
+  "snapshot_scope": "Original local/staging verification remains the pre-PR268-release snapshot; primary release and initial provider baseline were added afterward."
 }

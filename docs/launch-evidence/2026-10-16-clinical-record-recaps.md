@@ -83,13 +83,43 @@ pending in the reviewed dry run, then applied. The single new
   boundary: direct table privileges are revoked; each staff RPC checks current
   actor/role/session. No other advisory was added or removed.
 
-## Remaining release and activation gates
+## Primary release after PR268 approval
 
-Primary recap migration/function/frontend release awaits exact-head CI and
-specific PR merge approval. No primary recap rollout was performed by this
-receipt. Susan's independent recap policy and clinical presentation approval,
-bounded real synthetic-model evaluation, and clinical fidelity review remain
-pending. Structural quotation membership is not evidence of medical entailment.
+PR268 was specifically approved and merged as
+`c8d44c2edfa8f3a05ac7d6a113ad69508ddfdf6d`. Its complete file tree matches
+the tested PR head `c2cbbde0291c49abe19cd63155c5c1fffd13063d`; all required
+PR checks passed. The duplicate main CI run remains separately tracked.
+
+Primary `mgadheotkdnrsatfivjy` was released in database → Edge Function →
+merged frontend order: migration 199, JWT-protected `clinical-recap-process`
+ACTIVE v1, then Vercel production `dpl_BxKbeNDmmKWLifpAH1BndBhFK9fc` READY
+at the merged commit with `thelivingroom.vet` and `www.thelivingroom.vet` attached.
+The build took 108,154 ms.
+
+All 381 prior public table contents and 1,259 routines/ACLs were preserved;
+only the five expected source triggers changed old table metadata. Scheduler
+runs/results each appended three rows with original prefixes identical. All
+53 previous Edge Function metadata records and 39 secret names/value digests
+were unchanged, and all six uploaded source assets matched local bytes.
+The advisor delta matched staging: 10 private RLS INFO and 16 narrow staff RPC
+WARN findings, zero removals. Unauthenticated function POST returned 401.
+
+Real Chromium checks at 1440px and 390px verified rendered login, protected-route
+redirection, no horizontal overflow and no page errors. A deployment-scoped
+error-log query returned zero entries; that is not a backend clinical acceptance
+or monitoring-coverage claim. Primary recap policy remained draft v1, with zero
+jobs/attempts and all clinical processing gates off. No real provider call or
+hosted clinical fixture was created during rollout. Primary has no OpenAI key.
+
+## Remaining activation gates
+
+The [initial eight-case provider evaluation](2026-10-16-clinical-recap-synthetic-evaluation.md)
+is complete with blocking fidelity findings; correction/re-evaluation and Susan's
+independent recap policy, clinical presentation and complete-output review remain
+pending.
+Structural quotation membership is not evidence of medical entailment. The
+owner must configure the primary server-side OpenAI key privately and commission
+its independent processing gate only after the other activation gates pass.
 
 Uploaded/scanned documents, OCR, outside-record ingestion, additional native
 structured adapters, automatic note background, export/email and real iPhone
