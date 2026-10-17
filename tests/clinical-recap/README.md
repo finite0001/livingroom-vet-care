@@ -49,3 +49,51 @@ policy approval remain separate activation requirements. Fictional fixtures and
 fake provider responses are not evidence of medical accuracy. See the bounded
 evaluation plan in
 `plans/20261016-vetrec-authenticated/recap-model-evaluation.md`.
+
+## Eight-case real-provider baseline
+
+The initial authorized run is complete: structural 8/8; the fidelity gate is **not
+met**. B/C/D/H require resolution. See the [complete engineering summary](../../docs/launch-evidence/2026-10-16-clinical-recap-synthetic-evaluation.md).
+No clinical flag or policy was activated. Raw synthetic responses and the complete
+clinical review packet remain in ignored private `tmp/clinical-recap-evaluation-*`.
+
+`evaluation-corpus.ts` fixes the fictional A–H signals and a hand-authored
+required/forbidden fact inventory. `evaluation-local.py --run-synthetic-local`
+creates a separate owned local stack on 653xx ports; `evaluation-capture.ts`
+uses actual Auth/native RPCs and the real immutable adapter, verifies canonical
+state/hashes and exports a newly versioned corpus before teardown. A fresh
+capture has new actual server timestamps/hashes; it is not the old byte-identical
+baseline. No provider key or hosted project is used by local capture.
+
+`synthetic-provider.py --corpus FILE --prepare` validates only the exact fixed
+fictional fields, identities, selection and inventory, then freezes the full
+request/schema/vocabulary/source hashes without hosted operations. Its separate
+`--plan PLAN --run-synthetic-provider` mode is explicitly paid, staging-only and
+requires a newly authorized bounded run. It deploys eight expiring service-only
+fixed-input probes using the existing staging OpenAI secret, verifies every
+uploaded source/request before any call, and makes at most one request per case.
+A private bucket's eight empty create-only objects provide cross-isolate admission
+locks. No hosted clinical rows are read/written and no processing flag changes.
+Every attempted function and guard resource is removed and baseline metadata
+verified in `finally`, including ambiguous deployment outcomes. Unknown or failed
+paid work is never automatically retried; unattempted cases remain visible.
+
+The initial eight-request budget is spent. Do not rerun to obtain a green report.
+Prompt/model/contract changes require new versioned deterministic checks and a
+separately approved complete baseline; preserve the old failures.
+
+Offline commands never call OpenAI:
+
+```sh
+python3 -B -m unittest discover -s tests/clinical-recap -p 'test_*.py'
+node --experimental-strip-types --test tests/clinical-recap/synthetic-provider-plan.test.ts
+python3 -B tests/clinical-recap/synthetic-provider.py --review-receipt RECEIPT
+python3 -B tests/clinical-recap/evaluation-review-packet.py --corpus CORPUS --receipt RECEIPT --engineering-review APPRAISAL --output NEW_PACKET
+```
+
+The packet renderer preserves all eight case outcomes, full frozen fields,
+assistant text and review flags, exact corpus/manifest bindings and engineering
+fact annotations. Source instructions stay literal; arbitrary provider reasoning
+metadata is excluded, malformed cases remain visible, and clinical adjudication
+stays pending. Source-family omission, a false source-cited claim or missing
+claim-specific provenance must not be hidden by an aggregate pass percentage.

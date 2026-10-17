@@ -1,11 +1,13 @@
 """Verify source-cited clinical recaps in a uniquely owned, disposable local stack."""
-import argparse, hashlib, json, os, shutil, socket, subprocess, tempfile, uuid
+import argparse, hashlib, json, os, re, shutil, socket, subprocess, tempfile, uuid
 from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--run-synthetic-local',action='store_true',required=True)
 p.add_argument('--include-sql-regression',action='store_true')
 p.add_argument('--sql-only',action='store_true')
+p.add_argument('--evidence-prefix',default='clinical-recap')
 args=p.parse_args();os.umask(0o077)
+assert re.fullmatch(r'[a-z0-9][a-z0-9-]{0,79}',args.evidence_prefix),'Invalid evidence prefix'
 root=Path(__file__).resolve().parents[2];identity='lrv-clinical-recap-'+uuid.uuid4().hex[:10]
 work=Path(tempfile.mkdtemp(prefix=identity+'-'));project=work/'project';(project/'supabase/migrations').mkdir(parents=True)
 evidence=Path(tempfile.mkdtemp(prefix=identity+'-evidence-'));log=(evidence/'commands.log').open('w');started=False;proof=None
@@ -21,7 +23,7 @@ def run(argv,**kw):
 try:
  for port in [65220,65221,65222,65224,65281]:
   with socket.socket()as s:s.bind(('127.0.0.1',port))
- files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==199
+ files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==200
  for f in files:shutil.copy2(f,project/'supabase/migrations'/f.name)
  (project/'supabase/tests').mkdir()
  for f in(root/'supabase/tests').glob('*.sql'):
@@ -59,15 +61,15 @@ enabled = false
  result=run(['supabase','test','db','--workdir',str(project)],timeout=420);assert 'All tests successful.'in result
  summary=result[result.rfind('All tests successful.'):].strip();print(summary,flush=True)
  if not args.sql_only:
-  result=run(['node','--experimental-strip-types',str(root/'tests/clinical-recap/local-roundtrip.ts')],env={**os.environ,'RECAP_TEST_PROJECT':str(project),'RECAP_RUN_SYNTHETIC_LOCAL':'true'},timeout=600);print(result.strip(),flush=True)
+  result=run(['node','--experimental-strip-types',str(root/'tests/clinical-recap/local-roundtrip.ts')],env={**os.environ,'RECAP_TEST_PROJECT':str(project),'RECAP_RUN_SYNTHETIC_LOCAL':'true','RECAP_EVIDENCE_PREFIX':args.evidence_prefix},timeout=600);print(result.strip(),flush=True)
  assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==digest for name,digest in hashes.items()),'Proof input changed during run'
- proof={'identity':identity,'migrations':199,'sql_summary':summary,'sql_only':args.sql_only,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
- if not args.sql_only:proof['auth_browser_restore']=json.loads((root/'tmp/clinical-recap-roundtrip.json').read_text())
+ proof={'identity':identity,'migrations':200,'sql_summary':summary,'sql_only':args.sql_only,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
+ if not args.sql_only:proof['auth_browser_restore']=json.loads((root/f'tmp/{args.evidence_prefix}-roundtrip.json').read_text())
 finally:
  if started:
   run(['supabase','stop','--workdir',str(project),'--no-backup'],timeout=180)
   assert not run(['docker','ps','-a','--filter','label=com.supabase.cli.project='+identity,'--format','{{.ID}}']).strip()
  log.close();shutil.rmtree(work)
  if proof:
-  proof['owned_runtime_removed']=True;(root/'tmp').mkdir(exist_ok=True);(root/('tmp/clinical-recap-sql-proof.json'if args.sql_only else'tmp/clinical-recap-local-proof.json')).write_text(json.dumps(proof,indent=2)+'\n')
+  proof['owned_runtime_removed']=True;(root/'tmp').mkdir(exist_ok=True);(root/f'tmp/{args.evidence_prefix}-{"sql" if args.sql_only else "local"}-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
  print('Owned recap containers, volumes and private work removed.',flush=True)

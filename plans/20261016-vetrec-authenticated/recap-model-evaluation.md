@@ -1,6 +1,6 @@
 # Records recap: synthetic model fidelity and provenance evaluation
 
-Status: evaluation design only. No provider calls, implementation, real patient data or clinical activation. Read with [recap contract](recap-contract.md) and [Phase 2 scope](phase-02-recapped-records.md). Provider choice is OpenAI; a terminology prompt is neither fine-tuning nor clinical validation.
+Status: initial authorized eight-case real OpenAI baseline completed; structural 8/8, synthetic fidelity gate not met. Cases B/C/D/H require resolution, clinical adjudication remains pending, and processing stays off. No extra paid run is authorized by this document. See [actual results](../../docs/launch-evidence/2026-10-16-clinical-recap-synthetic-evaluation.md) and reproducible helpers under `tests/clinical-recap/`. Read with [recap contract](recap-contract.md) and [Phase 2 scope](phase-02-recapped-records.md). Provider choice is OpenAI; a terminology prompt is neither fine-tuning nor clinical validation.
 
 ## Corpus construction
 
@@ -65,3 +65,7 @@ Before any paid call freeze handler/prompt/output schema, vocabulary bundle, pol
 Any prompt, vocabulary, output contract, model identity or source-adapter change reruns affected deterministic checks and the full eight-case synthetic baseline; retain the prior receipts and explicitly approve any additional paid budget. A model alias changing its returned version triggers re-evaluation before claiming equivalent performance. This small corpus is a regression screen, not an accuracy estimate, medical benchmark, OCR validation or substitute for real-world clinical acceptance. No statistical confidence or general clinical-performance claim is justified.
 
 Contract observations: no blocking shape conflict found. Zero usable clinical claims has no accepted recap representation because Payload requires at least one claim; the adapter must fail closed as unusable output, retain a sanitized result category and never invent filler. Temporal/category enums, literal membership and a native status citation are necessary structural checks; none independently prove the clinical assertions attached to them.
+
+## Latest correction candidate
+
+The [fidelity correction candidate](../../docs/launch-evidence/2026-10-16-clinical-recap-fidelity-corrections.md) completes a final v3 eight-case engineering pass (8/8 parser,41/41 required facts,16/16 forbidden checks), preserving the original failures and the intervening rejected v2 H result. Staging200/functionv2 source verified; primary unchanged. Susan clinical adjudication, policy approval, CI and specific merge/release gates remain pending. No processing activation.

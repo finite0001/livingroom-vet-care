@@ -1,6 +1,6 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 create temp table cr_fx(k text primary key,id uuid,v jsonb);grant all on cr_fx to authenticated,service_role;
-insert into cr_fx(k,id)select k,gen_random_uuid()from unnest(array['actor','other','sid','other_sid','job','attempt','review','canceled','attemptcancel','policycancel','link','stalejob','staleattempt','heldjob','heldattempt','missingreview','policyaction'])k;
+insert into cr_fx(k,id)select k,gen_random_uuid()from unnest(array['actor','other','sid','other_sid','job','attempt','review','canceled','attemptcancel','policycancel','link','stalejob','staleattempt','heldjob','heldattempt','missingreview','policyaction','v2job','v2attempt','v3job','v3attempt'])k;
 create function pg_temp.cr_id(key text)returns uuid language sql as $$select id from cr_fx where k=$1$$;
 insert into auth.users(id,email,raw_user_meta_data)select id,'synthetic-recap-'||id||'@example.test','{}'from cr_fx where k in('actor','other');update profiles set is_active=true,full_name='Synthetic recap staff'where id in(pg_temp.cr_id('actor'),pg_temp.cr_id('other'));insert into user_roles(user_id,role)values(pg_temp.cr_id('actor'),'ADMIN'),(pg_temp.cr_id('other'),'STAFF')on conflict do nothing;
 insert into auth.sessions(id,user_id,created_at,updated_at)values(pg_temp.cr_id('sid'),pg_temp.cr_id('actor'),now(),now()),(pg_temp.cr_id('other_sid'),pg_temp.cr_id('other'),now(),now());
@@ -60,6 +60,31 @@ select throws_ok($$select finish_clinical_recap(pg_temp.cr_id('attempt'),(select
 reset role;set local role authenticated;
 insert into cr_fx(k,v)select'outputread',read_clinical_recap_job(auth.uid(),pg_temp.cr_id('job'));
 select is((select v#>>'{job,output_id}'from cr_fx where k='outputread'),pg_temp.cr_id('attempt')::text,'Job pins the one completed output');
+
+-- New prompt receipts coexist with retained v1 history; future/absent versions fail closed.
+insert into cr_fx(k,v)select 'v2reserved',reserve_clinical_recap(auth.uid(),pg_temp.cr_id('v2job'),(select v from cr_fx where k='request'));
+select claim_clinical_recap(auth.uid(),pg_temp.cr_id('v2attempt'),pg_temp.cr_id('v2job'));
+reset role;set local role service_role;
+select is(dispatch_clinical_recap(pg_temp.cr_id('v2attempt')),true,'V2 test attempt dispatches once');
+insert into cr_fx(k,v)select 'v2result',v||jsonb_build_object('prompt_version','lrv-recap-claims-v2','manifest_sha256',(select v#>>'{manifest,sha256}'from cr_fx where k='v2reserved'))from cr_fx where k='result';
+select throws_ok($$select finish_clinical_recap(pg_temp.cr_id('v2attempt'),(select v||'{"prompt_version":"lrv-recap-claims-v999"}'from cr_fx where k='v2result'))$$,'PT422',null,'Unknown prompt version cannot be retained');
+select throws_ok($$select finish_clinical_recap(pg_temp.cr_id('v2attempt'),(select v||'{"prompt_version":null}'from cr_fx where k='v2result'))$$,'PT422',null,'Null prompt version cannot be retained');
+select is(finish_clinical_recap(pg_temp.cr_id('v2attempt'),(select v from cr_fx where k='v2result'))->>'retained','true','V2 output retained with unchanged source contract');
+select is(finish_clinical_recap(pg_temp.cr_id('v2attempt'),(select v from cr_fx where k='v2result'))->>'retained','true','V2 exact result replay is idempotent');
+reset role;set local role authenticated;
+select is(read_clinical_recap_job(auth.uid(),pg_temp.cr_id('v2job'))#>>'{output,provider_manifest,prompt_version}','lrv-recap-claims-v2','New output keeps v2 provenance');
+select is(read_clinical_recap_job(auth.uid(),pg_temp.cr_id('job'))#>>'{output,provider_manifest,prompt_version}','lrv-recap-claims-v1','Existing v1 output remains readable and unchanged');
+
+insert into cr_fx(k,v)select 'v3reserved',reserve_clinical_recap(auth.uid(),pg_temp.cr_id('v3job'),(select v from cr_fx where k='request'));
+select claim_clinical_recap(auth.uid(),pg_temp.cr_id('v3attempt'),pg_temp.cr_id('v3job'));
+reset role;set local role service_role;
+select is(dispatch_clinical_recap(pg_temp.cr_id('v3attempt')),true,'V3 test attempt dispatches once');
+insert into cr_fx(k,v)select 'v3result',v||jsonb_build_object('prompt_version','lrv-recap-claims-v3','manifest_sha256',(select v#>>'{manifest,sha256}'from cr_fx where k='v3reserved'))from cr_fx where k='result';
+select is(finish_clinical_recap(pg_temp.cr_id('v3attempt'),(select v from cr_fx where k='v3result'))->>'retained','true','V3 classification prompt output retained');
+reset role;set local role authenticated;
+select is(read_clinical_recap_job(auth.uid(),pg_temp.cr_id('v3job'))#>>'{output,provider_manifest,prompt_version}','lrv-recap-claims-v3','V3 provenance remains distinct from v1/v2');
+
+
 select is((select subjective from clinical_encounters where id=pg_temp.cr_id('enc')),'Fictional cough.','Recap generation does not change signed source');
 reset role;
 select is((select count(*)::integer from clinical_dictation_proposals where pet_id=pg_temp.cr_id('pet')),0,'Recap does not create a SOAP proposal');

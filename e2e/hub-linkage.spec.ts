@@ -113,6 +113,10 @@ for (const width of [390, 1280]) {
     await page.getByRole("link", { name: "Ada Lovelace", exact: true }).first().click();
     await expect(page).toHaveURL(new RegExp(`/hub/client/${client}$`));
     await expect(target).not.toBeAttached({ timeout: 30_000 });
+    // The URL and patient unmount can precede the household's loaded render.
+    // Finish that navigation before testing a separate browser Back traversal.
+    await expect(page.getByRole("heading", { name: "Ada Lovelace", exact: true })).toBeVisible();
+    await expect(page.getByRole("tablist", { name: "Household sections", exact: true })).toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/tab=medical&section=labs$/);
     await expect(target).toBeInViewport();

@@ -1,10 +1,10 @@
 # Phase 2: reviewed, source-cited records recap
 
-Priority: after Phase 1. Status: native implementation and local/staging verification complete; PR CI and primary release pending; no recap processing activated. Vendor observation VR-A06 establishes a form, not verified OCR or citation behavior. This is an independent native implementation.
+Priority: after Phase 1. Status: native first increment released in PR268 with verified primary backend/frontend; initial eight-case provider baseline complete with blocking fidelity findings; no recap processing activated. Vendor observation VR-A06 establishes a form, not verified OCR or citation behavior. This is an independent native implementation.
 
-Implementation preparation: [strict source/job/review contract](recap-contract.md), [database race and preservation acceptance matrix](recap-db-acceptance.md), [patient workspace and recovery map](recap-ui-map.md), and [synthetic model-fidelity evaluation](recap-model-evaluation.md). These documents specify the implementation and its acceptance targets. Release evidence must distinguish actual structural/workflow checks from the separately pending real-model and clinical evaluation.
+Implementation preparation: [strict source/job/review contract](recap-contract.md), [database race and preservation acceptance matrix](recap-db-acceptance.md), [patient workspace and recovery map](recap-ui-map.md), and [synthetic model-fidelity evaluation](recap-model-evaluation.md). These documents specify the implementation and its acceptance targets. Release evidence must distinguish actual structural/workflow checks from the separately assessed provider fidelity and clinical activation.
 
-Actual completed checks and remaining activation gates: [local/staging receipt](../../docs/launch-evidence/2026-10-16-clinical-record-recaps.md).
+Actual completed checks and remaining activation gates: [initial synthetic evaluation](../../docs/launch-evidence/2026-10-16-clinical-recap-synthetic-evaluation.md) and [workflow and hosted release receipt](../../docs/launch-evidence/2026-10-16-clinical-record-recaps.md).
 
 ## First increment
 
@@ -60,6 +60,10 @@ Source-ID/version/hash patterns in [release selection](../../src/hub/features/re
 Not in this first release: uploaded/scanned/handwritten PDFs, OCR, Office/ZIP/Excel parsing, URL fetch, DICOM, structured lab/diagnostic/treatment/prescription/vaccine adapters, outside-record ingestion, export/email, or automatic incorporation into signed clinical records. Existing diagnostic-renderer `pdftotext` verifies generated PDFs; it is not a general extractor. Native narrative mentions do not establish complete medication reconciliation, current vaccination status or laboratory coverage.
 
 - [ ] Approve the independent recap policy and clinical presentation with Susan; keep processing inactive meanwhile.
-- [ ] Pin and implement the native-source/manifest/review contract, then complete the checks above.
+- [x] Implement and release the native-source/manifest/review contract; actual completed checks are recorded in the release receipts. Real-model and clinical evaluation are separate gates.
 - [ ] Scope additional native adapters individually with their correction/void/version semantics.
 - [ ] Obtain authorized sample documents and approve extraction/runtime/provider scope before claiming uploaded-record recap support. Document ingestion requires immutable originals, MIME/page/size limits, isolated bounded parsing/OCR and per-page provenance in its own plan/release.
+
+## Latest correction candidate
+
+The [fidelity correction candidate](../../docs/launch-evidence/2026-10-16-clinical-recap-fidelity-corrections.md) completes a final v3 eight-case engineering pass (8/8 parser,41/41 required facts,16/16 forbidden checks), preserving the original failures and the intervening rejected v2 H result. Staging200/functionv2 source verified; primary unchanged. Susan clinical adjudication, policy approval, CI and specific merge/release gates remain pending. No processing activation.
