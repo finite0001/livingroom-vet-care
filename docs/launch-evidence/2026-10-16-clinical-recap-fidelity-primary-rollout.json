@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "practice_date": "2026-10-16",
+  "recorded_at_utc": "2026-10-17T05:36:35.871574+00:00",
+  "pr": 270,
+  "merged": {
+    "headRefOid": "c9edcaa3de19a150d8e77bca14475e924cf6e547",
+    "mergeCommit": {
+      "oid": "6577c8cb616ab08d3937e69b1285a0012a7b7cd2"
+    },
+    "mergedAt": "2026-10-17T05:33:18Z",
+    "state": "MERGED",
+    "url": "https://github.com/finite0001/livingroom-vet-care/pull/270"
+  },
+  "required_pr_ci": {
+    "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/39004482151",
+    "exact_head": "c9edcaa3de19a150d8e77bca14475e924cf6e547",
+    "checks": [
+      {
+        "name": "frontend",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "edge",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "database",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "diagnostic-renderer",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "Vercel",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "conclusion": "SUCCESS"
+      }
+    ]
+  },
+  "database": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migrations": 200,
+    "latest": "20261017042009",
+    "public_table_fingerprints_preserved": 391,
+    "exact_planned_function_changes": [
+      "finish_clinical_recap(uuid,jsonb)"
+    ],
+    "other_routines_and_permissions_preserved": 1300,
+    "table_metadata_unchanged": true,
+    "audio_policy_unchanged": true,
+    "original_scheduler_prefixes_preserved": true,
+    "scheduler_appends": {
+      "public.scheduler_job_results": 3,
+      "public.scheduler_job_runs": 3
+    },
+    "hosted_clinical_writes": 0,
+    "primary_changed": true
+  },
+  "edge": {
+    "project": "mgadheotkdnrsatfivjy",
+    "name": "clinical-recap-process",
+    "version": 2,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "downloaded_source_sha256": {
+      "supabase/functions/clinical-recap-process/index.ts": "0a255e923d8026ec1b9d097d0dbb0e0536d0c7f3b76da859be62d6d2b111d25d",
+      "supabase/functions/_shared/clinical-recap-handler.ts": "b38dd94f6c4f8e8cb21a984793f56b68b8c49374f9a05330cc3e817580401068",
+      "supabase/functions/_shared/clinical-recap-model.ts": "9345c69fe0d3ec91d14ce54c60f64ab7067c0ca5bc695fba54f12cc36d6e4567",
+      "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+      "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c"
+    },
+    "other_edge_functions_unchanged": true,
+    "secret_metadata_unchanged": true,
+    "service_key_not_a_user_http_status": 401,
+    "service_key_not_a_user_error": "authentication_required",
+    "processing_flag_absent_defaults_off": true,
+    "authenticated_closed_gate_http_tested": false,
+    "real_provider_requests": 0,
+    "hosted_clinical_writes": 0,
+    "primary_changed": true
+  },
+  "frontend": {
+    "deployment_id": "dpl_GMc5oz2rAVm5N67M1qXLMYSrWNHt",
+    "state": "READY",
+    "target": "production",
+    "source_commit": "6577c8cb616ab08d3937e69b1285a0012a7b7cd2",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ]
+  },
+  "browser": {
+    "target": "https://thelivingroom.vet",
+    "checks": [
+      {
+        "width": 1440,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      },
+      {
+        "width": 390,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      }
+    ],
+    "page_errors": [],
+    "authenticated_clinical_acceptance": false,
+    "clinical_writes": 0,
+    "real_provider_calls": 0
+  },
+  "clinical_activation": {
+    "recap_policy_version": 1,
+    "recap_policy_status": "draft",
+    "processing_flag_absent_defaults_off": true,
+    "primary_openai_key_present": false,
+    "clinical_adjudication": "pending",
+    "real_provider_requests": 0
+  },
+  "private_receipt_sha256": {
+    "clinical-recap-fidelity-pr270-merged.json": "fe0caa216f88227fda969fe42e06f2f2f0592b4e2f8d7b57cf5f5b42042980db",
+    "clinical-recap-fidelity-pr270-merge-preflight.json": "cc4f2b82363378013f72b17e860d79f0408402cb51f6551cb22f3485e32117ba",
+    "clinical-recap-fidelity-primary-rollout-db.json": "d4bb72dc73b78091f0914c7f67a8b3aa714fc02a33da92cc7673d480362475fa",
+    "clinical-recap-fidelity-primary-rollout-edge.json": "fb38ac40b705bcf597dd2db1b03bad49fb01e08ccdc2dc7ab94d73f2ea2815c0",
+    "clinical-recap-fidelity-primary-rollout-browser-verification.json": "e787de5e832be29294987cabdb6382ae789262da68c589391d159f4664e6627a"
+  }
+}

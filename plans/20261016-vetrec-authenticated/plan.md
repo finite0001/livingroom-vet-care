@@ -15,7 +15,7 @@ See [observation ledger and native gap matrix](research/authenticated-workflows.
 | Authenticated investigation | Complete within stated boundary | Input workflows, template structure, terminology settings and one generated note inspected |
 | [1. Templates and typed notes](phase-01-templates-and-text.md) | Released in PR267; primary backend and thelivingroom.vet verified | Versioned practice templates, source-backed field proposals and typed observations without microphone capture |
 | [2. Records recap](phase-02-recapped-records.md) | Released in PR268; v3 correction candidate passes eight-case engineering review and staging; clinical adjudication/merge/release pending | Reviewed, source-cited patient history; document ingestion is an explicit second increment |
-| [3–5. Calls, dental and remaining parity](phase-03-05-calls-dental-and-parity.md) | Source capture in progress in an isolated branch; generation/dental remain planned | Patient-linked call drafts, reviewed tooth proposals, separately evaluated discharge/multi-pet/ambient features |
+| [3–5. Calls, dental and remaining parity](phase-03-05-calls-dental-and-parity.md) | 3A source capture implemented with frozen local SQL/Auth/browser/restore proof; staging backend verified with policy draft and gate off; generation/dental remain planned | Private complete call evidence first; [3B call generation/review](phase-03b-call-summary-implementation.md) and [dental dictation](phase-04-dental-dictation-implementation.md) remain separate increments |
 
 Templates/text first because they serve the everyday SOAP path, reuse the existing proposal/review machinery, and provide output contracts for later call and recap adapters. Building an unrestricted general template engine or replacing existing clinical signing is unnecessary.
 
@@ -45,3 +45,7 @@ Evaluate desktop and 390px layout; real iPhone recording/background/screen-lock 
 ## Latest correction candidate
 
 The [fidelity correction candidate](../../docs/launch-evidence/2026-10-16-clinical-recap-fidelity-corrections.md) completes a final v3 eight-case engineering pass (8/8 parser,41/41 required facts,16/16 forbidden checks), preserving the original failures and the intervening rejected v2 H result. Staging200/functionv2 source verified; primary unchanged. Susan clinical adjudication, policy approval, CI and specific merge/release gates remain pending. No processing activation.
+
+## Call source increment
+
+The [Phase 3A engineering evidence](../../docs/launch-evidence/2026-10-16-clinical-call-sources.md) records final private source capture proof: 61 call SQL assertions, 75 actual local API assertions, 41 browser assertions, 3 STAFF boundary checks, 5 populated-restore checks and two observed lock waits. Current canonical compatibility also passes 164 SQL files / 7,172 assertions with 201 migrations. All provider HTTP in the call proof is explicitly stubbed; no real call, OpenAI request or clinical chart write was performed. The separate policy remains draft and processing defaults off. This completes local capture infrastructure, not call summaries or clinical activation; exact-head CI, primary release, Susan's policy review and provider commissioning remain separate gates.

@@ -42,3 +42,8 @@ test-results/
 # Private source-cited recap receipts and synthetic verification artifacts.
 /tmp/clinical-recap-*
 /tests/clinical-recap/__pycache__/
+
+# Private complete call-source receipts, screenshots and local verification artifacts.
+/tmp/clinical-call-*
+/tmp/clinical-calls-*
+/tests/clinical-calls/__pycache__/

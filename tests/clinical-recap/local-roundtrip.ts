@@ -249,7 +249,7 @@ let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 let vite: ReturnType<typeof spawn> | null = null;
 mkdirSync(browserEvidence, { recursive: true, mode: 0o700 });
 try {
-  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "200");
+  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "201");
   const first = await actor(true), second = await actor(false);
   const policyRead = (a = first) => rpc(a.db, "read_clinical_recap_policy", { p_actor_id: a.id });
   const initialPolicy = (await policyRead()).policy;

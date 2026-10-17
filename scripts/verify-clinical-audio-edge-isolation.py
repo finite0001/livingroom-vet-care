@@ -7,7 +7,7 @@ import tempfile
 root = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix="lrv-clinical-audio-edge-") as temporary:
     isolated = Path(temporary)
-    functions = ("clinical-audio-process", "clinical-note-process", "clinical-recap-process")
+    functions = ("clinical-audio-process", "clinical-note-process", "clinical-recap-process", "clinical-call-capture")
     for folder in ("_shared", *functions):
         shutil.copytree(root / "supabase/functions" / folder, isolated / folder)
     for function in functions:
