@@ -203,7 +203,7 @@ mkdirSync("tmp/clinical-dictation-browser", { recursive: true, mode: 0o700 });
 try {
   sqlCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "197",
+    "198",
   );
   const first = await actor("First"),
     second = await actor("Colleague");

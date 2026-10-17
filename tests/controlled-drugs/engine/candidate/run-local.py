@@ -29,7 +29,7 @@ project=work/'project'
 result_dir=Path(tempfile.mkdtemp(prefix=identity+'-evidence-'))
 log=(result_dir/'runner.log').open('w')
 started=False
-runtime=dict(identity=identity,work=str(work),project=str(project),root=str(root),baseline_migrations=197,
+runtime=dict(identity=identity,work=str(work),project=str(project),root=str(root),baseline_migrations=198,
  canonical_candidate=None,controlled_policy_or_opening=False,new_rpc_grants=False,removed=False)
 
 def command(argv,input=None,timeout=120):
@@ -47,7 +47,7 @@ def sql(query):
  return command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=query)
 
 files=sorted((root/'supabase/migrations').glob('*.sql'))
-assert len(files)==197,'Candidate targets the exact 197-migration release; review before rebasing'
+assert len(files)==198,'Candidate targets the exact 198-migration release; review before rebasing'
 inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+[
  root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql',
  root/'supabase/tests/native_fulfillment.test.sql']
@@ -94,7 +94,7 @@ enabled = false
   time.sleep(.05)
  else:raise RuntimeError('Owned scheduler pause did not settle')
  proof['scheduler_paused_owned_server_only']=True
- assert sql('select count(*)from supabase_migrations.schema_migrations;').strip()=='197'
+ assert sql('select count(*)from supabase_migrations.schema_migrations;').strip()=='198'
  assert sql('select count(*)from auth.users;').strip()=='0'
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
  assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and left(relname,17)='controlled_stock_';").strip()=='0'
@@ -124,9 +124,9 @@ select controlled_stock_manifest_required();commit;
  print('Candidate installed locally; all ten canonical root definitions unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:
   output=command(['supabase','test','db','--workdir',str(project)],timeout=420)
-  assert 'All tests successful.'in output and 'Files=160, Tests=6815'in output
-  proof['ordinary_sql_regression']={'files':160,'assertions':6815}
-  print('Ordinary compatibility:160 canonical SQL suites /6815 assertions passed with the candidate installed.',flush=True)
+  assert 'All tests successful.'in output and 'Files=161, Tests=6953'in output
+  proof['ordinary_sql_regression']={'files':161,'assertions':6953}
+  print('Ordinary compatibility:161 canonical SQL suites /6953 assertions passed with the candidate installed.',flush=True)
  environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
  for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-api.py','genuine_auth_api')]:
   p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=360)

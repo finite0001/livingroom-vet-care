@@ -16,6 +16,7 @@ import { useClinicalEncounters } from './queries';
 import { PatientProblems } from './PatientProblems';
 import { ClinicalDictationAudio } from './dictation/audio/ClinicalDictationAudio';
 import { ClinicalDictationReview } from './dictation/ClinicalDictationReview';
+import { ClinicalNoteDrafts } from './templates/ClinicalNoteDrafts';
 
 import { AppointmentDictation } from './appointment-dictation/AppointmentDictation';
 import { prepareAppointmentDictation } from './appointment-dictation/api';
@@ -41,8 +42,10 @@ export function ClinicalWorkspace({ petId, appointmentId = null, disabled = fals
   const [dictationBusy, setDictationBusy] = useState(false);
   const [audioDirty, setAudioDirty] = useState(false);
   const [audioBusy, setAudioBusy] = useState(false);
-  const assistanceDirty = dictationDirty || audioDirty;
-  const assistanceBusy = dictationBusy || audioBusy;
+  const [noteDirty, setNoteDirty] = useState(false);
+  const [noteBusy, setNoteBusy] = useState(false);
+  const assistanceDirty = dictationDirty || audioDirty || noteDirty;
+  const assistanceBusy = dictationBusy || audioBusy || noteBusy;
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [message, setMessage] = useState('');
@@ -141,14 +144,15 @@ export function ClinicalWorkspace({ petId, appointmentId = null, disabled = fals
         {record && <Button size="sm" variant="outline" disabled={appointmentBusy || busy || assistanceDirty} onClick={() => void reload()}>Reload latest saved record</Button>}
         {record && !signed && <p className="text-sm text-muted-foreground">Created by {author(record.created_by)} · Last updated by {author(record.updated_by)} on {dateTime(record.updated_at)} (America/Denver).</p>}
         {signed && <p className="text-sm">Signed by {author(record.signed_by)} on {record.signed_at ? dateTime(record.signed_at) : 'unknown time'} (America/Denver). Original text is locked.</p>}
-        {record && <div ref={recorderSection} tabIndex={-1} className="rounded-md focus:outline-none focus:ring-2 focus:ring-ring">{!appointmentReady && <p role="status" className="mb-3 text-sm">Confirm the appointment above to record into its linked encounter.</p>}<ClinicalDictationAudio encounter={record} beforeStart={beforeRecording} blocked={!appointmentReady || appointmentBusy || disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || dictationDirty || dictationBusy} onDirtyChange={setAudioDirty} onBusyChange={setAudioBusy} /></div>}
+        {record && <div ref={recorderSection} tabIndex={-1} className="rounded-md focus:outline-none focus:ring-2 focus:ring-ring">{!appointmentReady && <p role="status" className="mb-3 text-sm">Confirm the appointment above to record into its linked encounter.</p>}<ClinicalDictationAudio encounter={record} beforeStart={beforeRecording} blocked={!appointmentReady || appointmentBusy || disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || dictationDirty || dictationBusy || noteDirty || noteBusy} onDirtyChange={setAudioDirty} onBusyChange={setAudioBusy} /></div>}
+        {record && <ClinicalNoteDrafts encounter={record} blocked={appointmentBusy || disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || audioDirty || audioBusy || dictationDirty || dictationBusy} onDirtyChange={setNoteDirty} onBusyChange={setNoteBusy} />}
         <fieldset disabled={appointmentBusy || busy || assistanceDirty || (disabled && !record)} className="space-y-4"><legend className="sr-only">Encounter details</legend><div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="visit-date">Visit date and time (America/Denver)</Label><Input readOnly={signed} id="visit-date" type="datetime-local" value={draft.visit_at} onChange={event => setDraft({ ...draft, visit_at: event.target.value })} /></div><div className="space-y-2"><Label htmlFor="visit-type">Visit type</Label><select disabled={signed} id="visit-type" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-100" value={draft.visit_type} onChange={event => { const visit_type = event.target.value as 'clinic' | 'housecall'; setDraft({ ...draft, visit_type, location: visit_type === 'clinic' ? practiceAddress : '' }); }}><option value="clinic">Clinic</option><option value="housecall">Housecall</option></select></div></div>
           <div className="space-y-2"><Label htmlFor="visit-location">Visit location</Label><Input readOnly={signed} id="visit-location" maxLength={1000} value={draft.location} onChange={event => setDraft({ ...draft, location: event.target.value })} /></div>
           {(['subjective', 'objective', 'assessment', 'plan'] as const).map(field => <div key={field} className="space-y-2"><Label htmlFor={`soap-${field}`} >{field.charAt(0).toUpperCase() + field.slice(1)}</Label><Textarea readOnly={signed} id={`soap-${field}`} rows={5} maxLength={50000} value={draft[field]} onChange={event => setDraft({ ...draft, [field]: event.target.value })} /></div>)}
         </fieldset>
         {!signed && <div className="flex flex-wrap gap-2"><Button disabled={appointmentBusy || busy || assistanceDirty || (disabled && !record) || (!!record && !dirty)} onClick={() => void save()}>Save draft</Button><Button variant="outline" disabled={appointmentBusy || busy || assistanceDirty || dirty || !record} onClick={() => setConfirmSign(true)}>Review and sign</Button><p className="w-full text-xs text-muted-foreground">Save explicitly. Clinical text is not automatically saved.</p></div>}
 
-        {record && <ClinicalDictationReview encounter={record} blocked={appointmentBusy || disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || audioDirty || audioBusy} onDirtyChange={setDictationDirty} onBusyChange={setDictationBusy} onAccepted={adopt} />}
+        {record && <ClinicalDictationReview encounter={record} blocked={appointmentBusy || disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || busy || audioDirty || audioBusy || noteDirty || noteBusy} onDirtyChange={setDictationDirty} onBusyChange={setDictationBusy} onAccepted={adopt} />}
         {signed && <div className="space-y-3"><h4 className="font-semibold">Addenda</h4>{addenda.isPending && <p role="status">Loading addenda…</p>}{addenda.isError && <p role="alert" className="text-destructive">Could not load addenda. <button className="underline" onClick={() => void addenda.refetch()}>Retry</button></p>}{addenda.data?.map(item => <article key={item.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{author(item.created_by)} · {dateTime(item.created_at)} (America/Denver)</p><p className="mt-2 whitespace-pre-wrap text-sm">{item.content}</p></article>)}<Label htmlFor="addendum">Append a correction or additional information</Label><Textarea id="addendum" value={addendum} maxLength={50000} disabled={appointmentBusy || busy || assistanceDirty} onChange={event => setAddendum(event.target.value)} /><Button disabled={appointmentBusy || busy || assistanceDirty || !addendum.trim()} onClick={() => void append()}>Save addendum</Button></div>}
       </div>}
     </CardContent></Card>
