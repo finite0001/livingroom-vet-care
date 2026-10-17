@@ -28,7 +28,18 @@ def sql(query):
     return result.stdout.strip()
 
 
-phone = '+1303555' + str(1000 + int(uuid.uuid4().hex[:8], 16) % 9000)
+def unused_synthetic_phone():
+    # Earlier CI probes retain their immutable evidence and complete households.
+    # Find unused fixture space without changing any of those existing records.
+    start = int(uuid.uuid4().hex[:8], 16) % 9000
+    for offset in range(32):
+        candidate = '+1303555' + str(1000 + (start + offset) % 9000)
+        if sql(f"select count(*) from public.clients where public.communication_recipient('SMS',primary_phone)='{candidate}';") == '0':
+            return candidate
+    raise RuntimeError('Could not find an unused synthetic race phone within 32 checks')
+
+
+phone = unused_synthetic_phone()
 message = 'client-integrity-race-' + uuid.uuid4().hex
 client = str(uuid.uuid4())
 assert sql(f"select count(*) from public.clients where public.communication_recipient('SMS',primary_phone)='{phone}';") == '0', 'Refuse a nonempty synthetic race phone'

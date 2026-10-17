@@ -957,5 +957,31 @@
       "hosted_clinical_writes": 0,
       "primary_changed": false
     }
+  },
+  "ci_fixture_correction": {
+    "failed_ci_run": 39006913327,
+    "original_ci_log_sha256": "676629880198e1c447f7ef9279e1f33250e04e53a97c0bf0cc210fddb69d8cdf",
+    "exact_original_collided_phone_known": false,
+    "offline_harness_checks": 8,
+    "proof_receipt_sha256": "ddb23764115a2feec8aec09dfb5bdf28f577d3ed382483d2a452ee8492e44a23",
+    "migrations": 201,
+    "preceding_fixtures": [
+      "whogot_concurrency.py",
+      "patient_photos_concurrency.py"
+    ],
+    "forced_first_candidate": "+13035559201",
+    "selected_unused_phone": "+13035559202",
+    "preceding_clients_byte_preserved": true,
+    "owned_client_removed": true,
+    "retained_review_items": 1,
+    "duplicate_messages": 0,
+    "owned_runtime_removed": true,
+    "provider_requests": 0,
+    "hosted_writes": 0,
+    "bound_inputs_verified": 205,
+    "changed_harness_sha256": {
+      "supabase/tests/client_inbound_concurrency.py": "1af93f146b53bfcd134b0935f8475e8ba836facc3929e1185d844e8ffaf3543e",
+      "supabase/tests/test_client_inbound_harness.py": "42632b906806b671581b835591a62e804b9e3f60df182d791d30c6d793ed2546"
+    }
   }
 }
