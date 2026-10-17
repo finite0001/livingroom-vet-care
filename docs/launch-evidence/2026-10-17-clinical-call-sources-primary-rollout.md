@@ -1,0 +1,11 @@
+# PR 271 — private call capture primary rollout
+
+Recorded 2026-10-17. [PR 271](https://github.com/finite0001/livingroom-vet-care/pull/271) merged as `9a192f23b8b0509019f1571861f8c51ce9b6b97d` after the owner’s specific approval and every required check passed at head `365f2a708e2575a46855b81e6e4bd05b9b5f5d4a`. The deployment checkout’s tree matched merged `main` exactly. The [sanitized receipt](2026-10-17-clinical-call-sources-primary-rollout.json) records each verification boundary and original private receipt hash.
+
+Primary Supabase `mgadheotkdnrsatfivjy` advanced from 200 to **201 migrations**, latest `20261017042642`. All original **391 public tables**, **1,301 routine definitions/permissions**, table metadata and audio policy were preserved. The 26 scheduler appends retained their original prefixes. The four new private tables, 21 new routine source bodies and effective grants matched the reviewed migration; only the draft policy seed was added. No existing clinical record was written by the rollout.
+
+`clinical-call-capture` is **ACTIVE v1**, with JWT verification enabled. Downloaded entrypoint, handler and model bytes match the reviewed source. Other Edge Functions and secret metadata are unchanged. The capture flag is **absent/default off**, and the call policy remains **v1 draft**. Anonymous HTTP returned 401. An authenticated closed-gate request was not tested or claimed; no real provider request occurred.
+
+Vercel production `dpl_9kx3ZzsrDR7xWLeRQgvpiMg59huU` is READY at the exact merge commit and assigned to [thelivingroom.vet](https://thelivingroom.vet) and its www alias. Actual browser checks passed at 1440px and 390px: login HTTP 200 with its form, protected patient route redirects, no horizontal overflow and no page errors. Screenshots were visually inspected. These are public/protected-route checks, not authenticated clinical or real iPhone/Safari acceptance.
+
+This releases **private source capture infrastructure**, not AI call summaries or clinical activation. Susan’s policy/retention approval, authorized CloudTalk account commissioning, call generation/review and its clinical evaluation remain separate work. The subsequent Phase 3B.1 access migration is not included in this primary rollout.

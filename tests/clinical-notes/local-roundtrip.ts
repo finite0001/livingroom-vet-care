@@ -293,7 +293,7 @@ mkdirSync("tmp/clinical-notes-browser", { recursive: true, mode: 0o700 });
 try {
   apiCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "201",
+    "202",
   );
   const first = await actor(true), second = await actor(false);
   const configuration = (a = first) =>
