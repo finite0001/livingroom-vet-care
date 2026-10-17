@@ -1,6 +1,6 @@
 # Phase 1: versioned templates and typed-note generation
 
-Status: implemented on `feat/clinical-note-templates-20261016`; local/staging verification passed; PR review and primary release pending. Depends on [observations VR-A07–12 and VR-T01](research/authenticated-workflows.md), existing audio/proposal pipeline and current clinical policy. The implementation is stacked on imaging PR266. Processing remains inactive pending Susan's review. See the [verification receipt](../../docs/launch-evidence/2026-10-16-clinical-note-templates.md).
+Status: released in PR267 with primary migration/function and thelivingroom.vet verification; post-merge CI passed. Depends on [observations VR-A07–12 and VR-T01](research/authenticated-workflows.md), existing audio/proposal pipeline and current clinical policy. Imaging PR266 was released first; merged main `bef6d4ee` has the tested Phase 1 application tree. Processing remains inactive pending Susan's review. See the [verification receipt](../../docs/launch-evidence/2026-10-16-clinical-note-templates.md).
 
 The final implementation uses a separate `clinical-note-v1` contract and `clinical-note-process` function. It preserves the strict legacy audio contracts and adapts only an already completed, same-operator audio transcript for the exact encounter. See the [final contract](contract.md) and [staff/release documentation](../../docs/features/clinical-note-templates.md).
 

@@ -1,6 +1,10 @@
 # Phase 2: reviewed, source-cited records recap
 
-Priority: after Phase 1. Status: planned; no recap processing activated. Vendor observation VR-A06 establishes a form, not verified OCR or citation behavior. This is an independent native implementation.
+Priority: after Phase 1. Status: native implementation and local/staging verification complete; PR CI and primary release pending; no recap processing activated. Vendor observation VR-A06 establishes a form, not verified OCR or citation behavior. This is an independent native implementation.
+
+Implementation preparation: [strict source/job/review contract](recap-contract.md), [database race and preservation acceptance matrix](recap-db-acceptance.md), [patient workspace and recovery map](recap-ui-map.md), and [synthetic model-fidelity evaluation](recap-model-evaluation.md). These documents specify the implementation and its acceptance targets. Release evidence must distinguish actual structural/workflow checks from the separately pending real-model and clinical evaluation.
+
+Actual completed checks and remaining activation gates: [local/staging receipt](../../docs/launch-evidence/2026-10-16-clinical-record-recaps.md).
 
 ## First increment
 

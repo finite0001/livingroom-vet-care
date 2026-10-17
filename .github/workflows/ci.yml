@@ -255,6 +255,8 @@ jobs:
         run: python3 -B tests/clinical-audio/disposable.py --run-synthetic-local
       - name: Verify template note generation, source recovery, revoked-session locks and populated restore
         run: python3 -B tests/clinical-notes/disposable.py --run-synthetic-local
+      - name: Verify source-cited recap, source-write races and immutable review in an owned runtime
+        run: python3 -B tests/clinical-recap/disposable.py --run-synthetic-local
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage
