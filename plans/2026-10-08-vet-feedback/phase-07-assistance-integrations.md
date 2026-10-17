@@ -18,6 +18,8 @@ These are separate deliverables and should be separate PR sequences. One working
 
 ## 7B — VetRocket X-ray integration
 
+**October16 progress:** public official-source/demo investigation and native manually linked imaging register are underway in the [VetRocket implementation plan](../20261016-vetrocket-imaging/plan.md). Automatic study/report exchange remains open pending practice account/interface evidence.
+
 1. Confirm the actual RocketPACS product/account and obtain authorized interface details. Prove patient/study identity mapping before broader automation.
 2. Add patient/encounter imaging studies with accession/vendor study ID, modality, date, viewer link, report and status. A reviewed manual link is an intermediate workflow; do not call it an automatic result feed.
 3. Implement the agreed supported study/report exchange. Where the vendor offers it and the practice requires it, add order/worklist creation and result notification through a separate tested adapter. Do not assume public DICOMweb/HL7/SSO/webhook support from product marketing.

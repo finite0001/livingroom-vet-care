@@ -51,7 +51,7 @@ try:
         assert re.match(r'^\d{14}_', migration.name)
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project/'supabase/migrations'/migration.name)
-    assert len(hashes) == 196 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes and '20261015011200_controlled_draft_configuration.sql' in hashes and '20261015020722_stock_writer_provenance.sql' in hashes and '20261015055007_native_custody_provenance.sql' in hashes and '20261015235157_unpaid_invoice_reminders.sql' in hashes and '20261016004714_invoice_reminder_care_gate_order.sql' in hashes and '20261016020711_invoice_reminder_practice_settings.sql' in hashes and '20261016040402_clinical_dictation_review.sql' in hashes and '20261016143618_clinical_audio_soap.sql' in hashes and '20261016162448_clinical_audio_veterinary_context.sql' in hashes
+    assert len(hashes) == 197 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes and '20261015011200_controlled_draft_configuration.sql' in hashes and '20261015020722_stock_writer_provenance.sql' in hashes and '20261015055007_native_custody_provenance.sql' in hashes and '20261015235157_unpaid_invoice_reminders.sql' in hashes and '20261016004714_invoice_reminder_care_gate_order.sql' in hashes and '20261016020711_invoice_reminder_practice_settings.sql' in hashes and '20261016040402_clinical_dictation_review.sql' in hashes and '20261016143618_clinical_audio_soap.sql' in hashes and '20261016162448_clinical_audio_veterinary_context.sql' in hashes
     if args.include_sql_regression: shutil.copytree(root/'supabase/tests', project/'supabase/tests')
     harness = root/'tests/scheduling/catalog-local.ts'
     harness_hash = hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -82,8 +82,8 @@ enabled = false
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
-        assert 'All tests successful.' in result and 'Files=159, Tests=6738' in result
-        print('Canonical SQL regression passed: 159 files /6738 assertions.', flush=True)
+        assert 'All tests successful.' in result and 'Files=160, Tests=6815' in result
+        print('Canonical SQL regression passed: 160 files /6815 assertions.', flush=True)
     # Rehearse the exact staged/primary rollback probe while the freshly replayed
     # policy is still empty, before any Auth/browser acceptance changes it.
     probe = root/'scripts/task-reconciliation/rollback-probe.sql'
@@ -210,7 +210,7 @@ enabled = false
       "select jsonb_build_object('active_staff',(select count(*)from profiles where is_active),'reconciliation_enabled',coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false),'pending_run',(select pending_run_id from operational_reconciliation_cursor),'outbox',(select count(*)from communication_outbox),'inventory_movements',(select count(*)from inventory_movements),'cron_active',(select active from cron.job where jobname='reconcile-operational-tasks'));" ]))
     assert baseline == {'active_staff':0,'reconciliation_enabled':False,'pending_run':None,'outbox':0,'inventory_movements':0,'cron_active':False}
     proof = {'canonical_migrations':len(hashes),'migration189_sha256':hashes['20261015055007_native_custody_provenance.sql'],'migration188_sha256':hashes['20261015020722_stock_writer_provenance.sql'],'migration187_sha256':hashes['20261015011200_controlled_draft_configuration.sql'],'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
-             'sql_regression':{'files':159,'assertions':6738} if args.include_sql_regression else None,
+             'sql_regression':{'files':160,'assertions':6815} if args.include_sql_regression else None,
              'staff_only':args.staff_only,'controlled_draft':{'api':controlled_receipt,'concurrency':controlled_locks,'restore':controlled_restored},'inventory':{'api':inventory_receipt,'concurrency':inventory_locks,'restore':inventory_restored},'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'inventory_rollback_probe':identity_rollback,'controlled_rollback_probe':controlled_rollback,'cleanup_baseline':baseline}
     proof_path=root/'tmp/reconciliation-release-disposable-proof.json'
     proof_path.parent.mkdir(exist_ok=True)

@@ -341,7 +341,7 @@ let cleanupFailure: unknown = null;
 try {
   sqlCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "196",
+    "197",
   );
   const first = await actor("First"),
     second = await actor("Second");
