@@ -21,3 +21,9 @@ Status: implementing on `fix/clinical-recap-fidelity-20261016`, stacked on evalu
 ## Following packages
 
 After the recap correction increment, continue patient-linked call drafts and dental proposals with explicit patient/source mapping and existing reviewed-note/chart writes. Supplier, PACS, Gusto and anesthesia exchanges require supported vendor access/sample data. Do not claim a manual register, CSV contract or synthetic probe proves the live integration.
+
+## Bounded run decisions and retained failures
+
+- V2 run `fa894caa00cf466a9728`: exactly8 calls, no retries, all resources removed;7 accepted, H rejected because a historical unrecorded measurement was labeled native problem status. Its raw wording covers the missing measurements; no output was retained for H. Preserve the complete failed run and separate clinical adjudication.
+- Under Dave's instruction to address the remaining defects and execute, the coordinator selects **one additional full A-H baseline, at most8 requests**, after tightening this classification instruction as promptv3. This is a new complete comparison, not a retry of only H. Total selected correction budget:16 provider requests across the two fully reported runs; no automatic retries or additional follow-up run is scheduled. Same source corpus/inventory, same model alias, original parser rejection retained.
+- Promptv3/schema description explicitly reserve `recorded_status_as_of_capture` for native problem status and classify encounter measurements as historical/uncertain. Do not relax the parser to admit the observed invalid output. The unreleased prompt-version migration now preserves exact v1/v2/v3 receipts.

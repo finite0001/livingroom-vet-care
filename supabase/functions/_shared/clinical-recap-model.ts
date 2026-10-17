@@ -3,9 +3,10 @@ import { audioLanguageContextSchema } from "./clinical-audio-model.ts";
 
 export const RECAP_CONTRACT = "clinical-recap-v1";
 export const RECAP_SOURCE_CONTRACT = "clinical-recap-source-v1";
-export const RECAP_PROMPT_VERSION = "lrv-recap-claims-v2";
+export const RECAP_PROMPT_VERSION = "lrv-recap-claims-v3";
 export const RECAP_PROMPT_VERSIONS = [
   "lrv-recap-claims-v1",
+  "lrv-recap-claims-v2",
   RECAP_PROMPT_VERSION,
 ] as const;
 export const RECAP_LIMITS = {
