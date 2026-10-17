@@ -1,0 +1,376 @@
+{
+  "evidence_version": "lrv-recap-fidelity-corrections-v1",
+  "practice_date": "2026-10-16",
+  "parent_pr": 269,
+  "prior_baseline_preserved": "2026-10-16-clinical-recap-synthetic-evaluation.json",
+  "current_prompt": "lrv-recap-claims-v3",
+  "current_corpus_unchanged": true,
+  "runs": [
+    {
+      "prompt_version": "lrv-recap-claims-v2",
+      "implementation_commit": "e8aae8a9",
+      "run_id": "fa894caa00cf466a9728",
+      "started_at": "2026-10-17T04:24:32.188919Z",
+      "finished_at": "2026-10-17T04:26:33.012017Z",
+      "corpus_sha256": "98367e46cab9978c005a72dc0dd6dda5f89d40dd8d6c71295888c6dad93ffc4f",
+      "frozen_plan_sha256": "91702a0939116cea7bab83e5f960d2f30e5e19aa014d8eeeab2e11119efa1e84",
+      "source_sha256": {
+        "supabase/functions/_shared/clinical-recap-handler.ts": "69819a36e4192f35071e3c519dffc5941e51d9ce3a4fc90cc19814a53a9be5a2",
+        "supabase/functions/_shared/clinical-recap-model.ts": "ddd2e8565c158eb2e9ae5128b6bfe25d9d3bd08cc06a6df5263673e81ff13efc",
+        "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+        "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+        "supabase/functions/clinical-recap-process/deno.json": "e85b3fea7b5b71c07813df8c0e34f5d2ef9a0f7660482245703b548351094a34",
+        "supabase/functions/clinical-recap-process/deno.lock": "ee504df067152068e733d4010eac4786ff321498ef4d25941c6f81c36436328b",
+        "supabase/migrations/20261017015543_clinical_record_recap.sql": "801965b142ad970a92fc5027dc0d6e47dda52217938136c9326f32d078142e55",
+        "supabase/migrations/20261017042009_clinical_recap_prompt_v2.sql": "62886f70f34a90b79aeee35e7f9cdfa977d9b798c35ab2b1d69da8d9bed24d4b",
+        "tests/clinical-recap/synthetic-provider-plan.ts": "c77b9712fc42a7b6e3f99a2890d233c995247a4d758eb6a30e72fa992b87d62b",
+        "tests/clinical-recap/synthetic-provider.py": "bc193c64fca946bc3716a7b4abae6392521d1a01032b2ed82ed6f5787003c79c",
+        "tests/clinical-recap/evaluation-corpus.ts": "47d014042b92638b61806e81a43b71e54aa405eac60f512477536c83f56c3fe3",
+        "tests/clinical-recap/evaluation-capture.ts": "f49fe58e604d3006d3f5de443181c69d18ed25e557c421bca32c8c98602168a1",
+        "tests/clinical-recap/evaluation-local.py": "9262b44bc9d2a99ffcaf59dee35add346d3f582fdc0d53e3062690bc07003705",
+        "tests/clinical-recap/synthetic-provider-plan.test.ts": "57cfb87616ba82178f43343b9b264ee9d6789dede1fe588332dcaccdfbb8d766",
+        "tests/clinical-recap/test_synthetic_provider.py": "fc713b031a89ee8e6042c63d8bd0c760f35b1ceaca200b743b8f3b9f2b1877f5"
+      },
+      "maximum_calls": 8,
+      "observed_calls": 8,
+      "automatic_retries": 0,
+      "uncertain_calls": 0,
+      "http_200": 8,
+      "complete_provider_bodies": 8,
+      "parser_passes": 7,
+      "raw_claims": 38,
+      "parsed_claims": 34,
+      "parsed_citations": 43,
+      "raw_flags": 15,
+      "parsed_flags": 16,
+      "usage": {
+        "input_tokens": 26949,
+        "output_tokens": 4869,
+        "total_tokens": 31818
+      },
+      "requested_and_returned_model": "gpt-6-luna",
+      "immutable_server_model_snapshot_exposed": false,
+      "required_count": 41,
+      "required_pass": 38,
+      "required_not_pass": [
+        "H_historical_owner_cough",
+        "H_measurements_unknown",
+        "H_no_care"
+      ],
+      "forbidden_checks": 16,
+      "forbidden_inferences_observed": 0,
+      "engineering_case_results": [
+        {
+          "id": "A",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": [
+            {
+              "id": "A_dates_depend_on_rendered_citation_metadata",
+              "severity": "note",
+              "blocking": false,
+              "reason": "Literal dates are absent in some claim text, but visible per-claim immutable source summaries carry visit dates and retained claims preserve citations. Plain text-only reuse without those dates is not approved by this evaluation."
+            }
+          ]
+        },
+        {
+          "id": "B",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "C",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "D",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "E",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "F",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "G",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "H",
+          "parser_pass": false,
+          "engineering_result": "needs_resolution",
+          "additional_findings": [
+            {
+              "id": "H_temporal_discriminator_invalid",
+              "severity": "critical",
+              "blocking": true,
+              "reason": "Raw claim_002 uses temporal_status=recorded_status_as_of_capture for historical signed-encounter measurements without native fields.status evidence. The unchanged validator correctly rejects the whole response as invalid_provider_output. No parsed or retainable payload exists; do not weaken validation or treat faithful raw wording as delivered success."
+            }
+          ]
+        }
+      ],
+      "clinical_adjudication": "pending",
+      "cleanup": {
+        "owned_functions_removed": 8,
+        "owned_guard_bucket_removed": true,
+        "all_baseline_metadata_unchanged": true,
+        "complete": true
+      },
+      "hosted_preservation": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 199,
+        "public_table_fingerprints_preserved": 391,
+        "routines_and_permissions_preserved": 1301,
+        "table_metadata_unchanged": true,
+        "original_scheduler_prefixes_preserved": true,
+        "scheduler_appends": {},
+        "hosted_clinical_writes": 0
+      },
+      "processing_flags_before": {
+        "CLINICAL_AUDIO_PROCESSING_ENABLED": null,
+        "CLINICAL_NOTE_PROCESSING_ENABLED": null,
+        "CLINICAL_RECAP_PROCESSING_ENABLED": null
+      },
+      "processing_flags_after": {
+        "CLINICAL_AUDIO_PROCESSING_ENABLED": null,
+        "CLINICAL_NOTE_PROCESSING_ENABLED": null,
+        "CLINICAL_RECAP_PROCESSING_ENABLED": null
+      }
+    },
+    {
+      "prompt_version": "lrv-recap-claims-v3",
+      "implementation_commit": "fec22a29",
+      "run_id": "ad1a0f1a81ac42b08b62",
+      "started_at": "2026-10-17T04:29:41.836813Z",
+      "finished_at": "2026-10-17T04:32:02.103515Z",
+      "corpus_sha256": "98367e46cab9978c005a72dc0dd6dda5f89d40dd8d6c71295888c6dad93ffc4f",
+      "frozen_plan_sha256": "7e42498d215e90406427392ea0d8329b94add51e93d3fb5117ed71d5d61f04ba",
+      "source_sha256": {
+        "supabase/functions/_shared/clinical-recap-handler.ts": "b38dd94f6c4f8e8cb21a984793f56b68b8c49374f9a05330cc3e817580401068",
+        "supabase/functions/_shared/clinical-recap-model.ts": "9345c69fe0d3ec91d14ce54c60f64ab7067c0ca5bc695fba54f12cc36d6e4567",
+        "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+        "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+        "supabase/functions/clinical-recap-process/deno.json": "e85b3fea7b5b71c07813df8c0e34f5d2ef9a0f7660482245703b548351094a34",
+        "supabase/functions/clinical-recap-process/deno.lock": "ee504df067152068e733d4010eac4786ff321498ef4d25941c6f81c36436328b",
+        "supabase/migrations/20261017015543_clinical_record_recap.sql": "801965b142ad970a92fc5027dc0d6e47dda52217938136c9326f32d078142e55",
+        "supabase/migrations/20261017042009_clinical_recap_prompt_v2.sql": "f51ecd2a6d4faf6c65b173cf773be0cdb26dbf24609f3934644bc0527bf0f999",
+        "tests/clinical-recap/synthetic-provider-plan.ts": "c77b9712fc42a7b6e3f99a2890d233c995247a4d758eb6a30e72fa992b87d62b",
+        "tests/clinical-recap/synthetic-provider.py": "bc193c64fca946bc3716a7b4abae6392521d1a01032b2ed82ed6f5787003c79c",
+        "tests/clinical-recap/evaluation-corpus.ts": "47d014042b92638b61806e81a43b71e54aa405eac60f512477536c83f56c3fe3",
+        "tests/clinical-recap/evaluation-capture.ts": "f49fe58e604d3006d3f5de443181c69d18ed25e557c421bca32c8c98602168a1",
+        "tests/clinical-recap/evaluation-local.py": "9262b44bc9d2a99ffcaf59dee35add346d3f582fdc0d53e3062690bc07003705",
+        "tests/clinical-recap/synthetic-provider-plan.test.ts": "57cfb87616ba82178f43343b9b264ee9d6789dede1fe588332dcaccdfbb8d766",
+        "tests/clinical-recap/test_synthetic_provider.py": "fc713b031a89ee8e6042c63d8bd0c760f35b1ceaca200b743b8f3b9f2b1877f5"
+      },
+      "maximum_calls": 8,
+      "observed_calls": 8,
+      "automatic_retries": 0,
+      "uncertain_calls": 0,
+      "http_200": 8,
+      "complete_provider_bodies": 8,
+      "parser_passes": 8,
+      "raw_claims": 43,
+      "parsed_claims": 43,
+      "parsed_citations": 50,
+      "raw_flags": 11,
+      "parsed_flags": 13,
+      "usage": {
+        "input_tokens": 28013,
+        "output_tokens": 5598,
+        "total_tokens": 33611
+      },
+      "requested_and_returned_model": "gpt-6-luna",
+      "immutable_server_model_snapshot_exposed": false,
+      "required_count": 41,
+      "required_pass": 41,
+      "required_not_pass": [],
+      "forbidden_checks": 16,
+      "forbidden_inferences_observed": 0,
+      "engineering_case_results": [
+        {
+          "id": "A",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "B",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": [
+            {
+              "id": "B_UTC_document_day_versus_Denver_display",
+              "severity": "note",
+              "blocking": false,
+              "reason": "Claims002/003 say October17,2026 without naming UTC; immutable created_at is October17 03:49:43Z, while SourceSummary shows October16 evening explicitly labeled Denver. Both derive from the same valid instant and no event is fabricated. Flag the possible apparent disagreement for review; qualify UTC or retain canonical timestamp before text-only reuse. Engineering fact support passes; clinical/presentation approval remains pending."
+            }
+          ]
+        },
+        {
+          "id": "C",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": [
+            {
+              "id": "C_anaphoric_problem_notes_context",
+              "severity": "note",
+              "blocking": false,
+              "reason": "Claim002 names gastroenteritis while quoting the same frozen problem notes prior episode recorded as resolved. Title resides in that source context and full source is retained; this is not an unrelated-source claim. A stricter future literal-field-only policy could split/remove the repeated title or cite title too; current contextual support is preserved."
+            }
+          ]
+        },
+        {
+          "id": "D",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "E",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "F",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        },
+        {
+          "id": "G",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": [
+            {
+              "id": "G_date_depends_on_rendered_source_metadata",
+              "severity": "note",
+              "blocking": false,
+              "reason": "Claim001 says selected encounter rather than spelling December1,2024; own immutable citation SourceSummary carries the dated visit and is rendered before quote. This evaluation does not approve stripping provenance and reusing text without historical context."
+            }
+          ]
+        },
+        {
+          "id": "H",
+          "parser_pass": true,
+          "engineering_result": "pass",
+          "additional_findings": []
+        }
+      ],
+      "clinical_adjudication": "pending",
+      "cleanup": {
+        "owned_functions_removed": 8,
+        "owned_guard_bucket_removed": true,
+        "all_baseline_metadata_unchanged": true,
+        "complete": true
+      },
+      "hosted_preservation": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 199,
+        "public_table_fingerprints_preserved": 391,
+        "routines_and_permissions_preserved": 1301,
+        "table_metadata_unchanged": true,
+        "original_scheduler_prefixes_preserved": true,
+        "scheduler_appends": {
+          "public.scheduler_job_results": 1,
+          "public.scheduler_job_runs": 1
+        },
+        "hosted_clinical_writes": 0
+      },
+      "processing_flags_before": {
+        "CLINICAL_AUDIO_PROCESSING_ENABLED": null,
+        "CLINICAL_NOTE_PROCESSING_ENABLED": null,
+        "CLINICAL_RECAP_PROCESSING_ENABLED": null
+      },
+      "processing_flags_after": {
+        "CLINICAL_AUDIO_PROCESSING_ENABLED": null,
+        "CLINICAL_NOTE_PROCESSING_ENABLED": null,
+        "CLINICAL_RECAP_PROCESSING_ENABLED": null
+      }
+    }
+  ],
+  "current_engineering_required_facts_passed": 41,
+  "current_engineering_forbidden_checks_passed": 16,
+  "synthetic_fidelity_gate": "pending_independent_clinical_adjudication",
+  "clinical_processing_enabled": false,
+  "primary_changed": false,
+  "verification": {
+    "npm_check": true,
+    "node_tests": 1585,
+    "offline_python_tests": 16,
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "frozen_edge_typecheck": true,
+    "current_sql_migrations": 200,
+    "current_sql_summary": "All tests successful.\nFiles=163, Tests=7111, 49 wallclock secs ( 0.91 usr  0.32 sys +  1.09 cusr  1.01 csys =  3.33 CPU)\nResult: PASS",
+    "ui_and_auth_proof_prompt": "lrv-recap-claims-v2; final v3 UI source hashes unchanged",
+    "api_assertions": 89,
+    "browser_assertions": 26,
+    "restore_assertions": 6,
+    "restored_relations": 428,
+    "observed_lock_waits": 11,
+    "dropped_committed_browser_responses": 3,
+    "owned_runtime_removed": true
+  },
+  "staging_database": {
+    "project": "kothoqicubowyhwfsrte",
+    "migrations": 200,
+    "latest": "20261017042009",
+    "public_table_fingerprints_preserved": 391,
+    "exact_planned_function_changes": [
+      "finish_clinical_recap(uuid,jsonb)"
+    ],
+    "other_routines_and_permissions_preserved": 1300,
+    "table_metadata_unchanged": true,
+    "audio_policy_unchanged": true,
+    "original_scheduler_prefixes_preserved": true,
+    "scheduler_appends": {},
+    "hosted_clinical_writes": 0,
+    "primary_changed": false
+  },
+  "staging_edge": {
+    "project": "kothoqicubowyhwfsrte",
+    "name": "clinical-recap-process",
+    "version": 2,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "downloaded_source_sha256": {
+      "supabase/functions/clinical-recap-process/index.ts": "0a255e923d8026ec1b9d097d0dbb0e0536d0c7f3b76da859be62d6d2b111d25d",
+      "supabase/functions/_shared/clinical-recap-handler.ts": "b38dd94f6c4f8e8cb21a984793f56b68b8c49374f9a05330cc3e817580401068",
+      "supabase/functions/_shared/clinical-recap-model.ts": "9345c69fe0d3ec91d14ce54c60f64ab7067c0ca5bc695fba54f12cc36d6e4567",
+      "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+      "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c"
+    },
+    "other_edge_functions_unchanged": true,
+    "secret_metadata_unchanged": true,
+    "service_key_not_a_user_http_status": 401,
+    "service_key_not_a_user_error": "authentication_required",
+    "processing_flag_absent_defaults_off": true,
+    "authenticated_closed_gate_http_tested": false,
+    "real_provider_requests": 0,
+    "hosted_clinical_writes": 0,
+    "primary_changed": false
+  },
+  "clinical_review_packets": "Complete private packets for both correction runs; prior original packet retained",
+  "remaining": [
+    "Susan clinical adjudication and recap presentation/retention approval",
+    "specific merge approval and required CI",
+    "primary database/Edge/frontend release verification",
+    "primary OpenAI key setup if still absent",
+    "separate approved processing commissioning"
+  ]
+}

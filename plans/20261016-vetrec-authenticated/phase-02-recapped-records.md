@@ -63,3 +63,7 @@ Not in this first release: uploaded/scanned/handwritten PDFs, OCR, Office/ZIP/Ex
 - [x] Implement and release the native-source/manifest/review contract; actual completed checks are recorded in the release receipts. Real-model and clinical evaluation are separate gates.
 - [ ] Scope additional native adapters individually with their correction/void/version semantics.
 - [ ] Obtain authorized sample documents and approve extraction/runtime/provider scope before claiming uploaded-record recap support. Document ingestion requires immutable originals, MIME/page/size limits, isolated bounded parsing/OCR and per-page provenance in its own plan/release.
+
+## Latest correction candidate
+
+The [fidelity correction candidate](../../docs/launch-evidence/2026-10-16-clinical-recap-fidelity-corrections.md) completes a final v3 eight-case engineering pass (8/8 parser,41/41 required facts,16/16 forbidden checks), preserving the original failures and the intervening rejected v2 H result. Staging200/functionv2 source verified; primary unchanged. Susan clinical adjudication, policy approval, CI and specific merge/release gates remain pending. No processing activation.

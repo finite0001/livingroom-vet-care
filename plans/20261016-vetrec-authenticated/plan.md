@@ -14,8 +14,8 @@ See [observation ledger and native gap matrix](research/authenticated-workflows.
 | --- | --- | --- |
 | Authenticated investigation | Complete within stated boundary | Input workflows, template structure, terminology settings and one generated note inspected |
 | [1. Templates and typed notes](phase-01-templates-and-text.md) | Released in PR267; primary backend and thelivingroom.vet verified | Versioned practice templates, source-backed field proposals and typed observations without microphone capture |
-| [2. Records recap](phase-02-recapped-records.md) | Released in PR268; primary backend and thelivingroom.vet verified; initial provider baseline complete; fidelity findings block activation | Reviewed, source-cited patient history; document ingestion is an explicit second increment |
-| [3–5. Calls, dental and remaining parity](phase-03-05-calls-dental-and-parity.md) | Planned | Patient-linked call drafts, reviewed tooth proposals, separately evaluated discharge/multi-pet/ambient features |
+| [2. Records recap](phase-02-recapped-records.md) | Released in PR268; v3 correction candidate passes eight-case engineering review and staging; clinical adjudication/merge/release pending | Reviewed, source-cited patient history; document ingestion is an explicit second increment |
+| [3–5. Calls, dental and remaining parity](phase-03-05-calls-dental-and-parity.md) | Source capture in progress in an isolated branch; generation/dental remain planned | Patient-linked call drafts, reviewed tooth proposals, separately evaluated discharge/multi-pet/ambient features |
 
 Templates/text first because they serve the everyday SOAP path, reuse the existing proposal/review machinery, and provide output contracts for later call and recap adapters. Building an unrestricted general template engine or replacing existing clinical signing is unnecessary.
 
@@ -41,3 +41,7 @@ Evaluate desktop and 390px layout; real iPhone recording/background/screen-lock 
 - Authorized sample record uploads and source-document requirements before claiming scanned/handwritten recap support.
 - Call transcript access policy: current call recordings/transcripts are ADMIN-only.
 - Real VetRocket portal/API/DICOM access remains separate. This VetRec login does not resolve it; PR266 is a manual imaging register, not automatic PACS integration.
+
+## Latest correction candidate
+
+The [fidelity correction candidate](../../docs/launch-evidence/2026-10-16-clinical-recap-fidelity-corrections.md) completes a final v3 eight-case engineering pass (8/8 parser,41/41 required facts,16/16 forbidden checks), preserving the original failures and the intervening rejected v2 H result. Staging200/functionv2 source verified; primary unchanged. Susan clinical adjudication, policy approval, CI and specific merge/release gates remain pending. No processing activation.
