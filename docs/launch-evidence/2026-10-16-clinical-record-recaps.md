@@ -88,7 +88,11 @@ pending in the reviewed dry run, then applied. The single new
 PR268 was specifically approved and merged as
 `c8d44c2edfa8f3a05ac7d6a113ad69508ddfdf6d`. Its complete file tree matches
 the tested PR head `c2cbbde0291c49abe19cd63155c5c1fffd13063d`; all required
-PR checks passed. The duplicate main CI run remains separately tracked.
+PR checks passed. The post-merge main frontend CI later reported 523 passes, one cold-load Back
+navigation failure and one skip. PR269 adds destination-record readiness
+assertions to that test; ten focused mobile/desktop repetitions pass, with no
+production routing change or established deterministic product defect. Follow-up
+CI is separate from the historical PR-head checks.
 
 Primary `mgadheotkdnrsatfivjy` was released in database → Edge Function →
 merged frontend order: migration 199, JWT-protected `clinical-recap-process`

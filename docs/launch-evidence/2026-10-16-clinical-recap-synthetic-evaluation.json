@@ -231,7 +231,9 @@
     "node_tests": 1580,
     "python_offline_safeguard_tests": 16,
     "existing_lint_warnings": 4,
-    "new_lint_errors": 0
+    "new_lint_errors": 0,
+    "focused_cold_load_back_navigation_tests": 10,
+    "browser_test_readiness": "Wait for rendered destination household before browser Back; no product routing change or new retry/timeout."
   },
   "raw_provider_receipts_and_review_packet": "Private ignored tmp files; not committed",
   "remaining_activation_gates": [

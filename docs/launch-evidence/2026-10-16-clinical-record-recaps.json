@@ -471,7 +471,14 @@
       "version": 1
     },
     "clinical_processing_enabled": false,
-    "primary_openai_key_configured_at_rollout": false
+    "primary_openai_key_configured_at_rollout": false,
+    "post_merge_browser_ci": {
+      "run_id": 38999080923,
+      "frontend_job": "523 passed; one cold-load browser Back test failed, plus one skipped",
+      "failure": "e2e/hub-linkage.spec.ts desktop cold-load section navigation",
+      "followup_pr": 269,
+      "followup": "Test waits for rendered household before Back; ten focused mobile/desktop repetitions pass. No deterministic production routing defect established. Follow-up CI remains separate."
+    }
   },
   "activation": {
     "recap_policy": "draft",

@@ -102,6 +102,13 @@ covering successful finish, duplicate refusal, wrong auth/body, expiry and
 bounded oversized-body failure. Generated probe frozen Deno checking passed.
 CI includes only offline safeguards; it cannot initiate the paid corpus.
 
+The earlier merged build separately exposed a cold-load browser Back test
+readiness failure. The test now waits for the fully rendered destination household
+before Back, preserving its URL/deep-link/viewport assertions. Ten repeated
+mobile/desktop focused cases and scoped lint pass. No production routing code,
+timeout or retry changed; this is a test-readiness mitigation, not a demonstrated
+deterministic product defect or a change to the frozen evaluation.
+
 ## Next bounded correction and re-evaluation
 
 1. Add an explicit reviewable source-coverage contract for required problem
