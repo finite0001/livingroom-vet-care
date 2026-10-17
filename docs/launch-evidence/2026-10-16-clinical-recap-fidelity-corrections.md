@@ -2,7 +2,7 @@
 
 The original B/C/D/H findings have been corrected in a reviewable candidate. The final complete eight-case run passes **8/8 structural checks, all 41 required engineering fact checks and all 16 forbidden-inference checks**. Susan's independent clinical adjudication remains pending. Processing stays off; this is not clinical approval, an accuracy estimate or a production release.
 
-[Machine-readable receipts and source hashes](2026-10-16-clinical-recap-fidelity-corrections.json). Original [v1 baseline and failures](2026-10-16-clinical-recap-synthetic-evaluation.md) are preserved. New code is stacked on evaluation PR269; it must receive its own specific merge approval and required CI before primary rollout.
+[Machine-readable receipts and source hashes](2026-10-16-clinical-recap-fidelity-corrections.json). Original [v1 baseline and failures](2026-10-16-clinical-recap-synthetic-evaluation.md) are preserved. PR270 targets main and includes evaluation PR269, which will be closed as superseded after merge. Dave specifically authorized PR270 to merge when its required checks pass; primary rollout follows that merge.
 
 ## Corrections
 
@@ -47,6 +47,7 @@ Nonblocking presentation observation: B's generated October 17 addendum date is 
 ## Verification and preservation
 
 - `npm run check`:1,585 tests, TypeScript and build pass; four existing lint warnings.16 Python offline safeguard/packet tests and frozen Edge checking pass.
+- CI compatibility harnesses now explicitly target200 migrations/7,111 SQL assertions, and both restore upgrade modes include migration200. The12-test offline restore suite passes. The isolated controlled-stock candidate passes163 SQL files/7,111 assertions,124 authenticated API checks and5 observed lock queues; all449 selected relation fingerprints survive its populated restore, all10 canonical writer definitions stay unchanged, and its owned containers/volumes are removed. This is local compatibility proof, with no hosted writes, provider requests, practice-rule approval or engine publication.
 - Final v3 SQL:163 files /7,111 assertions pass. The separately captured v2 actual Auth/HTTP/browser/restore proof passes89 API,26 browser and6 restore checks across428 relations,11 observed lock waits and3 deliberately dropped committed browser responses. V3 leaves the UI files unchanged; their hashes match the verified1280px/390px frozen-patient display. Actual iPhone hardware acceptance remains separate.
 - Both runs verified every uploaded fixed input before any paid request. Each removed8 temporary functions, its private bucket and8 empty one-shot guards; function/secret/bucket baseline metadata matched.391 public tables,1,301 routines and table metadata were preserved around each run; only verified scheduler appends were allowed. No hosted clinical records were loaded or written by the probes.
 - Staging now has200 migrations. Only the planned `finish_clinical_recap` body changed; its owner/ACL/config and the other1,300 routines/permissions are preserved. All391 public-table fingerprints and table metadata remain unchanged.
@@ -56,4 +57,4 @@ The real-provider probes use fixed captured contexts and in-memory completion. T
 
 ## Remaining release and clinical gates
 
-Required CI and specific merge approval; primary migration/Edge/frontend verification; Susan's full-output clinical adjudication and independent recap presentation/retention approval; private primary OpenAI key setup if still absent; explicit approved processing commissioning. The final synthetic fidelity gate remains pending clinical adjudication. Calls, dental dictation, uploaded-record ingestion and VetRocket integration retain their separately scoped acceptance requirements.
+Required CI (specific PR270 merge approval received); primary migration/Edge/frontend verification; Susan's full-output clinical adjudication and independent recap presentation/retention approval; private primary OpenAI key setup if still absent; explicit approved processing commissioning. The final synthetic fidelity gate remains pending clinical adjudication. Calls, dental dictation, uploaded-record ingestion and VetRocket integration retain their separately scoped acceptance requirements.
