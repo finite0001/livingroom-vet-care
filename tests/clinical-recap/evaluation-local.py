@@ -54,7 +54,7 @@ try:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     files = sorted((root / 'supabase/migrations').glob('*.sql'))
-    assert len(files) == 201
+    assert len(files) == 202
     for migration in files:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"

@@ -1,0 +1,147 @@
+{
+  "date": "2026-10-17",
+  "scope": "test_harness_only",
+  "original_ci": {
+    "run": 39042768951,
+    "head": "47d326d4024239f691cdac0f4a8a1f431051cf0c",
+    "canonical_sql_suites": 165,
+    "canonical_sql_assertions": 7235,
+    "source_child_stderr_retained": false,
+    "exact_failure_cause": "unconfirmed"
+  },
+  "synthetic_live_counterexample": {
+    "original_runner_sha256": "47cb9f9b55cc761cc81ae23e16b839377b519e1c6afaeadfbd1a6dd45a2d5112",
+    "autonomous_writer_observed": true,
+    "original_oracle_rejected_concurrent_source_writes": true,
+    "inflight_job_observed_before_pause": true,
+    "cron_worker_mode": "off",
+    "schedules_preserved": true,
+    "autonomous_writer_resumed": true,
+    "owned_runtime_removed": true,
+    "provider_requests": 0
+  },
+  "repaired_oracle": {
+    "checks": 961,
+    "private_acl": true,
+    "return_actions": 6,
+    "annotation_kinds": 3,
+    "source_producers": 10,
+    "provider_requests": 0,
+    "authorizes_execution": false,
+    "canonical_operations": 136,
+    "actual_canonical_replays": 136,
+    "controlled_policy_or_opening": false,
+    "anesthesia_treatment_receipts": 1,
+    "missing_reverse_sources_denied": 2,
+    "retired_recorder_provenance_preserved": true,
+    "catalog_edits_preserve_original_sources": true,
+    "distinct_negative_compensation_movements": 5,
+    "canonical_replay_preserves_stock_and_billing": true,
+    "sql_only": true,
+    "project_id": "lrv-prescription-oracle-61a2fdba7a",
+    "owned_clone_removed": true,
+    "source_database_unchanged": true,
+    "populated_clone_unchanged": true,
+    "source_scheduler": {
+      "initial": "on",
+      "paused_and_drained": true,
+      "restored": true
+    },
+    "modules_and_fixture_sha256": {
+      "tests/controlled-drugs/owned_scheduler.py": "1413a8f36a1f00d99909aa8056db05ca5491c86259b9839ee05cfd23816293f0",
+      "supabase/migrations/20260916090000_native_dispense_returns.sql": "fc89ac2801bbb39b21c7be5e6f7fffb06a381710a3ff7020c4b77e087373b99b",
+      "supabase/tests/native_fulfillment.test.sql": "8198ea74a2d75a706a469135cd4684c1b635ecdb9572e1f0e03d6bbbc2404192",
+      "scripts/stock-writers/rollback-probe.sql": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+      "supabase/tests/native_return_reconciliation.test.sql": "3af1cf00df34fe2b43109d97af9991263bf7bab02068c8e5001240edb860428f",
+      "supabase/tests/native_dispense_corrections.test.sql": "bfeda2f5d9b4005b9821e944cf01b53ccb25f33cb2a293f051bfdbc532ed5197",
+      "tests/controlled-drugs/engine/source-reader.sql": "ec75bd5346657230cb0c6602589a10d22b0ee880f786118f8342bf57d48788fa",
+      "tests/controlled-drugs/engine/source-effects.sql": "6cb79e0e2cd737652de34e5a8d33b963ab42fa28d369d2b3d7d976f58f653f10",
+      "tests/controlled-drugs/engine/source-proof.sql": "2b027a570dcf11e4095da6720181cfb465d651f023d3bf846dc58bc7cc602d22"
+    },
+    "runner_sha256": "6a4dfee3da4afcbe8620095d11e5218dafbb9a6ab4f090311fb4e85525988acd"
+  },
+  "source_preservation_scope": "All public/auth/storage/extensions ordinary tables during the paused/drained proof window; original effective scheduler setting restored afterward.",
+  "offline_regressions": {
+    "new": 9,
+    "total_harness_tests": 17,
+    "passed": true,
+    "source_sha256": {
+      "tests/controlled-drugs/owned_scheduler.py": "1413a8f36a1f00d99909aa8056db05ca5491c86259b9839ee05cfd23816293f0",
+      "tests/controlled-drugs/source-reconciliation.py": "6a4dfee3da4afcbe8620095d11e5218dafbb9a6ab4f090311fb4e85525988acd",
+      "supabase/tests/test_owned_scheduler_harness.py": "7fe12edb534ccb98254613bac8bed438852fdf3bc2e91e449553928ca9ca5461"
+    },
+    "private_log_sha256": "13f278c6c16e81c92f79c408c721d00eeda426d6e2e4990d95f7a4c952a26687"
+  },
+  "original_feature_inventories_reverified": {
+    "clinical-calls-notes-full-v5-proof.json": 213,
+    "clinical-call-notes-candidate202-v2-result.json": 388
+  },
+  "private_receipt": {
+    "name": "clinical-call-notes-pr272-scheduler-proof-v3-result.json",
+    "sha256": "2ced435126d22470f1295a812618fdca77102dac981fdcaeffb87155d50acf58",
+    "diagnostic_runner_sha256": "72d84dd384c5dcd00059bb7b8c43a25008dcc1b12f8d8ec7c9c091dc24ceae2b",
+    "protected_log_sha256": "467164cafcbc1b2e483dced9a4f3005f1bd0295de3f986a10aa70892ca58f9b2"
+  },
+  "provider_requests": 0,
+  "hosted_operations": 0,
+  "product_source_changed": false,
+  "call_generation_added": false,
+  "exact_head_ci": "pending on updated PR",
+  "background_worker_counterexample": {
+    "original_runner_sha256": "47cb9f9b55cc761cc81ae23e16b839377b519e1c6afaeadfbd1a6dd45a2d5112",
+    "autonomous_writer_observed": true,
+    "original_oracle_rejected_concurrent_source_writes": true,
+    "inflight_job_observed_before_pause": true,
+    "cron_worker_mode": "on",
+    "schedules_preserved": true,
+    "autonomous_writer_resumed": true,
+    "owned_runtime_removed": true,
+    "provider_requests": 0
+  },
+  "background_worker_repaired_oracle": {
+    "checks": 961,
+    "private_acl": true,
+    "return_actions": 6,
+    "annotation_kinds": 3,
+    "source_producers": 10,
+    "provider_requests": 0,
+    "authorizes_execution": false,
+    "canonical_operations": 136,
+    "actual_canonical_replays": 136,
+    "controlled_policy_or_opening": false,
+    "anesthesia_treatment_receipts": 1,
+    "missing_reverse_sources_denied": 2,
+    "retired_recorder_provenance_preserved": true,
+    "catalog_edits_preserve_original_sources": true,
+    "distinct_negative_compensation_movements": 5,
+    "canonical_replay_preserves_stock_and_billing": true,
+    "sql_only": true,
+    "project_id": "lrv-prescription-oracle-90fbba88b9",
+    "owned_clone_removed": true,
+    "source_database_unchanged": true,
+    "populated_clone_unchanged": true,
+    "source_scheduler": {
+      "initial": "on",
+      "paused_and_drained": true,
+      "restored": true
+    },
+    "modules_and_fixture_sha256": {
+      "tests/controlled-drugs/owned_scheduler.py": "1413a8f36a1f00d99909aa8056db05ca5491c86259b9839ee05cfd23816293f0",
+      "supabase/migrations/20260916090000_native_dispense_returns.sql": "fc89ac2801bbb39b21c7be5e6f7fffb06a381710a3ff7020c4b77e087373b99b",
+      "supabase/tests/native_fulfillment.test.sql": "8198ea74a2d75a706a469135cd4684c1b635ecdb9572e1f0e03d6bbbc2404192",
+      "scripts/stock-writers/rollback-probe.sql": "2ea31141c74f3cc7fffbb1646125962e0c0db1772804107fa037f7b26509bc98",
+      "supabase/tests/native_return_reconciliation.test.sql": "3af1cf00df34fe2b43109d97af9991263bf7bab02068c8e5001240edb860428f",
+      "supabase/tests/native_dispense_corrections.test.sql": "bfeda2f5d9b4005b9821e944cf01b53ccb25f33cb2a293f051bfdbc532ed5197",
+      "tests/controlled-drugs/engine/source-reader.sql": "ec75bd5346657230cb0c6602589a10d22b0ee880f786118f8342bf57d48788fa",
+      "tests/controlled-drugs/engine/source-effects.sql": "6cb79e0e2cd737652de34e5a8d33b963ab42fa28d369d2b3d7d976f58f653f10",
+      "tests/controlled-drugs/engine/source-proof.sql": "2b027a570dcf11e4095da6720181cfb465d651f023d3bf846dc58bc7cc602d22"
+    },
+    "runner_sha256": "6a4dfee3da4afcbe8620095d11e5218dafbb9a6ab4f090311fb4e85525988acd"
+  },
+  "background_worker_private_receipt": {
+    "name": "clinical-call-notes-pr272-scheduler-proof-v4-result.json",
+    "sha256": "12064b0b5d31946964d577f0237896aad141a1178352d73049738871bf6ea78f",
+    "diagnostic_runner_sha256": "e64846431ed515f620e4a5d4aaed3b544b0d4c123de11966a81f70a6827e2c79",
+    "protected_log_sha256": "958ae5ec31b94d5b89720c401b139796aaf2a9e9430939c12b967efced5d71ee"
+  }
+}
