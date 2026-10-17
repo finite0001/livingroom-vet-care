@@ -1,0 +1,13 @@
+# PR270 — primary recap fidelity rollout
+
+PR270 merged after every required check passed at `c9edcaa3de19a150d8e77bca14475e924cf6e547`. The merge commit is `6577c8cb616ab08d3937e69b1285a0012a7b7cd2`. Dave explicitly authorized PR270 to merge when ready. [Exact-head CI](https://github.com/finite0001/livingroom-vet-care/actions/runs/39004482151) and the [sanitized rollout receipt](2026-10-16-clinical-recap-fidelity-primary-rollout.json) bind this release; the post-merge main workflow is separate from the successful required PR checks.
+
+Primary `mgadheotkdnrsatfivjy` advanced from199 to200 migrations, latest `20261017042009`. Only the planned `finish_clinical_recap(uuid,jsonb)` body changed; its owner/permissions/configuration and the other1,300 routines remained unchanged. All391 public-table fingerprints and table metadata were preserved. Three scheduler runs/results appended; their original prefixes remained unchanged. No clinical chart writes were made by the rollout.
+
+Primary `clinical-recap-process` is ACTIVEv2 with JWT verification enabled. Downloaded entrypoint and all four shared source files match the tested final-v3 bytes. Other functions and secret metadata remained unchanged. A service-key request returned401 `authentication_required`; an authenticated closed-gate503 request is not claimed.
+
+Vercel production deployment `dpl_GMc5oz2rAVm5N67M1qXLMYSrWNHt` is READY, serves the exact merge commit and is assigned to [thelivingroom.vet](https://thelivingroom.vet) and its www alias. Actual desktop1440px/mobile390px browser checks passed: loginHTTP200 and form rendered, protected patient route redirects to login, no horizontal overflow and no page errors. Screenshots were visually inspected. This is public/protected-route smoke verification, not authenticated clinical acceptance or real iPhone hardware acceptance.
+
+Clinical processing remains off: the processing flag is absent, the recap policy is still v1 draft, and the primary OpenAI key is absent. No provider request, policy approval or clinical activation was performed. Susan's independent full-output fidelity/presentation/retention adjudication and explicit commissioning remain required. The [fidelity evidence](2026-10-16-clinical-recap-fidelity-corrections.md) preserves original failures, both correction baselines and the final eight-case engineering result.
+
+The separate call-source package is staged at201 with its own draft policy/default-off flag; this primary rollout contains only the approved recap release at200. Call generation, reviewed call-derived SOAP and dental dictation remain separately scoped work.
