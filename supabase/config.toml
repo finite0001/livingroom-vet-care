@@ -164,3 +164,7 @@ verify_jwt = false
 # Staff JWT plus live actor/session checks; generation remains separately gated.
 [functions.clinical-note-process]
 verify_jwt = true
+
+# Historical recap has its own policy and default-off processing flag.
+[functions.clinical-recap-process]
+verify_jwt = true

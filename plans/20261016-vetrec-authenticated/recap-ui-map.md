@@ -1,6 +1,6 @@
 # Phase 2 records recap — UI implementation map
 
-Status: implementation design only. No recap application code, runtime checks, migrations, provider requests or activation were performed for this document. Baseline inspected: Phase 1 `fd3f329a`. All tests below are **planned**, not completed. [Strict proposed contract](recap-contract.md) and [scope](phase-02-recapped-records.md) remain authoritative.
+Status: implemented UI map. See the [local/staging receipt](../../docs/launch-evidence/2026-10-16-clinical-record-recaps.md) for actual desktop/390px, recovery, stale-edit and navigation checks. Remaining targets below are not a claim of unperformed clinical/model acceptance. Original design baseline: Phase 1 `fd3f329a`. [Strict contract](recap-contract.md) and [scope](phase-02-recapped-records.md) remain authoritative.
 
 ## Placement and ownership boundary
 

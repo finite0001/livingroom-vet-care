@@ -1,6 +1,6 @@
 # Phase 2 database acceptance matrix
 
-**Status: planned proof only. No recap database implementation, race test, restore test or hosted activation is established by this document.** The completed source-writer audit is a static review. Baseline `fd3f329a`; contracts: [recap-contract.md](recap-contract.md) and [phase-02-recapped-records.md](phase-02-recapped-records.md). Existing Phase 1 test results do not prove Phase 2 behavior.
+**Status: acceptance target inventory. Native implementation and selected local/staging checks are complete; see the [local/staging receipt](../../docs/launch-evidence/2026-10-16-clinical-record-recaps.md) for actual evidence and unperformed clinical/provider gates. This matrix does not claim every row or interleaving was exercised.** Original design baseline `fd3f329a`; contracts: [recap-contract.md](recap-contract.md) and [phase-02-recapped-records.md](phase-02-recapped-records.md).
 
 ## Proof environment and observation rules
 

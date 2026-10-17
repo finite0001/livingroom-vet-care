@@ -38,3 +38,7 @@ test-results/
 # Private synthetic clinical-note receipts, screenshots and local verification helpers.
 /tmp/clinical-notes-*
 /tests/clinical-notes/__pycache__/
+
+# Private source-cited recap receipts and synthetic verification artifacts.
+/tmp/clinical-recap-*
+/tests/clinical-recap/__pycache__/

@@ -45,6 +45,7 @@ import {
   type PatientTab,
 } from "@/hub/features/patient-360/model";
 
+const PatientRecap = lazy(() => import("@/hub/features/clinical/recap/PatientRecap").then(m => ({default:m.PatientRecap})));
 const PatientImaging = lazy(() => import("@/hub/features/imaging/PatientImaging").then(m => ({default:m.PatientImaging})));
 const PatientLabWorkspace = lazy(() => import("@/hub/features/diagnostics/PatientLabWorkspace").then(m => ({default:m.PatientLabWorkspace})));
 
@@ -83,6 +84,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [externalDirty, setExternalDirty] = useState(false);
   const [releaseDirty, setReleaseDirty] = useState(false);
   const [clinicalDirty, setClinicalDirty] = useState(false);
+  const [recapDirty, setRecapDirty] = useState(false);
   const [careDirty, setCareDirty] = useState(false);
   const [dentalDirty, setDentalDirty] = useState(false);
   const [labDirty, setLabDirty] = useState(false);
@@ -92,8 +94,9 @@ function PatientWorkspace({ petId }: { petId: string }) {
   const [vaccineDueDirty, setVaccineDueDirty] = useState(false);
   const [carePlanDirty, setCarePlanDirty] = useState(false);
   const [nextVisitDirty,setNextVisitDirty]=useState(false);
-  const dirty = nextVisitDirty || photoDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
-  const medicalDirty = nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
+  const otherRecapDirty = nextVisitDirty || photoDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
+  const dirty = otherRecapDirty || recapDirty;
+  const medicalDirty = nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty;
   const documentsDirty = externalDirty || releaseDirty || certificateDirty;
   const navigationGuard = useUnsavedChanges(dirty);
   useScrollToSection(tab, section);
@@ -163,8 +166,9 @@ function PatientWorkspace({ petId }: { petId: string }) {
           {visited.has("medical") && <>
             <PatientAlerts petId={petId} />
             {patient.allergies?.trim() && <div role="note" className="flex gap-3 rounded-md border border-destructive bg-destructive/10 p-4 text-clinical-alert"><AlertTriangle className="h-5 w-5 shrink-0" /><div><h2 className="font-semibold">Allergy information from existing record</h2><p className="whitespace-pre-wrap text-sm">{patient.allergies}</p><p className="mt-1 text-xs">Review alongside the structured problem list below.</p></div></div>}
-            <Section360 id="soap"><ClinicalWorkspace petId={petId} appointmentId={searchParams.get("dictation_appointment")} disabled={inactive || imagingDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || carePlanDirty} onDirtyChange={setClinicalDirty} /></Section360>
-            <Section360 id="prescriptions"><PatientPrescriptions petId={petId} clientId={patient.client_id} inactive={inactive} disabled={importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setNativePrescriptionDirty} /></Section360>
+            <Section360 id="soap"><ClinicalWorkspace petId={petId} appointmentId={searchParams.get("dictation_appointment")} disabled={inactive || recapDirty || imagingDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || carePlanDirty} onDirtyChange={setClinicalDirty} /></Section360>
+            <Section360 id="recap"><Suspense fallback={<p role="status">Loading records recap…</p>}><PatientRecap key={`recap-${petId}`} petId={petId} blocked={otherRecapDirty} onDirtyChange={setRecapDirty} /></Suspense></Section360>
+            <Section360 id="prescriptions"><PatientPrescriptions petId={petId} clientId={patient.client_id} inactive={inactive} disabled={importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setNativePrescriptionDirty} /></Section360>
             <Section360 id="treatments"><PatientTreatments petId={petId} clientId={patient.client_id} /></Section360>
             <Section360 id="care-plans"><PatientCarePlans petId={petId} inactive={inactive} disabled={dirty && !carePlanDirty} onDirtyChange={setCarePlanDirty} /></Section360>
             <Section360 id="vaccine-plans"><PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} /></Section360>
@@ -174,9 +178,9 @@ function PatientWorkspace({ petId }: { petId: string }) {
             <Section360 id="dental"><PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} /></Section360>
             <Section360 id="anesthesia"><PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} clientId={patient.client_id} onDirtyChange={setAnesthesiaDirty} /></Section360>
             <Section360 id="imported" className="space-y-5">
-              <PatientImportedVaccinations petId={petId} patientVersion={patient.version} disabled={nativePrescriptionDirty || importedPrescriptionDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setImportedVaccinationDirty} />
-              <PatientImportedPrescriptions petId={petId} patientVersion={patient.version} disabled={nativePrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setImportedPrescriptionDirty} />
-              <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || externalDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setImportedHistoryDirty} />
+              <PatientImportedVaccinations petId={petId} patientVersion={patient.version} disabled={nativePrescriptionDirty || importedPrescriptionDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setImportedVaccinationDirty} />
+              <PatientImportedPrescriptions petId={petId} patientVersion={patient.version} disabled={nativePrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setImportedPrescriptionDirty} />
+              <PatientImportedHistory petId={petId} patientVersion={patient.version} disabled={nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || externalDirty || releaseDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setImportedHistoryDirty} />
             </Section360>
           </>}
         </TabsContent>
@@ -210,7 +214,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
             <Section360 id="attachments"><PatientApiAttachments petId={petId} disabled={dirty} /></Section360>
             <Section360 id="certificates"><PatientCertificates key={`certificates-${petId}`} petId={petId} onDirtyChange={setCertificateDirty} /></Section360>
             <Section360 id="releases"><PatientRecordReleases key={`release-${petId}`} petId={petId} onDirtyChange={setReleaseDirty} /></Section360>
-            <Section360 id="external-records"><PatientExternalRecords petId={petId} disabled={nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || releaseDirty || clinicalDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setExternalDirty} /></Section360>
+            <Section360 id="external-records"><PatientExternalRecords petId={petId} disabled={nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || releaseDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setExternalDirty} /></Section360>
           </>}
         </TabsContent>
       </Tabs>
