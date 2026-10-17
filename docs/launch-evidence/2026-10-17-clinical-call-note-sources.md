@@ -31,6 +31,8 @@ The owned upgrade proof starts with all 201 prior migrations and historical type
 
 Both final owned runtimes were removed. No real provider call, hosted write or clinical chart insertion occurred in the local proofs. Earlier fixture/expected-count diagnostics remain private and are not acceptance evidence. The restore comparison uses PostgreSQL's pretty constraint deparser: its ordinary output adds/removes redundant associative-AND parentheses after BETWEEN checks are dumped and reparsed. A bounded independent reproduction verified that difference; exact routine, owner, permission and other metadata checks were retained.
 
+The first PR CI run subsequently failed in the older stock source-reconciliation harness after all canonical SQL suites passed. Its missing child stderr prevents a definitive diagnosis. The separate [scheduler-isolation repair and controlled counterexample](2026-10-17-source-reconciliation-scheduler.md) preserve all table comparisons and original feature receipts; exact-head CI must pass on the updated PR before release.
+
 ## Staging comparison
 
 Staging `kothoqicubowyhwfsrte` now has **202 migrations**, latest `20261017135245`. All **395 original public tables** were preserved. All existing routine owners/permissions and **1,306 unrelated routine definitions** were preserved. The sixteen planned replacement bodies, nine new routine bodies/grants, two private tables, four foreign-key indexes, two changed job CHECKs and deferred job-binding constraint trigger match the source. One scheduler append retained the original prefixes. Existing audio and capture policies are unchanged; no clinical chart was written.
