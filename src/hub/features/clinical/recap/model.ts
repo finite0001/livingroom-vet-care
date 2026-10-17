@@ -58,6 +58,15 @@ export const pendingPolicySchema = z
 export type PendingRecap = z.infer<typeof pendingRecapSchema>;
 export type JobRead = z.infer<typeof recapJobReadSchema>;
 export type RecapSource = z.infer<typeof recapSourceSchema>;
+export type RecapPatient = JobRead["manifest"]["source_set"]["patient"];
+export function recapPatientDetails(patient: RecapPatient) {
+  return [
+    { label: "Birth date", value: patient.dob ?? "Not recorded" },
+    { label: "Birth date precision", value: patient.birth_date_precision },
+    { label: "Deceased date", value: patient.deceased_at ?? "Not marked deceased" },
+    { label: "Archive timestamp", value: patient.archived_at ?? "Not archived" },
+  ];
+}
 export const retryReasons = {
   previous_failure_reviewed: "Previous processing failure reviewed",
   uncertain_outcome_duplicate_charge_authorized:

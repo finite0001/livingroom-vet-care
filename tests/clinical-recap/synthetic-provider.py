@@ -35,6 +35,7 @@ FILES = [
     "supabase/functions/clinical-recap-process/deno.json",
     "supabase/functions/clinical-recap-process/deno.lock",
     "supabase/migrations/20261017015543_clinical_record_recap.sql",
+    "supabase/migrations/20261017042009_clinical_recap_prompt_v2.sql",
     "tests/clinical-recap/synthetic-provider-plan.ts",
     "tests/clinical-recap/synthetic-provider.py",
     "tests/clinical-recap/evaluation-corpus.ts",

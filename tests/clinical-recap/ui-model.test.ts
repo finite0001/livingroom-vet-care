@@ -9,6 +9,7 @@ import {
   verifyPolicyReceipt,
   unresolvedAttempt,
   excerptParts,
+  recapPatientDetails,
   RECAP_UNSUPPORTED_FAMILIES,
   type PendingRecap,
 } from "../../src/hub/features/clinical/recap/model.ts";
@@ -445,4 +446,32 @@ test("missing attempt leases remain unresolved; exact repeated excerpts are rend
   assert.equal(parts.filter((part) => part.highlighted).length, 2);
   assert.equal(parts.map((part) => part.text).join(""), "No fever. No fever.");
   assert.throws(() => excerptParts("Not examined.", "Normal"));
+});
+test("frozen patient context preserves unknown DOB and independent exact archive and death metadata", () => {
+  const { job } = fixture();
+  const patient = {
+    ...job.manifest.source_set.patient,
+    deceased_at: "2026-10-02",
+    archived_at: "2026-10-16T19:11:12.123456Z",
+  };
+  const details = recapPatientDetails(patient);
+  assert.deepEqual(details, [
+    { label: "Birth date", value: "Not recorded" },
+    { label: "Birth date precision", value: "unknown" },
+    { label: "Deceased date", value: "2026-10-02" },
+    { label: "Archive timestamp", value: "2026-10-16T19:11:12.123456Z" },
+  ]);
+  for (const precision of ["exact", "estimated"] as const) {
+    const dated = recapPatientDetails({ ...patient, dob: "2018-01-12", birth_date_precision: precision });
+    assert.deepEqual(dated.slice(0, 2), [
+      { label: "Birth date", value: "2018-01-12" },
+      { label: "Birth date precision", value: precision },
+    ]);
+    assert.deepEqual(dated.slice(2), details.slice(2));
+  }
+  const active = recapPatientDetails(job.manifest.source_set.patient);
+  assert.deepEqual(active.slice(2), [
+    { label: "Deceased date", value: "Not marked deceased" },
+    { label: "Archive timestamp", value: "Not archived" },
+  ]);
 });

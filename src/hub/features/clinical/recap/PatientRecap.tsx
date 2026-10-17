@@ -41,6 +41,7 @@ import { recapFeedback } from "./feedback";
 import { RecapSourcePreview, RecapCurrentStatus } from "./RecapSourcePreview";
 import { RecapReview } from "./RecapReview";
 import { RecapPolicy } from "./RecapPolicy";
+import { RecapPatientContext } from "./RecapPatientContext";
 interface PatientRecapProps {
   petId: string;
   blocked: boolean;
@@ -973,6 +974,10 @@ function RecapSession({
           className="min-w-0 space-y-4 border-t border-border pt-4"
         >
           <h3 className="font-semibold">Frozen recap job</h3>
+          <RecapPatientContext
+            patient={job.manifest.source_set.patient}
+            capturedAt={job.manifest.captured_at}
+          />
           <p className="whitespace-pre-wrap break-words text-sm">
             Source and permission: {job.job.source_note}
           </p>

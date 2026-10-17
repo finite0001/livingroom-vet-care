@@ -3,7 +3,11 @@ import { audioLanguageContextSchema } from "./clinical-audio-model.ts";
 
 export const RECAP_CONTRACT = "clinical-recap-v1";
 export const RECAP_SOURCE_CONTRACT = "clinical-recap-source-v1";
-export const RECAP_PROMPT_VERSION = "lrv-recap-claims-v1";
+export const RECAP_PROMPT_VERSION = "lrv-recap-claims-v2";
+export const RECAP_PROMPT_VERSIONS = [
+  "lrv-recap-claims-v1",
+  RECAP_PROMPT_VERSION,
+] as const;
 export const RECAP_LIMITS = {
   encounters: 20,
   problems: 40,
@@ -473,12 +477,53 @@ export function validateRecapPayload(value: unknown, manifestValue: unknown) {
   }
   return payload;
 }
+// This is a generation coverage check, not a semantic-entailment validator.
+// Historical v1 output remains readable through validateRecapPayload above.
+export function recapRequiredProblemEvidence(manifestValue: unknown) {
+  const manifest = recapManifestSchema.parse(manifestValue);
+  return manifest.source_set.sources.flatMap((source) => {
+    if (source.kind !== "native_problem") return [];
+    return (["title", "status", "importance", "onset_date"] as const).flatMap(
+      (field) => {
+        const value = source.fields[field];
+        return value === null || !value.trim() ? [] : [
+          {
+            source_ref: source.ref,
+            field_path: `fields.${field}` as const,
+            value,
+          },
+        ];
+      },
+    );
+  });
+}
+export function validateGeneratedRecapCoverage(
+  value: unknown,
+  manifestValue: unknown,
+) {
+  const payload = validateRecapPayload(value, manifestValue);
+  const citations = payload.claims.flatMap((claim) => claim.citations);
+  for (const required of recapRequiredProblemEvidence(manifestValue)) {
+    if (
+      !citations.some(
+        (citation) =>
+          citation.source_ref === required.source_ref &&
+          citation.field_path === required.field_path &&
+          (required.field_path === "fields.title" ||
+            citation.quote === required.value),
+      )
+    ) {
+      throw Error("Generated recap lacks required native problem evidence.");
+    }
+  }
+  return payload;
+}
 export const recapResultSchema = z.object({
   request_id: text(200),
   response_id: nonblank(200),
   provider_model: text(200),
   contract_version: z.literal(RECAP_CONTRACT),
-  prompt_version: z.literal(RECAP_PROMPT_VERSION),
+  prompt_version: z.enum(RECAP_PROMPT_VERSIONS),
   manifest_sha256: hash,
   language_context: audioLanguageContextSchema,
   payload: recapPayloadSchema,

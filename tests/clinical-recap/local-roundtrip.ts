@@ -19,6 +19,10 @@ import {
 
 const project = process.env.RECAP_TEST_PROJECT;
 assert.ok(project && process.env.RECAP_RUN_SYNTHETIC_LOCAL === "true");
+const evidencePrefix = process.env.RECAP_EVIDENCE_PREFIX ?? "clinical-recap";
+assert.match(evidencePrefix, /^[a-z0-9][a-z0-9-]{0,79}$/, "Invalid local evidence prefix.");
+const evidenceBase = `tmp/${evidencePrefix}`;
+const browserEvidence = `${evidenceBase}-browser`;
 const identity = readFileSync(project + "/supabase/config.toml", "utf8").match(
   /^project_id = "(lrv-clinical-recap-[a-f0-9]+)"/m,
 )?.[1];
@@ -68,12 +72,12 @@ function sql(query: string, database = "postgres") {
   } catch (failure) {
     mkdirSync("tmp", { recursive: true, mode: 0o700 });
     writeFileSync(
-      "tmp/clinical-recap-sql-failure.txt",
+      `${evidenceBase}-sql-failure.txt`,
       query + "\n" + String(failure),
       { mode: 0o600 },
     );
     throw Error(
-      "Owned recap SQL failed; see private tmp/clinical-recap-sql-failure.txt.",
+      `Owned recap SQL failed; see private ${evidenceBase}-sql-failure.txt.`,
     );
   }
 }
@@ -243,9 +247,9 @@ async function observeWait(blocker: number, needle: string, label: string) {
 
 let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 let vite: ReturnType<typeof spawn> | null = null;
-mkdirSync("tmp/clinical-recap-browser", { recursive: true, mode: 0o700 });
+mkdirSync(browserEvidence, { recursive: true, mode: 0o700 });
 try {
-  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "199");
+  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "200");
   const first = await actor(true), second = await actor(false);
   const policyRead = (a = first) => rpc(a.db, "read_clinical_recap_policy", { p_actor_id: a.id });
   const initialPolicy = (await policyRead()).policy;
@@ -549,6 +553,10 @@ try {
   check(Object.hasOwn(historicalAfter.source_set.patient, "client_id"), false);
   check(JSON.stringify(historicalAfter.source_set).includes("synthetic-recap@example.test"), false);
   assert.notEqual(historicalAfter.source_fingerprint, historicalBefore.source_fingerprint); apiChecks++;
+  const historicalJob = await reserve(randomUUID(), requestFor(historicalAfter, historicalPet, historicalSelection));
+  // Later patient corrections must not replace the saved recap's unknown DOB or archive timestamp.
+  await rpc(first.db, "save_patient", { p_id: historicalPet, p_client_id: client, p_expected_version: historicalAfter.source_set.patient.version, p_name: "Synthetic historical recap patient", p_species: "Dog", p_breed: "Mixed", p_dob: "2017-03-04", p_birth_date_precision: "estimated", p_color: "", p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: new Date().toISOString(), p_deceased_at: "2026-10-02" });
+  check((await read(historicalJob.job.id)).manifest.source_set.patient, historicalAfter.source_set.patient);
   // Exercise the migration's table-lock boundary with a real native patient writer.
   const rolloutBarrier = sqlSession();
   rolloutBarrier.process.stdin!.write("begin;select pg_backend_pid();lock table public.pets in share row exclusive mode;select 'LOCKED';\n");
@@ -635,11 +643,11 @@ try {
   await panel.getByLabel("Captured citation source", { exact: true }).waitFor();
   browserCheck((await panel.getByLabel("Captured citation source", { exact: true }).textContent())!.includes(fictional), true);
   await citation.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: "tmp/clinical-recap-browser/desktop.png", fullPage: false });
+  await page.screenshot({ path: `${browserEvidence}/desktop.png`, fullPage: false });
   await page.setViewportSize({ width: 390, height: 844 });
   await citation.scrollIntoViewIfNeeded();
   browserCheck(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-  await page.screenshot({ path: "tmp/clinical-recap-browser/mobile.png", fullPage: false });
+  await page.screenshot({ path: `${browserEvidence}/mobile.png`, fullPage: false });
   const reviewPanel = panel.getByRole("region", { name: "Recap claim review", exact: true });
   const edited = "Fictional browser review: the owner reported a two-day cough.";
   await reviewPanel.getByRole("checkbox", { name: "Retain claim_001", exact: true }).check();
@@ -689,6 +697,36 @@ try {
   await staleReviewPanel.getByRole("checkbox", { name: /^I reviewed the patient attribution, dated claims/ }).check();
   await staleReviewPanel.getByRole("button", { name: "Reject recap", exact: true }).click();
   await panel.getByText(/Decision: rejected/).waitFor();
+
+  // Read a real saved historical snapshot through Patient 360, independently of later live patient edits.
+  const historicalProviderBefore = providerRequests;
+  await page.goto(origin + "/hub/patient/" + historicalPet + "?tab=medical&section=recap", { waitUntil: "domcontentloaded" });
+  panel = page.getByRole("region", { name: "Records recap", exact: true });
+  await panel.getByRole("region", { name: "Recap history", exact: true }).getByRole("button", { name: /^Captured / }).click();
+  const historicalSaved = panel.getByRole("region", { name: "Saved records recap", exact: true });
+  const frozenPatient = historicalSaved.getByRole("region", { name: "Frozen patient context", exact: true }).first();
+  const expectedPatientDetails = ["Not recorded", "unknown", "2026-10-02", historicalAfter.source_set.patient.archived_at];
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
+    await frozenPatient.waitFor({ state: "visible" });
+    browserCheck(await frozenPatient.locator("dd").allTextContents(), expectedPatientDetails);
+    browserCheck((await frozenPatient.textContent())!.includes("2017-03-04"), false);
+    browserCheck(await historicalSaved.getByRole("region", { name: "Captured recap sources", exact: true }).isVisible(), false);
+    await frozenPatient.scrollIntoViewIfNeeded();
+    browserCheck(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: `${browserEvidence}/historical-header-${width}.png`, fullPage: false });
+    const frozenManifest = historicalSaved.locator("summary").filter({ hasText: "Review frozen source manifest" });
+    await frozenManifest.click();
+    const frozenPreview = historicalSaved.getByRole("region", { name: "Captured recap sources", exact: true });
+    const previewPatient = frozenPreview.getByRole("region", { name: "Frozen patient context", exact: true });
+    await previewPatient.waitFor({ state: "visible" });
+    browserCheck(await previewPatient.locator("dd").allTextContents(), expectedPatientDetails);
+    await previewPatient.scrollIntoViewIfNeeded();
+    browserCheck(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: `${browserEvidence}/historical-manifest-${width}.png`, fullPage: false });
+    await frozenManifest.click();
+  }
+  browserCheck(providerRequests, historicalProviderBefore);
   browserCheck(browserErrors, []);
   await context.close();
 
@@ -718,13 +756,13 @@ try {
   sql("delete from auth.sessions where user_id='" + second.id + "';");
   await assert.rejects(read(jobId, second)); apiChecks++;
   const proof = { apiAssertions: apiChecks, browserAssertions: browserChecks, restoreAssertions: restoreChecks, restoredRelations: Object.keys(before).length, observedLockWaits: observedWaits, fakeProviderRequests: providerRequests, realProviderRequests: 0, droppedCommittedBrowserResponses: Number(lostReservation) + Number(lostGeneration) + Number(lostReview) };
-  writeFileSync("tmp/clinical-recap-roundtrip.json", JSON.stringify(proof, null, 2) + "\n", { mode: 0o600 });
+  writeFileSync(`${evidenceBase}-roundtrip.json`, JSON.stringify(proof, null, 2) + "\n", { mode: 0o600 });
   console.log(JSON.stringify(proof));
 } catch (failure) {
   const page = browser?.contexts()[0]?.pages()[0];
   if (page) {
-    await page.screenshot({ path: "tmp/clinical-recap-browser/failure.png", fullPage: false }).catch(() => {});
-    writeFileSync("tmp/clinical-recap-browser/failure.html", await page.content().catch(() => "Unavailable"), { mode: 0o600 });
+    await page.screenshot({ path: `${browserEvidence}/failure.png`, fullPage: false }).catch(() => {});
+    writeFileSync(`${browserEvidence}/failure.html`, await page.content().catch(() => "Unavailable"), { mode: 0o600 });
   }
   throw failure;
 } finally {

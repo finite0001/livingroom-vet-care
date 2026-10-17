@@ -8,7 +8,8 @@ import {
   type recapSourceSetSchema,
 } from "./model";
 import { z } from "zod";
-import { formatDateTime, formatDay } from "@/hub/features/patient-360/model";
+import { formatDateTime } from "@/hub/features/patient-360/model";
+import { RecapPatientContext } from "./RecapPatientContext";
 interface SourceContentProps {
   source: RecapSource;
   fieldPath?: string;
@@ -133,15 +134,7 @@ export function RecapSourcePreview({
         {sourceSet.patient.name} · {sourceSet.patient.species}
         {capturedAt ? ` · captured ${formatDateTime(capturedAt)} (Denver)` : ""}
       </p>
-      {(sourceSet.patient.archived_at || sourceSet.patient.deceased_at) && (
-        <p className="text-sm">
-          Historical patient record ·{" "}
-          {sourceSet.patient.deceased_at
-            ? `Deceased ${formatDay(sourceSet.patient.deceased_at)}`
-            : "Archived"}
-          . This recap does not enable new care or communication.
-        </p>
-      )}
+      <RecapPatientContext patient={sourceSet.patient} capturedAt={capturedAt} />
       <dl className="grid min-w-0 gap-2 sm:grid-cols-2">
         {Object.entries(budgetLimits).map(([key, limit]) => (
           <div key={key} className="rounded-md border border-border p-2">
