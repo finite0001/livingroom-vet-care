@@ -165,7 +165,7 @@ async function observe(pid: number, routine: string) {
   await until(() => Number(sql("select count(*)from pg_stat_activity where query like '%" + routine + "%'and wait_event_type='Lock'and " + pid + "=any(pg_blocking_pids(pid));")) > 0, routine + " actual lock wait"); observedWaits++;
 }
 try {
-  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "202");
+  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "203");
   const first = await actor(true), staff = await actor(false);
   const client = await rpc(first.db, "save_client", { p_actor_id: first.id, p_client_id: null, p_expected_version: null, p_first_name: "Synthetic", p_last_name: "Calls", p_primary_phone: "+13035555584", p_primary_email: "synthetic-calls-http@example.test", p_preferred_channel: "EMAIL", p_mailing_address: null, p_housecall_address: null });
   const pet = await rpc(first.db, "save_patient", { p_id: null, p_client_id: client.id, p_expected_version: null, p_name: "Synthetic Call Patient", p_species: "Dog", p_breed: "Mixed", p_dob: null, p_birth_date_precision: "unknown", p_color: "", p_sex: "unknown", p_neuter_status: "unknown", p_microchip_id: null, p_archived_at: null, p_deceased_at: null });

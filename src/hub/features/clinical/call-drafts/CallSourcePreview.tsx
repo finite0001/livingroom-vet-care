@@ -45,6 +45,6 @@ export function CallSourcePreview({ source, patientName, householdName, encounte
         {document.segments.map((segment) => <p key={segment.ordinal} className="break-all text-xs text-muted-foreground">Segment {segment.ordinal} · text SHA256 {segment.text_sha256} · projection offsets {segment.projection_from}–{segment.projection_to}</p>)}
       </details>
     </details>
-    <p className="text-sm text-muted-foreground">Private call evidence only. No AI draft, SOAP update, signature or delivery occurs in this workflow.</p>
+    <p className="text-sm text-muted-foreground">Inspecting this private call evidence does not generate a draft, update SOAP text, sign a chart or send records.</p>
   </section>;
 }

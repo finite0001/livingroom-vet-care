@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import { formatDateTime } from "@/hub/features/patient-360/model";
 import { CallSourcePolicy } from "./CallSourcePolicy";
 import { CallSourcePreview } from "./CallSourcePreview";
+import { CallNoteDrafts } from "./CallNoteDrafts";
+import { inspectCallNoteRecovery, callNoteStorageKey } from "./note-pending";
 import { captureCall, cancelCall, listCallCandidates, listCallSources, readCallPatient, readCallPolicy, readCallSource, recoverCall, reserveCall } from "./api";
 import { callActionIsTerminal, callCaptureIntentSchema, callFeedback, summarizeCallSource, verifyPendingCall, type CallCaptureRead, type CallPolicy, type CallSource, type CallSourceSummary, type PendingCall, type callCandidateSchema } from "./model";
 interface PatientCallDraftsProps {
@@ -14,6 +16,7 @@ interface PatientCallDraftsProps {
   blocked: boolean;
   onDirtyChange: (dirty: boolean) => void;
   onBusyChange: (busy: boolean) => void;
+  onAccepted: (row: Tables<"clinical_encounters">) => void;
 }
 export function PatientCallDrafts(props: PatientCallDraftsProps) {
   const { session, hasRole } = useAuth();
@@ -28,13 +31,15 @@ function CallLauncher(props: CallSessionProps) {
     <Button variant="outline" className="h-auto min-h-11 max-w-full whitespace-normal" disabled={props.blocked} onClick={() => setOpen(true)}>Review household call sources</Button>
   </section>;
 }
-function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange }: CallSessionProps) {
+function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange, onAccepted }: CallSessionProps) {
   const prefix = useId(), lock = useRef(false), mounted = useRef(true);
   const storageKey = `lrv:call-capture:${actor}:${encounter.pet_id}:${encounter.id}`;
   const [stored] = useState(() => {
     try { const raw = sessionStorage.getItem(storageKey); return { value: raw ? verifyPendingCall(JSON.parse(raw), actor, encounter.pet_id, encounter.id) : null, invalid: false }; }
     catch { return { value: null, invalid: true }; }
   });
+  const [noteRecovery, setNoteRecovery] = useState(() => inspectCallNoteRecovery(sessionStorage, actor, encounter.pet_id, encounter.id));
+  const [noteRecoveryBlocked, setNoteRecoveryBlocked] = useState(!!noteRecovery.value || noteRecovery.invalid);
   const [pending, setPending] = useState<PendingCall | null>(stored.value);
   const [invalidStorage, setInvalidStorage] = useState(stored.invalid), [recoveryReviewRequired, setRecoveryReviewRequired] = useState(false);
   const [policy, setPolicy] = useState<CallPolicy | null>(null), [patient, setPatient] = useState<Awaited<ReturnType<typeof readCallPatient>> | null>(null);
@@ -45,23 +50,26 @@ function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange }:
   const [busy, setBusy] = useState(false), [loading, setLoading] = useState(true), [uncertain, setUncertain] = useState(!!stored.value);
   const [policyDirty, setPolicyDirty] = useState(false), [policyBusy, setPolicyBusy] = useState(false);
   const [error, setError] = useState<unknown>(null), [notice, setNotice] = useState("");
+  const [noteDirty, setNoteDirty] = useState(false), [noteBusy, setNoteBusy] = useState(false);
+  const onNoteDirtyChange = useCallback((dirty: boolean) => { setNoteDirty(dirty); if (dirty) setNoteRecoveryBlocked(false); else { const recovery = inspectCallNoteRecovery(sessionStorage, actor, encounter.pet_id, encounter.id); setNoteRecoveryBlocked(!!recovery.value || recovery.invalid); if (!recovery.value && !recovery.invalid) setNoteRecovery((current) => current.value ? { value: null, invalid: false } : current); } }, [actor, encounter.pet_id, encounter.id]);
   const formDirty = !!selected || mappingConfirmed || authorized;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  useEffect(() => { onDirtyChange(formDirty || !!pending || busy || policyDirty || policyBusy || invalidStorage); return () => onDirtyChange(false); }, [formDirty, pending, busy, policyDirty, policyBusy, invalidStorage, onDirtyChange]);
-  useEffect(() => { onBusyChange(busy || policyBusy); return () => onBusyChange(false); }, [busy, policyBusy, onBusyChange]);
+  useEffect(() => { onDirtyChange(formDirty || !!pending || busy || policyDirty || policyBusy || invalidStorage || noteDirty || noteBusy || noteRecoveryBlocked); return () => onDirtyChange(false); }, [formDirty, pending, busy, policyDirty, policyBusy, invalidStorage, noteDirty, noteBusy, noteRecoveryBlocked, onDirtyChange]);
+  useEffect(() => { onBusyChange(busy || policyBusy || noteBusy); return () => onBusyChange(false); }, [busy, policyBusy, noteBusy, onBusyChange]);
   useEffect(() => {
     let valid = true;
     setLoading(true); setError(null); setSelected(""); setAuthorized(false); setMappingConfirmed(false);
-    Promise.all([readCallPatient(encounter.pet_id), readCallPolicy(actor), listCallSources(actor, encounter.pet_id), encounter.status === "draft" ? listCallCandidates(actor, encounter.pet_id, encounter.id, encounter.version) : Promise.resolve(null)])
-      .then(([identity, currentPolicy, sources, candidates]) => {
+    Promise.all([noteRecovery.value ? readCallSource(actor, encounter.pet_id, noteRecovery.value.source) : Promise.resolve(null), readCallPatient(encounter.pet_id), readCallPolicy(actor), listCallSources(actor, encounter.pet_id), encounter.status === "draft" ? listCallCandidates(actor, encounter.pet_id, encounter.id, encounter.version) : Promise.resolve(null)])
+      .then(([recoverySource, identity, currentPolicy, sources, candidates]) => {
         if (!valid) return;
         if (candidates?.calls.some((call) => call.client_id !== identity.patient.client_id)) throw Error("Call household differs.");
+        if (recoverySource) { if (recoverySource.encounter_id !== encounter.id) throw Error("Call recovery encounter differs."); setSource(recoverySource); }
         setPatient(identity); setPolicy(candidates?.policy ?? currentPolicy); setHistory(sources.sources); setCalls(candidates?.calls ?? []); setHistoryHasMore(sources.has_more); setCallsHaveMore(candidates?.has_more ?? false);
       })
-      .catch((failure) => { if (valid) { setError(failure); setSource(null); setCapture(null); setPatient(null); setPolicy(null); setHistory([]); setCalls([]); setHistoryHasMore(false); setCallsHaveMore(false); } })
+      .catch((failure) => { if (valid) { setError(failure); const retainedRecovery = inspectCallNoteRecovery(sessionStorage, actor, encounter.pet_id, encounter.id); if (!retainedRecovery.value && !retainedRecovery.invalid) setSource(null); else setNoteRecoveryBlocked(true); setCapture(null); setPatient(null); setPolicy(null); setHistory([]); setCalls([]); setHistoryHasMore(false); setCallsHaveMore(false); } })
       .finally(() => { if (valid) setLoading(false); });
     return () => { valid = false; };
-  }, [actor, encounter.pet_id, encounter.id, encounter.version, encounter.status]);
+  }, [actor, encounter.pet_id, encounter.id, encounter.version, encounter.status, noteRecovery.value]);
   function persist(value: PendingCall | null) { if (value) sessionStorage.setItem(storageKey, JSON.stringify(value)); else sessionStorage.removeItem(storageKey); setPending(value); }
   function clearSelection() { setSelected(""); setAuthorized(false); setMappingConfirmed(false); }
   function acceptRead(value: CallCaptureRead) {
@@ -74,7 +82,7 @@ function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange }:
     }
   }
   async function run(mode: "reserve" | "capture" | "recover" | "cancel") {
-    if (lock.current || invalidStorage || ((mode === "reserve" || mode === "capture") && (blocked || policyDirty || policyBusy || recoveryReviewRequired))) return;
+    if (lock.current || noteRecoveryBlocked || noteDirty || noteBusy || invalidStorage || ((mode === "reserve" || mode === "capture") && (blocked || policyDirty || policyBusy || recoveryReviewRequired))) return;
     let action = pending;
     if (!action && mode === "reserve") {
       const call = calls.find((item) => item.inbound_id === selected);
@@ -100,17 +108,18 @@ function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange }:
     finally { lock.current = false; if (mounted.current) setBusy(false); }
   }
   async function openSource(id: string) {
-    if (lock.current || pending || policyBusy) return;
+    if (lock.current || pending || policyBusy || noteRecoveryBlocked || noteDirty || noteBusy) return;
     lock.current = true; setBusy(true); setError(null); setSource(null);
     try { const value = await readCallSource(actor, encounter.pet_id, id); if (mounted.current) setSource(value); }
     catch (failure) { if (mounted.current) setError(failure); }
     finally { lock.current = false; if (mounted.current) setBusy(false); }
   }
   const selectedCall = calls.find((item) => item.inbound_id === selected);
-  const captureBlocked = blocked || loading || busy || !!pending || policyDirty || policyBusy || invalidStorage || recoveryReviewRequired || encounter.status !== "draft" || !patient || !!patient.patient.archived_at || !!patient.patient.deceased_at || policy?.status !== "approved";
+  const captureBlocked = blocked || loading || busy || noteRecoveryBlocked || noteDirty || noteBusy || !!pending || policyDirty || policyBusy || invalidStorage || recoveryReviewRequired || encounter.status !== "draft" || !patient || !!patient.patient.archived_at || !!patient.patient.deceased_at || policy?.status !== "approved";
   return <section aria-label="Patient-linked call sources" className="min-w-0 space-y-4 rounded-xl border border-border bg-card p-4 shadow-card">
     <h3 className="font-display text-lg">Patient-linked call sources</h3>
-    <p className="text-sm text-muted-foreground">Administrator-only full-call evidence. Explicitly choose an assigned household call and confirm this patient and saved unsigned encounter. Capture preserves the transcript privately; AI call drafts and reviewed chart insertion are separate work.</p>
+    <p className="text-sm text-muted-foreground">Administrator-only full-call evidence. Explicitly choose an assigned household call and confirm this patient and saved unsigned encounter. Capture preserves the transcript privately. AI generation requires separate approval and an explicit request; only reviewed selected SOAP sections can enter the unsigned encounter.</p>
+    {noteRecoveryBlocked && <section aria-label="Outstanding call drafting recovery" className="space-y-2"><p className="text-sm">{noteRecovery.invalid ? "Stored private call drafting identifiers are invalid." : "Recovering the exact source of an outstanding private call drafting action."} New capture and source switching remain blocked.</p><Button variant="outline" disabled={busy || policyBusy} onClick={() => { if (!window.confirm("Discard local call drafting recovery identifiers? This does not cancel remote work. Investigate outstanding actions and review retained history before starting new work.")) return; try { sessionStorage.removeItem(callNoteStorageKey(actor, encounter.pet_id, encounter.id)); setNoteRecovery({ value: null, invalid: false }); setNoteRecoveryBlocked(false); setRecoveryReviewRequired(true); } catch (failure) { setError(failure); } }}>Discard local call drafting recovery identifiers</Button></section>}
     {error && <p role="alert" className="text-sm text-destructive">{callFeedback(error)}</p>}
     {notice && <p role="status" className="text-sm">{notice}</p>}
     {loading && <p role="status" className="text-sm">Loading authorized call sources…</p>}
@@ -118,7 +127,7 @@ function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange }:
     {invalidStorage && <p role="alert" className="text-sm text-destructive">Stored call-capture recovery identifiers could not be validated. New capture remains blocked until this local state is resolved.</p>}
     {invalidStorage && <Button variant="outline" disabled={busy || policyBusy} onClick={() => { if (!window.confirm("Discard invalid local call recovery data? This does not cancel any remote capture. Review retained history and investigate outstanding actions before a new reservation.")) return; try { sessionStorage.removeItem(storageKey); setPending(null); setInvalidStorage(false); setRecoveryReviewRequired(true); setError(null); } catch (failure) { setError(failure); } }}>Discard invalid local call recovery data</Button>}
     {recoveryReviewRequired && <section aria-label="Call recovery review required" className="space-y-2"><p className="text-sm">Local recovery data was discarded; no remote action was canceled. Review retained sources below and investigate any outstanding capture before reserving again.</p><Button variant="outline" disabled={busy || policyBusy} onClick={() => setRecoveryReviewRequired(false)}>I reviewed retained sources and outstanding captures</Button></section>}
-    {policy && <CallSourcePolicy actor={actor} policy={policy} blocked={blocked || busy || !!pending} onChanged={(value) => { setPolicy(value); setAuthorized(false); }} onDirtyChange={setPolicyDirty} onBusyChange={setPolicyBusy} />}
+    {policy && <CallSourcePolicy actor={actor} policy={policy} blocked={blocked || busy || !!pending || noteRecoveryBlocked || noteDirty || noteBusy} onChanged={(value) => { setPolicy(value); setAuthorized(false); }} onDirtyChange={setPolicyDirty} onBusyChange={setPolicyBusy} />}
     {policy?.status !== "approved" && !loading && <p role="status" className="text-sm">Practice approval for call sources is pending. Existing clinician recording and typed-note approvals do not enable call capture.</p>}
     {encounter.status !== "draft" && <p className="text-sm">Choose a saved unsigned encounter before capturing a new call source. Retained private evidence can still be reviewed below.</p>}
     {patient && <section aria-label="Explicit call destination" className="min-w-0 space-y-2 rounded-md border border-border p-3">
@@ -154,8 +163,9 @@ function CallSession({ actor, encounter, blocked, onDirtyChange, onBusyChange }:
       <p className="text-xs text-muted-foreground">Up to 100 recent sources for this patient. Opening a transcript rechecks administrator access and its household association.</p>
       {historyHasMore && <p className="text-sm text-muted-foreground">Older retained sources exist beyond this recent list.</p>}
       {!history.length && !loading && <p className="text-sm text-muted-foreground">No retained call sources returned.</p>}
-      <div className="flex flex-wrap gap-2">{history.map((item) => <Button key={item.id} variant="outline" className="h-auto min-h-11 max-w-full whitespace-normal text-left" disabled={busy || !!pending || policyBusy} onClick={() => void openSource(item.id)}>Review call ended {formatDateTime(item.context.call_ended_at)} · captured {formatDateTime(item.created_at)} (Denver)</Button>)}</div>
+      <div className="flex flex-wrap gap-2">{history.map((item) => <Button key={item.id} variant="outline" className="h-auto min-h-11 max-w-full whitespace-normal text-left" disabled={busy || !!pending || policyBusy || noteRecoveryBlocked || noteDirty || noteBusy} onClick={() => void openSource(item.id)}>Review call ended {formatDateTime(item.context.call_ended_at)} · captured {formatDateTime(item.created_at)} (Denver)</Button>)}</div>
     </section>
+    {source && source.encounter_id === encounter.id && <CallNoteDrafts key={source.id} actor={actor} encounter={encounter} source={source} blocked={blocked || busy || !!pending || policyDirty || policyBusy || invalidStorage || formDirty} onDirtyChange={onNoteDirtyChange} onBusyChange={setNoteBusy} onAccepted={onAccepted} />}
     {source && <CallSourcePreview source={source} patientName={patient?.patient.name} householdName={patient?.client.full_name} encounterDate={source.encounter_id === encounter.id ? encounter.visit_at : undefined} />}
   </section>;
 }

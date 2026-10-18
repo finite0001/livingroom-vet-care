@@ -1,0 +1,157 @@
+{
+  "date_utc": "2026-10-18",
+  "increment": "Phase 3B.2 guarded call generation and private clinical review",
+  "state": "implemented; new PR pending review; clinical processing remains disabled",
+  "migration_count": 203,
+  "migration_sha256": "ccb3c9460a20da848fd0fd262facf58ae8249b3ce6b4d869f2d41963bf71eb72",
+  "prior_release": {
+    "pr": 273,
+    "merge": "2df9a1c84f1fd9c8df4e374ffcfe6f5e7e306f73",
+    "vercel_deployment": "dpl_2DuGBqY4fs7nmBgKY3JQAu6ppLmi",
+    "state": "READY",
+    "target": "production",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app"
+    ],
+    "backend_change_required": false
+  },
+  "local": {
+    "unit_tests": 1643,
+    "typescript_projects": 3,
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "canonical_sql": {
+      "files": 166,
+      "assertions": 7315,
+      "bound_source_unchanged": true,
+      "owned_runtime_removed": true,
+      "receipt": {
+        "path": "tmp/clinical-calls-generation-canonical-v3-sql-proof.json",
+        "sha256": "51ae37cd17d1dee1180c551c19b716903a6cca9df956c5a6ca813f0a7b177017"
+      }
+    },
+    "end_to_end": {
+      "sql_summary": "All tests successful.\nFiles=3, Tests=204,  2 wallclock secs ( 0.08 usr  0.02 sys +  0.03 cusr  0.03 csys =  0.16 CPU)\nResult: PASS",
+      "sql_only": false,
+      "migrations": 203,
+      "actual_auth_api_assertions": 136,
+      "observed_lock_waits": 8,
+      "provider_requests": 0,
+      "hosted_writes": 0,
+      "owned_runtime_removed": true,
+      "actual_worker": {
+        "actual_worker_http_assertions": 15,
+        "stub_provider_requests": 1,
+        "real_provider_requests": 0,
+        "committed_finish_requests": 2,
+        "lost_finish_ack_recovered": true,
+        "browser": {
+          "assertions": 21,
+          "droppedCommittedAcknowledgements": 3,
+          "desktopWidth": 1280,
+          "mobileChromiumWidth": 390,
+          "realProviderRequests": 0,
+          "staffPrivateRequests": 0,
+          "acceptedThenRejected": true
+        },
+        "all_stub_provider_requests": 3
+      },
+      "populated_restore_assertions": 8,
+      "restored_relation_families": 17,
+      "restored_table_security_catalogs": 17,
+      "restored_public_routines": 1355
+    },
+    "bound_end_to_end_inputs": 230,
+    "end_to_end_receipt": {
+      "path": "tmp/clinical-calls-generation-full-v6-proof.json",
+      "sha256": "bb0f50d03a43e11df9faa2f1e2e35948b8adab3dba381a8eaf4c366b0c05ea35"
+    },
+    "existing_browser": {
+      "initial_passed": 515,
+      "initial_failed": 9,
+      "initial_skipped": 1,
+      "serial_rerun_passed": 9,
+      "combined_passed": 524,
+      "skipped": 1,
+      "application_changes_for_rerun": false,
+      "initial_artifacts": "tmp/clinical-calls-generation-e2e-initial"
+    },
+    "edge": {
+      "frozen_all_entrypoints": true,
+      "isolated_checked_and_bundled_endpoints": 5
+    },
+    "harness_unit_tests": 17,
+    "baseline_upgrade": {
+      "baseline_migrations": 201,
+      "current_migrations": 203,
+      "actual_auth_api_assertions": 144,
+      "observed_source_read_waits": 2,
+      "actual_frontend_parses": 27,
+      "actual_frontend_review_checks": 9,
+      "exact_legacy_json_preserved": true,
+      "exact_legacy_wire_bytes_preserved": true,
+      "populated_restore_assertions": 7,
+      "restored_relation_families": 20,
+      "restored_public_routines": 1355,
+      "owned_runtime_removed": true,
+      "receipt": {
+        "path": "tmp/clinical-calls-generation-compat-v2-proof.json",
+        "sha256": "7f2b981838f3890b3341e3abcd15737dc387314c001d9d88e5e613e6831b134f"
+      }
+    },
+    "security_advisors": {
+      "scope": "owned local CLI only",
+      "baseline201_sha256": "ed8701b1c09442d00ffa50db996268dbf66b2470617d6c6df313f0e6efa2b559",
+      "current203_sha256": "ed8701b1c09442d00ffa50db996268dbf66b2470617d6c6df313f0e6efa2b559",
+      "identical": true,
+      "exit_code": 0,
+      "existing_warning": "extension_in_public_pg_net",
+      "new_warnings": 0
+    }
+  },
+  "no_real_provider_requests": true,
+  "hosted_writes": 0,
+  "remaining": [
+    "Phase 3B.3 independently adjudicated call fidelity evaluation with separately bounded real-provider decision",
+    "Susan call-processing and retention approval",
+    "Authorized CloudTalk commissioning",
+    "Physical iPhone/Safari acceptance",
+    "Specific approval and verified rollout of the new PR"
+  ],
+  "commands": {
+    "canonical": "python3 -B tests/clinical-calls/disposable.py --run-synthetic-local --include-sql-regression --sql-only --evidence-prefix clinical-calls-generation-canonical-v3",
+    "end_to_end": "python3 -B tests/clinical-call-generation/disposable.py --run-synthetic-local --evidence-prefix clinical-calls-generation-full-v6",
+    "repository": "npm run check",
+    "browser": "npm run test:e2e",
+    "failed_browser_rerun": "npx playwright test --last-failed --workers=1",
+    "edge_isolation": "python3 -B scripts/verify-clinical-audio-edge-isolation.py"
+  },
+  "reproduction_note": "Use a fresh evidence prefix for each owned local run. Ordinary tests use labeled synthetic provider stubs. Private artifacts are not committed.",
+  "source_sha256": {
+    "package-lock.json": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f",
+    "src/hub/features/clinical/ClinicalWorkspace.tsx": "a9c984b7c4c2de72072d57f1b3aef24f91b1efb16c0e00ac3f1e8fb8495eff08",
+    "src/hub/features/clinical/call-drafts/CallNoteDrafts.tsx": "8d6eb8bd7e3138bbb2d929d82be6586530857e8666612cf9fbb5061c5b64eb1d",
+    "src/hub/features/clinical/call-drafts/CallNotePolicy.tsx": "f16341f1c0c939ef414b09b28a1308b31a836b02c85be67682d34efc439b2536",
+    "src/hub/features/clinical/call-drafts/CallNoteReview.tsx": "23d810cd88b048d34fdbb4c07375ae346d93d26b258a742cb919fbffef6efccf",
+    "src/hub/features/clinical/call-drafts/CallSourcePolicy.tsx": "329d95ed85f58ccc4b13caf953fd330941010b0dcb483faa6b3cfe11b4592fb4",
+    "src/hub/features/clinical/call-drafts/CallSourcePreview.tsx": "0407653590b26342321be94e1b5de9eac7b11d85abf569bf4c2b192f0a9ef574",
+    "src/hub/features/clinical/call-drafts/PatientCallDrafts.tsx": "d6ff58a23218bd90f4e66d7f36c9574a3faf4f9942730e54a9730cbb52a23629",
+    "src/hub/features/clinical/call-drafts/api.ts": "40257bb59d6e33502fc571e367dba82f8298950bdc51e5cb51bd6f605d6192ee",
+    "src/hub/features/clinical/call-drafts/model.ts": "da4d6834d54612868dae1b1a201686b5474b777d166b7ace8e907c2dce1d1c8f",
+    "src/hub/features/clinical/call-drafts/note-api.ts": "37ff966e93c20079d6630f42cceb382b6998040b3baec4c833e9c4ea8a38c26e",
+    "src/hub/features/clinical/call-drafts/note-pending.ts": "e1c49b16a300dd32ef8496570b95df797782ae882fd9e7bc4b292d24a4471a95",
+    "supabase/functions/_shared/clinical-call-note-handler.ts": "b56073dab2a403e149b85b13203b2a998034a0eb58fbcf2b58fedf12a5d9d801",
+    "supabase/functions/_shared/clinical-call-note-model.ts": "99b992a7dc0824d81acfcd1c5db15d7f85e6840f41ca55e0ae9f676a91e3b6b2",
+    "supabase/functions/_shared/clinical-call-note-processing-model.ts": "1e3b328c40401f77294e461d9733a05c5f3f31a8ed2bbbbb791d5564682d537f",
+    "supabase/functions/_shared/clinical-call-note-provider.ts": "859c644e38646490a791e0554b34a309b0603bef24bec740bd7a26b377ab67ab",
+    "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+    "supabase/migrations/20261018032610_clinical_call_note_generation.sql": "ccb3c9460a20da848fd0fd262facf58ae8249b3ce6b4d869f2d41963bf71eb72",
+    "supabase/tests/clinical_call_note_generation.test.sql": "64dae167e8ed98d7d7aa500faf67de2939e6cc35da8830d3d8b42ce9aedc32eb",
+    "tests/clinical-call-generation/README.md": "7a5b778eb8d7db5c47367712b7b1feba91a21705dffd0634fe05c8f13244ff40",
+    "tests/clinical-call-generation/browser-proof.ts": "f1f719b6a2a4893761f85aef5d38e99fdd03b04040c6dc370d102be112f2d5da",
+    "tests/clinical-call-generation/disposable.py": "1a2f8f33998b540c656f136105117d4ebfb2b1e216c69c6d0b24a63cba94f617",
+    "tests/clinical-call-generation/worker-roundtrip.ts": "323354aeb70b73cfa097c4fd7673dbe064f316115ba51a4ae636e508d8cccbbf"
+  }
+}

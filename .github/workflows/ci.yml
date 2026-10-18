@@ -60,6 +60,7 @@ jobs:
           supabase/functions/ezyvet-import/attachment-metadata.ts
           supabase/functions/_shared/clinical-call-note-model.ts
           supabase/functions/_shared/clinical-call-note-provider.ts
+          supabase/functions/_shared/clinical-call-note-processing-model.ts
       - name: Verify invoice handler without root Node dependencies
         run: python3 scripts/verify-invoice-edge-isolation.py
       - name: Verify every diagnostic-record consumer without root Node dependencies
@@ -267,6 +268,8 @@ jobs:
         run: python3 -B tests/clinical-calls/disposable.py --run-synthetic-local
       - name: Verify private call-note access, legacy frontend compatibility and populated restore
         run: python3 -B tests/clinical-call-notes/disposable.py --run-synthetic-local
+      - name: Verify guarded call drafts, private review, Auth races and populated restore
+        run: python3 -B tests/clinical-call-generation/disposable.py --run-synthetic-local
       - name: Verify source-bound release artifacts in disposable Auth and Storage
         run: python3 tests/record-releases/source-disposable.py --run-synthetic-local
       - name: Verify reviewed imported history and release artifacts in disposable Auth and Storage

@@ -29,7 +29,7 @@ project=work/'project'
 result_dir=Path(tempfile.mkdtemp(prefix=identity+'-evidence-'))
 log=(result_dir/'runner.log').open('w')
 started=False
-runtime=dict(identity=identity,work=str(work),project=str(project),root=str(root),baseline_migrations=202,
+runtime=dict(identity=identity,work=str(work),project=str(project),root=str(root),baseline_migrations=203,
  canonical_candidate=None,controlled_policy_or_opening=False,new_rpc_grants=False,removed=False)
 
 def command(argv,input=None,timeout=120):
@@ -47,7 +47,7 @@ def sql(query):
  return command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=query)
 
 files=sorted((root/'supabase/migrations').glob('*.sql'))
-assert len(files)==202,'Candidate targets the exact 202-migration release; review before rebasing'
+assert len(files)==203,'Candidate targets the exact 203-migration release; review before rebasing'
 inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[
  root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql']
 hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in inputs}
@@ -93,7 +93,7 @@ enabled = false
   time.sleep(.05)
  else:raise RuntimeError('Owned scheduler pause did not settle')
  proof['scheduler_paused_owned_server_only']=True
- assert sql('select count(*)from supabase_migrations.schema_migrations;').strip()=='202'
+ assert sql('select count(*)from supabase_migrations.schema_migrations;').strip()=='203'
  assert sql('select count(*)from auth.users;').strip()=='0'
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
  assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and left(relname,17)='controlled_stock_';").strip()=='0'
@@ -123,9 +123,9 @@ select controlled_stock_manifest_required();commit;
  print('Candidate installed locally; all ten canonical root definitions unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:
   output=command(['supabase','test','db','--workdir',str(project)],timeout=420)
-  assert 'All tests successful.'in output and 'Files=165, Tests=7235'in output
-  proof['ordinary_sql_regression']={'files':165,'assertions':7235}
-  print('Ordinary compatibility:165 canonical SQL suites /7235 assertions passed with the candidate installed.',flush=True)
+  assert 'All tests successful.'in output and 'Files=166, Tests=7315'in output
+  proof['ordinary_sql_regression']={'files':166,'assertions':7315}
+  print('Ordinary compatibility:166 canonical SQL suites /7315 assertions passed with the candidate installed.',flush=True)
  environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
  for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-api.py','genuine_auth_api')]:
   p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=360)
