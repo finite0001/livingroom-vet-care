@@ -1,0 +1,11 @@
+# Controlled-stock candidate — merged rollout
+
+> Historical October 15, 2026 receipt for the 189-migration release. Its hosted observations, counts, deployment identifiers and original proof results describe that dated run. The October 18 forward-port performs no hosted comparison or deployment; current 203-migration local verification is recorded separately below and does not refresh these historical observations.
+
+[PR #258](https://github.com/finite0001/livingroom-vet-care/pull/258) merged as `25557067eeff8c79e56284db84a335a50ab92344` from reviewed `7090ec5d0c40a54e17fa58fcabe601957d529ecf`. The merged tree equals the reviewed tree. All four exact-head CI jobs passed, including the isolated candidate gate. [Machine receipt](2026-10-15-controlled-engine-candidate-rollout.json), [local candidate proof](2026-10-15-controlled-engine-candidate-local.md).
+
+Production deployment `dpl_8RxYiNkEN3s4Vqjo8GFts3sarTzM` is READY for that exact merge, and `thelivingroom.vet` points to it. The live browser check passed login200, five protected redirects, primary-backend-only configuration, preserved task/supplier/draft/scanner assets, the expected scanner worker/WASM checksum, zero page errors, and anonymous diagnostic-download401. It used no staff session or camera permission. A successful deployment-scoped error-log query returned no error rows within its one-hour/50-row bound; this is not a full uptime-monitoring audit.
+
+Both backends still have 189 migrations, with history matching all canonical versions and none pending. No controlled-stock schema is installed. Primary retains outbox3, payment profiles0, stock movements0 and controlled draft entries0. Staging retains its one sandbox payment profile and two synthetic draft entries. Verification made no hosted schema/data, provider, secret, Edge Function or legacy-backend changes.
+
+PR #258 makes the candidate and its reproducible tests available in the repository and CI. It adds no production engine migration or clinical activation. C1b production hardening and release, C2 review/witness/count/transfer/report workflows, and C3 actual configuration/counts/Susan’s approval remain required. All 45 original requirements remain in scope.

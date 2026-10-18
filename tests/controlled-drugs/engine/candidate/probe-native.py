@@ -44,10 +44,12 @@ try:
  needle="insert into data select 'target',";assert fixture.count(needle)==1
  prefix=fixture[:fixture.index(needle)]+'\ncommit;\n'
  config=(source/'native-config.sql').read_text();operations=(source/'native-operations.sql').read_text()
+ assert operations.count('set constraints all immediate;')==1
  operations=operations.replace('set constraints all immediate;',(source/'fault-probes.sql').read_text()+'\n'+(source/'integrity-probes.sql').read_text()+'\nset constraints all immediate;')
  output=sql(prefix+config+operations,database)
  proof=json.loads(next(line for line in reversed(output.splitlines())if line.startswith('{')))
  assert proof['managed_canonical_actions']==24 and proof['managed_producers']==9
+ assert proof['late_injected_fault_points']==4 and proof['independent_corruption_failures']==11
  managed=snapshot(database)
  restore_dump=subprocess.check_output(['docker','exec',container,'pg_dump','-U','postgres','--no-owner','--schema=public','--schema=auth','--schema=storage','--schema=extensions',database],timeout=90).decode()
  restore_dump='\n'.join(line for line in restore_dump.splitlines()if not line.startswith('ALTER DEFAULT PRIVILEGES')).replace('CREATE SCHEMA extensions;','CREATE SCHEMA IF NOT EXISTS extensions;')
@@ -58,9 +60,21 @@ try:
  assert snapshot(restore_database)==managed
  sql('select controlled_stock_manifest_required();select controlled_stock_validate_event(id)from controlled_stock_events;select controlled_stock_validate_product(product_id)from controlled_stock_states;',restore_database)
  assert snapshot(restore_database)==managed
+ isolation_results=[]
+ for level in ['repeatable read','serializable']:
+  isolation_sql=(source/'restore-isolation.sql').read_text().replace('__ISOLATION__',level)
+  result=sql(isolation_sql,restore_database)
+  row=json.loads(next(line for line in reversed(result.splitlines())if line.startswith('{')))
+  assert row['kind']=='controlled-restored-isolation'and row['level']==level and row['checks']==4
+  isolation_results.append(row)
+ result=sql((source/'restore-context.sql').read_text(),restore_database)
+ context_result=json.loads(next(line for line in reversed(result.splitlines())if line.startswith('{')))
+ assert context_result['kind']=='controlled-restored-context'and context_result['checks']==4
+ assert snapshot(restore_database)==managed
+ proof.update(restored_unsupported_isolation_checks=sum(v['checks']for v in isolation_results),restored_context=context_result)
  assert snapshot(database)==managed
  assert snapshot('postgres')==original
- proof.update(independent_corruption_failures=11,late_injected_fault_points=4,all_relations_unchanged_after_each_injected_fault=True,populated_managed_restore=True,restored_exact_relation_fingerprints=len(managed),
+ proof.update(all_relations_unchanged_after_each_injected_fault=True,populated_managed_restore=True,restored_exact_relation_fingerprints=len(managed),
   restore_validates_without_recorder_session=True,source_runtime_all_relations_unchanged=len(original),
   physical_post_backup_reconciliation_proven=False,storage_binary_restore_proven=False)
  proof.update(canonical_migration=False,genuine_auth_api=False,actual_practice_rules=False)
