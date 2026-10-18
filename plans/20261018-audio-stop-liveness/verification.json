@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "scope": "Local recorder Stop finalization liveness; no hosted/provider/account/real-microphone operations",
+  "parent_commit": "a11df554df0f01094a566e65936e8f80bb5576d9",
+  "runtime": "Node v26.10.0",
+  "source_sha256": {
+    "src/hub/features/clinical/dictation/audio/recorder.ts": "a8628014a68252e154df3d8e8555134633b2418b049bc802a6432863cac27e40",
+    "tests/clinical-audio/recorder.test.ts": "b0ff9107e8e0b5d47ab655568307019cdd9c83d0b246a26026b6ea1b6323f8b1"
+  },
+  "focused_tests": {
+    "command": "node --experimental-strip-types --test tests/clinical-audio/recorder.test.ts",
+    "passed": 14,
+    "failed": 0,
+    "interfaces": "Synthetic browser APIs around the actual ClinicalPcmRecorder class; no browser/hardware acceptance claim"
+  },
+  "parent_regression": {
+    "test": "pending resume is bounded; late resolve cannot restart capture or reject unobserved",
+    "result": "Expected failure on parent code",
+    "failure_type": "unhandledRejection",
+    "exit_code": 1,
+    "adaptations": "Equivalent explicit constructor field assignment for Node strip-types and relocated import paths only",
+    "tap_sha256": "e6c862a185321c7b50fa68288085efe76e9695562631d9a22eb20b92d897f2df"
+  },
+  "repository_check": {
+    "command": "npm run check",
+    "exit_code": 0,
+    "tests_passed": 1684,
+    "tests_failed": 0,
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "typecheck": "passed",
+    "build": "passed",
+    "existing_build_warning": "Bundle chunk sizes above 500 kB",
+    "log_sha256": "c0746974c8c90ab16c8840b7467c1a1fa7dc005d605fcc6b8e747f5f7cc910ef"
+  },
+  "review": {
+    "result": "No blocker found in focused source review",
+    "preserved": "WAV encoding, min/max validation, explicit pause/resume, worklet, no automatic upload or processing",
+    "limitations": [
+      "JavaScript timers require a running event loop",
+      "Physical iPhone/Safari interruption acceptance is unproved",
+      "Start and standalone Resume liveness, context statechange and track mute detection are outside this increment",
+      "Context close is requested and observed; timeout does not prove OS-level context destruction"
+    ]
+  }
+}

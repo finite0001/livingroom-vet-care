@@ -15,8 +15,12 @@ export class ClinicalPcmRecorder {
   private chunks: Int16Array[] = [];
   private disposed = false;
   private complete = false;
-  private finishAck: (() => void) | null = null;
-  constructor(private callbacks: RecorderCallbacks) {}
+  private finishAck: ((error?: Error) => void) | null = null;
+  private finishing = false;
+  private callbacks: RecorderCallbacks;
+  constructor(callbacks: RecorderCallbacks) {
+    this.callbacks = callbacks;
+  }
   async start() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -105,40 +109,52 @@ export class ClinicalPcmRecorder {
     await this.context?.resume();
   }
   async stop() {
-    if (this.disposed || !this.node || !this.context)
+    if (this.disposed || this.finishing || !this.node || !this.context)
       throw new Error(
         "Recording could not be finalized. No audio was uploaded.",
       );
+    this.finishing = true;
+    const context = this.context;
+    const node = this.node;
+    const failure = () =>
+      new Error("Recording did not finalize. No audio was uploaded.");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(failure()), 1500);
+    });
     this.stream?.getTracks().forEach((t) => {
       t.enabled = false;
     });
     try {
       if (!this.complete) {
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        try {
-          const ack = new Promise<void>((resolve, reject) => {
-            this.finishAck = resolve;
-            timer = setTimeout(
-              () =>
-                reject(
-                  new Error(
-                    "Recording did not finalize. No audio was uploaded.",
-                  ),
-                ),
-              1500,
-            );
-          });
-          await this.context.resume();
-          this.node.port.postMessage("stop");
-          await ack;
-        } finally {
-          if (timer) clearTimeout(timer);
-          this.finishAck = null;
-        }
+        const ack = new Promise<void>((resolve, reject) => {
+          this.finishAck = (error) => (error ? reject(error) : resolve());
+          // Observe resume immediately, including a rejection after the deadline.
+          void Promise.resolve()
+            .then(() => {
+              if (this.disposed) throw failure();
+              return context.resume();
+            })
+            .then(() => {
+              if (this.disposed || this.context !== context || this.node !== node)
+                throw failure();
+              node.port.postMessage("stop");
+            })
+            .catch(reject);
+        });
+        await Promise.race([ack, deadline]);
       }
+      if (this.disposed) throw failure();
       return encodeAudioWav(this.chunks);
     } finally {
-      await this.dispose();
+      this.finishAck = null;
+      try {
+        // dispose releases tracks/ports synchronously; close acknowledgement is
+        // covered by the same deadline as resume and the worklet acknowledgement.
+        await Promise.race([this.dispose(), deadline]);
+      } finally {
+        clearTimeout(timer);
+      }
     }
   }
   private closeTracks() {
@@ -147,6 +163,10 @@ export class ClinicalPcmRecorder {
   }
   async dispose() {
     this.disposed = true;
+    this.finishAck?.(
+      new Error("Recording did not finalize. No audio was uploaded."),
+    );
+    this.finishAck = null;
     this.closeTracks();
     this.node?.disconnect();
     this.gain?.disconnect();
