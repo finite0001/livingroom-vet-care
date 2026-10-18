@@ -24,7 +24,7 @@ The independently retained `trusted-prior-189.json` is byte-for-byte unchanged (
 The final source-bound owned run passed:
 
 - All 166 current canonical SQL suites / 7,315 assertions with the candidate installed; all ten canonical writer definitions unchanged.
-- 133 genuine local Auth/PostgREST checks and eight observed lock queues, including admitted-writer drain, new-writer waiting before native resources, suspension refusal and exact saved recovery.
+- 133 combined Auth/API/SQL assertions using genuine local Auth/PostgREST and eight observed lock queues, including admitted-writer drain, new-writer waiting before native resources, suspension refusal and exact saved recovery.
 - 24 managed actions across nine native producers, plus separate receiving/adjustment smoke coverage; four late failures and eleven corruption failures counted from executed SQL proof tables.
 - Eight restored isolation refusals, four stale-context/recovery checks and 456 exact restored relation fingerprints. Those restore/context claims use explicitly labeled SQL fixtures; physical post-backup history and Storage binary restore are not established.
 - All 394 bound input hashes still matched after completion. Owned actors/sessions were retired; the marked clones and owned stack were removed. Container, volume and private-work removal were independently rechecked. Hosted writes and provider requests: zero.
