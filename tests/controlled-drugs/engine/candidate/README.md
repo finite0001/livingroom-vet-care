@@ -80,6 +80,11 @@ managed action. Available-only old movements retain their exact opening snapshot
 Any supported exception route remains separate work.
 
 The separate populated upgrade rehearsal uses the reviewed CLI 2.118.0.
+It accepts the exact Postgres 17.6.1.171 reference from ECR or the CLI's official
+GHCR fallback, and inspects the owned container's immutable image ID to require
+the reviewed repository-qualified index or matching Linux platform manifest
+digest. A matching tag alone is insufficient. The independently retained
+trusted-189 catalog comparison remains unchanged; no bootstrap ACLs are normalized.
 Its two eras use separate local port blocks: 64630/64631/64632/64634 for 187
 and 64640/64641/64642/64644 for 188. These stay separate from the ordinary
 runner's 6462x block so recently closed Auth/API sockets do not collide between

@@ -16,6 +16,7 @@ import tempfile
 import uuid
 
 from local_install import build_install, assert_prior
+from history_environment import assert_bootstrap_image
 
 source = Path(__file__).resolve().parent
 root = source.parents[3]
@@ -181,8 +182,10 @@ def rehearse(era, files, assembly, folder):
     try:
         print('Replaying genuine native checkpoint ' + str(era) + '.', flush=True)
         replay.start(files[:era])
-        image = json.loads(replay.command(['docker', 'inspect', replay.container]))[0]['Config']['Image']
-        assert image == 'public.ecr.aws/supabase/postgres:17.6.1.171', 'Review the bootstrap image before changing the trusted environment'
+        container = json.loads(replay.command(['docker', 'inspect', replay.container]))[0]
+        image = container['Config']['Image']
+        inspected = json.loads(replay.command(['docker', 'image', 'inspect', container['Image']]))[0]
+        image_pin = assert_bootstrap_image(image, inspected)
         replay.ledger(files[:era])
         with paused_owned_scheduler(replay.project, replay.identity) as scheduler:
             fixture = (root / 'supabase/tests/native_fulfillment.test.sql').read_text()
@@ -236,7 +239,8 @@ def rehearse(era, files, assembly, folder):
             assert replay.no_controlled_data() == controlled
             (replay.folder / 'preservation.json').write_text(json.dumps({'original_columns': original_columns,
                 'original_before_and_after': before, 'post_install_after_each_observation': installed}, indent=2))
-            outcome = {'era': era, 'postgres_image': image, 'original_checkpoint': files[era - 1].name, 'final_migrations': len(files),
+            outcome = {'era': era, 'postgres_image': image, 'postgres_content_pin': image_pin,
+                'original_checkpoint': files[era - 1].name, 'final_migrations': len(files),
                 'original_relation_count': len(before), 'final_relation_count': len(installed),
                 'original_rows': sum(x['count'] for x in before.values()),
                 'original_columns_rows_unchanged': True, 'post_install_state_unchanged_after_each_case': True,

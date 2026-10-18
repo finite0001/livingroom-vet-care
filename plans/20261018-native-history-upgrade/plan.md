@@ -1,8 +1,8 @@
 # Genuine native history upgrade characterization
 
 Status: fresh seven-case rehearsal, ordinary compatibility and repository checks
-passed after CI port isolation; exact-head CI and release pending. Synthetic
-engineering rehearsal only.
+passed after CI port isolation and reviewed registry content pinning; exact-head
+CI and release pending. Synthetic engineering rehearsal only.
 
 ## Goal and boundary
 

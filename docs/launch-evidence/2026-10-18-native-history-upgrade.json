@@ -4,8 +4,25 @@
   "scope": "genuine native 187/188 records upgraded unchanged through 204 and observed by the isolated controlled-stock candidate; synthetic engineering rehearsal only, no hosted installation",
   "environment": {
     "supabase_cli": "2.118.0",
-    "postgres_image": "public.ecr.aws/supabase/postgres:17.6.1.171",
-    "python": "3.14.7"
+    "postgres_image": "ghcr.io/supabase/postgres:17.6.1.171",
+    "python": "3.14.7",
+    "postgres_content_pin": {
+      "exact_references": [
+        "public.ecr.aws/supabase/postgres:17.6.1.171",
+        "ghcr.io/supabase/postgres:17.6.1.171"
+      ],
+      "index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+      "platform_manifests": {
+        "linux/amd64": "sha256:8fd52f740917ecfce63117428e84e04cbb9c8fed6771431c55e259ebb991e51b",
+        "linux/arm64": "sha256:2163c5dca3899d27b2020a08844e6c5386d8ea954c5a2259e78cc0c7945bc33c"
+      },
+      "ghcr_raw_index_sha_matches_registry_header": true,
+      "retained_ecr_and_fresh_ghcr_index_digest_match": true,
+      "platform_manifests_independently_match_dockerhub": true,
+      "runtime_inspected_by_immutable_image_id": true,
+      "matching_tag_alone_is_insufficient": true,
+      "protected_raw_index_sha256": "658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+    }
   },
   "synthetic_only": true,
   "hosted_writes": 0,
@@ -20,17 +37,23 @@
     "assembled_sql_sha256": "47577a5b932a8295694e8cc36a4b4f601b7e2c128636bb1c0d2ca1283f3ef736"
   },
   "historical_upgrade_proof": {
-    "private_result_sha256": "101573b53269b303f4dad7d808b242564d3161318969d1423b25a6caa416ce17",
-    "protected_187_runner_log_sha256": "ca4e6e6fa589bc9f61b3e91569a48ced1db0b7a7a31c467b7a2b65c50e1a8f94",
-    "protected_188_runner_log_sha256": "0747d24439d03bd27cbc57e524976eb7a2b68ce029d1cde059724cd349e0d754",
-    "bound_source_hashes_matched": 239,
+    "private_result_sha256": "1db553012b22a5a2a4b27e6eae68caf06bc7a32f1f3d7184e2a71f92affe81fb",
+    "protected_187_runner_log_sha256": "ad816d63afe379a3a83c84cb39fef33cbf965d4628dd4b11d86ed4e77afa1f4e",
+    "protected_188_runner_log_sha256": "6ccf6adb8f4da611455fc9cd8b44e90c84ab57ea1222c63217d27b0cce950a71",
+    "bound_source_hashes_matched": 240,
     "observed_cases": 7,
     "total_sql_checks": 83,
     "all_owned_resources_removed": true,
     "replays": [
       {
         "era": 187,
-        "postgres_image": "public.ecr.aws/supabase/postgres:17.6.1.171",
+        "postgres_image": "ghcr.io/supabase/postgres:17.6.1.171",
+        "postgres_content_pin": {
+          "reference": "ghcr.io/supabase/postgres:17.6.1.171",
+          "platform": "linux/arm64",
+          "repository_digest": "ghcr.io/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+          "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+        },
         "original_checkpoint": "20261015011200_controlled_draft_configuration.sql",
         "final_migrations": 204,
         "original_relation_count": 63,
@@ -56,7 +79,13 @@
       },
       {
         "era": 188,
-        "postgres_image": "public.ecr.aws/supabase/postgres:17.6.1.171",
+        "postgres_image": "ghcr.io/supabase/postgres:17.6.1.171",
+        "postgres_content_pin": {
+          "reference": "ghcr.io/supabase/postgres:17.6.1.171",
+          "platform": "linux/arm64",
+          "repository_digest": "ghcr.io/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+          "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+        },
         "original_checkpoint": "20261015020722_stock_writer_provenance.sql",
         "final_migrations": 204,
         "original_relation_count": 66,
@@ -365,7 +394,8 @@
     "partial_attempts_counted_as_coverage": false,
     "exact_label_absence_verified_after_rerun": true,
     "fresh_rerun_after_port_isolation": true,
-    "run_after_complete_ordinary_compatibility": true
+    "run_after_complete_ordinary_compatibility": true,
+    "fresh_rerun_with_ghcr_content_guard": true
   },
   "ordinary_candidate_compatibility": {
     "rerun_after_reboot": true,
@@ -375,8 +405,8 @@
       "runtime_removed": true,
       "exact_label_containers_or_volumes_remaining": false
     },
-    "sanitized_result_sha256": "067ef914b8de10b6c3fb2a2b49a56fa324dd1acdb3185c61f3d6d9fed246ab6e",
-    "protected_runner_log_sha256": "d3acb23cd5b0b266bdd46ef5ad764b1c2804a505fd09c0106a7a473ca71be6db",
+    "sanitized_result_sha256": "721df27f6acd0c67090d5db175412b89ab4a71bc86ed002d5e734a0557298247",
+    "protected_runner_log_sha256": "4aa00be83d4f21f0e7f546c55394a9b140ec7ba997a8d9b839fe493ec1cabd45",
     "proof": {
       "trusted_prior_upgrade": {
         "functions": 116,
@@ -410,7 +440,7 @@
       "all_ten_canonical_root_definitions_unchanged": true,
       "owned_containers_and_volumes_removed": true,
       "scheduler_paused_owned_server_only": true,
-      "bound_source_hashes_matched": 403,
+      "bound_source_hashes_matched": 404,
       "smoke_all_relation_fingerprints_unchanged": 456,
       "managed_native": {
         "managed_producers": 9,
@@ -446,7 +476,8 @@
     "counter_labels": {
       "api_checks": "combined genuine Auth/PostgREST response and SQL setup/state/cleanup assertions; not an HTTP request count"
     },
-    "fresh_rerun_after_port_isolation": true
+    "fresh_rerun_after_port_isolation": true,
+    "fresh_rerun_forced_official_ghcr": true
   },
   "repository_checks": {
     "npm_ci": "passed (--ignore-scripts; no .env or .env.local existed or was written)",
@@ -460,14 +491,22 @@
     "protected_log_sha256": "188bfa0ce672a35d1933ae05ba363dfb6ad7fb48c5f8f478bc1929a39f744718",
     "python_syntax_compiled": "passed",
     "rerun_after_port_isolation": true,
-    "node_major": 22
+    "node_major": 22,
+    "bootstrap_environment_harness": {
+      "tests": 23,
+      "new_test_methods": 6,
+      "passed": true,
+      "protected_log_sha256": "785504ecdba820a9666374e3ab9d81469e5423a35d9f20e7f7013d3bbcfaf5d4"
+    }
   },
   "source_hashes": {
     "tests/controlled-drugs/engine/candidate/local_install.py": "efc95c3c36313d33fb22e8ae56d37d121fccf6f3dd8d612b6690f90c91138112",
     "tests/controlled-drugs/engine/candidate/run-local.py": "c9e96e7457dca8061893f2dc60ee5cb6dd7861579671d39a863b20f986af30bc",
     "tests/controlled-drugs/engine/candidate/native-history-seed.sql": "690c7d6825c4f99f54858970e5d439be4a4e2c4d41dc9392071891be2cb631af",
     "tests/controlled-drugs/engine/candidate/native-history-observe.sql": "5e19edf8ade5760eaa35dc3980918f53e7c29e67f0fd04a42d4be845f71978e0",
-    "tests/controlled-drugs/engine/candidate/run-native-history.py": "e4209a0e9654360497253a82c0c9449a95a3758796ed1f7ad89adca6f78c44e7"
+    "tests/controlled-drugs/engine/candidate/run-native-history.py": "0e7dd48996dd8ca050d64d2c3d84cddf3f3cb7de05819ea476e25a744d25f7e3",
+    "tests/controlled-drugs/engine/candidate/history_environment.py": "ed42ffa7835b5e2fc424738de97ceb237f554651c0e0f7facf5a10c8a2e3094a",
+    "supabase/tests/test_native_history_environment_harness.py": "b75288a4cf3877ff97737a95acfe69600764c82374caa4973a292630cee6928f"
   },
   "ci": {
     "new_job_step": "Verify genuine native 187 and 188 records survive unchanged upgrades",
@@ -504,7 +543,18 @@
       "occupied_port_guard_retained": true,
       "socket_reuse_enabled": false,
       "no_other_repository_runner_uses_historical_blocks": true
-    }
+    },
+    "preceding_image_reference_failure": {
+      "run_id": 39171708071,
+      "head": "0cd414c56243b4083169fcf1803e85f173b219c2",
+      "ordinary_candidate_compatibility": "passed",
+      "native_history": "exact ECR-reference assertion refused after startup; no historical observation completed",
+      "ci_registry_observation": "ECR rate limits followed by official CLI fallback to ghcr.io/supabase/postgres:17.6.1.171",
+      "failed_attempt_counted_as_coverage": false,
+      "protected_failure_log_sha256": "cd32a5fdec7d7c82e2d423d73a2efd873aaab1334ad85a4818c49e5b7c8d1aec",
+      "protected_full_log_sha256": "b2bada2d4bf521ffb4a7d67189851005db1af5130517683b41431351177e689d"
+    },
+    "bootstrap_guard_counterexamples_run_before_database_start": true
   },
   "limitations": [
     "Characterizes synthetic prefix upgrades from canonical checkpoints 187 and 188; not a production backup restore, historical clinic-data certification or clinical activation approval.",
@@ -520,6 +570,11 @@
   "preceding_successful_proofs_before_port_isolation": {
     "historical_result_sha256": "fab42ef0b6fd8c9983aa1389d45874336274f0f0e4cf243766270d3f4a033337",
     "ordinary_result_sha256": "4ca2092739376638449bf83e3c01beeafb9313bb807da4ef07b4340700639073",
+    "superseded_for_current_runner_hash": true
+  },
+  "preceding_successful_proofs_before_registry_content_guard": {
+    "historical_result_sha256": "101573b53269b303f4dad7d808b242564d3161318969d1423b25a6caa416ce17",
+    "ordinary_result_sha256": "067ef914b8de10b6c3fb2a2b49a56fa324dd1acdb3185c61f3d6d9fed246ab6e",
     "superseded_for_current_runner_hash": true
   }
 }
