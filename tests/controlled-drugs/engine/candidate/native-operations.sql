@@ -122,5 +122,6 @@ select jsonb_build_object('synthetic_only',true,'sql_only',true,'managed_canonic
  'managed_producers',9,'all_six_return_actions',true,'all_four_discrepancy_actions',true,'all_three_correction_kinds',true,
  'available','100.875','prepared','4.500','return_held','2.100','billing_items',4,'billing_cents',1975,
  'anesthesia_one_treatment_debit_charge',true,'mixed_case_pickup_uuid_preserved',true,'pickup_amendment_did_not_restore_custody',true,
- 'native_holds_resolved_without_quantity_change',true,'private_context_cleared',true,'provider_requests',0);
+ 'native_holds_resolved_without_quantity_change',true,'private_context_cleared',true,'provider_requests',0,
+ 'late_injected_fault_points',(select count(*)from engine_fault_proof),'independent_corruption_failures',(select count(*)from engine_integrity_proof));
 commit;
