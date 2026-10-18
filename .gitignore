@@ -48,4 +48,5 @@ test-results/
 /tmp/clinical-calls-*
 /tmp/call-fidelity-*
 /tmp/call-provider-*
+/tmp/call-auth-*
 /tests/clinical-calls/__pycache__/

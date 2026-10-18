@@ -27,6 +27,27 @@ sha = lambda value: hashlib.sha256(value).hexdigest()
 packed = lambda value: json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()
 
 
+def validate_service_jwt_identity(value):
+    """Claims/shape check only, NOT signature verification.
+
+    The captured CLI credential must subsequently pass the independently verified
+    project JWT gateway. Runtime-inherited service keys need not equal CLI keys.
+    """
+    def unique_object(pairs):
+        result = {}
+        for key, item in pairs:
+            if key in result: raise ValueError("duplicate_jwt_claim")
+            result[key] = item
+        return result
+    try:
+        if not isinstance(value, str) or len(value) > 16384 or not re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", value): raise ValueError()
+        encoded = value.split(".")[1]
+        claims = json.loads(base64.b64decode(encoded + "=" * (-len(encoded) % 4), altchars=b"-_", validate=True).decode("utf-8"), object_pairs_hook=unique_object)
+        if not isinstance(claims, dict) or claims.get("role") != "service_role" or claims.get("ref") != PROJECT: raise ValueError()
+    except Exception:
+        raise ValueError("staging_service_jwt_identity_unconfirmed") from None
+
+
 def rows(value):
     if isinstance(value, list): return value
     if isinstance(value, dict):
@@ -186,6 +207,7 @@ class NativeTransport:
         keys = rows(json.loads(raw))
         key = next((r.get("api_key") for r in keys if r.get("name") == "service_role"), None)
         if not isinstance(key, str) or len(key) < 40 or key.startswith("[REDACTED"): raise ValueError("staging_admin_credential_unavailable")
+        validate_service_jwt_identity(key)
         self.service = key
     def list_functions(self): return functions(self.json_command(["functions", "list", "--project-ref", PROJECT]))
     def list_secret_metadata(self): return secret_metadata(self.json_command(["secrets", "list", "--project-ref", PROJECT]))

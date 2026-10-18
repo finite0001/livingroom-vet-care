@@ -1,0 +1,56 @@
+{
+  "pr": 275,
+  "head": "9046b1e8f974897df3c638c0c117fd8b8baa43c9",
+  "merge": "7cdb2ba833659e65410531483e6d1ce10226d9d9",
+  "merged_at": "2026-10-18T12:23:17Z",
+  "ci_run": 39099959569,
+  "all_four_jobs": "success",
+  "frontend": {
+    "id": "dpl_CwMMnkzkfhb3H4ZZ1BkRCojiHCxT",
+    "readyState": "READY",
+    "target": "production",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ]
+  },
+  "browser": {
+    "target": "https://thelivingroom.vet",
+    "checks": [
+      {
+        "width": 1440,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      },
+      {
+        "width": 390,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      }
+    ],
+    "page_errors": [],
+    "authenticated_clinical_acceptance": false,
+    "clinical_writes": 0,
+    "real_provider_calls": 0
+  },
+  "screenshots_inspected": true,
+  "migration_or_function_deployment_required": false,
+  "provider_calls": 0,
+  "clinical_activation": false,
+  "private_receipts_sha256": {
+    "call-fidelity-pr275-primary-browser-verification.json": "e787de5e832be29294987cabdb6382ae789262da68c589391d159f4664e6627a",
+    "call-fidelity-pr275-primary-login-390.png": "cabb5a8817082f2849cd624d890803a2a652e465b438aa5d548499e10e825adc",
+    "call-fidelity-pr275-github-status.json": "79aad6421e75e034be2fe82579d5a040e1ccbf21ee7eb1841575146fb2e8cbb9",
+    "call-fidelity-pr275-ci.json": "688ec1c6caa3ac19d9dd150cdfc9e935074d21ceae9538dc40727b09db9346c3",
+    "call-fidelity-pr275-merge.json": "7aa6862b3d9a05682627cb28121df4694c84cbe6f07a15a021c0eff97c0618e0",
+    "call-fidelity-pr275-vercel.json": "9acebd29cedf8f6c505d64c813f8de69b55502dd09b55b270d074481ee5227c9",
+    "call-fidelity-pr275-browser-smoke.mjs": "622c9c8260f3bb434c5aefb4e35d09a633c6559b025dfe0637dc1899a8f2f2bb",
+    "call-fidelity-pr275-primary-login-1440.png": "3d5d9a96baab6817460af9916cae6a557a93a2a1f39de03005409307f947e874"
+  }
+}

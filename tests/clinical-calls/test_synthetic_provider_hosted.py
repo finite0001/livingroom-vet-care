@@ -268,7 +268,7 @@ class HostedTests(unittest.TestCase):
             native=hosted.NativeTransport(runner,plan,directory,"dummy-operator")
             with patch.object(native,"json_command",return_value=[{"id":"wrong-project"}]):
                 with self.assertRaises(ValueError):native.verify_project()
-            key="dummy-service-role-key-value-at-least-forty-characters"
+            key="e30."+base64.urlsafe_b64encode(json.dumps({"role":"service_role","ref":hosted.PROJECT}).encode()).decode().rstrip("=")+".c3ludGhldGlj"
             with patch.object(native,"command",return_value=json.dumps([{"name":"service_role","api_key":key}]).encode()):
                 native.acquire_credentials()
             self.assertEqual(native.service,key)
@@ -285,6 +285,24 @@ class HostedTests(unittest.TestCase):
             native.opener=Opener()
             self.assertTrue(native.probe(plan["function_names"][0],"attest")["complete"])
             self.assertIsNone(hosted.NoRedirect().redirect_request(None,None,302,None,None,None))
+
+    def test_cli_service_identity_rejects_wrong_role_project_and_malformed_claims(self):
+        def token(payload):
+            return "e30."+base64.urlsafe_b64encode(payload).decode().rstrip("=")+".c3ludGhldGlj"
+        # These dummy tokens prove only claim validation, never JWT signatures.
+        hosted.validate_service_jwt_identity(token(json.dumps({"role":"service_role","ref":hosted.PROJECT}).encode()))
+        invalid=[b'{"role":"anon","ref":"'+hosted.PROJECT.encode()+b'"}',
+                 b'{"role":"authenticated","ref":"'+hosted.PROJECT.encode()+b'"}',
+                 b'{"role":"service_role","ref":"wrong-project"}',
+                 b'{"role":"anon","role":"service_role","ref":"'+hosted.PROJECT.encode()+b'"}',
+                 b'[]',b'null',b'\xff',b'not-json']
+        for payload in invalid:
+            with self.subTest(payload=payload):
+                with self.assertRaisesRegex(ValueError,"service_jwt_identity_unconfirmed"):
+                    hosted.validate_service_jwt_identity(token(payload))
+        for value in (None,"not-a-jwt","e30.@@.c2ln","e30.e30.c2ln.extra","a"*16385):
+            with self.assertRaisesRegex(ValueError,"service_jwt_identity_unconfirmed"):
+                hosted.validate_service_jwt_identity(value)
 
     def test_all_ten_final_canonical_sidecars_exist_with_actual_file_hashes_after_early_stop(self):
         for mode in ("503", "outer_partial", "target", "deploy_lost", "run_invalid"):

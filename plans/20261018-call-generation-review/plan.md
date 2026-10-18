@@ -1,6 +1,6 @@
 # Guarded call generation and private clinical review
 
-Status: implemented and locally verified, new PR pending review; PR 273 merged at `2df9a1c84f1fd9c8df4e374ffcfe6f5e7e306f73`. See [verification evidence](../../docs/launch-evidence/2026-10-18-clinical-call-generation.md). This increment implements Phase 3B.2, not clinical activation or paid fidelity evaluation.
+Status: implemented, merged as PR 274 and deployed to staging, primary and the production frontend. See [verification evidence](../../docs/launch-evidence/2026-10-18-clinical-call-generation.md) and the [approved rollout receipt](../../docs/launch-evidence/2026-10-18-clinical-call-generation-primary-rollout.md). This increment implements Phase 3B.2, not clinical activation. Phase 3B.3 continues under its [separate fidelity plan](../20261018-call-fidelity/plan.md).
 
 ## Outcome
 
@@ -26,4 +26,4 @@ Root owns the additive migration and integration. The worker implementation owns
 - Real owned local Auth/PostgREST and actual handler with a synthetic provider; ordinary tests make zero real or paid requests. Observe lock barriers for revocation/source and encounter races. Restore populated private histories and effective grants.
 - Actual Patient 360 at desktop and 390px: private source selection, generation, evidence, selected edits, acceptance/rejection/recovery, navigation guard and STAFF/role-loss boundary. A mobile Chromium check is not iPhone/Safari acceptance.
 - Run repository checks, strict TypeScript, all frozen Edge checks and database suites. Record actual limitations rather than treating static helpers as end-to-end proof.
-- Open the completed next PR. No merge of that PR is authorized by the PR 273 approval. No real call generation, policy approval, provider spend, signing, delivery or primary migration is part of this increment. Susan's approval and separate commissioning remain outstanding.
+- The original implementation boundary ended at the completed PR. The owner subsequently authorized PR 274's merge and additive rollout, now recorded in the linked receipt. Real call generation, policy approval, signing and delivery remain inactive. Susan's approval and separate commissioning remain outstanding.
