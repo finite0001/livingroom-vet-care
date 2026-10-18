@@ -17,7 +17,7 @@ The protocol reserves each operation UUID, freezes original canonical arguments 
 | `probe-smoke.py` / `smoke.sql` | Fractional receive/adjust, stale reviews, changed payloads, permanent cancellation, foreign owner, shared/exclusive upgrade rejection, same-packet generic/raw context borrowing, exact recovery; all source relation fingerprints unchanged after rollback |
 | `probe-native.py` / native fixtures | 24 managed actions across nine producers; receiving is tested separately. All six return actions, three correction kinds and four discrepancy actions; independent available/prepared/held and billing totals; one anesthesia treatment/debit/charge |
 | `probe-opening.py` / `opening-boundary-acceptance.sql` / `opening-history.sql` | Separately counted populated opening-custody boundary acceptance; original native prefixes, exact cell reconciliation, refusal rollback fingerprints and marked clone/restore cleanup. Synthetic engineering evidence, not commissioning or genuine Auth/API coverage |
-| `run-native-history.py` / `native-history-*.sql` | Genuine canonical 187/188 record creation followed by unchanged upgrades to 204; seven separately classified native entry projections, original-column preservation and unchanged final state after every observation |
+| `run-native-history.py` / `native-history-*.sql` / `native_history_restore.py` | Genuine canonical 187/188 record creation followed by unchanged upgrades to 204; seven native projections plus two separate available-only opening cases, original-column preservation, rollback fingerprints and persisted unattached opening restore |
 | `fault-probes.sql` | Failures after inventory, billing, controlled-line and action inserts; every relation fingerprint must match the pre-execution state after rollback |
 | `integrity-probes.sql` | Missing/forged lines, foreign source, changed opening, skipped head, broken custody predecessor, rolled-back state head, changed unit, forged event hash/frame and forged new-container identity must fail independent validation |
 | Populated managed restore | Eight owned-API rejections under repeatable-read/serializable isolation; four stale-context/recovery checks prove an old server/transaction row is not authority and a new owned action replaces/clears it once. Exact schema/data restore of all selected public/Auth/Storage/extensions relations, manifest equality, source/event/product validation without caller claims; both marked clone databases removed and original runtime unchanged |
@@ -98,15 +98,24 @@ It seeds through actual canonical APIs before provenance migrations exist, expor
 fixture IDs privately, and applies every remaining migration unchanged. Original
 native/inventory/billing/client/actor columns are fingerprinted across the upgrade;
 all public/Auth/Storage/extensions rows are fingerprinted after installation and
-after each projector observation. It never backfills provenance or creates a
-controlled site, policy, opening, position or event. Its installer shares the exact
-pinned assembly used by the ordinary empty-Auth runner, whose precondition remains
-unchanged. This seven-case matrix does not test generic available-only stock
-opening construction, a production backup restore or historical clinic datasets.
+after each observation. It never backfills provenance. The seven native projector
+cases create no controlled configuration. Two additional cases use an independent
+generic product received and fractionally adjusted through each era's original
+RPCs, then construct a synthetic, frozen and unattached available-only opening.
+Exact original movement snapshots and lot totals are validated, with focused
+missing/changed snapshot and wrong-quantity refusals; the entire observation rolls
+back. A marked disposable clone alone commits the valid unattached opening before
+dump/restore and independent validation. Its installer shares the exact pinned
+assembly used by the ordinary empty-Auth runner, whose precondition remains
+unchanged. These selected-schema synthetic restores do not establish production
+backup recovery, historical clinic-data correctness or physical counts.
 
 The [dated native-upgrade receipt](../../../../docs/launch-evidence/2026-10-18-native-history-upgrade.md)
 records the seven outcomes, preservation boundaries and ordinary compatibility
-checks without treating entry projection as register commissioning.
+checks without treating entry projection as register commissioning. That receipt
+describes the earlier seven-case source; the separate
+[old-stock opening receipt](../../../../docs/launch-evidence/2026-10-18-old-stock-opening.md)
+records the expanded rehearsal without rewriting its historical counts.
 
 Candidate capacity is explicit: at most 200 product dispenses/boundary entries,
 100 allocations per dispense, 1,000 events per dispense per native history family (including

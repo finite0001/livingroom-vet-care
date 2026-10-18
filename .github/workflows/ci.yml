@@ -184,7 +184,7 @@ jobs:
         run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
       - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
         run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression
-      - name: Verify genuine native 187 and 188 records survive unchanged upgrades
+      - name: Verify genuine 187/188 history, available-only openings and populated opening restore
         run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local
       - uses: denoland/setup-deno@v2
         with:
