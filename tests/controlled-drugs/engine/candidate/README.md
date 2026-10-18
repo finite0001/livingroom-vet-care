@@ -16,6 +16,7 @@ The protocol reserves each operation UUID, freezes original canonical arguments 
 | --- | --- |
 | `probe-smoke.py` / `smoke.sql` | Fractional receive/adjust, stale reviews, changed payloads, permanent cancellation, foreign owner, shared/exclusive upgrade rejection, same-packet generic/raw context borrowing, exact recovery; all source relation fingerprints unchanged after rollback |
 | `probe-native.py` / native fixtures | 24 managed actions across nine producers; receiving is tested separately. All six return actions, three correction kinds and four discrepancy actions; independent available/prepared/held and billing totals; one anesthesia treatment/debit/charge |
+| `probe-opening.py` / `opening-boundary-acceptance.sql` | Separately counted populated opening-custody boundary acceptance; original native prefixes, exact cell reconciliation, refusal rollback fingerprints and marked clone/restore cleanup. Synthetic engineering evidence, not commissioning or genuine Auth/API coverage |
 | `fault-probes.sql` | Failures after inventory, billing, controlled-line and action inserts; every relation fingerprint must match the pre-execution state after rollback |
 | `integrity-probes.sql` | Missing/forged lines, foreign source, changed opening, skipped head, broken custody predecessor, rolled-back state head, changed unit, forged event hash/frame and forged new-container identity must fail independent validation |
 | Populated managed restore | Eight owned-API rejections under repeatable-read/serializable isolation; four stale-context/recovery checks prove an old server/transaction row is not authority and a new owned action replaces/clears it once. Exact schema/data restore of all selected public/Auth/Storage/extensions relations, manifest equality, source/event/product validation without caller claims; both marked clone databases removed and original runtime unchanged |
@@ -26,3 +27,66 @@ The initial trusted prior reference is checked before any persistent engine obje
 The restore proves recorded database history, not actual physical history after a backup or Storage binary disaster recovery. No live provider, payment, email, payroll or clinical activation is tested or authorized here.
 
 The separate [migration-204 compatibility receipt](../../../../docs/launch-evidence/2026-10-18-controlled-candidate-204-compatibility.md) preserves the current 166-suite/7,338-assertion proof without relabeling the historical 203 evidence. Its raw `api_checks: 133` counts combined Auth/PostgREST response and SQL setup/state/cleanup assertions, not HTTP-only checks or requests.
+
+## Opening custody contract
+
+`opening.sql` defines the private projector
+`controlled_stock_opening_native_entry(opening_id, dispense_id, return_version,
+correction_version, discrepancy_version, pickup_id)` and the independent
+`controlled_stock_validate_opening(opening_id)` validator. These are candidate
+helpers, with the same default revocations and manifest coverage as the other
+private engine routines.
+
+The private construction helper
+`controlled_stock_opening_native_entry_for_product(product_id, stock_unit,
+dispense_id, return_version, correction_version, discrepancy_version, pickup_id)`
+produces the same verified native entry before the immutable opening row exists.
+The opening-aware wrapper and validator then bind it to the actual opening's
+product, policy unit and exact source membership. This avoids updating an opening
+or bypassing its immutable trigger merely to assemble a fixture.
+
+Each `native_custody_boundary` entry has exactly `version: 1`, `dispense_id`,
+`dispense_document_hash`, `dispense_operation_hash`, `return_head`, `correction_head`, `discrepancy_head`,
+`pickup`, and `allocations`. Heads are `{event_id, version, record_hash}`; the empty
+prefix is `{event_id: null, version: 0, record_hash: null}`. Pickup is null or
+`{id, document_hash, operation_hash}`. Operation hashes cover the existing
+`native_fulfillment_receipt` canonical JSON, including the original request,
+result and operation timestamp, using UTC. They retain opening-time receipt
+content; they are not signatures, raw network-byte hashes, or proof of truth
+before the opening was constructed. Allocations sort by original allocation ID and contain
+`allocation_id`, `lot_id`, `dispensed_quantity`, `prepared_quantity`, and `held`.
+Held entries sort by original intake ID and contain `intake_id` and `quantity`,
+including zero quantities needed to retain source membership. Quantity strings
+use the existing native three-decimal formatter. A supplied entry must equal its
+verified canonical projection, including keys, identities, heads and quantities.
+
+The retained prefix belongs to the opening; later managed activity does not
+replace it with today's replay. Source membership, rather than time or UUID
+ordering, distinguishes opening evidence from later controlled event links.
+Opening available/prepared/held quantities are checked independently; already
+dispensed stock is not counted twice. The product validator checks an existing
+opening even before the state head attaches it. Unsupported custody/discrepancy
+routes remain unavailable. The proof reports its actual assertion counts and
+limitations separately from the historical compatibility receipts.
+
+Native dispense and pickup opening evidence also requires the existing C1a stock
+provenance and its original immutable operation receipt. Genuinely older native
+records without that provenance remain an explicit unsupported case; a synthetic
+missing-provenance mutation is not a historical-upgrade proof. Available-only old
+movements retain their exact opening snapshots. The genuine pre-C1a native upgrade
+matrix and any supported exception route remain separate work.
+
+Candidate capacity is explicit: at most 200 product dispenses/boundary entries,
+100 allocations per dispense, 1,000 events per dispense per native history family (including
+later managed history), and a 1 MiB boundary. Exceeding these limits refuses; it
+never truncates evidence. This bounded development capacity needs review before
+production engine assembly and commissioning.
+
+Opening validation checks the retained boundary and exact later-source partition.
+The existing deferred guards validate each new/root managed event, and the restore
+probe separately audits every historical managed event. The opening helper does
+not repeat that complete event audit for every deferred product check. Positive
+receipt fixtures currently use UTC; historical receipts produced by ordinary SQL
+sessions in other time zones need separate compatibility acceptance before
+production assembly. No equivalent-timestamp repair or historical fallback is
+claimed by this increment.

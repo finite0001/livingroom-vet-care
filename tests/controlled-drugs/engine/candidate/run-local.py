@@ -101,7 +101,7 @@ enabled = false
  parts=[(source/(name+'.sql')).read_text()for name in ['schema','helpers','effects','review']]
  for name in ['source-reader.sql','source-effects.sql']:
   parts.append((source.parent/name).read_text().replace('pg_temp.controlled_stock_','public.controlled_stock_'))
- parts.extend((source/(name+'.sql')).read_text()for name in ['posting','constraints','entry','protocol','guards','seal'])
+ parts.extend((source/(name+'.sql')).read_text()for name in ['posting','opening','constraints','entry','protocol','guards','seal'])
  # The expected catalog is independently retained from the original canonical
  # 189 replay, never rebuilt from this candidate or a deployed catalog. Newer
  # migrations may coexist only if the scoped metadata still equals that pin.
@@ -181,7 +181,7 @@ select controlled_stock_manifest_required();commit;
   proof['ordinary_sql_regression']={'files':166,'assertions':7338}
   print('Ordinary compatibility:166 canonical SQL suites /7338 assertions passed with the candidate installed.',flush=True)
  environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
- for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-api.py','genuine_auth_api')]:
+ for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-opening.py','opening_boundary'),('probe-api.py','genuine_auth_api')]:
   p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=360)
   log.write(probe+'\n'+p.stdout+p.stderr+'\n');log.flush()
   if p.returncode:raise RuntimeError(probe+' failed; protected result directory: '+str(result_dir))
