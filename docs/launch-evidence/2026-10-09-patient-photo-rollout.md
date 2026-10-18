@@ -1,5 +1,7 @@
 # Patient photos — hosted rollout receipt
 
+> Historical receipt for the October 9, 2026 rollout, restored to current main on October 18. Counts, deployed versions and acceptance observations below describe that dated run. This documentation restoration did not repeat hosted probes or change the current backend, frontend or practice approvals.
+
 **Status:** PR #232 merged; staging and primary backends deployed; production frontend READY. Engineering rollout is complete. Practice acceptance remains pending.
 
 Dave approved merging #232 and the staged rollout. Reviewed head `0d98918042d32361042634732d2775df02f4ac41` passed [all CI jobs](https://github.com/finite0001/livingroom-vet-care/actions/runs/37961854969). The merge commit is `7cf7fbfdf9a8b774da6964164f3d00e97423fd5f` (2026-10-09 21:06:04 UTC); its tree is identical to that reviewed head.

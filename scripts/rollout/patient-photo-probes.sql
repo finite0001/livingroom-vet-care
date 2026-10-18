@@ -1,3 +1,6 @@
+-- Historical October 9, 2026 rollback probe for the 169-migration release.
+-- Retained with its original rollout receipt; not a current hosted release check.
+-- Review current schema/session prerequisites and authorization before any rerun.
 -- Hosted role/metadata probes. No actual image bytes or HTTP session are claimed.
 -- All synthetic records, Storage metadata and audit writes roll back in the inner block.
 begin;
