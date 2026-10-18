@@ -26,3 +26,41 @@ python3 -B tests/clinical-calls/disposable.py --run-synthetic-local
 The disposable runner uses uniquely owned local ports 65320/65321/65322/65324/65381. It copies committed migrations into its own temporary runtime, verifies Docker ownership before accessing keys, disables its local cron scheduler, exercises real Auth/PostgREST/handler HTTP against stubbed CloudTalk pages, and checks a populated dump/restore. No real provider, call, recording, AI request or hosted secret is accessed. `--include-sql-regression` adds all SQL tests; `--sql-only` skips HTTP/browser/restore. Evidence is private under `tmp/<evidence-prefix>-*`; the input hash inventory and runtime cleanup are part of the final receipt. Do not modify proof inputs during a final run.
 
 The native CloudTalk projection is seeded with fictional calls to exercise household authorization; this is not a real CloudTalk webhook/account acceptance test. Provider API commissioning and authorized practice samples remain separate launch work.
+
+## Offline call-note fidelity evaluation (Phase 3B.3)
+
+This preparation freezes ten wholly fictional calls before any paid request. Scenarios cover household attribution, ambiguous speakers/pets, negation and corrections, historical/current reports, exact drug decimals and units, unmeasured vitals, discussed/declined/planned/not-given treatment, midnight, DST, unknown call start, hostile transcript commands and compound comparisons. Required meanings concern the selected patient; other-pet history may be omitted and must stay private if included. Veterinary vocabulary remains the exact production prompt context, not custom model training.
+
+```sh
+node --experimental-strip-types --test tests/clinical-calls/evaluation-offline.test.ts
+mkdir -p tmp
+node --experimental-strip-types tests/clinical-calls/evaluation-cli.ts export tmp/call-fidelity-frozen
+```
+
+The export uses production transcript capture with injected response stubs and the production OpenAI request builder. It performs **zero network requests**, reads no environment keys or hosted data, and changes no clinical policy. `bundle.json` retains complete fictional context, every exact serialized request, model/prompt/template/vocabulary receipts, code/lockfile fingerprints, mandatory/forbidden inventory and deliberately false but structurally valid negative controls. Fixture context/template hashes bind offline bytes; they do not assert PostgreSQL canonicalization, authorization or hosted provenance. Alias names do not establish immutable model snapshots. Export directories must not exist and are created privately; existing evidence is never overwritten.
+
+`raw-import-template.json` has deliberately invalid `outcome: null` placeholders. It is not model evidence. A separately authorized future run must choose this exact bundle/model, a concrete cost ceiling and at most ten requests (one per case), with **no retries**. Use a protected server-side key boundary; do not recover keys via SQL, browser storage or logs. Preserve every outcome, including refusals, incomplete responses, provider errors and transport failures. This package includes no paid request runner.
+
+Replace each placeholder with exactly one of these strict outcome shapes, preserving the complete HTTP entity body bytes in canonical base64 before decoding or parsing. Record a supplied provider request identifier when available; an empty identifier is permitted when unavailable. Do not put authentication headers, keys or real patient information in the import.
+
+```json
+{"kind":"http","status":200,"request_id":"req_supplied_by_provider","raw_body_base64":"BASE64_OF_COMPLETE_UNMODIFIED_RESPONSE_BODY"}
+```
+
+```json
+{"kind":"transport_error","error":"Specific retained transport failure; no retry performed."}
+```
+
+Keep the template's `case_id`, `request_sha256`, `bundle_sha256` and top-level contract unchanged. Import rejects missing, duplicate, unknown or mismatched cases and any altered current-revision bundle/code/request. SHA256 binds supplied evidence bytes; it does **not** authenticate provider authorship. HTTP bodies with invalid UTF8 remain exact base64 with their original byte hash and fail parsing.
+
+```sh
+node --experimental-strip-types tests/clinical-calls/evaluation-cli.ts packet tmp/call-fidelity-frozen/bundle.json tmp/call-fidelity-results.json tmp/call-fidelity-review
+```
+
+This writes `packet.json`, a readable `review.md` and `adjudication-pending.json`. All failures and exact raw bytes remain in the packet. The Markdown contains complete transcript segments, each whole claim with its own supports, proposed selected-patient SOAP, private flags, required/forbidden meanings and stable decision IDs. Untrusted text is fenced safely. A parser/citation pass never becomes a clinical pass. Every claim dimension, each individual support and each inventory fact needs a named reviewer's explicit pass/fail, specific rationale and allowed evidence references. Passing mandatory meanings require references to the actual output claims or flags. Other-pet/unassigned claims stay outside selected-patient SOAP but are still reviewed. Do not edit the packet or import after review; even a whitespace change in raw output invalidates the adjudication binding.
+
+```sh
+node --experimental-strip-types tests/clinical-calls/evaluation-cli.ts adjudicate tmp/call-fidelity-frozen/bundle.json tmp/call-fidelity-results.json tmp/call-fidelity-review/adjudication-pending.json tmp/call-fidelity-adjudicated
+```
+
+Incomplete/duplicate/tampered decisions, blank reviewer/rationales, invented evidence or unreviewed supports are rejected. Any failed contract/transport or explicit semantic failure prevents a fidelity pass. Engineering tests deliberately judge negative controls as failures; they are not real model results or Susan's clinical approval. Real-provider fidelity, authorized provider samples and practice clinical activation remain pending.
