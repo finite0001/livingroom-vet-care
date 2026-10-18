@@ -66,16 +66,8 @@ function boundary(value: string, offset: number) {
  * must load and authorize the retained source/template and bind their manifests
  * server-side; browser-supplied documents cannot establish trusted provenance.
  */
-export async function validateCallNotePayload(value: unknown, source: unknown, definition: unknown) {
-  const payload = callNotePayloadSchema.parse(value);
+export async function validateCallNoteSourceDocument(source: unknown) {
   const document = callSourceDocumentSchema.parse(source);
-  const template = noteTemplateDefinitionSchema.parse(definition);
-  if (new TextEncoder().encode(JSON.stringify(payload)).byteLength > CALL_NOTE_LIMITS.payload_bytes) {
-    throw Error("Call draft byte budget exceeded.");
-  }
-  if (payload.fields.length !== template.fields.length) {
-    throw Error("Every pinned call template field must be returned exactly once.");
-  }
   const labels = new Set(document.callers.map((c) => c.localIdentifier));
   if (labels.size !== document.callers.length) throw Error("Original speaker labels must be unique.");
   let projection = "", previousStart = -1;
@@ -93,6 +85,19 @@ export async function validateCallNotePayload(value: unknown, source: unknown, d
     previousStart = segment.start;
   }
   if (projection !== document.projection) throw Error("Retained call projection differs.");
+  return document;
+}
+
+export async function validateCallNotePayload(value: unknown, source: unknown, definition: unknown) {
+  const payload = callNotePayloadSchema.parse(value);
+  const template = noteTemplateDefinitionSchema.parse(definition);
+  if (new TextEncoder().encode(JSON.stringify(payload)).byteLength > CALL_NOTE_LIMITS.payload_bytes) {
+    throw Error("Call draft byte budget exceeded.");
+  }
+  if (payload.fields.length !== template.fields.length) {
+    throw Error("Every pinned call template field must be returned exactly once.");
+  }
+  const document = await validateCallNoteSourceDocument(source);
   const counts = { subjective: 0, objective: 0, assessment: 0, plan: 0 };
   let claims = 0, supports = 0, eligible = 0;
   for (const [index, field] of payload.fields.entries()) {
