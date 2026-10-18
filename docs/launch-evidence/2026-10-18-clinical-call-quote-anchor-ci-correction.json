@@ -1,0 +1,27 @@
+{
+  "contract": "call-quote-ci-inventory-correction-v1",
+  "failed_ci_run": 39137467883,
+  "failed_head": "fb4b1b907922f6da1e8cf2b0ff9895937447aed7",
+  "failed_job": "frontend",
+  "failed_step": "Check read-only schema comparison safeguards",
+  "cause": "Migration204 was missing from the explicit new_versions suffix shared by both historical restore-upgrade modes. Current count was already204.",
+  "correction": "Append only20261018150000 to reviewed suffix; preserve every historical prefix and existing completeness assertion.",
+  "local_checks": {
+    "restore_safeguard_python": 12,
+    "restore_diagnostics_python": 3,
+    "storage_metadata_node": 1,
+    "recap_python": 16,
+    "transport_python": 27,
+    "sql_harness_python": 17,
+    "all_passed": true
+  },
+  "source_sha256": {
+    "scripts/restore-rehearsal/run.py": "170012ea108f26f83a6513734a85b72e1f6eb7bd96bb4603289d3c88a96b9e9f"
+  },
+  "existing_proof_inputs_still_current": {
+    "call_generation": 231,
+    "controlled_compatibility": 395,
+    "rollout_rehearsal": 211
+  },
+  "no_provider_request_or_hosted_deployment": true
+}
