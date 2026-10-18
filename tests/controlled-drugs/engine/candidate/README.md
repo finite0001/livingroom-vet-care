@@ -16,7 +16,7 @@ The protocol reserves each operation UUID, freezes original canonical arguments 
 | --- | --- |
 | `probe-smoke.py` / `smoke.sql` | Fractional receive/adjust, stale reviews, changed payloads, permanent cancellation, foreign owner, shared/exclusive upgrade rejection, same-packet generic/raw context borrowing, exact recovery; all source relation fingerprints unchanged after rollback |
 | `probe-native.py` / native fixtures | 24 managed actions across nine producers; receiving is tested separately. All six return actions, three correction kinds and four discrepancy actions; independent available/prepared/held and billing totals; one anesthesia treatment/debit/charge |
-| `probe-opening.py` / `opening-boundary-acceptance.sql` | Separately counted populated opening-custody boundary acceptance; original native prefixes, exact cell reconciliation, refusal rollback fingerprints and marked clone/restore cleanup. Synthetic engineering evidence, not commissioning or genuine Auth/API coverage |
+| `probe-opening.py` / `opening-boundary-acceptance.sql` / `opening-history.sql` | Separately counted populated opening-custody boundary acceptance; original native prefixes, exact cell reconciliation, refusal rollback fingerprints and marked clone/restore cleanup. Synthetic engineering evidence, not commissioning or genuine Auth/API coverage |
 | `fault-probes.sql` | Failures after inventory, billing, controlled-line and action inserts; every relation fingerprint must match the pre-execution state after rollback |
 | `integrity-probes.sql` | Missing/forged lines, foreign source, changed opening, skipped head, broken custody predecessor, rolled-back state head, changed unit, forged event hash/frame and forged new-container identity must fail independent validation |
 | Populated managed restore | Eight owned-API rejections under repeatable-read/serializable isolation; four stale-context/recovery checks prove an old server/transaction row is not authority and a new owned action replaces/clears it once. Exact schema/data restore of all selected public/Auth/Storage/extensions relations, manifest equality, source/event/product validation without caller claims; both marked clone databases removed and original runtime unchanged |
@@ -85,8 +85,26 @@ production engine assembly and commissioning.
 Opening validation checks the retained boundary and exact later-source partition.
 The existing deferred guards validate each new/root managed event, and the restore
 probe separately audits every historical managed event. The opening helper does
-not repeat that complete event audit for every deferred product check. Positive
-receipt fixtures currently use UTC; historical receipts produced by ordinary SQL
-sessions in other time zones need separate compatibility acceptance before
-production assembly. No equivalent-timestamp repair or historical fallback is
-claimed by this increment.
+not repeat that complete event audit for every deferred product check.
+
+Only three independently reconstructed result fields compare as finite typed
+instants: slot `opened_at`, slot `closed_at`, and the verified linked-refill event's
+`created_at`. Their keys must exist, their strings require explicit offsets, and
+null is allowed only where reconstructed state requires it. Every other result
+field, including nested refill snapshots, remains exact. The original stored JSON
+is never repaired or normalized; the retained operation-receipt hash still binds
+its exact opening-time content, including timestamp spelling.
+
+The opening-history fixture uses real canonical writers under UTC,
+America/Denver and Asia/Kathmandu and validates from other caller timezones and
+after populated restore. It separately tests genuine same-unit foreign-product
+identities and historical-result mutations. Per-zone repeated baseline counts and
+new distinct case families are reported separately; execution evidence is recorded
+in the dated history-compatibility receipt. These cases do not establish genuine
+pre-C1a native upgrade support, a general legacy repair route or commissioning.
+
+The [dated history-compatibility receipt](../../../../docs/launch-evidence/2026-10-18-controlled-opening-history.md)
+records the three-zone full run: 27 baseline refusal/14 positive families plus 33 new
+refusal/seven positive families, separately counted from repeated executions.
+All 399 bound source hashes matched; no canonical/hosted engine installation or
+clinical/register activation occurred.
