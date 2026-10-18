@@ -17,6 +17,7 @@ The protocol reserves each operation UUID, freezes original canonical arguments 
 | `probe-smoke.py` / `smoke.sql` | Fractional receive/adjust, stale reviews, changed payloads, permanent cancellation, foreign owner, shared/exclusive upgrade rejection, same-packet generic/raw context borrowing, exact recovery; all source relation fingerprints unchanged after rollback |
 | `probe-native.py` / native fixtures | 24 managed actions across nine producers; receiving is tested separately. All six return actions, three correction kinds and four discrepancy actions; independent available/prepared/held and billing totals; one anesthesia treatment/debit/charge |
 | `probe-opening.py` / `opening-boundary-acceptance.sql` / `opening-history.sql` | Separately counted populated opening-custody boundary acceptance; original native prefixes, exact cell reconciliation, refusal rollback fingerprints and marked clone/restore cleanup. Synthetic engineering evidence, not commissioning or genuine Auth/API coverage |
+| `run-native-history.py` / `native-history-*.sql` | Genuine canonical 187/188 record creation followed by unchanged upgrades to 204; seven separately classified native entry projections, original-column preservation and unchanged final state after every observation |
 | `fault-probes.sql` | Failures after inventory, billing, controlled-line and action inserts; every relation fingerprint must match the pre-execution state after rollback |
 | `integrity-probes.sql` | Missing/forged lines, foreign source, changed opening, skipped head, broken custody predecessor, rolled-back state head, changed unit, forged event hash/frame and forged new-container identity must fail independent validation |
 | Populated managed restore | Eight owned-API rejections under repeatable-read/serializable isolation; four stale-context/recovery checks prove an old server/transaction row is not authority and a new owned action replaces/clears it once. Exact schema/data restore of all selected public/Auth/Storage/extensions relations, manifest equality, source/event/product validation without caller claims; both marked clone databases removed and original runtime unchanged |
@@ -70,11 +71,42 @@ routes remain unavailable. The proof reports its actual assertion counts and
 limitations separately from the historical compatibility receipts.
 
 Native dispense and pickup opening evidence also requires the existing C1a stock
-provenance and its original immutable operation receipt. Genuinely older native
-records without that provenance remain an explicit unsupported case; a synthetic
-missing-provenance mutation is not a historical-upgrade proof. Available-only old
-movements retain their exact opening snapshots. The genuine pre-C1a native upgrade
-matrix and any supported exception route remain separate work.
+provenance and its original immutable operation receipt. Older dispenses missing
+movement provenance and older pickups missing pickup provenance are unsupported;
+a synthetic missing-provenance mutation alone is not a historical-upgrade proof.
+Retained canonical annotation heads have a different guard from managed source
+admission: projecting an older annotation does not prove it can be posted as a new
+managed action. Available-only old movements retain their exact opening snapshots.
+Any supported exception route remains separate work.
+
+The separate populated upgrade rehearsal uses the reviewed CLI 2.118.0.
+It accepts the exact Postgres 17.6.1.171 reference from ECR or the CLI's official
+GHCR fallback, and inspects the owned container's immutable image ID to require
+the reviewed repository-qualified index or matching Linux platform manifest
+digest. A matching tag alone is insufficient. The independently retained
+trusted-189 catalog comparison remains unchanged; no bootstrap ACLs are normalized.
+Its two eras use separate local port blocks: 64630/64631/64632/64634 for 187
+and 64640/64641/64642/64644 for 188. These stay separate from the ordinary
+runner's 6462x block so recently closed Auth/API sockets do not collide between
+rehearsals; occupied ports still fail the startup guard.
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local
+```
+
+It seeds through actual canonical APIs before provenance migrations exist, exports
+fixture IDs privately, and applies every remaining migration unchanged. Original
+native/inventory/billing/client/actor columns are fingerprinted across the upgrade;
+all public/Auth/Storage/extensions rows are fingerprinted after installation and
+after each projector observation. It never backfills provenance or creates a
+controlled site, policy, opening, position or event. Its installer shares the exact
+pinned assembly used by the ordinary empty-Auth runner, whose precondition remains
+unchanged. This seven-case matrix does not test generic available-only stock
+opening construction, a production backup restore or historical clinic datasets.
+
+The [dated native-upgrade receipt](../../../../docs/launch-evidence/2026-10-18-native-history-upgrade.md)
+records the seven outcomes, preservation boundaries and ordinary compatibility
+checks without treating entry projection as register commissioning.
 
 Candidate capacity is explicit: at most 200 product dispenses/boundary entries,
 100 allocations per dispense, 1,000 events per dispense per native history family (including
