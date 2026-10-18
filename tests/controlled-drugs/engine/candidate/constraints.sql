@@ -150,12 +150,16 @@ begin
  if counted<>latest or latest<>head.event_version
   or(head.last_event_id is not null and not exists(select 1 from public.controlled_stock_events where id=head.last_event_id and product_id=p_product and sequence=latest))then
   raise exception 'Controlled product event sequence projection mismatch'using errcode='23514';end if;
+ select * into opening from public.controlled_stock_openings where product_id=p_product;
  if s.opening_id is null then
   if s.state='active'or head.event_version<>0 then raise exception 'An actual opening is required before managed posting'using errcode='23514';end if;
-  return;
+  if opening.id is null then return;end if;
+ elsif opening.id is distinct from s.opening_id then
+  raise exception 'Exact controlled opening required'using errcode='23514';
  end if;
- select * into opening from public.controlled_stock_openings where id=s.opening_id and product_id=p_product;
- if not found then raise exception 'Exact controlled opening required'using errcode='23514';end if;
+ -- Persisted openings and current projections are validated even before active
+ -- attachment; the immutable boundary uses opening quantities, never latest ones.
+ perform public.controlled_stock_validate_opening(opening.id);
  if exists(select 1 from public.controlled_stock_policy_versions policy where policy.product_id=p_product
   and policy.stock_unit is distinct from(select stock_unit from public.controlled_stock_policy_versions where id=opening.policy_version_id))
   or exists(select 1 from public.controlled_stock_containers c where c.product_id=p_product

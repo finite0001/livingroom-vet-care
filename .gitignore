@@ -51,3 +51,7 @@ test-results/
 /tmp/call-auth-*
 /tmp/call-quote-*
 /tests/clinical-calls/__pycache__/
+
+# Private controlled-opening research and local acceptance receipts.
+/tmp/opening-*
+/tmp/controlled-opening-*
