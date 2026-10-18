@@ -1,0 +1,41 @@
+{
+  "scope": "historical_evidence_reconciliation_only",
+  "prs": [
+    {
+      "number": 233,
+      "url": "https://github.com/finite0001/livingroom-vet-care/pull/233",
+      "head": "8f9316efd4f3430f48a1e9bfc012341e870557b5",
+      "merge": "1a75bd9bc2fd9780ab6f49fda0092dc817ce7e6a",
+      "merged_at": "2026-10-18T13:41:10Z",
+      "ci_run": 39129757656,
+      "all_four_jobs": "success"
+    },
+    {
+      "number": 238,
+      "url": "https://github.com/finite0001/livingroom-vet-care/pull/238",
+      "head": "5e1c85ef44994e78a599e9b5e6b8ceebc2c2008a",
+      "merge": "879cf155fe9c7da6d4eea23164aba21178021214",
+      "merged_at": "2026-10-18T13:50:07Z",
+      "ci_run": 39129767140,
+      "all_four_jobs": "success"
+    }
+  ],
+  "deployed_merge": "879cf155fe9c7da6d4eea23164aba21178021214",
+  "deployment": {
+    "id": "dpl_GKYpFZV5TR5uRwv5qeBju46QBXw3",
+    "readyState": "READY",
+    "target": "production",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ]
+  },
+  "product_delta": false,
+  "migration_or_function_deployment_required": false,
+  "historical_sql_or_acceptance_scripts_executed": false,
+  "clinical_activation": false,
+  "provider_requests": 0,
+  "public_browser_smoke": "Final combined rollout smoke will be observed separately; metadata verification only in this receipt."
+}
