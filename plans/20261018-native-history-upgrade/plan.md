@@ -1,7 +1,8 @@
 # Genuine native history upgrade characterization
 
-Status: seven-case local rehearsal passed; compatibility, evidence and release
-verification in progress. Synthetic engineering rehearsal only.
+Status: fresh seven-case rehearsal, ordinary compatibility and repository checks
+passed after CI port isolation; exact-head CI and release pending. Synthetic
+engineering rehearsal only.
 
 ## Goal and boundary
 

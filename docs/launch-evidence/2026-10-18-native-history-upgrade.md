@@ -56,7 +56,7 @@ removed and exact-label absence was root-verified. They are not counted as cover
 
 The full ordinary candidate compatibility run was started before an owner-requested
 reboot and deliberately interrupted at `supabase start`; no result was claimed and
-its runtime was removed. It was rerun from the same source after the reboot and
+its runtime was removed. The final source-bound rerun after the port-isolation fix
 passed: 166 canonical SQL suites / 7,338 assertions with the candidate installed,
 four trusted drift cases rejected with exact rollback, smoke, native managed,
 opening and real-Auth probes, and 403 bound source hashes.
@@ -67,9 +67,21 @@ opening and real-Auth probes, and 403 bound source hashes.
 | Python | all three runners compile; `git diff --check` clean |
 | CI | new step runs the rehearsal after the existing full candidate runner; no canonical migration or application change |
 
+The first PR CI run passed ordinary compatibility, then stopped before historical
+stack creation because the historical runner reused the ordinary runner's local
+port block (`socket.bind`, Errno 98). Lingering Auth/API connections are a likely
+mechanism; their socket state was not directly captured. The runner now uses
+64630/64631/64632/64634 for 187 and 64640/64641/64642/64644 for 188, separate from
+the ordinary 6462x block and all other repository runner allocations. Occupied-port
+guards remain intact and socket reuse is not enabled. The full ordinary run and
+then both historical replays passed again with the corrected source; all 403/239
+source hashes matched and cleanup was independently checked. Repository checks
+were rerun under Node 22. The initial CI failure is not successful coverage; its
+private log digest and superseded proof digests are retained in machine evidence.
+
 Private historical-proof result SHA-256:
-`fab42ef0b6fd8c9983aa1389d45874336274f0f0e4cf243766270d3f4a033337`.
-Sanitized ordinary rerun result SHA-256: `4ca2092739376638449bf83e3c01beeafb9313bb807da4ef07b4340700639073`.
+`101573b53269b303f4dad7d808b242564d3161318969d1423b25a6caa416ce17`.
+Sanitized ordinary rerun result SHA-256: `067ef914b8de10b6c3fb2a2b49a56fa324dd1acdb3185c61f3d6d9fed246ab6e`.
 [Machine evidence](2026-10-18-native-history-upgrade.json) retains per-case
 counters, replay summaries, implementation hashes and cleanup receipts without
 fixture identifiers, projections or private paths.

@@ -79,7 +79,11 @@ admission: projecting an older annotation does not prove it can be posted as a n
 managed action. Available-only old movements retain their exact opening snapshots.
 Any supported exception route remains separate work.
 
-The separate populated upgrade rehearsal uses the reviewed CLI 2.118.0:
+The separate populated upgrade rehearsal uses the reviewed CLI 2.118.0.
+Its two eras use separate local port blocks: 64630/64631/64632/64634 for 187
+and 64640/64641/64642/64644 for 188. These stay separate from the ordinary
+runner's 6462x block so recently closed Auth/API sockets do not collide between
+rehearsals; occupied ports still fail the startup guard.
 
 ```sh
 python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local

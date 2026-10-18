@@ -121,7 +121,11 @@ class OwnedReplay:
         return value
 
     def start(self, files):
-        for port in [64620, 64621, 64622, 64624]:
+        # Keep both eras separate from the ordinary Auth/API runner and from
+        # each other: recently closed TCP connections may outlive owned Docker
+        # cleanup. Retain the occupied-port guard instead of enabling reuse.
+        port_base = {187: 64630, 188: 64640}[self.era]
+        for port in [port_base, port_base + 1, port_base + 2, port_base + 4]:
             with socket.socket() as sock:
                 sock.bind(('127.0.0.1', port))
         migrations = self.project / 'supabase/migrations'
@@ -130,19 +134,19 @@ class OwnedReplay:
             shutil.copy2(path, migrations / path.name)
         (self.project / 'supabase/config.toml').write_text(f'''project_id = "{self.identity}"
 [api]
-port = 64621
+port = {port_base + 1}
 [db]
-port = 64622
-shadow_port = 64620
+port = {port_base + 2}
+shadow_port = {port_base}
 major_version = 17
 [studio]
 enabled = false
 [analytics]
 enabled = false
 [inbucket]
-port = 64624
+port = {port_base + 4}
 [auth]
-site_url = "http://127.0.0.1:64621"
+site_url = "http://127.0.0.1:{port_base + 1}"
 enable_signup = false
 [storage]
 enabled = true

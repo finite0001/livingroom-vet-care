@@ -20,10 +20,9 @@
     "assembled_sql_sha256": "47577a5b932a8295694e8cc36a4b4f601b7e2c128636bb1c0d2ca1283f3ef736"
   },
   "historical_upgrade_proof": {
-    "private_result_sha256": "fab42ef0b6fd8c9983aa1389d45874336274f0f0e4cf243766270d3f4a033337",
-    "protected_runner_log_sha256": "3538650937a0716e1400ca4e94b9e8e56b935255c761fb901dd3de0f902bc112",
-    "protected_187_runner_log_sha256": "79bc0c95926e95823277febdd2e03124983d120c641b3d645814d6af483bb4f1",
-    "protected_188_runner_log_sha256": "18040f265fffda5e3b8346e4874f0051140f5ace709f3b2adf13c01dfedfd89e",
+    "private_result_sha256": "101573b53269b303f4dad7d808b242564d3161318969d1423b25a6caa416ce17",
+    "protected_187_runner_log_sha256": "ca4e6e6fa589bc9f61b3e91569a48ced1db0b7a7a31c467b7a2b65c50e1a8f94",
+    "protected_188_runner_log_sha256": "0747d24439d03bd27cbc57e524976eb7a2b68ce029d1cde059724cd349e0d754",
     "bound_source_hashes_matched": 239,
     "observed_cases": 7,
     "total_sql_checks": 83,
@@ -364,7 +363,9 @@
       }
     ],
     "partial_attempts_counted_as_coverage": false,
-    "exact_label_absence_verified_after_rerun": true
+    "exact_label_absence_verified_after_rerun": true,
+    "fresh_rerun_after_port_isolation": true,
+    "run_after_complete_ordinary_compatibility": true
   },
   "ordinary_candidate_compatibility": {
     "rerun_after_reboot": true,
@@ -374,8 +375,8 @@
       "runtime_removed": true,
       "exact_label_containers_or_volumes_remaining": false
     },
-    "sanitized_result_sha256": "4ca2092739376638449bf83e3c01beeafb9313bb807da4ef07b4340700639073",
-    "protected_runner_log_sha256": "0869bc494f742e781e10f0b6e8f97aacd8df9505f4650db29cf7890fd756cbf7",
+    "sanitized_result_sha256": "067ef914b8de10b6c3fb2a2b49a56fa324dd1acdb3185c61f3d6d9fed246ab6e",
+    "protected_runner_log_sha256": "d3acb23cd5b0b266bdd46ef5ad764b1c2804a505fd09c0106a7a473ca71be6db",
     "proof": {
       "trusted_prior_upgrade": {
         "functions": 116,
@@ -444,7 +445,8 @@
     },
     "counter_labels": {
       "api_checks": "combined genuine Auth/PostgREST response and SQL setup/state/cleanup assertions; not an HTTP request count"
-    }
+    },
+    "fresh_rerun_after_port_isolation": true
   },
   "repository_checks": {
     "npm_ci": "passed (--ignore-scripts; no .env or .env.local existed or was written)",
@@ -455,20 +457,54 @@
     "existing_lint_warnings": 4,
     "build": "passed (existing large-chunk warning)",
     "git_diff_check": "passed",
-    "protected_log_sha256": "f0fe9bad28308c004ce6f6f6fc6c2387968a56d72ff89712217f4786cc917aa2",
-    "python_syntax_compiled": "passed"
+    "protected_log_sha256": "188bfa0ce672a35d1933ae05ba363dfb6ad7fb48c5f8f478bc1929a39f744718",
+    "python_syntax_compiled": "passed",
+    "rerun_after_port_isolation": true,
+    "node_major": 22
   },
   "source_hashes": {
     "tests/controlled-drugs/engine/candidate/local_install.py": "efc95c3c36313d33fb22e8ae56d37d121fccf6f3dd8d612b6690f90c91138112",
     "tests/controlled-drugs/engine/candidate/run-local.py": "c9e96e7457dca8061893f2dc60ee5cb6dd7861579671d39a863b20f986af30bc",
     "tests/controlled-drugs/engine/candidate/native-history-seed.sql": "690c7d6825c4f99f54858970e5d439be4a4e2c4d41dc9392071891be2cb631af",
     "tests/controlled-drugs/engine/candidate/native-history-observe.sql": "5e19edf8ade5760eaa35dc3980918f53e7c29e67f0fd04a42d4be845f71978e0",
-    "tests/controlled-drugs/engine/candidate/run-native-history.py": "9a4a245900984f5d22b1ffe60353ce50a99ebce984e58095e1f0062ab9a99279"
+    "tests/controlled-drugs/engine/candidate/run-native-history.py": "e4209a0e9654360497253a82c0c9449a95a3758796ed1f7ad89adca6f78c44e7"
   },
   "ci": {
     "new_job_step": "Verify genuine native 187 and 188 records survive unchanged upgrades",
     "runs_after": "existing full candidate runner",
-    "canonical_migration_or_application_change": false
+    "canonical_migration_or_application_change": false,
+    "preceding_failed_run": {
+      "run_id": 39165158175,
+      "head": "292c95ce95dcd7707d7442d53fb294b61ed1dadc",
+      "ordinary_candidate_compatibility": "passed",
+      "native_history": "failed before replay stack creation: socket.bind Errno 98 Address already in use",
+      "failed_attempt_counted_as_coverage": false,
+      "cause_class": "shared local port block; lingering connections after Auth/API cleanup are a likely mechanism, not directly observed",
+      "protected_failure_log_sha256": "0aeed581b2159005fde9634493eed7c5faeedd1d7151cc49ea6b063e67a49c93"
+    },
+    "historical_port_isolation": {
+      "187": [
+        64630,
+        64631,
+        64632,
+        64634
+      ],
+      "188": [
+        64640,
+        64641,
+        64642,
+        64644
+      ],
+      "ordinary": [
+        64620,
+        64621,
+        64622,
+        64624
+      ],
+      "occupied_port_guard_retained": true,
+      "socket_reuse_enabled": false,
+      "no_other_repository_runner_uses_historical_blocks": true
+    }
   },
   "limitations": [
     "Characterizes synthetic prefix upgrades from canonical checkpoints 187 and 188; not a production backup restore, historical clinic-data certification or clinical activation approval.",
@@ -480,5 +516,10 @@
     "Two earlier fixture failures are retained privately and are not counted as coverage; no candidate business-logic fix was needed.",
     "No controlled site, policy, opening, cell or event was created; no provenance was backfilled; no grants or policies were added.",
     "Exact-head CI and frontend deployment are recorded in the PR and private release receipt; this batch does not install a production engine or activate the register."
-  ]
+  ],
+  "preceding_successful_proofs_before_port_isolation": {
+    "historical_result_sha256": "fab42ef0b6fd8c9983aa1389d45874336274f0f0e4cf243766270d3f4a033337",
+    "ordinary_result_sha256": "4ca2092739376638449bf83e3c01beeafb9313bb807da4ef07b4340700639073",
+    "superseded_for_current_runner_hash": true
+  }
 }
