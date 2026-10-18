@@ -4,12 +4,12 @@
   "parent_commit": "a11df554df0f01094a566e65936e8f80bb5576d9",
   "runtime": "Node v26.10.0",
   "source_sha256": {
-    "src/hub/features/clinical/dictation/audio/recorder.ts": "a8628014a68252e154df3d8e8555134633b2418b049bc802a6432863cac27e40",
-    "tests/clinical-audio/recorder.test.ts": "b0ff9107e8e0b5d47ab655568307019cdd9c83d0b246a26026b6ea1b6323f8b1"
+    "src/hub/features/clinical/dictation/audio/recorder.ts": "b79eb4b3f40788466f55a48a7f4070ed0f73140fe8bed7025633d73314ee7138",
+    "tests/clinical-audio/recorder.test.ts": "eb61ebd429f5d8b5faea7e02fefdd82cd9faeb0a5611de535a4bc2ca8dc17cef"
   },
   "focused_tests": {
     "command": "node --experimental-strip-types --test tests/clinical-audio/recorder.test.ts",
-    "passed": 14,
+    "passed": 17,
     "failed": 0,
     "interfaces": "Synthetic browser APIs around the actual ClinicalPcmRecorder class; no browser/hardware acceptance claim"
   },
@@ -24,14 +24,14 @@
   "repository_check": {
     "command": "npm run check",
     "exit_code": 0,
-    "tests_passed": 1684,
+    "tests_passed": 1687,
     "tests_failed": 0,
     "lint_errors": 0,
     "existing_lint_warnings": 4,
     "typecheck": "passed",
     "build": "passed",
     "existing_build_warning": "Bundle chunk sizes above 500 kB",
-    "log_sha256": "c0746974c8c90ab16c8840b7467c1a1fa7dc005d605fcc6b8e747f5f7cc910ef"
+    "log_sha256": "c8c3608083c414f44b43e22504f0198cbbadccc6ac32e96433049b2150269240"
   },
   "review": {
     "result": "No blocker found in focused source review",
@@ -42,5 +42,17 @@
       "Start and standalone Resume liveness, context statechange and track mute detection are outside this increment",
       "Context close is requested and observed; timeout does not prove OS-level context destruction"
     ]
+  },
+  "followup_regression": {
+    "prior_commit": "5e145c796a8c0e4e3e8495db92ccad84521fbf6d",
+    "tests": "External disposal during pending context close with late close resolve and reject",
+    "before_fix": {
+      "passed": 0,
+      "failed": 2,
+      "failure": "Stop remained pending after external disposal instead of rejecting",
+      "log_sha256": "1109b1a553294248684832e90c65182f692d50dd7b84a04d62d367407ee7cfe4"
+    },
+    "after_fix": "Both reject before close settles, no WAV is returned, and late close completion remains handled; delayed normal close still returns a valid WAV",
+    "implementation": "Dedicated cancellation remains live through Stop settlement; internal release does not cancel Stop; cancellation check executes synchronously after the final await"
   }
 }

@@ -15,7 +15,8 @@ export class ClinicalPcmRecorder {
   private chunks: Int16Array[] = [];
   private disposed = false;
   private complete = false;
-  private finishAck: ((error?: Error) => void) | null = null;
+  private finishAck: (() => void) | null = null;
+  private cancelFinish: (() => void) | null = null;
   private finishing = false;
   private callbacks: RecorderCallbacks;
   constructor(callbacks: RecorderCallbacks) {
@@ -122,13 +123,23 @@ export class ClinicalPcmRecorder {
     const deadline = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(failure()), 1500);
     });
+    let cancelled = false;
+    const cancellation = new Promise<never>((_, reject) => {
+      this.cancelFinish = () => {
+        cancelled = true;
+        reject(failure());
+      };
+    });
+    const ensureNotCancelled = () => {
+      if (cancelled) throw failure();
+    };
     this.stream?.getTracks().forEach((t) => {
       t.enabled = false;
     });
     try {
       if (!this.complete) {
         const ack = new Promise<void>((resolve, reject) => {
-          this.finishAck = (error) => (error ? reject(error) : resolve());
+          this.finishAck = resolve;
           // Observe resume immediately, including a rejection after the deadline.
           void Promise.resolve()
             .then(() => {
@@ -142,17 +153,19 @@ export class ClinicalPcmRecorder {
             })
             .catch(reject);
         });
-        await Promise.race([ack, deadline]);
+        await Promise.race([ack, deadline, cancellation]);
       }
       if (this.disposed) throw failure();
       return encodeAudioWav(this.chunks);
     } finally {
       this.finishAck = null;
       try {
-        // dispose releases tracks/ports synchronously; close acknowledgement is
-        // covered by the same deadline as resume and the worklet acknowledgement.
-        await Promise.race([this.dispose(), deadline]);
+        // Own cleanup does not cancel Stop. External dispose remains able to
+        // cancel through close settlement, even after the worklet acknowledged.
+        await Promise.race([this.releaseResources(), deadline, cancellation]);
+        ensureNotCancelled();
       } finally {
+        this.cancelFinish = null;
         clearTimeout(timer);
       }
     }
@@ -162,10 +175,11 @@ export class ClinicalPcmRecorder {
     this.stream = null;
   }
   async dispose() {
+    this.cancelFinish?.();
+    await this.releaseResources();
+  }
+  private async releaseResources() {
     this.disposed = true;
-    this.finishAck?.(
-      new Error("Recording did not finalize. No audio was uploaded."),
-    );
     this.finishAck = null;
     this.closeTracks();
     this.node?.disconnect();

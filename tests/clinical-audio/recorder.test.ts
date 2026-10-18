@@ -258,3 +258,43 @@ test("resume and close share the original deadline rather than restarting it", a
   await flush();
   f.assertClean();
 });
+
+for (const late of ["resolve", "reject"] as const) {
+  test(`external disposal during close cancels Stop before late close ${late}`, async (t) => {
+    const f = await fixture(t);
+    const close = deferred();
+    f.context.closeResult = () => close.promise;
+    let outcome = "pending";
+    const stop = f.recorder.stop().then(
+      () => { outcome = "returned WAV"; },
+      (error) => { assert.match(error.message, failure); outcome = "rejected"; },
+    );
+    await flush();
+    assert.equal(outcome, "pending");
+    assert.equal(f.context.closeCalls, 1);
+    f.assertClean();
+    await f.recorder.dispose();
+    await flush();
+    assert.equal(outcome, "rejected");
+    if (late === "resolve") close.resolve();
+    else close.reject(new Error("late close failure after cancellation"));
+    await stop;
+    await flush();
+    assert.equal(outcome, "rejected");
+    f.assertClean();
+  });
+}
+
+test("a delayed normal close completes Stop with the valid WAV", async (t) => {
+  const f = await fixture(t);
+  const close = deferred();
+  f.context.closeResult = () => close.promise;
+  let settled = false;
+  const stop = f.recorder.stop().then((bytes) => { settled = true; return bytes; });
+  await flush();
+  assert.equal(settled, false);
+  f.assertClean();
+  close.resolve();
+  assert.equal(inspectAudioWav(await stop).frames, AUDIO_RATE);
+  f.assertClean();
+});
