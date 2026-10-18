@@ -2,7 +2,7 @@
 
 ## Scope
 
-Prepare offline, wholly fictional evaluation material for the production call-note request and response contracts. No hosted reads or writes, network calls, keys, activation, paid requests, clinical acceptance or deployment are part of this package.
+The original increment prepared offline, wholly fictional evaluation material for the production call-note request and response contracts. That increment made no hosted or provider requests. The separately authorized [protected hosted runner](hosted-runner.md) now extends it without changing the twelve frozen inputs or ten exact request bodies. Neither increment grants clinical acceptance or activation.
 
 ## Implementation
 
@@ -12,11 +12,11 @@ Prepare offline, wholly fictional evaluation material for the production call-no
 4. Produce a review packet and pending adjudication form containing raw outputs, parsed claims, each claim's own supports, assembled selected-patient SOAP, expected/forbidden meanings and explicit per-claim/per-support decisions. Structural validity never grants a semantic pass. Require all questions, nonempty rationales and named reviewer before accepting adjudication; any failed transport/contract/meaning prevents an overall pass.
 5. Verify deterministic export, production contract acceptance for every request, and missing/duplicate/tampered import/review rejection. Preserve structurally valid semantic negative controls as proof of the validator's boundary.
 
-The [protected transport preparation](provider-run-design.md) now implements a fixed-bundle offline planner, ten generated staging-only probes, externally supplied price/bounds admission arithmetic, partial-response evidence bridging and injected cleanup checks. Generated callbacks are exercised with local transport stubs. The hosted orchestrator remains unimplemented and `--run` refuses; no hosted or paid operation follows from generating or testing these files. Official pricing evidence is retained separately from unverified account/tier and token-bound assumptions.
+The [protected transport](provider-run-design.md) implements a fixed-bundle offline planner, ten generated staging-only probes, externally supplied price/bounds admission arithmetic, partial-response evidence bridging and cleanup checks. Generated callbacks and the native hosted adapter are exercised with injected transports. Ordinary preparation and tests make no hosted or paid requests. Real execution requires exact candidate admission before credentials or mutations. Official pricing evidence remains separate from unverified account contracts and final billing.
 
-## Future bounded decision
+## Bounded execution and review
 
-The prepared corpus is not a completed model evaluation. Before a paid run, separately select the exact frozen bundle/model and authorize at most ten requests, one per case, no retries or follow-ups, with a concrete total cost ceiling and protected server-side key access. Preserve raw response bytes, HTTP status, request identifiers and every failure. Do not recover keys through SQL, browser storage or logs. A returned model alias is recorded as supplied, not claimed to be an immutable snapshot. Real source commissioning and Susan's clinical policy/fidelity review remain separate activation requirements.
+The owner authorized continuing this protected evaluation. Its exact execution receipt binds the frozen bundle/model, staging project, at most ten fictional requests, one per case, no retries, fixed expiry and the reviewed token reservation. The assistant selected a conservative $6 admission reservation under [published PAYG assumptions](provider-pricing-evidence.md); this is not a provider-enforced bill cap or a user-selected dollar amount. Preserve raw response bytes, HTTP status, request identifiers and every failure. Do not recover the OpenAI key through SQL, browser storage or logs: it stays inside Edge. A returned model alias is recorded as supplied, not claimed to be an immutable snapshot. Real source commissioning and Susan's clinical policy/fidelity review remain separate activation requirements.
 
 ## Completion evidence
 

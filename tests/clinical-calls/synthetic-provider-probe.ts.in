@@ -1,6 +1,7 @@
 /** Generated fixed synthetic probe: no clinical RPC, SQL or patient-record read. */
 import { callNoteProviderContextSchema, clinicalCallNoteRequest, parseClinicalCallNoteResponse } from "../_shared/clinical-call-note-provider.ts";
 import { callSha256 } from "../_shared/clinical-call-model.ts";
+import { z } from "zod";
 const fixed = __FIXED__;
 const decode = (value: string) => Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
 const encode = (value: Uint8Array) => {
@@ -24,16 +25,37 @@ async function flags() {
   }));
 }
 const response = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
-const base = { contract: "lrv-call-provider-probe-v1", ticket: fixed.ticket, id: fixed.id,
+const base = { contract: "lrv-call-provider-probe-v2", ticket: fixed.ticket, id: fixed.id,
   bundle_sha256: fixed.bundle_sha256, request_sha256: fixed.request_sha256, context_sha256: fixed.context_sha256,
   transport_source_sha256: fixed.transport_source_sha256, expires_at_ms: fixed.expires_at_ms,
   admission_sha256: fixed.admission_sha256, synthetic_only: true, hosted_clinical_reads: 0, hosted_clinical_writes: 0 };
+// This is bounded identity validation, NOT local signature verification. The independently
+// read-back verify_jwt=true gateway verifies the legacy JWT signature before invocation.
+// The incoming CLI credential need not equal the inherited Storage credential.
+const legacyHeaderSchema = z.object({ alg: z.literal("HS256"), typ: z.literal("JWT") }).strict();
+const legacyPayloadSchema = z.object({ role: z.literal("service_role"), ref: z.literal("kothoqicubowyhwfsrte") }).passthrough();
+function stagingLegacyIdentity(authorization: string | null): boolean {
+  if (!authorization || authorization.length > 8192 || !authorization.startsWith("Bearer ")) return false;
+  const parts = authorization.slice(7).split(".");
+  if (parts.length !== 3 || parts[0].length > 684 || parts[1].length > 5462 || parts[2].length !== 43) return false;
+  try {
+    const decodeUrl = (part: string, maximum: number) => {
+      if (!/^[A-Za-z0-9_-]+$/.test(part) || part.length % 4 === 1) throw Error("Invalid JWT encoding.");
+      const bytes = decode(part.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(part.length / 4) * 4, "="));
+      if (bytes.length > maximum || encode(bytes).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_") !== part) throw Error("Noncanonical JWT encoding.");
+      return bytes;
+    };
+    const header = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decodeUrl(parts[0], 512)));
+    const payload = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decodeUrl(parts[1], 4096)));
+    if (decodeUrl(parts[2], 32).length !== 32) return false;
+    return legacyHeaderSchema.safeParse(header).success && legacyPayloadSchema.safeParse(payload).success;
+  } catch { return false; }
+}
 Deno.serve(async (incoming) => {
-  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!service || incoming.method !== "POST" || Date.now() > fixed.expires_at_ms
-    || Deno.env.get("SUPABASE_URL") !== "https://kothoqicubowyhwfsrte.supabase.co"
-    || await callSha256(incoming.headers.get("Authorization") ?? "") !== await callSha256("Bearer " + service)
+  if (incoming.method !== "POST" || Date.now() > fixed.expires_at_ms
+    || !stagingLegacyIdentity(incoming.headers.get("Authorization"))
     || await callSha256(incoming.headers.get("x-evaluation-operator") ?? "") !== fixed.operator_token_sha256) return response({ error: "forbidden" }, 403);
+  if (Deno.env.get("SUPABASE_URL") !== "https://kothoqicubowyhwfsrte.supabase.co") return response({ error: "forbidden" }, 403);
   if (new URL(incoming.url).search || incoming.headers.get("content-length") !== "2" || !incoming.body) return response({ error: "fixed_body_required" }, 422);
   const inputReader = incoming.body.getReader(); let input = "", inputBytes = 0;
   try {
@@ -55,7 +77,8 @@ Deno.serve(async (incoming) => {
   if (envFlags.some((flag) => callFlags.includes(flag.name) && flag.enabled)) return response({ ...base, error: "call_gate_enabled", provider_call_count: 0 }, 409);
   if (incoming.headers.get("x-evaluation-flags-sha256") !== await callSha256(JSON.stringify(envFlags))) return response({ ...base, error: "flag_snapshot_changed_or_missing", provider_call_count: 0 }, 409);
   const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey || Date.now() + fixed.provider_timeout_ms + fixed.guard_timeout_ms >= fixed.expires_at_ms) return response({ ...base, error: "configuration_or_lifetime_refused", provider_call_count: 0 }, 409);
+  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"); // Storage guard credential only.
+  if (!apiKey || !service || Date.now() + fixed.provider_timeout_ms + fixed.guard_timeout_ms >= fixed.expires_at_ms) return response({ ...base, error: "configuration_or_lifetime_refused", provider_call_count: 0 }, 409);
   let guardOutcome = "unconfirmed";
   try {
     const guard = await fetch("https://kothoqicubowyhwfsrte.supabase.co/storage/v1/object/" + fixed.guard_bucket + "/" + fixed.guard_object, {
@@ -81,7 +104,7 @@ Deno.serve(async (incoming) => {
       method: "POST", redirect: "error", headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
       body: requestBody, signal: AbortSignal.timeout(fixed.provider_timeout_ms),
     });
-    httpStatus = upstream.status; requestId = upstream.headers.get("x-request-id")?.slice(0, 300) ?? null;
+    httpStatus = upstream.status; requestId = upstream.headers.get("x-request-id");
     if (!upstream.body) throw Error("Response body missing.");
     const reader = upstream.body.getReader();
     try {
@@ -98,7 +121,7 @@ Deno.serve(async (incoming) => {
   const raw = new Uint8Array(retained); let offset = 0;
   for (const chunk of chunks) { raw.set(chunk, offset); offset += chunk.byteLength; }
   // Never export a provider echo of a server secret, including split chunks or escaped JSON strings.
-  const protectedValues = [apiKey, service, incoming.headers.get("x-evaluation-operator") ?? ""].filter(Boolean);
+  const protectedValues = [apiKey, service, incoming.headers.get("Authorization") ?? "", incoming.headers.get("Authorization")?.slice(7) ?? "", incoming.headers.get("x-evaluation-operator") ?? ""].filter(Boolean);
   let decoded: unknown = null;
   try { decoded = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw)); }
   catch { /* Invalid UTF8/JSON remains raw evidence unless its bytes contain a credential. */ }
@@ -133,9 +156,20 @@ Deno.serve(async (incoming) => {
     provider_request_id: null, response_complete: false, upstream_body_complete: complete, uncertain: true,
     raw_body_base64: "", raw_body_sha256: null, retained_bytes: 0, observed_bytes_lower_bound: observed,
     parser_pass: false, parsed_result: null, error: "secret_echo_redacted", evidence_gap: "Decoded provider output contained a server credential; suppress evidence and stop without retry." });
+  const usage = decoded && typeof decoded === "object" && "usage" in decoded ? (decoded as { usage: unknown }).usage : null;
+  const usageRecord = usage && typeof usage === "object" ? usage as Record<string, unknown> : null;
+  const usableUsage = !!usageRecord && ["input_tokens", "output_tokens", "total_tokens"].every((name) => Number.isSafeInteger(usageRecord[name]) && (usageRecord[name] as number) >= 0)
+    && (usageRecord.input_tokens as number) > 0 && usageRecord.total_tokens === (usageRecord.input_tokens as number) + (usageRecord.output_tokens as number);
+  const billingUncertain = calls > 0 && (!complete || httpStatus === 408 || (httpStatus !== null && httpStatus >= 500) || !usableUsage);
+  const requestIdReceipt = { provider_request_id: requestId?.slice(0, 300) ?? null,
+    provider_request_id_sha256: requestId === null ? null : await callSha256(requestId),
+    provider_request_id_truncated: requestId !== null && requestId.length > 300,
+    provider_request_id_utf8_bytes: requestId === null ? 0 : new TextEncoder().encode(requestId).byteLength };
   return response({ ...base, flags: envFlags, state: calls === 0 ? "not_dispatched" : complete ? "response_complete" : httpStatus === null ? "dispatch_uncertain" : "response_partial",
-    guard_outcome: guardOutcome, provider_call_count: calls, http_status: httpStatus, provider_request_id: requestId,
-    response_complete: complete, uncertain: calls > 0 && !complete, raw_body_base64: encode(raw), raw_body_sha256: await bytesSha(raw),
+    guard_outcome: guardOutcome, provider_call_count: calls, http_status: httpStatus, ...requestIdReceipt,
+    response_complete: complete, upstream_body_complete: complete, dispatch_uncertain: calls > 0 && httpStatus === null, billing_uncertain: billingUncertain,
+    usage_status: usableUsage ? "usable" : "missing_or_unusable",
+    usage: usableUsage ? { input_tokens: usageRecord!.input_tokens, output_tokens: usageRecord!.output_tokens, total_tokens: usageRecord!.total_tokens } : null, stop_remaining: billingUncertain, uncertain: billingUncertain, raw_body_base64: encode(raw), raw_body_sha256: await bytesSha(raw),
     retained_bytes: retained, observed_bytes_lower_bound: observed, parser_pass: parsed !== null, parsed_result: parsed, error,
     timing: { started_at: startedAt, finished_at: new Date().toISOString() } });
 });

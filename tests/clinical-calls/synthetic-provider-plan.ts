@@ -10,8 +10,10 @@ export const TRANSPORT_FILES = [
   "tests/clinical-calls/synthetic-provider-plan.ts", "tests/clinical-calls/synthetic-provider.py",
   "tests/clinical-calls/synthetic-provider-probe.ts.in", "tests/clinical-calls/synthetic-provider-plan.test.ts",
   "tests/clinical-calls/test_synthetic_provider.py",
+  "tests/clinical-calls/synthetic_provider_hosted.py", "tests/clinical-calls/test_synthetic_provider_hosted.py",
   "supabase/functions/clinical-call-note-process/deno.json", "supabase/functions/clinical-call-note-process/deno.lock",
 ];
+export const PROBE_SHARED_FILES = ["clinical-call-note-provider.ts", "clinical-call-model.ts", "clinical-call-note-model.ts", "clinical-note-model.ts", "clinical-veterinary-context.ts", "clinical-audio-model.ts"];
 export async function planCallProviderBundle(bytes: Uint8Array) {
   if (bytes.byteLength > 4000000) throw Error("Frozen call bundle exceeds planner limit.");
   const bundle = await verifyFrozenCallBundle(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
@@ -33,6 +35,7 @@ export async function planCallProviderBundle(bytes: Uint8Array) {
     bundle_sha256: bundle.bundle_sha256, bundle_file_sha256: sha(bytes), corpus_revision: bundle.corpus_revision,
     requested_model: bundle.requested_model, immutable_model_snapshot: false,
     source_sha256: bundle.source_sha256,
+    probe_shared_sha256: Object.fromEntries(PROBE_SHARED_FILES.map((name) => [name, bundle.source_sha256["supabase/functions/_shared/" + name]])),
     transport_source_sha256: Object.fromEntries(TRANSPORT_FILES.map((file) => [file, sha(readFileSync(new URL("../../" + file, import.meta.url)))])),
     cases };
 }
