@@ -1,0 +1,57 @@
+{
+  "verified_at": "2026-10-18T00:09:26.749748+00:00",
+  "baseline": "4be7133172273eefab3e16a8cc806d20438a23fa",
+  "scope": "Pure call citation, section assembly and OpenAI request/response helpers; no production consumer.",
+  "scoped_tests": {
+    "total": 36,
+    "new_citation_cases": 11,
+    "new_provider_cases": 11,
+    "failed": 0,
+    "inputs_frozen_before_and_after": true
+  },
+  "repository_check": {
+    "tests": 1621,
+    "failed": 0,
+    "lint": "passed with four existing warnings",
+    "application_types": "passed",
+    "build": "passed with existing chunk warnings"
+  },
+  "strict_standalone_typescript": "passed",
+  "frozen_deno_all_entrypoints_and_new_shared_modules": "passed",
+  "input_sha256": {
+    ".github/workflows/ci.yml": "d6027b0dabff233f9830071fb5449995f304935d48587786ff53ab8179bcbd9a",
+    "package.json": "6f527f6ac68983c6295e69c3392a82a00ee7e8f789e633e78e99e638f9746965",
+    "package-lock.json": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f",
+    "deno.lock": "839546bac2a45ff2f8fbe40e36e895f4093fb4c796e5aa0bbfdc47766738df8d",
+    "supabase/functions/_shared/clinical-call-model.ts": "e74057e5d2645c97b5df0475625a2776277aeb9ea1f4aa4d34da02090a321a08",
+    "supabase/functions/_shared/clinical-call-handler.ts": "5ae8974d7b6f56d907c73a2c8e1415463c7de2f0b384a7d95b942c133b1d39d1",
+    "supabase/functions/_shared/clinical-call-note-model.ts": "99b992a7dc0824d81acfcd1c5db15d7f85e6840f41ca55e0ae9f676a91e3b6b2",
+    "supabase/functions/_shared/clinical-call-note-provider.ts": "859c644e38646490a791e0554b34a309b0603bef24bec740bd7a26b377ab67ab",
+    "supabase/functions/_shared/clinical-note-model.ts": "43903f3f18c0ec8a234417a55ed2089b058ac772820d346dc851b8608768cf80",
+    "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+    "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+    "tests/clinical-calls/note-model.test.ts": "d398251c2b4b9f59bbb477750061573ab349ee34d2e054a3097ede202b2f1881",
+    "tests/clinical-calls/note-provider.test.ts": "482b400fe44a6d0c542373fc27db7cdc1b9fb1f31640399aff6045fd42951f10"
+  },
+  "private_log_sha256": {
+    "lrv-call-citation-final-frozen-tests-20261017.log": "929542cb3ae2c6387050718207ed2d9031ef818624c4b8d9617d3a359ef2b9bd",
+    "lrv-call-citations-full-check-20261017.log": "25c5c06e40e2665322bb75fd67caf0aaa73428951402da6df1279bbd8b23e9e9",
+    "lrv-call-citations-deno-all-20261017.log": "ccb880c349c8ec299d16e5d1d8e8895c9720c7348bfd031475c974e1849e442d"
+  },
+  "developer_self_review": "plans/20261017-call-citation-contract/reports/20261017-contract-review.md",
+  "real_provider_requests": 0,
+  "hosted_operations_in_contract_tests": 0,
+  "admission_or_endpoint_added": false,
+  "database_migration_added": false,
+  "clinical_chart_write_added": false,
+  "processing_activation": false,
+  "not_established": [
+    "Canonical PostgreSQL manifest validation and current Auth/policy/job binding",
+    "SQL citation parity",
+    "Network transport and one-shot dispatch/recovery",
+    "Private clinical review and explicit selected-section save",
+    "Actual local Auth/browser/concurrency/restore workflow",
+    "Real OpenAI model/account support or clinical fidelity",
+    "Physical iPhone/Safari acceptance"
+  ]
+}

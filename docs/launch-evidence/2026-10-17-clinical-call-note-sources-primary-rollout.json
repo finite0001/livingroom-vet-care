@@ -1,0 +1,146 @@
+{
+  "verified_at": "2026-10-18T00:03:20.440513+00:00",
+  "pr": 272,
+  "ci": {
+    "head": "f41f789cf7e660cef1cc1bcc413fa1da9f574155",
+    "run": 39070363831,
+    "conclusion": "success"
+  },
+  "merge_commit": "4be7133172273eefab3e16a8cc806d20438a23fa",
+  "migration": "20261017135245_clinical_call_note_sources.sql",
+  "migration_sha256": "5835c89322576812b1c00af9d5ffc207119c68ee1a447e97fb63c7911d43b4d2",
+  "database": {
+    "project": "mgadheotkdnrsatfivjy",
+    "migrations": 202,
+    "latest": "20261017135245",
+    "original_public_tables_preserved": 395,
+    "unchanged_routines_preserved": 1306,
+    "replaced_routines_source_bodies_verified": [
+      "cancel_clinical_note_attempt",
+      "cancel_clinical_note_reservation",
+      "claim_clinical_note",
+      "clinical_note_guard",
+      "clinical_note_job_view",
+      "dispatch_clinical_note",
+      "fail_clinical_note",
+      "finish_clinical_note",
+      "read_clinical_audio_provenance",
+      "read_clinical_dictation",
+      "read_clinical_note_job",
+      "read_clinical_note_provenance",
+      "read_clinical_notes",
+      "recover_clinical_dictation_action",
+      "reserve_clinical_note",
+      "save_clinical_dictation_action"
+    ],
+    "existing_routine_owners_permissions_preserved": true,
+    "new_private_routines_verified": 9,
+    "new_private_tables": [
+      "clinical_call_note_bindings",
+      "clinical_call_note_policies"
+    ],
+    "exact_planned_metadata_changes_verified": true,
+    "existing_audio_policy_unchanged": true,
+    "scheduler_appends": {
+      "public.scheduler_job_runs": 3
+    },
+    "provider_requests": 0,
+    "hosted_clinical_writes": 0,
+    "primary_changed": true
+  },
+  "edge_and_gates": {
+    "bindings": 0,
+    "indexes": [
+      "clinical_call_note_bindings_capture_policy_idx",
+      "clinical_call_note_bindings_generation_policy_idx",
+      "clinical_call_note_bindings_source_idx",
+      "clinical_call_note_policies_reviewer_idx"
+    ],
+    "policy": {
+      "status": "draft",
+      "version": 1
+    },
+    "project": "mgadheotkdnrsatfivjy",
+    "all_edge_functions_unchanged": true,
+    "secret_metadata_unchanged": true,
+    "capture_and_generation_flags_absent": true,
+    "provider_requests": 0,
+    "hosted_clinical_writes": 0
+  },
+  "security_advisors": {
+    "prior_findings_preserved": true,
+    "baseline_warnings": 572,
+    "after_warnings": 573,
+    "new_findings": [
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+        "detail": "Function `public.read_clinical_call_note_job_v1(p_actor_id uuid, p_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/read_clinical_call_note_job_v1`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+        "metadata": {
+          "name": "read_clinical_call_note_job_v1",
+          "schema": "public"
+        },
+        "cacheKey": "authenticated_security_definer_function_executable_public_read_clinical_call_note_job_v1_p_actor_id uuid, p_id uuid"
+      }
+    ],
+    "review": "The deliberately granted authenticated SECURITY DEFINER RPC uses the approved hardened ADMIN/current live unbanned-session/source access checks, repeated after source-lock waits; function body and existing guards match tested source. Anonymous and service-role execution are denied. This generic exposure warning is recorded, not suppressed. No other finding was added or changed.",
+    "before_sha256": "b5fdab236d26dedf8ec136829895d3f7d37650fe1b0f0e544097dc64b795e66f",
+    "after_sha256": "adcda0ed0f1045540d4c1958909b06596cf214dead76385022d6ddded1326f86"
+  },
+  "frontend": {
+    "deployment_id": "dpl_8auNQ1jfwzczuRpQdnVue6eyAGHm",
+    "state": "READY",
+    "target": "production",
+    "source_commit": "4be7133172273eefab3e16a8cc806d20438a23fa",
+    "source_commit_proof": "Exact-merge-commit GitHub Vercel success status links the same deployment ID served by the production aliases.",
+    "github_deployment_status_url": "https://vercel.com/daves-projects-e0da43ba/livingroom-vet-care/8auNQ1jfwzczuRpQdnVue6eyAGHm",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ],
+    "project": "livingroom-vet-care",
+    "team": "daves-projects-e0da43ba"
+  },
+  "browser": {
+    "target": "https://thelivingroom.vet",
+    "checks": [
+      {
+        "width": 1440,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      },
+      {
+        "width": 390,
+        "login": 200,
+        "login_rendered": true,
+        "protected_route_redirects": true,
+        "horizontal_overflow": false
+      }
+    ],
+    "page_errors": [],
+    "authenticated_clinical_acceptance": false,
+    "clinical_writes": 0,
+    "real_provider_calls": 0
+  },
+  "private_receipts_sha256": {
+    "clinical-call-notes-pr272-primary-db.json": "c74628013a6fd8cd6906aa44f283535a9eff2c322cedb7c3c5d27c60eaa4bfa1",
+    "clinical-call-notes-pr272-primary-edge.json": "df4eebb71879af16fd9138a13038515fb5c4d2810fe79faef5550602cddf2fd4",
+    "clinical-call-notes-pr272-primary-advisors.json": "d768de3d5d3537c1871818dbf5beaa394f50cd87585ee41840ee29650f96b7c1",
+    "clinical-call-notes-pr272-primary-frontend.json": "4d4609df03dccf69f0a00989bb22e8828b5be28847a59bd96f60c035a508f673",
+    "clinical-call-notes-pr272-primary-browser-verification.json": "e787de5e832be29294987cabdb6382ae789262da68c589391d159f4664e6627a"
+  },
+  "real_provider_requests": 0,
+  "hosted_clinical_writes": 0,
+  "call_processing_activated": false
+}
