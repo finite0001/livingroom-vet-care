@@ -1,5 +1,7 @@
 # Call-note clinical fidelity: offline preparation
 
+This receipt records the implementation and source fingerprints at merged PR 275. Later transport v2 changes have their own source inventory and [hosted runner plan](../../plans/20261018-call-fidelity/hosted-runner.md); they do not retroactively change this offline proof or its frozen request bodies.
+
 Ten wholly fictional household calls now have frozen production-shaped requests, 18 required selected-patient meanings and ten forbidden inference groups. Cases cover multiple pets, uncertain speakers, corrections, negation, historical versus current reports, exact decimals and units, absent measurements, discussed/declined/not-given care, midnight, DST, unknown call start, hostile transcript instructions and compound comparisons.
 
 The [machine-readable receipt](2026-10-18-clinical-call-fidelity-preparation.json) records all twelve bound code/lockfile fingerprints, exact request hashes and frozen bundle hashes. Capture uses the production adapter with injected fictional responses. Fixture context hashes bind offline bytes; they do not assert PostgreSQL canonicalization, hosted authorization or vendor provenance. Requested/returned model aliases are not immutable snapshot claims.

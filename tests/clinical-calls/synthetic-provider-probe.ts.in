@@ -24,7 +24,7 @@ async function flags() {
   }));
 }
 const response = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
-const base = { contract: "lrv-call-provider-probe-v1", ticket: fixed.ticket, id: fixed.id,
+const base = { contract: "lrv-call-provider-probe-v2", ticket: fixed.ticket, id: fixed.id,
   bundle_sha256: fixed.bundle_sha256, request_sha256: fixed.request_sha256, context_sha256: fixed.context_sha256,
   transport_source_sha256: fixed.transport_source_sha256, expires_at_ms: fixed.expires_at_ms,
   admission_sha256: fixed.admission_sha256, synthetic_only: true, hosted_clinical_reads: 0, hosted_clinical_writes: 0 };
@@ -81,7 +81,7 @@ Deno.serve(async (incoming) => {
       method: "POST", redirect: "error", headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
       body: requestBody, signal: AbortSignal.timeout(fixed.provider_timeout_ms),
     });
-    httpStatus = upstream.status; requestId = upstream.headers.get("x-request-id")?.slice(0, 300) ?? null;
+    httpStatus = upstream.status; requestId = upstream.headers.get("x-request-id");
     if (!upstream.body) throw Error("Response body missing.");
     const reader = upstream.body.getReader();
     try {
@@ -133,9 +133,20 @@ Deno.serve(async (incoming) => {
     provider_request_id: null, response_complete: false, upstream_body_complete: complete, uncertain: true,
     raw_body_base64: "", raw_body_sha256: null, retained_bytes: 0, observed_bytes_lower_bound: observed,
     parser_pass: false, parsed_result: null, error: "secret_echo_redacted", evidence_gap: "Decoded provider output contained a server credential; suppress evidence and stop without retry." });
+  const usage = decoded && typeof decoded === "object" && "usage" in decoded ? (decoded as { usage: unknown }).usage : null;
+  const usageRecord = usage && typeof usage === "object" ? usage as Record<string, unknown> : null;
+  const usableUsage = !!usageRecord && ["input_tokens", "output_tokens", "total_tokens"].every((name) => Number.isSafeInteger(usageRecord[name]) && (usageRecord[name] as number) >= 0)
+    && (usageRecord.input_tokens as number) > 0 && usageRecord.total_tokens === (usageRecord.input_tokens as number) + (usageRecord.output_tokens as number);
+  const billingUncertain = calls > 0 && (!complete || httpStatus === 408 || (httpStatus !== null && httpStatus >= 500) || !usableUsage);
+  const requestIdReceipt = { provider_request_id: requestId?.slice(0, 300) ?? null,
+    provider_request_id_sha256: requestId === null ? null : await callSha256(requestId),
+    provider_request_id_truncated: requestId !== null && requestId.length > 300,
+    provider_request_id_utf8_bytes: requestId === null ? 0 : new TextEncoder().encode(requestId).byteLength };
   return response({ ...base, flags: envFlags, state: calls === 0 ? "not_dispatched" : complete ? "response_complete" : httpStatus === null ? "dispatch_uncertain" : "response_partial",
-    guard_outcome: guardOutcome, provider_call_count: calls, http_status: httpStatus, provider_request_id: requestId,
-    response_complete: complete, uncertain: calls > 0 && !complete, raw_body_base64: encode(raw), raw_body_sha256: await bytesSha(raw),
+    guard_outcome: guardOutcome, provider_call_count: calls, http_status: httpStatus, ...requestIdReceipt,
+    response_complete: complete, upstream_body_complete: complete, dispatch_uncertain: calls > 0 && httpStatus === null, billing_uncertain: billingUncertain,
+    usage_status: usableUsage ? "usable" : "missing_or_unusable",
+    usage: usableUsage ? { input_tokens: usageRecord!.input_tokens, output_tokens: usageRecord!.output_tokens, total_tokens: usageRecord!.total_tokens } : null, stop_remaining: billingUncertain, uncertain: billingUncertain, raw_body_base64: encode(raw), raw_body_sha256: await bytesSha(raw),
     retained_bytes: retained, observed_bytes_lower_bound: observed, parser_pass: parsed !== null, parsed_result: parsed, error,
     timing: { started_at: startedAt, finished_at: new Date().toISOString() } });
 });

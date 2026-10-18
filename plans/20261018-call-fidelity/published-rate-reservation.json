@@ -1,0 +1,175 @@
+{
+  "contract": "lrv-call-provider-reviewed-budget-v1",
+  "currency": "USD",
+  "model": "gpt-6-luna",
+  "request_service_tier": "unpinned",
+  "budget_usd": "6.000000",
+  "per_case_margin_usd": "0.0093",
+  "billable_output_tokens_upper": 8000,
+  "applicable_tiers": [
+    {
+      "name": "Greatest published Luna input/cache-write and output rates, including conservative 10% uplift",
+      "input_usd_per_million_upper": "0.55",
+      "output_usd_per_million_upper": "1.65",
+      "other_usd_per_request_upper": "0",
+      "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44"
+    }
+  ],
+  "input_bounds": [
+    {
+      "case_id": "A",
+      "request_sha256": "2962163cc7dcfdbf366fd9bc13da6dd2323aeb5bd4d6404deb0e0bddeccf47da",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "B",
+      "request_sha256": "bbccaf4952a6ae8fe337356c57fbf8b6228f7c8bf463c04062965f49e4e21f0a",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "C",
+      "request_sha256": "ceab931b7a68a67c2bbed0717b792ff5152d3781e0420ae20ba109dc42643e41",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "D",
+      "request_sha256": "88876acb156f449e66a4d713366c282e870b79ccde9aceab7e61cf5ad2635ba0",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "E",
+      "request_sha256": "428c25b884bff5ab13cd65223de6d37b7ba45501eb2f28eb54f13694b02aa889",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "F",
+      "request_sha256": "da54d3c73f35984e07ff9c313ab68829f141bb1c81cca8883041666b129ea946",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "G",
+      "request_sha256": "af20b2be39f086be65b008dff96086d0dbb26b43de41dd0a05838ae38d9719c4",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "H",
+      "request_sha256": "8117491e59341ff7fb9ffa9c13bf84d8862c3ebc61b2ae3c72992d9ff43d3f8e",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "I",
+      "request_sha256": "115809f2432460fd85db2929dbe65577ce9046e4842bcd2233f5252ec0e34087",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    },
+    {
+      "case_id": "J",
+      "request_sha256": "15968208deeacf7f99a87024c541d95c3aa81ee68b693e76f401a8b331df2f45",
+      "billable_input_tokens_upper": 1050000,
+      "review": {
+        "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+        "reviewed_at": "2026-10-18T13:02:06+00:00",
+        "valid_until": "2026-10-18T23:59:59Z",
+        "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+        "explanation": "Uses the entire documented model context window as input, then reserves output separately: deliberately over-reserves request/schema/formatting overhead. Not an estimate or token-count API result."
+      }
+    }
+  ],
+  "input_metering_review": {
+    "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+    "reviewed_at": "2026-10-18T13:02:06+00:00",
+    "valid_until": "2026-10-18T23:59:59Z",
+    "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+    "explanation": "The documented context window includes the complete single-request input/output/reasoning. Full-context input reservation is conservative for accepted requests; body bytes are not used as a token estimate. Assumes current documented model limits apply."
+  },
+  "tier_coverage_review": {
+    "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+    "reviewed_at": "2026-10-18T13:02:06+00:00",
+    "valid_until": "2026-10-18T23:59:59Z",
+    "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+    "explanation": "Unpinned service tier can inherit project Fast settings. Takes the greatest published Luna Standard/Fast short/long input or cache-write rate plus 10% uplift. No account-specific contract or alias immutability assertion."
+  },
+  "output_metering_review": {
+    "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+    "reviewed_at": "2026-10-18T13:02:06+00:00",
+    "valid_until": "2026-10-18T23:59:59Z",
+    "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+    "explanation": "Frozen max_output_tokens=8000 bounds generated visible, reasoning and formatting tokens. Greatest published Luna output rate plus 10% uplift; reasoning is not charged twice."
+  },
+  "other_cost_review": {
+    "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+    "reviewed_at": "2026-10-18T13:02:06+00:00",
+    "valid_until": "2026-10-18T23:59:59Z",
+    "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+    "explanation": "Token-usage reservation only for exact text Responses requests with no tools, retries, follow-ups or counting calls. No other per-request token component identified in cited public pricing. Taxes, account-specific contracts, shared-account usage and temporary Supabase charges are excluded and unverified; not a final-bill hard cap."
+  },
+  "pricing_review": {
+    "reviewer": "Codex \u2014 official public documentation review; account contract/access unverified",
+    "reviewed_at": "2026-10-18T13:02:06+00:00",
+    "valid_until": "2026-10-18T23:59:59Z",
+    "evidence_sha256": "eba69b0d1ffab7c55164fd14faf729c88bd26a13001e685dc629897b38d20c44",
+    "explanation": "Official public documentation sources and rates reviewed in provider-pricing-evidence.md on 2026-10-18. Assumes current PAYG rates/model limits remain applicable through the run; no authenticated account/pricing/access check performed."
+  }
+}

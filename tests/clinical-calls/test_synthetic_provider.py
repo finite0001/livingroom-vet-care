@@ -102,7 +102,7 @@ class OfflineTransportTests(unittest.TestCase):
         authorized = authority(plan, current)
         with patch.object(runner, "local_bundle_plan", return_value=deepcopy(self.frozen)):
             receipt = runner.authorize_candidate(plan, self.bundle_path, authorized, clock=lambda: current)
-            self.assertFalse(receipt["paid_execution_ready"])
+            self.assertTrue(receipt["paid_execution_ready"])
             self.assertEqual(receipt["provider_requests"], 0)
             for key, wrong in (("budget_usd_micros", 1), ("ticket", "b" * 20), ("candidate_sha256", "0" * 64), ("maximum_paid_requests", 11), ("billing_limitation_acceptance", "")):
                 changed = deepcopy(authorized); changed[key] = wrong
@@ -168,7 +168,7 @@ class OfflineTransportTests(unittest.TestCase):
 
     def test_offline_run_entrypoint_refuses_before_environment_subprocess_or_transport(self):
         with patch.object(runner, "local_bundle_plan", side_effect=AssertionError("no command")), patch.dict("os.environ", {}, clear=True):
-            with self.assertRaisesRegex(ValueError, "not_implemented_or_authorized"): runner.main(["--run"])
+            with self.assertRaisesRegex(ValueError, "exact_plan_bundle_and_run_authorization_required"): runner.main(["--run"])
 
     def test_cleanup_keeps_guards_on_ambiguous_function_absence_and_until_expiry(self):
         plan = self.candidate()

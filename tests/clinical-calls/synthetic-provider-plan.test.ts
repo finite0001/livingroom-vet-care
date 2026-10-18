@@ -6,7 +6,7 @@ import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildFrozenCallBundle } from "./evaluation-offline.ts";
-import { CALL_PROVIDER_BUNDLE_SHA256, planCallProviderBundle } from "./synthetic-provider-plan.ts";
+import { CALL_PROVIDER_BUNDLE_SHA256, TRANSPORT_FILES, planCallProviderBundle } from "./synthetic-provider-plan.ts";
 
 const bundle = await buildFrozenCallBundle();
 const bytes = Buffer.from(JSON.stringify(bundle));
@@ -17,7 +17,7 @@ test("transport plan admits only exact frozen ten requests with separate code fi
     const plan = await planCallProviderBundle(bytes);
     assert.equal(plan.bundle_sha256, CALL_PROVIDER_BUNDLE_SHA256);
     assert.equal(plan.cases.length, 10);
-    assert.equal(Object.keys(plan.transport_source_sha256).length, 7);
+    assert.deepEqual(Object.keys(plan.transport_source_sha256).sort(), [...TRANSPORT_FILES].sort());
     for (const [n, item] of plan.cases.entries()) {
       assert.equal(Buffer.from(item.request_body_base64, "base64").toString(), bundle.cases[n].request_json);
       assert.equal(item.request_service_tier, "unpinned");
@@ -44,7 +44,7 @@ test("actual generated Deno callbacks enforce fixed auth/body/gates, atomic one-
   for (const name of ["clinical-call-note-provider.ts", "clinical-call-model.ts"]) {
     emitted = emitted.replace("../_shared/" + name, new URL("../../supabase/functions/_shared/" + name, import.meta.url).href);
   }
-  const envelope = { id: "resp_fictional", model: "returned-alias", status: "completed", error: null, incomplete_details: null,
+  const envelope = { id: "resp_fictional", model: "returned-alias", status: "completed", error: null, incomplete_details: null, usage: { input_tokens: 100, output_tokens: 40, total_tokens: 140 },
     output: [{ type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(item.semantic_negative_control.payload) }] }] };
   const prelude = `
 import assert from 'node:assert/strict';
@@ -74,6 +74,7 @@ globalThis.fetch=async(url,options)=>{
  if(mode==='echo')expectedRaw=Buffer.from(JSON.stringify({message:secret}));
  if(mode==='service_echo')expectedRaw=Buffer.from(JSON.stringify({message:serviceSecret}));
  if(mode==='escaped_echo')expectedRaw=Buffer.from(JSON.stringify({message:secret}).replace('offline','\\\\u006fffline'));
+ if(mode==='usage_missing'||mode==='usage_invalid'){const decoded=JSON.parse(expectedRaw.toString());if(mode==='usage_missing')delete decoded.usage;else decoded.usage.total_tokens=-1;expectedRaw=Buffer.from(JSON.stringify(decoded));}
  if(mode==='invalid_utf8')expectedRaw=Buffer.from([255,254,0,96]);
  if(mode==='oversize')expectedRaw=Buffer.alloc(512001,120);
  if(mode==='refusal')expectedRaw=Buffer.from(JSON.stringify({id:'refusal',status:'completed',error:null,incomplete_details:null,output:[{type:'message',role:'assistant',status:'completed',content:[{type:'refusal',refusal:'No'}]}]}));
@@ -81,7 +82,7 @@ globalThis.fetch=async(url,options)=>{
   expectedRaw=Buffer.from(mode==='partial'?'partial-prefix':'{"error":"'+'\\\\u0073'+secret.slice(1));let read=0;
   return new Response(new ReadableStream({pull(c){if(read++===0)c.enqueue(expectedRaw);else c.error(Error('interrupted '+secret));}}),{headers:{'x-request-id':'req_offline'}});
  }
- return new Response(expectedRaw,{status:mode==='http_error'?429:200,headers:{'x-request-id':mode==='header_echo'?secret:'req_offline'}});
+ return new Response(expectedRaw,{status:mode==='http_error'?429:mode==='server503'?503:mode==='server408'?408:200,headers:{'x-request-id':mode==='header_echo'?secret:mode==='long_id'?'req_'+('x'.repeat(400)):'req_offline'}});
 };
 `;
   const after = `
@@ -111,7 +112,10 @@ if(mode==='unpriced'||mode==='gate'||mode==='changed_flag'){
  else {
   const raw=Buffer.from(first.raw_body_base64,'base64');assert.deepEqual(raw,mode==='oversize'?expectedRaw.subarray(0,512000):expectedRaw);assert.equal(first.raw_body_sha256,digest(raw));
   if(mode==='partial'||mode==='oversize'){assert.equal(first.response_complete,false);assert.equal(first.state,'response_partial');assert.equal(first.uncertain,true);}
-  else {assert.equal(first.response_complete,true);assert.equal(first.state,'response_complete');assert.equal(first.parser_pass,mode==='success');}
+  else {assert.equal(first.response_complete,true);assert.equal(first.state,'response_complete');assert.equal(first.parser_pass,['success','long_id','usage_missing','usage_invalid'].includes(mode));
+   if(['server503','server408','usage_missing','usage_invalid'].includes(mode)){assert.equal(first.billing_uncertain,true);assert.equal(first.stop_remaining,true);assert.equal(first.uncertain,true);}
+   if(mode==='success'){assert.equal(first.billing_uncertain,false);assert.equal(first.usage.total_tokens,140);}
+   if(mode==='long_id'){assert.equal(first.provider_request_id.length,300);assert.equal(first.provider_request_id_truncated,true);assert.equal(first.provider_request_id_sha256,digest('req_'+('x'.repeat(400))));}}
  }
  const again=await(await invoke()).json();assert.equal(again.provider_call_count,0);assert.equal(providerCount,mode==='guard_timeout'?0:1);
 }
@@ -120,7 +124,7 @@ console.log('fixed generated call probe offline passed '+mode);
 `;
   try {
     const source = join(directory, "probe.ts"); writeFileSync(source, prelude + emitted + after);
-    for (const mode of ["success", "guard_timeout", "timeout", "partial", "invalid_utf8", "oversize", "refusal", "http_error", "echo", "service_echo", "escaped_echo", "header_echo", "unpriced", "gate", "changed_flag", "partial_escaped_echo"]) {
+    for (const mode of ["success", "guard_timeout", "timeout", "partial", "invalid_utf8", "oversize", "refusal", "http_error", "echo", "service_echo", "escaped_echo", "header_echo", "unpriced", "gate", "changed_flag", "partial_escaped_echo", "server503", "server408", "usage_missing", "usage_invalid", "long_id"]) {
       execFileSync(process.execPath, ["--experimental-strip-types", source, mode], { stdio: "pipe", timeout: 30000 });
     }
     assert.throws(() => execFileSync(process.execPath, ["--experimental-strip-types", source, "tamper"], { stdio: "pipe", timeout: 30000 }));

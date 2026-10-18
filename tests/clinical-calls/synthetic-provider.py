@@ -1,7 +1,6 @@
-"""OFFLINE-ONLY fixed call provider preparation, budget admission and injected cleanup.
-
-This increment has NO hosted execution implementation. --run refuses before any
-credential, CLI, HTTP or environment access. Preparation invokes only local Node.
+"""Fixed fictional call provider runner. Preparation is offline; --run requires exact
+reviewed candidate, external billing/token bounds and explicit expense authorization.
+No generation resume. --cleanup-only may remove only this run's owned resources.
 """
 from __future__ import annotations
 import argparse
@@ -17,11 +16,12 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT = "kothoqicubowyhwfsrte"
 BUNDLE = "ab55997d352dba503ecd5d654b5ee7e0cbc6e406c3ea575c8b217537c43677a6"
-VERSION = "lrv-call-provider-candidate-v1"
+VERSION = "lrv-call-provider-candidate-v2"
 CASES = list("ABCDEFGHIJ")
 PROVIDER_TIMEOUT_MS = 60000
 GUARD_TIMEOUT_MS = 10000
@@ -88,10 +88,20 @@ def reserve_micros(value: Fraction) -> int:
 
 def save(path: Path, value, exclusive=True):
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with path.open("x" if exclusive else "w", encoding="utf-8") as stream:
-        os.chmod(path, 0o600)
+    if exclusive:
+        temporary = path
+        stream = temporary.open("x", encoding="utf-8")
+    else:
+        stream = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", prefix=path.name + ".writing-", dir=path.parent, delete=False)
+        temporary = Path(stream.name)
+    with stream:
+        os.chmod(temporary, 0o600)
         json.dump(value, stream, ensure_ascii=False, indent=2, allow_nan=False)
-        stream.write("\n")
+        stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
+    if not exclusive: os.replace(temporary, path)
+    descriptor = os.open(path.parent, os.O_RDONLY)
+    try: os.fsync(descriptor)
+    finally: os.close(descriptor)
 
 
 def read_json(path: Path):
@@ -188,7 +198,7 @@ def freeze_candidate(bundle: Path, ticket: str, expires_at: str, operator_token_
             "admission": admission, "admission_sha256": digest(packed(admission)) if admission is not None else None,
             "external_price_profile": profile, "expense_authorization": None,
             "paid_execution_ready": False,
-            "pending": (["external_price_metering_tier_input_bounds"] if admission is None else []) + ["specific_expense_authorization", "hosted_runner_implementation_and_review"],
+            "pending": (["external_price_metering_tier_input_bounds"] if admission is None else []) + ["specific_expense_authorization", "protected_hosted_preflight"],
             "hosted_operations": 0, "provider_requests": 0}
     template = (ROOT / "tests/clinical-calls/synthetic-provider-probe.ts.in").read_text()
     sources = {}
@@ -260,10 +270,9 @@ def authorize_candidate(plan, bundle: Path, authorization, clock=now_ms):
         raise ValueError("fixed_authorization_expiry_window_invalid")
     if plan["expires_at_ms"] - current < 10 * (PROVIDER_TIMEOUT_MS + GUARD_TIMEOUT_MS) + 60000:
         raise ValueError("fixed_expiry_insufficient_for_ten_cases")
-    # This offline increment intentionally has no deploy/run path, even with supplied authorization.
     return {"contract": "lrv-call-provider-reviewed-admission-v1", "candidate_sha256": plan["candidate_sha256"],
-            "authorization_sha256": digest(packed(authorization)), "admission": plan["admission"], "paid_execution_ready": False,
-            "pending": ["hosted_runner_implementation_and_review"], "provider_requests": 0, "hosted_operations": 0}
+            "authorization_sha256": digest(packed(authorization)), "admission": plan["admission"], "paid_execution_ready": True,
+            "pending": ["protected_hosted_preflight"], "provider_requests": 0, "hosted_operations": 0}
 
 
 def reserve_case(ledger, plan, case_id):
@@ -302,26 +311,34 @@ def record_outcome(ledger, case_id, receipt):
     return ledger
 
 
-def bridge_outcomes(plan, receipts):
-    """All ten outcomes survive; partial/redacted/missing evidence cannot pass importer."""
+def validate_transport_body(receipt):
+    """Pure body validation, without creating references to not-yet-finalized sidecars."""
+    if receipt.get("state") != "response_complete" or receipt.get("response_complete") is not True:
+        return None
+    raw = base64.b64decode(receipt.get("raw_body_base64", ""), validate=True)
+    if base64.b64encode(raw).decode() != receipt.get("raw_body_base64"):
+        raise ValueError("complete_response_base64_not_canonical")
+    if len(raw) > 512000 or digest(raw) != receipt.get("raw_body_sha256") or receipt.get("retained_bytes") != len(raw):
+        raise ValueError("complete_response_byte_evidence_differs")
+    status = integer(receipt.get("http_status"), 100, 599)
+    return {"kind": "http", "status": status, "request_id": (receipt.get("provider_request_id") or "") if not receipt.get("provider_request_id_truncated") else "", "raw_body_base64": receipt["raw_body_base64"]}
+
+
+def bridge_outcomes(plan, receipts, sidecar_paths=None):
+    """All ten outcomes survive; caller finalizes immutable canonical sidecars before export."""
     if len(receipts) != 10 or [c.get("id") for c in receipts] != CASES:
         raise ValueError("ten_exact_case_receipts_required")
     cases = []
     for case, receipt in zip(plan["cases"], receipts, strict=True):
         if receipt.get("request_sha256") != case["request_sha256"]:
             raise ValueError("outcome_request_differs")
-        raw = base64.b64decode(receipt.get("raw_body_base64", ""), validate=True)
-        complete = receipt.get("state") == "response_complete" and receipt.get("response_complete") is True and receipt.get("uncertain") is False
-        if complete:
-            if base64.b64encode(raw).decode() != receipt.get("raw_body_base64"):
-                raise ValueError("complete_response_base64_not_canonical")
-            if len(raw) > 512000 or digest(raw) != receipt.get("raw_body_sha256") or receipt.get("retained_bytes") != len(raw):
-                raise ValueError("complete_response_byte_evidence_differs")
-            status = integer(receipt.get("http_status"), 100, 599)
-            outcome = {"kind": "http", "status": status, "request_id": receipt.get("provider_request_id") or "", "raw_body_base64": receipt["raw_body_base64"]}
-        else:
+        outcome = validate_transport_body(receipt)
+        if outcome is None:
             sidecar = digest(packed(receipt))
-            outcome = {"kind": "transport_error", "error": "Incomplete/non-dispatched synthetic outcome: " + text(receipt.get("state"), 100) + "; retain private case-" + case["id"] + "-transport.json sidecar SHA256 " + sidecar + ". No retry."}
+            filename = sidecar_paths[case["id"]] if sidecar_paths is not None else "case-" + case["id"] + "-transport.json"
+            if not re.fullmatch("case-" + case["id"] + r"-transport(?:-[a-f0-9]{64})?\.json", filename):
+                raise ValueError("owned_sidecar_filename_required")
+            outcome = {"kind": "transport_error", "error": "Incomplete/non-dispatched synthetic outcome: " + text(receipt.get("state"), 100) + "; retain private " + filename + " sidecar SHA256 " + sidecar + ". No retry."}
         cases.append({"case_id": case["id"], "request_sha256": case["request_sha256"], "outcome": outcome})
     return {"contract": "lrv-call-fidelity-raw-v1", "bundle_sha256": BUNDLE, "cases": cases}
 
@@ -387,9 +404,18 @@ def main(argv=None):
     action.add_argument("--prepare", action="store_true")
     action.add_argument("--finalize-admission", action="store_true")
     action.add_argument("--run", action="store_true")
+    action.add_argument("--cleanup-only", action="store_true")
     args = parser.parse_args(argv)
-    if args.run:
-        raise ValueError("hosted_execution_not_implemented_or_authorized_in_offline_increment")
+    if args.run or args.cleanup_only:
+        if not args.plan or not args.bundle or (args.run and not args.authorization):
+            raise ValueError("exact_plan_bundle_and_run_authorization_required")
+        import synthetic_provider_hosted as hosted
+        if args.cleanup_only:
+            result = hosted.cleanup_only(sys.modules[__name__], args.plan, args.bundle)
+        else:
+            result = hosted.run_hosted(sys.modules[__name__], args.plan, args.bundle, read_json(args.authorization))
+        print(json.dumps({"receipt": str(args.plan.parent / "run-receipt.json"), "cleanup_complete": result.get("cleanup", {}).get("complete", False), "error": result.get("error")}))
+        return 0 if result.get("cleanup", {}).get("complete") and (args.cleanup_only or not result.get("error")) else 1
     if not args.bundle or not args.output:
         parser.error("--bundle and a new --output are required")
     if args.prepare:
@@ -402,7 +428,7 @@ def main(argv=None):
             parser.error("--plan and explicit --authorization are required")
         reviewed = authorize_candidate(read_json(args.plan), args.bundle, read_json(args.authorization))
         save(args.output, reviewed)
-        print(json.dumps({"admission_receipt": str(args.output), "paid_execution_ready": False, "pending": reviewed["pending"], "hosted_operations": 0, "provider_requests": 0}))
+        print(json.dumps({"admission_receipt": str(args.output), "paid_execution_ready": reviewed["paid_execution_ready"], "pending": reviewed["pending"], "hosted_operations": 0, "provider_requests": 0}))
     return 0
 
 
@@ -410,5 +436,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception:
-        print("Offline call transport preparation/admission refused. No hosted/provider operation attempted; no automatic retry.", file=sys.stderr)
+        print("Call transport stopped; inspect the private receipt when present. No automatic retry or generation resume.", file=sys.stderr)
         sys.exit(1)
