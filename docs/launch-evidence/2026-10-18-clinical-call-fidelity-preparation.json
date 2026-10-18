@@ -36,7 +36,7 @@
   },
   "checks": {
     "focused_tests": 15,
-    "final_repository_unit_tests": 1658,
+    "final_repository_unit_tests": 1660,
     "unit_failures": 0,
     "lint_errors": 0,
     "existing_lint_warnings": 4,
@@ -61,7 +61,8 @@
   "private_receipts_sha256": {
     "tmp/call-fidelity-final-cli-proof.json": "1893d575fcb2ff439fb746f69e15a1b1470cc0774f64f9a662fb22cd77a6398d",
     "repository_check_log": "8483379f0c2bbda5b83ad94e7a0fc48cf190d3e18621593558a19296864857a9",
-    "final_unit_log": "85c32d4337fd2d91b00e4c86e00cb0ed79246b71c101974e3b7b0714ad8dd96f"
+    "final_unit_log": "0fcae424e9a2626cb3487b2fea50557b855b8d5a3493f0a58ca7bda1c0a329a0",
+    "before_parent_preflight_unit_log": "85c32d4337fd2d91b00e4c86e00cb0ed79246b71c101974e3b7b0714ad8dd96f"
   },
   "remaining": [
     "Separately authorize an exact frozen bundle/model, at most ten provider requests, zero retries and a concrete cost ceiling through protected server-side key handling.",
