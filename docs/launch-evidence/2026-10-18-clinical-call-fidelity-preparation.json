@@ -35,8 +35,8 @@
     "J": "15968208deeacf7f99a87024c541d95c3aa81ee68b693e76f401a8b331df2f45"
   },
   "checks": {
-    "focused_tests": 15,
-    "final_repository_unit_tests": 1660,
+    "focused_tests": 17,
+    "final_repository_unit_tests": 1662,
     "unit_failures": 0,
     "lint_errors": 0,
     "existing_lint_warnings": 4,
@@ -49,7 +49,9 @@
     "pending_review_rejected": true,
     "evidence_overwrite_rejected": true,
     "malformed_refusal_transport_outcomes_preserved": 3,
-    "all_bound_inputs_unchanged": true
+    "all_bound_inputs_unchanged": true,
+    "offline_transport_python_tests": 10,
+    "offline_transport_generated_callback_scenarios": 17
   },
   "provider_requests": 0,
   "hosted_reads": 0,
@@ -60,13 +62,63 @@
   "paid_run_authorized": false,
   "private_receipts_sha256": {
     "tmp/call-fidelity-final-cli-proof.json": "1893d575fcb2ff439fb746f69e15a1b1470cc0774f64f9a662fb22cd77a6398d",
-    "repository_check_log": "8483379f0c2bbda5b83ad94e7a0fc48cf190d3e18621593558a19296864857a9",
-    "final_unit_log": "0fcae424e9a2626cb3487b2fea50557b855b8d5a3493f0a58ca7bda1c0a329a0",
-    "before_parent_preflight_unit_log": "85c32d4337fd2d91b00e4c86e00cb0ed79246b71c101974e3b7b0714ad8dd96f"
+    "repository_check_log": "6c025db6d5bb34baa6ed3de6d18b6d583d439e1b8c8917a6ca7afc58bf73f1cb",
+    "final_unit_log": "6c025db6d5bb34baa6ed3de6d18b6d583d439e1b8c8917a6ca7afc58bf73f1cb",
+    "before_parent_preflight_unit_log": "85c32d4337fd2d91b00e4c86e00cb0ed79246b71c101974e3b7b0714ad8dd96f",
+    "before_transport_repository_check_log": "8483379f0c2bbda5b83ad94e7a0fc48cf190d3e18621593558a19296864857a9",
+    "before_transport_unit_log": "0fcae424e9a2626cb3487b2fea50557b855b8d5a3493f0a58ca7bda1c0a329a0",
+    "preserved_transport_lint_failure_log": "b83107d2fe1c001b9646f228a92ba6bd6c610db1ae6dde10a30915afb06ac1b9"
   },
   "remaining": [
     "Separately authorize an exact frozen bundle/model, at most ten provider requests, zero retries and a concrete cost ceiling through protected server-side key handling.",
     "Retain all actual raw outcomes and obtain independent clinical adjudication from Susan or her qualified delegate.",
     "Approve call-specific processing/retention policy and commission real provider/account and iPhone/Safari workflows separately."
-  ]
+  ],
+  "offline_transport_preparation": {
+    "status": "offline_verified_hosted_runner_not_implemented",
+    "candidate_sha256": "0844f0d9c02817162843675f501efcf14182df2d1b7b442925c35532bf5d5aaf",
+    "plan_file_sha256": "2d56a5f027759e9282b05eb12fe78fae0f7182a2ad1a02b7e9fcefa4972ee59b",
+    "proof_sha256": "fa60e14b69b479bad3afbd02c3d15fecd908d258e0c02a10dbf6b99c26991c84",
+    "transport_source_sha256": {
+      "tests/clinical-calls/synthetic-provider-plan.ts": "fdb0c335055457c86ccc275331f77ef37af8aabb831fc95d0f688c32e11f5b59",
+      "tests/clinical-calls/synthetic-provider.py": "1314233923a5f190cac4877095f7abccb13ff5e5976e03ed38e7a10ba475129c",
+      "tests/clinical-calls/synthetic-provider-probe.ts.in": "42a0b783ca76e454b9dde5099d2279b65fea9fcaf6100e68fad651db578c70be",
+      "tests/clinical-calls/synthetic-provider-plan.test.ts": "7a53548a5162787c144f3ac697cf647c639d8d3aed9cbb7d9df0ff2a1538a6e3",
+      "tests/clinical-calls/test_synthetic_provider.py": "0fdc39336d8fea426e8a704649f202f4b26d102c3f8772bd28271dd26f8f45f5",
+      "supabase/functions/clinical-call-note-process/deno.json": "a03278169495625b745a70f27ee50478a15244cb5ba8cc21f82e8c03da021a47",
+      "supabase/functions/clinical-call-note-process/deno.lock": "ee504df067152068e733d4010eac4786ff321498ef4d25941c6f81c36436328b"
+    },
+    "generated_probe_source_sha256": {
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-a": "08bef023a4deec3314c37b6b89acc1e5df0f0a73e4897f77db0cfdab0c4e39da",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-b": "2f40006e894882f45a51cfca76b35455c6c597d6822419957d4f1dd81a4d158b",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-c": "8cd6e09dfb46364fcff17ca61ad1ba392df3c87eed4bca4a9f41e728b753c229",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-d": "c528e0f42b6085512f2a6b89cdfabbef04a8813be8cbd380b0a2552b4593b920",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-e": "7f57a354f9fef5a05bdb15236109e225424490a89e74638e97be9e36d10e4c08",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-f": "ff67b2650d9193786d1c1747b2420504a76893926092a989a23a3fc1388e52d9",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-g": "8f415e89aa1078b87a37923e7fc258b762bbd2d529d9d70ca8c1265e10fb1d5d",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-h": "e22f7ba980f1e28516cf33578b2b2bfdca6f98aba4ba1c64e8c1c094018d4c41",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-i": "10b9d0bf36ed2eb24f1d1a62d7360834d82a3832fdcebd05dbfc4b5cf4e08981",
+      "call-eval-bbbbbbbbbbbbbbbbbbbb-j": "b1b6976ab338ff563e2a3fd1f590002b25e7dddf494959927625b32c12b69fce"
+    },
+    "typescript_tests": 2,
+    "generated_callback_scenarios": 17,
+    "python_tests": 10,
+    "cached_deno_entrypoints": 10,
+    "scoped_lint_and_strict_typescript": "pass",
+    "all_private_permissions": true,
+    "all_bound_inputs_and_probes_unchanged": true,
+    "run_command": "refuses_before_credentials_or_network",
+    "provider_requests": 0,
+    "hosted_operations": 0,
+    "existing_secret_reads": 0,
+    "clinical_fidelity_claim": false,
+    "paid_execution_ready": false,
+    "pending": [
+      "external_price_metering_tier_input_bounds",
+      "specific_expense_authorization",
+      "hosted_runner_implementation_and_review"
+    ],
+    "cleanup_evidence": "Injected local state only; not hosted preservation or row equality.",
+    "budget_evidence": "Exact arithmetic over explicitly supplied external reviews, not verified account rates or a provider hard cap."
+  }
 }

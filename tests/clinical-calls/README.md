@@ -64,3 +64,16 @@ node --experimental-strip-types tests/clinical-calls/evaluation-cli.ts adjudicat
 ```
 
 Incomplete/duplicate/tampered decisions, blank reviewer/rationales, invented evidence or unreviewed supports are rejected. Any failed contract/transport or explicit semantic failure prevents a fidelity pass. Engineering tests deliberately judge negative controls as failures; they are not real model results or Susan's clinical approval. Real-provider fidelity, authorized provider samples and practice clinical activation remain pending.
+
+## Offline protected transport preparation
+
+`synthetic-provider-plan.ts` and `synthetic-provider.py` prepare the exact frozen ten-case bundle for later staging transport review. They create private generated sources, request/code/lock hashes, a fixed expiry and ticket, and an operator nonce receipt. Preparation reads local files only; it never retrieves a provider key. With no externally reviewed pricing/input-bound profile, the generated probes refuse generation. The `--run` command also always refuses because this increment has no hosted orchestrator.
+
+```sh
+node --experimental-strip-types --test tests/clinical-calls/synthetic-provider-plan.test.ts
+python3 -B -m unittest discover -s tests/clinical-calls -p test_synthetic_provider.py
+```
+
+The tests inject local responses into actual generated callbacks, including duplicate dispatch, guard ambiguity, partial/oversized bodies and credential echoes. They do not contact Supabase or OpenAI. Budget calculations use exact rational arithmetic and permanently reserve uncertain requests; supplied rates/reviews are explicit assumptions, not automatically verified prices or a guaranteed provider billing cap. Only proven complete bodies enter the existing raw importer as HTTP outcomes; incomplete cases keep private sidecars and become transport errors. Cleanup tests retain one-shot guards until function absence and expiry are confirmed.
+
+See the [transport design](../../plans/20261018-call-fidelity/provider-run-design.md) and [official pricing evidence](../../plans/20261018-call-fidelity/provider-pricing-evidence.md) for remaining hosted implementation, account/metering and clinical-review work.

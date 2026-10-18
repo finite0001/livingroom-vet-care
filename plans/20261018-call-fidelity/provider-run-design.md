@@ -1,6 +1,6 @@
-# Proposed bounded provider transport — implementation design only
+# Bounded provider transport — offline preparation and hosted design
 
-No paid execution, hosted change, key access or activation is authorized by this document. All source review for this design was local; model availability, current prices and account billing controls remain unverified.
+The offline planner, generated probe, budget arithmetic, outcome bridge and injected cleanup tests are implemented. The hosted orchestrator is not implemented; `--run` refuses before credential or network access. No paid execution, hosted change, key access or activation is authorized by this document. Subsequent [official pricing research](provider-pricing-evidence.md) verifies public model/rate documentation; account access/tier, exact input bounds and billing controls remain unverified.
 
 ## Frozen input and reuse boundary
 
@@ -13,7 +13,7 @@ No paid execution, hosted change, key access or activation is authorized by this
 
 ## Proposed files and offline acceptance
 
-Prepare `tests/clinical-calls/synthetic-provider-plan.ts`, `synthetic-provider.py` and focused local tests, without changing product code, migrations or the frozen importer. The plan binds: authorization/run ticket, bundle/file digests, cases A–J and request digests, exact staging reference, function/guard names, fixed expiry, ten-request maximum, per-case worst-case budget reservations, pricing evidence and its assumptions, all probe/code hashes, and a no-resume/no-retry rule. Zod validates TypeScript external inputs.
+Implemented `tests/clinical-calls/synthetic-provider-plan.ts`, `synthetic-provider.py`, the generated probe template and focused local tests without changing product code, migrations or the frozen importer. The candidate binds: run ticket, bundle/file digests, cases A–J and request digests, exact staging reference, function/guard names, fixed expiry, ten-request maximum, optional externally reviewed per-case budget reservations, all probe/code hashes, and a no-resume/no-retry rule. Zod validates TypeScript external inputs. Unpriced candidates cannot dispatch. Even a supplied admission/authorization document does not make this offline increment executable.
 
 Before any hosted action, test source/context/request tampering, concurrent duplicate dispatch, guard creation timeout, deployment/response acknowledgement loss, interrupted/oversized/invalid-UTF8 bodies, refusing redirect/retry/model overrides, expired run, incomplete preservation proof and cleanup with ambiguous function deletion. Tests use injected local transport only. Generate and review the exact temporary probe sources and plan offline; no model-availability request is an implicit free preflight.
 
@@ -62,6 +62,6 @@ There are **zero clinical RPCs, PostgREST patient requests, SQL patient queries 
 
 A run with unknown absence, changed baseline resources, lost raw evidence or unresolved preservation observations is **incomplete**, even if some model outputs parsed. Do not suppress such gaps or activate real processing.
 
-## Required decision before implementation/execution
+## Required decision before hosted execution
 
 First finish offline implementation/review of this transport and verify model/pricing/billing facts without accessing the OpenAI secret. Then present the exact frozen plan and calculated bound. The remaining user decision is: **authorize at most ten one-shot fictional requests for this bundle and `gpt-6-luna`, choose D dollars, and accept the stated calculated-bound limitations—or require a verified provider hard cap before any paid execution.** Temporary staging probe/guard creation and deletion must be included explicitly in that bounded authorization. Susan's fidelity and practice-policy approvals remain separate and cannot be supplied by this test.

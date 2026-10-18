@@ -12,7 +12,7 @@ Prepare offline, wholly fictional evaluation material for the production call-no
 4. Produce a review packet and pending adjudication form containing raw outputs, parsed claims, each claim's own supports, assembled selected-patient SOAP, expected/forbidden meanings and explicit per-claim/per-support decisions. Structural validity never grants a semantic pass. Require all questions, nonempty rationales and named reviewer before accepting adjudication; any failed transport/contract/meaning prevents an overall pass.
 5. Verify deterministic export, production contract acceptance for every request, and missing/duplicate/tampered import/review rejection. Preserve structurally valid semantic negative controls as proof of the validator's boundary.
 
-See the [protected transport design](provider-run-design.md) for the proposed next implementation, one-shot guard, partial-response evidence and pricing/cleanup limits. It authorizes no hosted or paid operation.
+The [protected transport preparation](provider-run-design.md) now implements a fixed-bundle offline planner, ten generated staging-only probes, externally supplied price/bounds admission arithmetic, partial-response evidence bridging and injected cleanup checks. Generated callbacks are exercised with local transport stubs. The hosted orchestrator remains unimplemented and `--run` refuses; no hosted or paid operation follows from generating or testing these files. Official pricing evidence is retained separately from unverified account/tier and token-bound assumptions.
 
 ## Future bounded decision
 
