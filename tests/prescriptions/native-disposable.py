@@ -105,7 +105,7 @@ enabled = false
     if args.include_sql_regression:
         regression=command(['supabase','test','db','--workdir',str(project)],cwd=root,timeout=360)
         assert 'All tests successful.'in regression and 'Files=166, Tests=7315'in regression
-        print('Canonical SQL regression passed:163 files/7101 assertions.',flush=True)
+        print('Canonical SQL regression passed:166 files/7315 assertions.',flush=True)
     stock_probe_path=root/'scripts/stock-writers/rollback-probe.sql'
     stock_probe_hash=hashlib.sha256(stock_probe_path.read_bytes()).hexdigest()
     # One simple-query packet matches the hosted SQL API; psql stdin splits commands.

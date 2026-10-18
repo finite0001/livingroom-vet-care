@@ -83,7 +83,7 @@ enabled = false
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
         assert 'All tests successful.' in result and 'Files=166, Tests=7315' in result
-        print('Canonical SQL regression passed: 163 files /7101 assertions.', flush=True)
+        print('Canonical SQL regression passed: 166 files /7315 assertions.', flush=True)
     # Rehearse the exact staged/primary rollback probe while the freshly replayed
     # policy is still empty, before any Auth/browser acceptance changes it.
     probe = root/'scripts/task-reconciliation/rollback-probe.sql'
