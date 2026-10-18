@@ -33,7 +33,7 @@ work = Path(tempfile.mkdtemp(prefix=identity + '-'))
 project = work / 'project'
 (project / 'supabase/migrations').mkdir(parents=True)
 (project / 'supabase/tests').mkdir()
-new_migration = root / 'supabase/migrations/20261018032610_clinical_call_note_generation.sql'
+new_migration = root / 'supabase/migrations/20261018150000_clinical_call_quote_anchors.sql'
 test = root / 'supabase/tests/clinical_call_note_generation.test.sql'
 inputs = set((root / 'supabase/migrations').glob('*.sql')) | set((root / 'tests/clinical-call-generation').glob('*')) | {test}
 if not args.sql_only:
@@ -186,7 +186,7 @@ try:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     migrations = sorted((root / 'supabase/migrations').glob('*.sql'))
-    assert len(migrations) == 203 and migrations[-1] == new_migration
+    assert len(migrations) == 204 and migrations[-1] == new_migration
     for migration in migrations:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     for candidate in (root / 'supabase/tests').glob('clinical_call*.test.sql'):
@@ -253,6 +253,15 @@ enabled = false
         check(rpc(worker, 'finish_clinical_call_note_v1', {**work_args, 'p_result': result}), complete)
         check(complete['proposal']['sections']['objective']['text'], '')
         check(complete['generation']['payload'], result['payload'])
+        check(complete['generation']['manifest']['contract_version'], 'clinical-call-note-result-v2')
+        check(complete['generation']['manifest']['provider_evidence'], result['provider_evidence'])
+        legacy = json.loads(sql(fixtures + '\nselect pg_temp.cgn_seed_legacy(' + quote(job) + ');').splitlines()[-1])
+        legacy_read_args = {'p_actor_id': owner['id'], 'p_id': legacy['job_id']}
+        legacy_view = rpc(owner, 'read_clinical_call_note_processing_v1', legacy_read_args)
+        check(legacy_view['generation']['manifest']['contract_version'], 'clinical-call-note-result-v1')
+        check('provider_evidence' in legacy_view['generation']['manifest'], False)
+        check(rpc(worker, 'finish_clinical_call_note_v1', {'p_job_id': legacy['job_id'], 'p_attempt_id': legacy['attempt_id'], 'p_result': legacy['result']}), legacy_view)
+        denied(worker, 'finish_clinical_call_note_v1', {'p_job_id': legacy['job_id'], 'p_attempt_id': legacy['attempt_id'], 'p_result': {**legacy['result'], 'request_id': 'tampered-legacy-replay'}}, 'PT409')
         check(json.loads(sql('select to_jsonb(e)from clinical_encounters e where id=' + quote(fixture['encounter']) + ';')), chart_before)
         for current in [owner, staff]:
             denied(current, 'read_clinical_note_job', {'p_actor_id': current['id'], 'p_id': job})
@@ -306,7 +315,7 @@ enabled = false
             with bridge_seed.open('x') as handle:
                 handle.write(json.dumps({'actor_id': owner['id'], 'token': owner['token'], 'job_id': worker_job, 'attempt_id': worker_attempt,
                                          'owner_session': owner['auth_session'], 'staff_session': staff['auth_session'],
-                                         'browser_fixture': browser_fixture, 'browser_source': browser_source,
+                                         'browser_fixture': browser_fixture, 'browser_source': browser_source, 'legacy': legacy,
                                          'evidence_base': 'tmp/' + args.evidence_prefix}))
             worker_bridge = json.loads(run(['node','--experimental-strip-types',str(root / 'tests/clinical-call-generation/worker-roundtrip.ts'),str(bridge_seed)], env={**os.environ,'CALL_GENERATION_TEST_PROJECT':str(project),'CALL_GENERATION_RUN_SYNTHETIC_LOCAL':'true'}, timeout=600).stdout.splitlines()[-1])
         finally:
@@ -336,6 +345,18 @@ enabled = false
             check(value, None)
             check(sql('select state from clinical_note_attempts where id=' + quote(refused['attempt']) + ';'), 'uncertain')
             check(json.loads(sql('select failure_details from clinical_note_attempts where id=' + quote(refused['attempt']) + ';')), {})
+
+        # Safe complete-byte digest evidence can be retained without any raw response.
+        failed_with_evidence = scenario(dispatch=True)
+        failure_details = {'http_status': 200, 'provider_response_sha256': 'd' * 64}
+        failure_code, failure_value = request('/rest/v1/rpc/fail_clinical_call_note_v1', status['SERVICE_ROLE_KEY'], status['SERVICE_ROLE_KEY'],
+            {**failed_with_evidence['work'], 'p_uncertain': True, 'p_code': 'provider_response_contract_failed', 'p_details': failure_details})
+        check(failure_code in (200, 204), True)
+        check(failure_value, None)
+        failed_view = rpc(owner, 'read_clinical_call_note_processing_v1', {'p_actor_id': owner['id'], 'p_id': failed_with_evidence['job']})
+        check(failed_view['attempts'][0]['failure_details'], failure_details)
+        check(failed_view['attempts'][0]['state'], 'uncertain')
+        check(failed_view['proposal'], None)
 
         # Every transition below is observed at its real lock, rather than inferred from a sleep.
         r = scenario()
@@ -428,6 +449,10 @@ enabled = false
             check(json.loads(sql(catalog_sql, clone)), catalog); restore_checks += 1
             check(json.loads(sql(table_security_sql, clone)), table_security); restore_checks += 1
             check(actor_sql(reader, 'read_clinical_call_note_processing_v1(' + quote(reader['id']) + ',' + quote(job) + ')', clone), retained); restore_checks += 1
+            restored_legacy = actor_sql(reader, 'read_clinical_call_note_processing_v1(' + quote(reader['id']) + ',' + quote(legacy['job_id']) + ')', clone)
+            check(restored_legacy['generation'], legacy_view['generation']); restore_checks += 1
+            restored_failure = actor_sql(reader, 'read_clinical_call_note_processing_v1(' + quote(reader['id']) + ',' + quote(failed_with_evidence['job']) + ')', clone)
+            check(restored_failure['attempts'][0]['failure_details'], failure_details); restore_checks += 1
             check(actor_sql(owner, 'recover_clinical_call_note_review_v1(' + quote(owner['id']) + ',' + quote(review_id) + ',' + quote(job) + ')', clone), acceptance); restore_checks += 1
             sql('do $$declare j record;begin for j in select id from clinical_note_jobs where source_kind=\'call_transcript\'loop perform clinical_call_note_check_binding(j.id);end loop;end $$;', clone); restore_checks += 1
             check(json.loads(sql(snapshot_sql)), snapshot); restore_checks += 1
@@ -437,11 +462,11 @@ enabled = false
             check(sql('select current_database();'), 'postgres')
             sql('drop database ' + clone + ' with(force);'); restore_checks += 1
     assert all(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest for name, digest in hashes.items()), 'Proof input changed during run'
-    proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only, 'migrations': 203,
+    proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only, 'migrations': 204,
              'source_sha256': hashes, 'actual_auth_api_assertions': checks, 'observed_lock_waits': waits,
              'provider_requests': 0, 'hosted_writes': 0, 'owned_runtime_removed': False}
     if not args.sql_only:
-        proof.update(actual_worker=worker_bridge, populated_restore_assertions=restore_checks, restored_relation_families=len(names), restored_table_security_catalogs=len(table_security), restored_public_routines=len(catalog))
+        proof.update(legacy_v1_owner_seeded_adaptation=True, legacy_v1_completed_replay=True, v2_manifest_and_failure_evidence=True, actual_worker=worker_bridge, populated_restore_assertions=restore_checks, restored_relation_families=len(names), restored_table_security_catalogs=len(table_security), restored_public_routines=len(catalog))
 finally:
     try:
         if started:

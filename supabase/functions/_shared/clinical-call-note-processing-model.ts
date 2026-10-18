@@ -11,6 +11,7 @@ import {
   CALL_NOTE_PROMPT_VERSION,
   CALL_NOTE_RESULT_CONTRACT,
   callNoteProviderContextSchema,
+  callNoteProviderEvidenceSchema,
 } from "./clinical-call-note-provider.ts";
 import {
   noteAttemptSchema,
@@ -54,10 +55,8 @@ export const callNoteBindingSchema = z.object({
   call_generation_policy_version: version,
   created_at: z.string(),
 }).strict();
-export const callNoteResultSchema = z.object({
+const callNoteResultBaseSchema = z.object({
   request_id: text(200),
-  contract_version: z.literal(CALL_NOTE_RESULT_CONTRACT),
-  prompt_version: z.literal(CALL_NOTE_PROMPT_VERSION),
   response_id: nonempty(200),
   requested_model: notePolicySchema.innerType().shape.soap_model,
   provider_model: text(200),
@@ -74,6 +73,17 @@ export const callNoteResultSchema = z.object({
   veterinary_context: audioLanguageContextSchema,
   payload: callNotePayloadSchema,
 }).strict();
+// Historical records keep their original contract; current admissions require the strict v2 schema.
+export const callNoteLegacyResultSchema = callNoteResultBaseSchema.extend({
+  contract_version: z.literal("clinical-call-note-result-v1"), prompt_version: z.literal("lrv-call-note-fields-v1"),
+});
+export const callNoteResultSchema = callNoteResultBaseSchema.extend({
+  contract_version: z.literal(CALL_NOTE_RESULT_CONTRACT), prompt_version: z.literal(CALL_NOTE_PROMPT_VERSION),
+  provider_evidence: callNoteProviderEvidenceSchema,
+});
+const callNoteHistoricalManifestSchema = z.discriminatedUnion("contract_version", [
+  callNoteLegacyResultSchema.omit({ payload: true }), callNoteResultSchema.omit({ payload: true }),
+]);
 export const callNoteGenerationSchema = z.object({
   proposal_id: uuid,
   job_id: uuid,
@@ -81,7 +91,7 @@ export const callNoteGenerationSchema = z.object({
   template_snapshot: noteTemplateVersionSchema.omit({ status: true }),
   source_sha256: noteHashSchema,
   payload: callNotePayloadSchema,
-  manifest: callNoteResultSchema.omit({ payload: true }),
+  manifest: callNoteHistoricalManifestSchema,
   created_at: z.string(),
 }).strict();
 const section = z.object({ text: text(50000), quote: text(2000) }).strict();

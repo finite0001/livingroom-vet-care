@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { createHash } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { proveCallNoteBrowser } from "./browser-proof.ts";
 import { parseOwnedRuntimeStatus } from "../estimates/owned-runtime-status.ts";
@@ -28,6 +29,8 @@ async function rpc(db: SupabaseClient, name: string, args: Record<string, unknow
   if (error) throw error;
   return data;
 }
+interface SyntheticEvidence { response_sha256: string; output_text_sha256: string; }
+const expectedEvidence = new Map<string, SyntheticEvidence>();
 let enabled = false, providers = 0, finishes = 0;
 const handler = createClinicalCallNoteHandler({
   get enabled() { return enabled; }, callEnabled: true, apiKey: "synthetic-not-an-api-key",
@@ -57,16 +60,19 @@ const handler = createClinicalCallNoteHandler({
     assert.equal(request.store, false);
     assert.match(input.job_id, /^[a-f0-9-]{36}$/);
     const segment = input.segments[0];
-    const payload = { contract_version: "clinical-call-note-payload-v1", review_flags: [],
+    const payload = { contract_version: "clinical-call-note-provider-payload-v2", review_flags: [],
       fields: input.template.definition.fields.map((field: { id: string }, index: number) => ({
         field_id: field.id, status: index === 0 ? "supported" : "missing", uncertainty: "",
         claims: index === 0 ? [{ text: "Owner reports historical vomiting; vaccine declined.", patient_scope: "selected_patient",
-          supports: [{ segment_ordinal: segment.ordinal, segment_sha256: segment.text_sha256, from: 0, to: segment.text.length, quote: segment.text }] }] : [],
+          supports: [{ segment_ordinal: segment.ordinal, quote: segment.text }] }] : [],
       })),
     };
-    return new Response(JSON.stringify({ id: "synthetic-call-response-handler", model: "gpt-6-luna", status: "completed", error: null, incomplete_details: null,
-      output: [{ type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(payload) }] }],
-    }), { headers: { "content-type": "application/json", "x-request-id": "synthetic-owned-worker-request" } });
+    const outputText = JSON.stringify(payload);
+    const responseBody = JSON.stringify({ id: "synthetic-call-response-handler", model: "gpt-6-luna", status: "completed", error: null, incomplete_details: null,
+      output: [{ type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: outputText }] }],
+    });
+    expectedEvidence.set(input.job_id, { response_sha256: createHash("sha256").update(responseBody, "utf8").digest("hex"), output_text_sha256: createHash("sha256").update(outputText, "utf8").digest("hex") });
+    return new Response(responseBody, { headers: { "content-type": "application/json", "x-request-id": "synthetic-owned-worker-request" } });
   },
 });
 const server = createServer(async (incoming, outgoing) => {
@@ -86,8 +92,8 @@ server.listen(0, "127.0.0.1");
 await once(server, "listening");
 const address = server.address();
 assert.ok(address && typeof address === "object");
-const post = () => fetch(`http://127.0.0.1:${address.port}/call-note`, { method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer " + seed.token },
-  body: JSON.stringify({ job_id: seed.job_id, attempt_id: seed.attempt_id, retry_of: null, reason: "", ack_cost: false }),
+const post = (jobId = seed.job_id, attemptId = seed.attempt_id) => fetch(`http://127.0.0.1:${address.port}/call-note`, { method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer " + seed.token },
+  body: JSON.stringify({ job_id: jobId, attempt_id: attemptId, retry_of: null, reason: "", ack_cost: false }),
 });
 try {
   assert.equal((await post()).status, 503);
@@ -99,14 +105,24 @@ try {
   const saved = await validateCallNoteProcessingRead(firstBody);
   assert.equal(saved.job.proposal_id, seed.attempt_id);
   assert.equal(saved.attempts[0].state, "completed");
+  const manifest = saved.generation?.manifest;
+  assert.ok(manifest?.contract_version === "clinical-call-note-result-v2");
+  assert.deepEqual(manifest.provider_evidence, {
+    provider_contract_version: "clinical-call-note-provider-payload-v2", resolver_version: "lrv-call-unique-literal-v1", ...expectedEvidence.get(seed.job_id),
+  });
   assert.equal(providers, 1);
   assert.equal(finishes, 2, "Lost finish ACK repeats only the exact DB result");
   const recovered = await post();
   assert.equal(recovered.status, 200);
   assert.deepEqual(await recovered.json(), saved);
   assert.equal(providers, 1, "Repeating HTTP request cannot send a second provider request");
-  const workerProof = { actual_worker_http_assertions: 15, stub_provider_requests: providers,
-    real_provider_requests: 0, committed_finish_requests: finishes, lost_finish_ack_recovered: true };
+  const historical = await post(seed.legacy.job_id, seed.legacy.attempt_id);
+  assert.equal(historical.status, 200);
+  const historicalRead = await validateCallNoteProcessingRead(await historical.json());
+  assert.equal(historicalRead.generation?.manifest.contract_version, "clinical-call-note-result-v1");
+  assert.equal(providers, 1, "Completed v1 history cannot dispatch a provider under v2");
+  const workerProof = { actual_worker_http_assertions: 20, stub_provider_requests: providers,
+    real_provider_requests: 0, committed_finish_requests: finishes, lost_finish_ack_recovered: true, unique_literal_v2_exact_byte_provenance: true, historical_v1_recovery_without_provider: true };
   const browser = await proveCallNoteBrowser({ status, session: seed.owner_session, staffSession: seed.staff_session,
     petId: seed.browser_fixture.pet, encounterId: seed.browser_fixture.encounter, sourceId: seed.browser_source,
     bridgeUrl: `http://127.0.0.1:${address.port}`, evidenceBase: seed.evidence_base,

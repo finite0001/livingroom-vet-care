@@ -5,17 +5,21 @@ import { captureClinicalCallTranscript } from "../../supabase/functions/_shared/
 import { callSha256 } from "../../supabase/functions/_shared/clinical-call-model.ts";
 import { CALL_NOTE_PAYLOAD_CONTRACT } from "../../supabase/functions/_shared/clinical-call-note-model.ts";
 import {
-  CALL_NOTE_PROMPT_VERSION, CALL_NOTE_RESULT_CONTRACT, clinicalCallNoteInstructions,
-  clinicalCallNoteRequest, parseClinicalCallNoteResponse,
+  CALL_NOTE_PROMPT_VERSION, CALL_NOTE_RESULT_CONTRACT, CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT, CALL_NOTE_SUPPORT_RESOLVER_VERSION, clinicalCallNoteInstructions,
+  clinicalCallNoteRequest, parseClinicalCallNoteResponse as parseProvider,
 } from "../../supabase/functions/_shared/clinical-call-note-provider.ts";
 import { veterinaryContextReceipt, veterinarySoapContext } from "../../supabase/functions/_shared/clinical-veterinary-context.ts";
 
-async function fixture(text = "Owner reports Luna is ADR. Cerenia was discussed and declined; it was not administered.") {
+async function parseClinicalCallNoteResponse(value: unknown, input: unknown) {
+  // Synthetic exact serialized HTTP bytes; actual byte boundary is tested separately in handler tests.
+  return await parseProvider(value, input, { response_sha256: await callSha256(JSON.stringify(value)) });
+}
+async function fixture(text = "Owner reports Luna is ADR. Cerenia was discussed and declined; it was not administered.", otherText?: string) {
   const now = "2026-10-17T15:00:00.000Z";
   const document = await captureClinicalCallTranscript("700013", "synthetic-only", async () => new Response(JSON.stringify({
     data: { callId: 700013, language: "en", callers: [{ type: "agent", id: 12, localIdentifier: "original-receiver" }],
-      segments: [{ start: 0, end: 3, caller: "original-receiver", text }] },
-    pagination: { total: 1, offset: 0, limit: 100 },
+      segments: [{ start: 0, end: 3, caller: "original-receiver", text }, ...(otherText === undefined ? [] : [{ start: 4, end: 7, caller: "original-receiver", text: otherText }])] },
+    pagination: { total: otherText === undefined ? 1 : 2, offset: 0, limit: 100 },
   }), { headers: { "content-type": "application/json" } }), () => Date.parse(now));
   const pet = randomUUID(), client = randomUUID(), conversation = randomUUID();
   const source = {
@@ -36,10 +40,9 @@ async function fixture(text = "Owner reports Luna is ADR. Cerenia was discussed 
         { id: "history", label: "History", destination: "subjective", instructions: "", required: true },
       ] } },
   };
-  const payload = { contract_version: CALL_NOTE_PAYLOAD_CONTRACT, fields: [{ field_id: "history", status: "supported",
+  const payload = { contract_version: CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT, fields: [{ field_id: "history", status: "supported",
     uncertainty: "", claims: [{ text: "Owner reports ADR; clarify the nonspecific complaint.",
-      patient_scope: "selected_patient", supports: [{ segment_ordinal: 1, segment_sha256: document.segments[0].text_sha256,
-        from: 0, to: text.length, quote: text }] }] }], review_flags: [] as string[] };
+      patient_scope: "selected_patient", supports: [{ segment_ordinal: 1, quote: text }] }] }], review_flags: [] as string[] };
   const response = (p: unknown = payload) => ({ id: "resp_synthetic", model: "returned-alias", status: "completed",
     error: null, incomplete_details: null,
     output: [{ type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(p) }] }],
@@ -104,6 +107,10 @@ test("valid responses retain source, policies, template, prompt and exact vocabu
   const result = await parseClinicalCallNoteResponse(response(), context);
   assert.deepEqual(context, before);
   assert.equal(result.contract_version, CALL_NOTE_RESULT_CONTRACT);
+  assert.equal(result.payload.contract_version, CALL_NOTE_PAYLOAD_CONTRACT);
+  assert.deepEqual(result.provider_evidence, { provider_contract_version: CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT,
+    resolver_version: CALL_NOTE_SUPPORT_RESOLVER_VERSION, response_sha256: await callSha256(JSON.stringify(response())),
+    output_text_sha256: await callSha256(response().output[0].content[0].text) });
   assert.equal(result.requested_model, "gpt-6-luna"); assert.equal(result.provider_model, "returned-alias");
   assert.equal(result.source_manifest_sha256, context.source.sha256);
   assert.equal(result.projection_sha256, context.projection_sha256);
@@ -148,4 +155,54 @@ test("malformed JSON, legacy payload and altered claim citations fail closed", a
 test("response envelope byte budget also covers ignored provider metadata", async () => {
   const { context, response } = await fixture();
   await assert.rejects(parseClinicalCallNoteResponse({ ...response(), ignored: "猫".repeat(180000) }, context), /response byte budget/);
+});
+
+test("unique literal anchors derive trusted UTF16 ranges and hashes without changing claims or attribution", async () => {
+  const { context, payload, response } = await fixture("😀 Luna ate café. 🐾");
+  const claim = payload.fields[0].claims[0];
+  claim.text = "Original claim wording stays exactly as supplied."; claim.patient_scope = "unassigned";
+  // Retain one selected claim so the canonical usable-draft check still applies.
+  const selected = structuredClone(claim); selected.patient_scope = "selected_patient";
+  claim.supports[0].quote = "Luna ate café."; selected.supports[0].quote = "🐾";
+  payload.fields[0].claims.push(selected);
+  const before = structuredClone(payload);
+  const result = await parseClinicalCallNoteResponse(response(), context);
+  assert.deepEqual(payload, before);
+  assert.equal(result.payload.fields[0].claims[0].text, claim.text);
+  assert.equal(result.payload.fields[0].claims[0].patient_scope, "unassigned");
+  assert.deepEqual(result.payload.fields[0].claims[0].supports[0], { segment_ordinal: 1, quote: "Luna ate café.",
+    from: 3, to: 17, segment_sha256: context.source.document.segments[0].text_sha256 });
+  const paw = result.payload.fields[0].claims[1].supports[0];
+  assert.equal(paw.to - paw.from, 2);
+});
+test("absent, repeated, overlapping and wrong-segment quotes fail without fuzzy or first-match fallback", async () => {
+  for (const [text, quote] of [["Luna ate. Luna ate.", "Luna ate."], ["aaa", "aa"],
+    ["Luna ate café.", "Luna ate cafe."], ["Luna ate café.", "Luna ate cafe\u0301."],
+    ["Luna ate.", " Luna ate. "]]) {
+    const { context, payload, response } = await fixture(text);
+    payload.fields[0].claims[0].supports[0].quote = quote;
+    await assert.rejects(parseClinicalCallNoteResponse(response(), context), /unique exact quote/);
+  }
+  const { context, payload, response } = await fixture("Luna ate.", "Milo coughed.");
+  payload.fields[0].claims[0].supports[0].quote = "Milo coughed.";
+  await assert.rejects(parseClinicalCallNoteResponse(response(), context), /unique exact quote/);
+  payload.fields[0].claims[0].supports[0].segment_ordinal = 3;
+  await assert.rejects(parseClinicalCallNoteResponse(response(), context), /retained segment/);
+});
+test("provider v2 rejects copied hashes, offsets, occurrence selectors, old contracts and duplicate own supports", async () => {
+  const { context, payload, response } = await fixture();
+  for (const extra of [{ from: 0 }, { to: 10 }, { segment_sha256: "a".repeat(64) }, { occurrence: 1 }]) {
+    const value = structuredClone(payload);
+    Object.assign(value.fields[0].claims[0].supports[0], extra);
+    await assert.rejects(parseClinicalCallNoteResponse(response(value), context));
+  }
+  await assert.rejects(parseClinicalCallNoteResponse(response({ ...payload, contract_version: CALL_NOTE_PAYLOAD_CONTRACT }), context));
+  payload.fields[0].claims[0].supports.push(structuredClone(payload.fields[0].claims[0].supports[0]));
+  await assert.rejects(parseClinicalCallNoteResponse(response(), context), /own exact retained/);
+});
+test("a complete-response byte receipt is mandatory and never inferred from provider metadata", async () => {
+  const { context, response } = await fixture();
+  for (const receipt of [undefined, {}, { response_sha256: "wrong" }, { response_sha256: "a".repeat(64), complete: false }]) {
+    await assert.rejects(parseProvider(response(), context, receipt));
+  }
 });

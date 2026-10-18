@@ -49,7 +49,30 @@ end $$;
 create function pg_temp.cgn_result(p_job uuid)returns jsonb language plpgsql as $$
 declare j clinical_note_jobs;b clinical_call_note_bindings;begin
  select *into j from clinical_note_jobs where id=p_job;select *into b from clinical_call_note_bindings where job_id=p_job;
- return jsonb_build_object('request_id','synthetic-call-request','contract_version','clinical-call-note-result-v1','prompt_version','lrv-call-note-fields-v1','response_id','synthetic-call-response','requested_model','gpt-6-luna','provider_model','gpt-6-luna','job_id',j.id,'source_id',b.call_source_id,'source_manifest_sha256',b.call_source_sha256,'projection_sha256',j.source_sha256,'source_capture_policy_version',b.source_capture_policy_version,'call_generation_policy_version',b.call_generation_policy_version,'note_policy_version',j.policy_version,'template_id',j.template_id,'template_version',j.template_version,'template_sha256',j.template_hash,'veterinary_context',jsonb_build_object('version','lrv-vet-en-v1','bundle_sha256',repeat('b',64),'request_sha256',repeat('c',64)),'payload',pg_temp.cgn_payload(b.call_source_id));
+ return jsonb_build_object('request_id','synthetic-call-request','contract_version','clinical-call-note-result-v2','prompt_version','lrv-call-note-fields-v2','response_id','synthetic-call-response','requested_model','gpt-6-luna','provider_model','gpt-6-luna','job_id',j.id,'source_id',b.call_source_id,'source_manifest_sha256',b.call_source_sha256,'projection_sha256',j.source_sha256,'source_capture_policy_version',b.source_capture_policy_version,'call_generation_policy_version',b.call_generation_policy_version,'note_policy_version',j.policy_version,'template_id',j.template_id,'template_version',j.template_version,'template_sha256',j.template_hash,'veterinary_context',jsonb_build_object('version','lrv-vet-en-v1','bundle_sha256',repeat('b',64),'request_sha256',repeat('c',64)),'provider_evidence',jsonb_build_object('provider_contract_version','clinical-call-note-provider-payload-v2','resolver_version','lrv-call-unique-literal-v1','response_sha256',repeat('d',64),'output_text_sha256',repeat('e',64)),'payload',pg_temp.cgn_payload(b.call_source_id));
+end $$;
+
+
+-- Explicit owner-seeded historical adaptation of a completed packet. This does not
+-- claim a new provider result; no old row, trigger, grant or manifest is rewritten.
+create function pg_temp.cgn_seed_legacy(p_job uuid)returns jsonb language plpgsql as $$
+declare j clinical_note_jobs;a clinical_note_attempts;b clinical_call_note_bindings;
+ p clinical_dictation_proposals;g clinical_note_generations;old_proposal uuid;old_job uuid;new_job uuid:=gen_random_uuid();new_attempt uuid:=gen_random_uuid();begin
+ select *into j from clinical_note_jobs where id=p_job;old_proposal:=j.proposal_id;old_job:=j.id;
+ select *into a from clinical_note_attempts where id=old_proposal;
+ select *into b from clinical_call_note_bindings where job_id=old_job;
+ select *into p from clinical_dictation_proposals where id=old_proposal;
+ select *into g from clinical_note_generations where job_id=old_job;
+ if j.id is null or a.state<>'completed' or g.job_id is null then raise exception 'Completed synthetic seed required';end if;
+ p.id:=new_attempt;insert into clinical_dictation_proposals select p.*;
+ j.id:=new_job;j.proposal_id:=new_attempt;j.created_at:=clock_timestamp()-interval'2 hours';insert into clinical_note_jobs select j.*;
+ b.job_id:=new_job;b.created_at:=j.created_at;insert into clinical_call_note_bindings select b.*;
+ a.id:=new_attempt;a.job_id:=new_job;a.intent:=jsonb_set(a.intent,'{job_id}',to_jsonb(new_job));a.created_at:=j.created_at;
+ a.result:=(a.result-'provider_evidence')||jsonb_build_object('contract_version','clinical-call-note-result-v1','prompt_version','lrv-call-note-fields-v1','job_id',new_job);
+ a.result_hash:=public.clinical_recap_hash(a.result);insert into clinical_note_attempts select a.*;
+ g.job_id:=new_job;g.attempt_id:=new_attempt;g.proposal_id:=new_attempt;g.manifest:=a.result-'payload';g.created_at:=j.created_at;insert into clinical_note_generations select g.*;
+ insert into clinical_note_events(job_id,attempt_id,actor_id,kind,details,created_at)values(new_job,new_attempt,j.actor_id,'completed',jsonb_build_object('result_hash',a.result_hash),j.created_at);
+ return jsonb_build_object('job_id',new_job,'attempt_id',new_attempt,'result',a.result);
 end $$;
 
 -- END GUARDED CALL GENERATION FIXTURES
@@ -93,6 +116,17 @@ select ok(dispatch_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_t
 select ok(not dispatch_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid),'Repeated dispatch cannot send again');
 select throws_ok($$select fail_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid,false,'provider_rejected','{"http_status":400.5}')$$,null,null,'Fractional HTTP diagnostic cannot be silently coerced');
 select throws_ok($$select fail_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid,false,'provider_rejected','{"retry_after_seconds":0.5}')$$,null,null,'Fractional retry delay cannot be silently coerced');
+select throws_ok(format('select fail_clinical_call_note_v1(%L::uuid,%L::uuid,false,%L,%L::jsonb)',pg_temp.cgn('job')#>>'{}',pg_temp.cgn('attempt')#>>'{}','provider_response_contract_failed',jsonb_build_object('provider_response_sha256',value)),null,null,label)
+from(values ('null'::jsonb,'Null complete-response digest refused'),('42'::jsonb,'Numeric complete-response digest refused'),('"not-a-digest"'::jsonb,'Malformed complete-response digest refused'),(to_jsonb(repeat('A',64)),'Noncanonical uppercase complete-response digest refused'))bad(value,label);
+select throws_ok(format('select finish_clinical_call_note_v1(%L::uuid,%L::uuid,%L::jsonb)',pg_temp.cgn('job')#>>'{}',pg_temp.cgn('attempt')#>>'{}',(pg_temp.cgn('result')-'provider_evidence')||'{"contract_version":"clinical-call-note-result-v1","prompt_version":"lrv-call-note-fields-v1"}'::jsonb),null,null,'Fresh attempt cannot finish with historical v1 manifest');
+select throws_ok(format('select finish_clinical_call_note_v1(%L::uuid,%L::uuid,%L::jsonb)',pg_temp.cgn('job')#>>'{}',pg_temp.cgn('attempt')#>>'{}',pg_temp.cgn('result')-'provider_evidence'),null,null,'New v2 result requires provider evidence');
+select throws_ok(format('select finish_clinical_call_note_v1(%L::uuid,%L::uuid,%L::jsonb)',pg_temp.cgn('job')#>>'{}',pg_temp.cgn('attempt')#>>'{}',jsonb_set(pg_temp.cgn('result'),'{provider_evidence}',pg_temp.cgn('result')->'provider_evidence'||'{"raw_response":"private text must not be retained"}'::jsonb)),null,null,'Extra provider evidence metadata refused');
+reset role;
+insert into cgn_fx select'repeated_support',jsonb_build_object('segment_ordinal',1,'segment_sha256',s.document#>>'{segments,0,text_sha256}','from',public.clinical_note_text_length(substr(s.document#>>'{segments,0,text}',1,strpos(s.document#>>'{segments,0,text}','o')-1)),'to',public.clinical_note_text_length(substr(s.document#>>'{segments,0,text}',1,strpos(s.document#>>'{segments,0,text}','o')-1))+1,'quote','o')from clinical_call_sources s where id=(pg_temp.cgn('source')#>>'{}')::uuid;
+insert into cgn_fx select'repeated_result',jsonb_set(pg_temp.cgn('result'),'{payload,fields,0,claims,0,supports,0}',pg_temp.cgn('repeated_support'));
+select lives_ok($$select clinical_call_note_assemble_v1(v.definition,s.document,pg_temp.cgn('repeated_result')->'payload')from clinical_note_template_versions v,clinical_call_sources s where v.template_id='e7000000-0000-4000-8000-000000000001'and v.version=1 and s.id=(pg_temp.cgn('source')#>>'{}')::uuid$$,'Unchanged canonical assembler still accepts an explicit repeated literal range');
+set local role service_role;
+select throws_ok($$select finish_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid,pg_temp.cgn('repeated_result'))$$,'PT422','New provider quote requires one exact segment-local occurrence','New v2 finish rejects repeated quote despite canonical-valid explicit range');
 select throws_ok($$select finish_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid,jsonb_set(pg_temp.cgn('result'),'{payload,fields,0,claims,0,supports,0,from}','1'))$$,null,null,'SQL refuses UTF16 range splitting emoji');
 select throws_ok($$select finish_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid,jsonb_set(pg_temp.cgn('result'),'{source_manifest_sha256}',to_jsonb(repeat('f',64))))$$,null,null,'SQL refuses wrong frozen source manifest');
 select throws_ok($$select finish_clinical_call_note_v1((pg_temp.cgn('job')#>>'{}')::uuid,(pg_temp.cgn('attempt')#>>'{}')::uuid,jsonb_set(pg_temp.cgn('result'),'{payload,fields,0,claims,0,supports,0,quote}','"forged excerpt"'))$$,null,null,'SQL refuses quote not matching its own segment');
@@ -109,6 +143,15 @@ from(values
  ('{payload,fields,0,status}'::text[],'"uncertain"'::jsonb,'Uncertain field needs explicit uncertainty'),
  ('{payload,fields,0,field_id}'::text[],'"objective"'::jsonb,'Pinned field order/identity cannot change'),
  ('{payload,fields,0,claims,0,supports}'::text[],'[]'::jsonb,'Each claim needs its own evidence'),
+ ('{contract_version}'::text[],'"clinical-call-note-result-v1"'::jsonb,'New result rejects historical contract version'),
+ ('{prompt_version}'::text[],'"lrv-call-note-fields-v1"'::jsonb,'New result rejects historical prompt version'),
+ ('{provider_evidence}'::text[],'null'::jsonb,'Null provider evidence refused'),
+ ('{provider_evidence,provider_contract_version}'::text[],'"clinical-call-note-payload-v1"'::jsonb,'Provider contract cannot use canonical payload version'),
+ ('{provider_evidence,resolver_version}'::text[],'"invented-resolver"'::jsonb,'Unknown resolver version refused'),
+ ('{provider_evidence,response_sha256}'::text[],'null'::jsonb,'Null response digest refused'),
+ ('{provider_evidence,response_sha256}'::text[],'42'::jsonb,'Numeric response digest refused'),
+ ('{provider_evidence,response_sha256}'::text[],'"malformed"'::jsonb,'Malformed response digest refused'),
+ ('{provider_evidence,output_text_sha256}'::text[],to_jsonb(repeat('A',64)),'Noncanonical output-text digest refused'),
  ('{template_sha256}'::text[],to_jsonb(repeat('f',64)),'Pinned template digest cannot change'),
  ('{note_policy_version}'::text[],'1'::jsonb,'General note policy cannot change in result'),
  ('{call_generation_policy_version}'::text[],'1'::jsonb,'Call-generation policy cannot change in result'),
@@ -126,6 +169,17 @@ select is(pg_temp.cgn('finished')#>>'{proposal,actor_name}','Staff member','Over
 select is(pg_temp.cgn('finished')#>>'{proposal,sections,objective,text}','','Other-patient claims remain private and ineligible');
 select ok(pg_temp.cgn('finished')#>>'{proposal,sections,subjective,text}'like'%Owner reports historical vomiting%','Selected-patient draft is assembled');
 select is((select count(*)::integer from clinical_note_generations where job_id=(pg_temp.cgn('job')#>>'{}')::uuid),1,'One immutable generation retained');
+insert into cgn_fx select'legacy',pg_temp.cgn_seed_legacy((pg_temp.cgn('job')#>>'{}')::uuid);
+set local role service_role;
+insert into cgn_fx select'legacy_replayed',finish_clinical_call_note_v1((pg_temp.cgn('legacy')->>'job_id')::uuid,(pg_temp.cgn('legacy')->>'attempt_id')::uuid,pg_temp.cgn('legacy')->'result');
+select is(pg_temp.cgn('legacy_replayed')#>>'{generation,manifest,contract_version}','clinical-call-note-result-v1','Completed historical v1 result remains recoverable after v2 migration');
+select throws_ok(format('select finish_clinical_call_note_v1(%L::uuid,%L::uuid,%L::jsonb)',pg_temp.cgn('legacy')->>'job_id',pg_temp.cgn('legacy')->>'attempt_id',jsonb_set(pg_temp.cgn('legacy')->'result','{request_id}','"tampered-replay"')), 'PT409',null,'Historical replay still requires exact immutable original result hash');
+reset role;
+set local role authenticated;
+select is(read_clinical_call_note_processing_v1(auth.uid(),(pg_temp.cgn('legacy')->>'job_id')::uuid),pg_temp.cgn('legacy_replayed'),'Authorized historical read preserves complete v1 packet');
+reset role;
+select ok(not has_function_privilege('anon','finish_clinical_call_note_v1(uuid,uuid,jsonb)','execute')and not has_function_privilege('authenticated','finish_clinical_call_note_v1(uuid,uuid,jsonb)','execute')and has_function_privilege('service_role','finish_clinical_call_note_v1(uuid,uuid,jsonb)','execute'),'Replacement finish preserves service-only grants');
+select ok(not has_function_privilege('anon','fail_clinical_call_note_v1(uuid,uuid,boolean,text,jsonb)','execute')and not has_function_privilege('authenticated','fail_clinical_call_note_v1(uuid,uuid,boolean,text,jsonb)','execute')and has_function_privilege('service_role','fail_clinical_call_note_v1(uuid,uuid,boolean,text,jsonb)','execute'),'Replacement failure preserves service-only grants');
 insert into cgn_fx select'review_request',jsonb_build_object('expected_version',1,'proposal_id',pg_temp.cgn('attempt'),'decision','accepted','accepted_sections',jsonb_build_object('subjective','Clinician reviewed owner-reported historical vomiting.'),'review_note','Synthetic review only','attest_reviewed',true);
 set local role authenticated;
 select throws_ok($$select save_clinical_dictation_action(auth.uid(),gen_random_uuid(),'review',pg_temp.cgn('review_request')||jsonb_build_object('pet_id',pg_temp.cgn('base')->'pet','encounter_id',pg_temp.cgn('base')->'encounter'))$$,'PT403',null,'Generic review cannot accept actual call proposal');
@@ -150,7 +204,7 @@ do $$begin for n in 1..11 loop perform reserve_clinical_call_note_v1(auth.uid(),
 select throws_ok($$select reserve_clinical_call_note_v1(auth.uid(),gen_random_uuid(),(pg_temp.cgn('request')||'{"expected_version":2}'::jsonb))$$,'PT409','Note generation reservation limit reached','Thirteenth call reservation in an hour is refused');
 select is(reserve_clinical_call_note_v1(auth.uid(),(pg_temp.cgn('job')#>>'{}')::uuid,pg_temp.cgn('request'))#>>'{job,id}',pg_temp.cgn('job')#>>'{}','Existing reservation replay remains available after quota is full');
 reset role;
-select is((select count(*)::integer from clinical_note_jobs where actor_id='e9000000-0000-4000-8000-000000000001'),12,'Hourly quota has exactly twelve retained admitted jobs');
+select is((select count(*)::integer from clinical_note_jobs where actor_id='e9000000-0000-4000-8000-000000000001'and created_at>clock_timestamp()-interval'1 hour'),12,'Hourly quota has exactly twelve retained admitted jobs');
 -- Owner-seeded historical rows isolate the independent daily budget from hourly limits.
 insert into user_roles(user_id,role)values('e9000000-0000-4000-8000-000000000002','ADMIN')on conflict do nothing;
 do $$declare j clinical_note_jobs;b clinical_call_note_bindings;begin

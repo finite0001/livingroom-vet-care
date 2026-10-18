@@ -1,5 +1,5 @@
 /** Fictional semantic inventory, frozen before provider requests; not medical guidance. */
-export const CALL_EVALUATION_REVISION = "lrv-call-fidelity-ten-v1";
+export const CALL_EVALUATION_REVISION = "lrv-call-fidelity-ten-v2";
 export interface EvaluationFact {
   id: string;
   meaning: string;

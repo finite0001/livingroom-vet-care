@@ -42,7 +42,7 @@ async function rpc(name: string, args: Record<string, unknown>) {
 }
 const baseline = sql("select jsonb_build_object('outbox',(select count(*)from communication_outbox),'payments',(select count(*)from payment_provider_profiles),'generation',(select count(*)from operational_task_generation_policy where enabled),'reconciliation',(select count(*)from operational_reconciliation_policy where enabled));");
 try {
-  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "203");
+  check(sql("select count(*)from supabase_migrations.schema_migrations;"), "204");
   const email = "synthetic-stock-" + randomUUID() + "@example.test", password = randomUUID() + randomUUID();
   const created = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error) throw created.error;

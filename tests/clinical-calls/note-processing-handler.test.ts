@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import type { z } from "zod";
 import {
   createClinicalCallNoteHandler,
@@ -76,9 +76,13 @@ async function harness(text?: string) {
       assert.equal(input.segments[0].text, fixture.read.source.document.segments[0].text);
       assert.ok(options?.signal);
       if (controls.behavior === "timeout") throw Error("Synthetic network outcome unknown");
-      if (controls.behavior === "body_lost") return new Response(new ReadableStream({ start(controller) {
-        controller.enqueue(new TextEncoder().encode('{"id":')); controller.error(Error("Private source-bearing interruption"));
-      } }));
+      if (controls.behavior === "body_lost") {
+        let reads = 0;
+        return new Response(new ReadableStream({ pull(controller) {
+          if (reads++ === 0) controller.enqueue(new TextEncoder().encode('{"id":'));
+          else controller.error(Error("Private source-bearing interruption"));
+        } }));
+      }
       if (controls.behavior === "oversized") return new Response("x".repeat(512001));
       if (controls.behavior === "server_error" || controls.behavior === "rate_limit") {
         return new Response(JSON.stringify({ error: { code: "quota_exceeded", message: "PRIVATE SOURCE TEXT", secret: "PRIVATE" } }), {
@@ -86,6 +90,8 @@ async function harness(text?: string) {
           headers: { "x-request-id": "req_private_outcome", "retry-after": "17" },
         });
       }
+      if (controls.behavior === "pretty_json") return new Response(" \n" + JSON.stringify(fixture.response(), null, 2) + "\n\t");
+      if (controls.behavior === "invalid_utf8") return new Response(new Uint8Array([255, 0]));
       if (controls.behavior === "invalid_json") return new Response("not JSON");
       if (controls.behavior === "incomplete") return new Response(JSON.stringify({ ...fixture.response(), status: "incomplete" }));
       if (controls.behavior === "bad_citation") {
@@ -238,6 +244,7 @@ test("known provider refusal keeps only bounded metadata and incomplete or inval
     assert.equal(fixture.failures[0].uncertain, false);
     if (behavior === "rate_limit") assert.deepEqual(fixture.failures[0].details, {
       http_status: 429, request_id: "req_private_outcome", retry_after_seconds: 17, provider_code: "quota_exceeded",
+      provider_response_sha256: createHash("sha256").update(JSON.stringify({ error: { code: "quota_exceeded", message: "PRIVATE SOURCE TEXT", secret: "PRIVATE" } })).digest("hex"),
     });
     assert.equal(JSON.stringify(fixture.failures).includes("PRIVATE"), false);
     assert.equal(fixture.read.proposal, null);
@@ -252,4 +259,31 @@ test("authority lost after provider completion never returns private history or 
   assert.equal(body.includes(fixture.read.source.document.segments[0].text), false);
   assert.equal(fixture.counts.providers, 1);
   assert.equal(fixture.counts.finishes, 2);
+});
+
+test("response provenance hashes exact complete HTTP bytes separately from decoded assistant text", async () => {
+  const fixture = await harness(); fixture.controls.behavior = "pretty_json";
+  assert.equal((await fixture.run()).status, 200);
+  const result = fixture.read.generation!.manifest;
+  assert.equal(result.contract_version, "clinical-call-note-result-v2");
+  if (result.contract_version !== "clinical-call-note-result-v2") throw Error("New result required.");
+  const exact = " \n" + JSON.stringify(fixture.response(), null, 2) + "\n\t";
+  assert.equal(result.provider_evidence.response_sha256, createHash("sha256").update(exact).digest("hex"));
+  assert.notEqual(result.provider_evidence.response_sha256, createHash("sha256").update(JSON.stringify(fixture.response())).digest("hex"));
+  assert.equal(result.provider_evidence.output_text_sha256, createHash("sha256").update(fixture.response().output[0].content[0].text).digest("hex"));
+});
+test("complete invalid JSON, UTF8 and quote evidence keep only a byte digest; partial bytes never claim a complete digest", async () => {
+  for (const behavior of ["invalid_json", "invalid_utf8", "bad_citation", "body_lost", "oversized"]) {
+    const fixture = await harness(); fixture.controls.behavior = behavior;
+    assert.equal((await fixture.run()).status, ["body_lost", "oversized"].includes(behavior) ? 503 : 422);
+    const details = fixture.failures[0].details;
+    if (["body_lost", "oversized"].includes(behavior)) assert.equal("provider_response_sha256" in details, false);
+    else {
+      assert.deepEqual(Object.keys(details), ["provider_response_sha256"]);
+      assert.match(String(details.provider_response_sha256), /^[a-f0-9]{64}$/);
+      if (behavior === "invalid_json") assert.equal(details.provider_response_sha256, createHash("sha256").update("not JSON").digest("hex"));
+      if (behavior === "invalid_utf8") assert.equal(details.provider_response_sha256, createHash("sha256").update(new Uint8Array([255, 0])).digest("hex"));
+    }
+    assert.equal(fixture.read.proposal, null); assert.equal(fixture.counts.providers, 1);
+  }
 });
