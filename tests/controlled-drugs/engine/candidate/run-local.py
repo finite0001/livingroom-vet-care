@@ -48,7 +48,7 @@ def sql(query):
 
 files=sorted((root/'supabase/migrations').glob('*.sql'))
 assert len(files)==203,'Candidate targets the exact 203-migration release; review before rebasing'
-inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[
+inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[source/'trusted-prior-189.json',
  root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql']
 hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in inputs}
 proof={}
@@ -102,7 +102,21 @@ enabled = false
  for name in ['source-reader.sql','source-effects.sql']:
   parts.append((source.parent/name).read_text().replace('pg_temp.controlled_stock_','public.controlled_stock_'))
  parts.extend((source/(name+'.sql')).read_text()for name in ['posting','constraints','entry','protocol','guards','seal'])
- install='begin;\n'+'\n'.join(parts)
+ # The expected catalog is independently retained from the original canonical
+ # 189 replay, never rebuilt from this candidate or a deployed catalog. Newer
+ # migrations may coexist only if the scoped metadata still equals that pin.
+ reference=(source/'trusted-prior-189.json').read_bytes()
+ assert hashlib.sha256(reference).hexdigest()=='7c39d7d55b7aed8f11159555bbcd880c5910b1fa2891e495c28d2a1b6dbc5ac1','Original trusted reference changed; review its independent provenance'
+ trusted=json.loads(reference)
+ migration_sources={p.name:hashlib.sha256(p.read_bytes()).hexdigest()for p in files}
+ trusted_sources={p.name:migration_sources[p.name]for p in files[:189]}
+ assert trusted['migration_count']==189 and trusted['migration_source_set_sha256']==hashlib.sha256(json.dumps(trusted_sources,sort_keys=True).encode()).hexdigest(),'Trusted prior migration prefix changed; review the upgrade baseline'
+ prior_sql=(source/'prior-snapshot.sql').read_text()
+ assert trusted['snapshot_sql_sha256']==hashlib.sha256(prior_sql.encode()).hexdigest(),'Prior snapshot coverage changed; review the baseline'
+ expected="'"+json.dumps(trusted['definition']).replace("'","''")+"'::jsonb"
+ barrier='begin;\nselect pg_advisory_xact_lock(90271040,0);\n'
+ preflight=prior_sql+"\ndo $$begin if pg_temp.controlled_stock_prior_snapshot()is distinct from "+expected+" then raise exception 'Controlled upgrade prior definitions or grants drifted; review required'using errcode='23514';end if;end $$;\n"
+ install=barrier+preflight+'\n'.join(parts)
  install=install.replace('set search_path=public,pg_temp as $$',"set search_path=public,pg_temp set timezone='UTC' as $$")
  install+='''
 do $$declare r record;d jsonb;begin
@@ -116,6 +130,27 @@ end $$;
 select controlled_stock_manifest_required();commit;
 '''
  (result_dir/'assembled-local-only.sql').write_text(install)
+ drift_cases={
+  'helper_definition':"alter function public.stock_writer_current()set statement_timeout='200ms';",
+  'private_helper_grant':'grant execute on function public.stock_writer_current()to authenticated;',
+  'private_relation_rls':'alter table public.stock_writer_admissions disable row level security;',
+  'immutable_trigger':'alter table public.stock_movement_sources disable trigger immutable;',
+ }
+ for kind,mutation in drift_cases.items():
+  failed=subprocess.run(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],
+   input=install.replace(barrier,barrier+mutation+'\n',1),capture_output=True,text=True,cwd=root,timeout=90)
+  log.write('OWNED PRIOR DRIFT '+kind+'\n'+failed.stdout+failed.stderr+'\n');log.flush()
+  assert failed.returncode!=0 and 'Controlled upgrade prior definitions or grants drifted; review required'in failed.stderr,'Prior drift was not rejected: '+kind
+  assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and left(relname,17)='controlled_stock_';").strip()=='0','Rejected upgrade left persistent engine schema'
+  restored=json.loads(sql(prior_sql+'select pg_temp.controlled_stock_prior_snapshot();').splitlines()[-1])
+  assert restored==trusted['definition'],'Rejected upgrade left prior metadata changes: '+kind
+ proof['trusted_prior_upgrade']={'functions':len(trusted['definition']['functions']),'relations':len(trusted['definition']['relations']),
+  'definition_hash':trusted['definition_hash'],'trusted_reference_sha256':hashlib.sha256(reference).hexdigest(),
+  'trusted_migration_prefix':189,'current_replayed_migrations':len(files),'trusted_reference_regenerated':False,
+  'trusted_migration_source_set_sha256':trusted['migration_source_set_sha256'],
+  'current_migration_source_set_sha256':hashlib.sha256(json.dumps(migration_sources,sort_keys=True).encode()).hexdigest(),
+  'current_scoped_metadata_equals_original_reference':True,'drift_failures':list(drift_cases),'atomic_rollback_verified':True,'exclusive_barrier_before_preflight':True}
+ print('Trusted prior metadata: four drift cases rejected before engine schema; exact rollback verified.',flush=True)
  sql(install)
  assert sql("select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;").strip()==roots
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
