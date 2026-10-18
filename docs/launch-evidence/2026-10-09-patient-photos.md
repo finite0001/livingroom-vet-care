@@ -1,6 +1,6 @@
 # Patient identity photos — implementation and release checks
 
-Requirement N17 / plan phase 1B. This is a candidate implementation; hosted rollout and practice acceptance remain pending.
+Requirement N17 / plan phase 1B. Merged in PR #232 and deployed to staging and primary. [Hosted rollout receipt](2026-10-09-patient-photo-rollout.md). Practice acceptance remains pending.
 
 ## Behavior
 
