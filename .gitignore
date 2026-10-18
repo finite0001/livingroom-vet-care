@@ -46,4 +46,6 @@ test-results/
 # Private complete call-source receipts, screenshots and local verification artifacts.
 /tmp/clinical-call-*
 /tmp/clinical-calls-*
+/tmp/call-fidelity-*
+/tmp/call-provider-*
 /tests/clinical-calls/__pycache__/

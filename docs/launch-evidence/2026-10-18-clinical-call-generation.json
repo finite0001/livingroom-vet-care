@@ -1,7 +1,7 @@
 {
   "date_utc": "2026-10-18",
   "increment": "Phase 3B.2 guarded call generation and private clinical review",
-  "state": "implemented; new PR pending review; clinical processing remains disabled",
+  "state": "PR 274 merged and staging/primary/frontend deployed; call processing remains disabled",
   "migration_count": 203,
   "migration_sha256": "ccb3c9460a20da848fd0fd262facf58ae8249b3ce6b4d869f2d41963bf71eb72",
   "prior_release": {
@@ -153,5 +153,7 @@
     "tests/clinical-call-generation/browser-proof.ts": "f1f719b6a2a4893761f85aef5d38e99fdd03b04040c6dc370d102be112f2d5da",
     "tests/clinical-call-generation/disposable.py": "1a2f8f33998b540c656f136105117d4ebfb2b1e216c69c6d0b24a63cba94f617",
     "tests/clinical-call-generation/worker-roundtrip.ts": "323354aeb70b73cfa097c4fd7673dbe064f316115ba51a4ae636e508d8cccbbf"
-  }
+  },
+  "release_receipt": "2026-10-18-clinical-call-generation-primary-rollout.json",
+  "release_merge_sha": "2a21c4591ff7ac753cbd0c944ea28444b98954c8"
 }

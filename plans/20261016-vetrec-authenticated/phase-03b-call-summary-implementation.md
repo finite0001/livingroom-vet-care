@@ -176,7 +176,8 @@ No deletion planned. No new CloudTalk outbound dialer or Messages synchronizatio
 - [x] 3A exact released schema/ACL/source proof confirmed at PR 271 merge `9a192f23b8b0509019f1571861f8c51ce9b6b97d`; primary has 201 migrations and the source capture gate remains off.
 - [x] 3B.1 access and database-first compatibility passed locally and on staging; no call admission API exists.
 - [x] 3B.1 exact-head CI, specific PR merge approval and primary additive rollout complete before 3B.2 admission is introduced; PR 272 merged `4be71331`, primary202 verified, capture/generation off.
-- [x] 3B.2 deterministic + actual local end-to-end proof passes with no automatic signature/billing/delivery; new PR and hosted rollout remain pending approval.
+- [x] 3B.2 local proof, exact-head CI and specifically approved PR 274 rollout complete: merge `2a21c4591ff7ac753cbd0c944ea28444b98954c8`; staging/primary203, JWT worker source/grants and exact Vercel production deployment verified. Capture/generation remain off; no clinical activation. See [rollout evidence](../../docs/launch-evidence/2026-10-18-clinical-call-generation-primary-rollout.md).
+- [x] 3B.3 offline preparation complete: ten frozen fictional cases, exact production requests, raw outcome/review CLI, generated protected probes and injected safeguards. No real provider or clinical fidelity pass claimed. See [preparation evidence](../../docs/launch-evidence/2026-10-18-clinical-call-fidelity-preparation.md).
 - [ ] 3B.3 complete bounded synthetic evaluation passes; failures remain preserved and Susan independently adjudicates clinical fidelity.
 - [ ] Susan approves OpenAI call processing/retention and the private-source versus accepted-chart distinction. Existing approvals are not reused implicitly.
 - [ ] Authorized CloudTalk account behavior and real sample access are commissioned separately; Phase 3A synthetic two-pass tests are not proof of account entitlement or atomic remote revision support.

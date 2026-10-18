@@ -1,0 +1,293 @@
+{
+  "date_utc": "2026-10-18",
+  "pr": 274,
+  "state": "staging_primary_backend_and_exact_merge_frontend_deployed_default_off",
+  "head_sha": "034ee3c8b7fc49e76d5079667121b1d5ae60e5ef",
+  "merge_sha": "2a21c4591ff7ac753cbd0c944ea28444b98954c8",
+  "merged_at": "2026-10-18T05:11:31Z",
+  "ci": {
+    "run": 39097285696,
+    "head_sha": "034ee3c8b7fc49e76d5079667121b1d5ae60e5ef",
+    "conclusion": "success",
+    "jobs": {
+      "diagnostic-renderer": "success",
+      "edge": "success",
+      "frontend": "success",
+      "database": "success"
+    },
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/39097285696"
+  },
+  "migration": {
+    "version": "20261018032610",
+    "count": 203,
+    "sha256": "ccb3c9460a20da848fd0fd262facf58ae8249b3ce6b4d869f2d41963bf71eb72"
+  },
+  "targets": {
+    "staging": {
+      "project_ref": "kothoqicubowyhwfsrte",
+      "database": {
+        "project": "kothoqicubowyhwfsrte",
+        "migrations": 203,
+        "latest": "20261018032610",
+        "original_tables_preserved": 397,
+        "original_routines_preserved": 1331,
+        "original_metadata_permissions_preserved": true,
+        "new_routines_source_owner_acl_verified": 24,
+        "authenticated_rpcs": 13,
+        "service_transitions": 3,
+        "private_helpers": 8,
+        "new_table_private_rls_no_direct_access": true,
+        "new_fk_indexes_verified": 2,
+        "migration203_source_matches": true,
+        "gates": {
+          "actions": 0,
+          "bindings": 0,
+          "capture_policy": "draft",
+          "generation_policy": "draft"
+        },
+        "scheduler_appends_prefix_verified": {},
+        "clinical_writes": 0,
+        "provider_calls": 0
+      },
+      "edge": {
+        "project": "kothoqicubowyhwfsrte",
+        "existing_edge_functions_unchanged": 54,
+        "new_function": {
+          "id": "2ffb0232-411c-4518-9272-b1f342a467f3",
+          "slug": "clinical-call-note-process",
+          "version": 1,
+          "verify_jwt": true,
+          "status": "ACTIVE",
+          "ezbr_sha256": "b483903bdcc28988cd32b4c20c5dd9f4703142666b91b359730ca9acc5c4a12b"
+        },
+        "downloaded_source_files_exact": {
+          "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+          "supabase/functions/_shared/clinical-call-note-handler.ts": "b56073dab2a403e149b85b13203b2a998034a0eb58fbcf2b58fedf12a5d9d801",
+          "supabase/functions/_shared/clinical-note-model.ts": "43903f3f18c0ec8a234417a55ed2089b058ac772820d346dc851b8608768cf80",
+          "supabase/functions/_shared/clinical-call-note-model.ts": "99b992a7dc0824d81acfcd1c5db15d7f85e6840f41ca55e0ae9f676a91e3b6b2",
+          "supabase/functions/_shared/clinical-call-model.ts": "e74057e5d2645c97b5df0475625a2776277aeb9ea1f4aa4d34da02090a321a08",
+          "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+          "supabase/functions/_shared/clinical-call-note-processing-model.ts": "1e3b328c40401f77294e461d9733a05c5f3f31a8ed2bbbbb791d5564682d537f",
+          "supabase/functions/_shared/clinical-call-note-provider.ts": "859c644e38646490a791e0554b34a309b0603bef24bec740bd7a26b377ab67ab",
+          "supabase/functions/clinical-call-note-process/deno.json": "a03278169495625b745a70f27ee50478a15244cb5ba8cc21f82e8c03da021a47",
+          "supabase/functions/clinical-call-note-process/index.ts": "6904aab2e27afb3eaa1309920bbd3b5bfce860698ffa7a8193b19c3556ad2c0f"
+        },
+        "secret_names_digests_and_custom_metadata_unchanged": true,
+        "builtin_secret_timestamps_refreshed_by_deployment": true,
+        "call_flags_absent": true,
+        "unauthenticated_and_invalid_token_status": [
+          401,
+          401
+        ],
+        "clinical_writes": 0,
+        "provider_calls": 0
+      },
+      "no_session_read_denied": true,
+      "security_advisors": {
+        "baseline": 573,
+        "after": 586,
+        "prior_findings_unchanged": true,
+        "added_warning_count": 13,
+        "added_warning_kind": "authenticated_security_definer_function_executable",
+        "added_rpc_names": [
+          "cancel_clinical_call_note_attempt_v1",
+          "cancel_clinical_call_note_policy_v1",
+          "cancel_clinical_call_note_reservation_v1",
+          "cancel_clinical_call_note_review_v1",
+          "claim_clinical_call_note_v1",
+          "read_clinical_call_note_policy_v1",
+          "read_clinical_call_note_processing_v1",
+          "read_clinical_call_note_workspace_v1",
+          "recover_clinical_call_note_policy_v1",
+          "recover_clinical_call_note_review_v1",
+          "reserve_clinical_call_note_v1",
+          "save_clinical_call_note_policy_v1",
+          "save_clinical_call_note_review_v1"
+        ],
+        "review": "Intentional authenticated entrypoints with active staff/session/administrator guards; exact source, owners and effective grants matched; no advisor suppression. Local observed authorization-race proof is in the implementation receipt.",
+        "remediation_reference": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      }
+    },
+    "primary": {
+      "project_ref": "mgadheotkdnrsatfivjy",
+      "database": {
+        "project": "mgadheotkdnrsatfivjy",
+        "baseline_phase": "before-install",
+        "migrations": 203,
+        "latest": "20261018032610",
+        "original_tables_preserved": 397,
+        "original_routines_preserved": 1331,
+        "original_metadata_permissions_preserved": true,
+        "new_routines_source_owner_acl_verified": 24,
+        "authenticated_rpcs": 13,
+        "service_transitions": 3,
+        "private_helpers": 8,
+        "new_table_private_rls_no_direct_access": true,
+        "new_fk_indexes_verified": 2,
+        "migration203_source_matches": true,
+        "gates": {
+          "actions": 0,
+          "bindings": 0,
+          "capture_policy": "draft",
+          "generation_policy": "draft"
+        },
+        "scheduler_appends_prefix_verified": {},
+        "clinical_writes": 0,
+        "provider_calls": 0
+      },
+      "edge": {
+        "project": "mgadheotkdnrsatfivjy",
+        "existing_edge_functions_unchanged": 55,
+        "new_function": {
+          "id": "09eddb00-9657-4315-90dc-47c71cc21a3f",
+          "slug": "clinical-call-note-process",
+          "version": 1,
+          "verify_jwt": true,
+          "status": "ACTIVE",
+          "ezbr_sha256": "b483903bdcc28988cd32b4c20c5dd9f4703142666b91b359730ca9acc5c4a12b"
+        },
+        "downloaded_source_files_exact": {
+          "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+          "supabase/functions/_shared/clinical-call-note-handler.ts": "b56073dab2a403e149b85b13203b2a998034a0eb58fbcf2b58fedf12a5d9d801",
+          "supabase/functions/_shared/clinical-note-model.ts": "43903f3f18c0ec8a234417a55ed2089b058ac772820d346dc851b8608768cf80",
+          "supabase/functions/_shared/clinical-call-note-model.ts": "99b992a7dc0824d81acfcd1c5db15d7f85e6840f41ca55e0ae9f676a91e3b6b2",
+          "supabase/functions/_shared/clinical-call-model.ts": "e74057e5d2645c97b5df0475625a2776277aeb9ea1f4aa4d34da02090a321a08",
+          "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6",
+          "supabase/functions/_shared/clinical-call-note-processing-model.ts": "1e3b328c40401f77294e461d9733a05c5f3f31a8ed2bbbbb791d5564682d537f",
+          "supabase/functions/_shared/clinical-call-note-provider.ts": "859c644e38646490a791e0554b34a309b0603bef24bec740bd7a26b377ab67ab",
+          "supabase/functions/clinical-call-note-process/deno.json": "a03278169495625b745a70f27ee50478a15244cb5ba8cc21f82e8c03da021a47",
+          "supabase/functions/clinical-call-note-process/index.ts": "6904aab2e27afb3eaa1309920bbd3b5bfce860698ffa7a8193b19c3556ad2c0f"
+        },
+        "secret_names_digests_and_custom_metadata_unchanged": true,
+        "builtin_secret_timestamps_refreshed_by_deployment": true,
+        "call_flags_absent": true,
+        "unauthenticated_and_invalid_token_status": [
+          401,
+          401
+        ],
+        "clinical_writes": 0,
+        "provider_calls": 0
+      },
+      "no_session_read_denied": true,
+      "security_advisors": {
+        "baseline": 573,
+        "after": 586,
+        "prior_findings_unchanged": true,
+        "added_warning_count": 13,
+        "added_warning_kind": "authenticated_security_definer_function_executable",
+        "added_rpc_names": [
+          "cancel_clinical_call_note_attempt_v1",
+          "cancel_clinical_call_note_policy_v1",
+          "cancel_clinical_call_note_reservation_v1",
+          "cancel_clinical_call_note_review_v1",
+          "claim_clinical_call_note_v1",
+          "read_clinical_call_note_policy_v1",
+          "read_clinical_call_note_processing_v1",
+          "read_clinical_call_note_workspace_v1",
+          "recover_clinical_call_note_policy_v1",
+          "recover_clinical_call_note_review_v1",
+          "reserve_clinical_call_note_v1",
+          "save_clinical_call_note_policy_v1",
+          "save_clinical_call_note_review_v1"
+        ],
+        "review": "Intentional authenticated entrypoints with active staff/session/administrator guards; exact source, owners and effective grants matched; no advisor suppression. Local observed authorization-race proof is in the implementation receipt.",
+        "remediation_reference": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      }
+    }
+  },
+  "clinical_writes": 0,
+  "real_provider_requests": 0,
+  "practice_policy_approved": false,
+  "clinical_activation": false,
+  "private_receipts_sha256": {
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-before.json": "1ab542cbf2b8ed9e52526be9155efd13cc67855baf55767fdcc4204bd5078540",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-after.json": "31aaee44b6ba5e21e32404fd228d8aeaf4df4bb3b90844045479dfacb5a9c4a3",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-db-proof.json": "16127e3f39c2f55202cb6f6bf7107239b31cad63c0395aefc8e2f3042982ff72",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-edge-before.json": "c3389185fb53de51f46f856d6811b94441bb57f0333a8a2c0ca6f14c94e0ada2",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-edge-after.json": "ed2dd0658fd428195b8803e7a98a5b067a7a2dd19d8782f916bb2d1015e5d2f0",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-secrets-before.json": "7cdf7644f0f52ccecdc8f055707d896a3014ca81aba6a6b0ea406bf26bf0941d",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-secrets-after.json": "0c327df8080166c0dd41bdc2c9451c035e39301d7bcb7346a71caae7998efbb6",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-advisors-before.json": "4432bc6bbf292b43a41745def2f2c6f0ece39fe9674d7a872b0e5cf676da885b",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-advisors-after.json": "3d4be4724e2d307b9ca35611937535ffd6e4b44c62a2f608003bfaa91847d9ec",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-edge-proof-v2.json": "bc3bcb50885b758336d909736c9e727ed96bd98dc66cadf4fa217c4e7654f865",
+    "clinical-call-generation-pr274-kothoqicubowyhwfsrte-no-session-proof.json": "8ddffa32163f4a15215e9917cba36dca036a8c0df78bf3c645966f65b3fa8f46",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-before.json": "5c71dc2f62b98ad11f8acecd9f48b8464060f6a7e743a47a97030a44bf990491",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-before-install.json": "e81df95224f9ccf55f3b9a1b39ccbbd367c451e6272363d7438d8ba73baa195f",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-after.json": "a3ab1074dff991386a5b8a7bab0f994b3d35cbab5586dd843cb081c3a5690988",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-db-proof.json": "aa47e51df7641876ebe1e41f050ca17570c2abde7a7a0330ff5f13f0bb9d2cdb",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-edge-before.json": "262f4678c33e21ada0a60f976495cc963a6d02117f51cd769d7d49912b9a385b",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-edge-after.json": "18c4f1455ef574d79bf687f32b4472cb2a677ed010ad6f02c85ea4f5212c713b",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-secrets-before.json": "d2357aedcbf1e92d0af80b51255452d1749a456c262ddaa416ec8d030daa6dc1",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-secrets-after.json": "b28a7b3804e6bd6f9fb29891a1cbd2760fe75af965801373098996fcfbd07dc2",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-advisors-before.json": "4432bc6bbf292b43a41745def2f2c6f0ece39fe9674d7a872b0e5cf676da885b",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-advisors-after.json": "3d4be4724e2d307b9ca35611937535ffd6e4b44c62a2f608003bfaa91847d9ec",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-edge-proof-v2.json": "084d48ed54161fc2cac4f6b6ed4504d682021e63ed8e372a60caa0c7f20d5637",
+    "clinical-call-generation-pr274-mgadheotkdnrsatfivjy-no-session-proof.json": "8ddffa32163f4a15215e9917cba36dca036a8c0df78bf3c645966f65b3fa8f46",
+    "clinical-call-generation-pr274-ci-final.json": "120bd56956cd4bea7aa1565ede2eded1bc850c47a3e6e6576dd9161c5811041c",
+    "clinical-call-generation-pr274-merge.json": "793c90d9bfb507143ce476e0af277d104898c4de7615784cce89c0ffe2e266dd",
+    "clinical-call-generation-invoice-corrected-proof-20261018.json": "c83d89cabfae634b4357b27ebf08ef9a0885287ecc01b12d584d9974e326bb14",
+    "clinical-call-generation-dictation-corrected-proof-20261018.json": "f4eb4a8cc369dda60329640065e476f75923d970d681403ae09001347a46f1d8",
+    "clinical-call-pr274-audio-native-count-fix-local-proof.json": "8b6d675879c89b1485352f00b909fc0cb66b26e7b6d125996f57e82c978942c1",
+    "clinical-call-pr274-notes-native-count-fix-local-proof.json": "fe3cb8f0c496baf81377204537b7e4af11ae8214dbcfbc5f729901d7c4103adf",
+    "clinical-call-generation-pr274-primary-vercel-inspect.json": "bce39e530ed86c5bc4f7b2d9eedf377f7db7a3d8c74d320026ffff806c29ad8e",
+    "clinical-call-generation-pr274-primary-github-status.json": "b96ea7c2f83fffcd282eff19992c6a7ad5a12550a352f40a10fe97f0b4c76ee5",
+    "clinical-call-generation-pr274-primary-browser-verification.json": "e787de5e832be29294987cabdb6382ae789262da68c589391d159f4664e6627a",
+    "clinical-call-generation-pr274-primary-login-1440.png": "3d5d9a96baab6817460af9916cae6a557a93a2a1f39de03005409307f947e874",
+    "clinical-call-generation-pr274-primary-login-390.png": "cabb5a8817082f2849cd624d890803a2a652e465b438aa5d548499e10e825adc"
+  },
+  "ci_regression_fix": {
+    "original_failed_run": 39095507243,
+    "cause": "Four current-runtime migration-count assertions still expected 202 after migration 203.",
+    "fix": "Update only current invoice/dictation/audio/note guards to 203; preserve historical upgrade fixtures; add AST preflight for multiline ledger-count assertions.",
+    "corrected_local_owned_runs": [
+      "invoice reminders: 57 Auth/API/SQL/restore and 24 browser checks",
+      "dictation: 27 API, 16 browser and 7 restore checks",
+      "audio: 38 API, 21 browser and 7 restore checks",
+      "notes: 31 API, 14 browser and 3 restore checks"
+    ],
+    "owned_runtimes_removed": true
+  },
+  "limits": [
+    "Unauthenticated browser smoke does not establish authenticated clinical acceptance.",
+    "Mobile Chromium viewport does not establish physical iPhone/Safari acceptance.",
+    "No real call capture, provider generation, policy approval or clinical activation occurred.",
+    "Supabase deployment refreshed built-in secret timestamps; secret names/digests and custom metadata remained unchanged."
+  ],
+  "frontend": {
+    "deployment_id": "dpl_GZZKzWcKY3A8gAQFDDtSgmQdKdFp",
+    "state": "READY",
+    "target": "production",
+    "aliases": [
+      "thelivingroom.vet",
+      "www.thelivingroom.vet",
+      "livingroom-vet-care.vercel.app",
+      "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app"
+    ],
+    "url": "livingroom-vet-care-8oj33hdez-daves-projects-e0da43ba.vercel.app",
+    "github_status_exact_merge": "success",
+    "public_browser": {
+      "target": "https://thelivingroom.vet",
+      "checks": [
+        {
+          "width": 1440,
+          "login": 200,
+          "login_rendered": true,
+          "protected_route_redirects": true,
+          "horizontal_overflow": false
+        },
+        {
+          "width": 390,
+          "login": 200,
+          "login_rendered": true,
+          "protected_route_redirects": true,
+          "horizontal_overflow": false
+        }
+      ],
+      "page_errors": [],
+      "authenticated_clinical_acceptance": false,
+      "clinical_writes": 0,
+      "real_provider_calls": 0
+    },
+    "screenshots_inspected": true
+  }
+}

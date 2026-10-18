@@ -33,6 +33,8 @@ jobs:
           node --test tests/restore/storage-metadata.test.mjs
       - name: Verify offline synthetic recap evaluation safeguards
         run: python3 -B -m unittest discover -s tests/clinical-recap -p 'test_*.py'
+      - name: Verify offline synthetic call transport safeguards
+        run: python3 -B -m unittest discover -s tests/clinical-calls -p 'test_synthetic_provider.py'
       - run: npm run check
       - run: npx playwright install --with-deps chromium
       - name: Verify built local barcode worker and simulated camera cleanup

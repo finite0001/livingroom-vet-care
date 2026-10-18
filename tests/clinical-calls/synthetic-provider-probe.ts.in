@@ -1,0 +1,141 @@
+/** Generated fixed synthetic probe: no clinical RPC, SQL or patient-record read. */
+import { callNoteProviderContextSchema, clinicalCallNoteRequest, parseClinicalCallNoteResponse } from "../_shared/clinical-call-note-provider.ts";
+import { callSha256 } from "../_shared/clinical-call-model.ts";
+const fixed = __FIXED__;
+const decode = (value: string) => Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
+const encode = (value: Uint8Array) => {
+  let binary = "";
+  for (let offset = 0; offset < value.length; offset += 16384) binary += String.fromCharCode(...value.subarray(offset, offset + 16384));
+  return btoa(binary);
+};
+const bytesSha = async (value: Uint8Array) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new Uint8Array(value)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+const requestBytes = decode(fixed.request_body_base64);
+const requestBody = new TextDecoder("utf-8", { fatal: true }).decode(requestBytes);
+const contextBytes = decode(fixed.context_base64);
+const context = callNoteProviderContextSchema.parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(contextBytes)));
+if (await bytesSha(requestBytes) !== fixed.request_sha256 || await bytesSha(contextBytes) !== fixed.context_sha256
+  || JSON.stringify(await clinicalCallNoteRequest(context)) !== requestBody || context.model !== "gpt-6-luna") throw Error("Fixed probe input differs.");
+const callFlags = ["CLINICAL_CALL_CAPTURE_ENABLED", "CLINICAL_CALL_NOTE_PROCESSING_ENABLED"];
+const flagNames = [...callFlags, "CLINICAL_AUDIO_PROCESSING_ENABLED", "CLINICAL_NOTE_PROCESSING_ENABLED", "CLINICAL_RECAP_PROCESSING_ENABLED"];
+async function flags() {
+  return await Promise.all(flagNames.map(async (name) => {
+    const value = Deno.env.get(name);
+    return { name, present: value !== undefined, enabled: value === "true", sha256: value === undefined ? null : await callSha256(value) };
+  }));
+}
+const response = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
+const base = { contract: "lrv-call-provider-probe-v1", ticket: fixed.ticket, id: fixed.id,
+  bundle_sha256: fixed.bundle_sha256, request_sha256: fixed.request_sha256, context_sha256: fixed.context_sha256,
+  transport_source_sha256: fixed.transport_source_sha256, expires_at_ms: fixed.expires_at_ms,
+  admission_sha256: fixed.admission_sha256, synthetic_only: true, hosted_clinical_reads: 0, hosted_clinical_writes: 0 };
+Deno.serve(async (incoming) => {
+  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!service || incoming.method !== "POST" || Date.now() > fixed.expires_at_ms
+    || Deno.env.get("SUPABASE_URL") !== "https://kothoqicubowyhwfsrte.supabase.co"
+    || await callSha256(incoming.headers.get("Authorization") ?? "") !== await callSha256("Bearer " + service)
+    || await callSha256(incoming.headers.get("x-evaluation-operator") ?? "") !== fixed.operator_token_sha256) return response({ error: "forbidden" }, 403);
+  if (new URL(incoming.url).search || incoming.headers.get("content-length") !== "2" || !incoming.body) return response({ error: "fixed_body_required" }, 422);
+  const inputReader = incoming.body.getReader(); let input = "", inputBytes = 0;
+  try {
+    for (;;) {
+      const next = await inputReader.read(); if (next.done) break;
+      inputBytes += next.value.length;
+      if (inputBytes > 2) { await inputReader.cancel(); return response({ error: "fixed_body_required" }, 422); }
+      input += new TextDecoder().decode(next.value);
+    }
+  } catch { return response({ error: "fixed_body_required" }, 422); }
+  finally { inputReader.releaseLock(); }
+  if (input !== "{}" || inputBytes !== 2) return response({ error: "fixed_body_required" }, 422);
+  const envFlags = await flags();
+  const action = incoming.headers.get("x-evaluation-action");
+  if (action === "attest") return response({ ...base, action, request_body_base64: fixed.request_body_base64,
+    openai_key_present: !!Deno.env.get("OPENAI_API_KEY"), flags: envFlags, flags_sha256: await callSha256(JSON.stringify(envFlags)), jwt_verification_required: true });
+  if (action !== "run") return response({ error: "fixed_action_required" }, 422);
+  if (!fixed.admission_sha256) return response({ ...base, error: "unpriced_candidate_not_executable", provider_call_count: 0 }, 403);
+  if (envFlags.some((flag) => callFlags.includes(flag.name) && flag.enabled)) return response({ ...base, error: "call_gate_enabled", provider_call_count: 0 }, 409);
+  if (incoming.headers.get("x-evaluation-flags-sha256") !== await callSha256(JSON.stringify(envFlags))) return response({ ...base, error: "flag_snapshot_changed_or_missing", provider_call_count: 0 }, 409);
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey || Date.now() + fixed.provider_timeout_ms + fixed.guard_timeout_ms >= fixed.expires_at_ms) return response({ ...base, error: "configuration_or_lifetime_refused", provider_call_count: 0 }, 409);
+  let guardOutcome = "unconfirmed";
+  try {
+    const guard = await fetch("https://kothoqicubowyhwfsrte.supabase.co/storage/v1/object/" + fixed.guard_bucket + "/" + fixed.guard_object, {
+      method: "POST", redirect: "error", headers: { Authorization: "Bearer " + service, apikey: service, "Content-Type": "application/octet-stream", "x-upsert": "false" },
+      body: new Uint8Array(), signal: AbortSignal.timeout(fixed.guard_timeout_ms),
+    });
+    // Headers are enough to establish successful creation. Never follow a redirect or retry an uncertain write.
+    guardOutcome = guard.status === 200 || guard.status === 201 ? "created" : "refused";
+    await guard.body?.cancel().catch(() => {});
+  } catch { /* An ambiguous guard write never permits provider dispatch. */ }
+  if (guardOutcome !== "created") return response({ ...base, flags: envFlags, state: "guard_" + guardOutcome,
+    guard_outcome: guardOutcome, provider_call_count: 0, response_complete: false, uncertain: false,
+    http_status: null, provider_request_id: null, raw_body_base64: "", raw_body_sha256: await bytesSha(new Uint8Array()), retained_bytes: 0,
+    observed_bytes_lower_bound: 0, parser_pass: false, parsed_result: null, error: "guard_not_confirmed" });
+  let calls = 0, httpStatus: number | null = null, requestId: string | null = null, complete = false;
+  let observed = 0, retained = 0, error: string | null = null;
+  const chunks: Uint8Array[] = [];
+  const startedAt = new Date().toISOString();
+  try {
+    if (Date.now() + fixed.provider_timeout_ms >= fixed.expires_at_ms) throw Error("Lifetime expired after guard.");
+    calls = 1; // The durable guard and this assignment precede the sole provider fetch.
+    const upstream = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST", redirect: "error", headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
+      body: requestBody, signal: AbortSignal.timeout(fixed.provider_timeout_ms),
+    });
+    httpStatus = upstream.status; requestId = upstream.headers.get("x-request-id")?.slice(0, 300) ?? null;
+    if (!upstream.body) throw Error("Response body missing.");
+    const reader = upstream.body.getReader();
+    try {
+      for (;;) {
+        const next = await reader.read();
+        if (next.done) { complete = true; break; }
+        observed += next.value.byteLength;
+        const available = Math.max(0, 512000 - retained);
+        if (available) { const piece = next.value.slice(0, available); chunks.push(piece); retained += piece.byteLength; }
+        if (observed > 512000) { error = "provider_response_oversized"; await reader.cancel().catch(() => {}); break; }
+      }
+    } finally { reader.releaseLock(); }
+  } catch { error ??= httpStatus === null ? "provider_dispatch_outcome_unconfirmed" : "provider_body_interrupted"; }
+  const raw = new Uint8Array(retained); let offset = 0;
+  for (const chunk of chunks) { raw.set(chunk, offset); offset += chunk.byteLength; }
+  // Never export a provider echo of a server secret, including split chunks or escaped JSON strings.
+  const protectedValues = [apiKey, service, incoming.headers.get("x-evaluation-operator") ?? ""].filter(Boolean);
+  let decoded: unknown = null;
+  try { decoded = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw)); }
+  catch { /* Invalid UTF8/JSON remains raw evidence unless its bytes contain a credential. */ }
+  // Bounded, conservative literal + two-round JSON-escape scan also covers malformed/interrupted JSON prefixes.
+  // This is not a universal encoded-secret detector. It can suppress ambiguous escaped text conservatively.
+  const simpleEscapes: Record<string, string> = { '"': '"', "\\": "\\", "/": "/", b: "\b", f: "\f", n: "\n", r: "\r", t: "\t" };
+  const unescapeJson = (value: string) => value.replace(/\\(?:u([0-9a-fA-F]{4})|(["\\/bfnrt]))/g, (_match, hex: string, simple: string) => hex ? String.fromCharCode(parseInt(hex, 16)) : (simpleEscapes[simple] ?? simple));
+  let escapedText = new TextDecoder().decode(raw);
+  const normalizedTexts = [escapedText];
+  for (let round = 0; round < 2; round++) { escapedText = unescapeJson(escapedText); normalizedTexts.push(escapedText); }
+  let secretEcho = false;
+  for (const secret of protectedValues) {
+    const secretBytes = new TextEncoder().encode(secret);
+    if (requestId?.includes(secret) || JSON.stringify(decoded)?.includes(secret) || normalizedTexts.some((value) => value.includes(secret))) secretEcho = true;
+    if (secretBytes.length) outer: for (let i = 0; i <= raw.length - secretBytes.length; i++) {
+      for (let j = 0; j < secretBytes.length; j++) if (raw[i + j] !== secretBytes[j]) continue outer;
+      secretEcho = true; break;
+    }
+  }
+  if (secretEcho) return response({ ...base, flags: envFlags, state: "secret_echo_redacted", guard_outcome: guardOutcome,
+    provider_call_count: calls, http_status: httpStatus, provider_request_id: null, response_complete: false,
+    upstream_body_complete: complete, uncertain: true, raw_body_base64: "", raw_body_sha256: null, retained_bytes: 0,
+    observed_bytes_lower_bound: observed, parser_pass: false, parsed_result: null, error: "secret_echo_redacted",
+    evidence_gap: "Provider bytes suppressed at protected boundary because they contained a server secret; stop remaining cases without retry." });
+  let parsed: Awaited<ReturnType<typeof parseClinicalCallNoteResponse>> | null = null;
+  if (complete && httpStatus !== null && httpStatus >= 200 && httpStatus < 300) {
+    try { parsed = await parseClinicalCallNoteResponse(decoded, context); }
+    catch { error ??= "provider_response_contract_failed"; }
+  } else if (complete) error ??= "provider_http_failed";
+  if (parsed && protectedValues.some((secret) => JSON.stringify(parsed).includes(secret))) return response({ ...base, flags: envFlags,
+    state: "secret_echo_redacted", guard_outcome: guardOutcome, provider_call_count: calls, http_status: httpStatus,
+    provider_request_id: null, response_complete: false, upstream_body_complete: complete, uncertain: true,
+    raw_body_base64: "", raw_body_sha256: null, retained_bytes: 0, observed_bytes_lower_bound: observed,
+    parser_pass: false, parsed_result: null, error: "secret_echo_redacted", evidence_gap: "Decoded provider output contained a server credential; suppress evidence and stop without retry." });
+  return response({ ...base, flags: envFlags, state: calls === 0 ? "not_dispatched" : complete ? "response_complete" : httpStatus === null ? "dispatch_uncertain" : "response_partial",
+    guard_outcome: guardOutcome, provider_call_count: calls, http_status: httpStatus, provider_request_id: requestId,
+    response_complete: complete, uncertain: calls > 0 && !complete, raw_body_base64: encode(raw), raw_body_sha256: await bytesSha(raw),
+    retained_bytes: retained, observed_bytes_lower_bound: observed, parser_pass: parsed !== null, parsed_result: parsed, error,
+    timing: { started_at: startedAt, finished_at: new Date().toISOString() } });
+});

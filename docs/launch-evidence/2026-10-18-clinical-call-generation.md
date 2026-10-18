@@ -1,6 +1,6 @@
 # Guarded call drafting and private clinical review
 
-Phase 3B.2 is implemented and locally verified; the new PR is pending review. Real call processing remains disabled. No real provider requests, hosted database writes, practice policy approvals or clinical activation were performed for this increment.
+Phase 3B.2 is implemented, merged as PR 274 and deployed to staging, primary and the exact production frontend. Real call processing remains disabled. No real provider requests, clinical writes, practice-policy approvals or activation were performed. See the [approved rollout receipt](2026-10-18-clinical-call-generation-primary-rollout.md).
 
 ## Delivered behavior
 
@@ -41,6 +41,6 @@ The owned end-to-end run used three labeled in-process provider stub responses i
 
 PR 273 was specifically approved and merged at `2df9a1c84f1fd9c8df4e374ffcfe6f5e7e306f73`. GitHub's successful Vercel status identifies deployment `dpl_2DuGBqY4fs7nmBgKY3JQAu6ppLmi`; native CLI inspection verified that exact deployment `READY`, production, on `thelivingroom.vet`, `www.thelivingroom.vet` and the project alias. That release contained pure contracts, so no database or Edge rollout was required.
 
-This new increment has not been applied to staging or primary. After specific approval of its PR, use an additive database-first rollout: verify project identity and migration/source parity; apply 203 to staging and verify the guards and disabled gates; deploy only the new JWT-protected function with processing off; repeat the verified migration/function rollout on primary; then merge the approved frontend and verify the exact Vercel commit and aliases. Preserve existing secrets and other processing/delivery gates.
+PR 274 completed that additive database-first rollout after its exact-head CI passed. Staging and primary now have migration 203 and the new JWT-protected worker with capture/generation gates absent and policies draft. Merge `2a21c4591ff7ac753cbd0c944ea28444b98954c8` is production deployment `dpl_GZZKzWcKY3A8gAQFDDtSgmQdKdFp`, verified READY on the apex and www aliases. Existing data, permissions, function versions and secret digests were preserved. The [rollout receipt](2026-10-18-clinical-call-generation-primary-rollout.md) records the CI count-guard correction, reviewed advisor additions and public browser verification.
 
 Phase 3B.3 remains: independently reviewed call-fidelity evaluation with a separately bounded real-provider decision, Susan's call-processing/retention approval, authorized CloudTalk commissioning and real iPhone/Safari acceptance. Synthetic exact-quote validation establishes source membership, not medical entailment or production clinical readiness.
