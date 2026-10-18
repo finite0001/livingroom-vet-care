@@ -1,0 +1,17 @@
+# Guarded call generation and private clinical review
+
+Run only against a uniquely owned synthetic runtime:
+
+```sh
+python3 -B tests/clinical-call-generation/disposable.py --run-synthetic-local --evidence-prefix clinical-calls-generation-unique
+```
+
+Every attempt needs a fresh evidence prefix. The harness refuses existing artifacts, verifies Docker project/workdir labels, pauses only its disposable scheduler, and checks removal of its containers and volumes. It never reads hosted configuration or `.env` files. Artifacts use the ignored `tmp/clinical-calls-*` prefix with private filesystem permissions. The local worker bridge's temporary Auth-session input is deleted after use.
+
+The new SQL suite covers genuine source admission, canonical capture linkage, exact reservation and attempt recovery, cancellation tombstones, one-shot dispatch, SQL claim/segment/UTF16/result-manifest validation, private output, generic-reader denial, explicit selected-section acceptance, immutable review recovery and STAFF denial. Hourly and daily reservation budgets are tested independently, completed recovery remains available at quota, and pathological Unicode author names produce bounded readable receipts. Other-patient claims stay in the private payload and cannot fill ordinary chart sections.
+
+Full mode creates actual local Auth users and invokes PostgREST, including administrative demotion during an observed private-read row-lock wait and a ban during an observed acceptance destination-lock wait. Additional observed waits change the original call event, inbound assignment version, original worker session, template approval, encounter version and general policy. A fresh administrator can review a completed retained proposal after its generator signs out. Acceptance saves exactly one unsigned encounter version; STAFF can read the reviewed chart text while private call/proposal/review APIs remain unavailable. A local HTTP bridge executes the actual call-note handler with a labeled in-process OpenAI response stub, checks disabled processing, then recovers a lost committed finish acknowledgement without repeating provider work. The actual UI browser proof runs against the same owned backend and bridge. No real provider request is made.
+
+Finally, a separately marked clone restores populated call/job/proposal/review/action relations and compares every public routine body, owner and effective grants. Every populated relation also has its RLS flags, effective anonymous/authenticated/service grants, policies, triggers and constraints compared after restore. It reads retained results and recovers the original review receipt without generation, then proves the source database unchanged and drops only the marked clone.
+
+`--sql-only` runs all three call SQL suites, without Auth, worker, browser or restore claims. Its source inventory excludes unused worker/frontend modules. A receipt is written only if the bound source hashes remain unchanged and cleanup succeeds. Preserve failed attempts and issue a new prefix after fixes; a test fixture's exact citation membership does not establish medical entailment or clinical approval. Chromium at mobile width does not establish real iPhone/Safari acceptance.

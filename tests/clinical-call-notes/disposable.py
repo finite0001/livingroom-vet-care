@@ -68,10 +68,10 @@ container = 'supabase_db_' + identity
 command = ['docker', 'exec', '-i', container, 'psql', '-X', '-qAt', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1']
 
 
-def sql(query, database='postgres'):
+def sql(query, database='postgres', timeout=120):
     cmd = command.copy()
     cmd[cmd.index('-d') + 1] = database
-    return run(cmd, input=query).stdout.strip()
+    return run(cmd, input=query, timeout=timeout).stdout.strip()
 
 
 def quote(value):
@@ -208,8 +208,8 @@ try:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     migrations = sorted((root / 'supabase/migrations').glob('*.sql'))
-    assert len(migrations) == 202 and migrations[-1] == new_migration
-    selected = migrations if args.sql_only else migrations[:-1]
+    assert len(migrations) == 203 and new_migration in migrations and migrations[-1].name == '20261018032610_clinical_call_note_generation.sql'
+    selected = migrations if args.sql_only else [m for m in migrations if m < new_migration]
     for migration in selected:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     shutil.copy2(test, project / 'supabase/tests' / test.name)
@@ -256,9 +256,11 @@ enabled = false
         before = legacy(owner, fixture, 'before')
         chart_before = sql('select to_jsonb(e)from clinical_encounters e where id=' + quote(fixture['encounter']) + ';')
         baseline_advisors = advisors('baseline201')
-        shutil.copy2(new_migration, project / 'supabase/migrations' / new_migration.name)
+        for migration in migrations:
+            if migration >= new_migration:
+                shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
         run(['supabase', 'migration', 'up', '--local', '--workdir', str(project)], timeout=180)
-        check(sql('select count(*)from supabase_migrations.schema_migrations;'), '202')
+        check(sql('select count(*)from supabase_migrations.schema_migrations;'), '203')
         sql("notify pgrst,'reload schema';")
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
@@ -383,7 +385,7 @@ enabled = false
         restore_checks = 0
         try:
             sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp"with schema extensions;', clone)
-            sql(dump, clone)
+            sql(dump, clone, timeout=300)
             check(json.loads(sql(snapshot_sql, clone)), snapshot); restore_checks += 1
             check(json.loads(sql(catalog_sql, clone)), catalog); restore_checks += 1
             restored = json.loads(sql('begin;set local role authenticated;select set_config(\'request.jwt.claims\',' + quote(json.dumps(reader['claims'])) + ',true);select read_clinical_call_note_job_v1(' + quote(reader['id']) + ',' + quote(fixture['call']['job']) + ');rollback;', clone).splitlines()[-1])
@@ -413,12 +415,12 @@ enabled = false
         finally:
             assert sql("select shobj_description(oid,'pg_database')from pg_database where datname=" + quote(clone) + ';') == marker
             check(sql('select current_database();'), 'postgres')
-            sql('drop database ' + clone + ';')
+            sql('drop database ' + clone + ' with(force);')
             restore_checks += 1
-        after_advisors = advisors('current202')
+        after_advisors = advisors('current203')
     assert all(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest for name, digest in hashes.items()), 'Proof input changed during run'
     proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only,
-             'baseline_migrations': 201, 'current_migrations': 202, 'initial_migrations': len(selected), 'migration_upgrade_executed': not args.sql_only, 'source_sha256': hashes,
+             'baseline_migrations': 201, 'current_migrations': 203, 'initial_migrations': len(selected), 'migration_upgrade_executed': not args.sql_only, 'source_sha256': hashes,
              'actual_auth_api_assertions': checks, 'observed_source_read_waits': waits,
              'provider_requests': 0, 'hosted_writes': 0, 'owned_runtime_removed': False}
     if not args.sql_only:

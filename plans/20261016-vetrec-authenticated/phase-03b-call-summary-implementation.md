@@ -1,6 +1,6 @@
 # Phase 3B — OpenAI call drafts with private source evidence
 
-Status: **3B.1 released in PR 272**, 2026-10-17; exact-head CI, specific merge approval and [primary migration 202/frontend verification](../../docs/launch-evidence/2026-10-17-clinical-call-note-sources-primary-rollout.md) are complete. See [source-bound evidence](../../docs/launch-evidence/2026-10-17-clinical-call-note-sources.md). Generation/review and fidelity evaluation remain planned; pure citation/request-contract preparation is separate from admission. The owner authorized continuing implementation; this document does not approve clinical processing or activation. Capture and generation remain off, with draft policies.
+Status: **3B.1 released in PR 272**, 2026-10-17; exact-head CI, specific merge approval and [primary migration 202/frontend verification](../../docs/launch-evidence/2026-10-17-clinical-call-note-sources-primary-rollout.md) are complete. See [source-bound evidence](../../docs/launch-evidence/2026-10-17-clinical-call-note-sources.md). Generation/review (3B.2) is now implemented and locally verified in the pending next PR; see the [concrete implementation and proof](../20261018-call-generation-review/plan.md). Fidelity evaluation remains planned; pure citation/request-contract preparation is separate from admission. The owner authorized continuing implementation; this document does not approve clinical processing or activation. Capture and generation remain off, with draft policies.
 
 Implementation worktree: `/Users/davidedler/Developer/lrv-clinical-call-citations-20261017`. Historical file-map paths below identify the inspected Phase 3A checkout; resolve their repository-relative suffixes in the current worktree. The [pure citation/provider contract preparation](../20261017-call-citation-contract/plan.md) is implemented independently of admission and private review.
 
@@ -102,7 +102,7 @@ Document and test one lock order before replacing routines. Recheck current acto
 
 Keep transcript/quotes/proposal/review text out of local/session storage, URLs, logs and notifications. Store only strictly validated pending IDs/versions/hashes. Keep private call reads in role-scoped ephemeral state or a dedicated cache that is removed on role/session/patient changes; never leak them into generic staff caches. Explicitly discarded invalid local metadata must not cancel an unknown remote action; require investigation of retained history/outstanding actions before a new attempt.
 
-If source trust/household access, policy, template, patient lifecycle, encounter signature/version or original live session changes during dispatch/finish/accept, fail closed. Preserve authorized historical sources and sanitized failure categories; do not publish raw provider output to a revoked reader or persist private text in `failure_details`. No accepted sections means no chart mutation.
+If source trust/household access, policy, template, patient lifecycle or encounter signature/version changes during dispatch/finish/accept, fail closed. Active processing requires its recorded operator's live session; accepting a completed retained proposal requires the current reviewer's live ADMIN session. Historical generator sign-out must not permanently strand an otherwise eligible completed draft. Preserve authorized historical sources and sanitized failure categories; do not publish raw provider output to a revoked reader or persist private text in `failure_details`. No accepted sections means no chart mutation. The [concrete generation/review plan](../20261018-call-generation-review/plan.md) records this distinction and the additive dedicated RPC implementation.
 
 ## Incremental PR boundaries
 
@@ -176,7 +176,7 @@ No deletion planned. No new CloudTalk outbound dialer or Messages synchronizatio
 - [x] 3A exact released schema/ACL/source proof confirmed at PR 271 merge `9a192f23b8b0509019f1571861f8c51ce9b6b97d`; primary has 201 migrations and the source capture gate remains off.
 - [x] 3B.1 access and database-first compatibility passed locally and on staging; no call admission API exists.
 - [x] 3B.1 exact-head CI, specific PR merge approval and primary additive rollout complete before 3B.2 admission is introduced; PR 272 merged `4be71331`, primary202 verified, capture/generation off.
-- [ ] 3B.2 deterministic + actual local end-to-end proof passes with no automatic signature/billing/delivery.
+- [x] 3B.2 deterministic + actual local end-to-end proof passes with no automatic signature/billing/delivery; new PR and hosted rollout remain pending approval.
 - [ ] 3B.3 complete bounded synthetic evaluation passes; failures remain preserved and Susan independently adjudicates clinical fidelity.
 - [ ] Susan approves OpenAI call processing/retention and the private-source versus accepted-chart distinction. Existing approvals are not reused implicitly.
 - [ ] Authorized CloudTalk account behavior and real sample access are commissioned separately; Phase 3A synthetic two-pass tests are not proof of account entitlement or atomic remote revision support.

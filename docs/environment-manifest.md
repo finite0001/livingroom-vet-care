@@ -29,6 +29,14 @@ The repository no longer tracks a real `.env` file. Keep local developer values 
 
 ## Supabase Edge Function Secrets
 
+### Private call drafting (2026-10-18 increment)
+
+The dedicated `clinical-call-note-process` endpoint uses server-only `OPENAI_API_KEY` and requires **both** `CLINICAL_NOTE_PROCESSING_ENABLED=true` and `CLINICAL_CALL_NOTE_PROCESSING_ENABLED=true`. Missing or any other values keep processing disabled. Its JWT verification remains enabled. These are Supabase secrets, never `VITE_*` variables. Deploying this endpoint or saving an approved policy does not activate either gate.
+
+Before any real call processing, the database must have the exact approved general note, call capture and independent call-generation policies and approved template. Susan's policy review and separate commissioning remain outstanding. Retained sources and generated drafts are private ADMIN records; only explicitly accepted clinical SOAP wording becomes ordinary chart text. See the [guarded workflow plan](../plans/20261018-call-generation-review/plan.md).
+
+Capture remains separately controlled by its existing `CLINICAL_CALL_CAPTURE_ENABLED` gate. Generating from an already retained source does not fetch CloudTalk or re-transcribe audio. Do not enable capture, dictation audio or outbound delivery as a side effect of deploying this increment.
+
 Set these per Supabase project with the Supabase dashboard/CLI secret store.
 
 | Secret | Required before | Notes |

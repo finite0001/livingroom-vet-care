@@ -23,7 +23,7 @@ def run(argv,**kw):
 try:
  for port in [65320,65321,65322,65324,65381]:
   with socket.socket()as s:s.bind(('127.0.0.1',port))
- files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==202
+ files=sorted((root/'supabase/migrations').glob('*.sql'));assert len(files)==203
  for f in files:shutil.copy2(f,project/'supabase/migrations'/f.name)
  (project/'supabase/tests').mkdir()
  for f in(root/'supabase/tests').glob('*.sql'):
@@ -63,7 +63,7 @@ enabled = false
  if not args.sql_only:
   result=run(['node','--experimental-strip-types',str(root/'tests/clinical-calls/local-roundtrip.ts')],env={**os.environ,'CALL_TEST_PROJECT':str(project),'CALL_RUN_SYNTHETIC_LOCAL':'true','CALL_EVIDENCE_PREFIX':args.evidence_prefix},timeout=600);print(result.strip(),flush=True)
  assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==digest for name,digest in hashes.items()),'Proof input changed during run'
- proof={'identity':identity,'migrations':202,'sql_summary':summary,'sql_only':args.sql_only,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
+ proof={'identity':identity,'migrations':203,'sql_summary':summary,'sql_only':args.sql_only,'source_sha256':hashes,'provider_requests':0,'owned_runtime_removed':False}
  if not args.sql_only:proof['auth_browser_restore']=json.loads((root/f'tmp/{args.evidence_prefix}-roundtrip.json').read_text())
 finally:
  if started:
