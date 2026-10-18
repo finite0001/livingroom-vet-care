@@ -1,3 +1,5 @@
+/** Historical PR #238 feasibility spike at the October 11 baseline; superseded by the isolated production renderer.
+ * Preserve its original dependencies/fixtures when reproducing; it is not a current release or clinical acceptance runner. */
 /** Local feasibility proof only. No hosted keys, registry, provider calls or public renderer API. */
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";

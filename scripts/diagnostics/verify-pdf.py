@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Validate this local synthetic spike's captured bytes; requires pypdf and Poppler."""
+"""Historical PR #238 verifier for its original 16-page synthetic spike.
+
+Superseded by production renderer acceptance; requires the original baseline,
+pypdf and Poppler. This is not a current release or clinical acceptance runner.
+"""
 import hashlib
 import importlib.metadata
 import json

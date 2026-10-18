@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Run pinned records assertions on the approved hosts; roll back every synthetic fixture."""
+"""Historical PR #237 proof for the October 11, 173-migration baseline.
+
+Preserved with its dated receipt, not a current hosted release check. It accesses
+hosted databases and assumes the original empty request/disclosure inventories;
+review current schema/session prerequisites and authorization before any rerun.
+Every original synthetic fixture is intended to roll back.
+"""
 import argparse
 import hashlib
 import json

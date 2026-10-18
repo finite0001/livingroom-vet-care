@@ -1,5 +1,7 @@
 # Records requests — hosted rollout
 
+> Historical receipt for the October 11, 2026 PR #237 rollout. Migration counts, function versions, deployment identifiers and next steps below describe that run, not current hosted state. Restored to current main on October 18 without rerunning hosted probes or changing practice approvals. The subsequent diagnostics/PDF work is recorded in the [numbered-record package rollout](2026-10-13-diagnostic-pdf-record-packages-rollout.md).
+
 Dave approved PR #237 for merge and hosted rollout on October 11, 2026. [PR #237](https://github.com/finite0001/livingroom-vet-care/pull/237) merged at `2026-10-11T14:53:39Z` as `3bd3f002b78b65d1eed6cccf711d355aa67ba3c4`, from approved head `28b984440ba048d5e2530588c88a8f6231b2fa15`. Approved head and merge share Git tree `fc2bfa3827c48310eb469773798997d7fdce8c31`. All required [exact-head CI checks](https://github.com/finite0001/livingroom-vet-care/actions/runs/38111089726) passed: 1,298 unit tests, 514 browser tests plus one existing skip, 140 SQL files / 5,706 assertions, 23 race checks and 36 genuine local Auth/Storage/renderer/typed-email assertions. Zero local provider HTTP requests.
 
 ## Backend installation and proof

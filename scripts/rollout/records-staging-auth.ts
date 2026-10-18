@@ -1,3 +1,7 @@
+/** Historical PR #237 staging acceptance at the October 11 baseline.
+ * This script accesses hosted credentials and creates retained synthetic fixtures.
+ * Review current schema/session prerequisites and authorization before any rerun;
+ * restoring it to main does not approve a new hosted run. */
 /** Staging-only engineering acceptance; disclosure remains OFF and no queue/provider calls. */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";

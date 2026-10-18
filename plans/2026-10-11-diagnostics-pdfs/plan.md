@@ -1,5 +1,7 @@
 # Phase 3 — diagnostics and generated clinical PDFs
 
+> Historical October 11, 2026 package plan, preserved to repair release-evidence links. Its implementation sequence is superseded by the shipped [manual diagnostics](../../docs/launch-evidence/2026-10-11-manual-diagnostics-rollout.md), [isolated PDF renderer](../../docs/launch-evidence/2026-10-11-diagnostic-pdf-renderer-rollout.md), [private registration](../../docs/launch-evidence/2026-10-12-diagnostic-pdf-registration-rollout.md), [reviewed sharing scope](../../docs/launch-evidence/2026-10-12-diagnostic-pdf-release-scope-rollout.md) and [numbered-record packages](../../docs/launch-evidence/2026-10-13-diagnostic-pdf-record-packages-rollout.md). Future-tense steps below are the original plan, not a current unfinished-work inventory or new practice approval. The October 18 restoration performed static checks only.
+
 Baseline: merged [PR #237](https://github.com/finite0001/livingroom-vet-care/pull/237), `3bd3f002b78b65d1eed6cccf711d355aa67ba3c4`. Both hosted backends have 173 migrations. [Verified 2C rollout](../../docs/launch-evidence/2026-10-11-records-requests-rollout.md). All 45 original launch requirements remain required; these packages divide implementation/review, not launch scope.
 
 ## Package sequence
