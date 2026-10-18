@@ -113,6 +113,25 @@ enabled = false
  assert trusted['migration_count']==189 and trusted['migration_source_set_sha256']==hashlib.sha256(json.dumps(trusted_sources,sort_keys=True).encode()).hexdigest(),'Trusted prior migration prefix changed; review the upgrade baseline'
  prior_sql=(source/'prior-snapshot.sql').read_text()
  assert trusted['snapshot_sql_sha256']==hashlib.sha256(prior_sql.encode()).hexdigest(),'Prior snapshot coverage changed; review the baseline'
+ # Validate the untouched replay before deliberately injecting drift. Different
+ # CLI/Postgres bootstrap defaults can change raw ACLs even with identical source
+ # migrations; those differences must fail closed, not masquerade as rollback
+ # damage or be normalized into the independent reference.
+ untouched=json.loads(sql(prior_sql+'select pg_temp.controlled_stock_prior_snapshot();').splitlines()[-1])
+ if untouched!=trusted['definition']:
+  changed=[]
+  for family in ['functions','relations']:
+   expected_objects=trusted['definition'][family];actual_objects=untouched[family]
+   for name in sorted(expected_objects.keys()|actual_objects.keys()):
+    if name not in expected_objects or name not in actual_objects:
+     changed.append(family+'/'+name)
+    else:
+     expected_object=expected_objects[name];actual_object=actual_objects[name]
+     changed.extend(family+'/'+name+'/'+field for field in sorted(expected_object.keys()|actual_object.keys())
+      if expected_object.get(field)!=actual_object.get(field))
+  # Metadata paths only: never include relation rows, caller claims or secrets.
+  (result_dir/'untouched-prior-drift.json').write_text(json.dumps({'changed_metadata_paths':changed},indent=2))
+  raise AssertionError('Untouched replay differs from independently trusted prior metadata; review CLI/Postgres bootstrap environment: '+', '.join(changed))
  expected="'"+json.dumps(trusted['definition']).replace("'","''")+"'::jsonb"
  barrier='begin;\nselect pg_advisory_xact_lock(90271040,0);\n'
  preflight=prior_sql+"\ndo $$begin if pg_temp.controlled_stock_prior_snapshot()is distinct from "+expected+" then raise exception 'Controlled upgrade prior definitions or grants drifted; review required'using errcode='23514';end if;end $$;\n"

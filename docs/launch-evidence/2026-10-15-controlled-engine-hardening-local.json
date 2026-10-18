@@ -195,7 +195,7 @@
     "remaining": "Complete opening/old-source/hold/exception coverage and independent production-migration release review; exact-head CI and stage-first install/rollback/advisors; C2 workflows and C3 actual acceptance."
   },
   "current_203_forward_port": {
-    "observed_at": "2026-10-18T13:10:15.367885+00:00",
+    "observed_at": "2026-10-18T13:48:35.568556+00:00",
     "scope": "October 18 forward-port of PR259 against current main; owned local engineering only",
     "baseline_git_commit": "7cdb2ba833659e65410531483e6d1ce10226d9d9",
     "forward_port_of": "123e9bd262ef4c4cb2ad8c619939a5a95604d030",
@@ -320,7 +320,7 @@
       "hosted_writes": 0,
       "provider_requests": 0,
       "actual_practice_rules": false,
-      "project_id": "lrv-controlled-engine-0d4186f61f",
+      "project_id": "lrv-controlled-engine-262fbe60fe",
       "all_ten_canonical_root_definitions_unchanged": true,
       "owned_containers_and_volumes_removed": true
     },
@@ -550,7 +550,7 @@
       "tests/controlled-drugs/engine/candidate/probe-api.py": "7ae0bdbd5cac66e13e54b2b1fb1eeecbe95aeb434766de7f9a4dda8e86b34326",
       "tests/controlled-drugs/engine/candidate/probe-native.py": "ee4918159f43252c2a2a285446c01c96c84ed4238ae8ef5e55267ffc6980bb02",
       "tests/controlled-drugs/engine/candidate/probe-smoke.py": "980c79cb987f3ca4540dd8f942e3f99cfdd7ec5fcb6a4605c7bacc06904436d9",
-      "tests/controlled-drugs/engine/candidate/run-local.py": "81c0716f94904db21f394fdbec5b6b7a614ff3fb24be12a29eb643d2556cd5c9",
+      "tests/controlled-drugs/engine/candidate/run-local.py": "a0bab65903b4de8ad1901d1d46e7387e3afa13b88c9d6417cf5d1314cd7094c1",
       "supabase/tests/a4_consent_submission_columns.test.sql": "74dbe797830322bf0f3d17e97acf1dfd680aa4387a774ea6b6cc0d7836dd2a5f",
       "supabase/tests/a5_on_duty_guard.test.sql": "c21b0e3942e89fdcf5e704131eb34b7947c193ca889a653ea6f632da956b5737",
       "supabase/tests/abandoned_attachment_cleanup.test.sql": "12f8dacc831eb99f6edb01aa83ecda84b541386f2916e381ca671d336fbd51cd",
@@ -721,8 +721,8 @@
       "tests/controlled-drugs/engine/source-reader.sql": "ec75bd5346657230cb0c6602589a10d22b0ee880f786118f8342bf57d48788fa",
       "tests/controlled-drugs/engine/source-effects.sql": "6cb79e0e2cd737652de34e5a8d33b963ab42fa28d369d2b3d7d976f58f653f10"
     },
-    "candidate_result_sha256": "7b1d7aa177abdd7b8aef1954e635844c8d7a86f3d7123e570bcea47037cb309c",
-    "protected_runner_log_sha256": "cbf11ba30dd65f981c4ada6db65cc4c0ed821ec52093880663a07f264dcfdaee",
+    "candidate_result_sha256": "d8a338abb20790bcd8611eefc9eac9863299f4966b41f63e9e45c645234c823a",
+    "protected_runner_log_sha256": "3c35ecb5de144b307a8715c487e4a173c5328df64d266b088927edb302325ed2",
     "current_source_inventory_verified_after_cleanup": true,
     "cleanup_independently_checked": {
       "owned_containers": 0,
@@ -740,6 +740,42 @@
       "SQL-fixture restore/context checks are distinct from genuine Auth/PostgREST checks",
       "Production migration, opening/old-source/hold/exception release coverage, C2 workflows and C3 practice acceptance remain unfinished",
       "Physical post-backup reconciliation and Storage binary restore are not proven"
-    ]
+    ],
+    "previous_local_proof_before_environment_diagnostic": {
+      "observed_at": "2026-10-18T13:10:15.367885+00:00",
+      "candidate_result_sha256": "7b1d7aa177abdd7b8aef1954e635844c8d7a86f3d7123e570bcea47037cb309c",
+      "protected_runner_log_sha256": "cbf11ba30dd65f981c4ada6db65cc4c0ed821ec52093880663a07f264dcfdaee",
+      "project_id": "lrv-controlled-engine-0d4186f61f",
+      "runner_source_sha256": "81c0716f94904db21f394fdbec5b6b7a614ff3fb24be12a29eb643d2556cd5c9"
+    },
+    "environment_boundary": {
+      "passing_local_environment": {
+        "supabase_cli_version": "2.118.0",
+        "database_image": "public.ecr.aws/supabase/postgres:17.6.1.171"
+      },
+      "ci_supabase_cli_versions": [
+        "2.118.0",
+        "2.118.0"
+      ],
+      "previous_ci_run": 39130709746,
+      "previous_ci_head": "01047fefb9633f35d56ff334e31550a4cfb32b3a",
+      "older_environment_refused": {
+        "supabase_cli_version": "2.115.0",
+        "database_image": "public.ecr.aws/supabase/postgres:17.6.1.159",
+        "untouched_catalog_checked_before_injected_drift": true,
+        "changed_metadata_paths": [
+          "functions/has_role(uuid,user_role)/acl",
+          "functions/is_active_staff(uuid)/acl",
+          "functions/protect_profile_privileges()/acl"
+        ],
+        "owned_runtime_removed": true
+      },
+      "all_other_scoped_metadata_matched": true,
+      "difference": "Older bootstrap omits explicit anon/authenticated/service_role EXECUTE entries on has_role and protect_profile_privileges and explicit anon EXECUTE on is_active_staff; PUBLIC EXECUTE remains in both environments.",
+      "raw_acl_differences_normalized": false,
+      "missing_grants_added": false,
+      "frozen_reference_modified": false,
+      "exact_head_ci_still_required": true
+    }
   }
 }
