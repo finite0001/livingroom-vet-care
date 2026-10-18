@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "scope": "Local recorder Stop finalization liveness; no hosted/provider/account/real-microphone operations",
+  "parent_commit": "a11df554df0f01094a566e65936e8f80bb5576d9",
+  "runtime": "Node v26.10.0",
+  "source_sha256": {
+    "src/hub/features/clinical/dictation/audio/recorder.ts": "b79eb4b3f40788466f55a48a7f4070ed0f73140fe8bed7025633d73314ee7138",
+    "tests/clinical-audio/recorder.test.ts": "eb61ebd429f5d8b5faea7e02fefdd82cd9faeb0a5611de535a4bc2ca8dc17cef"
+  },
+  "focused_tests": {
+    "command": "node --experimental-strip-types --test tests/clinical-audio/recorder.test.ts",
+    "passed": 17,
+    "failed": 0,
+    "interfaces": "Synthetic browser APIs around the actual ClinicalPcmRecorder class; no browser/hardware acceptance claim"
+  },
+  "parent_regression": {
+    "test": "pending resume is bounded; late resolve cannot restart capture or reject unobserved",
+    "result": "Expected failure on parent code",
+    "failure_type": "unhandledRejection",
+    "exit_code": 1,
+    "adaptations": "Equivalent explicit constructor field assignment for Node strip-types and relocated import paths only",
+    "tap_sha256": "e6c862a185321c7b50fa68288085efe76e9695562631d9a22eb20b92d897f2df"
+  },
+  "repository_check": {
+    "command": "npm run check",
+    "exit_code": 0,
+    "tests_passed": 1687,
+    "tests_failed": 0,
+    "lint_errors": 0,
+    "existing_lint_warnings": 4,
+    "typecheck": "passed",
+    "build": "passed",
+    "existing_build_warning": "Bundle chunk sizes above 500 kB",
+    "log_sha256": "c8c3608083c414f44b43e22504f0198cbbadccc6ac32e96433049b2150269240"
+  },
+  "review": {
+    "result": "No blocker found in focused source review",
+    "preserved": "WAV encoding, min/max validation, explicit pause/resume, worklet, no automatic upload or processing",
+    "limitations": [
+      "JavaScript timers require a running event loop",
+      "Physical iPhone/Safari interruption acceptance is unproved",
+      "Start and standalone Resume liveness, context statechange and track mute detection are outside this increment",
+      "Context close is requested and observed; timeout does not prove OS-level context destruction"
+    ]
+  },
+  "followup_regression": {
+    "prior_commit": "5e145c796a8c0e4e3e8495db92ccad84521fbf6d",
+    "tests": "External disposal during pending context close with late close resolve and reject",
+    "before_fix": {
+      "passed": 0,
+      "failed": 2,
+      "failure": "Stop remained pending after external disposal instead of rejecting",
+      "log_sha256": "1109b1a553294248684832e90c65182f692d50dd7b84a04d62d367407ee7cfe4"
+    },
+    "after_fix": "Both reject before close settles, no WAV is returned, and late close completion remains handled; delayed normal close still returns a valid WAV",
+    "implementation": "Dedicated cancellation remains live through Stop settlement; internal release does not cancel Stop; cancellation check executes synchronously after the final await"
+  }
+}
