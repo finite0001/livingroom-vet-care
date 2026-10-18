@@ -5,13 +5,13 @@ import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { captureClinicalCallTranscript } from "../../supabase/functions/_shared/clinical-call-handler.ts";
 import { callSha256 } from "../../supabase/functions/_shared/clinical-call-model.ts";
-import { assembleCallNoteSections, CALL_NOTE_PAYLOAD_CONTRACT } from "../../supabase/functions/_shared/clinical-call-note-model.ts";
-import { CALL_NOTE_PROVIDER_LIMITS, callNoteProviderContextSchema, clinicalCallNoteRequest, parseClinicalCallNoteResponse } from "../../supabase/functions/_shared/clinical-call-note-provider.ts";
+import { assembleCallNoteSections } from "../../supabase/functions/_shared/clinical-call-note-model.ts";
+import { CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT, CALL_NOTE_PROVIDER_LIMITS, callNoteProviderContextSchema, clinicalCallNoteRequest, parseClinicalCallNoteResponse } from "../../supabase/functions/_shared/clinical-call-note-provider.ts";
 import { veterinaryContextReceipt } from "../../supabase/functions/_shared/clinical-veterinary-context.ts";
 import { CALL_EVALUATION_CASES, CALL_EVALUATION_REVISION } from "./evaluation-corpus.ts";
 
 export const EVALUATION_MODEL = "gpt-6-luna";
-const revision = "lrv-call-fidelity-offline-v1";
+const revision = "lrv-call-fidelity-offline-v2";
 const now = "2026-12-01T12:00:00.000Z";
 export const EVALUATION_SOURCE_FILES = [
   "tests/clinical-calls/evaluation-corpus.ts", "tests/clinical-calls/evaluation-offline.ts",
@@ -19,6 +19,7 @@ export const EVALUATION_SOURCE_FILES = [
   "supabase/functions/_shared/clinical-audio-model.ts",
   "supabase/functions/_shared/clinical-call-handler.ts", "supabase/functions/_shared/clinical-call-model.ts",
   "supabase/functions/_shared/clinical-call-note-model.ts", "supabase/functions/_shared/clinical-call-note-provider.ts",
+  "supabase/functions/_shared/clinical-call-note-handler.ts", "supabase/functions/_shared/clinical-call-note-processing-model.ts",
   "supabase/functions/_shared/clinical-note-model.ts", "supabase/functions/_shared/clinical-veterinary-context.ts",
 ];
 export const exactSha256 = (value: string) => createHash("sha256").update(value, "utf8").digest("hex");
@@ -60,16 +61,17 @@ export async function buildFrozenCallBundle() {
       assert.ok(fact.segments.length && new Set(fact.segments).size === fact.segments.length);
       assert.ok(fact.segments.every((ordinal) => !!document.segments[ordinal - 1]));
     }
-    const negativePayload = { contract_version: CALL_NOTE_PAYLOAD_CONTRACT, fields: definition.fields.map((field, n) => ({
+    const negativePayload = { contract_version: CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT, fields: definition.fields.map((field, n) => ({
       field_id: field.id, status: n === 0 ? "supported" : "missing", uncertainty: "", claims: n === 0 ? [{
         text: fixture.negative_control.text, patient_scope: "selected_patient",
         supports: fixture.negative_control.segments.map((ordinal) => {
           const segment = document.segments[ordinal - 1];
-          return { segment_ordinal: ordinal, segment_sha256: segment.text_sha256, from: 0, to: segment.text.length, quote: segment.text };
+          return { segment_ordinal: ordinal, quote: segment.text };
         }),
       }] : [],
     })), review_flags: [] };
-    await parseClinicalCallNoteResponse(syntheticEnvelope(negativePayload), context);
+    const negativeEnvelope = syntheticEnvelope(negativePayload);
+    await parseClinicalCallNoteResponse(negativeEnvelope, context, { response_sha256: exactSha256(JSON.stringify(negativeEnvelope)) });
     cases.push({ id: fixture.id, title: fixture.title, context, request_json: requestJson,
       request_sha256: exactSha256(requestJson), inventory: { required: fixture.required, forbidden: fixture.forbidden },
       veterinary_context: await veterinaryContextReceipt(request), semantic_negative_control: {
@@ -126,7 +128,8 @@ export async function createCallReviewPacket(bundleInput: unknown, rawInput: unk
       if (imported.outcome.kind !== "http") throw Error("Transport failed.");
       assert.ok(imported.outcome.status >= 200 && imported.outcome.status < 300, "Non-success HTTP status.");
       assert.ok(rawBody && rawBody.byteLength <= CALL_NOTE_PROVIDER_LIMITS.response_bytes, "Original response bytes exceed the production HTTP limit.");
-      result = await parseClinicalCallNoteResponse(JSON.parse(z.string().parse(rawBodyUtf8)), item.context);
+      result = await parseClinicalCallNoteResponse(JSON.parse(z.string().parse(rawBodyUtf8)), item.context,
+        { response_sha256: createHash("sha256").update(rawBody!).digest("hex") });
     } catch { structuralFailure = "Transport, HTTP, JSON or production response contract failed; raw outcome retained below. This case cannot pass."; }
     const claims: { id: string; field_id: string; claim: unknown; supports: { id: string; evidence: unknown }[] }[] = [];
     if (result) {

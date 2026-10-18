@@ -62,6 +62,9 @@ class CallProviderFailure extends Error {
     this.details = details;
   }
 }
+async function responseDigest(bytes: Uint8Array) {
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)))].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 async function providerJson(response: Response) {
   if (!response.ok) {
     const details: Record<string, unknown> = {
@@ -74,7 +77,9 @@ async function providerJson(response: Response) {
       if (Number.isFinite(seconds)) details.retry_after_seconds = Math.min(86400, Math.max(0, seconds));
     }
     try {
-      const raw = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(await boundedBytes(response.body, 8192)));
+      const bytes = await boundedBytes(response.body, 8192);
+      details.provider_response_sha256 = await responseDigest(bytes);
+      const raw = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
       if (typeof raw?.error?.code === "string" && /^[a-z0-9_]{1,80}$/.test(raw.error.code)) {
         details.provider_code = raw.error.code;
       }
@@ -84,8 +89,9 @@ async function providerJson(response: Response) {
   let bytes: Uint8Array;
   try { bytes = await boundedBytes(response.body, CALL_NOTE_PROVIDER_LIMITS.response_bytes); }
   catch { throw new CallProviderFailure(true, "provider_response_unconfirmed"); }
-  try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
-  catch { throw new CallProviderFailure(false, "invalid_provider_output"); }
+  const response_sha256 = await responseDigest(bytes);
+  try { return { value: JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)) as unknown, response_sha256 }; }
+  catch { throw new CallProviderFailure(false, "invalid_provider_output", { provider_response_sha256: response_sha256 }); }
 }
 
 export function createClinicalCallNoteHandler(deps: ClinicalCallNoteDependencies) {
@@ -170,7 +176,7 @@ export function createClinicalCallNoteHandler(deps: ClinicalCallNoteDependencies
       try { return await recover(); }
       catch { return reply(503, "recovery_required", "Recover the original processing attempt before retrying."); }
     }
-    let result: z.infer<typeof callNoteResultSchema>, received = false;
+    let result: z.infer<typeof callNoteResultSchema>, received = false, completeResponseSha: string | null = null;
     try {
       const response = await (deps.providerFetch ?? fetch)("https://api.openai.com/v1/responses", {
         method: "POST",
@@ -185,10 +191,11 @@ export function createClinicalCallNoteHandler(deps: ClinicalCallNoteDependencies
       });
       const requestId = response.headers.get("x-request-id") ?? "";
       if (requestId.length > 200) throw new CallProviderFailure(false, "invalid_provider_output");
-      const value = await providerJson(response);
+      const observed = await providerJson(response);
+      completeResponseSha = observed.response_sha256;
       received = true;
       result = callNoteResultSchema.parse({
-        ...await parseClinicalCallNoteResponse(value, providerContext),
+        ...await parseClinicalCallNoteResponse(observed.value, providerContext, { response_sha256: observed.response_sha256 }),
         request_id: requestId,
       });
     } catch (error) {
@@ -196,7 +203,7 @@ export function createClinicalCallNoteHandler(deps: ClinicalCallNoteDependencies
       const code = error instanceof CallProviderFailure ? error.code
         : uncertain ? "provider_outcome_unknown" : "invalid_provider_output";
       try {
-        await deps.fail(intent.job_id, attempt.id, uncertain, code, error instanceof CallProviderFailure ? error.details : {});
+        await deps.fail(intent.job_id, attempt.id, uncertain, code, error instanceof CallProviderFailure ? error.details : completeResponseSha ? { provider_response_sha256: completeResponseSha } : {});
       } catch { /* Retain the durable original sending state; never repeat provider work. */ }
       return reply(uncertain ? 503 : 422, code, uncertain
         ? "Provider outcome is unknown and may have been billed. Recover the original attempt before any explicit retry."

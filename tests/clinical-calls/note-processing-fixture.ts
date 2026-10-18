@@ -5,7 +5,7 @@ import {
   CALL_NOTE_PAYLOAD_CONTRACT,
   assembleCallNoteSections,
 } from "../../supabase/functions/_shared/clinical-call-note-model.ts";
-import { parseClinicalCallNoteResponse } from "../../supabase/functions/_shared/clinical-call-note-provider.ts";
+import { CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT, parseClinicalCallNoteResponse } from "../../supabase/functions/_shared/clinical-call-note-provider.ts";
 import {
   CALL_NOTE_PROCESSING_CONTRACT,
   callNoteProcessingReadSchema,
@@ -64,13 +64,19 @@ export async function callNoteProcessingFixture(text = "Owner reports Luna is AD
         from: text.length - quote.length, to: text.length, quote }],
     }] }], review_flags: [],
   };
-  const response = (value: unknown = payload) => ({
+  // Adapted fictional provider-v2 fixture; never a repaired historical provider response.
+  const toProvider = (value: typeof payload) => ({ ...value, contract_version: CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT,
+    fields: value.fields.map((field) => ({ ...field, claims: field.claims.map((claim) => ({ ...claim,
+      supports: claim.supports.map(({ segment_ordinal, quote }) => ({ segment_ordinal, quote })),
+    })) })),
+  });
+  const response = (value: typeof payload = payload) => ({
     id: "resp_synthetic_call", model: "synthetic-returned-alias", status: "completed", error: null, incomplete_details: null,
-    output: [{ type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(value) }] }],
+    output: [{ type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(toProvider(value)) }] }],
   });
   const intent = { job_id: id, attempt_id: randomUUID(), retry_of: null as string | null, reason: "", ack_cost: false };
   const result = async () => callNoteResultSchema.parse({
-    ...await parseClinicalCallNoteResponse(response(), callNoteProviderContext(read)), request_id: "req_synthetic_call",
+    ...await parseClinicalCallNoteResponse(response(), callNoteProviderContext(read), { response_sha256: await callSha256(JSON.stringify(response())) }), request_id: "req_synthetic_call",
   });
   return { actor, now, read, payload, response, intent, result };
 }

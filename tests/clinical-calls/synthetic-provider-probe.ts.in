@@ -148,7 +148,7 @@ Deno.serve(async (incoming) => {
     evidence_gap: "Provider bytes suppressed at protected boundary because they contained a server secret; stop remaining cases without retry." });
   let parsed: Awaited<ReturnType<typeof parseClinicalCallNoteResponse>> | null = null;
   if (complete && httpStatus !== null && httpStatus >= 200 && httpStatus < 300) {
-    try { parsed = await parseClinicalCallNoteResponse(decoded, context); }
+    try { parsed = await parseClinicalCallNoteResponse(decoded, context, { response_sha256: await bytesSha(raw) }); }
     catch { error ??= "provider_response_contract_failed"; }
   } else if (complete) error ??= "provider_http_failed";
   if (parsed && protectedValues.some((secret) => JSON.stringify(parsed).includes(secret))) return response({ ...base, flags: envFlags,

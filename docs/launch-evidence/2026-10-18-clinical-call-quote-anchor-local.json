@@ -1,0 +1,44 @@
+{
+  "contract": "lrv-call-quote-anchor-local-verification-v1",
+  "date": "2026-10-18",
+  "status": "local_verification_complete_hosted_rollout_pending",
+  "provider_payload": "clinical-call-note-provider-payload-v2",
+  "result_contract": "clinical-call-note-result-v2",
+  "canonical_payload_unchanged": "clinical-call-note-payload-v1",
+  "frozen_bundle_sha256": "9127a1ce40add23f6e92f92cb1fef5501e380e84f012b774f70e024ac8925a42",
+  "original_scenario_inventory_sha256": "3244035bc79dc99efd98951248fd1f4b1a65a78588e4860a3a110596ca2b1d47",
+  "local_runtime": {
+    "receipt_sha256": "b7adc286bfd09ec82ef5e87c82dd9e0521ec624447e4646a78f512bd1d560d1c",
+    "source_files": 231,
+    "source_hashes_current": true,
+    "migrations": 204,
+    "sql_suites": 3,
+    "sql_assertions": 227,
+    "combined_auth_sql_setup_restore_assertions": 152,
+    "worker_http_assertions": 20,
+    "browser_assertions": 21,
+    "observed_lock_waits": 8,
+    "populated_restore_assertions": 10,
+    "restored_relation_families": 17,
+    "restored_public_routines": 1355,
+    "stub_provider_requests": 3,
+    "real_provider_requests": 0,
+    "owned_runtime_removed": true
+  },
+  "repository_check": {
+    "unit_tests": 1670,
+    "strict_typescript_projects": 3,
+    "lint_errors": 0,
+    "existing_fast_refresh_warnings": 4,
+    "build_passed": true,
+    "log_sha256": "4db5d5b4becf41e90a9ffce7e805fa2ebf6000580ab74255be1a975012bce35a"
+  },
+  "independent_review": "Provider, handler, historical reader, SQL guards and new bundle/pricing binding reviewed; no blockers reported.",
+  "limitations": [
+    "The legacy actual_auth_api_assertions key counts combined local Auth/PostgREST, SQL-state, setup/process and restore assertions, not HTTP-only requests.",
+    "Historical v1 replay used an explicitly owner-seeded fictional adaptation, not a new provider result.",
+    "Raw HTTP digests bind observed bytes at the trusted worker boundary; the database validates digest shape and versions but does not store or authenticate raw provider HTTP bytes.",
+    "No fresh v2 real-provider evaluation or hosted migration/function deployment is claimed by this receipt.",
+    "Mechanical citation validity is not clinical entailment or practice approval. Real-call gates and policies remain inactive."
+  ]
+}

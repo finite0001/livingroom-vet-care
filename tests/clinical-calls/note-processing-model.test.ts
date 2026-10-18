@@ -3,6 +3,8 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import {
   callNoteProcessingReadSchema,
+  callNoteResultSchema,
+  callNoteLegacyResultSchema,
   callNoteProviderContext,
   callNoteReserveSchema,
   callNoteReviewRequestSchema,
@@ -111,4 +113,27 @@ test("bounded audit events explicitly disclose older history and template config
     call_generation_policy: read.call_generation_policy, capture_policy: read.capture_policy,
   });
   assert.equal(workspace.templates.length, 101);
+});
+
+test("historical v1 manifests remain readable while current results require exact v2 provenance", async () => {
+  const fixture = await callNoteProcessingFixture();
+  const result = await fixture.result();
+  await saveSyntheticCallResult(fixture.read, fixture.intent.attempt_id, result);
+  const { provider_evidence: _evidence, ...base } = result;
+  const legacy = { ...base, contract_version: "clinical-call-note-result-v1", prompt_version: "lrv-call-note-fields-v1" };
+  assert.equal(callNoteLegacyResultSchema.safeParse(legacy).success, true);
+  assert.equal(callNoteResultSchema.safeParse(legacy).success, false);
+  const { payload: _payload, ...manifest } = callNoteLegacyResultSchema.parse(legacy);
+  fixture.read.generation!.manifest = manifest;
+  await validateCallNoteProcessingRead(fixture.read);
+  for (const changed of [
+    { ...result, provider_evidence: undefined },
+    { ...result, prompt_version: "lrv-call-note-fields-v1" },
+    { ...result, provider_evidence: { ...result.provider_evidence, resolver_version: "other" } },
+    { ...result, provider_evidence: { ...result.provider_evidence, provider_contract_version: "other" } },
+    { ...result, provider_evidence: { ...result.provider_evidence, response_sha256: "invalid" } },
+    { ...result, provider_evidence: { ...result.provider_evidence, output_text_sha256: "invalid" } },
+    { ...result, provider_evidence: { ...result.provider_evidence, raw_body: "private" } },
+  ]) assert.equal(callNoteResultSchema.safeParse(changed).success, false);
+  assert.equal(callNoteLegacyResultSchema.safeParse({ ...legacy, provider_evidence: result.provider_evidence }).success, false);
 });

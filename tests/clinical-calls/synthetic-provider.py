@@ -20,7 +20,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT = "kothoqicubowyhwfsrte"
-BUNDLE = "ab55997d352dba503ecd5d654b5ee7e0cbc6e406c3ea575c8b217537c43677a6"
+BUNDLE = "9127a1ce40add23f6e92f92cb1fef5501e380e84f012b774f70e024ac8925a42"
 VERSION = "lrv-call-provider-candidate-v2"
 CASES = list("ABCDEFGHIJ")
 PROVIDER_TIMEOUT_MS = 60000

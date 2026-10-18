@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import { verifyFrozenCallBundle } from "./evaluation-offline.ts";
-export const CALL_PROVIDER_BUNDLE_SHA256 = "ab55997d352dba503ecd5d654b5ee7e0cbc6e406c3ea575c8b217537c43677a6";
+export const CALL_PROVIDER_BUNDLE_SHA256 = "9127a1ce40add23f6e92f92cb1fef5501e380e84f012b774f70e024ac8925a42";
 export const CALL_PROVIDER_PROJECT = "kothoqicubowyhwfsrte";
 const sha = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
 export const TRANSPORT_FILES = [
@@ -18,7 +18,7 @@ export async function planCallProviderBundle(bytes: Uint8Array) {
   if (bytes.byteLength > 4000000) throw Error("Frozen call bundle exceeds planner limit.");
   const bundle = await verifyFrozenCallBundle(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
   if (bundle.bundle_sha256 !== CALL_PROVIDER_BUNDLE_SHA256 || bundle.requested_model !== "gpt-6-luna"
-    || bundle.corpus_revision !== "lrv-call-fidelity-ten-v1" || !bundle.synthetic_only || bundle.cases.length !== 10) {
+    || bundle.corpus_revision !== "lrv-call-fidelity-ten-v2" || !bundle.synthetic_only || bundle.cases.length !== 10) {
     throw Error("This transport accepts only the reviewed ten-case frozen candidate.");
   }
   const cases = bundle.cases.map((item, index) => {

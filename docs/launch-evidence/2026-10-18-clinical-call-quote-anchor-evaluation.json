@@ -1,0 +1,291 @@
+{
+  "contract": "lrv-call-quote-v2-hosted-evaluation-v1",
+  "date": "2026-10-18",
+  "source_commit": "bff9622a4e571125d5f354b25895838e4aae21a9",
+  "candidate_sha256": "7ecf5d2980aced52d102b89366c11ad982cc9e55c917f80a19778feeca744a94",
+  "bundle_sha256": "9127a1ce40add23f6e92f92cb1fef5501e380e84f012b774f70e024ac8925a42",
+  "bundle_file_sha256": "bccc5fca31570b0d58c884c0ebbd8273527dd4b9ed0293966c4e5e09e6a9714d",
+  "original_scenarios_unchanged": true,
+  "requested_model": "gpt-6-luna",
+  "immutable_model_snapshot": false,
+  "source_sha256": {
+    "tests/clinical-calls/evaluation-corpus.ts": "8807f953a4984662524eb72b88db9ee9670936ba9366aca3883fc93521f19ade",
+    "tests/clinical-calls/evaluation-offline.ts": "0afcefb16009d0e4045b7c38d56dad2e1c9d889716a8b754b4b8211a85e50f53",
+    "tests/clinical-calls/evaluation-cli.ts": "37796c84a3a44501370f519634fad3bcd43b750273024c18c2ac79a9ba364131",
+    "tests/clinical-calls/evaluation-offline.test.ts": "9b2a1430b6e8234b3262cf7bf0e490163441e3e98973b145b55a9b52bd26eef0",
+    "package-lock.json": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f",
+    "supabase/functions/_shared/clinical-audio-model.ts": "f805221c702d1ebcf83cd29236901ee0b25af2390c9de4b936418e2e39dadf4c",
+    "supabase/functions/_shared/clinical-call-handler.ts": "5ae8974d7b6f56d907c73a2c8e1415463c7de2f0b384a7d95b942c133b1d39d1",
+    "supabase/functions/_shared/clinical-call-model.ts": "e74057e5d2645c97b5df0475625a2776277aeb9ea1f4aa4d34da02090a321a08",
+    "supabase/functions/_shared/clinical-call-note-model.ts": "99b992a7dc0824d81acfcd1c5db15d7f85e6840f41ca55e0ae9f676a91e3b6b2",
+    "supabase/functions/_shared/clinical-call-note-provider.ts": "14dabd2f1d5891e0095756ff36f1565e6251327c333653be6d1b09ee95f3439d",
+    "supabase/functions/_shared/clinical-call-note-handler.ts": "11431b34ec39234042e3c189857e93aa926584dac5f841e71fc99d2c2eec69b6",
+    "supabase/functions/_shared/clinical-call-note-processing-model.ts": "7c4747553d4f30e35b7dc15508686a47b25c26f16e7d9f4074b497591038ec85",
+    "supabase/functions/_shared/clinical-note-model.ts": "43903f3f18c0ec8a234417a55ed2089b058ac772820d346dc851b8608768cf80",
+    "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6"
+  },
+  "transport_source_sha256": {
+    "tests/clinical-calls/synthetic-provider-plan.ts": "9ec5af85eafca25ca4af2b732d70d38a3a92b38fde87dc1eec5e3a212f8bfc89",
+    "tests/clinical-calls/synthetic-provider.py": "d9a7677982364778f7b267c563bdbc82032d81459fcd9189da09d9391cd9cdc4",
+    "tests/clinical-calls/synthetic-provider-probe.ts.in": "8dcebec17c6b304e0476d5f99aa62f110630f4cb50571d0683d806aa2e86d324",
+    "tests/clinical-calls/synthetic-provider-plan.test.ts": "b7f7ea06de465261e6513dac4859ee4e4eaf3edd1ac1e89be687c71b25e7c207",
+    "tests/clinical-calls/test_synthetic_provider.py": "0090e5401b60bb682cfef727ad35230c31e66df8dbf58954b7a6aafb8f03dafd",
+    "tests/clinical-calls/synthetic_provider_hosted.py": "ff0aff56cabcd53403e7fe8636e6e1b3d7456330cc7d388d16419e10661798a8",
+    "tests/clinical-calls/test_synthetic_provider_hosted.py": "f1147be1c25ddb7ecc3c754a5826a83da9bfe3d4d643016937fb28319b7a4795",
+    "supabase/functions/clinical-call-note-process/deno.json": "a03278169495625b745a70f27ee50478a15244cb5ba8cc21f82e8c03da021a47",
+    "supabase/functions/clinical-call-note-process/deno.lock": "ee504df067152068e733d4010eac4786ff321498ef4d25941c6f81c36436328b"
+  },
+  "public_scope_document_sha256": "76ccf5ebd1a0bc9db027b6a12adea1fb83ccd25d9d88d64bfc1c4225b6d9b38a",
+  "scope_record_sha256": "c52c0f2a6e4aedb62d066ca3177cff6ca861a108dcbb1789189c16fd7306e198",
+  "scope_authority": "Codex selected this new bounded regression scope and separate reservation under Dave’s continue/plan-execute authorization. Dave did not separately review the candidate digest or select the dollar amount. Original batch remains closed.",
+  "request_count": 10,
+  "maximum_requests": 10,
+  "retries": 0,
+  "clinical_reads": 0,
+  "clinical_writes": 0,
+  "mechanical_parser_passes": 10,
+  "clinical_adjudication_complete": false,
+  "clinical_fidelity_pass": false,
+  "engineering_findings": [
+    "D negative-diagnosis claim quotes a fragment omitting its governing no; full-source negation does not make that claim’s own quote sufficient.",
+    "C/E conservative unassigned attribution keeps some required facts/plan statements private and out of selected-patient SOAP; clinical acceptability remains pending.",
+    "A/D/J pronoun or referent context can depend on source outside the quote. Mechanical membership does not prove patient scope or entailment."
+  ],
+  "cases": [
+    {
+      "id": "A",
+      "request_sha256": "714ced1742a618d898ebd77ceba88a4cd230a13cdc5f81df59befdce5f6bb0ec",
+      "raw_body_sha256": "702d4629c169e734822170053cf49897cc9d0e4ecfe00ec6b734ecf7f7147146",
+      "provider_request_id_sha256": "cca92503db493cf5f350c732fa69a29738003150a56e0d880d0ef9476fcc938f",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2840,
+        "output_tokens": 505,
+        "total_tokens": 3345
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "B",
+      "request_sha256": "9536d3e26e524030cec94cc257e09fcb14e3c0844163341189ec107aae01c6cc",
+      "raw_body_sha256": "bc812d85b0a64c2d38ed8066fdba2af78a59a2873a43561472f6aa586019de13",
+      "provider_request_id_sha256": "1e7b8d04d43cd1f635d3958de7ce0d77512b0a509e35b8a273e47061ac67243d",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2847,
+        "output_tokens": 475,
+        "total_tokens": 3322
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "C",
+      "request_sha256": "527a4e44e02512e6bf0ebe3fd165d966daa48814e8723d002936a17b16ba40ad",
+      "raw_body_sha256": "a6c50059923c39359d073c9d3c516b927ece6ff21389f928fe100f8f8262ebad",
+      "provider_request_id_sha256": "d26d617373bb7ec506b37e86b22802668450a3853ada5a9ee3fc3cb899c7bf8c",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2853,
+        "output_tokens": 633,
+        "total_tokens": 3486
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "D",
+      "request_sha256": "13afc8c702a45429045d9e76c1ad0e45cc628347258d00c9fcb1ad6066fe9694",
+      "raw_body_sha256": "1b39a239b52ad24e63e3128e982a5c1efb0c80731d87e9611cf776112d375e55",
+      "provider_request_id_sha256": "dd0d987f8462837197b6efa888163acddba5c03b0008388bff62e0ae7ce29862",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2863,
+        "output_tokens": 622,
+        "total_tokens": 3485
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "E",
+      "request_sha256": "2564707484f5f7f3e342ad4640ae2e383b2e86d80ac2ea96f507f340f1e1313e",
+      "raw_body_sha256": "db439a7921ef654700edd4c441dcd3089d421e42cea05528f61758342d51e3fd",
+      "provider_request_id_sha256": "39633051ba4d6c4bc8c53e7026513506c17d968a9131424ed631ca077ae3bfe3",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2865,
+        "output_tokens": 783,
+        "total_tokens": 3648
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "F",
+      "request_sha256": "150af742ffe30cc737d00cf8eccc6058bcb879faf5f9cf36a087e96e85f1ce94",
+      "raw_body_sha256": "5716e966c8d58b267466f680418cf01c6b813b061dfd5f56387682d532f4a4ca",
+      "provider_request_id_sha256": "9c9109c3b296661e0afa54de405701f72a92270147574e9b81dad8ad4d6dce20",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2779,
+        "output_tokens": 334,
+        "total_tokens": 3113
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "G",
+      "request_sha256": "a4ee78342711d24f2ffd7f93df8f89851881f08258ad5dec54e69c371e600fea",
+      "raw_body_sha256": "c5ec937057292519434d9c711a5048d0429fff3202f7cfaeb0f8ddfa35f81d58",
+      "provider_request_id_sha256": "bdc6194375d0d16bc786498ba64fe4caeddbfce152e62617d3986e341cc2ee35",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2798,
+        "output_tokens": 454,
+        "total_tokens": 3252
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "H",
+      "request_sha256": "a11c3d3c858f7c38062eb746637bbb60ead9c4b00676fc34b3939338f305c800",
+      "raw_body_sha256": "19da64e4bf0c0174f81414e307bbd20cb6f003d8294d7e48d4421ec261db26b4",
+      "provider_request_id_sha256": "4b543cea4ba2e376353ef7b38b109edf0dbb0d58fa849427b12fcd3ea34362ac",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2760,
+        "output_tokens": 384,
+        "total_tokens": 3144
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "I",
+      "request_sha256": "660324fb4e6ccd03316df457530dfb9124f2d4a1c19d63121fec7de5c5bd8e33",
+      "raw_body_sha256": "3b434304bfa0b71af12b518f9d4ac363e03ae09bd20455861e46e9e579b4fc5a",
+      "provider_request_id_sha256": "61f0b3f888ce34f95d2f4c4d08d06fbc8406d0a077f8d9e4266b5f0c3c3a41b2",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2782,
+        "output_tokens": 510,
+        "total_tokens": 3292
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    },
+    {
+      "id": "J",
+      "request_sha256": "877bc9697e74796f798c6808e4c78a20643a033c8983e3ea3ac36f1de1006370",
+      "raw_body_sha256": "0bc60b1198cdd50e6498a08a4f886ae8193745e8a36d91e14fe1cb6fc29e0083",
+      "provider_request_id_sha256": "7878fd11ea3cb1b220afb4666453667f922aefdb4055ae579e9d84b432712436",
+      "http_status": 200,
+      "response_complete": true,
+      "parser_pass": true,
+      "usage_status": "usable",
+      "usage": {
+        "input_tokens": 2863,
+        "output_tokens": 572,
+        "total_tokens": 3435
+      },
+      "uncertain": false,
+      "provider_call_count": 1
+    }
+  ],
+  "usage": {
+    "input_tokens": 28250,
+    "output_tokens": 5272,
+    "total_tokens": 33522
+  },
+  "reservation": {
+    "per_case_usd": "0.600000",
+    "total_usd": "6.000000",
+    "permanently_reserved_usd_micros": 6000000,
+    "profile_file_sha256": "4e1134194d3f867545dd22feb67563b183d8aa64a511a4fb7a65909828f6a812",
+    "published_rate_usage_calculation_usd": "0.0242363",
+    "not_authenticated_provider_bill": true,
+    "excluded": "Account contracts, taxes, shared-account usage and temporary staging infrastructure costs."
+  },
+  "hosted_verification": {
+    "downloaded_probes": 10,
+    "files_per_probe": 8,
+    "jwt_required": true,
+    "local_frozen_lock_checked": true,
+    "remote_lock_available": false,
+    "pre_dispatch_baseline_preserved": true,
+    "processing_gates_absent_before_and_after": true
+  },
+  "cleanup": {
+    "function_absence_confirmed": true,
+    "guard_removed": true,
+    "complete": true,
+    "errors": [
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-a",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-b",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-c",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-d",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-e",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-f",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-g",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-h",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-i",
+      "function_delete_receipt_unconfirmed:call-eval-faa63b6ed2c5cdb9977e-j"
+    ],
+    "baseline_functions_unchanged": true,
+    "baseline_secrets_unchanged": true,
+    "baseline_storage_unchanged": true,
+    "data_preservation_scope": "No clinical API/SQL operations in fixed source; no row-for-row data equality proof or credential-level denial.",
+    "guard_safe_removal_after_ms": 1792334613946
+  },
+  "private_evidence_sha256": {
+    "run_receipt": "ca4c492a5e07feabc812ae4a68858d5b8b8b48468001da268d53ab709667b49e",
+    "raw_import": "377fda81d5a4f5d4e3521ba5fb8957d44e64c722359fb779cf6dc76af922435c",
+    "packet_file": "1cb6eb618636475247e15a2068b92a64e7b937a6711497f224eb0c6c0491fd9b",
+    "pending_adjudication": "ca491acc3368deaecc642e0d502c588a1b5a9fe722337447fdf72bf540a8f1a6",
+    "triage_a_e": "f0555f86853f09d790ad4c4d2f8714a2b45d4b0c794f275013ced88193ca6543",
+    "triage_f_j": "4634de7a3a64031f70d6f19a7cf9723e06746c41e3322d572fa07a2ee6e97653",
+    "clinic_front_sheet": "e9f79c3d9fcc641b7df8612248670b2c1bdcee2ecfe9182b7c602fc1a1f88420"
+  },
+  "integrated_repository_check": {
+    "unit_tests": 1670,
+    "passed": true,
+    "log_sha256": "e9934689236883d92c4519d233405f6af86f9e6203f887644343feb250ef2611"
+  },
+  "limits": [
+    "Pure request/parser staging probes, not hosted clinical Auth/job/finish acceptance. Separate local runtime proof covers that flow.",
+    "Privileged service credential remains privileged; preservation here covers baseline function/configuration, secret-digest and bucket metadata, not clinical row equality.",
+    "Provider alias and raw-byte hashes do not establish immutable model snapshot or authenticate provider authorship.",
+    "No outputs repaired, original batch reclassified, Susan adjudication filled, policy approved or real clinical processing activated."
+  ]
+}

@@ -9,6 +9,8 @@ import { CALL_EVALUATION_CASES } from "./evaluation-corpus.ts";
 import { adjudicateCallReview, buildFrozenCallBundle, createCallReviewPacket, exactSha256, syntheticEnvelope, verifyFrozenCallBundle, renderCallReviewMarkdown, callEvaluationFence } from "./evaluation-offline.ts";
 
 const bundle = await buildFrozenCallBundle();
+// Retained from the original ten-case run, before any v2 request or provider response.
+const originalScenarioInventorySha256 = "3244035bc79dc99efd98951248fd1f4b1a65a78588e4860a3a110596ca2b1d47";
 function imports() {
   return { contract: "lrv-call-fidelity-raw-v1", bundle_sha256: bundle.bundle_sha256,
     cases: bundle.cases.map((c) => ({ case_id: c.id, request_sha256: c.request_sha256, outcome: { kind: "http", status: 200,
@@ -29,12 +31,21 @@ test("all ten fictional requests use production capture/request/vocabulary contr
     assert.deepEqual(repeated, bundle);
     assert.equal(forbiddenFetches, 0);
     assert.equal(bundle.provider_requests, 0);
+    assert.equal(bundle.corpus_revision, "lrv-call-fidelity-ten-v2");
+    assert.equal(exactSha256(JSON.stringify(CALL_EVALUATION_CASES)), originalScenarioInventorySha256,
+      "Protocol changes cannot make the original scenarios or meaning inventories easier.");
+    assert.ok(bundle.source_sha256["supabase/functions/_shared/clinical-call-note-handler.ts"]);
+    assert.ok(bundle.source_sha256["supabase/functions/_shared/clinical-call-note-processing-model.ts"]);
     assert.equal(bundle.cases.length, 10);
     assert.deepEqual(bundle.cases.map((c) => c.id), CALL_EVALUATION_CASES.map((c) => c.id));
     for (const item of bundle.cases) {
       const request = JSON.parse(item.request_json), input = JSON.parse(request.input);
       assert.equal(item.request_sha256, exactSha256(item.request_json));
       assert.equal(request.model, "gpt-6-luna"); assert.equal(request.store, false);
+      assert.equal(input.contract_version, "clinical-call-note-provider-payload-v2");
+      assert.equal(request.text.format.name, "clinical_call_note_fields_v2");
+      const properties = request.text.format.schema.properties.fields.items.properties.claims.items.properties.supports.items.properties;
+      assert.deepEqual(Object.keys(properties).sort(), ["quote", "segment_ordinal"]);
       assert.equal(input.source_reference.manifest_sha256, item.context.source.sha256);
       assert.equal(input.template.sha256, item.context.template.sha256);
       assert.ok(item.veterinary_context.version.startsWith("lrv-vet-en-"));
@@ -90,11 +101,26 @@ test("structurally valid semantic negative controls get pending per-claim and pe
   assert.equal(packet.cases[0].parsed_result?.provider_model, "fictional-returned-alias");
   await assert.rejects(adjudicateCallReview(bundle, imports(), form));
 });
-test("tampered claim quote, duplicate support and wrong support digest become retained structural failures", async () => {
+test("v2 evidence hashes the exact retained HTTP bytes and decoded assistant text separately", async () => {
+  const raw = imports();
+  const body = " \n" + JSON.stringify(syntheticEnvelope(bundle.cases[0].semantic_negative_control.payload)) + "\n";
+  setBody(raw, 0, body);
+  const { packet } = await createCallReviewPacket(bundle, raw);
+  const first = packet.cases[0];
+  assert.equal(first.structural_status, "pass");
+  assert.equal(first.raw_body_sha256, exactSha256(body));
+  assert.equal(first.parsed_result?.provider_evidence.response_sha256, exactSha256(body));
+  assert.equal(first.parsed_result?.provider_evidence.output_text_sha256,
+    exactSha256(JSON.stringify(bundle.cases[0].semantic_negative_control.payload)));
+  assert.notEqual(first.parsed_result?.provider_evidence.response_sha256,
+    exactSha256(JSON.stringify(JSON.parse(body))));
+});
+test("tampered quote, duplicate support and model-supplied citation bookkeeping remain structural failures", async () => {
   for (const mutate of [
     (p: typeof bundle.cases[0]["semantic_negative_control"]["payload"]) => { p.fields[0].claims[0].supports[0].quote = "invented"; },
     (p: typeof bundle.cases[0]["semantic_negative_control"]["payload"]) => { p.fields[0].claims[0].supports.push(p.fields[0].claims[0].supports[0]); },
-    (p: typeof bundle.cases[0]["semantic_negative_control"]["payload"]) => { p.fields[0].claims[0].supports[0].segment_sha256 = "0".repeat(64); },
+    (p: typeof bundle.cases[0]["semantic_negative_control"]["payload"]) => { Object.assign(p.fields[0].claims[0].supports[0], { segment_sha256: "0".repeat(64), from: 0, to: 1 }); },
+    (p: typeof bundle.cases[0]["semantic_negative_control"]["payload"]) => { p.fields[0].claims[0].supports[0].segment_ordinal = 1; },
   ]) {
     const raw = imports(), payload = structuredClone(bundle.cases[0].semantic_negative_control.payload); mutate(payload);
     setBody(raw, 0, JSON.stringify(syntheticEnvelope(payload)));

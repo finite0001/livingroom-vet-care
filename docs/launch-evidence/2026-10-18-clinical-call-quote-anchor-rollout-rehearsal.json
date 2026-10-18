@@ -1,0 +1,38 @@
+{
+  "contract": "call-quote-rollout-owned-local-check-v1",
+  "migrations_before": 203,
+  "migrations_after": 204,
+  "ordered_exact_ledger_parity": true,
+  "snapshot_sql_executes": true,
+  "actual_after_edge_capture_uses_204": true,
+  "unknown_phase_refused": true,
+  "replaced_function_keys": [
+    "public.fail_clinical_call_note_v1(uuid,uuid,boolean,text,jsonb)",
+    "public.finish_clinical_call_note_v1(uuid,uuid,jsonb)"
+  ],
+  "exact_source_body_digests": true,
+  "only_two_routines_and_ledger_changed": true,
+  "strict_all_data_fingerprints_preserved": true,
+  "compare_verified": true,
+  "fingerprinted_relations": 454,
+  "routine_count": 1475,
+  "scheduler_paused_owned_only": true,
+  "policies_draft": true,
+  "guard_buckets_absent": true,
+  "source_input_count": 211,
+  "hosted_operations": 0,
+  "provider_requests": 0,
+  "owned_cleanup_verified": true,
+  "before_sha256": "06759e1f0b4bd427895b874cea5c0c80e097340c2430be0c09214449e291e973",
+  "after_sha256": "c8bf2e474523c1e0b63a21db0539785611110072b42f8bfe0c91a5a01691625c",
+  "proof_sha256": "43e9ad2c6f28827904699a720e5a6972ea5fee69a0822c7e63163f3f3fc34d4d",
+  "scope": "Actual owned local203\u2192204 replay; account identity/transport wrappers mocked, hosted operations zero. Not hosted deployment or provider acceptance.",
+  "tool_source_sha256": {
+    "tmp/call-quote-rollout-20261018/common.py": "15f234e5ed19a70666d2892916d996be168d6f73015639fefff54fdbb390617d",
+    "tmp/call-quote-rollout-20261018/compare.py": "f15597672f8497216bb7b02702bdc619469725d889baea9e78ea94d52f630095",
+    "tmp/call-quote-rollout-20261018/edge.py": "e6f07ea1483ff9917681e04572efd3c1e6978118af31750478036a99613be7ce",
+    "tmp/call-quote-rollout-20261018/install.py": "3c13fed183ba33c14cfead09a56dcabb36863f4ca8aa49f80f171c8dc6514b0d",
+    "tmp/call-quote-rollout-20261018/offline_tests.py": "a747ec66680deb5814e4a95dbe4f5ca7f1b866de3d71651efa0d248e954c8a2b",
+    "tmp/call-quote-rollout-20261018/snapshot.py": "27cdc3676d6effbc616c93fa9f1ea79fae853d8211e43ca150716c1f48c1b4f7"
+  }
+}
