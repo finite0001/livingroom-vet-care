@@ -96,7 +96,7 @@ create function public.controlled_stock_opening_native_entry_for_product(
 )returns jsonb language plpgsql stable set search_path=public,pg_temp set timezone='UTC' as $$
 declare d jsonb;stored public.native_dispenses;op public.native_fulfillment_operations;return_history jsonb;corrections jsonb;discrepancies jsonb;
  discrepancy_events jsonb;originals jsonb;quantity_events jsonb;replay jsonb;pickup jsonb;pickup_summary jsonb;allocations jsonb:='[]';held jsonb;
- r_alloc record;r_event record;balance jsonb;prepared numeric;slot jsonb;maximum numeric;dispensed numeric;refill_row public.native_refill_events;refill_result jsonb;begin
+ r_alloc record;r_event record;balance jsonb;prepared numeric;slot jsonb;actual_slot jsonb;actual_refill jsonb;slot_time_field text;actual_instant timestamptz;expected_instant timestamptz;maximum numeric;dispensed numeric;refill_row public.native_refill_events;refill_result jsonb;begin
  if p_product is null or p_dispense is null or p_stock_unit is null or length(p_stock_unit)not between 1 and 50
   or p_return_version is null or p_correction_version is null or p_discrepancy_version is null
   or least(p_return_version,p_correction_version,p_discrepancy_version)<0 or greatest(p_return_version,p_correction_version,p_discrepancy_version)>1000 then
@@ -157,8 +157,48 @@ declare d jsonb;stored public.native_dispenses;op public.native_fulfillment_oper
    raise exception 'Original dispense refill event mismatch'using errcode='23514';end if;
   refill_result:=public.native_refill_event(refill_row);
  elsif d#>'{reviewed_context,refill}'is distinct from 'null'::jsonb then raise exception 'Original dispense refill absence mismatch'using errcode='23514';end if;
- if op.result is distinct from jsonb_build_object('dispense',d,'slot',slot,'refill_event',refill_result)then
+ -- Only the two reconstructed slot instants may use equivalent offset spelling.
+ -- The saved operation/result is never normalized or rewritten; its full original
+ -- receipt hash below still witnesses every stored JSON value, including these.
+ actual_slot:=op.result->'slot';
+ if jsonb_typeof(actual_slot)is distinct from 'object'
+  or not(actual_slot?&array['opened_at','closed_at'])
+  or actual_slot-array['opened_at','closed_at']is distinct from slot-array['opened_at','closed_at']
+  or op.result-array['slot','refill_event']is distinct from jsonb_build_object('dispense',d)then
   raise exception 'Original dispense result must retain its exact slot and refill frame'using errcode='23514';end if;
+ foreach slot_time_field in array array['opened_at','closed_at']loop
+  if slot_time_field='closed_at'and slot->slot_time_field='null'::jsonb then
+   if actual_slot->slot_time_field is distinct from 'null'::jsonb then
+    raise exception 'Original dispense slot timestamps must retain exact finite instants'using errcode='23514';end if;
+  else
+   begin
+    expected_instant:=public.native_correction_instant(slot->slot_time_field);
+    actual_instant:=public.native_correction_instant(actual_slot->slot_time_field);
+   exception when data_exception or check_violation then
+    raise exception 'Original dispense slot timestamps must retain exact finite instants'using errcode='23514';
+   end;
+   if actual_instant is distinct from expected_instant then
+    raise exception 'Original dispense slot timestamps must retain exact finite instants'using errcode='23514';end if;
+  end if;
+ end loop;
+ -- The verified original refill event has one reconstructed typed timestamp.
+ -- Nested snapshots and every other event field remain exact saved JSON.
+ actual_refill:=op.result->'refill_event';
+ if refill_result='null'::jsonb then
+  if actual_refill is distinct from 'null'::jsonb then
+   raise exception 'Original dispense result must retain its exact slot and refill frame'using errcode='23514';end if;
+ else
+  if refill_row.id is null or jsonb_typeof(actual_refill)is distinct from 'object'or not(actual_refill?'created_at')
+   or actual_refill-'created_at'is distinct from refill_result-'created_at'then
+   raise exception 'Original dispense result must retain its exact slot and refill frame'using errcode='23514';end if;
+  begin
+   actual_instant:=public.native_correction_instant(actual_refill->'created_at');
+  exception when data_exception or check_violation then
+   raise exception 'Original dispense refill timestamp must retain its exact finite instant'using errcode='23514';
+  end;
+  if not isfinite(refill_row.created_at)or actual_instant is distinct from refill_row.created_at then
+   raise exception 'Original dispense refill timestamp must retain its exact finite instant'using errcode='23514';end if;
+ end if;
  for r_alloc in select * from public.native_dispense_allocations where dispense_id=p_dispense loop
   perform public.stock_source_validate_movement(r_alloc.movement_id);
  end loop;

@@ -1,6 +1,6 @@
 -- OWNED CLONE ONLY. Historical records below use the real canonical writers.
 -- They precede synthetic controlled configuration; no historical row is fabricated.
-begin;set local timezone='UTC';
+begin;set local timezone='__WRITER_TIMEZONE__';
 select set_config('request.jwt.claims','{"role":"authenticated","sub":"a5510000-0000-4000-8000-000000000001"}',true);
 create function pg_temp.oid(key text)returns uuid language sql stable as $$select id from fx where k=key$$;
 insert into fx select key,gen_random_uuid()from unnest(array['opening_pickup','opening_intake_zero','opening_dispose_zero',
@@ -9,7 +9,7 @@ create function pg_temp.opening_fill(version integer)returns jsonb language sql 
  select t||jsonb_build_object('expected_context_hash',preview_native_dispense(t)->>'context_hash','reason','Synthetic pre-opening legacy fill',
  'attest_alert_review',true,'attest_dispense_review',true)from(select jsonb_build_object('authorization_id',pg_temp.oid('sign'),
  'pet_id',pg_temp.oid('pet'),'slot_index',0,'expected_slot_version',version,'invoice_id',pg_temp.oid('invoice'),'quantity','10',
- 'allocations',jsonb_build_array(jsonb_build_object('lot_id',pg_temp.oid('lot1'),'quantity','4'),jsonb_build_object('lot_id',pg_temp.oid('lot2'),'quantity','6')),'refill',null)t)s
+ 'allocations',jsonb_build_array(jsonb_build_object('lot_id',pg_temp.oid('lot1'),'quantity','4'),jsonb_build_object('lot_id',pg_temp.oid('lot2'),'quantity','6')),'refill',case when version is null then jsonb_build_object('id',pg_temp.oid('refill'),'expected_version',2)else null end)t)s
 $$;
 select record_native_dispense(pg_temp.oid('dispense'),pg_temp.opening_fill(null));
 select record_native_dispense(pg_temp.oid('dispense2'),pg_temp.opening_fill(1));
@@ -53,6 +53,8 @@ $$;
 select record_native_return_discrepancy(pg_temp.oid('opening_discrepancy_report'),pg_temp.opening_discrepancy('report',null));
 select record_native_return_discrepancy(pg_temp.oid('opening_discrepancy_resolve'),pg_temp.opening_discrepancy('resolve_confirmed_original',pg_temp.oid('opening_discrepancy_report')));
 commit;
+
+-- OWNED_HISTORY_LEGACY_SEED --
 
 -- The Python owner substitutes only the existing private configuration prefix.
 -- OWNED_PRIVATE_CONFIGURATION --
@@ -147,7 +149,7 @@ select pg_temp.opening_reject('missing_current_movement_provenance',$q$alter tab
 select pg_temp.opening_reject('unresolved_discrepancy_at_prefix',$q$alter table controlled_stock_openings disable trigger immutable;update controlled_stock_openings set native_custody_boundary=(select jsonb_agg(case when e->>'dispense_id'=pg_temp.oid('dispense2')::text then e||jsonb_build_object('discrepancy_head',(select jsonb_build_object('event_id',id,'version',sequence,'record_hash',record_hash)from native_return_discrepancy_events where id=pg_temp.oid('opening_discrepancy_report')))else e end order by e->>'dispense_id')from jsonb_array_elements(native_custody_boundary)e)$q$);
 select pg_temp.opening_reject('discrepancy_source_beyond_retained_return_prefix',$q$alter table controlled_stock_openings disable trigger immutable;update controlled_stock_openings set native_custody_boundary=(select jsonb_agg(case when e->>'dispense_id'=pg_temp.oid('dispense2')::text then e||jsonb_build_object('return_head',(select jsonb_build_object('event_id',id,'version',sequence,'record_hash',record_hash)from native_return_events where id=pg_temp.oid('opening_intake_zero')))else e end order by e->>'dispense_id')from jsonb_array_elements(native_custody_boundary)e)$q$);
 select pg_temp.opening_assert((select state from controlled_stock_state_events where id=(select head_id from controlled_stock_states where product_id=pg_temp.oid('product')))='opening_frozen','validates before active attachment');
-select pg_temp.opening_assert((select count(*)from native_dispenses)=3,'three actual canonical legacy dispenses');
+select pg_temp.opening_assert((select count(*)from native_dispenses where id in(pg_temp.oid('dispense'),pg_temp.oid('dispense2'),pg_temp.oid('dispense3')))=3,'three actual canonical legacy dispenses');
 select pg_temp.opening_assert((select count(*)from native_return_events)=6,'six actual canonical legacy return records');
 select pg_temp.opening_assert((select sum(opening_quantity)from controlled_stock_cells where channel='available'and lot_id=pg_temp.oid('lot1'))=8.125,'lot1 available independently20 minus12 plus0.125');
 select pg_temp.opening_assert((select sum(opening_quantity)from controlled_stock_cells where channel='available'and lot_id=pg_temp.oid('lot2'))=82.125,'lot2 available independently100 minus18 plus0.125');
@@ -160,10 +162,14 @@ select pg_temp.opening_assert((select count(*)from jsonb_array_elements((select 
 select pg_temp.opening_assert((select count(*)from controlled_stock_cells where dispense_id=pg_temp.oid('dispense3'))=0,'handedoff package creates no onsite cells');
 select pg_temp.opening_assert((select e#>>'{return_head,version}'='6'and e#>>'{correction_head,version}'='1'and e#>>'{discrepancy_head,version}'='2'from controlled_stock_openings o cross join lateral jsonb_array_elements(o.native_custody_boundary)e where e->>'dispense_id'=pg_temp.oid('dispense2')::text),'explicit retained full prefix6 correction1 resolveddiscrepancy2');
 select pg_temp.opening_assert((select e#>>'{return_head,version}'='0'and e#>>'{correction_head,version}'='0'and e#>>'{discrepancy_head,version}'='0'from controlled_stock_openings o cross join lateral jsonb_array_elements(o.native_custody_boundary)e where e->>'dispense_id'=pg_temp.oid('dispense')::text),'explicit original prepared zero prefixes');
+-- OWNED_HISTORY_ACCEPTANCE --
 select controlled_stock_validate_opening(pg_temp.oid('engine_opening'));set constraints all immediate;
 select jsonb_build_object('kind','controlled-opening-boundary-acceptance','real_canonical_legacy_dispenses',3,'real_canonical_legacy_return_events',6,
  'real_canonical_preopening_pickups',1,'real_canonical_preopening_annotations',1,'real_canonical_preopening_discrepancy_events',2,'rejected_cases',(select count(*)from opening_rejections),'positive_sql_assertions',(select count(*)from opening_assertions),
  'independent_validator_failure_details',(select jsonb_object_agg(label,failure_detail)from opening_rejections),
+ 'historical_rejected_cases',(select count(*)from opening_history_rejections),'historical_positive_sql_assertions',(select count(*)from opening_history_assertions),
+ 'historical_failure_details',(select jsonb_object_agg(label,failure_detail)from opening_history_rejections),
+ 'original_native_source_fingerprints',(select value from opening_history_original_sources),
  'each_rejection_all_relation_and_manifest_rollback',true,'valid_opening_committed_while_unattached',true,'zero_held_intake_entries_preserved',true,'native_available_not_double_counted',true);
 commit;
 
@@ -204,7 +210,8 @@ do $$declare opening controlled_stock_openings;did uuid;d native_dispenses;root 
 begin
  select *into opening from controlled_stock_openings;
  select n.*into d from native_dispenses n where not exists(select 1 from native_pickups where dispense_id=n.id)
- and not exists(select 1 from native_return_events where dispense_id=n.id)order by n.id limit 1;did:=d.id;
+ and not exists(select 1 from native_return_events where dispense_id=n.id)
+ and exists(select 1 from jsonb_array_elements(opening.native_custody_boundary)e where(e->>'dispense_id')::uuid=n.id)order by n.id limit 1;did:=d.id;
  if did is null then raise exception 'Exact pre-opening prepared package required';end if;
  request:=jsonb_build_object('authorization_id',d.authorization_id,'pet_id',d.pet_id,'dispense_id',did,
  'expected_context_hash',preview_native_pickup(did,d.pet_id,null)->>'context_hash','recipient_name','Synthetic managed recipient','recipient_relationship','Owner',
