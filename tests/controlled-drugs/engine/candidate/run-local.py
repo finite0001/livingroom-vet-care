@@ -16,6 +16,7 @@ import tempfile
 import time
 import uuid
 from local_install import build_install, assert_prior, PriorMetadataDrift
+from scalar_contract import capture_originals, verify_installation
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local',action='store_true',required=True)
@@ -113,6 +114,7 @@ enabled = false
   # Metadata paths only: never include relation rows, caller claims or secrets.
   (result_dir/'untouched-prior-drift.json').write_text(json.dumps({'changed_metadata_paths':list(drift.changed_metadata_paths)},indent=2))
   raise
+ scalar_originals=capture_originals(sql,trusted)
  (result_dir/'assembled-local-only.sql').write_text(install)
  drift_cases={
   'helper_definition':"alter function public.stock_writer_current()set statement_timeout='200ms';",
@@ -136,18 +138,22 @@ enabled = false
   'current_scoped_metadata_equals_original_reference':True,'drift_failures':list(drift_cases),'atomic_rollback_verified':True,'exclusive_barrier_before_preflight':True}
  print('Trusted prior metadata: four drift cases rejected before engine schema; exact rollback verified.',flush=True)
  sql(install)
+ proof['scalar_helper_compatibility']=verify_installation(sql,scalar_originals,source/'scalar-compatibility.sql')
  assert sql("select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;").strip()==roots
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
  runtime['unpublished_engine_schema']=True;(result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
- print('Candidate installed locally; all ten canonical root definitions unchanged; new RPCs revoked.',flush=True)
+ print('Candidate installed locally; three scalar helper implementations verified; all ten canonical writer bodies unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:
   output=command(['supabase','test','db','--workdir',str(project)],timeout=420)
   assert 'All tests successful.'in output and 'Files=166, Tests=7338'in output
   proof['ordinary_sql_regression']={'files':166,'assertions':7338}
   print('Ordinary compatibility:166 canonical SQL suites /7338 assertions passed with the candidate installed.',flush=True)
  environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
- for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-opening.py','opening_boundary'),('probe-api.py','genuine_auth_api')]:
-  p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=360)
+ for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-opening.py','opening_boundary'),('probe-capacity.py','opening_capacity'),('probe-api.py','genuine_auth_api')]:
+  # The capacity fixture admits 200 real writers and runs deferred opening checks.
+  # Keep its 900-second SQL deadline inside the parent deadline with cleanup room.
+  probe_timeout=960 if name=='opening_capacity'else 360
+  p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=probe_timeout)
   log.write(probe+'\n'+p.stdout+p.stderr+'\n');log.flush()
   if p.returncode:raise RuntimeError(probe+' failed; protected result directory: '+str(result_dir))
   proof[name]=json.loads(next(line for line in reversed(p.stdout.splitlines())if line.startswith('{')))

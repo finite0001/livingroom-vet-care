@@ -17,6 +17,7 @@ The protocol reserves each operation UUID, freezes original canonical arguments 
 | `probe-smoke.py` / `smoke.sql` | Fractional receive/adjust, stale reviews, changed payloads, permanent cancellation, foreign owner, shared/exclusive upgrade rejection, same-packet generic/raw context borrowing, exact recovery; all source relation fingerprints unchanged after rollback |
 | `probe-native.py` / native fixtures | 24 managed actions across nine producers; receiving is tested separately. All six return actions, three correction kinds and four discrepancy actions; independent available/prepared/held and billing totals; one anesthesia treatment/debit/charge |
 | `probe-opening.py` / `opening-boundary-acceptance.sql` / `opening-history.sql` | Separately counted populated opening-custody boundary acceptance; original native prefixes, exact cell reconciliation, refusal rollback fingerprints and marked clone/restore cleanup. Synthetic engineering evidence, not commissioning or genuine Auth/API coverage |
+| `probe-capacity.py` / `opening-capacity*.sql` | Separate genuine 100-allocation and complete 200-dispense opening scenarios; genuine 201st-source refusal, separately labeled structural byte/head/count probes and corruption injection; committed canonical fixture rows exist only inside marked disposable clones |
 | `run-native-history.py` / `native-history-*.sql` / `native_history_restore.py` | Genuine canonical 187/188 record creation followed by unchanged upgrades to 204; seven native projections plus two separate available-only opening cases, original-column preservation, rollback fingerprints and persisted unattached opening restore |
 | `fault-probes.sql` | Failures after inventory, billing, controlled-line and action inserts; every relation fingerprint must match the pre-execution state after rollback |
 | `integrity-probes.sql` | Missing/forged lines, foreign source, changed opening, skipped head, broken custody predecessor, rolled-back state head, changed unit, forged event hash/frame and forged new-container identity must fail independent validation |
@@ -120,8 +121,33 @@ records the expanded rehearsal without rewriting its historical counts.
 Candidate capacity is explicit: at most 200 product dispenses/boundary entries,
 100 allocations per dispense, 1,000 events per dispense per native history family (including
 later managed history), and a 1 MiB boundary. Exceeding these limits refuses; it
-never truncates evidence. This bounded development capacity needs review before
-production engine assembly and commissioning.
+never truncates evidence. The capacity probe exercises real canonical writers
+before a frozen, unattached opening, separated by actual transaction boundaries.
+The 100-allocation and 200-dispense maxima use independent scenarios and do not
+establish combined-maximum acceptance. The 201st canonical dispense is created
+after rolling back configuration; a new
+freeze must reject its shortened 200-entry boundary. Configuration rollback is
+checked against exact committed-history fingerprints, and the source runtime
+remains unchanged. Structural 1 MiB/head probes and deliberately corrupted
+over-limit source rows are reported separately from genuine opening acceptance.
+Genuine 1,000-event lifecycle chains, combined-maxima stress, production workload
+capacity review and commissioning remain separate work. No supported limit changes
+in this batch.
+
+`scalar-helpers.sql` intentionally changes the implementation language/body of
+`native_fulfillment_hash`, `native_fulfillment_decimal` and
+`native_fulfillment_receipt` from SQL to PL/pgSQL. Their original expressions,
+signatures, OIDs, owner, ACLs, volatility, null behavior, caller timezone behavior
+and other catalog attributes remain unchanged. This bounds the dominant retained
+SQL-function contexts observed during repeated opening checks; it does not alter
+the opening validator or any of the ten canonical writer bodies. Both runners
+capture actual original definitions against the unchanged trusted-189 reference
+before installation, then compare 36 value/error cases with independent SQL
+oracles and check 128 parent-primed hash calls for retained context growth. This
+is a local candidate overlay, not a canonical migration or hosted installation.
+The [capacity and scalar-memory receipt](../../../../docs/launch-evidence/2026-10-18-controlled-opening-capacity.md)
+records the fresh full compatibility and historical proofs, separate maximum
+scenarios and their limits.
 
 Opening validation checks the retained boundary and exact later-source partition.
 The existing deferred guards validate each new/root managed event, and the restore
