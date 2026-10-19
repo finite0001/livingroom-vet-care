@@ -130,9 +130,43 @@ freeze must reject its shortened 200-entry boundary. Configuration rollback is
 checked against exact committed-history fingerprints, and the source runtime
 remains unchanged. Structural 1 MiB/head probes and deliberately corrupted
 over-limit source rows are reported separately from genuine opening acceptance.
-Genuine 1,000-event lifecycle chains, combined-maxima stress, production workload
-capacity review and commissioning remain separate work. No supported limit changes
-in this batch.
+Genuine 1,000-event return and discrepancy chains, combined-maxima stress,
+production workload capacity review and commissioning remain separate work.
+No supported limit changes in this batch.
+
+The optional correction-chain feasibility probe uses real canonical operational
+annotations for one dispense and one allocation. It runs in its own UUID-marked
+clone, commits at most 32 canonical writes per fresh backend, and records aggregate
+64/128/256/512/1,000 checkpoints. A single 900-second budget covers setup,
+ownership checks, fixture phases and final source/manifest verification. After an
+explicit first calibration batch, each next batch uses the latest completed batch's
+elapsed time, cubic work growth, a factor of two and a 120-second reserve. The
+full-goal forecast remains a diagnostic with unknown completion, not an admission
+condition. Append batches, bootstrap and correction 1,001 have a real deadline
+120 seconds before the global deadline. Exact replay runs in the positive
+validation phase under the global deadline. Each command recomputes remaining time
+after ownership checks and rejects late results. Safety cleanup may finish later,
+but exact cleanup remains mandatory before acceptance. A stopped attempt produces
+diagnostic evidence and no acceptance proof.
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression --include-correction-capacity
+```
+
+The passing [correction-capacity receipt](../../../../docs/launch-evidence/2026-10-19-controlled-opening-correction-capacity.md)
+includes a fully validated frozen, unattached opening at
+1,000 corrections, exact receipt replay, and refusal of opening evidence after a
+genuine 1,001st canonical annotation. A fresh full ordinary run passed with this
+optional local flag; CI enables it explicitly. It does not
+prove 1,000-event return or discrepancy chains, simultaneous maxima, populated
+restore at that depth, a production workload limit or approved practice rules.
+
+Canonical receipt replay in a fresh transaction also appends its writer-admission
+audit row. The probe verifies exactly that expected row with all original audit
+rows retained, then compares complete before/after relation fingerprints against
+the actual checkpoint and post-configuration rollback. Every relation remains in
+the private snapshots; the audit append does not create another correction event,
+receipt, stock movement or charge.
 
 `scalar-helpers.sql` intentionally changes the implementation language/body of
 `native_fulfillment_hash`, `native_fulfillment_decimal` and
