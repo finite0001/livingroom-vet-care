@@ -18,6 +18,13 @@ do $$declare era integer:=(select i.era from native_history_input i);begin
 end$$;
 grant all on native_history_input,native_history_cases to authenticated;
 set local role authenticated;
+-- Genuine generic-only stock is independent of the native product and its holds.
+-- These are the original era's public writers, not hand-built historical rows.
+insert into fx select k,gen_random_uuid()from unnest(array['history_generic_lot','history_generic_receive','history_generic_adjust'])k;
+insert into fx select 'history_generic_product',id from save_catalog_product(null,null,'Synthetic genuine-era generic stock','medication','','tablet',100,true);
+select receive_inventory(pg_temp.history_id('history_generic_receive'),pg_temp.history_id('history_generic_lot'),pg_temp.history_id('history_generic_product'),
+ 'SYNTHETIC-GENERIC-HISTORY',current_date+365,'Synthetic clinic',3.000,'Synthetic genuine-era generic receipt');
+select adjust_inventory(pg_temp.history_id('history_generic_adjust'),pg_temp.history_id('history_generic_lot'),-0.500,'Synthetic genuine-era fractional adjustment');
 insert into fx select k,gen_random_uuid()from unnest(array['history_prepared','history_clinical','history_operational','history_pickup_dispense',
  'history_amendment_dispense','history_hold_dispense','history_pickup','history_amendment_pickup','history_clinical_event',
  'history_operational_event','history_amendment_event','history_hold_intake','history_hold_report'])k;
@@ -88,6 +95,9 @@ reset role;
 commit;
 select jsonb_build_object('kind','controlled-native-history-seed-v1','era',(select era from native_history_input),
  'ids',(select jsonb_object_agg(k,id)from fx),'cases',(select jsonb_agg(to_jsonb(c)order by name)from native_history_cases c),
+ 'generic_stock',jsonb_build_object('product_id',pg_temp.history_id('history_generic_product'),'lot_id',pg_temp.history_id('history_generic_lot'),
+ 'receive_id',pg_temp.history_id('history_generic_receive'),'adjust_id',pg_temp.history_id('history_generic_adjust'),
+ 'received_quantity','3.000','adjustment_quantity','-0.500','available_quantity','2.500','movement_count',2),
  'actual_canonical_dispense_count',(select count(*)from native_dispenses),'actual_canonical_correction_count',(select count(*)from native_dispense_correction_events),
  'actual_canonical_pickup_count',(select count(*)from native_pickups),'actual_canonical_return_count',(select count(*)from native_return_events),
  'actual_canonical_discrepancy_count',(select count(*)from native_return_discrepancy_events),'historical_rows_fabricated',false,'provenance_backfilled',false);

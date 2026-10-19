@@ -17,6 +17,7 @@ import uuid
 
 from local_install import build_install, assert_prior
 from history_environment import assert_bootstrap_image
+from native_history_restore import probe_generic_restore
 
 source = Path(__file__).resolve().parent
 root = source.parents[3]
@@ -64,16 +65,16 @@ class OwnedReplay:
         assert labels['com.supabase.cli.project'] == self.identity
         assert Path(labels['com.supabase.cli.workdir']).resolve() == self.project.resolve()
 
-    def sql(self, query, variables=None):
+    def sql(self, query, variables=None, database='postgres'):
         self.verify()
         argv = ['docker', 'exec', '-i', self.container, 'psql', '-X', '-qAt',
-                '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1']
+                '-U', 'postgres', '-d', database, '-v', 'ON_ERROR_STOP=1']
         for key, value in (variables or {}).items():
             argv.extend(['-v', key + '=' + str(value)])
         return self.command(argv, query)
 
-    def json(self, query, variables=None):
-        return json.loads(self.sql(query, variables).splitlines()[-1])
+    def json(self, query, variables=None, database='postgres'):
+        return json.loads(self.sql(query, variables, database).splitlines()[-1])
 
     def ledger(self, files):
         actual = self.json('select jsonb_agg(version order by version)from supabase_migrations.schema_migrations;')
@@ -91,7 +92,7 @@ class OwnedReplay:
                          "join pg_attribute a on a.attrelid=c.oid and a.attnum>0 and not a.attisdropped "
                          "where c.relkind in('r','p')and(" + predicate + ')group by n.nspname,c.relname)x;')
 
-    def snapshot(self, columns):
+    def snapshot(self, columns, database='postgres'):
         parts = []
         for name, names in sorted(columns.items()):
             schema, relation = name.split('.')
@@ -100,7 +101,7 @@ class OwnedReplay:
                          "encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,'|'order by to_jsonb(t)::text),''),'UTF8')),'hex'))value "
                          'from(select ' + selected + ' from ' + identifier(schema) + '.' + identifier(relation) + ')t')
         return self.json("begin;set local timezone='UTC';select jsonb_object_agg(name,value)from(" +
-                         ' union all '.join(parts) + ')x;rollback;')
+                         ' union all '.join(parts) + ')x;rollback;', database=database)
 
     def provenance(self):
         return self.json("select jsonb_build_object('movement',(select count(*)from stock_movement_sources),"
@@ -237,6 +238,21 @@ def rehearse(era, files, assembly, folder):
                 print(str(era) + ': ' + case['name'] + ' observed; state unchanged.', flush=True)
             assert replay.provenance() == provenance
             assert replay.no_controlled_data() == controlled
+            generic_fixture = (source / 'native-history-generic-opening.sql').read_text()
+            generic = replay.json(generic_fixture, {'ids_json': json.dumps(seed)})
+            assert generic['kind'] == 'controlled-generic-history-opening-observation-v1'
+            assert generic['case_name'] == str(era) + '_generic_available_opening'
+            assert generic['outcome'] == 'accepted_opening_validation'
+            assert replay.snapshot(final_columns) == installed, 'Generic opening observation changed stored state'
+            replay.verify_writers(roots)
+            assert replay.provenance() == provenance
+            assert replay.no_controlled_data() == controlled
+            print(str(era) + ': generic available-only opening validated; state unchanged.', flush=True)
+            restored = probe_generic_restore(replay, seed, generic_fixture, installed, final_columns)
+            assert replay.snapshot(final_columns) == installed, 'Restore probe changed source state'
+            replay.verify_writers(roots)
+            assert replay.provenance() == provenance
+            assert replay.no_controlled_data() == controlled
             (replay.folder / 'preservation.json').write_text(json.dumps({'original_columns': original_columns,
                 'original_before_and_after': before, 'post_install_after_each_observation': installed}, indent=2))
             outcome = {'era': era, 'postgres_image': image, 'postgres_content_pin': image_pin,
@@ -247,7 +263,7 @@ def rehearse(era, files, assembly, folder):
                 'provenance_counts': provenance, 'no_retrospective_provenance': True,
                 'trusted_prior_metadata_matches_original_189': True, 'ten_canonical_writers_unchanged': True,
                 'controlled_data_relation_count': len(controlled), 'controlled_configuration_or_events': 0,
-                'observations': observations}
+                'observations': observations, 'generic_observations': [generic], 'generic_opening_restore': restored}
         assert scheduler['paused_and_drained'] and scheduler['restored']
         outcome['owned_scheduler_paused_drained_and_restored'] = True
     finally:
@@ -266,7 +282,7 @@ def main():
     assert files[186].name == '20261015011200_controlled_draft_configuration.sql'
     assert files[187].name == '20261015020722_stock_writer_provenance.sql'
     assert files[188].name == '20261015055007_native_custody_provenance.sql'
-    for name in ['native-history-seed.sql', 'native-history-observe.sql']:
+    for name in ['native-history-seed.sql', 'native-history-observe.sql', 'native-history-generic-opening.sql']:
         assert (source / name).is_file(), 'Required source-bound fixture missing: ' + name
     inputs = files + sorted(source.glob('*.sql')) + sorted(source.glob('*.py')) + [
         source / 'trusted-prior-189.json', root / 'supabase/tests/native_fulfillment.test.sql',
@@ -279,14 +295,17 @@ def main():
     assert cli.stdout.strip() == '2.118.0', 'Use the reviewed CLI bootstrap; never normalize trusted ACL drift'
     assembly = build_install(source, files)
     outcomes = [rehearse(era, files, assembly, folder) for era in (187, 188)]
+    assert sum(len(x['observations']) for x in outcomes) == 7
+    assert sum(len(x['generic_observations']) for x in outcomes) == 2
     assert all(digest(root / path) == expected for path, expected in hashes.items()), 'Source changed during proof'
     proof = {'synthetic_only': True, 'hosted_writes': 0, 'provider_requests': 0, 'canonical_migration': False,
              'clinical_or_register_activation': False, 'trusted_reference_regenerated': False,
              'trusted_reference_sha256': assembly['reference_sha256'], 'supabase_cli': cli.stdout.strip(), 'source_hashes': hashes,
              'replays': outcomes, 'observed_cases': sum(len(x['observations']) for x in outcomes),
+             'generic_opening_cases': sum(len(x['generic_observations']) for x in outcomes),
              'all_owned_resources_removed': True}
     (folder / 'result.json').write_text(json.dumps(proof, indent=2))
-    print('PASS: genuine 187/188 history upgraded unchanged; seven outcomes observed; cleanup verified.', flush=True)
+    print('PASS: genuine 187/188 history upgraded unchanged; seven native outcomes and two generic openings observed; populated opening restores and cleanup verified.', flush=True)
     print('Sanitized result: ' + str(folder / 'result.json'), flush=True)
 
 
