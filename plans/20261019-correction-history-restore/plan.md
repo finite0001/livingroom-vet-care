@@ -82,13 +82,24 @@ unchanged 120-second reserve. Source preservation, clone cleanup and outer
 owned-container/volume absence checks passed. The other three jobs passed. This
 run is excluded from acceptance; the first run's cause remains unknown.
 
-Only the database CI job now uses `ubuntu-24.04-arm`; the native amd64 renderer
-job remains unchanged. Both standard public runner architectures are documented
-at 4 vCPU, 16 GB RAM and 14 GB SSD with free public-repository usage. This is an
-architecture contingency, not a guaranteed performance fix. No engine, Python,
-SQL, 900/120-second guards, maximum batch of 32 or safety factor of two changed.
-The 417/253-file fresh source bindings remain valid because their sets exclude
-the CI workflow YAML. The next actual CI run is pending.
+The third CI run put the whole database job on ARM but again refused 928→960
+before restore: remaining 229.243710925 seconds was below required 243.556468959,
+including the unchanged 120-second reserve. Source preservation, clone cleanup
+and outer owned-resource absence checks passed; the other three jobs passed.
+This ARM run is excluded from acceptance. The first CI cause remains unknown.
+
+The original database job is restored to `ubuntu-latest`. Its exact two full
+candidate and history commands now run in a separate native ARM `controlled-stock`
+job with checkout and Supabase CLI 2.118.0 only. Python standard library and Docker
+suffice; no Node/npm/browser or global foundation runtime starts in the new job.
+All five jobs must pass. The original four jobs' other steps and runner labels
+remain unchanged; a semantic YAML comparison verified exact command relocation.
+The isolation removes known runtime overlap, without proving the underlying cause
+or guaranteeing improved performance. Both standard public runner architectures
+specify 4 vCPU, 16 GB RAM and 14 GB SSD with free public-repository usage.
+No engine, Python, SQL, 900/120-second guards, batch-32 bound or safety factor of
+two changed. The 417/253-file fresh source bindings exclude workflow YAML and
+remain valid. The next actual five-job CI run is pending.
 
 The proof is SQL-only and synthetic. It does not prove physical post-backup
 reconciliation, cluster-role recovery, Storage binary recovery, return/discrepancy

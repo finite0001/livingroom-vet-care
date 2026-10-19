@@ -79,9 +79,7 @@ jobs:
         run: python3 scripts/verify-clinical-audio-edge-isolation.py
 
   database:
-    # The pinned local database environment supports native Linux ARM64;
-    # retain the same bounded workloads and writer reserves on this runner.
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Verify local concurrency harness regressions
@@ -184,10 +182,6 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Verify native prescribing, real browser dispensing and populated restore
         run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
-      - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
-        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression --include-correction-capacity --include-correction-restore
-      - name: Verify genuine 187/188 history, available-only openings and populated opening restore
-        run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local
       - uses: denoland/setup-deno@v2
         with:
           deno-version: 2.9.6
@@ -316,6 +310,20 @@ jobs:
         run: python3 -B tests/diagnostics/local-disposable.py --run-synthetic-local
       - name: Verify diagnostic PDF jobs, exact-byte recovery and Patient360 in an owned runtime
         run: python3 -B tests/diagnostics/pdf-jobs-disposable.py --run-synthetic-local
+
+  controlled-stock:
+    # Run only the owned rehearsal stacks, without the database job's foundation.
+    # All probe deadlines, reserves, workloads and cleanup gates remain unchanged.
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression --include-correction-capacity --include-correction-restore
+      - name: Verify genuine 187/188 history, available-only openings and populated opening restore
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local
 
   diagnostic-renderer:
     runs-on: ubuntu-24.04

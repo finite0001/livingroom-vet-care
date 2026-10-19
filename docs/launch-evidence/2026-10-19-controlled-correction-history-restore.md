@@ -100,14 +100,30 @@ confirmed no owned containers or volumes remained. The other three jobs passed.
 This failed run is also excluded from acceptance and does not explain the first
 run's unknown failure.
 
-The database CI job now selects `ubuntu-24.04-arm`; the native amd64 renderer job
-is unchanged. GitHub documents both standard public ARM64 and x64 runners at
+The third CI run, with the whole database job on ARM, also refused the batch
+from 928 to 960 corrections before restore began. It had 229.243710925 seconds
+remaining, below the required 243.556468959 seconds (123.556468959 estimated batch
+seconds plus the same 120-second reserve). Source preservation, clone cleanup
+and outer owned-resource absence checks passed; the other three jobs passed.
+This ARM attempt is excluded from acceptance. Neither confirmed admission refusal
+establishes the cause of the first run's unknown failure.
+
+The original database job now uses `ubuntu-latest` again. Its two full candidate
+and historical commands have moved unchanged to a separate `controlled-stock`
+job on `ubuntu-24.04-arm`. That job checks out the source and installs Supabase
+CLI 2.118.0; its Python-standard-library/Docker workload needs no Node, npm or
+browser setup. It does not start the global foundation runtime. This removes a
+known runtime overlap within that job; it does not establish the underlying
+slowdown's cause or guarantee faster execution. All five CI jobs must pass.
+The original four jobs' other steps and runner labels remain unchanged, and a
+semantic YAML comparison confirmed the exact command relocation.
+
+GitHub documents standard public ARM64 and x64 runners at
 [4 vCPU, 16 GB RAM and 14 GB SSD, with free public-repository usage](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
-The architecture change is a contingency, not a guaranteed speed improvement.
-It changes no engine, Python, SQL, 900-second budget, 120-second reserve,
-32-write batch bound or safety factor of two. The fresh local 417/253-file source
-bindings remain valid; their input sets do not include the CI workflow YAML. The
-next actual CI result remains pending.
+This CI-only relocation changes no engine, Python, SQL, 900-second budget,
+120-second reserve, 32-write batch bound or safety factor of two. The fresh local
+417/253-file source bindings remain valid; their input sets do not include the
+CI workflow YAML. The next actual five-job CI result remains pending.
 
 The targeted private observer used six immutable target intervals across 50 labeled SQL
 stages. It closed before every target switch and database drop. Query actions
