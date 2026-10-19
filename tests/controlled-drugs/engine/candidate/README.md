@@ -185,6 +185,13 @@ Selected-schema logical restoration does not certify cluster-role, ownership,
 default-privilege or Storage binary recovery, physical reconciliation or practice
 approval. Clinical/register activation remains pending Susan's approval.
 
+On a child-probe failure, the parent prints only a sanitized fixed-category
+summary and bounded correction checkpoint timing. Raw errors, SQL, fixture IDs
+and private fingerprints stay in protected logs. An unrecognized error remains
+`unknown`; partial progress is never acceptance. Cleanup confirmation prints only
+after exact owned container and volume absence checks. This reporting does not
+change workload deadlines, writer reserves or product guards.
+
 `scalar-helpers.sql` intentionally changes the implementation language/body of
 `native_fulfillment_hash`, `native_fulfillment_decimal` and
 `native_fulfillment_receipt` from SQL to PL/pgSQL. Their original expressions,

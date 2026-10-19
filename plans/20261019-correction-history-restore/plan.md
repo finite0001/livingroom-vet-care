@@ -37,11 +37,15 @@ gap; it changes no engine behavior, canonical writer, migration, limit or pin.
 - [x] Complete fresh full ordinary compatibility with the explicit restore opt-in:
   166 canonical SQL suites/7,338 assertions, existing candidate/API probes, and
   the complete correction-capacity plus populated-restore proof passed. Its
-  correction workload took 582.279 seconds; all 416 bound hashes matched and
+  correction workload took 581.332 seconds; all 417 bound hashes matched and
   owned resources were removed.
 - [x] Publish sanitized evidence with explicit private source-set bindings and
   independently review it.
-- [ ] Complete PR and exact-head CI before Dave's specific merge approval.
+- [x] Retain sanitized parent failure diagnostics with 15 focused privacy tests;
+  repeat full ordinary and historical compatibility with the diagnostic patch.
+  All 162 harness methods pass; all 253 historical source bindings match.
+- [ ] Complete PR #285 and the next exact-head CI before Dave's specific merge
+  approval.
 
 The completed targeted rehearsal took 593.592 seconds within the shared workload
 budget. It retained all eleven named capacity observations (seven accepted checks
@@ -50,15 +54,26 @@ and its opening refusals. The populated restore compared all 456 selected relati
 and ran seven validations: both populated/restored databases in three timezones,
 plus restored-session retirement with exact rollback. All 416 bound source hashes
 and three private driver inputs matched; all owned containers and volumes were
-removed. Independent review and 147 focused harness tests passed before the run.
+removed. Independent review and 147 focused harness tests passed before that run. The
+latest fresh runs have a distinct source set: only the parent runner changed and
+one diagnostic helper was added. Workload, fixture and observer inputs remain
+unchanged; the latest harness total is 162.
 
 The private observer covered 50 SQL stages across six immutable-target intervals;
 sampled container/backend peaks were 268,330,598/124,870,656 bytes. These are sampled
 rehearsal observations, not production benchmarks or guaranteed memory maxima.
 The earlier reserve-guard refusal is excluded from completed acceptance. Fresh
 ordinary/historical compatibility and repository checks have since passed.
-Sanitized public evidence review, PR, exact-head CI and Dave's specific merge
-approval remain pending.
+Sanitized public evidence review passed. PR #285, the next exact-head CI and
+Dave's specific merge approval remain pending.
+
+The first CI correction child exited nonzero after approximately 686 seconds;
+its cause is unknown because its diagnostic was not retained in the CI artifact.
+That failed run is excluded from acceptance. The parent now prints only sanitized failure classifications; raw child
+diagnostics remain in protected local logs. The parent-only patch is covered
+by 15 privacy tests. It changes no engine, fixture, 900-second workload deadline
+or 120-second writer reserve. Fresh ordinary/historical passes include the patch;
+CI has not yet passed it.
 
 The proof is SQL-only and synthetic. It does not prove physical post-backup
 reconciliation, cluster-role recovery, Storage binary recovery, return/discrepancy

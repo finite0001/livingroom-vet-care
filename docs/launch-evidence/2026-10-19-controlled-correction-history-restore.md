@@ -3,8 +3,9 @@
 The targeted local rehearsal passed: a frozen, unattached opening containing a
 genuine 1,000-event operational-annotation chain was committed in a marked clone,
 dumped, restored into a second marked database and independently revalidated.
-Fresh full ordinary compatibility and historical rehearsals also passed. PR
-review, CI and release remain pending. The accompanying
+Fresh full ordinary compatibility and historical rehearsals also passed with
+the failure-diagnostic patch. PR #285 review, the next CI run and release remain
+pending. The accompanying
 [structured evidence](2026-10-19-controlled-correction-history-restore.json)
 records the separate results and source bindings.
 
@@ -58,25 +59,37 @@ The entire targeted correction/restore workload completed in 593.592 seconds
 within the unchanged 900-second budget. Append batches remained limited to 32
 corrections per fresh backend, with a real 120-second writer reserve. Acceptance
 still required the actual 1,001st append, all refusal checks and exact cleanup.
-All 416 bound source hashes and the three private executable input hashes matched.
+All 416 bound source hashes and the three private executable input hashes matched
+for that monitored rehearsal. Its source set is distinct from the latest fresh
+runs: only the parent runner changed and one failure-diagnostic helper was added.
+The workload, fixture, observer and budget guards did not change.
 
 The fresh full ordinary run independently repeated all eleven capacity
 observations and seven restore validations. Its correction/restore workload
-completed in 582.279 seconds under the same budget, without the targeted memory
+completed in 581.332 seconds under the same budget, without the targeted memory
 observer. It passed 166 canonical SQL suites and 7,338 assertions, the existing
 candidate probes and independent capacity scenarios, and 133 checks in the
 genuine Auth/PostgREST proof with eight observed lock queues. The 133 checks
 include SQL setup, state and cleanup observations; they are not an HTTP request
-count. All 416 source bindings matched, and owned-resource absence was
+count. All 417 source bindings matched, and owned-resource absence was
 independently confirmed.
 
 The fresh historical run preserved genuine 187/188 history and passed seven
 native outcomes with 83 SQL checks and two generic openings with 29 checks,
-including their existing populated restores. All 252 historical source bindings
+including their existing populated restores. All 253 historical source bindings
 matched and owned-resource cleanup was independently confirmed. Those historical
 cases remain separate from the new long-chain restore above. Repository checks
 also passed lint, type checking, all 1,687 unit tests and the build, plus
-147 Python harness methods, including 27 new restore-harness methods.
+162 Python harness methods, including 27 restore-harness methods and 15 new
+failure-diagnostic privacy tests.
+
+The first CI run failed when the correction child exited nonzero after about
+686 seconds. Its cause remains unknown because the child diagnostic was not
+retained in the CI artifact; it is excluded from passing evidence. The parent
+now prints only sanitized failure classifications; raw child diagnostics remain
+in protected local logs. Fifteen focused tests cover diagnostic privacy. This patch changes
+no engine, fixture, 900-second deadline or 120-second writer reserve. The fresh
+local passes above include that patch; the next exact-head CI run remains pending.
 
 The targeted private observer used six immutable target intervals across 50 labeled SQL
 stages. It closed before every target switch and database drop. Query actions

@@ -3,6 +3,19 @@
   "all_ten_canonical_writer_bodies_unchanged": true,
   "canonical_migration": false,
   "canonical_migration_files": 204,
+  "ci_attempts": [
+    {
+      "900_second_workload_budget_and_120_second_reserve_relaxed": false,
+      "cleanup_not_inferred_from_absence_of_finally_error": true,
+      "conclusion": "failure",
+      "failure_cause": "unknown",
+      "included_in_passing_acceptance": false,
+      "independent_cleanup_receipt_available": false,
+      "observed_failure": "Correction probe returned nonzero; the parent log did not expose its inner cause",
+      "run_id": 39320338590,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/39320338590"
+    }
+  ],
   "clinical_or_register_activation": false,
   "correction_capacity_acceptance": {
     "accepted_assertions_after_1001": 1,
@@ -25,27 +38,27 @@
     "full_ordinary_checkpoint_phase_seconds": [
       {
         "previous_target": 0,
-        "stage_elapsed_seconds": 1.244,
+        "stage_elapsed_seconds": 1.264,
         "target": 64
       },
       {
         "previous_target": 64,
-        "stage_elapsed_seconds": 2.899,
+        "stage_elapsed_seconds": 3.056,
         "target": 128
       },
       {
         "previous_target": 128,
-        "stage_elapsed_seconds": 12.89,
+        "stage_elapsed_seconds": 12.976,
         "target": 256
       },
       {
         "previous_target": 256,
-        "stage_elapsed_seconds": 66.849,
+        "stage_elapsed_seconds": 66.88,
         "target": 512
       },
       {
         "previous_target": 512,
-        "stage_elapsed_seconds": 377.489,
+        "stage_elapsed_seconds": 377.206,
         "target": 1000
       }
     ],
@@ -93,23 +106,35 @@
     "workload_budget_or_product_guard_relaxed_for_retry": false
   },
   "engine_definition_changes_in_this_batch": false,
-  "full_private_source_maps_retained": "Complete 416-source ordinary/targeted and 252-source historical maps remain private; each map is bound by its full_private_source_set_digest and private result SHA-256 above.",
+  "failure_diagnostics": {
+    "diagnostic_change_does_not_establish_prior_CI_root_cause": true,
+    "exact_terminal_assertions_mapped_only_to_fixed_guard_categories": true,
+    "failure_reporter_harness_methods": 15,
+    "failure_summary_always_nonacceptance": true,
+    "owned_cleanup_success_line_requires_verified_container_and_volume_absence": true,
+    "progress_and_cleanup_fields_typed_bounded_and_whitelisted": true,
+    "raw_subprocess_stdout_or_stderr_published": false,
+    "reporting_failure_cannot_replace_original_probe_failure": true,
+    "scope": "Parent-side reporting only",
+    "unrecognized_terminal_failure_category": "unknown"
+  },
+  "full_private_source_maps_retained": "Fresh 417-source ordinary and 253-source historical maps, plus the earlier monitored 416-source targeted map, remain private; each distinct map is bound by its full_private_source_set_digest and private result SHA-256 above.",
   "full_private_source_set_digest_algorithm": "SHA-256 of UTF-8 json.dumps(full_private_source_hash_map, sort_keys=True, separators=(',', ':'))",
   "historical_compatibility": {
     "all_owned_resources_removed": true,
     "all_shared_hashes_match": true,
-    "bound_source_hashes_matched": 252,
-    "full_private_source_set_digest": "9c405d93812c7476849046a4602abe5f0f7a8376c6db2a1b412121a883dbf63a",
+    "bound_source_hashes_matched": 253,
+    "full_private_source_set_digest": "8290e00579d7c94bfe4c10b8e1bf136e5690d6f232c77e9e112f93468078c52f",
     "generic_focused_refusals": 6,
     "generic_opening_cases": 2,
     "generic_sql_checks": 29,
-    "independent_cleanup_receipt_sha256": "d72a86bfc83adfc2a921e2de2d131b5dd0efeacb34c920e3cd84c9b23c4e7f03",
+    "independent_cleanup_receipt_sha256": "f9bc9351b0b4c7699c8f7eb83235c384e970927fa8d67c0b2396e87aad1921e4",
     "independent_cleanup_verified": true,
     "long_correction_chain_restore_executed_in_historical_replays": false,
     "native_cases": 7,
     "native_sql_checks": 83,
     "passed": true,
-    "private_result_sha256": "77a8773e573d88eba7e0beb3b27266e1097aca501a4de372448e00a3de325394",
+    "private_result_sha256": "3627457fc1632bc7e5d65fc6d39b6ae0d62860a7b20d95fb236cdd9201b91627",
     "replays": [
       {
         "containers_volumes_workdir_removed": true,
@@ -291,7 +316,7 @@
         "ten_canonical_writers_unchanged": true
       }
     ],
-    "shared_source_count_with_ordinary": 251
+    "shared_source_count_with_ordinary": 252
   },
   "hosted_writes": 0,
   "kind": "controlled-correction-history-restore-evidence-v1",
@@ -314,9 +339,9 @@
   },
   "ordinary_compatibility": {
     "api_check_count_includes_sql_setup_state_and_cleanup_not_http_request_count": true,
-    "bound_source_hashes_matched": 416,
-    "capacity_and_restore_proof_sha256": "d842a55f492376a07f7a6e81573ca74feef71898a63132b6975571678cb119cd",
-    "capacity_preservation_receipt_sha256": "d88f76539f648f2910f3be2e2de920ecf814d584777f5a5d62d34a3a62ecef0a",
+    "bound_source_hashes_matched": 417,
+    "capacity_and_restore_proof_sha256": "007ab79e4467f23f0a86ad3037857a3fd715d3fff1eb943d7e92674ab0255abb",
+    "capacity_preservation_receipt_sha256": "9ba3834ded86672addbfb7ce161bb1f6aa51b09fb93e565af198f669f1b936b2",
     "elapsed_is_production_benchmark": false,
     "existing_opening_capacity": {
       "combined_maximum_dispenses_and_allocations_tested": false,
@@ -333,8 +358,8 @@
       "semantic_cases": 36,
       "three_scalar_definitions_intentionally_changed": true
     },
-    "fixture_and_setup_elapsed_seconds": 582.279,
-    "full_private_source_set_digest": "c77c7194e25515780607d1efe3d697cba7180916659691dfd3e2ce15d0b64e5d",
+    "fixture_and_setup_elapsed_seconds": 581.332,
+    "full_private_source_set_digest": "2dba85310cd9c437c75df46e7a4150ffa5d477c8ee7d05426fdacd6972d74dcc",
     "genuine_auth_api": {
       "api_checks": 133,
       "genuine_auth_postgrest": true,
@@ -342,7 +367,7 @@
       "observed_lock_queues": 8,
       "owned_actors_and_sessions_retired": true
     },
-    "independent_cleanup_receipt_sha256": "2a7a5a18aef7b4ca0bb7c1afd6cbf02d14b68bc1c03b859918a91ee4526bde75",
+    "independent_cleanup_receipt_sha256": "1e7223f67665b3431625268f97f41fa66cb10c2d959353da2bba75550c1f256a",
     "independent_cleanup_verified": true,
     "memory_observer_used_in_this_full_ordinary_probe": false,
     "ordinary_sql_regression": {
@@ -351,7 +376,7 @@
     },
     "owned_containers_and_volumes_removed": true,
     "passed": true,
-    "private_result_sha256": "a383b039a5c87aa4e9674329e6f8b1c48bc35e0c96bbf043969d43172506946d",
+    "private_result_sha256": "e3f2e1a4d4a1083e1d04b1b357006cc385a99cf688dedcfffccf363f6515f3ae",
     "probes_passed": [
       "smoke",
       "managed_native",
@@ -360,7 +385,7 @@
       "opening_correction_capacity_with_populated_restore",
       "genuine_auth_api"
     ],
-    "restore_preservation_receipt_sha256": "06ea32a36cc3a8bea989b99c949b5c82fc6cde1d90e5c6eaa075fffe2acc80fe",
+    "restore_preservation_receipt_sha256": "944f9d45b925a31b811d0e5a4c3db879ce2be77e0ec6a418034fe510daa18d85",
     "trusted_drift_exact_atomic_rollback": true,
     "trusted_drift_refusals": 4
   },
@@ -603,7 +628,7 @@
   },
   "postgres_content_pin": {
     "independent_exact_runtime_labels_verified": true,
-    "independent_image_receipt_sha256": "5a58f555e23c0baacba6cc98c268821fad1657d9f9bd5a2c22ff640f3eeb4fe1",
+    "independent_image_receipt_sha256": "4a582a4a5cd10b6d6013e882b3e9bf73e55c1740b133bcac3b1fa99e4094c97b",
     "platform": "linux/arm64",
     "reference": "ghcr.io/supabase/postgres:17.6.1.171",
     "repository_digests": [
@@ -616,32 +641,35 @@
   "provider_requests": 0,
   "readiness": {
     "clinical_or_register_activation": "pending Susan approval",
-    "exact_head_ci": "pending",
+    "exact_head_ci": "pending diagnostic rerun",
     "fresh_full_ordinary_compatibility": "passed",
     "fresh_historical_compatibility": "passed",
     "local_targeted_rehearsal": "passed",
-    "pull_request": "pending",
+    "pull_request": "open PR #285",
     "release": "pending"
   },
   "repository_checks": {
     "build_passed": true,
+    "new_failure_reporter_harness_methods": 15,
     "new_restore_harness_methods": 27,
     "node_major": 22,
-    "python_harness_methods": 147,
+    "python_harness_methods": 162,
     "typescript_configurations_checked": 3,
     "unit_tests": 1687
   },
   "reviewed_file_hashes": {
     ".github/workflows/ci.yml": "cecec4bbf8cc11cd1487d3476cbcd36d6d1f6f4faa0674a3de0c20413ce9243d",
+    "supabase/tests/test_controlled_probe_failure_harness.py": "4907196462d7931dd3631a34b5c64a8411e37b6cd7f2b941a368438511562723",
     "supabase/tests/test_correction_history_restore_harness.py": "6386800e22bbbff65967641f76db797d5b5e84e417b93f9dcdb60a026a45b83c",
-    "tests/controlled-drugs/engine/candidate/README.md": "c7553d9dc3916999f1629094352bb2d9d6e326bbd3b0279827022e87cc5ac855",
+    "tests/controlled-drugs/engine/candidate/README.md": "1ba0cea1403ea00194bd6c7ef80b99d6c11a67bc8894a595305d6db87e025a51",
     "tests/controlled-drugs/engine/candidate/correction-history-restore.sql": "52d085d4c26a0e9468d1cc0054e53efc042ae332267b0d6d3a8a0f4ccad63008",
     "tests/controlled-drugs/engine/candidate/correction_history_restore.py": "855e0aae2c6b3f2a7089c6582325a49064cae6fe564e49953426210c30a8f2cc",
     "tests/controlled-drugs/engine/candidate/opening-correction-capacity.sql": "9dd87330b07a14f00c737698b9b24f5732a2ff84ac03e7f95041d03362217559",
     "tests/controlled-drugs/engine/candidate/probe-correction-capacity.py": "4ca3577a8a919fe1f4960488614831aba03f8818464279966e97b4c686c68708",
-    "tests/controlled-drugs/engine/candidate/run-local.py": "aa23bbabcc1916d987f20a61d456670281b3fee25167947bd171ac0252cac74f"
+    "tests/controlled-drugs/engine/candidate/probe_failure.py": "0dd7f3e7a79e7bc09bf62caaf81ef3ac0f0afccc75c69ddb3808fa7daf0743b4",
+    "tests/controlled-drugs/engine/candidate/run-local.py": "84278e6e6148ff035096641439906b6bb2fe7ef08947b2d4dff23f426b49947b"
   },
-  "reviewed_file_hashes_scope": "Eight selected implementation, test and integration files, not the complete private executable-input source maps",
+  "reviewed_file_hashes_scope": "Ten selected implementation, test and integration files, not the complete private executable-input source maps",
   "scope": "Synthetic populated selected-schema restore of a genuine 1000-correction frozen unattached opening",
   "selected_dump_contract": {
     "alter_default_privileges_statements_omitted": true,
@@ -682,7 +710,7 @@
     "fixture_and_setup_elapsed_seconds": 593.592,
     "full_ordinary_compatibility": false,
     "full_private_source_set_digest": "c77c7194e25515780607d1efe3d697cba7180916659691dfd3e2ce15d0b64e5d",
-    "full_source_map_matches_fresh_ordinary": true,
+    "full_source_map_matches_fresh_ordinary": false,
     "immutable_target_intervals": 6,
     "independent_cleanup_receipt_sha256": "0e83e1da970c83d5e2fdc5599af19b0e814e880b04449832693546dee23a5324",
     "independent_owned_container_and_volume_absence_verified": true,
@@ -711,6 +739,18 @@
     "raw_sample_count": 149,
     "restore_preservation_receipt_sha256": "ca605d4a16689754b1d44e8156fdbf43e9160b0e24b87de1b28242da62c1cba8",
     "runtime_identity_copied_at_each_activation": true,
+    "source_map_comparison_to_fresh_ordinary": {
+      "added_files": [
+        "tests/controlled-drugs/engine/candidate/probe_failure.py"
+      ],
+      "all_other_preexisting_source_hashes_identical": true,
+      "changed_existing_files": [
+        "tests/controlled-drugs/engine/candidate/run-local.py"
+      ],
+      "identical": false,
+      "private_observer_inputs_unchanged": true,
+      "scope_of_changes": "Parent failure diagnostics only; workload and restore guards unchanged"
+    },
     "switch_drop_and_final_boundaries": 9,
     "targeted_driver_result_sha256": "e4dfffae221e27c1dfbc59a417b630a27081aaa550db9f1684c2b6c242816a24",
     "three_private_executable_hashes_matched": true
