@@ -46,7 +46,7 @@ def build_install(source, files):
     parts=[(source/(name+'.sql')).read_text()for name in ['schema','helpers','effects','review']]
     for name in ['source-reader.sql','source-effects.sql']:
         parts.append((source.parent/name).read_text().replace('pg_temp.controlled_stock_','public.controlled_stock_'))
-    parts.extend((source/(name+'.sql')).read_text()for name in ['posting','opening','constraints','entry','protocol','guards','seal'])
+    parts.extend((source/(name+'.sql')).read_text()for name in ['posting','scalar-helpers','opening','constraints','entry','protocol','guards','seal'])
     # The expected catalog is independently retained from the original canonical
     # 189 replay, never rebuilt from this candidate or a deployed catalog. Newer
     # migrations may coexist only if the scoped metadata still equals that pin.

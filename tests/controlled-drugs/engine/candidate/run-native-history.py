@@ -16,6 +16,7 @@ import tempfile
 import uuid
 
 from local_install import build_install, assert_prior
+from scalar_contract import capture_originals, verify_installation
 from history_environment import assert_bootstrap_image
 from native_history_restore import probe_generic_restore
 
@@ -216,11 +217,13 @@ def rehearse(era, files, assembly, folder):
                 assert provenance['movement'] > 0 and provenance['custody'] > 0 and provenance['discrepancy'] > 0
             actual = replay.json(assembly['prior_sql'] + 'select pg_temp.controlled_stock_prior_snapshot();')
             assert_prior(actual, assembly['trusted'])
+            scalar_originals = capture_originals(replay.sql, assembly['trusted'])
             roots = replay.json('select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;')
             assert len(roots) == 10
             assert replay.sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip() == '10'
             replay.no_controlled_data()
             replay.sql(assembly['install'])
+            scalar_compatibility = verify_installation(replay.sql, scalar_originals, source / 'scalar-compatibility.sql')
             assert replay.snapshot(original_columns) == before, 'Candidate installation changed original history'
             assert replay.json('select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;') == roots
             replay.verify_writers(roots)
@@ -262,6 +265,7 @@ def rehearse(era, files, assembly, folder):
                 'original_columns_rows_unchanged': True, 'post_install_state_unchanged_after_each_case': True,
                 'provenance_counts': provenance, 'no_retrospective_provenance': True,
                 'trusted_prior_metadata_matches_original_189': True, 'ten_canonical_writers_unchanged': True,
+                'scalar_helper_compatibility': scalar_compatibility,
                 'controlled_data_relation_count': len(controlled), 'controlled_configuration_or_events': 0,
                 'observations': observations, 'generic_observations': [generic], 'generic_opening_restore': restored}
         assert scheduler['paused_and_drained'] and scheduler['restored']
