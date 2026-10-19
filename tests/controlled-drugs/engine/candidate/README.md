@@ -192,6 +192,12 @@ and private fingerprints stay in protected logs. An unrecognized error remains
 after exact owned container and volume absence checks. This reporting does not
 change workload deadlines, writer reserves or product guards.
 
+CI runs the database job on native `ubuntu-24.04-arm`, covered by the existing
+reviewed Linux ARM64 Postgres content pin. The separate diagnostic-renderer job
+retains its native AMD64 environment. The runner change follows an observed
+next-batch reserve refusal at 928 corrections on x64; it supplies no acceptance
+by itself and changes no workload, supported limit, deadline or reserve.
+
 `scalar-helpers.sql` intentionally changes the implementation language/body of
 `native_fulfillment_hash`, `native_fulfillment_decimal` and
 `native_fulfillment_receipt` from SQL to PL/pgSQL. Their original expressions,

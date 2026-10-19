@@ -91,6 +91,24 @@ in protected local logs. Fifteen focused tests cover diagnostic privacy. This pa
 no engine, fixture, 900-second deadline or 120-second writer reserve. The fresh
 local passes above include that patch; the next exact-head CI run remains pending.
 
+The second CI run stopped at the next-batch admission guard after 928 genuine
+corrections. It refused the proposed batch to 960: 210.895428161 seconds remained,
+below the required 247.737407283 seconds (127.737407283 estimated batch seconds
+plus the unchanged 120-second reserve). The restore phase had not started. Its
+strict summary confirmed source preservation and clone cleanup; the outer check
+confirmed no owned containers or volumes remained. The other three jobs passed.
+This failed run is also excluded from acceptance and does not explain the first
+run's unknown failure.
+
+The database CI job now selects `ubuntu-24.04-arm`; the native amd64 renderer job
+is unchanged. GitHub documents both standard public ARM64 and x64 runners at
+[4 vCPU, 16 GB RAM and 14 GB SSD, with free public-repository usage](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+The architecture change is a contingency, not a guaranteed speed improvement.
+It changes no engine, Python, SQL, 900-second budget, 120-second reserve,
+32-write batch bound or safety factor of two. The fresh local 417/253-file source
+bindings remain valid; their input sets do not include the CI workflow YAML. The
+next actual CI result remains pending.
+
 The targeted private observer used six immutable target intervals across 50 labeled SQL
 stages. It closed before every target switch and database drop. Query actions
 matched the exact owned database, application, backend identity and query start.

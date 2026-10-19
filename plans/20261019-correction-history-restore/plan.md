@@ -75,6 +75,21 @@ by 15 privacy tests. It changes no engine, fixture, 900-second workload deadline
 or 120-second writer reserve. Fresh ordinary/historical passes include the patch;
 CI has not yet passed it.
 
+The second CI run confirmed a next-batch admission refusal at 928 completed
+corrections, before restore began. The next target was 960; remaining time
+210.895428161 seconds was below required 247.737407283 seconds, including the
+unchanged 120-second reserve. Source preservation, clone cleanup and outer
+owned-container/volume absence checks passed. The other three jobs passed. This
+run is excluded from acceptance; the first run's cause remains unknown.
+
+Only the database CI job now uses `ubuntu-24.04-arm`; the native amd64 renderer
+job remains unchanged. Both standard public runner architectures are documented
+at 4 vCPU, 16 GB RAM and 14 GB SSD with free public-repository usage. This is an
+architecture contingency, not a guaranteed performance fix. No engine, Python,
+SQL, 900/120-second guards, maximum batch of 32 or safety factor of two changed.
+The 417/253-file fresh source bindings remain valid because their sets exclude
+the CI workflow YAML. The next actual CI run is pending.
+
 The proof is SQL-only and synthetic. It does not prove physical post-backup
 reconciliation, cluster-role recovery, Storage binary recovery, return/discrepancy
 maxima, simultaneous maxima or production capacity. C1b assembly, C2 workflows and
