@@ -242,7 +242,21 @@ def fixture_parts(root, source):
     for name in ('positive', 'overlimit'):
         parts[name] = parts[name].replace(marker, config)
     parts['bootstrap'] = prefix + '\n' + parts['preamble'].replace('-- CORRECTION_CAPACITY_SEED --', '') + parts['bootstrap']
+    parts['configuration'] = config
     return parts
+
+
+def restore_fixture_parts(source):
+    text = (source / 'correction-history-restore.sql').read_text()
+    result = {}
+    for name in ('build', 'validate'):
+        begin = '-- CORRECTION_RESTORE_' + name.upper() + '_BEGIN --'
+        end = '-- CORRECTION_RESTORE_' + name.upper() + '_END --'
+        assert text.count(begin) == text.count(end) == 1, 'Exact correction restore sections required'
+        assert text.index(begin) < text.index(end)
+        result[name] = text.split(begin, 1)[1].split(end, 1)[0]
+    assert result['validate'].count('-- CORRECTION_RESTORE_TIMEZONE --') == 1
+    return result
 
 
 def seeded_preamble(preamble, seed):
@@ -450,6 +464,13 @@ def finalize_acceptance(proof, workload_finished_before_deadline, cleanup_status
         assert proof.get(key) is True, 'Final correction preservation required: ' + key
     assert proof.get('clinical_or_register_activation') is False and proof.get('production_capacity_approved') is False
     assert proof.get('hosted_writes') == 0 and proof.get('provider_requests') == 0
+    restored = proof.get('selected_schema_populated_restore_proven', False)
+    assert type(restored) is bool, 'Typed correction restore acceptance flag required'
+    if restored:
+        from correction_history_restore import validate_restore_proof
+        validate_restore_proof(proof.get('correction_history_populated_restore'))
+    else:
+        assert proof.get('correction_history_populated_restore') is None, 'Restore proof requires explicit acceptance flag'
     return {**proof, 'passed': True, 'workload_finished_before_deadline': True,
             'marked_correction_database_removed': True, 'source_runtime_unchanged_after_cleanup': True}
 
@@ -479,6 +500,8 @@ def cleanup(runtime, original, created, prior_failure):
 
 def main():
     os.umask(0o077)
+    restore_flag = os.environ.get('CONTROLLED_ENGINE_CORRECTION_RESTORE', '0')
+    assert restore_flag in ('0', '1'), 'Explicit correction restore opt-in required'
     source = SOURCE
     root = source.parents[3]
     folder = Path(os.environ['CONTROLLED_ENGINE_RESULT_DIR']).resolve()
@@ -496,6 +519,7 @@ def main():
     latest_sample = None
     workload_finished_before_deadline = False
     checkpoint_fingerprints = {}
+    restore_proof = None
     receipt = {'kind': 'controlled-opening-correction-capacity-feasibility-v1', 'passed': False,
                'global_probe_budget_seconds': 900, 'maximum_canonical_writes_per_backend': 32,
                'elapsed_is_production_benchmark': False, 'checkpoints': checkpoints,
@@ -557,8 +581,16 @@ def main():
             previous_checkpoint = target
         positive_output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) + parts['positive'], deadline, 'positive')
         positive, boundary, replay_baseline = parse_positive(positive_output)
-        replay_audit = verify_replay_baselines(replay_baseline, checkpoint_fingerprints['1000'],
-                                               runtime.snapshot(runtime.database))
+        post_positive_snapshot = runtime.snapshot(runtime.database)
+        replay_audit = verify_replay_baselines(replay_baseline, checkpoint_fingerprints['1000'], post_positive_snapshot)
+        if restore_flag == '1':
+            from correction_history_restore import probe_correction_restore, validate_restore_proof
+            restore_parts = restore_fixture_parts(source)
+            preamble = seeded_preamble(parts['preamble'], seed)
+            restore_proof = probe_correction_restore(
+                runtime, preamble + parts['configuration'] + restore_parts['build'],
+                preamble + restore_parts['validate'], post_positive_snapshot, technical, run_stage)
+            validate_restore_proof(restore_proof)
         seed['retained_boundary'] = boundary
         admission = admit_next_batch(1000, 1001, deadline - time.monotonic(), latest_sample, positive_accepted=True)
         admissions.append(admission)
@@ -593,10 +625,12 @@ def main():
                      technical_manifest_and_ten_canonical_writers_unchanged=True,
                      source_runtime_all_relations_unchanged=True,
                      genuine_1000_correction_chain_proven=True, genuine_1000_return_or_discrepancy_chains_proven=False,
-                     simultaneous_maxima_proven=False, selected_schema_populated_restore_proven=False,
+                     simultaneous_maxima_proven=False, selected_schema_populated_restore_proven=restore_proof is not None,
                      synthetic_only=True, sql_only=True, genuine_auth_api=False, canonical_migration=False,
                      actual_practice_rules=False, clinical_or_register_activation=False,
                      production_capacity_approved=False, hosted_writes=0, provider_requests=0)
+        if restore_proof is not None:
+            proof['correction_history_populated_restore'] = restore_proof
         with (folder / 'engine-correction-capacity-v1-preservation.json').open('x') as stream:
             json.dump({'original_source_and_clone': original, 'checkpoint_fingerprints': checkpoint_fingerprints,
                        'canonical1001_baseline': baseline['fingerprint'], 'canonical_replay_baselines': replay_baseline,

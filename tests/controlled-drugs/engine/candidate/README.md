@@ -168,6 +168,23 @@ the actual checkpoint and post-configuration rollback. Every relation remains in
 the private snapshots; the audit append does not create another correction event,
 receipt, stock movement or charge.
 
+The separate `--include-correction-restore` local opt-in reuses this same
+1,000-correction producer and runs before the genuine 1,001st write. It persists
+the valid frozen, unattached opening in one marked clone and restores its selected
+schemas into another. All relation fingerprints, canonical history and audit rows
+must match; fresh validation uses UTC, Denver and Kathmandu without caller claims.
+It shares the correction probe's original 900-second workload deadline and
+120-second append reserve. A stopped or unsuccessfully cleaned attempt supplies
+no restore acceptance. The targeted rehearsal and fresh full ordinary run passed;
+CI now requests this restore explicitly alongside its existing capacity flag.
+The [populated correction-history restore receipt](../../../../docs/launch-evidence/2026-10-19-controlled-correction-history-restore.md)
+records all 456 selected relations, seven fresh validations and the unchanged
+eleven capacity observations, including the actual 1,001st append. The full run
+also passed 166 SQL suites/7,338 assertions and its separate genuine Auth/API gate.
+Selected-schema logical restoration does not certify cluster-role, ownership,
+default-privilege or Storage binary recovery, physical reconciliation or practice
+approval. Clinical/register activation remains pending Susan's approval.
+
 `scalar-helpers.sql` intentionally changes the implementation language/body of
 `native_fulfillment_hash`, `native_fulfillment_decimal` and
 `native_fulfillment_receipt` from SQL to PL/pgSQL. Their original expressions,

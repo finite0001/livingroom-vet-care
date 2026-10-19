@@ -183,7 +183,7 @@ jobs:
       - name: Verify native prescribing, real browser dispensing and populated restore
         run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
       - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
-        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression --include-correction-capacity
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression --include-correction-capacity --include-correction-restore
       - name: Verify genuine 187/188 history, available-only openings and populated opening restore
         run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local
       - uses: denoland/setup-deno@v2
