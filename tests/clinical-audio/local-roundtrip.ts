@@ -959,6 +959,12 @@ try {
     )
     .waitFor();
   browserChecks++;
+  await until(
+    async () =>
+      (await clinical.getByLabel("Subjective", { exact: true }).inputValue()) ===
+      "Reviewed browser cough history.",
+    "accepted Subjective to refresh from the saved encounter",
+  );
   browserCheck(
     await clinical.getByLabel("Subjective", { exact: true }).inputValue(),
     "Reviewed browser cough history.",
