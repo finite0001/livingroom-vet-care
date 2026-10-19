@@ -21,6 +21,7 @@ from scalar_contract import capture_originals, verify_installation
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local',action='store_true',required=True)
 parser.add_argument('--include-sql-regression',action='store_true')
+parser.add_argument('--include-correction-capacity',action='store_true',help='Run the separately bounded genuine correction-chain feasibility probe')
 args=parser.parse_args()
 os.umask(0o077)
 source=Path(__file__).resolve().parent
@@ -149,10 +150,13 @@ enabled = false
   proof['ordinary_sql_regression']={'files':166,'assertions':7338}
   print('Ordinary compatibility:166 canonical SQL suites /7338 assertions passed with the candidate installed.',flush=True)
  environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
- for probe,name in [('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-opening.py','opening_boundary'),('probe-capacity.py','opening_capacity'),('probe-api.py','genuine_auth_api')]:
-  # The capacity fixture admits 200 real writers and runs deferred opening checks.
-  # Keep its 900-second SQL deadline inside the parent deadline with cleanup room.
-  probe_timeout=960 if name=='opening_capacity'else 360
+ probes=[('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-opening.py','opening_boundary'),('probe-capacity.py','opening_capacity')]
+ if args.include_correction_capacity:probes.append(('probe-correction-capacity.py','opening_correction_capacity'))
+ probes.append(('probe-api.py','genuine_auth_api'))
+ for probe,name in probes:
+  # Each capacity probe has one 900-second workload deadline, including ownership
+  # checks. The parent leaves separate time for mandatory owned-resource cleanup.
+  probe_timeout=960 if name in('opening_capacity','opening_correction_capacity')else 360
   p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=probe_timeout)
   log.write(probe+'\n'+p.stdout+p.stderr+'\n');log.flush()
   if p.returncode:raise RuntimeError(probe+' failed; protected result directory: '+str(result_dir))
