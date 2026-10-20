@@ -30,6 +30,50 @@ The restore proves recorded database history, not actual physical history after 
 
 The separate [migration-204 compatibility receipt](../../../../docs/launch-evidence/2026-10-18-controlled-candidate-204-compatibility.md) preserves the current 166-suite/7,338-assertion proof without relabeling the historical 203 evidence. Its raw `api_checks: 133` counts combined Auth/PostgREST response and SQL setup/state/cleanup assertions, not HTTP-only checks or requests.
 
+## Frozen private installation artifact
+
+`release_assembly.py` builds the separate offline
+`engine/release/controlled-stock-private.sql` artifact. Its expected catalog comes
+from the independently reviewed PR #285 proofs, rather than the installation
+being checked. The unchanged original trusted-189 reference remains the prior
+catalog authority. The release pin binds all 204 migration files and 14 assembled
+SQL sources, 171 scoped functions, 51 relations and ten canonical writer bodies.
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/release_assembly.py --check
+python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --use-release-assembly --include-sql-regression --include-correction-capacity --include-correction-restore
+python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local --use-release-assembly
+```
+
+The explicit opt-in uses only owned disposable stacks. It verifies committed
+artifact bytes, checks the migration ledger and prior catalog before persistent
+DDL, and rejects a partial engine. All hooks and revocations belong to one
+transaction. The resulting catalog must equal the frozen literal before that
+literal is inserted as the initial manifest. No expected-value recapture or
+resealing operation is exposed by the artifact builder.
+
+The atomic rehearsal checks prior and installed catalog drift, plus injected
+failures after schema creation, after all hooks and before commit. Every refusal
+must reach its identified stage and return the exact SQLSTATE/message, followed
+by exact preservation of all selected relation data, prior metadata, ten writer
+definitions, migration ledger and permanent engine-object absence. A successful
+installation must retain private effective RPC/table privileges and RLS, one
+literal manifest, unchanged original source data and no configuration, openings,
+active state or controlled events. Existing compatibility and restore probes
+then exercise the installed artifact separately from these installation checks.
+
+This is scoped catalog verification, not a complete database or cluster pin.
+Roles, schema privileges, default ACLs, extensions and unlisted canonical
+dependencies remain outside the manifest. No canonical migration is added by
+this packaging step. Canonical promotion, hosted stage-first installation and
+advisors, C2 workflows and C3 reconciliation/commissioning remain separate work.
+Do not copy this explicit `BEGIN`/`COMMIT` script blindly into a CLI migration:
+the [pinned CLI executor](https://github.com/supabase/cli/blob/v2.118.0/apps/cli/src/command-internal/migration-apply.ts#L440-L469)
+inserts its ledger row after authored statements. Promotion requires a
+reviewed CLI-owned transaction and actual ledger-insert failure rollback tests;
+the owned `psql` rehearsal does not establish that boundary.
+Clinical/register activation remains pending Susan's approval.
+
 ## Opening custody contract
 
 `opening.sql` defines the private projector

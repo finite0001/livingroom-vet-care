@@ -24,6 +24,7 @@ parser.add_argument('--run-synthetic-local',action='store_true',required=True)
 parser.add_argument('--include-sql-regression',action='store_true')
 parser.add_argument('--include-correction-capacity',action='store_true',help='Run the separately bounded genuine correction-chain feasibility probe')
 parser.add_argument('--include-correction-restore',action='store_true',help='Also prove the populated 1,000-correction opening restore inside the same workload budget')
+parser.add_argument('--use-release-assembly',action='store_true',help='Install the independently pinned private artifact in this owned local stack')
 args=parser.parse_args()
 if args.include_correction_restore:args.include_correction_capacity=True
 os.umask(0o077)
@@ -52,10 +53,19 @@ def verify():
 def sql(query):
  return command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=query)
 
+def release_raw_sql(query):
+ verify()
+ result=subprocess.run(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],
+  input=query,capture_output=True,text=True,cwd=root,timeout=120)
+ log.write('OWNED RELEASE REHEARSAL\n'+result.stdout+result.stderr+'\n');log.flush()
+ return result
+
 files=sorted((root/'supabase/migrations').glob('*.sql'))
 assert len(files)==204,'Candidate targets the exact 204-migration release; review before rebasing'
 inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[source/'trusted-prior-189.json',
  root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql']
+if args.use_release_assembly:
+ inputs.extend([source/'release-expected-204.json',source.parent/'release/controlled-stock-private.sql'])
 hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in inputs}
 proof={}
 try:
@@ -107,6 +117,14 @@ enabled = false
  bundle=build_install(source,files)
  install=bundle['install'];prior_sql=bundle['prior_sql'];trusted=bundle['trusted']
  barrier=bundle['barrier'];migration_sources=bundle['migration_sources']
+ release_bundle=None
+ if args.use_release_assembly:
+  from release_assembly import build_release
+  from release_rehearsal import capture_baseline, rehearse_failures, verify_installed
+  release_bundle=build_release(source,files)
+  install=release_bundle['install']
+  assert install.encode()==(source.parent/'release/controlled-stock-private.sql').read_bytes(),'Frozen release artifact differs from reviewed assembly'
+  release_expected=json.loads((source/'release-expected-204.json').read_text())
  # Validate the untouched replay before deliberately injecting drift. Different
  # CLI/Postgres bootstrap defaults can change raw ACLs even with identical source
  # migrations; those differences must fail closed, not masquerade as rollback
@@ -119,6 +137,14 @@ enabled = false
   (result_dir/'untouched-prior-drift.json').write_text(json.dumps({'changed_metadata_paths':list(drift.changed_metadata_paths)},indent=2))
   raise
  scalar_originals=capture_originals(sql,trusted)
+ if release_bundle is not None:
+  release_baseline=capture_baseline(sql,prior_sql,trusted)
+  (result_dir/'release-assembly-baseline.json').write_text(json.dumps(release_baseline,indent=2)+'\n')
+  proof['frozen_release_install']={
+   'artifact_sha256':release_bundle['artifact_sha256'],'pin_sha256':release_bundle['pin_sha256'],
+   'failure_rehearsal':rehearse_failures(sql,release_raw_sql,install,prior_sql,trusted,release_baseline),
+   'canonical_migration':False,'hosted_installation':False,'clinical_or_register_activation':False}
+  assert proof['frozen_release_install']['failure_rehearsal'].get('passed')is True,'Frozen release failure rehearsal incomplete'
  (result_dir/'assembled-local-only.sql').write_text(install)
  drift_cases={
   'helper_definition':"alter function public.stock_writer_current()set statement_timeout='200ms';",
@@ -145,6 +171,10 @@ enabled = false
  proof['scalar_helper_compatibility']=verify_installation(sql,scalar_originals,source/'scalar-compatibility.sql')
  assert sql("select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;").strip()==roots
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
+ if release_bundle is not None:
+  proof['frozen_release_install']['installed']=verify_installed(sql,release_expected,release_baseline)
+  assert proof['frozen_release_install']['installed'].get('passed')is True,'Frozen release installation verification incomplete'
+  proof['frozen_release_install']['passed']=True
  runtime['unpublished_engine_schema']=True;(result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
  print('Candidate installed locally; three scalar helper implementations verified; all ten canonical writer bodies unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:
