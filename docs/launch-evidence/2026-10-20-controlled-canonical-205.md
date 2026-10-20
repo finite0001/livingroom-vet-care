@@ -1,15 +1,14 @@
 # Controlled-stock canonical migration 205
 
 The reviewed controlled-stock engine body is now present as canonical migration
-`20261020151157_controlled_stock_private_engine.sql`. The actual owned CLI proof
-passed both guarded rollback cases, transaction-barrier observations, the clean
-canonical 205 application and exact no-op retry. All 328 Python harness tests, ten TypeScript migration-guard tests and
-1,695 repository unit tests pass. Fresh genuine historical
-compatibility and fresh full ordinary compatibility also passed. Independent
-review of all three local evidence sets is complete. Exact-head CI, PR and Dave's
-specific merge/release approval remain pending.
-This is repository promotion and owned disposable proof, not hosted installation
-or clinical/register activation.
+`20261020151157_controlled_stock_private_engine.sql`. The actual CLI, genuine
+historical and refreshed full ordinary proofs pass, together with the populated
+attachment-helper follow-up. All 334 Python harness tests, ten TypeScript
+migration-guard tests and 1,695 repository unit tests pass. Independent review
+verified current source bindings and attributed cleanup for all four evidence
+sets. Fresh exact-head CI and Dave's specific merge/release approval remain
+pending. This is repository promotion and owned disposable proof, not hosted
+installation or clinical/register activation.
 
 The migration filename was generated with Supabase CLI 2.118.0 `migration new`.
 Its contents are byte-identical to the CLI-owned body established by the
@@ -74,7 +73,8 @@ configuration/activation checks passed. The fixture and its ledger-catalog
 instrumentation were removed. A second real CLI application was an exact no-op.
 No private artifact was reinstalled after canonical application.
 
-All 268 initial source bindings matched the result map and current files. The
+All 268 initial CLI source bindings matched its result map and current files;
+independent final rehash passed. The
 complete private archive contains the actual migration inputs, CLI logs, guarded
 failure receipts, observer records, source map and raw snapshots. The private
 result SHA-256 is
@@ -110,11 +110,13 @@ physical stock or Storage binary recovery. Both marked clone pairs and original
 owned runtimes were removed, and independent exact-label inspection found no
 containers or volumes for either project.
 
-All 269 historical source bindings matched current files. The private historical
+All 269 historical source bindings matched its initial/result maps and current
+files; independent final rehash passed. The private historical
 result SHA-256 is
 `284ec73a6ea3a9500acc65a6e911de686c192225272fabed701281e84136f3f1`.
-Fresh full ordinary compatibility also passed through the actual canonical 205
-lane. It retained the original-204 installation/prior-drift refusal rehearsals,
+The refreshed full ordinary compatibility proof passed through the actual
+canonical 205 lane after the five delivery-baseline fixture corrections below.
+It retained the original-204 installation/prior-drift refusal rehearsals,
 all 166 canonical SQL suites/7,338 assertions and every existing smoke, managed
 native, opening and capacity probe. The post-205 literal/private verifier and
 installed column ACL checks passed with the exact 205 ledger. Existing workload
@@ -128,19 +130,19 @@ boundary previews; canonical writer full-history verification remained unchanged
 The 1,000-correction populated restore passed all seven fresh validations across
 456 selected-schema relation fingerprints, including the exact frozen unattached
 opening and session-retirement rollback. The complete correction probe, including
-setup and populated restore, took 447.161 seconds within its shared 900-second
+setup and populated restore, took 365.388 seconds within its shared 900-second
 budget and unchanged 120-second writer reserve. This is an observed rehearsal
 runtime, not a production performance or capacity approval.
 
 The genuine Auth/PostgREST proof passed 133 combined checks and eight observed
 lock queues. That count includes SQL setup/state/cleanup checks and is not an HTTP
 request count. All 434 initial ordinary source bindings exactly matched the result
-map and current files. Independent attributed cleanup found no owned containers
+map and current files; independent final rehash passed. Independent attributed cleanup found no owned containers
 or volumes and confirmed removal of the owned work directory. The private ordinary
 result SHA-256 is
-`57ab2526e88f22e4377238610706c8988d3d08ede273a0ad14d245a3778c8449`.
-All three current local runtime gates and their independent evidence reviews pass.
-Exact-head CI remains pending; this does not grant approval to install on a hosted
+`1388341f2914395528688e9d7b77cbacc8d345566508c3712aa63e0ea1c05986`.
+The current local runtime gates and independent evidence reviews pass.
+Fresh exact-head CI remains pending; this does not grant approval to install on a hosted
 project.
 
 The first PR CI attempt is excluded from acceptance. Its renderer job reached a
@@ -164,26 +166,54 @@ separately marked owned database. They do not drop the restored public schema,
 manually replay 205, fabricate ledger rows or adopt live metadata as an expected
 pin.
 
-The focused follow-up smoke passed attachment metadata's 43 checks and attachment
-originals' 320 checks. Its source admission and clone verification enforced the
-independent literal manifest, complete selected data and real canonical ledger;
-source preservation was checked again afterward. These raw snapshots were held
-in memory by the helper and were not saved in the smoke archive. This is
-code-enforced verification with actual helper results, not a claim of independent
+The refreshed attachment-helper smoke used a deliberately populated baseline:
+nine outbox rows, ten messages (nine linked and one unlinked probe message), nine
+outbound deliveries and nine outbound attempts. Attachment metadata passed 43
+checks and attachment originals passed 320. Source admission and clone
+verification enforced the independent literal manifest, complete selected data
+and genuine canonical ledger; source preservation was checked again afterward.
+These helper snapshots were held in memory and were not saved in the archive.
+This is code-enforced verification with actual helper results, not independent
 raw-snapshot audit. Reviewed ARM image admission and owned scheduler pause,
 drain and restoration passed. Attributed cleanup found no owned containers or
 volumes and confirmed removal of the owned work directory.
 
-All 437 follow-up input bindings matched the initial/result maps and current
-files. Its private result SHA-256 is
-`e3f08e6133b51e58ee3eeeac1c0638ac8ed25157cf4306ca6b75efe059686806`.
-This is a separate helper-smoke proof; the original ordinary, historical and CLI
-proof maps remain unchanged at 434, 269 and 268 bindings respectively. Two earlier
-private smoke-wrapper attempts stopped on setup admission checks, first its
-allowlist and then an overlong identity, before either attachment helper ran.
-Their private evidence and verified cleanup were preserved and excluded from
-acceptance. A fresh exact-head five-job CI run is still required after these
-follow-up fixes.
+The populated follow-up also executed sixteen actual rollback controls: insert,
+update, delete and equal-count replacement in each of the four delivery families.
+Every actual change was detected, including same-count row changes, and every
+case restored the exact complete four-family fingerprint afterward. The private
+mutation script used the identical snapshot function as the five SQL fixtures.
+Independent review verified the exact sixteen distinct family/mutation pairs,
+strict success flags, both private SQL hashes and the executed driver's hash.
+The archived SQL and driver matched their current files. These negative controls
+establish snapshot sensitivity; they do not invoke a provider or dispatcher.
+
+All 437 populated-smoke bindings exactly matched its initial/result maps and
+current files. Its private result SHA-256 is
+`c8ca6f63e00c9c8f444dc14740e37fd2b9830a3f0496e8e97d850a27a7ddf32f`.
+This helper-smoke proof is separate from the current ordinary, historical and CLI
+maps of 434, 269 and 268 bindings respectively; all four final binding rechecks
+passed. The prior ordinary result and earlier helper smoke remain preserved as
+superseded evidence rather than current-source acceptance. Two earlier private
+smoke-wrapper attempts stopped on setup admission checks, first its allowlist
+and then an overlong identity, before either attachment helper ran. Their
+private evidence and verified cleanup were preserved and excluded from acceptance.
+
+A further attachment-helper run exposed five SQL fixtures that asserted the
+entire communication outbox was empty, even when the verified source legitimately
+contained earlier delivery rows. The fixtures now capture a complete baseline
+before any actor or RPC fixture work across communication outbox, messages,
+outbound deliveries and outbound message attempts. Each family retains both row
+count and an ordered full-row JSONB SHA-256 under fixed UTC. The final assertion
+requires exact equality to that baseline under the unrestricted role, after all
+fixture actions; no queue is cleared and no existing row is omitted. This catches
+same-count modifications as well as new or deleted rows. One existing assertion
+is replaced in each fixture, so the expected TAP assertion counts are unchanged.
+Negative harness cases reject count-only/id-only snapshots, missing families,
+missing timezone, late capture, restricted final visibility and unchecked later
+actions. All 334 current Python harness tests pass. The refreshed full ordinary
+SQL run and populated helper smoke above establish runtime acceptance for these
+five current SQL inputs. A fresh exact-head five-job CI run remains required.
 
 Canonical promotion does not complete production C1b admission, remaining
 hold/exception acceptance, C2 review/witness/transfer/count/report workflows or C3

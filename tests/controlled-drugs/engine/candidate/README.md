@@ -429,3 +429,10 @@ publication/subscription and whole-cluster recovery remain outside its scope.
 Current counted migration guards also contribute to their existing test receipts.
 The exact reconciliation, controlled-draft and stock-writer receiver totals include
 that extra assertion; unrelated inventory and operational-task totals are retained.
+
+The retained migration SQL fixtures preserve a complete before/after delivery
+baseline across outbox rows, messages, deliveries and attempts. Ordered full-row
+JSON array fingerprints and counts detect same-count changes as well as added or
+removed rows. Baselines precede fixture actors and RPCs; final comparisons run
+after all fixture actions with full visibility. Existing queued messages remain
+intact in verified attachment clones.

@@ -1,5 +1,18 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
 
+-- Capture delivery baselines before any fixture actor or RPC. Preserve complete
+-- preexisting rows, including same-count mutations, without clearing queues.
+create function pg_temp.ezyvet_delivery_snapshot()returns jsonb language plpgsql volatile
+set search_path=public,pg_temp set timezone='UTC' as $delivery$
+declare relation_name text;fingerprint jsonb;result jsonb:='{}';begin
+ foreach relation_name in array array['communication_outbox','messages','outbound_deliveries','outbound_message_attempts']loop
+  execute format('select jsonb_build_object(''count'',count(*),''hash'',encode(sha256(convert_to(coalesce(jsonb_agg(to_jsonb(r)order by to_jsonb(r)::text),''[]''::jsonb)::text,''UTF8'')),''hex''))from public.%I r',relation_name)into fingerprint;
+  result:=result||jsonb_build_object(relation_name,fingerprint);
+ end loop;
+ return result;
+end$delivery$;
+create temp table ezyvet_delivery_baseline as select pg_temp.ezyvet_delivery_snapshot()as value;
+
 
 insert into auth.users(id,email,raw_user_meta_data) values('db700000-0000-4000-8000-000000000001','attachment-admin@example.test','{}'),('db700000-0000-4000-8000-000000000002','attachment-other@example.test','{}');
 update public.profiles set is_active = true where id in ('db700000-0000-4000-8000-000000000001','db700000-0000-4000-8000-000000000002');
@@ -76,7 +89,6 @@ select is(read_ezyvet_migration_binding_progress(binding)#>>'{observations,curre
 reset role;
 select is((select count(*)::integer from ezyvet_migration_bindings),9,'All supported resource families have a binding');
 select is((select jsonb_agg(to_jsonb(r) order by id) from ezyvet_import_runs r),(select v from data where k='adapter-children'),'All resource bindings leave child state unchanged');
-select is((select count(*)::integer from communication_outbox),0,'Adapter acceptance sends nothing');
 
 -- Populate the remaining child families through their actual stage contract.
 do $$declare x record;r public.ezyvet_import_runs;payload jsonb;begin
@@ -91,4 +103,6 @@ set local role authenticated;
 select is(jsonb_array_length(list_ezyvet_migration_items(binding)->'items'),case when resource='attachment' then 2 else 1 end,resource||' item adapter reads its populated canonical ledger') from adapters;
 select is(list_ezyvet_migration_items(binding)#>>'{items,0,exact_source_current}',case when resource in ('animal','contact','healthstatus') then null else 'true' end,resource||' item preserves observed head fidelity') from adapters;
 select is(list_ezyvet_migration_items(binding)#>>'{items,0,ordinal}',case when resource='attachment' then '1' else '0' end,resource||' has a stable occurrence cursor') from adapters;
+reset role;
+select is(pg_temp.ezyvet_delivery_snapshot(),(select value from ezyvet_delivery_baseline),'Adapter acceptance sends nothing');
 select * from finish();rollback;

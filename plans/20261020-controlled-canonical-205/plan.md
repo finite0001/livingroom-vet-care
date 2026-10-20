@@ -41,3 +41,11 @@ would have replayed canonical205 without its real ledger. Keep exact receiver
 counts aligned with counted guards. Replace both attachment fixture rebuilds with
 independently admitted full schema/data/ledger clones, preserving source state and
 marked cleanup. Validate them separately from the retained three engine proofs.
+
+The second CI attempt passed clone admission and metadata races, then exposed
+five legacy no-send fixtures that assumed globally empty delivery tables. Replace
+their existing final assertion with exact four-family row fingerprints captured
+before fixture work and compared after all actions. Preserve TAP totals and
+preexisting messages; do not clear queues or alter canonical delivery guards.
+Reprove the affected ordinary and attachment input maps, including a populated
+four-family baseline and actual rolled-back mutation counterexamples.

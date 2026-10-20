@@ -1,7 +1,7 @@
 {
   "kind": "controlled-canonical-205-launch-evidence-v1",
   "date": "2026-10-20",
-  "status": "three_retained_local_gates_and_separate_attachment_clone_smoke_passed_followup_ci_pending",
+  "status": "all_current_owned_local_gates_and_populated_attachment_smoke_passed_followup_ci_pending",
   "scope": {
     "repository_canonical_migrations": 205,
     "canonical_filename": "20261020151157_controlled_stock_private_engine.sql",
@@ -134,10 +134,9 @@
   },
   "full_ordinary_compatibility": {
     "status": "passed",
-    "passed": true,
-    "result_sha256": "57ab2526e88f22e4377238610706c8988d3d08ede273a0ad14d245a3778c8449",
+    "result_sha256": "1388341f2914395528688e9d7b77cbacc8d345566508c3712aa63e0ea1c05986",
     "private_source_hash_count": 434,
-    "full_private_source_set_digest": "25afe3437a5c3f87dd5b91616f9006ad4faf2d287d5dfcc49d106b8c0e39198d",
+    "full_private_source_set_digest": "5dd0ebf1b551660d4cc963ca878b64bb206504542a790bd0691b2657fb585d2b",
     "initial_map_equals_result_and_current_files": true,
     "full_source_map_publicized": false,
     "canonical_205_actual_cli_install_verified": true,
@@ -182,7 +181,7 @@
       "simultaneous_maxima_proven": false
     },
     "genuine_correction_capacity": {
-      "fixture_and_setup_elapsed_seconds": 447.161,
+      "fixture_and_setup_elapsed_seconds": 365.388,
       "production_benchmark_claimed": false,
       "unique_sql_checks": 11,
       "unique_accepted_assertions": 7,
@@ -247,12 +246,14 @@
     "all_ten_canonical_writer_bodies_unchanged": true,
     "owned_containers_and_volumes_removed": true,
     "owned_workdir_absent": true,
-    "attributed_independent_cleanup_receipt_sha256": "1d3d89cd61549e8666e41ae4580ceac13eb787d14ad7f8566b10f261b75fe68a",
+    "attributed_independent_cleanup_receipt_sha256": "b5d5b83b9c2e110c351542a24c4e6fb7b85d3b6836c223f00b89bbfadb1e0525",
     "independent_container_count": 0,
-    "independent_volume_count": 0
+    "independent_volume_count": 0,
+    "passed": true,
+    "captured_raw_source_ledger_writer_snapshots_independently_compared": 17
   },
   "repository_checks": {
-    "python_ci_pattern_harness_tests": 328,
+    "python_ci_pattern_harness_tests": 334,
     "typescript_migration_guard_tests": 10,
     "unit_tests": 1695,
     "frozen_artifact_and_body_checks_passed": true,
@@ -263,7 +264,7 @@
   },
   "readiness": {
     "exact_head_ci": "pending",
-    "pr": "pending",
+    "pr": "https://github.com/finite0001/livingroom-vet-care/pull/289",
     "merge_and_release": "pending",
     "canonical_migration_hosted_installation": "not_performed",
     "clinical_and_register_activation": "Pending Susan approval.",
@@ -307,7 +308,13 @@
     "supabase/tests/ezyvet_attachment_originals_concurrency.py": "2ecc668a8f75c27976e20ec87907240e80b0b1ca5ead8c79e159b80edaa03a43",
     "supabase/tests/test_owned_attachment_clone_harness.py": "8174b2f57d7e75acffdef5f7bb58e7e714bc33ff41d3597dee0039f6b5d9f158",
     "tests/prescriptions/native-disposable.py": "f855e531946c5a44ca53e09479b8f075cec64865da7cbace6997711244e81d27",
-    "tests/scheduling/disposable.py": "6fc2270c740bbb01b1e3dac14a18f4e61f3ee91b11b76928192ff3cc5fd970f2"
+    "tests/scheduling/disposable.py": "6fc2270c740bbb01b1e3dac14a18f4e61f3ee91b11b76928192ff3cc5fd970f2",
+    "supabase/tests/ezyvet_migration_attempt_events.test.sql": "876ca125f917b135a57c21601f244de8a2f50dbeaf2aa3a5ee6b343021daebb3",
+    "supabase/tests/ezyvet_migration_binding_adapters.test.sql": "be372995223f27aa933d2dababc80c7ca1df1dac06a007df7a0d5c4a38b15de9",
+    "supabase/tests/ezyvet_migration_bindings.test.sql": "e59a83d1023aa8ac4def1839d5869d6db05bc0b189c6439c80a97208c9e37e92",
+    "supabase/tests/ezyvet_migration_manifests.test.sql": "8cd560f126ff40f5c305b8cdbbbc8065bba09667c00b841c62bf5d7790dbaa1d",
+    "supabase/tests/ezyvet_migration_progress.test.sql": "8a903560e8ee6b542318eca751c47ec29b9e2e7f2a5be4a5a43399a330501ce8",
+    "supabase/tests/test_ezyvet_delivery_baseline_harness.py": "93309b748a5238581ef8ca69025944cc98837967833ed0a9d5be60bdd75c8e11"
   },
   "raw_rows_catalogs_acl_claims_backend_identities_and_private_paths_published": false,
   "followup_after_first_ci": {
@@ -333,17 +340,19 @@
       "strict_equality_retained": true,
       "three_new_counter_contract_tests": true
     },
-    "scope": "Three receipt-contract/test files and four attachment-helper/test files are outside the three retained local runtime source maps. Those maps remain unchanged and current.",
-    "retained_local_gate_source_maps_rehashed_unchanged": true,
-    "fresh_full_ordinary_historical_cli_rerun_after_this_outside_input_followup": false,
+    "scope": "Receipt-contract and clone-helper changes were outside the retained CLI268/history269 maps. Five SQL changes superseded initial ordinary434/smoke437. Fresh434 ordinary and437 populated-smoke maps are now current; all shared434 inputs match.",
     "new_ci_and_pr_review_pending": true,
-    "first_ci_head_prefix": "706830"
+    "retained_cli_and_historical_maps_still_current": true,
+    "first_ci_head": "706830ee5deceea2699404f7aa31f1d0056b6406",
+    "fresh_full_ordinary_after_five_sql_changes_passed": true,
+    "cli_and_historical_proofs_remain_current_without_rerun": true,
+    "all_prior_runtime_maps_still_current": false,
+    "all_three_lanes_rerun_after_five_sql_changes": false
   },
   "separate_attachment_clone_smoke": {
-    "passed": true,
-    "result_sha256": "e3f08e6133b51e58ee3eeeac1c0638ac8ed25157cf4306ca6b75efe059686806",
+    "result_sha256": "c8ca6f63e00c9c8f444dc14740e37fd2b9830a3f0496e8e97d850a27a7ddf32f",
     "private_source_hash_count": 437,
-    "full_private_source_set_digest": "0ecc37683ba06112fef5abaf60d6f984529598180e6302d7da3ff57c23efedbc",
+    "full_private_source_set_digest": "6e0a89e8b6a5e5e29b73c6c903f82d2e2a355b1bd849bfac18cafed13895bd78",
     "initial_map_equals_result_and_current_files": true,
     "retained_434_ordinary_inputs_are_unchanged_subset": true,
     "additional_bound_inputs": [
@@ -351,7 +360,7 @@
       "supabase/tests/ezyvet_attachment_metadata_concurrency.py",
       "supabase/tests/ezyvet_attachment_originals_concurrency.py"
     ],
-    "private_runner_sha256": "d4423ec3d7ce171958e0cf8d9f1eec709de8079b066b8dfc16e6ff95f0f32f81",
+    "private_runner_sha256": "aaef0becba0e339f663a25ff881beb601fb56aa02be190c1a8d2d2cdcc5ee6ff",
     "private_runner_saved_preboot_bytes_current_bytes_and_result_hash_equal": true,
     "private_runner_equality_independently_checked_after_run_not_runtime_enforced": true,
     "actual_script_check_counts": {
@@ -391,7 +400,7 @@
     "owned_containers_volumes_and_workdir_removed": true,
     "independent_container_count": 0,
     "independent_volume_count": 0,
-    "attributed_independent_cleanup_receipt_sha256": "f9c2709218aea9a77835d0ab5923f96fd376316358f6ef0749b2c4542929e9f3",
+    "attributed_independent_cleanup_receipt_sha256": "31cb7fe27232838d2038d36245df33d922111e9b3d2e69a82ee88fcb8f4d9bcf",
     "hosted_writes": 0,
     "provider_requests": 0,
     "actual_practice_activation": false,
@@ -409,6 +418,118 @@
         "reason": "CLI normalized an overlong configured project identity, so the wrapper expected a different container name.",
         "cleanup_attribution": "Actual CLI-normalized project-label cleanup retained in a separate private companion receipt."
       }
-    ]
-  }
+    ],
+    "status": "passed_with_nonempty_delivery_baseline_and_16_actual_mutation_probes",
+    "passed": true,
+    "populated_delivery_baseline": {
+      "outbox_rows": 9,
+      "messages": 10,
+      "linked_messages": 9,
+      "unlinked_probe_messages": 1,
+      "outbound_deliveries": 9,
+      "outbound_message_attempts": 9,
+      "synthetic_only": true,
+      "provider_requests": 0
+    },
+    "actual_delivery_mutation_validation": {
+      "passed": true,
+      "distinct_families": 4,
+      "actual_mutation_cases": 16,
+      "mutations_per_family": [
+        "insert",
+        "update",
+        "delete",
+        "equal_count_replacement"
+      ],
+      "all_mutations_detected_by_full_row_count_and_hash": true,
+      "all_four_families_restored_exactly_after_each_mutation": true,
+      "private_probe_sql_hashes": {
+        "populated-message-seed.sql": "fe6205d051ca1775d8d0ffea1939f7de0b48b067935a2ee28c5aa29ced60ef7d",
+        "populated-message-mutation-probes.sql": "0c79216740da5cbb714132ec1a02f2e764c5d8b1fa4da474fe1d7ed8670e92c5"
+      },
+      "raw_mutation_result_records_retained": true,
+      "raw_relation_fingerprint_maps_retained": false,
+      "provider_requests": 0
+    }
+  },
+  "five_sql_no_send_followup": {
+    "status": "fresh_full_ordinary_and_populated_attachment_smoke_passed",
+    "changed_sql_fixtures": 5,
+    "new_pure_negative_harness_tests": 6,
+    "scope": "Replace absolute empty-outbox assumptions with exact before/after delivery-row fingerprints in five standalone SQL fixtures.",
+    "baseline_captured_before_first_fixture_actor_or_rpc": true,
+    "selected_delivery_families": [
+      "communication_outbox",
+      "messages",
+      "outbound_deliveries",
+      "outbound_message_attempts"
+    ],
+    "complete_rows_and_counts_compared": true,
+    "serialization": "FixedUTC; ordered full-row JSON aggregate; SHA256 of UTF-8 JSON text.",
+    "same_count_row_mutations_detected": true,
+    "preexisting_rows_need_not_be_empty": true,
+    "queues_cleared_or_permissions_relaxed": false,
+    "final_assertion_uses_unrestricted_role_after_all_fixture_actions": true,
+    "tap_assertion_count_unchanged": true,
+    "cli268_and_historical269_full_maps_rehashed_current": true,
+    "previous_ordinary434_and_smoke437_changed_only_these_five_sql_inputs": true,
+    "fresh_full_ordinary_passed": true,
+    "fresh_populated_attachment_smoke_passed": true,
+    "populated_baseline_all_four_families_observed_nonempty": true,
+    "actual_mutation_detection_and_exact_rollback_cases": 16
+  },
+  "superseded_local_proofs": {
+    "ordinary_before_five_sql_baseline_fix": {
+      "historical_proof_passed": true,
+      "current_source_acceptance_claimed": false,
+      "superseded_by": "Five revised no-send SQL fixture inputs.",
+      "result_sha256": "57ab2526e88f22e4377238610706c8988d3d08ede273a0ad14d245a3778c8449",
+      "private_source_hash_count": 434,
+      "full_private_source_set_digest": "25afe3437a5c3f87dd5b91616f9006ad4faf2d287d5dfcc49d106b8c0e39198d",
+      "original_fixture_and_setup_elapsed_seconds": 447.161,
+      "private_whole_archive_retained": true
+    },
+    "attachment_smoke_before_five_sql_baseline_fix": {
+      "historical_proof_passed": true,
+      "current_source_acceptance_claimed": false,
+      "superseded_by": "Five revised no-send SQL fixture inputs and a stronger populated-baseline smoke.",
+      "result_sha256": "e3f08e6133b51e58ee3eeeac1c0638ac8ed25157cf4306ca6b75efe059686806",
+      "private_source_hash_count": 437,
+      "full_private_source_set_digest": "0ecc37683ba06112fef5abaf60d6f984529598180e6302d7da3ff57c23efedbc",
+      "raw_comparison_maps_retained": false,
+      "private_whole_archive_retained": true
+    }
+  },
+  "excluded_ci_attempts": [
+    {
+      "run": 39451696040,
+      "head": "706830ee5deceea2699404f7aa31f1d0056b6406",
+      "conclusion": "failure",
+      "accepted": false,
+      "failures": [
+        {
+          "job": "diagnostic-renderer",
+          "observed_failure": "Obsolete api_checks42 equality after an added counted ledger-version guard."
+        },
+        {
+          "job": "database",
+          "observed_failure": "DROP-based attachment clone schema rebuild raised out-of-shared-memory error."
+        }
+      ]
+    },
+    {
+      "run": 39456322111,
+      "head": "2533ac7e321d64634f1ffb4e85cd3b50e3c626b8",
+      "conclusion": "failure",
+      "accepted": false,
+      "failures": [
+        {
+          "job": "database",
+          "step": "original attachment capture concurrency",
+          "observed_failure": "No-send SQL fixture required empty outbox: observed9, expected0.",
+          "interpretation": "The zero-row assertion could not distinguish preexisting copied messages from fixture side effects; new exact baseline guards test preservation."
+        }
+      ]
+    }
+  ]
 }
