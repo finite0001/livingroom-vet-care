@@ -3,6 +3,7 @@ import argparse
 import json
 import hashlib
 import os
+import re
 from pathlib import Path
 import shutil
 import socket
@@ -14,6 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
 parser.add_argument('--include-sql-regression', action='store_true', help='Run all canonical SQL suites in this fresh owned runtime')
 parser.add_argument('--decision-sql-only', action='store_true', help='Run the new decision SQL gate, then clean the owned runtime without claiming full acceptance')
+parser.add_argument('--retain-private-evidence', action='store_true', help='Retain a protected copy of synthetic logs and fixtures after removing the owned runtime')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
@@ -41,7 +43,15 @@ def command(argv, timeout=240, **kwargs):
     log.write('COMMAND ' + ' '.join(map(str, argv)) + '\n' + result.stdout + result.stderr + '\n')
     log.flush()
     if result.returncode:
-        raise RuntimeError('Disposable local command failed; inspect protected log: ' + str(work / 'commands.log'))
+        # Keep raw SQL, records and subprocess output in the protected log.
+        # CI needs only the known harness name and validated SQLSTATE to locate
+        # a failure whose detailed child log is retained inside this runtime.
+        script = next((Path(str(arg)).name for arg in argv if str(arg).endswith(('.py', '.ts', '.mjs'))), 'owned-command')
+        if not re.fullmatch(r'[A-Za-z0-9_.-]{1,100}', script):
+            script = 'owned-command'
+        state = re.search(r'\bSQLSTATE[=: ]+([A-Z0-9]{5})\b', result.stderr)
+        detail = script + (', SQLSTATE=' + state.group(1) if state else '')
+        raise RuntimeError('Disposable local command failed [' + detail + ']; inspect protected log: ' + str(work / 'commands.log'))
     return result.stdout
 
 def verify_identity():
@@ -221,8 +231,17 @@ if success:
                'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':163,'assertions':7101}if args.include_sql_regression else None,
                'stock_boundary':{'api':stock_api,'concurrency':stock_locks,'restore':stock_restore,'api_sha256':stock_api_hash,'concurrency_sha256':stock_locks_hash,'restore_sha256':stock_restore_hash,'rollback_probe':stock_probe,'rollback_probe_sha256':stock_probe_hash,'handoff_rollback_probe':handoff_probe,'handoff_rollback_probe_sha256':handoff_probe_hash},
                'controlled_source_reconciliation':source_reconciliation,'controlled_source_reconciliation_sha256':source_reconciliation_hash}
+    retained = None
+    if args.retain_private_evidence:
+        retained = Path(tempfile.mkdtemp(prefix=identity + '-evidence-'))
+        shutil.copytree(work, retained / 'runtime-work')
+        (retained / 'result.json').write_text(json.dumps(summary, indent=2) + '\n')
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)
     print('Sanitized result: ' + str(summary_path), flush=True)
-    print('Disposable project containers, volumes and private temporary files removed; shared foundation untouched.', flush=True)
+    if retained is not None:
+        print('Protected evidence: ' + str(retained), flush=True)
+        print('Disposable project containers, volumes and runtime workdir removed; protected evidence retained.', flush=True)
+    else:
+        print('Disposable project containers, volumes and private temporary files removed; shared foundation untouched.', flush=True)

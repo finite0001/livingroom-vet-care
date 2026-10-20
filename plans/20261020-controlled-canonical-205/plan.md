@@ -58,3 +58,12 @@ runs/scopes/bindings before cloning. Reprove all affected source maps with a
 persistent synthetic document reservation and separate rolled-back receipt
 diagnostics. Distinguish allowed changes from canonical immutability refusals;
 never disable those guards or claim persistent receipt admission or ready bytes.
+
+The fourth CI attempt passed both attachment suites and all initial native browser
+and writer queues, then exposed a mixed-era historical stock fixture: it removed
+pre-provenance admission types from a 205 clone while retaining dependent 205
+triggers. Preserve the current populated restore; move historical checks to genuine
+187/188 bootstraps with real CLI upgrades, exact drift rollback, no backfill and
+new-source enforcement. Require the precise two-row handoff manifest append.
+Retain protected local source-byte evidence and safe subprocess diagnostics, then
+run the entire native lane through its source oracle and final populated restore.

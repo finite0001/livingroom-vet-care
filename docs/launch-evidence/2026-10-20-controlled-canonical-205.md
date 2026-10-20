@@ -3,9 +3,9 @@
 The reviewed controlled-stock engine body is now present as canonical migration
 `20261020151157_controlled_stock_private_engine.sql`. The actual CLI, genuine
 historical and refreshed full ordinary proofs pass, together with the populated
-attachment-helper follow-up. All 342 Python harness tests, ten TypeScript
+attachment-helper follow-up. All 352 Python harness tests, ten TypeScript
 migration-guard tests and 1,695 repository unit tests pass. Independent review
-verified current source bindings and attributed cleanup for all four evidence
+verified current source bindings and attributed cleanup for all five evidence
 sets. Fresh exact-head CI and Dave's specific merge/release approval remain
 pending. This is repository promotion and owned disposable proof, not hosted
 installation or clinical/register activation.
@@ -239,7 +239,7 @@ same-count modifications as well as new or deleted rows. One existing assertion
 is replaced in each fixture, so the expected TAP assertion counts are unchanged.
 Negative harness cases reject count-only/id-only snapshots, missing families,
 missing timezone, late capture, restricted final visibility and unchecked later
-actions. All 342 current Python harness tests pass. The refreshed full ordinary
+actions. All 352 current Python harness tests pass. The refreshed full ordinary
 SQL run and populated helper smoke above establish runtime acceptance for these
 five current SQL inputs.
 
@@ -251,8 +251,52 @@ unrestricted role after all actions. Existing TAP counts remain unchanged.
 Negative harness controls require both complete families, early capture, fixed
 UTC and an unrestricted final comparison. The current full ordinary proof and
 clinical-populated helper smoke above establish acceptance of these changes.
-All three failed CI attempts are excluded; a fresh exact-head five-job CI run
+All four failed CI attempts are excluded; a fresh exact-head five-job CI run
 remains required.
+
+
+The fourth failed CI attempt reached the stock-source restore helper after the
+native API/browser and writer-queue checks passed. Its historical sublane removed
+C1a provenance tables from an installed-205 clone while retaining a 205 trigger
+whose compiled declaration required `stock_writer_admissions`. The reproduced
+legacy write failed with SQLSTATE 42704. The current-205 populated restore had
+already passed; this was a mixed-era test reconstruction, not evidence of a
+canonical writer or migration failure.
+
+That helper now keeps the current-205 populated restore separate from genuine
+historical upgrade runtimes. Expected prior writer hashes come directly from the
+verified source manifest, without stripping live function bodies. A genuine
+187 prefix with populated legacy rows applies the original 188 migration through
+the real CLI; a separate genuine 188 prefix applies 189. Both retain their
+original source-drift rollback, no-backfill, exact legacy-receipt replay and new
+source-enforcement checks. The 188 extension preserves all eight existing
+manifest records exactly and adds only the two reviewed records. Exact replay
+audit checks account for the genuine current-statement admission rather than
+omitting that relation. No 205 trigger is disabled to simulate an earlier era,
+and no engine body, migration or independent expected pin was changed.
+
+The refreshed full native acceptance passed the unchanged 300-second stock-child
+bound. Its installed-205 restore retained the five source families/21 selected
+relations and the additional two handoff families/26 selected relations, exact
+receipts, private grants and stale-admission refusal. Both genuine historical
+upgrades passed with actual ledger transitions 187 to 188 and 188 to 189. The
+following isolated source oracle passed 136 canonical replays and 961 checks;
+the final populated native restore passed 275 checks. That restore verifies its
+selected rows, constraints, table grants and native security boundaries; it does
+not claim migration-ledger, future-object default privileges or Storage binary
+recovery.
+
+All 1,918 native acceptance inputs matched the initial and result maps, current
+files and the archived source-byte copies. This broader repository binding is a
+separate scope from the other four maps; all four earlier maps still rehash
+exactly. The private native result SHA-256 is
+`3cd200bd4a73b50a1bdf2eeacf336f83b44aeca1d8a82974aa5d473666e1b807`.
+Independent exact-label inspection confirmed removal of the main native runtime
+and both historical runtimes, including their work directories. Failed local
+native attempts remain archived and excluded from acceptance. The first exposed
+the retained-205 dependency; a subsequent strict manifest-delta check was fixed
+to preserve the eight existing records while accepting exactly the two reviewed
+additions. Neither failure is counted as runtime acceptance.
 
 Canonical promotion does not complete production C1b admission, remaining
 hold/exception acceptance, C2 review/witness/transfer/count/report workflows or C3

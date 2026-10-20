@@ -444,3 +444,17 @@ whose global fixture counts require an empty import family. It preserves unrelat
 patient-document rows. Receipt fingerprint diagnostics use a separate rolled-back
 FK-valid fixture; they do not establish persistent receipt-source admission or
 clinical provenance. Canonical document and receipt immutability remains enforced.
+
+The native full-stack runner keeps its current-205 populated stock restore separate
+from genuine 187/188 historical upgrades. Historical checks boot only each pinned
+canonical prefix, then apply the unchanged next migration through the real CLI.
+They retain last-root drift rollback, exact legacy receipts, no backfill and new
+source enforcement. The 188-to-189 manifest change must preserve all eight original
+rows and append exactly the two independently expected handoff rows. They do not
+remove old admission types while retaining 205 triggers.
+
+For owned local audit, `tests/prescriptions/native-disposable.py` accepts
+`--retain-private-evidence`; it copies synthetic logs, snapshots and fixtures into
+a protected directory while removing the runtime containers, volumes and workdir.
+Default CI output includes only a known harness name and validated SQLSTATE on
+subprocess failure. Raw SQL, source rows and detailed child output stay private.

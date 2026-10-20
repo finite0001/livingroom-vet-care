@@ -1,7 +1,7 @@
 {
   "kind": "controlled-canonical-205-launch-evidence-v1",
   "date": "2026-10-20",
-  "status": "all_current_owned_local_gates_and_clinical_attachment_smoke_passed_followup_ci_pending",
+  "status": "all_current_owned_local_gates_attachment_and_full_native_acceptance_passed_followup_ci_pending",
   "scope": {
     "repository_canonical_migrations": 205,
     "canonical_filename": "20261020151157_controlled_stock_private_engine.sql",
@@ -253,7 +253,7 @@
     "captured_raw_source_ledger_writer_snapshots_independently_compared": 17
   },
   "repository_checks": {
-    "python_ci_pattern_harness_tests": 342,
+    "python_ci_pattern_harness_tests": 352,
     "typescript_migration_guard_tests": 10,
     "unit_tests": 1695,
     "frozen_artifact_and_body_checks_passed": true,
@@ -307,7 +307,7 @@
     "supabase/tests/ezyvet_attachment_metadata_concurrency.py": "81b6dfb4a982c56f620d4bb1c030ef1b64b3c479bd6ccc2b2067777f75be2b2a",
     "supabase/tests/ezyvet_attachment_originals_concurrency.py": "2ecc668a8f75c27976e20ec87907240e80b0b1ca5ead8c79e159b80edaa03a43",
     "supabase/tests/test_owned_attachment_clone_harness.py": "cab22611c94ddb0639b03ae419e325cb184955c6d69a7dbd8752efbdbfaf50ec",
-    "tests/prescriptions/native-disposable.py": "f855e531946c5a44ca53e09479b8f075cec64865da7cbace6997711244e81d27",
+    "tests/prescriptions/native-disposable.py": "93f67e41bb61a4754654598366e308cf2a6af28514ed6359663666aec5cb8a97",
     "tests/scheduling/disposable.py": "6fc2270c740bbb01b1e3dac14a18f4e61f3ee91b11b76928192ff3cc5fd970f2",
     "supabase/tests/ezyvet_migration_attempt_events.test.sql": "876ca125f917b135a57c21601f244de8a2f50dbeaf2aa3a5ee6b343021daebb3",
     "supabase/tests/ezyvet_migration_binding_adapters.test.sql": "be372995223f27aa933d2dababc80c7ca1df1dac06a007df7a0d5c4a38b15de9",
@@ -316,7 +316,10 @@
     "supabase/tests/ezyvet_migration_progress.test.sql": "8a903560e8ee6b542318eca751c47ec29b9e2e7f2a5be4a5a43399a330501ce8",
     "supabase/tests/test_ezyvet_delivery_baseline_harness.py": "93309b748a5238581ef8ca69025944cc98837967833ed0a9d5be60bdd75c8e11",
     "supabase/tests/ezyvet_attachment_originals.test.sql": "67ab64c3c04b142b643cf6881b6f3caf4f12f8cb091ce666e75a211ee248f9de",
-    "supabase/tests/test_ezyvet_original_baseline_harness.py": "f4773805b6c3a064e22731d4388253baf5e79fe14eced3255a7fd24607667a3b"
+    "supabase/tests/test_ezyvet_original_baseline_harness.py": "f4773805b6c3a064e22731d4388253baf5e79fe14eced3255a7fd24607667a3b",
+    "supabase/tests/stock_writer_historical_upgrade.py": "edaa8b3026c967f625de73dea75dd05a412e4fce33bbf076891588e70454dde4",
+    "supabase/tests/test_stock_writer_history_harness.py": "b778465f477d05cef3a573aebaeb1eba2cf82715ef07d4c5d2fe7c26706cd5b8",
+    "supabase/tests/stock_writer_restore.py": "d8ac4b43ad78608d2df8da0bff4e89a6d30bdd40ae32382081a2c8a042f24afd"
   },
   "raw_rows_catalogs_acl_claims_backend_identities_and_private_paths_published": false,
   "followup_after_first_ci": {
@@ -625,6 +628,20 @@
           "manual_export_receipt_assertion158": "passed"
         }
       ]
+    },
+    {
+      "run": 39468125026,
+      "head": "b6e3989d1e8baa1a97f558a0ab0df85279eedfdc",
+      "conclusion": "failure",
+      "accepted": false,
+      "failures": [
+        {
+          "job": "database",
+          "observed_failure": "Legacy mixed-era stock upgrade fixture dropped pre-C1a admissions while retaining the205 source-required trigger; subsequent legacy receive failed SQL42704.",
+          "current205_populated_restore_before_historical_sublane": "passed",
+          "resolution_scope": "Retain current205 restore lane and execute genuine187/188 upgrade lanes in separate owned historical runtimes."
+        }
+      ]
     }
   ],
   "originals_clinical_baseline_followup": {
@@ -646,5 +663,179 @@
     "persistent_document_seed_admitted_by_both_helpers": true,
     "actual_allowed_changes_detected": 3,
     "actual_immutable_refusals": 5
+  },
+  "full_native_acceptance": {
+    "passed": true,
+    "result_sha256": "3cd200bd4a73b50a1bdf2eeacf336f83b44aeca1d8a82974aa5d473666e1b807",
+    "private_runtime_source_input_count": 1918,
+    "full_private_source_set_digest": "795cf3a3066cd4c4ba168dc050c0d031d9a218de2f9a0d0e0cf54c32367e9a90",
+    "binding_scope": "Tracked and new nonignored runtime/source files; docs, plans, .planning, README.md and AGENTS.md excluded to avoid circular evidence. Dependency-directory contents are not included through symlink targets.",
+    "initial_result_current_and_saved_source_bytes_equal": true,
+    "private_runner_sha256": "d6c1256cf310f45e9744190d245f1359e4ca66014686fbc2c2e8a8d24ffc65c3",
+    "private_runner_executed_saved_and_current_bytes_match": true,
+    "source_maps_are_private": true,
+    "four_existing_proof_source_maps_remain_current": true,
+    "native_http_auth_browser_suites": {
+      "suite_count": 11,
+      "checks_passed": 783,
+      "suites": [
+        {
+          "suite": "native-prescription-lifecycle-http",
+          "checks_passed": 82
+        },
+        {
+          "suite": "native-fulfillment-http",
+          "checks_passed": 85
+        },
+        {
+          "suite": "native-fulfillment-and-release-browser",
+          "checks_passed": 77
+        },
+        {
+          "suite": "native-release-local-auth",
+          "checks_passed": 57
+        },
+        {
+          "suite": "native-corrections-local-auth",
+          "checks_passed": 46
+        },
+        {
+          "suite": "native-returns-local-auth",
+          "checks_passed": 57
+        },
+        {
+          "suite": "native-reconciliation-local-auth",
+          "checks_passed": 57
+        },
+        {
+          "suite": "native-finance-local-auth",
+          "checks_passed": 61
+        },
+        {
+          "suite": "native-estimate-drafts-local-auth",
+          "checks_passed": 51
+        },
+        {
+          "suite": "native-estimate-publications-local-auth-http",
+          "checks_passed": 87
+        },
+        {
+          "suite": "native-estimate-decisions-local-auth-http",
+          "checks_passed": 123
+        }
+      ]
+    },
+    "current205_stock_populated_restore": {
+      "source_families": 5,
+      "snapshot_relations": 21,
+      "handoff_additional_source_families": 2,
+      "handoff_snapshot_relations": 26,
+      "exact_snapshot_and_receipts_restored": true,
+      "stale_admission_denied": true,
+      "private_grants_and_manifest_restored": true,
+      "owned_clone_databases_removed": true,
+      "original_database_unchanged": true
+    },
+    "genuine_historical_upgrades": {
+      "passed": true,
+      "source_upgrade187_to188": {
+        "exact_prior_definition_hashes": 8,
+        "legacy_history_preserved": true,
+        "unexpected_drift_denied_atomically": true,
+        "legacy_receipt_unchanged_without_backfill": true,
+        "new_post_upgrade_source_enforced": true,
+        "ledger_before": 187,
+        "ledger_after": 188,
+        "genuine_prefix": true,
+        "owned_runtime_removed": true,
+        "reviewed_image_pin_enforced": true
+      },
+      "handoff_upgrade188_to189": {
+        "exact_prior_definition_hashes": 2,
+        "history_preserved": true,
+        "source_drift_rolls_back_all_ddl": true,
+        "legacy_replay_has_no_backfill": true,
+        "new_correction_has_one_source_and_no_stock_or_billing_effect": true,
+        "ledger_before": 188,
+        "ledger_after": 189,
+        "genuine_prefix": true,
+        "owned_runtime_removed": true,
+        "reviewed_image_pin_enforced": true
+      },
+      "old_relation_counts": [
+        384,
+        389
+      ],
+      "full_old_ledger_and_data_preserved_on_failed_upgrade": true,
+      "full_drifted_catalog_restored_after_failure": true,
+      "actual_primary_sqlstate": "23514",
+      "last_root_drift_cases": 2,
+      "successful188_to189_only_old_relation_delta": "stock_writer_manifests: all8 old full rows plus exactly2 independently derived expected full rows; all other original relation fingerprints unchanged.",
+      "legacy_receipt_replays": 6,
+      "legacy_replay_only_delta": "One exact expected admission audit row per replay; all prior audit rows and every other selected relation unchanged.",
+      "legacy_sources_not_backfilled": true,
+      "new_receive_has_exactly_one_source": true,
+      "new_annotation_has_exactly_one_source_without_inventory_or_billing_delta": true,
+      "actual_prior_definition_hashes_verified": 10,
+      "actual_cli_ledger_transitions": [
+        [
+          187,
+          188
+        ],
+        [
+          188,
+          189
+        ]
+      ],
+      "no205_overlay_dismantling_or_trigger_disabling": true
+    },
+    "controlled_source_reconciliation": {
+      "checks": 961,
+      "canonical_operations": 136,
+      "actual_canonical_replays": 136,
+      "private_acl": true,
+      "source_producers": 10,
+      "canonical_replay_preserves_stock_and_billing": true,
+      "source_database_unchanged": true,
+      "populated_clone_unchanged": true
+    },
+    "selected_native_populated_restore": {
+      "checks_passed": 275,
+      "cleanup_verified": true,
+      "default_privilege_statements_omitted": 36,
+      "future_object_default_privileges_restored": false,
+      "scope": "Selected native clinical/operational and stock/billing schema/data; not full commercial disaster recovery."
+    },
+    "cleanup": {
+      "owned_runtimes": 3,
+      "all_runtime_cleanup_receipts_successful": true,
+      "independent_exact_project_labels_have_no_containers_or_volumes": true,
+      "all_owned_workdirs_absent": true
+    },
+    "existing_stock_restore_child_timeout_seconds": 300,
+    "timeout_unchanged": true,
+    "fresh_full_ordinary_sql_regression_claimed_in_this_native_run": false,
+    "hosted_writes": 0,
+    "provider_requests": 0,
+    "clinical_or_register_activation": false
+  },
+  "full_native_followup": {
+    "prior_failed_local_attempts": [
+      {
+        "accepted": false,
+        "scope": "Full native local reproduction",
+        "observed_failure": "Same mixed-era SQL42704 fixture failure before genuine historical isolation.",
+        "owned_cleanup_independently_verified": true
+      },
+      {
+        "accepted": false,
+        "scope": "First genuine historical helper integration",
+        "observed_failure": "Overbroad188-to189 preservation assertion rejected legitimate stock_writer_manifests8-to10 append.",
+        "resolution": "Preserve all8 exact old rows and require exactly2 independently derived expected full rows; every other original relation remains exact.",
+        "owned_cleanup_independently_verified": true
+      }
+    ],
+    "canonical_migrations_candidate_engine_sql_pins_and_previous_four_proof_inputs_changed": false,
+    "new_historical_helper_does_not_reinstall_or_remove205_in_current_restore_clone": true
   }
 }
