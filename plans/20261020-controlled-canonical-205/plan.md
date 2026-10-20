@@ -49,3 +49,12 @@ before fixture work and compared after all actions. Preserve TAP totals and
 preexisting messages; do not clear queues or alter canonical delivery guards.
 Reprove the affected ordinary and attachment input maps, including a populated
 four-family baseline and actual rolled-back mutation counterexamples.
+
+The third CI attempt passed delivery-baseline assertions and metadata races, then
+found the originals fixture's global empty patient-document assumption. Preserve
+complete document and receipt baselines before setup through the final unrestricted
+comparison, retaining two existing TAP assertions. Refuse conflicting migration
+runs/scopes/bindings before cloning. Reprove all affected source maps with a
+persistent synthetic document reservation and separate rolled-back receipt
+diagnostics. Distinguish allowed changes from canonical immutability refusals;
+never disable those guards or claim persistent receipt admission or ready bytes.

@@ -2,6 +2,7 @@
 import ast
 import copy
 import json
+import re
 from pathlib import Path
 import sys
 import unittest
@@ -94,6 +95,47 @@ class OwnedAttachmentCloneTests(unittest.TestCase):
         self.assertIn('from public.ezyvet_attachment_capture_requests', query)
         self.assertNotIn('delete from', query.lower())
         self.assertNotIn('truncate ', query.lower())
+
+    def test_each_conflicting_migration_family_is_refused_without_child_imports(self):
+        class ExistingRows(Callbacks):
+            def __init__(self, relation):
+                super().__init__()
+                self.relation = relation
+                self.before['relations']['public.' + relation] = {'count': 1, 'hash': 'b' * 64}
+                self.after = copy.deepcopy(self.before)
+
+            def sql(self, query):
+                if "select jsonb_build_object('fixture_clean'" in query:
+                    self.queries.append(query)
+                    # Mock the existence semantics of the actual emitted SQL.
+                    # Removing any required predicate would incorrectly admit
+                    # that populated family and make this negative test fail.
+                    empty_checks = set(re.findall(r'not exists\(select 1 from (?:public\.)?([a-z_]+)\)', query))
+                    return json.dumps({'fixture_clean': self.relation not in empty_checks})
+                return super().sql(query)
+
+        for relation in ('ezyvet_migration_runs', 'ezyvet_migration_scopes', 'ezyvet_migration_bindings'):
+            with self.subTest(relation=relation):
+                c = ExistingRows(relation)
+                with self.assertRaisesRegex(AssertionError, 'conflicting attachment fixtures'):
+                    c.admit()
+                self.assertEqual(c.snapshots, 1, 'Refusal must precede clone use or post-admission snapshot')
+                query = next(q for q in c.queries if "'fixture_clean'" in q)
+                self.assertNotIn('delete from', query.lower())
+                self.assertNotIn('truncate ', query.lower())
+
+    def test_unrelated_clinical_documents_and_receipts_remain_allowed_and_preserved(self):
+        c = Callbacks()
+        for relation in ('patient_documents', 'external_record_receipts'):
+            c.before['relations']['public.' + relation] = {'count': 2, 'hash': 'c' * 64}
+        c.after = copy.deepcopy(c.before)
+        admitted = c.admit()
+        self.assertEqual(admitted, c.before)
+        clean_query = next(q for q in c.queries if "'fixture_clean'" in q)
+        self.assertNotIn('from patient_documents', clean_query)
+        self.assertNotIn('from public.patient_documents', clean_query)
+        self.assertNotIn('from external_record_receipts', clean_query)
+        self.assertNotIn('from public.external_record_receipts', clean_query)
 
     def test_missing_fixture_identity_contract_is_refused(self):
         c = Callbacks()

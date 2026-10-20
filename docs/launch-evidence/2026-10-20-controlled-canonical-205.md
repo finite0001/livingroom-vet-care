@@ -3,7 +3,7 @@
 The reviewed controlled-stock engine body is now present as canonical migration
 `20261020151157_controlled_stock_private_engine.sql`. The actual CLI, genuine
 historical and refreshed full ordinary proofs pass, together with the populated
-attachment-helper follow-up. All 334 Python harness tests, ten TypeScript
+attachment-helper follow-up. All 342 Python harness tests, ten TypeScript
 migration-guard tests and 1,695 repository unit tests pass. Independent review
 verified current source bindings and attributed cleanup for all four evidence
 sets. Fresh exact-head CI and Dave's specific merge/release approval remain
@@ -115,7 +115,7 @@ files; independent final rehash passed. The private historical
 result SHA-256 is
 `284ec73a6ea3a9500acc65a6e911de686c192225272fabed701281e84136f3f1`.
 The refreshed full ordinary compatibility proof passed through the actual
-canonical 205 lane after the five delivery-baseline fixture corrections below.
+canonical 205 lane after the delivery and clinical-baseline fixture corrections below.
 It retained the original-204 installation/prior-drift refusal rehearsals,
 all 166 canonical SQL suites/7,338 assertions and every existing smoke, managed
 native, opening and capacity probe. The post-205 literal/private verifier and
@@ -130,7 +130,7 @@ boundary previews; canonical writer full-history verification remained unchanged
 The 1,000-correction populated restore passed all seven fresh validations across
 456 selected-schema relation fingerprints, including the exact frozen unattached
 opening and session-retirement rollback. The complete correction probe, including
-setup and populated restore, took 365.388 seconds within its shared 900-second
+setup and populated restore, took 364.820 seconds within its shared 900-second
 budget and unchanged 120-second writer reserve. This is an observed rehearsal
 runtime, not a production performance or capacity approval.
 
@@ -140,7 +140,7 @@ request count. All 434 initial ordinary source bindings exactly matched the resu
 map and current files; independent final rehash passed. Independent attributed cleanup found no owned containers
 or volumes and confirmed removal of the owned work directory. The private ordinary
 result SHA-256 is
-`1388341f2914395528688e9d7b77cbacc8d345566508c3712aa63e0ea1c05986`.
+`49d81ae0f7d97844f22b41884c5b76ee4ac6f542f663bd3784bbf8755226efa2`.
 The current local runtime gates and independent evidence reviews pass.
 Fresh exact-head CI remains pending; this does not grant approval to install on a hosted
 project.
@@ -168,7 +168,10 @@ pin.
 
 The refreshed attachment-helper smoke used a deliberately populated baseline:
 nine outbox rows, ten messages (nine linked and one unlinked probe message), nine
-outbound deliveries and nine outbound attempts. Attachment metadata passed 43
+outbound deliveries, nine outbound attempts and one uploading patient document.
+The document was created through its canonical prepare RPC, without Storage bytes
+or a provider request; the persistent external-record-receipt baseline remained
+empty. Attachment metadata passed 43
 checks and attachment originals passed 320. Source admission and clone
 verification enforced the independent literal manifest, complete selected data
 and genuine canonical ledger; source preservation was checked again afterward.
@@ -184,22 +187,47 @@ Every actual change was detected, including same-count row changes, and every
 case restored the exact complete four-family fingerprint afterward. The private
 mutation script used the identical snapshot function as the five SQL fixtures.
 Independent review verified the exact sixteen distinct family/mutation pairs,
-strict success flags, both private SQL hashes and the executed driver's hash.
+strict success flags, all four private SQL hashes and the executed driver's hash.
 The archived SQL and driver matched their current files. These negative controls
 establish snapshot sensitivity; they do not invoke a provider or dispatcher.
 
+The clinical controls separately exercised insert, update, delete and equal-count
+replacement for patient documents and external record receipts. Three actual
+changes were detected: document insert/update through their canonical RPCs and a
+FK-valid synthetic receipt insert. Five remaining operations received their exact
+canonical immutability refusals. Every case rolled back exactly. The temporary
+receipt and mapping fixture also rolled back before helper admission. These are
+eight controls, not eight successful mutations, and they do not establish receipt
+provenance acceptance or acceptance of a persistently populated receipt source.
+The clinical snapshot functions were byte-identical to the bound originals
+fixture; no count-only substitute was used.
+
+Source admission now explicitly refuses preexisting migration runs, scopes and
+bindings in addition to the established conflicting import families. The target
+fixtures require these families to be empty for their exact import-count checks;
+the helper refuses conflicting data rather than clearing or rewriting it. The
+persistent unrelated patient document and delivery rows remain permitted and
+preserved.
+
 All 437 populated-smoke bindings exactly matched its initial/result maps and
 current files. Its private result SHA-256 is
-`c8ca6f63e00c9c8f444dc14740e37fd2b9830a3f0496e8e97d850a27a7ddf32f`.
+`d46c932b541882138c139fc3db6f0e62823a1b9df24a6f8bcaec0c17ffde84de`.
 This helper-smoke proof is separate from the current ordinary, historical and CLI
 maps of 434, 269 and 268 bindings respectively; all four final binding rechecks
-passed. The prior ordinary result and earlier helper smoke remain preserved as
-superseded evidence rather than current-source acceptance. Two earlier private
+passed. The prior ordinary results and earlier empty-clinical and delivery-only helper
+smokes remain preserved as superseded evidence rather than current-source
+acceptance. Two earlier private
 smoke-wrapper attempts stopped on setup admission checks, first its allowlist
 and then an overlong identity, before either attachment helper ran. Their
 private evidence and verified cleanup were preserved and excluded from acceptance.
+Two subsequent private smoke attempts are also excluded: a CASE parser ambiguity
+stopped the fifth attempt before clinical controls or helpers, and retained staff
+claims stopped the sixth during privileged fixture setup. Both were archived
+with verified cleanup. The private setup fixes parenthesized the expression and
+cleared the role/auth context before the unchanged fixture; no production grant
+or guard was relaxed.
 
-A further attachment-helper run exposed five SQL fixtures that asserted the
+The second failed CI attempt exposed five SQL fixtures that asserted the
 entire communication outbox was empty, even when the verified source legitimately
 contained earlier delivery rows. The fixtures now capture a complete baseline
 before any actor or RPC fixture work across communication outbox, messages,
@@ -211,9 +239,20 @@ same-count modifications as well as new or deleted rows. One existing assertion
 is replaced in each fixture, so the expected TAP assertion counts are unchanged.
 Negative harness cases reject count-only/id-only snapshots, missing families,
 missing timezone, late capture, restricted final visibility and unchecked later
-actions. All 334 current Python harness tests pass. The refreshed full ordinary
+actions. All 342 current Python harness tests pass. The refreshed full ordinary
 SQL run and populated helper smoke above establish runtime acceptance for these
-five current SQL inputs. A fresh exact-head five-job CI run remains required.
+five current SQL inputs.
+
+The third failed CI attempt exposed two further global absence assertions in the
+originals fixture: patient documents and external record receipts could already
+exist from earlier canonical CI work. Each now has an ordered full-row UTC
+count/hash baseline captured before any fixture work and compared under the
+unrestricted role after all actions. Existing TAP counts remain unchanged.
+Negative harness controls require both complete families, early capture, fixed
+UTC and an unrestricted final comparison. The current full ordinary proof and
+clinical-populated helper smoke above establish acceptance of these changes.
+All three failed CI attempts are excluded; a fresh exact-head five-job CI run
+remains required.
 
 Canonical promotion does not complete production C1b admission, remaining
 hold/exception acceptance, C2 review/witness/transfer/count/report workflows or C3

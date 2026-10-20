@@ -436,3 +436,11 @@ JSON array fingerprints and counts detect same-count changes as well as added or
 removed rows. Baselines precede fixture actors and RPCs; final comparisons run
 after all fixture actions with full visibility. Existing queued messages remain
 intact in verified attachment clones.
+
+Original-capture SQL also preserves complete patient-document and manual-receipt
+baselines captured before fixture setup and compared after all actions. Attachment
+clone admission explicitly refuses existing migration runs, scopes and bindings
+whose global fixture counts require an empty import family. It preserves unrelated
+patient-document rows. Receipt fingerprint diagnostics use a separate rolled-back
+FK-valid fixture; they do not establish persistent receipt-source admission or
+clinical provenance. Canonical document and receipt immutability remains enforced.

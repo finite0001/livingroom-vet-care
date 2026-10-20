@@ -54,9 +54,16 @@ def admit_source(sql, fixture_sqls, *, root=ROOT):
     ids = sorted({u.lower() for text in fixture_sqls for u in UUID.findall(text)})
     assert ids, 'Fixed fixture identities must be checked before copying'
     literal = "'" + json.dumps(ids).replace("'", "''") + "'::jsonb"
+    # Targeted standalone fixtures assert exact migration run/scope/binding
+    # cardinalities. A manifest can exist before any child import run, so empty
+    # import roots alone do not establish this prerequisite. Refuse these
+    # conflicting families explicitly; unrelated clinical data remains allowed.
     clean = atomic.release._json(sql(r"""
 select jsonb_build_object('fixture_clean',
  not exists(select 1 from auth.users where id in(select value::uuid from jsonb_array_elements_text(__IDS__)))
+ and not exists(select 1 from public.ezyvet_migration_runs)
+ and not exists(select 1 from public.ezyvet_migration_scopes)
+ and not exists(select 1 from public.ezyvet_migration_bindings)
  and not exists(select 1 from ezyvet_import_runs)
  and not exists(select 1 from ezyvet_import_snapshots)
  and not exists(select 1 from ezyvet_identity_heads)

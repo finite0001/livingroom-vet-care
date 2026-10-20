@@ -1,7 +1,7 @@
 {
   "kind": "controlled-canonical-205-launch-evidence-v1",
   "date": "2026-10-20",
-  "status": "all_current_owned_local_gates_and_populated_attachment_smoke_passed_followup_ci_pending",
+  "status": "all_current_owned_local_gates_and_clinical_attachment_smoke_passed_followup_ci_pending",
   "scope": {
     "repository_canonical_migrations": 205,
     "canonical_filename": "20261020151157_controlled_stock_private_engine.sql",
@@ -134,9 +134,9 @@
   },
   "full_ordinary_compatibility": {
     "status": "passed",
-    "result_sha256": "1388341f2914395528688e9d7b77cbacc8d345566508c3712aa63e0ea1c05986",
+    "result_sha256": "49d81ae0f7d97844f22b41884c5b76ee4ac6f542f663bd3784bbf8755226efa2",
     "private_source_hash_count": 434,
-    "full_private_source_set_digest": "5dd0ebf1b551660d4cc963ca878b64bb206504542a790bd0691b2657fb585d2b",
+    "full_private_source_set_digest": "9ef0ea979056efd449951fd8f581d9446ae6ff818ba0ebf35d3526b88c798fee",
     "initial_map_equals_result_and_current_files": true,
     "full_source_map_publicized": false,
     "canonical_205_actual_cli_install_verified": true,
@@ -181,7 +181,7 @@
       "simultaneous_maxima_proven": false
     },
     "genuine_correction_capacity": {
-      "fixture_and_setup_elapsed_seconds": 365.388,
+      "fixture_and_setup_elapsed_seconds": 364.82,
       "production_benchmark_claimed": false,
       "unique_sql_checks": 11,
       "unique_accepted_assertions": 7,
@@ -246,14 +246,14 @@
     "all_ten_canonical_writer_bodies_unchanged": true,
     "owned_containers_and_volumes_removed": true,
     "owned_workdir_absent": true,
-    "attributed_independent_cleanup_receipt_sha256": "b5d5b83b9c2e110c351542a24c4e6fb7b85d3b6836c223f00b89bbfadb1e0525",
+    "attributed_independent_cleanup_receipt_sha256": "19599a9a970ebde773da48ed182cc4a3e1a55e38afa6e5d0c87abd571c0adab0",
     "independent_container_count": 0,
     "independent_volume_count": 0,
     "passed": true,
     "captured_raw_source_ledger_writer_snapshots_independently_compared": 17
   },
   "repository_checks": {
-    "python_ci_pattern_harness_tests": 334,
+    "python_ci_pattern_harness_tests": 342,
     "typescript_migration_guard_tests": 10,
     "unit_tests": 1695,
     "frozen_artifact_and_body_checks_passed": true,
@@ -303,10 +303,10 @@
     "supabase/tests/test_controlled_canonical_post205_harness.py": "e7f3e49e56c2bad97eabbb5370d256f474c3ce9fa99c5f3a4db01f6ee5d72424",
     "supabase/tests/test_current_canonical_inventory_harness.py": "3fe7cd92932837dbf9fcc91628520273b8477b0ff8004c7795c3bd52339ebec4",
     "tests/restore/current-migration-guards.test.ts": "1f40a016b5099d47297ee88cb8b26c711683198306b33f0900858398efa4302e",
-    "supabase/tests/owned_attachment_clone.py": "44c1abe25b44e967a60bcd3f13e5454a530132b410455dd51028a007cc041ec5",
+    "supabase/tests/owned_attachment_clone.py": "b9712f602c5e2da025f1dfa9af2f05a982cf45984a783b2e508e89c07047c434",
     "supabase/tests/ezyvet_attachment_metadata_concurrency.py": "81b6dfb4a982c56f620d4bb1c030ef1b64b3c479bd6ccc2b2067777f75be2b2a",
     "supabase/tests/ezyvet_attachment_originals_concurrency.py": "2ecc668a8f75c27976e20ec87907240e80b0b1ca5ead8c79e159b80edaa03a43",
-    "supabase/tests/test_owned_attachment_clone_harness.py": "8174b2f57d7e75acffdef5f7bb58e7e714bc33ff41d3597dee0039f6b5d9f158",
+    "supabase/tests/test_owned_attachment_clone_harness.py": "cab22611c94ddb0639b03ae419e325cb184955c6d69a7dbd8752efbdbfaf50ec",
     "tests/prescriptions/native-disposable.py": "f855e531946c5a44ca53e09479b8f075cec64865da7cbace6997711244e81d27",
     "tests/scheduling/disposable.py": "6fc2270c740bbb01b1e3dac14a18f4e61f3ee91b11b76928192ff3cc5fd970f2",
     "supabase/tests/ezyvet_migration_attempt_events.test.sql": "876ca125f917b135a57c21601f244de8a2f50dbeaf2aa3a5ee6b343021daebb3",
@@ -314,7 +314,9 @@
     "supabase/tests/ezyvet_migration_bindings.test.sql": "e59a83d1023aa8ac4def1839d5869d6db05bc0b189c6439c80a97208c9e37e92",
     "supabase/tests/ezyvet_migration_manifests.test.sql": "8cd560f126ff40f5c305b8cdbbbc8065bba09667c00b841c62bf5d7790dbaa1d",
     "supabase/tests/ezyvet_migration_progress.test.sql": "8a903560e8ee6b542318eca751c47ec29b9e2e7f2a5be4a5a43399a330501ce8",
-    "supabase/tests/test_ezyvet_delivery_baseline_harness.py": "93309b748a5238581ef8ca69025944cc98837967833ed0a9d5be60bdd75c8e11"
+    "supabase/tests/test_ezyvet_delivery_baseline_harness.py": "93309b748a5238581ef8ca69025944cc98837967833ed0a9d5be60bdd75c8e11",
+    "supabase/tests/ezyvet_attachment_originals.test.sql": "67ab64c3c04b142b643cf6881b6f3caf4f12f8cb091ce666e75a211ee248f9de",
+    "supabase/tests/test_ezyvet_original_baseline_harness.py": "f4773805b6c3a064e22731d4388253baf5e79fe14eced3255a7fd24607667a3b"
   },
   "raw_rows_catalogs_acl_claims_backend_identities_and_private_paths_published": false,
   "followup_after_first_ci": {
@@ -340,7 +342,7 @@
       "strict_equality_retained": true,
       "three_new_counter_contract_tests": true
     },
-    "scope": "Receipt-contract and clone-helper changes were outside the retained CLI268/history269 maps. Five SQL changes superseded initial ordinary434/smoke437. Fresh434 ordinary and437 populated-smoke maps are now current; all shared434 inputs match.",
+    "scope": "Three failed CI attempts remain excluded. Delivery and clinical SQL baseline guards superseded earlier ordinary/smoke versions. CLI268/history269 remain current; fresh434 ordinary and437 clinical smoke passed, with all shared434 inputs equal.",
     "new_ci_and_pr_review_pending": true,
     "retained_cli_and_historical_maps_still_current": true,
     "first_ci_head": "706830ee5deceea2699404f7aa31f1d0056b6406",
@@ -350,9 +352,9 @@
     "all_three_lanes_rerun_after_five_sql_changes": false
   },
   "separate_attachment_clone_smoke": {
-    "result_sha256": "c8ca6f63e00c9c8f444dc14740e37fd2b9830a3f0496e8e97d850a27a7ddf32f",
+    "result_sha256": "d46c932b541882138c139fc3db6f0e62823a1b9df24a6f8bcaec0c17ffde84de",
     "private_source_hash_count": 437,
-    "full_private_source_set_digest": "6e0a89e8b6a5e5e29b73c6c903f82d2e2a355b1bd849bfac18cafed13895bd78",
+    "full_private_source_set_digest": "a4753601971f12f4da3c66ce624dcb02fa7d786ccdcb029444044171eaf4600d",
     "initial_map_equals_result_and_current_files": true,
     "retained_434_ordinary_inputs_are_unchanged_subset": true,
     "additional_bound_inputs": [
@@ -360,9 +362,9 @@
       "supabase/tests/ezyvet_attachment_metadata_concurrency.py",
       "supabase/tests/ezyvet_attachment_originals_concurrency.py"
     ],
-    "private_runner_sha256": "aaef0becba0e339f663a25ff881beb601fb56aa02be190c1a8d2d2cdcc5ee6ff",
+    "private_runner_sha256": "db058b5603409fc8cfbd46d6f65e216501777090227fa681143003241fec516c",
     "private_runner_saved_preboot_bytes_current_bytes_and_result_hash_equal": true,
-    "private_runner_equality_independently_checked_after_run_not_runtime_enforced": true,
+    "private_runner_equality_independently_checked_after_run_not_runtime_enforced": false,
     "actual_script_check_counts": {
       "attachment_metadata": 43,
       "attachment_originals": 320
@@ -387,7 +389,8 @@
       "marker_and_project_workdir_checked_before_clone_actions": true,
       "source_schema_drop_or_manual_migration_replay": false,
       "ledger_repair_or_expected_metadata_reseal": false,
-      "public_schema_rebuilt_in_clone": false
+      "public_schema_rebuilt_in_clone": false,
+      "migration_run_scope_and_binding_conflicts_refused": true
     },
     "evidence_scope": "Clone/data/source comparisons are enforced in memory by reviewed code and reflected in successful script exits. Raw comparison maps were not retained in this smoke archive and were not independently re-audited as durable raw snapshots. Clone catalog admission covers the independent171-function/51-relation manifest plus writers and engine catalog; no whole catalog clone equality is claimed.",
     "owned_scheduler_paused_drained_and_restored": true,
@@ -400,7 +403,7 @@
     "owned_containers_volumes_and_workdir_removed": true,
     "independent_container_count": 0,
     "independent_volume_count": 0,
-    "attributed_independent_cleanup_receipt_sha256": "31cb7fe27232838d2038d36245df33d922111e9b3d2e69a82ee88fcb8f4d9bcf",
+    "attributed_independent_cleanup_receipt_sha256": "197d35d6e9f76d1d4755249aa6ae2a9decaa5fc1467ac7a72d0acae09ca32018",
     "hosted_writes": 0,
     "provider_requests": 0,
     "actual_practice_activation": false,
@@ -417,10 +420,27 @@
         "helpers_started": false,
         "reason": "CLI normalized an overlong configured project identity, so the wrapper expected a different container name.",
         "cleanup_attribution": "Actual CLI-normalized project-label cleanup retained in a separate private companion receipt."
+      },
+      {
+        "attempt": 5,
+        "accepted": false,
+        "helpers_started": false,
+        "clinical_probes_completed": false,
+        "reason": "Private diagnostic function CASE-expression syntax was rejected before clinical probes and helpers.",
+        "subsequent_change": "Parenthesized the ignored diagnostic CASE expression only.",
+        "owned_cleanup_independently_verified": true
+      },
+      {
+        "attempt": 6,
+        "accepted": false,
+        "helpers_started": false,
+        "clinical_probes_completed": false,
+        "reason": "STAFF JWT from private document controls remained set while constructing the exact temporary mapping fixture; the canonical profile privilege guard refused.",
+        "subsequent_change": "Reset role and clear JWT claims before the unchanged mapping fixture; no role grant or guard bypass.",
+        "owned_cleanup_independently_verified": true
       }
     ],
-    "status": "passed_with_nonempty_delivery_baseline_and_16_actual_mutation_probes",
-    "passed": true,
+    "status": "passed_with_persistent_document_and_delivery_baselines_and_separate_rolled_back_receipt_probes",
     "populated_delivery_baseline": {
       "outbox_rows": 9,
       "messages": 10,
@@ -450,6 +470,47 @@
       "raw_mutation_result_records_retained": true,
       "raw_relation_fingerprint_maps_retained": false,
       "provider_requests": 0
+    },
+    "passed": true,
+    "private_runner_and_all_four_private_sql_inputs_rehashed_before_and_after": true,
+    "persistent_clinical_baseline": {
+      "patient_documents": 1,
+      "document_status": "uploading",
+      "created_via_canonical_prepare_rpc": true,
+      "storage_objects_created": 0,
+      "external_record_receipts": 0,
+      "ezyvet_record_links_persisted_by_seed": 0,
+      "ready_bytes_or_staged_receipt_provenance_claimed": false,
+      "provider_requests": 0
+    },
+    "actual_clinical_baseline_validation": {
+      "checks": 8,
+      "actual_changes_detected": 3,
+      "canonical_immutable_refusals": 5,
+      "actual_changes": [
+        "patient_document_insert",
+        "owned_uploading_document_abandon",
+        "external_record_receipt_insert"
+      ],
+      "immutable_refusals": [
+        "patient_document_delete",
+        "patient_document_equal_count_replacement",
+        "external_record_receipt_update",
+        "external_record_receipt_delete",
+        "external_record_receipt_equal_count_replacement"
+      ],
+      "each_probe_restored_both_complete_baseline_families": true,
+      "entire_temporary_mapping_and_receipt_fixture_rolled_back_before_helper_admission": true,
+      "receipt_rows_satisfied_foreign_keys_but_were_privileged_structural_diagnostics": true,
+      "receipt_staged_or_approved_lineage_claimed": false,
+      "persistent_receipt_source_admission_claimed": false,
+      "canonical_guards_left_enabled": true,
+      "private_sql_hashes": {
+        "populated-message-seed.sql": "fe6205d051ca1775d8d0ffea1939f7de0b48b067935a2ee28c5aa29ced60ef7d",
+        "populated-message-mutation-probes.sql": "0c79216740da5cbb714132ec1a02f2e764c5d8b1fa4da474fe1d7ed8670e92c5",
+        "populated-clinical-seed.sql": "daac11d2b22c554d10b6b65e9f54d1e4c5207c570ab619d86ce7828bf7b5b470",
+        "populated-clinical-mutation-probes.sql": "5e34fa75be98459a622b6139c6c1eb48f285ce7e9640906b96590217a3874893"
+      }
     }
   },
   "five_sql_no_send_followup": {
@@ -498,6 +559,26 @@
       "full_private_source_set_digest": "0ecc37683ba06112fef5abaf60d6f984529598180e6302d7da3ff57c23efedbc",
       "raw_comparison_maps_retained": false,
       "private_whole_archive_retained": true
+    },
+    "ordinary_after_delivery_before_originals_baseline_fix": {
+      "historical_proof_passed": true,
+      "current_source_acceptance_claimed": false,
+      "superseded_by": "Original-capture clinical baseline SQL revision.",
+      "result_sha256": "1388341f2914395528688e9d7b77cbacc8d345566508c3712aa63e0ea1c05986",
+      "private_source_hash_count": 434,
+      "full_private_source_set_digest": "5dd0ebf1b551660d4cc963ca878b64bb206504542a790bd0691b2657fb585d2b",
+      "original_fixture_and_setup_elapsed_seconds": 365.388,
+      "private_whole_archive_retained": true
+    },
+    "populated_delivery_smoke_before_originals_baseline_fix": {
+      "historical_proof_passed": true,
+      "current_source_acceptance_claimed": false,
+      "superseded_by": "Original-capture clinical baseline SQL and stricter migration-family admission.",
+      "result_sha256": "c8ca6f63e00c9c8f444dc14740e37fd2b9830a3f0496e8e97d850a27a7ddf32f",
+      "private_source_hash_count": 437,
+      "full_private_source_set_digest": "6e0a89e8b6a5e5e29b73c6c903f82d2e2a355b1bd849bfac18cafed13895bd78",
+      "raw_comparison_maps_retained": false,
+      "private_whole_archive_retained": true
     }
   },
   "excluded_ci_attempts": [
@@ -530,6 +611,40 @@
           "interpretation": "The zero-row assertion could not distinguish preexisting copied messages from fixture side effects; new exact baseline guards test preservation."
         }
       ]
+    },
+    {
+      "run": 39462101366,
+      "head": "ea215fb2754fbbd69aeb4b6975e77f15ef8bd20d",
+      "accepted": false,
+      "observed_database_job_conclusion": "failure",
+      "failures": [
+        {
+          "job": "database",
+          "step": "original attachment capture concurrency",
+          "observed_failure": "Assertion157 required patient_documents globally empty; preexisting clinical document made that assertion fail.",
+          "manual_export_receipt_assertion158": "passed"
+        }
+      ]
     }
-  ]
+  ],
+  "originals_clinical_baseline_followup": {
+    "status": "fresh_full_ordinary_and_clinical_attachment_smoke_passed",
+    "clinical_side_effect_families": [
+      "patient_documents",
+      "external_record_receipts"
+    ],
+    "full_row_count_and_hash_baseline_captured_before_fixture": true,
+    "final_comparison_after_all_original_actions_and_reset_role": true,
+    "absolute_empty_global_assertions_removed": true,
+    "two_existing_tap_assertions_preserved": true,
+    "migration_run_scope_binding_conflicts_refused_without_clearing": true,
+    "persistent_receipt_source_admission_claimed": false,
+    "receipt_probe_scope": "Separate entirely rolled-back FK-valid structural diagnostic; not staged/approved manual-export lineage.",
+    "six_new_original_baseline_harness_tests": true,
+    "two_new_admission_counterexample_tests": true,
+    "fresh_smoke_pass_claimed": true,
+    "persistent_document_seed_admitted_by_both_helpers": true,
+    "actual_allowed_changes_detected": 3,
+    "actual_immutable_refusals": 5
+  }
 }
