@@ -1,7 +1,6 @@
-"""Build and test the unpublished controlled-stock candidate in an owned local stack.
+"""Test the controlled-stock candidate or canonical205 in an owned local stack.
 
-This is deliberately outside supabase/migrations. It cannot install a hosted
-engine, commission a site or approve clinical rules. Every policy/count is an
+This runner cannot install a hosted engine, commission a site or approve clinical rules. Every policy/count is an
 explicit synthetic fixture; all containers and volumes are removed afterward.
 """
 import argparse
@@ -18,13 +17,17 @@ import uuid
 from local_install import build_install, assert_prior, PriorMetadataDrift
 from scalar_contract import capture_originals, verify_installation
 from probe_failure import summarize_probe_failure
+from canonical_prefix import canonical_prefix, canonical_binding
+from canonical_post205 import capture_pre204, verify_canonical_installed
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local',action='store_true',required=True)
 parser.add_argument('--include-sql-regression',action='store_true')
 parser.add_argument('--include-correction-capacity',action='store_true',help='Run the separately bounded genuine correction-chain feasibility probe')
 parser.add_argument('--include-correction-restore',action='store_true',help='Also prove the populated 1,000-correction opening restore inside the same workload budget')
-parser.add_argument('--use-release-assembly',action='store_true',help='Install the independently pinned private artifact in this owned local stack')
+mode=parser.add_mutually_exclusive_group()
+mode.add_argument('--use-canonical-migration',action='store_true',help='Apply the exact canonical205 with the real CLI after independent204 capture')
+mode.add_argument('--use-release-assembly',action='store_true',help='Install the independently pinned private artifact in this owned local stack')
 args=parser.parse_args()
 if args.include_correction_restore:args.include_correction_capacity=True
 os.umask(0o077)
@@ -51,6 +54,7 @@ def verify():
  assert Path(labels['com.supabase.cli.workdir']).resolve()==project.resolve()
 
 def sql(query):
+ verify()
  return command(['docker','exec','-i','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],input=query)
 
 def release_raw_sql(query):
@@ -60,15 +64,19 @@ def release_raw_sql(query):
  log.write('OWNED RELEASE REHEARSAL\n'+result.stdout+result.stderr+'\n');log.flush()
  return result
 
-files=sorted((root/'supabase/migrations').glob('*.sql'))
-assert len(files)==204,'Candidate targets the exact 204-migration release; review before rebasing'
-inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[source/'trusted-prior-189.json',
- root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql']
-if args.use_release_assembly:
- inputs.extend([source/'release-expected-204.json',source/'release-expected-204-v1.json',source.parent/'release/controlled-stock-private.sql'])
+all_files=sorted((root/'supabase/migrations').glob('*.sql'))
+files=canonical_prefix(source,all_files)
+binding=canonical_binding(source,all_files)if args.use_canonical_migration else None
+inputs=all_files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[source/'trusted-prior-189.json',
+ root/'.github/workflows/ci.yml',root/'tests/controlled-drugs/owned_scheduler.py',root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql']
+if args.use_release_assembly or args.use_canonical_migration:
+ inputs.extend([source/'release-expected-204.json',source/'release-expected-204-v1.json',source.parent/'release/controlled-stock-private.sql',source.parent/'release/controlled-stock-cli-body.sql'])
 hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in inputs}
 proof={}
+(result_dir/'source-hashes.json').write_text(json.dumps(hashes,sort_keys=True,indent=2)+'\n')
 try:
+ cli=command(['supabase','--version']).strip()
+ assert cli=='2.118.0','Use the independently reviewed CLI bootstrap'
  for port in [64620,64621,64622,64624]:
   with socket.socket()as sock:sock.bind(('127.0.0.1',port))
  (project/'supabase/migrations').mkdir(parents=True)
@@ -96,6 +104,7 @@ enabled = true
 enabled = false
 ''')
  (result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
+ print('Protected evidence: '+str(result_dir),flush=True)
  print('Starting an owned local candidate stack; no hosted or provider operations.',flush=True)
  started=True
  command(['supabase','start','--workdir',str(project),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'],timeout=600)
@@ -118,7 +127,7 @@ enabled = false
  install=bundle['install'];prior_sql=bundle['prior_sql'];trusted=bundle['trusted']
  barrier=bundle['barrier'];migration_sources=bundle['migration_sources']
  release_bundle=None
- if args.use_release_assembly:
+ if args.use_release_assembly or args.use_canonical_migration:
   from release_assembly import build_release
   from release_rehearsal import capture_baseline, rehearse_failures, verify_installed
   release_bundle=build_release(source,files)
@@ -164,21 +173,35 @@ enabled = false
   'definition_hash':trusted['definition_hash'],'trusted_reference_sha256':bundle['reference_sha256'],
   'trusted_migration_prefix':189,'current_replayed_migrations':len(files),'trusted_reference_regenerated':False,
   'trusted_migration_source_set_sha256':trusted['migration_source_set_sha256'],
+  'current_migration_source_set_scope':'independently_pinned_preinstallation_204_prefix',
   'current_migration_source_set_sha256':hashlib.sha256(json.dumps(migration_sources,sort_keys=True).encode()).hexdigest(),
   'current_scoped_metadata_equals_original_reference':True,'drift_failures':list(drift_cases),'atomic_rollback_verified':True,'exclusive_barrier_before_preflight':True}
  print('Trusted prior metadata: four drift cases rejected before engine schema; exact rollback verified.',flush=True)
- sql(install)
+ if binding is not None:
+  canonical_baseline=capture_pre204(sql,prior_sql,trusted,phase='ordinary')
+  (result_dir/'canonical-pre204-baseline.json').write_text(json.dumps(canonical_baseline,indent=2)+'\n')
+  canonical_path=root/binding['canonical_path']
+  shutil.copy2(canonical_path,project/'supabase/migrations'/binding['filename'])
+  verify()
+  command(['supabase','migration','up','--local','--workdir',str(project),'--yes','--output-format','json'],timeout=240)
+  proof['canonical_205_install']=verify_canonical_installed(sql,release_expected,canonical_baseline,binding)
+  assert proof['canonical_205_install']['passed']is True
+  runtime['canonical_candidate']=binding['filename']
+ else:
+  sql(install)
  proof['scalar_helper_compatibility']=verify_installation(sql,scalar_originals,source/'scalar-compatibility.sql')
  assert sql("select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;").strip()==roots
  assert sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip()=='10'
- if release_bundle is not None:
+ if release_bundle is not None and binding is None:
   proof['frozen_release_install']['installed']=verify_installed(sql,release_expected,release_baseline)
   assert proof['frozen_release_install']['installed'].get('passed')is True,'Frozen release installation verification incomplete'
   proof['frozen_release_install']['passed']=True
+ if release_bundle is not None:
+  if binding is not None:proof['frozen_release_install']['preinstallation_failures_passed']=True
   from column_acl_seal import probe_column_acl_seal
-  proof['ongoing_column_acl_seal']=probe_column_acl_seal(sql,release_raw_sql,prior_sql,phase='installed')
+  proof['ongoing_column_acl_seal']=probe_column_acl_seal(sql,release_raw_sql,prior_sql,phase='installed',**({'ledger_mode':'canonical205','canonical_ledger':{'original_rows':canonical_baseline['ledger'],'binding':binding}}if binding is not None else{}))
   assert proof['ongoing_column_acl_seal'].get('passed')is True,'Ongoing column ACL seal proof incomplete'
- runtime['unpublished_engine_schema']=True;(result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
+ runtime['engine_installed_owned_local_only']=True;(result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
  print('Candidate installed locally; three scalar helper implementations verified; all ten canonical writer bodies unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:
   output=command(['supabase','test','db','--workdir',str(project)],timeout=420)
@@ -205,7 +228,7 @@ enabled = false
    assert proof[name].get('selected_schema_populated_restore_proven')is True,'Requested correction restore proof missing'
   print(name+' passed.',flush=True)
  for path,digest in hashes.items():assert hashlib.sha256((root/path).read_bytes()).hexdigest()==digest,'Candidate source changed during proof: '+path
- proof.update(synthetic_only=True,canonical_migration=False,hosted_writes=0,provider_requests=0,actual_practice_rules=False,
+ proof.update(synthetic_only=True,canonical_migration=binding is not None,repository_canonical_migration_count=len(all_files),canonical_migration_filename=binding['filename']if binding is not None else None,hosted_writes=0,provider_requests=0,actual_practice_rules=False,
   project_id=identity,source_hashes=hashes,all_ten_canonical_root_definitions_unchanged=True)
 finally:
  try:

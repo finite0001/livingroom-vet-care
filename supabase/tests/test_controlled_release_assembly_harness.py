@@ -29,7 +29,8 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)
         shutil.copytree(ROOT / 'supabase/migrations', cls.root / 'supabase/migrations')
-        cls.files = sorted((cls.root / 'supabase/migrations').glob('*.sql'))
+        from canonical_prefix import canonical_prefix
+        cls.files = canonical_prefix(cls.source, sorted((cls.root / 'supabase/migrations').glob('*.sql')))
         cls.baseline = ASSEMBLY.build_release(cls.source, cls.files)
 
     @classmethod

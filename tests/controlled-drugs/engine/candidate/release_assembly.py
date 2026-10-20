@@ -204,10 +204,12 @@ def main():
     args = parser.parse_args()
     source = Path(__file__).resolve().parent
     root = source.parents[3]
-    release = build_release(source, sorted((root / 'supabase/migrations').glob('*.sql')))
+    from canonical_prefix import canonical_prefix
+    prefix = canonical_prefix(source, sorted((root / 'supabase/migrations').glob('*.sql')))
+    release = build_release(source, prefix)
     artifact = source.parent / 'release/controlled-stock-private.sql'
     if args.check:
-        check_release_artifact(source, sorted((root / 'supabase/migrations').glob('*.sql')), artifact)
+        check_release_artifact(source, prefix, artifact)
     else:
         artifact.parent.mkdir(parents=True, exist_ok=True)
         artifact.write_bytes(release['install'].encode())

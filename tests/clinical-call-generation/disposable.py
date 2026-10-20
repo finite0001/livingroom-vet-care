@@ -186,7 +186,7 @@ try:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     migrations = sorted((root / 'supabase/migrations').glob('*.sql'))
-    assert len(migrations) == 204 and migrations[-1] == new_migration
+    assert len(migrations) == 205 and new_migration in migrations and migrations[-1].name == '20261020151157_controlled_stock_private_engine.sql'
     for migration in migrations:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
     for candidate in (root / 'supabase/tests').glob('clinical_call*.test.sql'):
@@ -462,7 +462,7 @@ enabled = false
             check(sql('select current_database();'), 'postgres')
             sql('drop database ' + clone + ' with(force);'); restore_checks += 1
     assert all(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest for name, digest in hashes.items()), 'Proof input changed during run'
-    proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only, 'migrations': 204,
+    proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only, 'migrations': 205,
              'source_sha256': hashes, 'actual_auth_api_assertions': checks, 'observed_lock_waits': waits,
              'provider_requests': 0, 'hosted_writes': 0, 'owned_runtime_removed': False}
     if not args.sql_only:

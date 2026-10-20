@@ -1,10 +1,10 @@
--- OWNED LOCAL ONLY, after the unchanged canonical suffix and private installer.
+-- OWNED LOCAL ONLY, after the verified unchanged204 prefix and selected installation lane.
 -- Exactly one read-only constructor observation per invocation. Runner verifies
 -- all retained original-column row fingerprints before and after EVERY call.
 begin;set local timezone='UTC';
 select set_config('request.jwt.claims','{}',true);
-create temp table native_history_observation_input(payload jsonb not null,case_name text not null);
-insert into native_history_observation_input values(:'ids_json'::jsonb,:'case_name');
+create temp table native_history_observation_input(payload jsonb not null,case_name text not null,expected_migration_count integer not null);
+insert into native_history_observation_input values(:'ids_json'::jsonb,:'case_name',:'expected_migration_count'::integer);
 create temp table native_history_observation_result(value jsonb not null);
 do $$declare payload jsonb;case_name text;c record;era integer;product uuid;pet uuid;authorization_id uuid;document jsonb;corrections jsonb;reconciliation jsonb;discrepancy_events jsonb;
  projection jsonb;outcome text;failure text;failure_state text;checks integer:=0;allocation_count integer;modern_movements integer;
@@ -16,7 +16,8 @@ do $$declare payload jsonb;case_name text;c record;era integer;product uuid;pet 
  if(select count(*)from jsonb_array_elements(payload->'cases')x where x->>'name'=case_name)<>1 then raise exception 'Exactly one seeded observation case required';end if;
  select *into c from jsonb_to_recordset(payload->'cases')as x(name text,dispense_id uuid,return_version integer,correction_version integer,discrepancy_version integer,pickup_id uuid,expected_outcome text,expected_error text)where x.name=case_name;
  if left(c.name,3)is distinct from era::text then raise exception 'Historical case era mismatch';end if;checks:=checks+1;
- if(select count(*)from supabase_migrations.schema_migrations)<>204 then raise exception 'Observation requires unchanged full204 replay';end if;checks:=checks+1;
+ if(select expected_migration_count from native_history_observation_input)not in(204,205)
+ or(select count(*)from supabase_migrations.schema_migrations)is distinct from(select expected_migration_count from native_history_observation_input)then raise exception 'Observation requires the exact separately verified installation ledger';end if;checks:=checks+1;
  if exists(select 1 from controlled_stock_sites)or exists(select 1 from controlled_stock_policy_versions)or exists(select 1 from controlled_stock_openings)
  or exists(select 1 from controlled_stock_cells)or exists(select 1 from controlled_stock_events)then raise exception 'Historical observation must not invent configuration provenance or physical cells';end if;checks:=checks+1;
  product:=(payload#>>'{ids,product}')::uuid;pet:=(payload#>>'{ids,pet}')::uuid;authorization_id:=(payload#>>'{ids,sign}')::uuid;

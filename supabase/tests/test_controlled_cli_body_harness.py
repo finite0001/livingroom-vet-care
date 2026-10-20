@@ -35,7 +35,8 @@ class ControlledCliBodyTests(unittest.TestCase):
         cls.release.mkdir()
         cls.artifact = cls.release / 'controlled-stock-private.sql'
         cls.artifact.write_bytes((SOURCE.parent / 'release/controlled-stock-private.sql').read_bytes())
-        cls.files = sorted((cls.root / 'supabase/migrations').glob('*.sql'))
+        from canonical_prefix import canonical_prefix
+        cls.files = canonical_prefix(cls.source, sorted((cls.root / 'supabase/migrations').glob('*.sql')))
         cls.baseline = BODY.build_cli_body(cls.source, cls.files)
 
     @classmethod

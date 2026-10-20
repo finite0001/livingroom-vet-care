@@ -293,8 +293,9 @@ mkdirSync("tmp/clinical-notes-browser", { recursive: true, mode: 0o700 });
 try {
   apiCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "204",
+    "205",
   );
+  apiCheck(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");
   const first = await actor(true), second = await actor(false);
   const configuration = (a = first) =>
     rpc(a.db, "read_clinical_note_configuration", { p_actor_id: a.id });

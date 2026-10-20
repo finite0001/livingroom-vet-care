@@ -122,8 +122,9 @@ let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null,
 try {
   check(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "204",
+    "205",
   );
+  check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");
   const admin = await actor("ADMIN"),
     staff = await actor("STAFF");
   const practiceArgs = { p_actor_id: admin.id };

@@ -5,9 +5,11 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 import unittest
 
 PATH = Path(__file__).resolve().parents[2] / 'tests/controlled-drugs/engine/candidate/column_acl_seal.py'
+sys.path.insert(0, str(PATH.parent))
 SPEC = importlib.util.spec_from_file_location('column_acl_seal', PATH)
 m = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(m)
@@ -44,8 +46,8 @@ class Callbacks:
         result = subprocess.CompletedProcess([], 3, '', f'NOTICE:  00000: Column ACL seal armed: {label}\nERROR:  23514: {m.MESSAGE}\n')
         return self.failure_transform(result) if self.failure_transform else result
 
-    def probe(self):
-        return m.probe_column_acl_seal(self.sql, self.raw, 'PRIVATE prior SQL not executed', phase=self.phase)
+    def probe(self, **kwargs):
+        return m.probe_column_acl_seal(self.sql, self.raw, 'PRIVATE prior SQL not executed', phase=self.phase, **kwargs)
 
 
 class ColumnAclSealTests(unittest.TestCase):
@@ -61,6 +63,61 @@ class ColumnAclSealTests(unittest.TestCase):
         self.assertNotIn('PRIVATE OWNER', json.dumps(proof))
         self.assertNotIn('RAW PRIVATE', json.dumps(proof))
         self.assertNotIn('secret_id', json.dumps(proof))
+
+    def canonical_context(self, callbacks):
+        from canonical_prefix import canonical_binding
+        binding = canonical_binding(PATH.parent, sorted((PATH.parents[4] / 'supabase/migrations').glob('*.sql')))
+        original = [{'version': f'{i:014d}', 'name': 'old', 'statements': ['original']} for i in range(204)]
+        callbacks.base['ledger'] = {'present': True, 'rows': copy.deepcopy(original) + [
+            {'version': binding['version'], 'name': binding['name'], 'statements': binding['expected_statements']}]}
+        callbacks.after = copy.deepcopy(callbacks.base)
+        return {'original_rows': original, 'binding': binding}
+
+    def test_canonical205_requires_explicit_mode_and_exact_original_ledger(self):
+        c = Callbacks()
+        context = self.canonical_context(c)
+        proof = c.probe(ledger_mode='canonical205', canonical_ledger=context)
+        self.assertEqual(proof['ledger_rows'], 205)
+        self.assertEqual(proof['ledger_mode'], 'canonical205')
+        self.assertIs(proof['canonical_ledger_verified'], True)
+        self.assertEqual(len(c.raw_calls), 6)
+        self.assertNotIn('original_rows', json.dumps(proof))
+        c = Callbacks()
+        self.canonical_context(c)
+        with self.assertRaises(AssertionError):
+            c.probe()
+        with self.assertRaises(AssertionError):
+            c.probe(ledger_mode='canonical205')
+
+    def test_canonical205_rejects_wrong_record_and_changed_prior_row(self):
+        for field in ('name', 'version', 'statements', 'oldrow'):
+            c = Callbacks()
+            context = self.canonical_context(c)
+            if field == 'oldrow':
+                c.base['ledger']['rows'][0]['name'] = 'changed'
+            else:
+                c.base['ledger']['rows'][-1][field] = ['wrong'] if field == 'statements' else 'wrong'
+            c.after = copy.deepcopy(c.base)
+            with self.assertRaises(AssertionError):
+                c.probe(ledger_mode='canonical205', canonical_ledger=context)
+            self.assertEqual(c.raw_calls, [])
+
+    def test_canonical205_checks_ledger_again_after_every_refusal(self):
+        c = Callbacks()
+        context = self.canonical_context(c)
+        c.after['ledger']['rows'][0]['name'] = 'changed'
+        with self.assertRaises(AssertionError):
+            c.probe(ledger_mode='canonical205', canonical_ledger=context)
+
+    def test_explicit_absent_restore_mode_is_separate_from_canonical205(self):
+        c = Callbacks('populated_restore')
+        proof = c.probe(ledger_mode='absent_restore')
+        self.assertEqual(proof['ledger_mode'], 'absent_restore')
+        self.assertFalse(proof['canonical_ledger_verified'])
+        with self.assertRaises(AssertionError):
+            c.probe(ledger_mode='canonical205', canonical_ledger={})
+        with self.assertRaises(AssertionError):
+            Callbacks().probe(ledger_mode='absent_restore')
 
     def test_actual_sql_observes_direct_acl_and_effective_permissions_before_arming(self):
         c = Callbacks()

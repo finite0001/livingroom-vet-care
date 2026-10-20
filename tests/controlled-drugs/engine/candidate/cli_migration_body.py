@@ -188,7 +188,8 @@ def main():
     mode.add_argument('--write', action='store_true')
     args = parser.parse_args()
     source = Path(__file__).resolve().parent
-    files = sorted((source.parents[3] / 'supabase/migrations').glob('*.sql'))
+    from canonical_prefix import canonical_prefix
+    files = canonical_prefix(source, sorted((source.parents[3] / 'supabase/migrations').glob('*.sql')))
     path = source.parent / 'release/controlled-stock-cli-body.sql'
     if args.check:
         result = check_cli_body(source, files, path)
