@@ -1,0 +1,178 @@
+{
+  "kind": "controlled-cli-atomicity-launch-evidence-v1",
+  "date": "2026-10-20",
+  "status": "local_actual_cli_rehearsal_passed_ci_and_pr_pending",
+  "scope": {
+    "synthetic_owned_local_only": true,
+    "repository_canonical_migration_count": 204,
+    "repository_canonical_migration_added": false,
+    "temporary_local_postinstall_migration_count": 205,
+    "supabase_cli": "2.118.0",
+    "hosted_writes": 0,
+    "provider_requests": 0,
+    "clinical_or_register_activation": false
+  },
+  "artifact_derivation": {
+    "released_private_artifact_sha256": "7165851ab481f2ee2ab41c7347a7db65213b5c647c101eaf4554a973d896c4a7",
+    "reviewed_expected_v2_pin_sha256": "4755a1f1c53008003a11e94ada3963ae416f6c81f163ec43ed2ffea21d6d2f78",
+    "cli_owned_body_sha256": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3",
+    "body_bytes": 1173738,
+    "transformation": "Remove only outer begin newline and final commit newline; reverse wrapping reproduces released artifact bytes exactly.",
+    "removed_prefix_bytes": 7,
+    "removed_suffix_bytes": 8,
+    "executable_lexical_statements": 93,
+    "cli_ledger_statement_array_entries": 94,
+    "trailing_comment_only_entry_retained": true,
+    "statement_array_sha256": "626e9374546764d9a4070f3a0332bd0c7f606812ffe7355abdaea35088b89e7c",
+    "canonical_json_encoding": "UTF-8 json.dumps(value,sort_keys=True,separators=(comma,colon)); default ensure_ascii=True",
+    "parser_provenance": {
+      "official_source": "https://github.com/supabase/cli/blob/v2.118.0/apps/cli/src/command-internal/sql-split.ts",
+      "official_source_sha256": "2d2e707f9463081e3806726a161d424ed90f9c1025f7acfc0bed2e1f69e1bda7",
+      "typescript_transpiler_version": "5.8.3",
+      "actual_official_export_array_matches_for_this_body": true,
+      "generic_parser_equivalence_claimed": false
+    },
+    "original_trusted_prior_189_unchanged": true,
+    "released_v1_and_v2_expected_pins_unchanged": true,
+    "new_installation_expected_baseline_adopted": false
+  },
+  "actual_local_rehearsal": {
+    "passed": true,
+    "result_sha256": "1bab9656ab66152499a1faace9f517d97254487a6f5ca23fe7bf46c0773500ae",
+    "private_source_hash_count": 265,
+    "full_private_source_set_digest": "a233b63af01d8c9a5d70ca8664c493c2c1d195d938210b3728a42273b3fb4ba0",
+    "full_private_source_set_digest_algorithm": "SHA256 of UTF-8 json.dumps(full private source_hashes map,sort_keys=True,separators=(comma,colon)); default ensure_ascii=True. The reviewed_file_hashes subset is not this map.",
+    "initial_and_final_source_maps_equal": true,
+    "all_sources_match_current_files": true,
+    "executed_python_snapshots_match_current_files": 3,
+    "raw_data_and_catalog_snapshots_audited": 10,
+    "original_relations": 435,
+    "installed_relations": 456,
+    "new_engine_relations": 21,
+    "canonical_writer_definition_hashes_preserved": 10,
+    "literal_manifest_version": 2,
+    "literal_manifest_scoped_functions": 171,
+    "literal_manifest_scoped_relations": 51,
+    "private_zero_activation_verified": true,
+    "cases": [
+      {
+        "case": "late_body",
+        "expected_failure": true,
+        "actual_returncode": 1,
+        "sqlstate": "P0001",
+        "exact_primary_error_verified": true,
+        "complete_installed_body_and_held_barrier_checked_before_failure": true,
+        "full_data_catalog_and_204_ledger_rollback_verified": true,
+        "migration_variant_sha256": "44fe642d9435e80b4e6e24eb3d46d47d4f28396d1b3c97ff781db47aa091908e"
+      },
+      {
+        "case": "ledger_insert_failure",
+        "expected_failure": true,
+        "actual_returncode": 1,
+        "sqlstate": "P0001",
+        "exact_primary_error_verified": true,
+        "exact_reviewed_body_used": true,
+        "completed_install_checked_inside_actual_ledger_insert_backend": true,
+        "independent_gate_observer_verified": true,
+        "full_data_catalog_and_204_ledger_rollback_verified": true,
+        "instrumentation_removed_and_original_baseline_restored": true
+      },
+      {
+        "case": "clean_205",
+        "actual_returncode": 0,
+        "exact_reviewed_body_used": true,
+        "independent_gate_observer_verified": true,
+        "original_204_ledger_rows_preserved_exactly": true,
+        "new_row_statement_array_equals_independently_pinned_94_entries": true,
+        "new_row_version_and_name_checked": true,
+        "instrumentation_removed": true
+      },
+      {
+        "case": "already_applied_retry",
+        "actual_returncode": 0,
+        "exact_data_catalog_and_205_ledger_noop": true
+      }
+    ],
+    "both_gated_cases": {
+      "actual_ledger_backend_wait_observed": true,
+      "engine_exclusive_lock_observed_in_same_backend": true,
+      "distinct_backend_shared_lock_attempt_refused": true,
+      "owned_database_verified": true,
+      "gate_released": true,
+      "observer_session_closed": true,
+      "pid_backend_start_and_query_start_correlated": true
+    },
+    "notice_forwarding_required_or_claimed": false,
+    "private_baseline_digest": "0a4f2d0170fa84e66c4bc19b88498b49ad4d3e5510e8bf3e6ac97fb9b11925f5",
+    "private_205_ledger_record_digest": "113b71fe457e8340cf75194ed556c60be0c17badbe29f614de2d1f84b0af2484",
+    "reviewed_manifest_digest": "90d878fa695d65747c378704cf536852deade043d81b14257b9f6c2590ac1f05",
+    "raw_catalogs_ledger_rows_sql_error_context_and_backend_identities_publicized": false
+  },
+  "actual_environment_observation": {
+    "postgres_image_ref": "public.ecr.aws/supabase/postgres:17.6.1.171",
+    "postgres_image_id": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+    "postgres_repo_digests": [
+      "ghcr.io/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+      "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+    ],
+    "postgres_version": "PostgreSQL 17.6 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "environment_captured_from_owned_runtime": true,
+    "independent_expected_image_pin_enforced_by_this_standalone_driver": false
+  },
+  "cleanup": {
+    "owned_runtime_removed": true,
+    "independent_exact_project_label_container_count": 0,
+    "independent_exact_project_label_volume_count": 0,
+    "independent_cleanup_receipt_sha256": "d3b6b1b1a6cf386552458db1e5716e48bd9857efe5f400a929726f6104cbca08"
+  },
+  "verification": {
+    "ci_pattern_python_harness_tests": 287,
+    "new_cli_body_tests": 10,
+    "new_cli_atomicity_tests": 22,
+    "frozen_artifact_and_cli_body_checks_passed": true,
+    "fresh_full_ordinary_and_historical_runs_in_this_batch": false,
+    "previous_released_engine_evidence": "2026-10-19-controlled-column-acl-seal.json",
+    "previous_engine_proofs_are_separate_from_this_265_file_cli_proof": true,
+    "ci_will_execute_full_ordinary_historical_and_actual_cli_commands": true,
+    "ci_status": "pending",
+    "pr_status": "pending",
+    "merge_and_release_status": "pending"
+  },
+  "excluded_attempts": [
+    {
+      "attempt": 1,
+      "accepted": false,
+      "reason": "Actual intended late-body P0001 arrived in a structured CLI JSON envelope; the original plaintext receipt parser rejected it before post-failure rollback acceptance checks.",
+      "outer_owned_cleanup_independently_verified": true,
+      "initial_source_map_label": "reconstructed before any fix; not an initial capture",
+      "subsequent_fix": "Strict structured JSON receipt adapter and explicit JSON output, with initial source-map and executable snapshots captured before boot.",
+      "sql_body_or_engine_guard_relaxation": false
+    }
+  ],
+  "limits": {
+    "temporary_copy_205_only": true,
+    "canonical_205_promotion_approved_or_performed": false,
+    "full_205_ordinary_and_historical_forward_port_proven": false,
+    "hosted_cli_execution_proven": false,
+    "all_future_cli_versions_or_migration_bodies_proven": false,
+    "database_catalog_scope": "Logical relation and function metadata in public, migration-ledger and fixture schemas; namespace metadata for selected four schemas and ledger; selected four-schema relation data. Planner statistics and sticky planner hints are excluded.",
+    "whole_global_catalog_or_role_membership_schema_default_privilege_coverage_claimed": false,
+    "ongoing_manifest_scope": "171 functions and 51 relations including direct column ACLs; not the whole catalog.",
+    "further_C1b_promotion_C2_C3_work_complete": false,
+    "clinical_and_register_activation": "Pending Susan approval."
+  },
+  "reviewed_file_hashes": {
+    ".github/workflows/ci.yml": "a0d792453535e7c2df57103c65ae186d19d12eb4892b052b55af00e10550b2d7",
+    "tests/controlled-drugs/engine/candidate/cli_migration_body.py": "a1d9362e9167ff2bb2b77ffad1d31d2a7ef57f152521a37081ea075c8268f3f4",
+    "tests/controlled-drugs/engine/candidate/cli_atomicity.py": "0099b4280564447340ba6640e6872b2b03592f53cc7957f2547dcdba0480d896",
+    "tests/controlled-drugs/engine/candidate/run-cli-atomicity.py": "68e9bbc0171de0c45753e19232a30a488d0a4aae3f94431429cf1ebdf7f2bc41",
+    "tests/controlled-drugs/engine/release/controlled-stock-cli-body.sql": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3",
+    "supabase/tests/test_controlled_cli_body_harness.py": "d6a89334429047bf4ed984e2a993e62ca99265f8cbb13ad5d3697da3dc547e35",
+    "supabase/tests/test_controlled_cli_atomicity_harness.py": "353c31d00b8dbf84306b0ca11400c3a10f072772424914e139700b2d72b9997f",
+    "tests/controlled-drugs/engine/release/controlled-stock-private.sql": "7165851ab481f2ee2ab41c7347a7db65213b5c647c101eaf4554a973d896c4a7",
+    "tests/controlled-drugs/engine/candidate/release-expected-204.json": "4755a1f1c53008003a11e94ada3963ae416f6c81f163ec43ed2ffea21d6d2f78",
+    "tests/controlled-drugs/engine/candidate/release-expected-204-v1.json": "747813bb6dc4fa39213eb58eeb6515b0569ce0aac3eb171276e609e29f40c72d",
+    "tests/controlled-drugs/engine/candidate/trusted-prior-189.json": "7c39d7d55b7aed8f11159555bbcd880c5910b1fa2891e495c28d2a1b6dbc5ac1"
+  },
+  "full_private_source_hash_maps_published": false
+}
