@@ -294,7 +294,7 @@ def main():
         root / 'tests/controlled-drugs/owned_scheduler.py', source.parent / 'source-reader.sql',
         source.parent / 'source-effects.sql']
     if args.use_release_assembly:
-        inputs.extend([source / 'release-expected-204.json', source.parent / 'release/controlled-stock-private.sql'])
+        inputs.extend([source / 'release-expected-204.json', source / 'release-expected-204-v1.json', source.parent / 'release/controlled-stock-private.sql'])
     hashes = {str(p.relative_to(root)): digest(p) for p in inputs}
     folder = Path(tempfile.mkdtemp(prefix='lrv-native-history-evidence-'))
     print('Protected evidence: ' + str(folder), flush=True)

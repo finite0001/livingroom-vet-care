@@ -65,7 +65,7 @@ assert len(files)==204,'Candidate targets the exact 204-migration release; revie
 inputs=files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[source/'trusted-prior-189.json',
  root/'tests/controlled-drugs/engine/source-reader.sql',root/'tests/controlled-drugs/engine/source-effects.sql']
 if args.use_release_assembly:
- inputs.extend([source/'release-expected-204.json',source.parent/'release/controlled-stock-private.sql'])
+ inputs.extend([source/'release-expected-204.json',source/'release-expected-204-v1.json',source.parent/'release/controlled-stock-private.sql'])
 hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in inputs}
 proof={}
 try:
@@ -175,6 +175,9 @@ enabled = false
   proof['frozen_release_install']['installed']=verify_installed(sql,release_expected,release_baseline)
   assert proof['frozen_release_install']['installed'].get('passed')is True,'Frozen release installation verification incomplete'
   proof['frozen_release_install']['passed']=True
+  from column_acl_seal import probe_column_acl_seal
+  proof['ongoing_column_acl_seal']=probe_column_acl_seal(sql,release_raw_sql,prior_sql,phase='installed')
+  assert proof['ongoing_column_acl_seal'].get('passed')is True,'Ongoing column ACL seal proof incomplete'
  runtime['unpublished_engine_schema']=True;(result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
  print('Candidate installed locally; three scalar helper implementations verified; all ten canonical writer bodies unchanged; new RPCs revoked.',flush=True)
  if args.include_sql_regression:

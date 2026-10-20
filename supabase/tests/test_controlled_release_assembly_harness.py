@@ -24,7 +24,7 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
         cls.root = Path(cls.temporary.name)
         cls.source = cls.root / 'tests/controlled-drugs/engine/candidate'
         cls.source.mkdir(parents=True)
-        for path in ASSEMBLY.assembled_sources(SOURCE) + [SOURCE / ASSEMBLY.PIN_NAME, SOURCE / 'trusted-prior-189.json', SOURCE / 'prior-snapshot.sql']:
+        for path in ASSEMBLY.assembled_sources(SOURCE) + [SOURCE / ASSEMBLY.PIN_NAME, SOURCE / 'release-expected-204-v1.json', SOURCE / 'trusted-prior-189.json', SOURCE / 'prior-snapshot.sql']:
             target = cls.root / path.relative_to(ROOT)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)
@@ -82,12 +82,15 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
     def test_pin_manifest_acl_rls_trigger_mutation_cannot_reseal_itself(self):
         path = self.source / ASSEMBLY.PIN_NAME
         original = path.read_bytes()
-        for mutation in ['function', 'acl', 'rls', 'trigger']:
+        for mutation in ['function', 'acl', 'rls', 'trigger', 'column_acl']:
             pin = json.loads(original)
             manifest = pin['expected_technical_manifest']
             if mutation == 'function': next(iter(manifest['functions'].values()))['sha256'] = '0' * 64
             elif mutation == 'acl': next(iter(manifest['relations'].values()))['acl'] = []
             elif mutation == 'rls': next(iter(manifest['relations'].values()))['rls'] = False
+            elif mutation == 'column_acl':
+                next(iter(manifest['relations'].values()))['columns'][0]['column_acl'] = [
+                    {'grantee': 'authenticated', 'grantor': 'postgres', 'privilege': 'SELECT', 'grantable': True}]
             else: next(iter(manifest['relations'].values()))['triggers'] = []
             try:
                 path.write_text(json.dumps(pin))
@@ -97,7 +100,7 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
                 path.write_bytes(original)
 
     def test_original_prior_reference_and_snapshot_cannot_change(self):
-        for name in ['trusted-prior-189.json', 'prior-snapshot.sql']:
+        for name in ['trusted-prior-189.json', 'prior-snapshot.sql', 'release-expected-204-v1.json']:
             path = self.source / name
             original = path.read_bytes()
             try:
@@ -106,6 +109,46 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
                     ASSEMBLY.build_release(self.source, self.files)
             finally:
                 path.write_bytes(original)
+
+    def column_manifest(self, entries):
+        manifest = copy.deepcopy(self.baseline['expected_manifest'])
+        next(iter(manifest['relations'].values()))['columns'][0]['column_acl'] = entries
+        return manifest
+
+    def test_direct_column_acl_normal_form_uses_role_labels_and_exact_grantability(self):
+        entries = [{'grantee': role, 'grantor': 'postgres', 'privilege': 'SELECT', 'grantable': grantable}
+                   for role, grantable in [('123', False), ('PUBLIC', False), ('Z_role', True), ('a_role', False), ('Å_role', True)]]
+        # UTF-8 byte order is the promised SQL COLLATE C representation.
+        self.assertEqual(entries, sorted(entries, key=lambda item: (item['grantee'].encode(), item['grantor'].encode(), item['privilege'].encode(), item['grantable'])))
+        ASSEMBLY.validate_column_acl_manifest(self.column_manifest(entries))
+        ASSEMBLY.validate_column_acl_manifest(self.column_manifest([]))
+
+    def test_column_acl_missing_null_or_legacy_manifest_is_not_reviewable_v2(self):
+        for missing in [True, False]:
+            manifest = self.column_manifest([])
+            column = next(iter(manifest['relations'].values()))['columns'][0]
+            if missing: del column['column_acl']
+            else: column['column_acl'] = None
+            with self.subTest(missing=missing), self.assertRaises(AssertionError):
+                ASSEMBLY.validate_column_acl_manifest(manifest)
+        manifest = self.column_manifest([]); manifest['version'] = 1
+        with self.assertRaises(AssertionError): ASSEMBLY.validate_column_acl_manifest(manifest)
+
+    def test_column_acl_reordered_duplicate_or_conflicting_grant_option_is_rejected(self):
+        entry = {'grantee': 'authenticated', 'grantor': 'postgres', 'privilege': 'SELECT', 'grantable': False}
+        later = {**entry, 'grantee': 'service_role'}
+        for entries in [[later, entry], [entry, entry], [entry, {**entry, 'grantable': True}]]:
+            with self.subTest(entries=entries), self.assertRaises(AssertionError):
+                ASSEMBLY.validate_column_acl_manifest(self.column_manifest(entries))
+
+    def test_column_acl_cannot_use_oids_unknown_fields_or_nonboolean_grantability(self):
+        entry = {'grantee': 'authenticated', 'grantor': 'postgres', 'privilege': 'SELECT', 'grantable': False}
+        bad = [{**entry, 'grantee': 1234}, {**entry, 'grantee': ''}, {**entry, 'grantor': None},
+               {**entry, 'privilege': 'DELETE'}, {**entry, 'grantable': 1},
+               {**entry, 'grantable': 'false'}, {**entry, 'role_oid': 1234}]
+        for value in bad:
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                ASSEMBLY.validate_column_acl_manifest(self.column_manifest([value]))
 
     def test_frozen_artifact_tamper_is_rejected_by_public_check(self):
         artifact = self.root / 'private.sql'
@@ -131,6 +174,7 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
         self.assertIn('insert into controlled_stock_engine_manifests(revision,definition,definition_hash)\n values(1,', sql)
         self.assertEqual(len(self.baseline['expected_manifest']['functions']), 171)
         self.assertEqual(len(self.baseline['expected_manifest']['relations']), 51)
+        self.assertEqual(self.baseline['expected_manifest']['version'], 2)
         self.assertEqual(len(self.baseline['expected_writer_hooks']), 10)
 
     def test_mutation_markers_are_unique_and_in_order(self):
@@ -165,7 +209,7 @@ class ControlledReleaseAssemblyTests(unittest.TestCase):
 
     def test_all_sources_bound_without_self_referential_artifact_hashes(self):
         names = self.baseline['input_source_hashes']
-        self.assertEqual(len(names), 204 + 14 + 2 + 1)
+        self.assertEqual(len(names), 204 + 14 + 2 + 2)
         self.assertFalse(any('release_assembly.py' in name or name.endswith('controlled-stock-private.sql') for name in names))
         self.assertIn(str((self.source / ASSEMBLY.PIN_NAME).relative_to(self.root)), names)
 
