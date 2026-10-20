@@ -10,11 +10,13 @@ from pathlib import Path
 import re
 
 from local_install import build_install, FINALIZE_SQL
+from derive_column_acl_pin import PARENT_PIN_SHA256, validate_column_acl_manifest
 
 PIN_NAME = 'release-expected-204.json'
 # Set only after independent provenance review; never derive trust at runtime.
-REVIEWED_PIN_SHA256 = '747813bb6dc4fa39213eb58eeb6515b0569ce0aac3eb171276e609e29f40c72d'
-PIN_KIND = 'controlled-stock-release-expected-204-v1'
+REVIEWED_PIN_SHA256 = '4755a1f1c53008003a11e94ada3963ae416f6c81f163ec43ed2ffea21d6d2f78'
+PIN_KIND = 'controlled-stock-release-expected-204-v2'
+PARENT_PIN_NAME = 'release-expected-204-v1.json'
 ASSEMBLED_NAMES = ('schema', 'helpers', 'effects', 'review', 'posting', 'scalar-helpers',
                    'opening', 'constraints', 'entry', 'protocol', 'guards', 'seal')
 ENTRY_NAMES = ('read_controlled_stock_action', 'prepare_controlled_stock_action',
@@ -84,6 +86,7 @@ def assembled_sources(source):
 
 def _read_pin(source, files):
     root = source.parents[3]
+    assert _sha((source / PARENT_PIN_NAME).read_bytes()) == PARENT_PIN_SHA256, 'Released286 parent pin changed'
     raw = (source / PIN_NAME).read_bytes()
     assert _sha(raw) == REVIEWED_PIN_SHA256, 'Independently reviewed release pin changed'
     pin = json.loads(raw, object_pairs_hook=_unique)
@@ -105,7 +108,8 @@ def _read_pin(source, files):
     assert _sha((source / 'trusted-prior-189.json').read_bytes()) == pin['trusted_prior189_sha256']
     expected = pin['expected_technical_manifest']
     assert isinstance(expected, dict) and set(expected) == {'version', 'functions', 'relations'}
-    assert type(expected['version']) is int and expected['version'] == 1
+    assert type(expected['version']) is int and expected['version'] == 2
+    validate_column_acl_manifest(expected)
     assert isinstance(expected['functions'], dict) and len(expected['functions']) == 171
     assert isinstance(expected['relations'], dict) and len(expected['relations']) == 51
     _hash_map(pin['canonical_writer_definition_hashes'], 10)
@@ -113,6 +117,7 @@ def _read_pin(source, files):
     for name in ('prior-snapshot.sql', 'trusted-prior-189.json'):
         hashes[str((source / name).relative_to(root))] = _sha((source / name).read_bytes())
     hashes[str((source / PIN_NAME).relative_to(root))] = _sha(raw)
+    hashes[str((source / PARENT_PIN_NAME).relative_to(root))] = PARENT_PIN_SHA256
     return pin, hashes, _sha(raw)
 
 

@@ -11,7 +11,7 @@
     "tests/controlled-drugs/engine/candidate/review.sql": "8d013b1aa949966d50ccca00ad34dbde1b7bb974dd84de97e550c889757eb2d3",
     "tests/controlled-drugs/engine/candidate/scalar-helpers.sql": "89da9d7d912cd1c5ef86c4fbf1ede9ba2ca941d10680235f2a1ad7cafb5c5368",
     "tests/controlled-drugs/engine/candidate/schema.sql": "5467263c4776ca2ff67454a7086229644e3a6d233fc0a96d2ce831e20dd6fefe",
-    "tests/controlled-drugs/engine/candidate/seal.sql": "552abc4b18cb9d16b89e386376e3aa17af3eaa9ae43044698e06359503b46eb7",
+    "tests/controlled-drugs/engine/candidate/seal.sql": "0362392c6cdfda5a6333d63d5594b1cabd183acfee8095e4ba632335fdb0abcc",
     "tests/controlled-drugs/engine/source-effects.sql": "6cb79e0e2cd737652de34e5a8d33b963ab42fa28d369d2b3d7d976f58f653f10",
     "tests/controlled-drugs/engine/source-reader.sql": "ec75bd5346657230cb0c6602589a10d22b0ee880f786118f8342bf57d48788fa"
   },
@@ -923,7 +923,7 @@
         ],
         "definer": false,
         "owner": "postgres",
-        "sha256": "44e9bd54d1f99de8e3ee5d3471909290bf305436da8bd718095a25c3fa2df061"
+        "sha256": "6a978f2f0da3cac9271cfd2ad1895fd346f344a915d36b90e59ace86fc3bb5ef"
       },
       "controlled_stock_opening_contains_head(jsonb,jsonb,integer)": {
         "acl": [
@@ -3263,6 +3263,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3271,6 +3272,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3279,6 +3281,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3287,6 +3290,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3295,6 +3299,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3303,6 +3308,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "now()",
             "generated": "",
             "identity": "",
@@ -3434,6 +3440,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": "gen_random_uuid()",
             "generated": "",
             "identity": "",
@@ -3442,6 +3449,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3450,6 +3458,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3458,6 +3467,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": "''::text",
             "generated": "",
             "identity": "",
@@ -3466,6 +3476,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3474,6 +3485,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3482,6 +3494,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": "true",
             "generated": "",
             "identity": "",
@@ -3490,6 +3503,7 @@
             "type": "boolean"
           },
           {
+            "column_acl": [],
             "default": "1",
             "generated": "",
             "identity": "",
@@ -3498,6 +3512,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3506,6 +3521,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "now()",
             "generated": "",
             "identity": "",
@@ -3628,6 +3644,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3636,6 +3653,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3644,6 +3662,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3652,6 +3671,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3660,6 +3680,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3668,6 +3689,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3676,6 +3698,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3684,6 +3707,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -3793,6 +3817,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3801,6 +3826,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3809,6 +3835,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3817,6 +3844,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -3921,6 +3949,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3929,6 +3958,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3937,6 +3967,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "'draft'::text",
             "generated": "",
             "identity": "",
@@ -3945,6 +3976,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3953,6 +3985,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -3961,6 +3994,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -4082,6 +4116,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4090,6 +4125,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4098,6 +4134,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4106,6 +4143,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4114,6 +4152,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4122,6 +4161,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -4130,6 +4170,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": "(clock_timestamp() + '00:15:00'::interval)",
             "generated": "",
             "identity": "",
@@ -4252,6 +4293,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4260,6 +4302,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4268,6 +4311,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4276,6 +4320,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4284,6 +4329,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4292,6 +4338,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4300,6 +4347,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4308,6 +4356,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4316,6 +4365,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4324,6 +4374,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -4463,6 +4514,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4471,6 +4523,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4479,6 +4532,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4487,6 +4541,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4495,6 +4550,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4503,6 +4559,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4511,6 +4568,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -4654,6 +4712,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4662,6 +4721,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4670,6 +4730,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4678,6 +4739,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4686,6 +4748,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -4817,6 +4880,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4825,6 +4889,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4833,6 +4898,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4841,6 +4907,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4849,6 +4916,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4857,6 +4925,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4865,6 +4934,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4873,6 +4943,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4881,6 +4952,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -4889,6 +4961,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5085,6 +5158,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5093,6 +5167,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5101,6 +5176,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5109,6 +5185,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5117,6 +5194,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5125,6 +5203,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5276,6 +5355,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5284,6 +5364,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5292,6 +5373,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5300,6 +5382,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5308,6 +5391,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5316,6 +5400,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5324,6 +5409,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5332,6 +5418,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5340,6 +5427,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5348,6 +5436,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5356,6 +5445,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5544,6 +5634,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5552,6 +5643,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5560,6 +5652,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5568,6 +5661,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5576,6 +5670,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5584,6 +5679,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5592,6 +5688,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5600,6 +5697,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5608,6 +5706,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5616,6 +5715,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5624,6 +5724,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5632,6 +5733,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5640,6 +5742,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5648,6 +5751,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -5853,6 +5957,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5861,6 +5966,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5869,6 +5975,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5877,6 +5984,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -5976,6 +6084,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5984,6 +6093,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -5992,6 +6102,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6000,6 +6111,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6008,6 +6120,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6016,6 +6129,7 @@
             "type": "numeric(14,3)"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6024,6 +6138,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6176,6 +6291,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6184,6 +6300,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6192,6 +6309,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6200,6 +6318,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6208,6 +6327,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6216,6 +6336,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6224,6 +6345,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6232,6 +6354,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6240,6 +6363,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6248,6 +6372,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6256,6 +6381,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6264,6 +6390,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6272,6 +6399,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6280,6 +6408,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6288,6 +6417,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -6296,6 +6426,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6304,6 +6435,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6312,6 +6444,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6320,6 +6453,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6328,6 +6462,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6336,6 +6471,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6344,6 +6480,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6352,6 +6489,7 @@
             "type": "boolean"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6360,6 +6498,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6589,6 +6728,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6597,6 +6737,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6605,6 +6746,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6613,6 +6755,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6621,6 +6764,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6629,6 +6773,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6637,6 +6782,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6645,6 +6791,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6653,6 +6800,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6661,6 +6809,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6669,6 +6818,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6797,6 +6947,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6805,6 +6956,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6813,6 +6965,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6821,6 +6974,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6829,6 +6983,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6837,6 +6992,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6845,6 +7001,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -6853,6 +7010,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -7006,6 +7164,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7014,6 +7173,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7022,6 +7182,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7030,6 +7191,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7038,6 +7200,7 @@
             "type": "numeric(14,3)"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7177,6 +7340,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7185,6 +7349,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7193,6 +7358,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7201,6 +7367,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7209,6 +7376,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7217,6 +7385,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7225,6 +7394,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7233,6 +7403,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7241,6 +7412,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -7406,6 +7578,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7414,6 +7587,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7532,6 +7706,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7540,6 +7715,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7548,6 +7724,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7556,6 +7733,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7564,6 +7742,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7572,6 +7751,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7580,6 +7760,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7588,6 +7769,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7596,6 +7778,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7604,6 +7787,7 @@
             "type": "boolean"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7612,6 +7796,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7620,6 +7805,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7628,6 +7814,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -7802,6 +7989,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7810,6 +7998,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7922,6 +8111,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7930,6 +8120,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7938,6 +8129,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7946,6 +8138,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7954,6 +8147,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7962,6 +8156,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7970,6 +8165,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7978,6 +8174,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7986,6 +8183,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -7994,6 +8192,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8002,6 +8201,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8010,6 +8210,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8018,6 +8219,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -8026,6 +8228,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": "(clock_timestamp() + '00:15:00'::interval)",
             "generated": "",
             "identity": "",
@@ -8213,6 +8416,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8221,6 +8425,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8229,6 +8434,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8237,6 +8443,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8245,6 +8452,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8253,6 +8461,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -8383,6 +8592,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8391,6 +8601,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8399,6 +8610,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8407,6 +8619,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8415,6 +8628,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8423,6 +8637,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8431,6 +8646,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8614,6 +8830,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8622,6 +8839,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8630,6 +8848,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8638,6 +8857,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8646,6 +8866,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8654,6 +8875,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8662,6 +8884,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8670,6 +8893,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8678,6 +8902,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8686,6 +8911,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8694,6 +8920,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": "clock_timestamp()",
             "generated": "",
             "identity": "",
@@ -8885,6 +9112,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8893,6 +9121,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -8901,6 +9130,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "0",
             "generated": "",
             "identity": "",
@@ -8909,6 +9139,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9051,6 +9282,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9059,6 +9291,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9067,6 +9300,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9075,6 +9309,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9083,6 +9318,7 @@
             "type": "date"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9091,6 +9327,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9099,6 +9336,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "now()",
             "generated": "",
             "identity": "",
@@ -9234,6 +9472,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9242,6 +9481,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9250,6 +9490,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9258,6 +9499,7 @@
             "type": "numeric(14,3)"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9266,6 +9508,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9274,6 +9517,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9282,6 +9526,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "now()",
             "generated": "",
             "identity": "",
@@ -9460,6 +9705,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9468,6 +9714,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9476,6 +9723,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9484,6 +9732,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9492,6 +9741,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9605,6 +9855,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9613,6 +9864,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9621,6 +9873,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9629,6 +9882,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9637,6 +9891,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9645,6 +9900,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9653,6 +9909,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9661,6 +9918,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9669,6 +9927,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9677,6 +9936,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9685,6 +9945,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9693,6 +9954,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9871,6 +10133,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9879,6 +10142,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9887,6 +10151,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9895,6 +10160,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9903,6 +10169,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -9911,6 +10178,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10024,6 +10292,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10032,6 +10301,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10040,6 +10310,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10048,6 +10319,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10056,6 +10328,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10064,6 +10337,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10072,6 +10346,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10080,6 +10355,7 @@
             "type": "numeric(14,3)"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10088,6 +10364,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10096,6 +10373,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10219,6 +10497,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10227,6 +10506,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10235,6 +10515,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10243,6 +10524,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10251,6 +10533,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10259,6 +10542,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10267,6 +10551,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10375,6 +10660,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10383,6 +10669,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10391,6 +10678,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10399,6 +10687,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10407,6 +10696,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10415,6 +10705,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10423,6 +10714,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10570,6 +10862,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10578,6 +10871,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10586,6 +10880,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10594,6 +10889,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10602,6 +10898,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10610,6 +10907,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10618,6 +10916,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10626,6 +10925,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10765,6 +11065,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": "gen_random_uuid()",
             "generated": "",
             "identity": "",
@@ -10773,6 +11074,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10781,6 +11083,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10789,6 +11092,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10898,6 +11202,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10906,6 +11211,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10914,6 +11220,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10922,6 +11229,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10930,6 +11238,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10938,6 +11247,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10946,6 +11256,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10954,6 +11265,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10962,6 +11274,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10970,6 +11283,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10978,6 +11292,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10986,6 +11301,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -10994,6 +11310,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11175,6 +11492,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11183,6 +11501,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11191,6 +11510,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11199,6 +11519,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11207,6 +11528,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11215,6 +11537,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11315,6 +11638,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11323,6 +11647,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11331,6 +11656,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11339,6 +11665,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11347,6 +11674,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11355,6 +11683,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11363,6 +11692,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11371,6 +11701,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11379,6 +11710,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11387,6 +11719,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11395,6 +11728,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11403,6 +11737,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11411,6 +11746,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11593,6 +11929,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11601,6 +11938,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11609,6 +11947,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11617,6 +11956,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11625,6 +11965,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11633,6 +11974,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11733,6 +12075,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11741,6 +12084,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11749,6 +12093,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11757,6 +12102,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11765,6 +12111,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11773,6 +12120,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11907,6 +12255,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11915,6 +12264,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11923,6 +12273,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11931,6 +12282,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11939,6 +12291,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11947,6 +12300,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11955,6 +12309,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11963,6 +12318,7 @@
             "type": "boolean"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11971,6 +12327,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11979,6 +12336,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11987,6 +12345,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -11995,6 +12354,7 @@
             "type": "date"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12003,6 +12363,7 @@
             "type": "numeric(14,3)"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12011,6 +12372,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12019,6 +12381,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12027,6 +12390,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12035,6 +12399,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12043,6 +12408,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12051,6 +12417,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12059,6 +12426,7 @@
             "type": "date"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12067,6 +12435,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12075,6 +12444,7 @@
             "type": "jsonb"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12083,6 +12453,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": "now()",
             "generated": "",
             "identity": "",
@@ -12269,6 +12640,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12277,6 +12649,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12382,6 +12755,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12390,6 +12764,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12398,6 +12773,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12506,6 +12882,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12514,6 +12891,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12618,6 +12996,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12626,6 +13005,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12634,6 +13014,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12642,6 +13023,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12747,6 +13129,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12755,6 +13138,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12860,6 +13244,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12868,6 +13253,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12876,6 +13262,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12884,6 +13271,7 @@
             "type": "bigint"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12892,6 +13280,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12900,6 +13289,7 @@
             "type": "timestamp with time zone"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12908,6 +13298,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12916,6 +13307,7 @@
             "type": "uuid"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -12992,6 +13384,7 @@
         ],
         "columns": [
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -13000,6 +13393,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -13008,6 +13402,7 @@
             "type": "integer"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -13016,6 +13411,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -13024,6 +13420,7 @@
             "type": "text"
           },
           {
+            "column_acl": [],
             "default": null,
             "generated": "",
             "identity": "",
@@ -13076,9 +13473,9 @@
         ]
       }
     },
-    "version": 1
+    "version": 2
   },
-  "kind": "controlled-stock-release-expected-204-v1",
+  "kind": "controlled-stock-release-expected-204-v2",
   "prior_snapshot_sql_sha256": "fe7344ba56108a8844e6bdcb7e7375c5cb4223b3c9eecc9b96ccfc648c3f24cd",
   "trusted_prior189_sha256": "7c39d7d55b7aed8f11159555bbcd880c5910b1fa2891e495c28d2a1b6dbc5ac1"
 }

@@ -31,7 +31,7 @@ POST_MUTATIONS = {
     'post_helper_grant': ('grant execute on function public.controlled_stock_hash(jsonb)to authenticated;', 'Controlled release installed metadata differs from reviewed artifact'),
     'post_relation_rls': ('alter table public.controlled_stock_events disable row level security;', 'Controlled release installed metadata differs from reviewed artifact'),
     'post_immutable_trigger': ('alter table public.controlled_stock_events disable trigger immutable;', 'Controlled release installed metadata differs from reviewed artifact'),
-    'post_column_grant': ('grant select(id)on public.controlled_stock_events to authenticated;', 'Controlled release private access or RLS changed'),
+    'post_column_grant': ('grant select(id)on public.controlled_stock_events to authenticated;', 'Controlled release installed metadata differs from reviewed artifact'),
 }
 PHASES = ('after_schema', 'after_hooks', 'before_commit')
 CASE_ORDER = (*MUTATIONS, *PHASES, *POST_MUTATIONS)
@@ -200,12 +200,12 @@ def verify_installed(sql, expected_release, baseline):
     _validate_snapshot(baseline)
     assert all(not items for items in baseline['engine_catalog'].values()), 'Untouched empty engine baseline required'
     assert not any(name.startswith('public.controlled_stock_') for name in baseline['relations'])
-    assert expected_release.get('kind') == 'controlled-stock-release-expected-204-v1'
+    assert expected_release.get('kind') == 'controlled-stock-release-expected-204-v2'
     assert type(expected_release.get('baseline_migration_count')) is int and expected_release['baseline_migration_count'] == 204
     expected = expected_release.get('expected_technical_manifest')
     writers = expected_release.get('canonical_writer_definition_hashes')
     assert isinstance(expected, dict) and set(expected) == {'version', 'functions', 'relations'}
-    assert type(expected['version']) is int and expected['version'] == 1
+    assert type(expected['version']) is int and expected['version'] == 2
     assert isinstance(expected['functions'], dict) and expected['functions']
     assert isinstance(expected['relations'], dict) and expected['relations']
     assert writers == baseline['writers'], 'Reviewed canonical writer pin differs from untouched replay'

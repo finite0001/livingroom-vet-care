@@ -89,11 +89,11 @@ class ReleaseRehearsalTests(unittest.TestCase):
             self.assertEqual(outcome['sqlstate'], '23514')
             self.assertEqual(outcome['message'], message)
 
-    def test_column_acl_case_requires_the_independent_private_access_guard(self):
+    def test_column_acl_case_requires_the_new_manifest_metadata_guard(self):
         c = Callbacks()
         def wrong_guard(result):
             if 'armed: post_column_grant' in result.stderr:
-                return subprocess.CompletedProcess([], result.returncode, '', result.stderr.replace('Controlled release private access or RLS changed', 'Controlled release installed metadata differs from reviewed artifact'))
+                return subprocess.CompletedProcess([], result.returncode, '', result.stderr.replace('Controlled release installed metadata differs from reviewed artifact', 'Controlled release private access or RLS changed'))
             return result
         c.bad_result = wrong_guard
         with self.assertRaises(AssertionError):
@@ -234,8 +234,8 @@ class ReleaseRehearsalTests(unittest.TestCase):
 class InstalledTests(unittest.TestCase):
     def setUp(self):
         self.before = baseline()
-        self.expected = {'kind': 'controlled-stock-release-expected-204-v1', 'baseline_migration_count': 204,
-                         'expected_technical_manifest': {'version': 1, 'functions': {'private': {}}, 'relations': {'engine': {}}},
+        self.expected = {'kind': 'controlled-stock-release-expected-204-v2', 'baseline_migration_count': 204,
+                         'expected_technical_manifest': {'version': 2, 'functions': {'private': {}}, 'relations': {'engine': {}}},
                          'canonical_writer_definition_hashes': self.before['writers']}
         self.checks = {'manifest_rows': 1, 'literal_manifest_matches': True, 'live_manifest_matches': True,
                        'all_ten_hooks_pinned': True, 'raw_rpcs_private': True, 'raw_tables_private': True,
@@ -298,6 +298,12 @@ class InstalledTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 self.verify()
             self.installed = original
+
+    def test_old_v1_release_pin_cannot_verify_a_v2_manifest_install(self):
+        self.expected['kind'] = 'controlled-stock-release-expected-204-v1'
+        with self.assertRaises(AssertionError):
+            self.verify()
+        self.assertEqual(self.queries, [])
 
     def test_wrong_reviewed_writer_pin_rejected_before_sql(self):
         self.expected['canonical_writer_definition_hashes'] = {}

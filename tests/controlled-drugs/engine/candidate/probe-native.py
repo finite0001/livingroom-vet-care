@@ -60,6 +60,24 @@ try:
  assert snapshot(restore_database)==managed
  sql('select controlled_stock_manifest_required();select controlled_stock_validate_event(id)from controlled_stock_events;select controlled_stock_validate_product(product_id)from controlled_stock_states;',restore_database)
  assert snapshot(restore_database)==managed
+ # The populated restored database has its own ownership marker. Check both
+ # runtime labels and that marker before every fresh probe backend.
+ def verify_acl_restore():
+  current=json.loads(subprocess.check_output(['docker','inspect',container]))[0]['Config']['Labels']
+  assert current['com.supabase.cli.project']==identity and Path(current['com.supabase.cli.workdir']).resolve()==Path(runtime['project']).resolve()
+  assert sql("select shobj_description(oid,'pg_database')from pg_database where datname='"+restore_database+"';").strip()==restore_marker
+ def acl_sql(query):
+  verify_acl_restore()
+  return sql(query,restore_database)
+ def acl_raw_sql(query):
+  verify_acl_restore()
+  result=subprocess.run(['docker','exec','-i',container,'psql','-X','-qAt','-U','postgres','-d',restore_database,'-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose'],input=query,capture_output=True,text=True,timeout=180)
+  log.write('OWNED COLUMN ACL RESTORE REHEARSAL\n'+result.stdout+result.stderr+'\n');log.flush()
+  return result
+ from column_acl_seal import probe_column_acl_seal
+ proof['restored_column_acl_seal']=probe_column_acl_seal(acl_sql,acl_raw_sql,(source/'prior-snapshot.sql').read_text(),phase='populated_restore')
+ assert proof['restored_column_acl_seal'].get('passed')is True,'Restored column ACL seal proof incomplete'
+ assert snapshot(restore_database)==managed
  isolation_results=[]
  for level in ['repeatable read','serializable']:
   isolation_sql=(source/'restore-isolation.sql').read_text().replace('__ISOLATION__',level)

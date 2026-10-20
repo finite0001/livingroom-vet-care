@@ -34,7 +34,9 @@ The separate [migration-204 compatibility receipt](../../../../docs/launch-evide
 
 `release_assembly.py` builds the separate offline
 `engine/release/controlled-stock-private.sql` artifact. Its expected catalog comes
-from the independently reviewed PR #285 proofs, rather than the installation
+from the independently reviewed PR #285 proofs retained in the released #286
+pin, with an independently replayed #286 column-ACL supplement and the reviewed
+manifest-function delta for format version 2. It is not captured from the installation
 being checked. The unchanged original trusted-189 reference remains the prior
 catalog authority. The release pin binds all 204 migration files and 14 assembled
 SQL sources, 171 scoped functions, 51 relations and ten canonical writer bodies.
@@ -298,3 +300,35 @@ records the three-zone full run: 27 baseline refusal/14 positive families plus 3
 refusal/seven positive families, separately counted from repeated executions.
 All 399 bound source hashes matched; no canonical/hosted engine installation or
 clinical/register activation occurred.
+
+
+### Ongoing column ACL drift (manifest format version 2)
+
+Manifest format version 2 includes explicit column grants for every column in
+its existing 51 scoped relations. Each entry retains grantee, grantor, privilege
+and grant option, sorted by role names with C collation. An absent direct column
+ACL is an empty array; implicit owner access remains valid. Existing table and
+function ACL coverage remains separate from these direct column grants.
+
+The original released v1 expected pin is preserved verbatim in
+`release-expected-204-v1.json`; the v2 pin is derived from that reviewed
+reference plus an independently verified old-release column-ACL supplement and
+the explicitly reviewed snapshot-function delta. The new installation is never
+used to adopt its own expected baseline. Both pins are bound in rehearsal inputs.
+
+The owned-local rehearsal adds real column grants after successful installation,
+requires exact manifest refusal, and compares original data, catalog/column ACLs,
+manifest, ledger and writer hashes after rollback. The managed populated restore
+repeats these checks against its independently marked clone. That four-schema dump
+does not restore the migration ledger; the clone checks and preserves its absence.
+No synthetic grant is resealed. The focused, full ordinary and genuine historical
+runs passed; the
+[new evidence](../../../../docs/launch-evidence/2026-10-19-controlled-column-acl-seal.md)
+records their source bindings, cleanup and scope. Released v1 evidence describes
+the earlier coverage.
+
+This extends detection of direct column ACL drift inside the existing catalog
+scope. It does not prevent an owner from changing the database or cover role
+membership, unlisted relations, schema/default ACLs or every dependency. Canonical
+migration promotion still requires CLI-owned transaction/ledger-failure proof.
+Hosted installation and clinical/register activation remain pending.

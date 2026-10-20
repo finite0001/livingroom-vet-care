@@ -46,7 +46,7 @@ do $$declare r record;name text;columns text;begin
 end $$;
 create function public.controlled_stock_manifest_snapshot()returns jsonb
 language sql volatile set search_path=public,pg_temp as $$
- select jsonb_build_object('version',1,'functions',(
+ select jsonb_build_object('version',2,'functions',(
   select jsonb_object_agg(p.oid::regprocedure::text,jsonb_build_object('sha256',encode(sha256(convert_to(pg_get_functiondef(p.oid),'UTF8')),'hex'),
    'owner',pg_get_userbyid(p.proowner),'acl',(select jsonb_agg(jsonb_build_object('grantee',case when x.grantee=0 then 'PUBLIC' else pg_get_userbyid(x.grantee)end,
     'grantor',pg_get_userbyid(x.grantor),'privilege',x.privilege_type,'grantable',x.is_grantable)order by x.grantee::regrole::text,x.grantor::regrole::text,x.privilege_type)
@@ -66,7 +66,13 @@ language sql volatile set search_path=public,pg_temp as $$
     'grantor',pg_get_userbyid(x.grantor),'privilege',x.privilege_type,'grantable',x.is_grantable)order by x.grantee::regrole::text,x.grantor::regrole::text,x.privilege_type)
     from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner)))x),
    'columns',(select jsonb_agg(jsonb_build_object('name',a.attname,'type',format_type(a.atttypid,a.atttypmod),
-    'not_null',a.attnotnull,'identity',a.attidentity,'generated',a.attgenerated,'default',pg_get_expr(d.adbin,d.adrelid))order by a.attnum)
+    'not_null',a.attnotnull,'identity',a.attidentity,'generated',a.attgenerated,'default',pg_get_expr(d.adbin,d.adrelid),
+    'column_acl',(select coalesce(jsonb_agg(jsonb_build_object(
+     'grantee',case when x.grantee=0 then 'PUBLIC'else pg_get_userbyid(x.grantee)end,
+     'grantor',pg_get_userbyid(x.grantor),'privilege',x.privilege_type,'grantable',x.is_grantable)
+     order by(case when x.grantee=0 then 'PUBLIC'else pg_get_userbyid(x.grantee)end)collate "C",
+      pg_get_userbyid(x.grantor)collate "C",x.privilege_type collate "C",x.is_grantable),'[]'::jsonb)
+     from aclexplode(a.attacl)x))order by a.attnum)
     from pg_attribute a left join pg_attrdef d on d.adrelid=a.attrelid and d.adnum=a.attnum where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),
    'policies',(select coalesce(jsonb_agg(jsonb_build_object('name',p.polname,'permissive',p.polpermissive,'command',p.polcmd,
     'roles',(select jsonb_agg(case when r=0 then 'PUBLIC'else pg_get_userbyid(r)end order by case when r=0 then 'PUBLIC'else pg_get_userbyid(r)end)from unnest(p.polroles)r),
