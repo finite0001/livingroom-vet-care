@@ -330,5 +330,48 @@ the earlier coverage.
 This extends detection of direct column ACL drift inside the existing catalog
 scope. It does not prevent an owner from changing the database or cover role
 membership, unlisted relations, schema/default ACLs or every dependency. Canonical
-migration promotion still requires CLI-owned transaction/ledger-failure proof.
+migration promotion requires the separate CLI transaction proof below and a
+reviewed forward-port with distinct preinstallation and post-migration lanes.
 Hosted installation and clinical/register activation remain pending.
+
+
+### CLI-owned transaction and ledger atomicity
+
+`release/controlled-stock-cli-body.sql` is derived from the unchanged private
+release artifact by removing only its outer `begin;` and final `commit;` lines.
+The reversible builder verifies all parent pins and preserves every interior byte.
+This lets Supabase CLI 2.118.0 batch the engine installation and its genuine
+migration-ledger insertion in one transaction. Check the frozen body offline:
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/cli_migration_body.py --check
+```
+
+Run the separate owned-local proof with Docker and free ports
+65020/65021/65022/65024:
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/run-cli-atomicity.py --run-synthetic-local
+```
+
+The runner copies the original 204 migrations into a disposable project. A
+migration 205 exists only there. Guarded late-body and actual ledger-insert
+failures must each restore the full captured logical catalog, original data and
+204 ledger rows. During both the ledger failure and clean installation, an
+independent connection observes the actual CLI backend at ledger insertion,
+still holding the exclusive engine barrier, and cannot acquire its shared lock.
+The clean application uses the exact frozen body; its genuine ledger row must
+match the independently reviewed CLI parser array of 94 entries (93 SQL
+statements plus the retained final comment). A real retry must be an exact no-op.
+No ledger history is repaired and no expected installation baseline is recaptured.
+
+The [dated CLI evidence](../../../../docs/launch-evidence/2026-10-20-controlled-cli-atomicity.md)
+records the actual local pass, source bindings, rollback and cleanup audits, and
+an excluded earlier receipt-adapter failure. CI retains the full ordinary and
+historical compatibility runs and adds this proof. Its actual runtime image is
+recorded; this standalone driver does not enforce an independent image pin.
+
+This is a local transaction-boundary proof. The repository still has 204 canonical
+migrations; canonical promotion and full post-205 compatibility remain separate
+work. Hosted installation, C2/C3 completion and clinical/register activation are
+not established. Susan's clinical and register approval remains pending.
