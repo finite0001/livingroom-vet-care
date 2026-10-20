@@ -185,6 +185,18 @@ Selected-schema logical restoration does not certify cluster-role, ownership,
 default-privilege or Storage binary recovery, physical reconciliation or practice
 approval. Clinical/register activation remains pending Susan's approval.
 
+The synthetic operational-annotation producer takes a real preview at each
+batch boundary, binds every actual canonical receipt to its stored operation and
+event, and advances only the expected head between writes. The unchanged
+canonical writer still verifies the complete history on every append. A final
+real preview must match the derived context and hash before the batch commits.
+The 33 committed batches contain 1,001 writes and 66 endpoint previews; this is
+not a count of all preview calls in the workload. A separate three-write contract
+refuses eight altered receipts and two stale canonical contexts with exact
+`PT409`, then rolls back every selected relation and the technical manifest.
+Those contract checks are separate from the eleven capacity observations and
+seven restore validations. No deadline, reserve or batch limit is relaxed.
+
 On a child-probe failure, the parent prints only a sanitized fixed-category
 summary and bounded correction checkpoint timing. Raw errors, SQL, fixture IDs
 and private fingerprints stay in protected logs. An unrecognized error remains

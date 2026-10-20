@@ -67,6 +67,37 @@
       "validation_reserve_seconds": 120,
       "verified_outer_container_and_volume_absence_confirmed_in_ci_log": true,
       "workflow_runner_label": "ubuntu-24.04-arm"
+    },
+    {
+      "900_second_workload_budget_and_120_second_reserve_relaxed": false,
+      "all_four_original_jobs_passed": true,
+      "attempted_target": 992,
+      "completed_writer_batches": 30,
+      "completed_writer_target": 960,
+      "conclusion": "failure",
+      "estimated_next_batch_seconds": 130.74868965953425,
+      "failure_cause": "Observed next-batch reserve admission refused",
+      "foundation_and_candidate_stacks_shared_the_job_vm": false,
+      "genuine_1001st_writer_executed": false,
+      "head": "3f9d68c5ba93c161df8d4e7ea449cc022e534df0",
+      "historical_step_skipped_after_candidate_failure": true,
+      "included_in_passing_acceptance": false,
+      "job": "controlled-stock",
+      "last_admission_allowed": false,
+      "marked_database_removed_receipt_flag": true,
+      "observed_guard": "next_batch_admission_refused",
+      "private_ci_log_sha256": "1469f7437fc4548e5833eecb1b9cf3a907d47ba1d81ba6adcfa06c79c3b7bb7a",
+      "remaining_seconds": 183.09314814300023,
+      "required_seconds_with_reserve": 250.74868965953425,
+      "restore_phase_started": false,
+      "run_id": 39342481911,
+      "separate_independent_cleanup_receipt_available": false,
+      "source_runtime_unchanged_after_cleanup_receipt_flag": true,
+      "underlying_performance_cause": "not established",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/39342481911",
+      "validation_reserve_seconds": 120,
+      "verified_outer_container_and_volume_absence_confirmed_in_ci_log": true,
+      "workflow_runner_label": "ubuntu-24.04-arm"
     }
   ],
   "ci_runner_contract": {
@@ -132,27 +163,27 @@
     "full_ordinary_checkpoint_phase_seconds": [
       {
         "previous_target": 0,
-        "stage_elapsed_seconds": 1.264,
+        "stage_elapsed_seconds": 1.569,
         "target": 64
       },
       {
         "previous_target": 64,
-        "stage_elapsed_seconds": 3.056,
+        "stage_elapsed_seconds": 3.526,
         "target": 128
       },
       {
         "previous_target": 128,
-        "stage_elapsed_seconds": 12.976,
+        "stage_elapsed_seconds": 13.896,
         "target": 256
       },
       {
         "previous_target": 256,
-        "stage_elapsed_seconds": 66.88,
+        "stage_elapsed_seconds": 44.789,
         "target": 512
       },
       {
         "previous_target": 512,
-        "stage_elapsed_seconds": 377.206,
+        "stage_elapsed_seconds": 243.672,
         "target": 1000
       }
     ],
@@ -189,6 +220,34 @@
     "writer_deadline_is_global_minus_reserve": true,
     "writer_reserve_seconds": 120
   },
+  "correction_producer": {
+    "actual_receipts_bound": 1001,
+    "canonical_context_refusal_sqlstate": "PT409",
+    "canonical_writer_full_history_verification_unchanged": true,
+    "canonical_writes": 1001,
+    "committed_writer_batches": 33,
+    "contract": {
+      "batch_real_previews": 2,
+      "canonical_context_refusals": 2,
+      "kind": "controlled-correction-producer-contract-v1",
+      "mutation_refusals_rolled_back_exactly": true,
+      "original_counts_zero": true,
+      "passed": true,
+      "receipt_mutation_refusals": 8,
+      "successful_rolled_back_writes": 3
+    },
+    "contract_all_relations_and_manifest_rolled_back_exactly": true,
+    "contract_checks_separate_from_capacity_11_and_restore_7": true,
+    "endpoint_preview_count_scope": "Only the 33 committed batches; excludes rolled-back contract and other validation previews",
+    "kind": "controlled-correction-producer-proof-v1",
+    "only_operational_annotations": true,
+    "operational_annotation_fixture_only": true,
+    "passed": true,
+    "per_annotation_external_preview": false,
+    "production_workflow_or_performance_approved": false,
+    "real_previews": 66,
+    "source_of_acceptance": "Fresh full ordinary proof, independently matched to the separately monitored targeted proof"
+  },
   "date": "2026-10-19",
   "earlier_per_stage_observer_attempt": {
     "genuine_1001st_writer_executed": false,
@@ -200,6 +259,13 @@
     "workload_budget_or_product_guard_relaxed_for_retry": false
   },
   "engine_definition_changes_in_this_batch": false,
+  "excluded_producer_contract_attempt": {
+    "canonical_function_or_engine_changed": false,
+    "failure_cause": "Fixture expected historical SQLSTATE 40001; current canonical writer correctly returned PT409",
+    "fixture_fix": "Strict expected SQLSTATE updated to PT409 with the same exact message",
+    "included_in_passing_acceptance": false,
+    "independent_owned_container_and_volume_absence_verified": true
+  },
   "failure_diagnostics": {
     "diagnostic_change_does_not_establish_prior_CI_root_cause": true,
     "exact_terminal_assertions_mapped_only_to_fixed_guard_categories": true,
@@ -212,23 +278,23 @@
     "scope": "Parent-side reporting only",
     "unrecognized_terminal_failure_category": "unknown"
   },
-  "full_private_source_maps_retained": "Fresh 417-source ordinary and 253-source historical maps, plus the earlier monitored 416-source targeted map, remain private; each distinct map is bound by its full_private_source_set_digest and private result SHA-256 above.",
+  "full_private_source_maps_retained": "Current 418-source ordinary and targeted maps are exactly equal; the current historical map has 254 sources with 253 shared ordinary paths matching. Full maps remain private and are bound by full_private_source_set_digest and result SHA-256. Superseded 416/417/253-source receipts remain retained privately and are excluded from current-source acceptance.",
   "full_private_source_set_digest_algorithm": "SHA-256 of UTF-8 json.dumps(full_private_source_hash_map, sort_keys=True, separators=(',', ':'))",
   "historical_compatibility": {
     "all_owned_resources_removed": true,
     "all_shared_hashes_match": true,
-    "bound_source_hashes_matched": 253,
-    "full_private_source_set_digest": "8290e00579d7c94bfe4c10b8e1bf136e5690d6f232c77e9e112f93468078c52f",
+    "bound_source_hashes_matched": 254,
+    "full_private_source_set_digest": "c0a88c18245c10c43fe43fc392b6edf0454859865951f0897431898dcef2828d",
     "generic_focused_refusals": 6,
     "generic_opening_cases": 2,
     "generic_sql_checks": 29,
-    "independent_cleanup_receipt_sha256": "f9bc9351b0b4c7699c8f7eb83235c384e970927fa8d67c0b2396e87aad1921e4",
+    "independent_cleanup_receipt_sha256": "f83dac7a2ef27746fcd5ec23b3f1212101c50a58c265fa684e9bf66a9cb3f348",
     "independent_cleanup_verified": true,
     "long_correction_chain_restore_executed_in_historical_replays": false,
     "native_cases": 7,
     "native_sql_checks": 83,
     "passed": true,
-    "private_result_sha256": "3627457fc1632bc7e5d65fc6d39b6ae0d62860a7b20d95fb236cdd9201b91627",
+    "private_result_sha256": "c22d50e366ff73391046a68c1a1df4f49b347c8f87598899691cd2fdf0ffee8d",
     "replays": [
       {
         "containers_volumes_workdir_removed": true,
@@ -296,8 +362,8 @@
         "post_install_state_unchanged_after_each_case": true,
         "postgres_content_pin": {
           "platform": "linux/arm64",
-          "reference": "ghcr.io/supabase/postgres:17.6.1.171",
-          "repository_digest": "ghcr.io/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+          "reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
+          "repository_digest": "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
           "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
         },
         "ten_canonical_writers_unchanged": true
@@ -403,14 +469,14 @@
         "post_install_state_unchanged_after_each_case": true,
         "postgres_content_pin": {
           "platform": "linux/arm64",
-          "reference": "ghcr.io/supabase/postgres:17.6.1.171",
-          "repository_digest": "ghcr.io/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+          "reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
+          "repository_digest": "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
           "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
         },
         "ten_canonical_writers_unchanged": true
       }
     ],
-    "shared_source_count_with_ordinary": 252
+    "shared_source_count_with_ordinary": 253
   },
   "hosted_writes": 0,
   "kind": "controlled-correction-history-restore-evidence-v1",
@@ -433,9 +499,9 @@
   },
   "ordinary_compatibility": {
     "api_check_count_includes_sql_setup_state_and_cleanup_not_http_request_count": true,
-    "bound_source_hashes_matched": 417,
-    "capacity_and_restore_proof_sha256": "007ab79e4467f23f0a86ad3037857a3fd715d3fff1eb943d7e92674ab0255abb",
-    "capacity_preservation_receipt_sha256": "9ba3834ded86672addbfb7ce161bb1f6aa51b09fb93e565af198f669f1b936b2",
+    "bound_source_hashes_matched": 418,
+    "capacity_and_restore_proof_sha256": "513ffdbeec142af9eb239b4908862b6b116387db28e7d3da0b14f9c00c364c0b",
+    "capacity_preservation_receipt_sha256": "ec84543886c0d9b5944bbfa4bd1834ad61203ace1b4b4fc139d7dd99b57a8cf1",
     "elapsed_is_production_benchmark": false,
     "existing_opening_capacity": {
       "combined_maximum_dispenses_and_allocations_tested": false,
@@ -452,8 +518,8 @@
       "semantic_cases": 36,
       "three_scalar_definitions_intentionally_changed": true
     },
-    "fixture_and_setup_elapsed_seconds": 581.332,
-    "full_private_source_set_digest": "2dba85310cd9c437c75df46e7a4150ffa5d477c8ee7d05426fdacd6972d74dcc",
+    "fixture_and_setup_elapsed_seconds": 458.641,
+    "full_private_source_set_digest": "29ad62b1146a524890befa662b9799bda2fd4d01abc88d0798af73d59d628f52",
     "genuine_auth_api": {
       "api_checks": 133,
       "genuine_auth_postgrest": true,
@@ -461,7 +527,7 @@
       "observed_lock_queues": 8,
       "owned_actors_and_sessions_retired": true
     },
-    "independent_cleanup_receipt_sha256": "1e7223f67665b3431625268f97f41fa66cb10c2d959353da2bba75550c1f256a",
+    "independent_cleanup_receipt_sha256": "0bda6596e47d576ed9a873c3b23442c2821ee6560bcbc2de8c21cfd4c6a03646",
     "independent_cleanup_verified": true,
     "memory_observer_used_in_this_full_ordinary_probe": false,
     "ordinary_sql_regression": {
@@ -470,7 +536,7 @@
     },
     "owned_containers_and_volumes_removed": true,
     "passed": true,
-    "private_result_sha256": "e3f2e1a4d4a1083e1d04b1b357006cc385a99cf688dedcfffccf363f6515f3ae",
+    "private_result_sha256": "5c104c8cb3a9f253ba419b83e8f213f4f898c9f18ed7e1068e32d7f74c7c42bc",
     "probes_passed": [
       "smoke",
       "managed_native",
@@ -479,7 +545,7 @@
       "opening_correction_capacity_with_populated_restore",
       "genuine_auth_api"
     ],
-    "restore_preservation_receipt_sha256": "944f9d45b925a31b811d0e5a4c3db879ce2be77e0ec6a418034fe510daa18d85",
+    "restore_preservation_receipt_sha256": "7b58fe15b9bc9daea28b2c09d14907517a219743dff82baca466b7427318baf3",
     "trusted_drift_exact_atomic_rollback": true,
     "trusted_drift_refusals": 4
   },
@@ -721,49 +787,61 @@
     "workload_finished_before_deadline": true
   },
   "postgres_content_pin": {
-    "independent_exact_runtime_labels_verified": true,
-    "independent_image_receipt_sha256": "4a582a4a5cd10b6d6013e882b3e9bf73e55c1740b133bcac3b1fa99e4094c97b",
+    "historical_actual_configured_references": [
+      "public.ecr.aws/supabase/postgres:17.6.1.171",
+      "public.ecr.aws/supabase/postgres:17.6.1.171"
+    ],
+    "historical_exact_content_pins_recorded_per_replay": true,
+    "independent_active_image_receipt_captured_for_current_ordinary": false,
+    "ordinary_image_not_independently_reinspected_after_cleanup": true,
     "platform": "linux/arm64",
-    "reference": "ghcr.io/supabase/postgres:17.6.1.171",
     "repository_digests": [
       "ghcr.io/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
       "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
     ],
-    "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+    "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+    "targeted_actual_configured_reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
+    "targeted_all_six_immutable_target_intervals_verified": true,
+    "targeted_image_evidence_bound_by_memory_receipt_sha256": "679add9b18c329fb4423c0f23754115a6217265c1e45e6e74a1d9e6870b25b4d"
   },
   "previous_capacity_evidence": "2026-10-19-controlled-opening-correction-capacity.json",
   "provider_requests": 0,
   "readiness": {
     "clinical_or_register_activation": "pending Susan approval",
     "exact_head_ci": "pending isolated native ARM64 controlled-stock job run; all five jobs required",
-    "fresh_full_ordinary_compatibility": "passed",
-    "fresh_historical_compatibility": "passed",
-    "local_targeted_rehearsal": "passed",
+    "fresh_full_ordinary_compatibility": "passed fresh producer-bound full ordinary rehearsal",
+    "fresh_historical_compatibility": "passed fresh producer-bound replay",
+    "local_targeted_rehearsal": "passed fresh producer-bound monitored rehearsal",
     "pull_request": "open PR #285",
     "release": "pending"
   },
   "repository_checks": {
     "build_passed": true,
     "new_failure_reporter_harness_methods": 15,
+    "new_producer_harness_methods": 17,
+    "new_producer_parent_finalizer_methods": 3,
     "new_restore_harness_methods": 27,
     "node_major": 22,
-    "python_harness_methods": 162,
+    "python_harness_methods": 182,
     "typescript_configurations_checked": 3,
     "unit_tests": 1687
   },
   "reviewed_file_hashes": {
     ".github/workflows/ci.yml": "b5ea23fae313828b908d51b460be6145af5dbff21270b865c48a90190d1dd24a",
     "supabase/tests/test_controlled_probe_failure_harness.py": "4907196462d7931dd3631a34b5c64a8411e37b6cd7f2b941a368438511562723",
+    "supabase/tests/test_correction_capacity_harness.py": "be98dbb1823bd6d67930b96a4cca37e174a9ee0821df283423637c150f6ee4c0",
     "supabase/tests/test_correction_history_restore_harness.py": "6386800e22bbbff65967641f76db797d5b5e84e417b93f9dcdb60a026a45b83c",
-    "tests/controlled-drugs/engine/candidate/README.md": "ff77e2ba5872283638e581d20e986f7c524bc6bacff32a6917bb257bad3321cb",
+    "supabase/tests/test_correction_producer_harness.py": "6b498b624c3ca21cdf54014e74e6d817791c17bf8ec0f2e14596cc071eeb3678",
+    "tests/controlled-drugs/engine/candidate/README.md": "744e7a8470cad5fd90328e25d3779215ac521c38e311a8366ac01584e66573d0",
     "tests/controlled-drugs/engine/candidate/correction-history-restore.sql": "52d085d4c26a0e9468d1cc0054e53efc042ae332267b0d6d3a8a0f4ccad63008",
     "tests/controlled-drugs/engine/candidate/correction_history_restore.py": "855e0aae2c6b3f2a7089c6582325a49064cae6fe564e49953426210c30a8f2cc",
-    "tests/controlled-drugs/engine/candidate/opening-correction-capacity.sql": "9dd87330b07a14f00c737698b9b24f5732a2ff84ac03e7f95041d03362217559",
-    "tests/controlled-drugs/engine/candidate/probe-correction-capacity.py": "4ca3577a8a919fe1f4960488614831aba03f8818464279966e97b4c686c68708",
+    "tests/controlled-drugs/engine/candidate/correction_producer.py": "0cb3b4605c4f5c8b6fcc014ceedcde913b648a0fbc358893507427723d92c60c",
+    "tests/controlled-drugs/engine/candidate/opening-correction-capacity.sql": "890d2b2239d111b8df4e4d0c4b1105b435fbdbb2bea173f80e96e9ea3f520aea",
+    "tests/controlled-drugs/engine/candidate/probe-correction-capacity.py": "38f93557b30374bf775a7d6494f0b36d9d3a99ad99105df5f639f5bc415bac40",
     "tests/controlled-drugs/engine/candidate/probe_failure.py": "0dd7f3e7a79e7bc09bf62caaf81ef3ac0f0afccc75c69ddb3808fa7daf0743b4",
     "tests/controlled-drugs/engine/candidate/run-local.py": "84278e6e6148ff035096641439906b6bb2fe7ef08947b2d4dff23f426b49947b"
   },
-  "reviewed_file_hashes_scope": "Ten selected implementation, test and integration files, not the complete private executable-input source maps",
+  "reviewed_file_hashes_scope": "Thirteen selected implementation, test and integration files, not the complete private executable-input source maps",
   "scope": "Synthetic populated selected-schema restore of a genuine 1000-correction frozen unattached opening",
   "selected_dump_contract": {
     "alter_default_privileges_statements_omitted": true,
@@ -788,31 +866,59 @@
   },
   "source_base": "53bd045786f6cd88d8b6a56d217afdd3e6121e42",
   "supabase_cli": "2.118.0",
+  "superseded_local_proof_records": [
+    {
+      "bound_source_hashes_matched": 416,
+      "full_private_source_set_digest": "c77c7194e25515780607d1efe3d697cba7180916659691dfd3e2ce15d0b64e5d",
+      "included_in_current_source_acceptance": false,
+      "private_result_sha256": "8a2968b153329dbdaa28dd301fe3cd3e82f52674675c7d41b4326cf854463c9d",
+      "scope": "targeted_monitored_rehearsal",
+      "superseded_by": "Fresh producer-bound proofs; original private evidence retained"
+    },
+    {
+      "bound_source_hashes_matched": 417,
+      "full_private_source_set_digest": "2dba85310cd9c437c75df46e7a4150ffa5d477c8ee7d05426fdacd6972d74dcc",
+      "included_in_current_source_acceptance": false,
+      "independent_image_receipt_sha256": "4a582a4a5cd10b6d6013e882b3e9bf73e55c1740b133bcac3b1fa99e4094c97b",
+      "private_result_sha256": "e3f2e1a4d4a1083e1d04b1b357006cc385a99cf688dedcfffccf363f6515f3ae",
+      "scope": "ordinary_compatibility",
+      "superseded_by": "Fresh producer-bound proofs; original private evidence retained"
+    },
+    {
+      "bound_source_hashes_matched": 253,
+      "full_private_source_set_digest": "8290e00579d7c94bfe4c10b8e1bf136e5690d6f232c77e9e112f93468078c52f",
+      "included_in_current_source_acceptance": false,
+      "private_result_sha256": "3627457fc1632bc7e5d65fc6d39b6ae0d62860a7b20d95fb236cdd9201b91627",
+      "scope": "historical_compatibility",
+      "superseded_by": "Fresh producer-bound proofs; original private evidence retained"
+    }
+  ],
   "supported_history_limit_changed": false,
   "synthetic_only": true,
   "targeted_monitored_rehearsal": {
+    "actual_configured_postgres_reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
     "all_intervals_actual_image_pins_match_reviewed_reference_and_digest": true,
     "all_observer_intervals_clear": true,
     "all_sql_stages_succeeded": true,
-    "bound_source_hashes_matched": 416,
+    "bound_source_hashes_matched": 418,
     "cancel_grace_seconds": 10,
     "cancel_threshold_bytes": 3221225472,
-    "capacity_and_restore_proof_sha256": "b256b29692e08b2562ba4536af2fc8065ff843bbf08361385ca7484cca894e32",
+    "capacity_and_restore_proof_sha256": "d9eddc6835f8d5bc70d21db4fd37231512e9db2cebe828fb1162f53267d2ab08",
     "dump_threshold_bytes": 1610612736,
     "elapsed_is_production_benchmark": false,
     "emergency_stop_threshold_bytes": 3758096384,
-    "fixture_and_setup_elapsed_seconds": 593.592,
+    "fixture_and_setup_elapsed_seconds": 418.477,
     "full_ordinary_compatibility": false,
-    "full_private_source_set_digest": "c77c7194e25515780607d1efe3d697cba7180916659691dfd3e2ce15d0b64e5d",
-    "full_source_map_matches_fresh_ordinary": false,
+    "full_private_source_set_digest": "29ad62b1146a524890befa662b9799bda2fd4d01abc88d0798af73d59d628f52",
+    "full_source_map_matches_fresh_ordinary": true,
     "immutable_target_intervals": 6,
-    "independent_cleanup_receipt_sha256": "0e83e1da970c83d5e2fdc5599af19b0e814e880b04449832693546dee23a5324",
+    "independent_cleanup_receipt_sha256": "7a93bac1380abcc010648664fd33b176987fbe6950ab4d3a2fd5d3a6fca7a8e6",
     "independent_owned_container_and_volume_absence_verified": true,
-    "labeled_sql_stages": 50,
-    "max_observed_backend_rss_bytes": 124870656,
-    "max_sampled_container_memory_bytes": 268330598,
+    "labeled_sql_stages": 51,
+    "max_observed_backend_rss_bytes": 123211776,
+    "max_sampled_container_memory_bytes": 270742323,
     "memory_context_dump_requested": false,
-    "memory_receipt_sha256": "e88c8ab8a5d0057e1f95526253b9be334fb652f3efdae5a65c8a92e5814e3a7b",
+    "memory_receipt_sha256": "679add9b18c329fb4423c0f23754115a6217265c1e45e6e74a1d9e6870b25b4d",
     "monitor_scope": "active target stage application; intervening dumps/snapshots are not tagged or cancellable; container sampled while interval active",
     "no_live_observers": true,
     "observer_lifecycle": "persistent_immutable_target_activation_intervals",
@@ -828,25 +934,19 @@
       "reused_guarded_monitor": "a1e5ad9a62d688e126e55190ee4ef20287cd642eb4bf9cd6e18178694581608b",
       "targeted_driver": "563b1f68ef8028d2da45517a70e833ed3c1ed9be054fd98a35619963bed8fc18"
     },
-    "private_result_sha256": "8a2968b153329dbdaa28dd301fe3cd3e82f52674675c7d41b4326cf854463c9d",
+    "private_result_sha256": "fc0d87e3259429169aee90720c41e5740f82f5bb59823252937c9a18659c99ce",
     "production_capacity_approved": false,
-    "raw_sample_count": 149,
-    "restore_preservation_receipt_sha256": "ca605d4a16689754b1d44e8156fdbf43e9160b0e24b87de1b28242da62c1cba8",
+    "raw_sample_count": 105,
+    "restore_preservation_receipt_sha256": "c34d06247bd36b7be442a0215f9156886ecf05ff33689479af0cb7ac41c7c2af",
     "runtime_identity_copied_at_each_activation": true,
     "source_map_comparison_to_fresh_ordinary": {
-      "added_files": [
-        "tests/controlled-drugs/engine/candidate/probe_failure.py"
-      ],
-      "all_other_preexisting_source_hashes_identical": true,
-      "changed_existing_files": [
-        "tests/controlled-drugs/engine/candidate/run-local.py"
-      ],
-      "identical": false,
+      "bound_files": 418,
+      "identical": true,
       "private_observer_inputs_unchanged": true,
-      "scope_of_changes": "Parent failure diagnostics only; workload and restore guards unchanged"
+      "scope_of_comparison": "Exact complete private source_hashes dictionary equality; separate private observer files remain separately hashed"
     },
     "switch_drop_and_final_boundaries": 9,
-    "targeted_driver_result_sha256": "e4dfffae221e27c1dfbc59a417b630a27081aaa550db9f1684c2b6c242816a24",
+    "targeted_driver_result_sha256": "ae533b6948fe5cf850084eb48cbf142f1899fc010014829cb8722b0686f71824",
     "three_private_executable_hashes_matched": true
   },
   "trusted_reference_regenerated": false,

@@ -17,6 +17,9 @@ SOURCE = Path(__file__).resolve().parent
 _spec = importlib.util.spec_from_file_location('controlled_capacity_runtime', SOURCE / 'probe-capacity.py')
 capacity = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(capacity)
+_producer_spec = importlib.util.spec_from_file_location('controlled_correction_producer', SOURCE / 'correction_producer.py')
+producer = importlib.util.module_from_spec(_producer_spec)
+_producer_spec.loader.exec_module(producer)
 SCHEMAS = capacity.SCHEMAS
 literal = capacity.literal
 
@@ -195,7 +198,7 @@ def parse_checkpoint(output, target):
 def sections(source):
     contents = (source / 'opening-correction-capacity.sql').read_text()
     result = {}
-    for name in ('PREAMBLE', 'BOOTSTRAP', 'POSITIVE', 'OVERLIMIT'):
+    for name in ('PREAMBLE', 'BOOTSTRAP', 'PRODUCER', 'POSITIVE', 'OVERLIMIT'):
         start = '-- CORRECTION_CAPACITY_' + name + '_BEGIN --'
         end = '-- CORRECTION_CAPACITY_' + name + '_END --'
         assert contents.count(start) == contents.count(end) == 1, 'Exact correction fixture section required: ' + name
@@ -446,6 +449,7 @@ def finalize_acceptance(proof, workload_finished_before_deadline, cleanup_status
                 'checkpoint_before_replay_matches', 'after_configuration_rollback_matches'):
         assert audit.get(key) is True
     assert type(audit.get('complete_relation_fingerprints_retained')) is int and audit['complete_relation_fingerprints_retained'] > 0
+    producer.validate_producer_proof(proof.get('correction_producer'))
     _positive_contract(proof['genuine_capacity_positive'])
     final = proof['final_observation']
     assert final.get('kind') == 'controlled-opening-correction-capacity-observation-v1'
@@ -520,10 +524,13 @@ def main():
     workload_finished_before_deadline = False
     checkpoint_fingerprints = {}
     restore_proof = None
+    producer_batches = []
+    producer_contract = None
+    producer_contract_rolled_back = False
     receipt = {'kind': 'controlled-opening-correction-capacity-feasibility-v1', 'passed': False,
                'global_probe_budget_seconds': 900, 'maximum_canonical_writes_per_backend': 32,
                'elapsed_is_production_benchmark': False, 'checkpoints': checkpoints,
-               'admissions': admissions, 'samples': samples, 'full_goal_completion': 'unknown',
+               'admissions': admissions, 'samples': samples, 'producer_batches': producer_batches, 'full_goal_completion': 'unknown',
                'writer_reserve_seconds': 120, 'writer_deadline_is_global_minus_reserve': True}
     receipt_path = folder / 'engine-correction-capacity-v1-checkpoints.json'
     try:
@@ -542,6 +549,15 @@ def main():
         assert runtime.technical(runtime.database) == technical
         parts = fixture_parts(root, source)
         seed = parse_seed(run_stage(runtime, parts['bootstrap'], writer_deadline, 'bootstrap'))
+        producer_before = runtime.snapshot(runtime.database)
+        output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) + parts['producer'],
+                           writer_deadline, 'producer-contract')
+        producer_contract = producer.parse_contract_output(output)
+        producer_after = runtime.snapshot(runtime.database)
+        assert producer_after == producer_before, 'Producer contract must roll back every selected relation'
+        assert runtime.technical(runtime.database) == technical, 'Producer contract changed technical definitions'
+        producer_contract_rolled_back = True
+        receipt.update(producer_contract=producer_contract, producer_contract_rolled_back_exactly=True)
         current = 0
         previous_checkpoint = 0
         for target in (64, 128, 256, 512, 1000):
@@ -559,6 +575,8 @@ def main():
                 if batch_target == target:
                     query += 'select pg_temp.correction_capacity_checkpoint(' + str(target) + ');'
                 output = run_stage(runtime, query, writer_deadline, 'append-' + str(batch_target))
+                batch, output = producer.parse_batch_output(output, current, batch_target, batch_target == target)
+                producer_batches.append(batch)
                 if batch_target == target:
                     observed = parse_checkpoint(output, target)
                 else:
@@ -599,7 +617,9 @@ def main():
         batch_started = time.monotonic()
         output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) +
                            'select pg_temp.correction_capacity_append_to(1001);set constraints all immediate;commit;', writer_deadline, 'append-1001')
-        assert not _observations(output), 'Unexpected correction overflow writer observation'
+        batch, output = producer.parse_batch_output(output, 1000, 1001)
+        producer_batches.append(batch)
+        assert not output, 'Unexpected correction overflow writer observation'
         latest_sample = {'previous_target': 1000, 'target': 1001, 'elapsed_seconds': time.monotonic() - batch_started}
         samples.append(latest_sample)
         output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) + parts['overlimit'], deadline, 'overlimit')
@@ -612,6 +632,7 @@ def main():
         assert runtime.technical(runtime.database) == technical
         assert runtime.snapshot() == original
         proof.update(checkpoints=checkpoints, admissions=admissions, samples=samples,
+                     correction_producer=producer.build_producer_proof(producer_batches, producer_contract, producer_contract_rolled_back),
                      canonical_replay_audit=replay_audit,
                      full_goal_forecasts_are_diagnostic_only=True,
                      global_probe_budget_seconds=900, writer_reserve_seconds=120,
@@ -634,7 +655,8 @@ def main():
         with (folder / 'engine-correction-capacity-v1-preservation.json').open('x') as stream:
             json.dump({'original_source_and_clone': original, 'checkpoint_fingerprints': checkpoint_fingerprints,
                        'canonical1001_baseline': baseline['fingerprint'], 'canonical_replay_baselines': replay_baseline,
-                       'manifest_and_writers': technical}, stream, indent=2)
+                       'manifest_and_writers': technical, 'producer_contract_before': producer_before,
+                       'producer_contract_after': producer_after}, stream, indent=2)
             stream.write('\n')
         workload_finished_before_deadline = time.monotonic() < deadline
         assert workload_finished_before_deadline, 'Correction workload completed after global deadline'
