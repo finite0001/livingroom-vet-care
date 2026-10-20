@@ -1,0 +1,597 @@
+{
+  "actual_practice_rules": false,
+  "artifact": {
+    "artifact_byte_equality_verified": true,
+    "baseline_migration_count": 204,
+    "begins_with_transaction_and_exclusive_barrier": true,
+    "cli_migration_ledger_atomicity_proven": false,
+    "exact_204_version_ledger_checked_before_engine_ddl": true,
+    "literal_manifest_inserted_only_after_successful_checks": true,
+    "no_configuration_or_activation_seed": true,
+    "original_trusted189_sha256": "7c39d7d55b7aed8f11159555bbcd880c5910b1fa2891e495c28d2a1b6dbc5ac1",
+    "partial_engine_rejected_before_ddl": true,
+    "postinstall_live_metadata_compared_with_literal_reviewed_manifest": true,
+    "prior_snapshot_sql_sha256": "fe7344ba56108a8844e6bdcb7e7375c5cb4223b3c9eecc9b96ccfc648c3f24cd",
+    "reviewed_expected_pin_sha256": "747813bb6dc4fa39213eb58eeb6515b0569ce0aac3eb171276e609e29f40c72d",
+    "reviewed_raw_assembly_sql_files": 14,
+    "runtime_expected_adoption_or_resealing": false,
+    "sha256": "2c0fad2febe1842dbfbe7e8c5bb61a67ea9fca4f35abcf90b0f347ae522f7a6b"
+  },
+  "canonical_migration": false,
+  "ci_contract": {
+    "CI_workflow_hash_is_separately_reviewed_not_in_runtime_source_map": true,
+    "all_five_jobs_required": true,
+    "exact_head_result": "pending",
+    "offline_frozen_artifact_check_required": true,
+    "ordinary_and_historical_commands_use_release_assembly": true
+  },
+  "cli_migration_ledger_boundary": {
+    "artifact_has_embedded_transaction_boundaries": true,
+    "canonical_promotion_requires": [
+      "A CLI-owned migration body without embedded transaction control",
+      "Actual CLI migration-ledger insertion failure testing",
+      "Separate 204 preinstallation and 205 postinstallation verification lanes"
+    ],
+    "cli_2_118_source": "https://github.com/supabase/cli/blob/v2.118.0/apps/cli/src/command-internal/migration-apply.ts#L440-L469",
+    "cli_migration_ledger_atomicity_proven": false,
+    "existing_204_ledger_preserved_in_current_psql_rehearsal": true,
+    "new_205_ledger_insert_failure_tested": false,
+    "source_interpretation": "For authored transaction boundaries, the CLI executes the file statements sequentially and records migration history afterward; this psql artifact rehearsal does not prove that later ledger insertion is atomic with the authored COMMIT"
+  },
+  "clinical_or_register_activation": false,
+  "date": "2026-10-19",
+  "expected_catalog_coverage": {
+    "canonical_writer_definitions": 10,
+    "column_acl_guard": {
+      "PUBLIC_column_grants_denied": true,
+      "any_non_owner_column_ACL_denied": true,
+      "checked_before_install_commit_and_independently_after_install": true,
+      "effective_anon_authenticated_service_role_column_privileges_denied": true,
+      "included_in_existing_ongoing_manifest": false,
+      "lifetime_column_ACL_drift_seal_proven": false
+    },
+    "engine_helper_functions": 51,
+    "engine_relation_families": 21,
+    "function_metadata": [
+      "definition_sha256",
+      "owner",
+      "ACL",
+      "configuration",
+      "security_definer"
+    ],
+    "functions": 171,
+    "outside_manifest_scope": [
+      "schema privileges",
+      "role definitions and memberships",
+      "default privileges",
+      "extension definitions",
+      "unlisted canonical dependency relations",
+      "column ACLs"
+    ],
+    "owned_entrypoints": 4,
+    "relation_metadata": [
+      "owner",
+      "ACL",
+      "RLS",
+      "forced_RLS",
+      "columns",
+      "policies",
+      "constraints",
+      "triggers",
+      "indexes"
+    ],
+    "relations": 51,
+    "whole_database_catalog_covered": false
+  },
+  "focused_install_rehearsal": {
+    "atomic_failure_rehearsal": {
+      "baseline_relation_count": 435,
+      "baseline_sha256": "0705efe9a02ffae114c6e2f69cda3802d7eeb4c1616b0f518d4b914331e59a75",
+      "clinical_or_register_activation": false,
+      "empty_engine_catalog_after_every_failure": true,
+      "failure_cases": [
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "helper_definition",
+          "message": "Controlled upgrade prior definitions or grants drifted; review required",
+          "sqlstate": "23514",
+          "stage": "preflight"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "private_helper_grant",
+          "message": "Controlled upgrade prior definitions or grants drifted; review required",
+          "sqlstate": "23514",
+          "stage": "preflight"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "private_relation_rls",
+          "message": "Controlled upgrade prior definitions or grants drifted; review required",
+          "sqlstate": "23514",
+          "stage": "preflight"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "immutable_trigger",
+          "message": "Controlled upgrade prior definitions or grants drifted; review required",
+          "sqlstate": "23514",
+          "stage": "preflight"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "partial_engine",
+          "message": "Controlled release partial engine exists",
+          "sqlstate": "23514",
+          "stage": "preflight"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "migration_ledger",
+          "message": "Controlled release migration ledger mismatch",
+          "sqlstate": "23514",
+          "stage": "preflight"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "after_schema",
+          "message": "Synthetic controlled release injected failure",
+          "sqlstate": "P0001",
+          "stage": "after_schema"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "after_hooks",
+          "message": "Synthetic controlled release injected failure",
+          "sqlstate": "P0001",
+          "stage": "after_hooks"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "before_commit",
+          "message": "Synthetic controlled release injected failure",
+          "sqlstate": "P0001",
+          "stage": "before_commit"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "post_helper_definition",
+          "message": "Controlled release installed metadata differs from reviewed artifact",
+          "sqlstate": "23514",
+          "stage": "before_postcheck"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "post_helper_grant",
+          "message": "Controlled release installed metadata differs from reviewed artifact",
+          "sqlstate": "23514",
+          "stage": "before_postcheck"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "post_relation_rls",
+          "message": "Controlled release installed metadata differs from reviewed artifact",
+          "sqlstate": "23514",
+          "stage": "before_postcheck"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "post_immutable_trigger",
+          "message": "Controlled release installed metadata differs from reviewed artifact",
+          "sqlstate": "23514",
+          "stage": "before_postcheck"
+        },
+        {
+          "all_relations_prior_writers_ledger_and_engine_catalog_rolled_back": true,
+          "armed_before_failure": true,
+          "case": "post_column_grant",
+          "message": "Controlled release private access or RLS changed",
+          "sqlstate": "23514",
+          "stage": "before_postcheck"
+        }
+      ],
+      "failure_count": 14,
+      "fresh_backend_per_callback_required": true,
+      "hosted_writes": 0,
+      "kind": "controlled-release-atomic-rehearsal-v1",
+      "passed": true,
+      "selected_schemas": [
+        "public",
+        "auth",
+        "storage",
+        "extensions"
+      ]
+    },
+    "bound_source_hashes_matched": 422,
+    "executed_runner_sha256": "2fd2fa5b522e013a5d21149dd6d3678ae91822eb26a27efdc0519db6c3d25506",
+    "full_ordinary_compatibility": false,
+    "full_private_source_set_digest": "9e0f458ae1bd3ced67eacfbd3cf9c33a1f06dc6b700a849ac4f16327159bee66",
+    "independent_cleanup_receipt_sha256": "3df4122ddca374463aa248c3a90237d75ffc75bdd744faf8d0fe9cece128e4e8",
+    "independent_exact_label_cleanup_verified": true,
+    "other_candidate_probes_executed": false,
+    "owned_containers_and_volumes_removed": true,
+    "passed": true,
+    "private_baseline_receipt_sha256": "a2d30c13eb80d8b9021b8beda1e0aaeabde3dfc7b8a9770ae3aa16ceead31371",
+    "private_driver_and_bound_sources_unchanged": true,
+    "private_driver_receipt_sha256": "ba46429d71fb399762585014b482a1a3572dfb32c32803e8d1018a07f4a713a5",
+    "private_driver_sha256": "9882cfb1d9b2f43c89963b4c2e9715d6dd5657b720621e96af527176b4bf4a81",
+    "private_result_sha256": "48a5fc08b29c57d922fe98973de88f38f9096eeac9d3b62c0d7e3591872e2396",
+    "successful_install_verification": {
+      "all_ten_hooks_pinned": true,
+      "canonical_writers": 10,
+      "clinical_or_register_activation": false,
+      "hosted_writes": 0,
+      "kind": "controlled-release-installed-verification-v1",
+      "literal_manifest_matches": true,
+      "live_manifest_matches": true,
+      "new_engine_relation_count": 21,
+      "original_relation_count": 435,
+      "original_source_relations_and_ledger_preserved": true,
+      "passed": true,
+      "raw_rpcs_and_tables_private": true,
+      "reviewed_manifest_sha256": "5f9a62c96c0c97af3d2b3db617a7a94b63a3130ab843edf727622dc786d0b301",
+      "zero_configuration_events_and_activation": true
+    }
+  },
+  "full_private_source_maps_retained": "The complete 422-source focused and ordinary maps are exactly equal. The 258-source historical map shares 257 equal hashes with them. Maps remain private and are bound by the declared full_private_source_set_digest and result SHA-256 values; selected reviewed_file_hashes are a separate scope.",
+  "full_private_source_set_digest_algorithm": "SHA-256 of UTF-8 json.dumps(full_private_source_hash_map, sort_keys=True, separators=(',', ':'))",
+  "historical_compatibility": {
+    "all_owned_resources_removed": true,
+    "all_shared_hashes_match": true,
+    "bound_source_hashes_matched": 258,
+    "frozen_release_artifact": {
+      "artifact_sha256": "2c0fad2febe1842dbfbe7e8c5bb61a67ea9fca4f35abcf90b0f347ae522f7a6b",
+      "clinical_or_register_activation": false,
+      "hosted_installation": false,
+      "installed_after_canonical_suffix": true,
+      "pin_sha256": "747813bb6dc4fa39213eb58eeb6515b0569ce0aac3eb171276e609e29f40c72d"
+    },
+    "full_private_source_set_digest": "354bdfd0dbac78029c85d207ecd6fb10cbed484827f1c9bb911aac88b7b70d52",
+    "generic_focused_refusals": 6,
+    "generic_opening_cases": 2,
+    "generic_sql_checks": 29,
+    "independent_cleanup_receipt_sha256": "d838fadc01221b9e278cdcf4406ba0372ff5be9ecfd116dc1aa992f04e55da19",
+    "independent_exact_label_cleanup_verified": true,
+    "installed_after_canonical_204_suffix_in_both_eras": true,
+    "long_1000_correction_restore_executed_in_historical_replays": false,
+    "native_cases": 7,
+    "native_sql_checks": 83,
+    "passed": true,
+    "private_result_sha256": "62bbc29b54336083bba9df9cbb58b942280f9e780adbc8ee831970093eff9b2c",
+    "replays": [
+      {
+        "containers_volumes_workdir_removed": true,
+        "era": 187,
+        "final_relation_count": 456,
+        "generic_cases": [
+          {
+            "all_refusal_relations_and_manifests_rolled_back": true,
+            "available_quantity": "2.500",
+            "case_name": "187_generic_available_opening",
+            "only_available_cells": true,
+            "outcome": "accepted_opening_validation",
+            "outer_transaction_rolled_back": true,
+            "provenance_backfilled": false,
+            "sql_checks": 14
+          }
+        ],
+        "generic_populated_restore": {
+          "canonical_source_rows_unchanged": true,
+          "fresh_validation_caller_timezones": [
+            "UTC",
+            "America/Denver",
+            "Asia/Kathmandu"
+          ],
+          "fresh_validation_without_caller_auth_context": true,
+          "historical_sessions_unchanged": true,
+          "initial_source_clone_exact": true,
+          "marked_populated_and_restored_databases_removed": true,
+          "original_runtime_all_relations_unchanged": true,
+          "persisted_active_controlled_states": 0,
+          "persisted_controlled_events": 0,
+          "persisted_frozen_controlled_states": 1,
+          "persisted_valid_unattached_openings": 1,
+          "populated_opening_restore_exact": true,
+          "selected_relation_count": 456,
+          "selected_schemas": [
+            "public",
+            "auth",
+            "storage",
+            "extensions"
+          ],
+          "session_retirement_validation_rolled_back_exactly": true,
+          "synthetic_opening_sessions_added_only_in_clone": 1,
+          "technical_manifest_and_ten_writer_definitions_unchanged": true
+        },
+        "native_cases": [
+          {
+            "case_name": "187_prepared_native",
+            "outcome": "refused",
+            "sql_checks": 11,
+            "sqlstate": "23514"
+          }
+        ],
+        "no_retrospective_provenance": true,
+        "original_columns_rows_unchanged": true,
+        "original_relation_count": 63,
+        "original_rows": 50,
+        "post_install_state_unchanged_after_each_case": true,
+        "postgres_content_pin": {
+          "platform": "linux/arm64",
+          "reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
+          "repository_digest": "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+          "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+        },
+        "ten_canonical_writers_unchanged": true
+      },
+      {
+        "containers_volumes_workdir_removed": true,
+        "era": 188,
+        "final_relation_count": 456,
+        "generic_cases": [
+          {
+            "all_refusal_relations_and_manifests_rolled_back": true,
+            "available_quantity": "2.500",
+            "case_name": "188_generic_available_opening",
+            "only_available_cells": true,
+            "outcome": "accepted_opening_validation",
+            "outer_transaction_rolled_back": true,
+            "provenance_backfilled": false,
+            "sql_checks": 15
+          }
+        ],
+        "generic_populated_restore": {
+          "canonical_source_rows_unchanged": true,
+          "fresh_validation_caller_timezones": [
+            "UTC",
+            "America/Denver",
+            "Asia/Kathmandu"
+          ],
+          "fresh_validation_without_caller_auth_context": true,
+          "historical_sessions_unchanged": true,
+          "initial_source_clone_exact": true,
+          "marked_populated_and_restored_databases_removed": true,
+          "original_runtime_all_relations_unchanged": true,
+          "persisted_active_controlled_states": 0,
+          "persisted_controlled_events": 0,
+          "persisted_frozen_controlled_states": 1,
+          "persisted_valid_unattached_openings": 1,
+          "populated_opening_restore_exact": true,
+          "selected_relation_count": 456,
+          "selected_schemas": [
+            "public",
+            "auth",
+            "storage",
+            "extensions"
+          ],
+          "session_retirement_validation_rolled_back_exactly": true,
+          "synthetic_opening_sessions_added_only_in_clone": 1,
+          "technical_manifest_and_ten_writer_definitions_unchanged": true
+        },
+        "native_cases": [
+          {
+            "case_name": "188_clinical_annotation",
+            "outcome": "accepted_projection",
+            "sql_checks": 12,
+            "sqlstate": null
+          },
+          {
+            "case_name": "188_operational_annotation",
+            "outcome": "accepted_projection",
+            "sql_checks": 12,
+            "sqlstate": null
+          },
+          {
+            "case_name": "188_pickup",
+            "outcome": "refused",
+            "sql_checks": 12,
+            "sqlstate": "23514"
+          },
+          {
+            "case_name": "188_pickup_amendment",
+            "outcome": "refused",
+            "sql_checks": 12,
+            "sqlstate": "23514"
+          },
+          {
+            "case_name": "188_prepared_native",
+            "outcome": "accepted_projection",
+            "sql_checks": 12,
+            "sqlstate": null
+          },
+          {
+            "case_name": "188_unresolved_discrepancy",
+            "outcome": "refused",
+            "sql_checks": 12,
+            "sqlstate": "23514"
+          }
+        ],
+        "no_retrospective_provenance": true,
+        "original_columns_rows_unchanged": true,
+        "original_relation_count": 66,
+        "original_rows": 122,
+        "post_install_state_unchanged_after_each_case": true,
+        "postgres_content_pin": {
+          "platform": "linux/arm64",
+          "reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
+          "repository_digest": "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+          "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+        },
+        "ten_canonical_writers_unchanged": true
+      }
+    ],
+    "shared_source_paths_with_focused_rehearsal": 257
+  },
+  "hosted_installation": false,
+  "hosted_writes": 0,
+  "independent_expected_pin_provenance": {
+    "all_204_migration_sources_and_14_assembly_sources_matched_prior_reviewed_archive": true,
+    "all_thirteen_prior_reviewed_file_hashes_matched": true,
+    "independent_targeted_preservation_receipt_sha256": "5c1a3cbdb570508e5c6fb44b638cce0e1f76ae7228e04a420888def16e2d0e40",
+    "independent_targeted_result_sha256": "fc0d87e3259429169aee90720c41e5740f82f5bb59823252937c9a18659c99ce",
+    "new_runtime_capture_used_as_expected": false,
+    "ordinary_and_targeted_manifest_values_exactly_equal": true,
+    "ordinary_and_targeted_ten_writer_hashes_exactly_equal": true,
+    "ordinary_preservation_receipt_sha256": "ec84543886c0d9b5944bbfa4bd1834ad61203ace1b4b4fc139d7dd99b57a8cf1",
+    "ordinary_result_sha256": "5c104c8cb3a9f253ba419b83e8f213f4f898c9f18ed7e1068e32d7f74c7c42bc",
+    "original_trusted189_reference_regenerated": false,
+    "reviewed_prior_release": "PR285"
+  },
+  "kind": "controlled-stock-private-release-assembly-evidence-v1",
+  "limitations": [
+    "This is not a usable or activated controlled register",
+    "No production canonical engine migration or hosted installation is performed",
+    "C1b production release acceptance and C2 complete review, witness, transfer, count and report workflows remain unfinished",
+    "C3 requires actual practice configuration, counts, SOPs, current authoritative review and Susan approval",
+    "Existing three scalar helper implementation overlays remain intentional; all ten canonical writer bodies remain unchanged",
+    "Selected-schema logical restore does not prove cluster-role, ownership, default-privilege, Storage binary or post-backup physical reconciliation acceptance",
+    "Existing 204-migration ledger rollback is proven only for the authored psql transaction; future canonical CLI ledger insertion atomicity remains unproven"
+  ],
+  "ordinary_compatibility": {
+    "all_257_shared_historical_source_hashes_match": true,
+    "atomic_release_refusals": 14,
+    "auth_api_count_includes_SQL_setup_state_and_cleanup_not_HTTP_request_count": true,
+    "bound_source_hashes_matched": 422,
+    "correction_capacity_and_restore": {
+      "actual_final_canonical_corrections": 1001,
+      "canonical_corrections_at_opening": 1000,
+      "canonical_writer_full_history_verification_unchanged": true,
+      "capacity_positive_assertions": 7,
+      "capacity_preservation_receipt_sha256": "528d5ea3eb58c0738b4ed0f8ec9c8f0e77546028904bfe38f14b812b7db2c90d",
+      "capacity_proof_sha256": "56ae2732869ee1c0a5a8bdd441d9d683fcde47ceafbc7464786f447a7fe67e29",
+      "capacity_refusals": 4,
+      "capacity_unique_sql_checks": 11,
+      "elapsed_is_production_benchmark": false,
+      "endpoint_preview_count_scope": "Committed batches only; excludes contract and other validation previews",
+      "fixture_and_setup_elapsed_seconds": 374.085,
+      "global_probe_budget_seconds": 900,
+      "marked_correction_database_removed": true,
+      "maximum_canonical_writes_per_backend": 32,
+      "memory_observer_used_in_this_full_ordinary_probe": false,
+      "passed": true,
+      "per_annotation_external_preview": false,
+      "populated_restore_validations": 7,
+      "producer_canonical_context_refusal_sqlstate": "PT409",
+      "producer_canonical_context_refusals": 2,
+      "producer_canonical_writes": 1001,
+      "producer_committed_batches": 33,
+      "producer_contract_all_relations_and_manifest_rolled_back_exactly": true,
+      "producer_endpoint_previews": 66,
+      "producer_receipt_mutation_refusals": 8,
+      "producer_rolled_back_contract_writes": 3,
+      "restore_preservation_receipt_sha256": "28b23c4650757c46e2cb1f66e15abc8e9ead52d92265541d6055f6265cac87fc",
+      "selected_relation_count": 456,
+      "source_runtime_all_relations_unchanged": true,
+      "source_runtime_unchanged_after_cleanup": true,
+      "workload_finished_before_deadline": true,
+      "writer_reserve_seconds": 120
+    },
+    "existing_opening_capacity": {
+      "combined_maximum_dispenses_and_allocations_tested": false,
+      "scenario_count": 2,
+      "unique_positive_assertions": 12,
+      "unique_refusals": 11,
+      "unique_sql_checks": 23
+    },
+    "frozen_artifact_sha256": "2c0fad2febe1842dbfbe7e8c5bb61a67ea9fca4f35abcf90b0f347ae522f7a6b",
+    "full_private_source_set_digest": "9e0f458ae1bd3ced67eacfbd3cf9c33a1f06dc6b700a849ac4f16327159bee66",
+    "genuine_auth_api": {
+      "api_checks": 133,
+      "genuine_auth_postgrest": true,
+      "non_stock_baselines_unchanged": true,
+      "observed_lock_queues": 8,
+      "owned_actors_and_sessions_retired": true
+    },
+    "independent_cleanup_receipt_sha256": "5da81bbee40e9b4e0b7552d5f65a9e64b2193713988a0e520139645e829ccd12",
+    "independent_exact_label_cleanup_verified": true,
+    "ordinary_sql_regression": {
+      "assertions": 7338,
+      "files": 166
+    },
+    "owned_containers_and_volumes_removed": true,
+    "passed": true,
+    "private_release_baseline_receipt_sha256": "e7d50cf1c61086488629433d066abbbf151b9b4ea10ef5f2e70d5e1768762d75",
+    "private_result_sha256": "929143abb54494d56474a5b85b63977b2f332e4c3098de180cd7b38a5853be98",
+    "probes_passed": [
+      "smoke",
+      "managed_native",
+      "opening_boundary",
+      "opening_capacity",
+      "opening_correction_capacity_with_populated_restore",
+      "genuine_auth_api"
+    ],
+    "reviewed_expected_pin_sha256": "747813bb6dc4fa39213eb58eeb6515b0569ce0aac3eb171276e609e29f40c72d",
+    "source_map_exactly_matches_focused_rehearsal": true,
+    "successful_install_verification": {
+      "all_ten_hooks_pinned": true,
+      "canonical_writers": 10,
+      "clinical_or_register_activation": false,
+      "hosted_writes": 0,
+      "kind": "controlled-release-installed-verification-v1",
+      "literal_manifest_matches": true,
+      "live_manifest_matches": true,
+      "new_engine_relation_count": 21,
+      "original_relation_count": 435,
+      "original_source_relations_and_ledger_preserved": true,
+      "passed": true,
+      "raw_rpcs_and_tables_private": true,
+      "reviewed_manifest_sha256": "5f9a62c96c0c97af3d2b3db617a7a94b63a3130ab843edf727622dc786d0b301",
+      "zero_configuration_events_and_activation": true
+    },
+    "trusted_prior_drift_refusals": 4,
+    "trusted_prior_exact_atomic_rollback": true
+  },
+  "provider_requests": 0,
+  "readiness": {
+    "C2_workflows": "incomplete",
+    "C3_commissioning": "pending Susan approval and actual practice acceptance",
+    "canonical_promotion": "pending separate production hardening and rollout",
+    "exact_head_ci": "pending all five jobs",
+    "focused_install_rehearsal": "passed",
+    "fresh_full_ordinary_compatibility": "passed",
+    "fresh_historical_compatibility": "passed",
+    "merge": "pending specific approval",
+    "pull_request": "pending",
+    "release": "pending"
+  },
+  "repository_checks": {
+    "javascript_or_package_inputs_changed": false,
+    "new_assembly_harness_methods": 14,
+    "new_release_rehearsal_harness_methods": 28,
+    "python_harness_methods_passed": 224
+  },
+  "reviewed_file_hashes": {
+    ".github/workflows/ci.yml": "3620cc43223c08acec3a5ffdea027f17f8dbc5252be29fc539d11c687e319b54",
+    "supabase/tests/test_controlled_release_assembly_harness.py": "f4e8f2da3a334fed5b77d12af428e07bfca540655c65bac1bbf63da1d111dbc4",
+    "supabase/tests/test_controlled_release_rehearsal_harness.py": "8847b2527162d4a6e5e36f5aef33622d64b4961a9f8e0bd47440c5c64aa0ccaf",
+    "tests/controlled-drugs/engine/candidate/release-expected-204.json": "747813bb6dc4fa39213eb58eeb6515b0569ce0aac3eb171276e609e29f40c72d",
+    "tests/controlled-drugs/engine/candidate/release_assembly.py": "c173245856e04dafffc0e51785fba56c43ee0cc1a9b1f15010e910bdcfd29517",
+    "tests/controlled-drugs/engine/candidate/release_rehearsal.py": "0978632757863e275690ec61499d4b3564eb967c98dbc4e5b5e2e4c96562fcb4",
+    "tests/controlled-drugs/engine/candidate/run-local.py": "e271a515336244bbc563d134ff045df95e4fa92a4adec7cdace590cae9fbe9a4",
+    "tests/controlled-drugs/engine/candidate/run-native-history.py": "45b728c2c7012db7e765b66dd417cb3d3ee3c76eba2980e1a076028443bc3b0d",
+    "tests/controlled-drugs/engine/release/controlled-stock-private.sql": "2c0fad2febe1842dbfbe7e8c5bb61a67ea9fca4f35abcf90b0f347ae522f7a6b"
+  },
+  "reviewed_file_hashes_scope": "Selected implementation, test and CI files; distinct from complete private executable-input maps",
+  "scope": "Offline deterministic private C1b assembly and owned local installation rehearsal; no canonical promotion or hosted installation",
+  "source_base": "e4ecccc5e44b7d7a301d89ba4157aa5e86a75f36",
+  "superseded_focused_rehearsal": {
+    "included_in_current_source_acceptance": false,
+    "original_nine_case_proof": "superseded, not failed",
+    "private_evidence_retained": true,
+    "reason": "Expanded to fourteen actual refusals, moved after-hooks checkpoint after seal and added independent postcheck and column-ACL guard"
+  },
+  "synthetic_only": true
+}

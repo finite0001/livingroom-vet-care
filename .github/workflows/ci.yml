@@ -320,10 +320,12 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Verify frozen private controlled-stock installation artifact
+        run: python3 -B tests/controlled-drugs/engine/candidate/release_assembly.py --check
       - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
-        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression --include-correction-capacity --include-correction-restore
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --use-release-assembly --include-sql-regression --include-correction-capacity --include-correction-restore
       - name: Verify genuine 187/188 history, available-only openings and populated opening restore
-        run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local --use-release-assembly
 
   diagnostic-renderer:
     runs-on: ubuntu-24.04

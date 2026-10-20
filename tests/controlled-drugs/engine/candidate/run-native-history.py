@@ -279,7 +279,8 @@ def rehearse(era, files, assembly, folder):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-synthetic-local', action='store_true', required=True)
-    parser.parse_args()
+    parser.add_argument('--use-release-assembly', action='store_true', help='Install the independently pinned artifact after the canonical suffix')
+    args = parser.parse_args()
     os.umask(0o077)
     files = sorted((root / 'supabase/migrations').glob('*.sql'))
     assert len(files) == 204, 'Review the exact native upgrade baseline before rebasing'
@@ -292,12 +293,20 @@ def main():
         source / 'trusted-prior-189.json', root / 'supabase/tests/native_fulfillment.test.sql',
         root / 'tests/controlled-drugs/owned_scheduler.py', source.parent / 'source-reader.sql',
         source.parent / 'source-effects.sql']
+    if args.use_release_assembly:
+        inputs.extend([source / 'release-expected-204.json', source.parent / 'release/controlled-stock-private.sql'])
     hashes = {str(p.relative_to(root)): digest(p) for p in inputs}
     folder = Path(tempfile.mkdtemp(prefix='lrv-native-history-evidence-'))
     print('Protected evidence: ' + str(folder), flush=True)
     cli = subprocess.run(['supabase', '--version'], capture_output=True, text=True, timeout=30, check=True)
     assert cli.stdout.strip() == '2.118.0', 'Use the reviewed CLI bootstrap; never normalize trusted ACL drift'
     assembly = build_install(source, files)
+    release_bundle = None
+    if args.use_release_assembly:
+        from release_assembly import build_release
+        release_bundle = build_release(source, files)
+        assert release_bundle['install'].encode() == (source.parent / 'release/controlled-stock-private.sql').read_bytes(), 'Frozen release artifact differs from reviewed assembly'
+        assembly['install'] = release_bundle['install']
     outcomes = [rehearse(era, files, assembly, folder) for era in (187, 188)]
     assert sum(len(x['observations']) for x in outcomes) == 7
     assert sum(len(x['generic_observations']) for x in outcomes) == 2
@@ -308,6 +317,11 @@ def main():
              'replays': outcomes, 'observed_cases': sum(len(x['observations']) for x in outcomes),
              'generic_opening_cases': sum(len(x['generic_observations']) for x in outcomes),
              'all_owned_resources_removed': True}
+    if release_bundle is not None:
+        proof['frozen_release_artifact'] = {'artifact_sha256': release_bundle['artifact_sha256'],
+                                          'pin_sha256': release_bundle['pin_sha256'],
+                                          'installed_after_canonical_suffix': True,
+                                          'hosted_installation': False, 'clinical_or_register_activation': False}
     (folder / 'result.json').write_text(json.dumps(proof, indent=2))
     print('PASS: genuine 187/188 history upgraded unchanged; seven native outcomes and two generic openings observed; populated opening restores and cleanup verified.', flush=True)
     print('Sanitized result: ' + str(folder / 'result.json'), flush=True)
