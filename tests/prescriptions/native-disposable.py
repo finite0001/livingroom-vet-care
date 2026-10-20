@@ -164,9 +164,9 @@ enabled = false
     stock_api_path=root/'tests/inventory/stock-writer-local.ts'
     stock_api_hash=hashlib.sha256(stock_api_path.read_bytes()).hexdigest()
     stock_api=json.loads(command(['node','--experimental-strip-types',str(stock_api_path)],env={**os.environ,'STOCK_TEST_PROJECT':str(project),'STOCK_RUN_SYNTHETIC_LOCAL':'true'},cwd=root,timeout=180))
-    assert stock_api['api_checks']==40 and stock_api['genuine_auth_postgrest']and stock_api['actual_live_session']and stock_api['anesthesia_one_debit_one_source']and stock_api['owned_actor_and_sessions_retired']and stock_api['non_stock_baselines_unchanged']and stock_api['provider_requests']==0
+    assert stock_api['api_checks']==41 and stock_api['genuine_auth_postgrest']and stock_api['actual_live_session']and stock_api['anesthesia_one_debit_one_source']and stock_api['owned_actor_and_sessions_retired']and stock_api['non_stock_baselines_unchanged']and stock_api['provider_requests']==0
     assert hashlib.sha256(stock_api_path.read_bytes()).hexdigest()==stock_api_hash
-    print('Shared stock boundary:40 genuine Auth/API checks; exact fractions and anesthesia single debit/source.',flush=True)
+    print('Shared stock boundary:41 genuine Auth/API checks; exact fractions and anesthesia single debit/source.',flush=True)
     stock_locks_path=root/'supabase/tests/stock_writer_concurrency.py'
     stock_locks_hash=hashlib.sha256(stock_locks_path.read_bytes()).hexdigest()
     stock_locks=json.loads(command(['python3','-B',str(stock_locks_path),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120))

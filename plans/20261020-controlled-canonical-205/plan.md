@@ -33,3 +33,11 @@ independent design/code/evidence audit. All agents preserve other edits.
 
 No blanket count increase, expected metadata recapture, old history repair,
 clinical/provider activation, hosted migration or whole-C1b/C2/C3 completion claim.
+
+
+CI follow-up: the first head exposed stale counted-receipt totals and an attachment
+fixture that dropped a copied public schema, exhausted shared lock memory, then
+would have replayed canonical205 without its real ledger. Keep exact receiver
+counts aligned with counted guards. Replace both attachment fixture rebuilds with
+independently admitted full schema/data/ledger clones, preserving source state and
+marked cleanup. Validate them separately from the retained three engine proofs.

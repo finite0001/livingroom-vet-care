@@ -1,7 +1,7 @@
 {
   "kind": "controlled-canonical-205-launch-evidence-v1",
   "date": "2026-10-20",
-  "status": "all_three_owned_local_gates_passed_exact_head_ci_and_pr_pending",
+  "status": "three_retained_local_gates_and_separate_attachment_clone_smoke_passed_followup_ci_pending",
   "scope": {
     "repository_canonical_migrations": 205,
     "canonical_filename": "20261020151157_controlled_stock_private_engine.sql",
@@ -252,9 +252,9 @@
     "independent_volume_count": 0
   },
   "repository_checks": {
-    "python_ci_pattern_harness_tests": 318,
-    "typescript_migration_guard_tests": 7,
-    "unit_tests": 1692,
+    "python_ci_pattern_harness_tests": 328,
+    "typescript_migration_guard_tests": 10,
+    "unit_tests": 1695,
     "frozen_artifact_and_body_checks_passed": true,
     "inventory_failure_tests_cover_missing_extra_wrong_name_wrong_version": true,
     "original_201_call_note_seed_preserved": true,
@@ -301,7 +301,114 @@
     "supabase/tests/test_controlled_canonical_prefix_harness.py": "1f3a761d6cbb8f5b273e66265f7073326d833c06fb74a1173d3c6af3566bbbc0",
     "supabase/tests/test_controlled_canonical_post205_harness.py": "e7f3e49e56c2bad97eabbb5370d256f474c3ce9fa99c5f3a4db01f6ee5d72424",
     "supabase/tests/test_current_canonical_inventory_harness.py": "3fe7cd92932837dbf9fcc91628520273b8477b0ff8004c7795c3bd52339ebec4",
-    "tests/restore/current-migration-guards.test.ts": "825ed4eecb0d9c10cd8b0f70413b24a5a893d9ed0a429e9d0412d8fe9ad503c9"
+    "tests/restore/current-migration-guards.test.ts": "1f40a016b5099d47297ee88cb8b26c711683198306b33f0900858398efa4302e",
+    "supabase/tests/owned_attachment_clone.py": "44c1abe25b44e967a60bcd3f13e5454a530132b410455dd51028a007cc041ec5",
+    "supabase/tests/ezyvet_attachment_metadata_concurrency.py": "81b6dfb4a982c56f620d4bb1c030ef1b64b3c479bd6ccc2b2067777f75be2b2a",
+    "supabase/tests/ezyvet_attachment_originals_concurrency.py": "2ecc668a8f75c27976e20ec87907240e80b0b1ca5ead8c79e159b80edaa03a43",
+    "supabase/tests/test_owned_attachment_clone_harness.py": "8174b2f57d7e75acffdef5f7bb58e7e714bc33ff41d3597dee0039f6b5d9f158",
+    "tests/prescriptions/native-disposable.py": "f855e531946c5a44ca53e09479b8f075cec64865da7cbace6997711244e81d27",
+    "tests/scheduling/disposable.py": "6fc2270c740bbb01b1e3dac14a18f4e61f3ee91b11b76928192ff3cc5fd970f2"
   },
-  "raw_rows_catalogs_acl_claims_backend_identities_and_private_paths_published": false
+  "raw_rows_catalogs_acl_claims_backend_identities_and_private_paths_published": false,
+  "followup_after_first_ci": {
+    "first_ci_run": 39451696040,
+    "accepted": false,
+    "independent_failures": [
+      {
+        "job": "diagnostic-renderer",
+        "observed_failure": "Receipt api_checks assertion still expected42 after one additional counted migration-ledger guard."
+      },
+      {
+        "job": "database",
+        "observed_failure": "Attachment test's DROP-based schema rebuild failed with a shared-lock error."
+      }
+    ],
+    "receipt_contract_corrections": {
+      "operational_reconciliation_api_checks": 43,
+      "controlled_draft_api_checks": 29,
+      "shared_stock_writer_api_checks": 41,
+      "inventory_api_checks_unchanged": 38,
+      "additional_counted_ledger_guard_per_changed_producer": 1,
+      "counts_are_named_receipt_assertions_not_http_only_requests": true,
+      "strict_equality_retained": true,
+      "three_new_counter_contract_tests": true
+    },
+    "scope": "Three receipt-contract/test files and four attachment-helper/test files are outside the three retained local runtime source maps. Those maps remain unchanged and current.",
+    "retained_local_gate_source_maps_rehashed_unchanged": true,
+    "fresh_full_ordinary_historical_cli_rerun_after_this_outside_input_followup": false,
+    "new_ci_and_pr_review_pending": true,
+    "first_ci_head_prefix": "706830"
+  },
+  "separate_attachment_clone_smoke": {
+    "passed": true,
+    "result_sha256": "e3f08e6133b51e58ee3eeeac1c0638ac8ed25157cf4306ca6b75efe059686806",
+    "private_source_hash_count": 437,
+    "full_private_source_set_digest": "0ecc37683ba06112fef5abaf60d6f984529598180e6302d7da3ff57c23efedbc",
+    "initial_map_equals_result_and_current_files": true,
+    "retained_434_ordinary_inputs_are_unchanged_subset": true,
+    "additional_bound_inputs": [
+      "supabase/tests/owned_attachment_clone.py",
+      "supabase/tests/ezyvet_attachment_metadata_concurrency.py",
+      "supabase/tests/ezyvet_attachment_originals_concurrency.py"
+    ],
+    "private_runner_sha256": "d4423ec3d7ce171958e0cf8d9f1eec709de8079b066b8dfc16e6ff95f0f32f81",
+    "private_runner_saved_preboot_bytes_current_bytes_and_result_hash_equal": true,
+    "private_runner_equality_independently_checked_after_run_not_runtime_enforced": true,
+    "actual_script_check_counts": {
+      "attachment_metadata": 43,
+      "attachment_originals": 320
+    },
+    "admission_and_clone_checks": {
+      "independent_v2_literal_manifest_and_private_zero_state_before_copy": true,
+      "exact_canonical205_ledger_record_and_94_statements_verified": true,
+      "original_204_ledger_versions_and_names_verified": true,
+      "ten_actual_writer_definition_hashes_verified": true,
+      "fixture_actor_and_attachment_conflicts_refused": true,
+      "selected_schemas": [
+        "public",
+        "auth",
+        "storage",
+        "extensions",
+        "supabase_migrations"
+      ],
+      "full_selected_schema_data_and_actual_ledger_copied": true,
+      "owners_and_default_grants_preserved_by_restore": true,
+      "clone_independently_admitted_and_selected_data_ledger_writers_compared_exactly": true,
+      "source_final_captured_data_catalog_and_ledger_equal": true,
+      "marker_and_project_workdir_checked_before_clone_actions": true,
+      "source_schema_drop_or_manual_migration_replay": false,
+      "ledger_repair_or_expected_metadata_reseal": false,
+      "public_schema_rebuilt_in_clone": false
+    },
+    "evidence_scope": "Clone/data/source comparisons are enforced in memory by reviewed code and reflected in successful script exits. Raw comparison maps were not retained in this smoke archive and were not independently re-audited as durable raw snapshots. Clone catalog admission covers the independent171-function/51-relation manifest plus writers and engine catalog; no whole catalog clone equality is claimed.",
+    "owned_scheduler_paused_drained_and_restored": true,
+    "actual_postgres_content_pin": {
+      "reference": "public.ecr.aws/supabase/postgres:17.6.1.171",
+      "platform": "linux/arm64",
+      "repository_digest": "public.ecr.aws/supabase/postgres@sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9",
+      "reviewed_index_digest": "sha256:658d1c9b09ae4f61b8e95087b6859181b4b7d6940d769cf7b605609c8aad43e9"
+    },
+    "owned_containers_volumes_and_workdir_removed": true,
+    "independent_container_count": 0,
+    "independent_volume_count": 0,
+    "attributed_independent_cleanup_receipt_sha256": "f9c2709218aea9a77835d0ab5923f96fd376316358f6ef0749b2c4542929e9f3",
+    "hosted_writes": 0,
+    "provider_requests": 0,
+    "actual_practice_activation": false,
+    "excluded_private_wrapper_attempts": [
+      {
+        "attempt": 1,
+        "accepted": false,
+        "helpers_started": false,
+        "reason": "Private wrapper ownership-name contract failed before helper execution."
+      },
+      {
+        "attempt": 2,
+        "accepted": false,
+        "helpers_started": false,
+        "reason": "CLI normalized an overlong configured project identity, so the wrapper expected a different container name.",
+        "cleanup_attribution": "Actual CLI-normalized project-label cleanup retained in a separate private companion receipt."
+      }
+    ]
+  }
 }

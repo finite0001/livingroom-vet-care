@@ -169,3 +169,116 @@ test("every current ledger scalar assertion uses an actually declared helper", (
     assert.deepEqual(undeclaredMigrationGuardCallees(source), [], `${path} must execute a declared assertion helper`);
   }
 });
+
+interface ReceiptCounterContract {
+  countedGuards: number;
+  helper: string;
+  counter: string;
+}
+
+function ledgerCounterContract(source: string): ReceiptCounterContract {
+  const file = ts.createSourceFile("producer.ts", source, ts.ScriptTarget.Latest, true);
+  const helpers: string[] = [];
+  const counters = new Map<string, string>();
+  function visit(node: ts.Node) {
+    const body = ts.isFunctionDeclaration(node) ? node.body
+      : ts.isVariableDeclaration(node) && node.initializer
+        && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))
+        ? node.initializer.body : undefined;
+    if (body && (ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node))
+      && node.name && ts.isIdentifier(node.name)) {
+      const increments: string[] = [];
+      function increment(child: ts.Node) {
+        if ((ts.isPostfixUnaryExpression(child) || ts.isPrefixUnaryExpression(child))
+          && child.operator === ts.SyntaxKind.PlusPlusToken && ts.isIdentifier(child.operand)) {
+          increments.push(child.operand.text);
+        }
+        ts.forEachChild(child, increment);
+      }
+      increment(body);
+      if (increments.length === 1) counters.set(node.name.text, increments[0]!);
+    }
+    if (ts.isCallExpression(node) && node.arguments.length >= 2) {
+      let actual = node.arguments[0];
+      if (actual && ts.isCallExpression(actual) && actual.expression.getText(file) === "JSON.parse") actual = actual.arguments[0];
+      if (actual && ts.isCallExpression(actual) && actual.expression.getText(file) === "sql") {
+        const query = actual.arguments[0];
+        if (query && ts.isStringLiteralLike(query)
+          && /\bsupabase_migrations\.schema_migrations\b/i.test(query.text)) {
+          assert.ok(ts.isIdentifier(node.expression), "Ledger receipt helper must be a declared identifier");
+          helpers.push(node.expression.text);
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  assert.ok(helpers.length > 0);
+  assert.equal(new Set(helpers).size, 1, "Ledger assertions must increment the same receipt counter");
+  const helper = helpers[0]!;
+  const counter = counters.get(helper);
+  assert.ok(counter, "Each ledger assertion helper must increment exactly one receipt counter once");
+  return { countedGuards: helpers.length, helper, counter };
+}
+
+function receiverApiCount(source: string, variable: string) {
+  const matches = [...source.matchAll(new RegExp(`\\b${variable}\\[['"]api_checks['"]\\]\\s*==\\s*(\\d+)`, "g"))];
+  assert.equal(matches.length, 1, "Exactly one strict receiver receipt-count comparison required");
+  return Number(matches[0]![1]);
+}
+
+test("exact receipt counters follow counted ledger guards in all affected strict receivers", () => {
+  // Released #288 observed totals included one migration-count assertion. The
+  // non-ledger workloads are unchanged; canonical promotion adds one counted
+  // latest-version assertion. These are receipt checks, not HTTP request counts.
+  const contracts = [
+    { producer: "scheduling/operational-reconciliation-local.ts", receiver: "scheduling/disposable.py", variable: "receipt", nonLedger: 41, helper: "check", counter: "checks" },
+    { producer: "controlled-drugs/native-local.ts", receiver: "scheduling/disposable.py", variable: "controlled_receipt", nonLedger: 27, helper: "receipt", counter: "checks" },
+    { producer: "inventory/stock-writer-local.ts", receiver: "prescriptions/native-disposable.py", variable: "stock_api", nonLedger: 39, helper: "check", counter: "checks" },
+  ];
+  for (const contract of contracts) {
+    const producer = readFileSync(new URL(`../${contract.producer}`, import.meta.url), "utf8");
+    const receiver = readFileSync(new URL(`../${contract.receiver}`, import.meta.url), "utf8");
+    const actual = ledgerCounterContract(producer);
+    assert.deepEqual(actual, { countedGuards: 2, helper: contract.helper, counter: contract.counter });
+    const expected = contract.nonLedger + actual.countedGuards;
+    assert.equal(receiverApiCount(receiver, contract.variable), expected, `${contract.producer} receiver must include both counted ledger assertions`);
+    assert.notEqual(receiverApiCount(receiver, contract.variable), expected - 1, "The prior count must be rejected");
+  }
+});
+
+test("receipt contract detects a newly counted assertion and refuses stale or weak receiver checks", () => {
+  const producer = `const check = (a: unknown,b: unknown) => { checks++; };
+    check(sql("select count(*)from supabase_migrations.schema_migrations;"), "205");
+    check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");`;
+  const contract = ledgerCounterContract(producer);
+  assert.equal(contract.countedGuards, 2);
+  assert.equal(receiverApiCount("assert receipt['api_checks']==43 and receipt['passed']", "receipt"), 41 + contract.countedGuards);
+  assert.notEqual(receiverApiCount("assert receipt['api_checks']==42", "receipt"), 41 + contract.countedGuards);
+  assert.throws(() => receiverApiCount("assert receipt['api_checks']>=42", "receipt"));
+  const added = producer + '\ncheck(sql("select min(version)from supabase_migrations.schema_migrations;"), "old");';
+  assert.equal(ledgerCounterContract(added).countedGuards, 3);
+  assert.notEqual(43, 41 + ledgerCounterContract(added).countedGuards);
+  assert.throws(() => ledgerCounterContract(producer.replace('checks++;', 'checks++; other++;')));
+});
+
+test("all eleven changed ledger guards retain their exact receipt-counter destination", () => {
+  const expected = [
+    ["invoice-reminders/local-roundtrip.ts", "check", "checks", 2],
+    ["clinical-audio/local-roundtrip.ts", "sqlCheck", "sqlChecks", 2],
+    ["clinical-notes/local-roundtrip.ts", "apiCheck", "apiChecks", 2],
+    ["clinical-dictation/local-roundtrip.ts", "sqlCheck", "sqlChecks", 2],
+    ["clinical-calls/local-roundtrip.ts", "check", "apiChecks", 2],
+    ["clinical-recap/local-roundtrip.ts", "check", "apiChecks", 2],
+    ["inventory/stock-writer-local.ts", "check", "checks", 2],
+    ["imaging/local-roundtrip.ts", "check", "apiChecks", 2],
+    ["scheduling/operational-reconciliation-local.ts", "check", "checks", 2],
+    ["controlled-drugs/native-local.ts", "receipt", "checks", 2],
+    // This existing assertion gained a new expected object, not another call.
+    ["scheduling/operational-tasks-local.ts", "check", "checks", 1],
+  ] as const;
+  for (const [path, helper, counter, countedGuards] of expected) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    assert.deepEqual(ledgerCounterContract(source), { countedGuards, helper, counter }, path);
+  }
+});

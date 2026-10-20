@@ -3,8 +3,8 @@
 The reviewed controlled-stock engine body is now present as canonical migration
 `20261020151157_controlled_stock_private_engine.sql`. The actual owned CLI proof
 passed both guarded rollback cases, transaction-barrier observations, the clean
-canonical 205 application and exact no-op retry. All 318 Python harness tests and
-seven TypeScript migration-guard tests pass. Fresh genuine historical
+canonical 205 application and exact no-op retry. All 328 Python harness tests, ten TypeScript migration-guard tests and
+1,695 repository unit tests pass. Fresh genuine historical
 compatibility and fresh full ordinary compatibility also passed. Independent
 review of all three local evidence sets is complete. Exact-head CI, PR and Dave's
 specific merge/release approval remain pending.
@@ -142,6 +142,48 @@ result SHA-256 is
 All three current local runtime gates and their independent evidence reviews pass.
 Exact-head CI remains pending; this does not grant approval to install on a hosted
 project.
+
+The first PR CI attempt is excluded from acceptance. Its renderer job reached a
+strict receipt-count mismatch: adding the latest-migration assertion increased
+reconciliation's combined check count from 42 to 43. The same audit identified
+controlled-draft and stock-writer receiver counts increasing from 28 to 29 and
+40 to 41. All three exact receivers and their status summaries were corrected;
+the supplier-identity count remains 38. Conditions and counters were retained,
+not weakened. New AST tests bind all eleven changed ledger guards to their actual
+counter helpers, including the two SQL-restore counters and the operational-task
+object assertion whose call count did not change. They reject stale or weak
+receiver comparisons.
+
+That CI attempt's database job also found an obsolete clone setup: attachment
+helpers restored a schema-only copy, dropped its public schema, then manually
+replayed every migration. Dropping the enlarged schema exhausted shared-lock
+memory, and manual replay would not provide the real 204 ledger and CLI-owned
+205 insertion semantics in any event. Both attachment helpers now copy verified
+current canonical schema and data together with the genuine ledger into a
+separately marked owned database. They do not drop the restored public schema,
+manually replay 205, fabricate ledger rows or adopt live metadata as an expected
+pin.
+
+The focused follow-up smoke passed attachment metadata's 43 checks and attachment
+originals' 320 checks. Its source admission and clone verification enforced the
+independent literal manifest, complete selected data and real canonical ledger;
+source preservation was checked again afterward. These raw snapshots were held
+in memory by the helper and were not saved in the smoke archive. This is
+code-enforced verification with actual helper results, not a claim of independent
+raw-snapshot audit. Reviewed ARM image admission and owned scheduler pause,
+drain and restoration passed. Attributed cleanup found no owned containers or
+volumes and confirmed removal of the owned work directory.
+
+All 437 follow-up input bindings matched the initial/result maps and current
+files. Its private result SHA-256 is
+`e3f08e6133b51e58ee3eeeac1c0638ac8ed25157cf4306ca6b75efe059686806`.
+This is a separate helper-smoke proof; the original ordinary, historical and CLI
+proof maps remain unchanged at 434, 269 and 268 bindings respectively. Two earlier
+private smoke-wrapper attempts stopped on setup admission checks, first its
+allowlist and then an overlong identity, before either attachment helper ran.
+Their private evidence and verified cleanup were preserved and excluded from
+acceptance. A fresh exact-head five-job CI run is still required after these
+follow-up fixes.
 
 Canonical promotion does not complete production C1b admission, remaining
 hold/exception acceptance, C2 review/witness/transfer/count/report workflows or C3

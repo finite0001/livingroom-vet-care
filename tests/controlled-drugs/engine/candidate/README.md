@@ -416,3 +416,16 @@ records source-bound execution results and any pending checks. Repository promot
 and local compatibility do not establish hosted installation, physical stock
 reconciliation, complete C1b acceptance, C2 workflows or C3 commissioning. Susan's
 clinical/register approval remains pending.
+
+
+The attachment metadata/original race fixtures now clone the independently
+verified current schema and data, including its real 205 ledger and manifest.
+They refuse conflicting fixture identities or attachment data, verify the clone
+against the independent pin and source fingerprints, then check source
+preservation and marked cleanup. They no longer drop the copied public schema or
+manually replay canonical SQL without a ledger. This is a logical fixture clone;
+publication/subscription and whole-cluster recovery remain outside its scope.
+
+Current counted migration guards also contribute to their existing test receipts.
+The exact reconciliation, controlled-draft and stock-writer receiver totals include
+that extra assertion; unrelated inventory and operational-task totals are retained.
