@@ -46,20 +46,84 @@ create function pg_temp.correction_capacity_source()returns jsonb language plpgs
  end loop;
  return result;
 end$$;
-create function pg_temp.correction_capacity_request()returns jsonb language plpgsql volatile as $$declare p jsonb;begin
- p:=preview_native_dispense_correction(pg_temp.correction_capacity_id('sign'),pg_temp.correction_capacity_id('pet'),pg_temp.correction_capacity_id('dispense'));
+-- Fixture-only retained review context. Canonical append still independently
+-- verifies the full history for EVERY write. Only redundant producer previews
+-- within a bounded batch are replaced; real previews anchor both endpoints.
+create function pg_temp.correction_capacity_request(ctx jsonb)returns jsonb language plpgsql volatile as $$begin
  return jsonb_build_object('authorization_id',pg_temp.correction_capacity_id('sign'),'pet_id',pg_temp.correction_capacity_id('pet'),
- 'dispense_id',pg_temp.correction_capacity_id('dispense'),'kind','operational_annotation','expected_context_hash',p->>'context_hash',
- 'expected_head',p#>'{context,head}','reason','Synthetic reviewed capacity annotation','note','Synthetic capacity note',
+ 'dispense_id',pg_temp.correction_capacity_id('dispense'),'kind','operational_annotation','expected_context_hash',native_fulfillment_hash(ctx),
+ 'expected_head',ctx->'head','reason','Synthetic reviewed capacity annotation','note','Synthetic capacity note',
  'amends_event_id',null,'pickup_amendment',null,'attest_review',true);
 end$$;
-create function pg_temp.correction_capacity_append_to(target integer)returns void language plpgsql volatile as $$declare n integer;begin
+create function pg_temp.correction_capacity_receipt_advance(ctx jsonb,actor uuid,id uuid,req jsonb,receipt jsonb)returns jsonb language plpgsql volatile as $$
+declare o public.native_dispense_correction_operations;e public.native_dispense_correction_events;doc jsonb;next_ctx jsonb;begin
+ select * into o from native_dispense_correction_operations where native_dispense_correction_operations.id=correction_capacity_receipt_advance.id;
+ select * into e from native_dispense_correction_events where native_dispense_correction_events.id=correction_capacity_receipt_advance.id;
+ doc:=receipt->'result';
+ if ctx is null or actor is null or id is null or req is null or receipt is null
+ or o.id is null or e.id is null or actor is distinct from auth.uid()
+ or ctx->'version' is distinct from '1'::jsonb
+ or ctx->'target' is distinct from jsonb_build_object('authorization_id',pg_temp.correction_capacity_id('sign'),'pet_id',pg_temp.correction_capacity_id('pet'),'dispense_id',pg_temp.correction_capacity_id('dispense'))
+ or req is distinct from pg_temp.correction_capacity_request(ctx)
+ or receipt is distinct from native_correction_receipt(o)
+ or receipt->'version' is distinct from '1'::jsonb or receipt->>'id' is distinct from id::text
+ or receipt->>'actor_id' is distinct from actor::text or receipt->'request' is distinct from req
+ or o.actor_id is distinct from actor or o.request is distinct from req
+ or o.request_hash is distinct from native_fulfillment_hash(jsonb_build_object('version',1,'actor_id',actor,'operation','append_native_dispense_correction','request',req))
+ or o.result is distinct from e.document or doc is distinct from e.document or e.reviewed_context is distinct from ctx
+ or e.authorization_id::text is distinct from ctx#>>'{target,authorization_id}'
+ or e.pet_id::text is distinct from ctx#>>'{target,pet_id}' or e.dispense_id::text is distinct from ctx#>>'{target,dispense_id}'
+ or e.actor_id is distinct from actor or e.kind is distinct from 'operational_annotation'
+ or e.sequence is distinct from (ctx#>>'{head,version}')::integer+1
+ or e.prior_event_id::text is distinct from ctx#>>'{head,event_id}'
+ or o.created_at is distinct from e.created_at
+ or doc is distinct from jsonb_build_object('version',1,'id',id,'target',ctx->'target',
+  'authorization_hash',ctx->'authorization_hash','dispense_document_hash',ctx->'dispense_document_hash',
+  'sequence',e.sequence,'prior_event_id',ctx#>'{head,event_id}','prior_record_hash',ctx#>'{head,record_hash}',
+  'actor',native_correction_actor('operational_annotation'),'kind','operational_annotation','reason',req->'reason','note',req->'note',
+  'amends_event_id',null,'pickup_amendment',null,'reviewed_context_hash',native_fulfillment_hash(ctx),
+  'created_at',e.created_at,'record_hash',e.record_hash)
+ or e.record_hash is distinct from native_fulfillment_hash(doc-'record_hash') then
+  raise exception 'Correction producer receipt binding mismatch' using errcode='P0001';
+ end if;
+ -- Only the exact returned receipt supplies the next head. No unrelated context
+ -- field is synthesized or changed for operational annotations.
+ next_ctx:=jsonb_set(ctx,'{head}',jsonb_build_object('event_id',doc->'id','version',doc->'sequence','record_hash',doc->'record_hash'));
+ if next_ctx-'head' is distinct from ctx-'head' then raise exception 'Correction producer receipt binding mismatch' using errcode='P0001';end if;
+ return next_ctx;
+end$$;
+create function pg_temp.correction_capacity_append_to(target integer)returns jsonb language plpgsql volatile as $$
+declare n integer;p jsonb;ctx jsonb;original_ctx jsonb;actor uuid;id uuid;req jsonb;receipt jsonb;begin
  perform set_config('request.jwt.claims','{"role":"authenticated","sub":"a5510000-0000-4000-8000-000000000001"}',true);
  select count(*)into n from native_dispense_correction_events where dispense_id=pg_temp.correction_capacity_id('dispense');
  if target is null or target<1 or target>1001 or n>=target or target-n>32 then raise exception 'Exact advancing correction batch required';end if;
+ p:=preview_native_dispense_correction(pg_temp.correction_capacity_id('sign'),pg_temp.correction_capacity_id('pet'),pg_temp.correction_capacity_id('dispense'));
+ actor:=auth.uid();ctx:=p->'context';original_ctx:=ctx;
+ if actor is null or p->'version' is distinct from '1'::jsonb or p->>'actor_id' is distinct from actor::text
+ or ctx->'version' is distinct from '1'::jsonb
+ or ctx->'target' is distinct from jsonb_build_object('authorization_id',pg_temp.correction_capacity_id('sign'),'pet_id',pg_temp.correction_capacity_id('pet'),'dispense_id',pg_temp.correction_capacity_id('dispense'))
+ or p->>'context_hash' is distinct from native_fulfillment_hash(ctx)
+ or ctx->'head' is distinct from coalesce((select jsonb_build_object('event_id',e.id,'version',e.sequence,'record_hash',e.record_hash)from native_dispense_correction_events e where e.dispense_id=pg_temp.correction_capacity_id('dispense')order by sequence desc limit 1),jsonb_build_object('event_id',null,'version',0,'record_hash',null))
+ or ctx#>'{head,version}' is distinct from to_jsonb(n)
+ or(select count(*)from native_dispense_correction_operations)is distinct from n::bigint then
+  raise exception 'Correction producer initial preview mismatch';end if;
  for i in n+1..target loop
-  perform append_native_dispense_correction(gen_random_uuid(),pg_temp.correction_capacity_request());
+  id:=gen_random_uuid();req:=pg_temp.correction_capacity_request(ctx);
+  receipt:=append_native_dispense_correction(id,req);
+  ctx:=pg_temp.correction_capacity_receipt_advance(ctx,actor,id,req,receipt);
  end loop;
+ p:=preview_native_dispense_correction(pg_temp.correction_capacity_id('sign'),pg_temp.correction_capacity_id('pet'),pg_temp.correction_capacity_id('dispense'));
+ if p->'version' is distinct from '1'::jsonb or p->>'actor_id' is distinct from actor::text
+ or auth.uid()is distinct from actor or p->'context' is distinct from ctx
+ or p->>'context_hash' is distinct from native_fulfillment_hash(ctx)
+ or ctx-'head' is distinct from original_ctx-'head' or ctx#>'{head,version}' is distinct from to_jsonb(target)
+ or(select count(*)from native_dispense_correction_events where dispense_id=pg_temp.correction_capacity_id('dispense'))is distinct from target::bigint
+ or(select count(*)from native_dispense_correction_operations)is distinct from target::bigint
+ or exists(select 1 from native_dispense_correction_events where dispense_id=pg_temp.correction_capacity_id('dispense')and sequence>n and kind<>'operational_annotation')then
+  raise exception 'Correction producer final preview mismatch';end if;
+ return jsonb_build_object('kind','controlled-correction-producer-batch-v1','previous_target',n,'target',target,
+ 'canonical_writes',target-n,'real_previews',2,'actual_receipts_bound',target-n,'only_operational_annotations',true,
+ 'only_head_advanced',true,'fresh_preview_context_matches',true,'passed',true);
 end$$;
 create function pg_temp.correction_capacity_verified(target integer)returns boolean language plpgsql stable as $$declare v jsonb;begin
  v:=native_correction_verified(pg_temp.correction_capacity_id('sign'),pg_temp.correction_capacity_id('pet'),pg_temp.correction_capacity_id('dispense'));
@@ -127,6 +191,78 @@ insert into correction_capacity_meta select jsonb_build_object('ids_json',(selec
 set constraints all immediate;commit;
 select jsonb_build_object('kind','controlled-opening-correction-capacity-seed-v1')||seed from correction_capacity_meta;
 -- CORRECTION_CAPACITY_BOOTSTRAP_END --
+
+
+-- CORRECTION_CAPACITY_PRODUCER_BEGIN --
+-- Runner supplies a fresh seeded preamble after committed bootstrap, at zero
+-- corrections. This section owns ROLLBACK, emits only the sanitized contract,
+-- and must be independently checked against the exact pre-transaction snapshot.
+do $$declare batch jsonb;ctx jsonb;actor uuid;id uuid;req jsonb;receipt jsonb;bad jsonb;
+ before_value jsonb;manifest jsonb;failure text;state text;refused integer:=0;canonical_refused integer:=0;begin
+ if exists(select 1 from native_dispense_correction_events)or exists(select 1 from native_dispense_correction_operations)then
+  raise exception 'Correction producer contract requires zero original corrections';end if;
+ batch:=pg_temp.correction_capacity_append_to(3);
+ if batch is distinct from jsonb_build_object('kind','controlled-correction-producer-batch-v1','previous_target',0,'target',3,
+  'canonical_writes',3,'real_previews',2,'actual_receipts_bound',3,'only_operational_annotations',true,
+  'only_head_advanced',true,'fresh_preview_context_matches',true,'passed',true)then raise exception 'Correction producer contract batch mismatch';end if;
+ set constraints all immediate;
+ select o.id,o.actor_id,o.request,native_correction_receipt(o),e.reviewed_context into id,actor,req,receipt,ctx
+ from native_dispense_correction_operations o join native_dispense_correction_events e on e.id=o.id where e.sequence=1;
+ if pg_temp.correction_capacity_receipt_advance(ctx,actor,id,req,receipt) is distinct from
+  jsonb_set(ctx,'{head}',jsonb_build_object('event_id',receipt#>'{result,id}','version',receipt#>'{result,sequence}','record_hash',receipt#>'{result,record_hash}'))then
+  raise exception 'Correction producer contract actual receipt mismatch';end if;
+ for bad in select value from jsonb_array_elements(jsonb_build_array(
+  jsonb_set(receipt,'{id}',to_jsonb(gen_random_uuid())),
+  jsonb_set(receipt,'{actor_id}',to_jsonb(gen_random_uuid())),
+  jsonb_set(receipt,'{request,note}','"forged"'),
+  jsonb_set(receipt,'{request_hash}',to_jsonb(repeat('0',64))),
+  jsonb_set(receipt,'{result,target,dispense_id}',to_jsonb(gen_random_uuid())),
+  jsonb_set(receipt,'{result,sequence}','999'),
+  jsonb_set(receipt,'{result,prior_record_hash}',to_jsonb(repeat('0',64))),
+  jsonb_set(receipt,'{result,record_hash}',to_jsonb(repeat('0',64)))
+ ))loop
+  before_value:=pg_temp.correction_capacity_snapshot();manifest:=controlled_stock_manifest_snapshot();
+  begin
+   perform pg_temp.correction_capacity_receipt_advance(ctx,actor,id,req,bad);
+   raise exception 'Correction producer mutation unexpectedly accepted' using errcode='P0002';
+  exception when sqlstate 'P0001' then
+   get stacked diagnostics failure=MESSAGE_TEXT,state=RETURNED_SQLSTATE;
+   if failure is distinct from 'Correction producer receipt binding mismatch'or state is distinct from 'P0001'then raise exception 'Wrong correction producer receipt refusal';end if;
+   refused:=refused+1;
+  end;
+  if before_value is distinct from pg_temp.correction_capacity_snapshot()or manifest is distinct from controlled_stock_manifest_snapshot()then
+   raise exception 'Correction producer receipt refusal failed exact rollback';end if;
+ end loop;
+ -- These two requests reach the UNCHANGED canonical writer, not the fixture
+ -- receipt guard. Their admission/history side effects must roll back exactly.
+ -- Migration 20260928190000 changes permanent review conflicts to PT409;
+ -- the original September 16 writer's historical 40001 is not current behavior.
+ ctx:=(preview_native_dispense_correction(pg_temp.correction_capacity_id('sign'),pg_temp.correction_capacity_id('pet'),pg_temp.correction_capacity_id('dispense')))->'context';
+ req:=pg_temp.correction_capacity_request(ctx);
+ for bad in select value from jsonb_array_elements(jsonb_build_array(
+  jsonb_set(req,'{expected_head,version}','4'),
+  jsonb_set(req,'{expected_context_hash}',to_jsonb(case when req->>'expected_context_hash'=repeat('0',64)then repeat('1',64)else repeat('0',64)end))
+ ))loop
+  before_value:=pg_temp.correction_capacity_snapshot();manifest:=controlled_stock_manifest_snapshot();
+  begin
+   perform append_native_dispense_correction(gen_random_uuid(),bad);
+   raise exception 'Correction producer bad canonical context unexpectedly accepted' using errcode='P0002';
+  exception when sqlstate 'PT409' then
+   get stacked diagnostics failure=MESSAGE_TEXT,state=RETURNED_SQLSTATE;
+   if failure is distinct from 'Correction review context changed'or state is distinct from 'PT409'then raise exception 'Wrong correction producer canonical refusal';end if;
+   canonical_refused:=canonical_refused+1;
+  end;
+  if before_value is distinct from pg_temp.correction_capacity_snapshot()or manifest is distinct from controlled_stock_manifest_snapshot()then
+   raise exception 'Correction producer canonical refusal failed exact rollback';end if;
+ end loop;
+ if refused<>8 or canonical_refused<>2 or pg_temp.correction_capacity_verified(3)is distinct from true then raise exception 'Correction producer contract counts mismatch';end if;
+ insert into correction_capacity_results values('producer_contract',jsonb_build_object('kind','controlled-correction-producer-contract-v1',
+ 'passed',true,'successful_rolled_back_writes',3,'receipt_mutation_refusals',8,'canonical_context_refusals',2,'batch_real_previews',2,
+ 'original_counts_zero',true,'mutation_refusals_rolled_back_exactly',true));
+end$$;
+select value from correction_capacity_results where label='producer_contract';
+rollback;
+-- CORRECTION_CAPACITY_PRODUCER_END --
 
 -- CORRECTION_CAPACITY_POSITIVE_BEGIN --
 -- Runner begins a fresh seeded backend after the measured 1000-event batch.

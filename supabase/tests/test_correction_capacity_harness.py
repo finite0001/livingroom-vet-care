@@ -332,6 +332,25 @@ class CorrectionFinalProofTests(unittest.TestCase):
             proof[key] = True
         proof['canonical_replay_audit'] = PROBE.verify_replay_baselines(
             self.replay, self.replay['before_replay'], self.replay['after_replay'])
+        batches = []
+        previous = 0
+        for target in [*range(32, 993, 32), 1000, 1001]:
+            writes = target - previous
+            batches.append({
+                'kind': 'controlled-correction-producer-batch-v1',
+                'previous_target': previous, 'target': target, 'canonical_writes': writes,
+                'real_previews': 2, 'actual_receipts_bound': writes,
+                'only_operational_annotations': True, 'only_head_advanced': True,
+                'fresh_preview_context_matches': True, 'passed': True,
+            })
+            previous = target
+        contract = {
+            'kind': 'controlled-correction-producer-contract-v1', 'passed': True,
+            'successful_rolled_back_writes': 3, 'receipt_mutation_refusals': 8,
+            'canonical_context_refusals': 2, 'batch_real_previews': 2,
+            'original_counts_zero': True, 'mutation_refusals_rolled_back_exactly': True,
+        }
+        proof['correction_producer'] = PROBE.producer.build_producer_proof(batches, contract, True)
         proof.update(clinical_or_register_activation=False, production_capacity_approved=False,
                      hosted_writes=0, provider_requests=0)
         return proof
@@ -348,6 +367,39 @@ class CorrectionFinalProofTests(unittest.TestCase):
                                (True, {**cleanup, 'marked_database_removed': 1}), (True, {})):
             with self.subTest(on_time=on_time, status=status), self.assertRaises(AssertionError):
                 PROBE.finalize_acceptance(proof, on_time, status)
+
+    def test_missing_producer_evidence_cannot_be_finalized(self):
+        proof = self.finalizable_proof()
+        del proof['correction_producer']
+        cleanup = {'marked_database_removed': True, 'source_runtime_unchanged_after_cleanup': True}
+        with self.assertRaises((AssertionError, KeyError)):
+            PROBE.finalize_acceptance(proof, True, cleanup)
+
+    def test_forged_producer_success_or_unbound_receipts_cannot_be_finalized(self):
+        cleanup = {'marked_database_removed': True, 'source_runtime_unchanged_after_cleanup': True}
+        for mutation in ('success_flag', 'write_total', 'unbound_receipt'):
+            proof = self.finalizable_proof()
+            if mutation == 'success_flag':
+                proof['correction_producer']['passed'] = False
+            elif mutation == 'write_total':
+                proof['correction_producer']['canonical_writes'] = 1000
+            else:
+                proof['correction_producer']['batches'][-1]['actual_receipts_bound'] = 0
+            with self.subTest(mutation=mutation), self.assertRaises(AssertionError):
+                PROBE.finalize_acceptance(proof, True, cleanup)
+
+    def test_producer_contract_without_exact_rollback_cannot_be_finalized(self):
+        cleanup = {'marked_database_removed': True, 'source_runtime_unchanged_after_cleanup': True}
+        for flag in ('contract_all_relations_and_manifest_rolled_back_exactly',
+                     'mutation_refusals_rolled_back_exactly'):
+            proof = self.finalizable_proof()
+            producer = proof['correction_producer']
+            if flag == 'mutation_refusals_rolled_back_exactly':
+                producer['contract'][flag] = False
+            else:
+                producer[flag] = False
+            with self.subTest(flag=flag), self.assertRaises(AssertionError):
+                PROBE.finalize_acceptance(proof, True, cleanup)
 
     def test_partial_or_contradictory_functional_proof_cannot_be_finalized(self):
         cleanup = {'marked_database_removed': True, 'source_runtime_unchanged_after_cleanup': True}

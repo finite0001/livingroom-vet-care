@@ -168,6 +168,51 @@ the actual checkpoint and post-configuration rollback. Every relation remains in
 the private snapshots; the audit append does not create another correction event,
 receipt, stock movement or charge.
 
+The separate `--include-correction-restore` local opt-in reuses this same
+1,000-correction producer and runs before the genuine 1,001st write. It persists
+the valid frozen, unattached opening in one marked clone and restores its selected
+schemas into another. All relation fingerprints, canonical history and audit rows
+must match; fresh validation uses UTC, Denver and Kathmandu without caller claims.
+It shares the correction probe's original 900-second workload deadline and
+120-second append reserve. A stopped or unsuccessfully cleaned attempt supplies
+no restore acceptance. The targeted rehearsal and fresh full ordinary run passed;
+CI now requests this restore explicitly alongside its existing capacity flag.
+The [populated correction-history restore receipt](../../../../docs/launch-evidence/2026-10-19-controlled-correction-history-restore.md)
+records all 456 selected relations, seven fresh validations and the unchanged
+eleven capacity observations, including the actual 1,001st append. The full run
+also passed 166 SQL suites/7,338 assertions and its separate genuine Auth/API gate.
+Selected-schema logical restoration does not certify cluster-role, ownership,
+default-privilege or Storage binary recovery, physical reconciliation or practice
+approval. Clinical/register activation remains pending Susan's approval.
+
+The synthetic operational-annotation producer takes a real preview at each
+batch boundary, binds every actual canonical receipt to its stored operation and
+event, and advances only the expected head between writes. The unchanged
+canonical writer still verifies the complete history on every append. A final
+real preview must match the derived context and hash before the batch commits.
+The 33 committed batches contain 1,001 writes and 66 endpoint previews; this is
+not a count of all preview calls in the workload. A separate three-write contract
+refuses eight altered receipts and two stale canonical contexts with exact
+`PT409`, then rolls back every selected relation and the technical manifest.
+Those contract checks are separate from the eleven capacity observations and
+seven restore validations. No deadline, reserve or batch limit is relaxed.
+
+On a child-probe failure, the parent prints only a sanitized fixed-category
+summary and bounded correction checkpoint timing. Raw errors, SQL, fixture IDs
+and private fingerprints stay in protected logs. An unrecognized error remains
+`unknown`; partial progress is never acceptance. Cleanup confirmation prints only
+after exact owned container and volume absence checks. This reporting does not
+change workload deadlines, writer reserves or product guards.
+
+CI runs both complete rehearsals in a separate `controlled-stock` job on native
+`ubuntu-24.04-arm`, covered by the existing reviewed Linux ARM64 Postgres pin.
+This job starts only its owned disposable stacks; it does not share the database
+job's long-lived foundation or earlier concurrency workloads. The four existing
+jobs retain their original runner labels, including the native AMD64 renderer.
+All five jobs must pass. Isolation follows observed next-batch reserve refusals
+at 928 corrections on both x64 and ARM64; it supplies no acceptance by itself
+and changes no workload, supported limit, deadline or reserve.
+
 `scalar-helpers.sql` intentionally changes the implementation language/body of
 `native_fulfillment_hash`, `native_fulfillment_decimal` and
 `native_fulfillment_receipt` from SQL to PL/pgSQL. Their original expressions,

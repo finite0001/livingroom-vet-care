@@ -17,12 +17,15 @@ import time
 import uuid
 from local_install import build_install, assert_prior, PriorMetadataDrift
 from scalar_contract import capture_originals, verify_installation
+from probe_failure import summarize_probe_failure
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local',action='store_true',required=True)
 parser.add_argument('--include-sql-regression',action='store_true')
 parser.add_argument('--include-correction-capacity',action='store_true',help='Run the separately bounded genuine correction-chain feasibility probe')
+parser.add_argument('--include-correction-restore',action='store_true',help='Also prove the populated 1,000-correction opening restore inside the same workload budget')
 args=parser.parse_args()
+if args.include_correction_restore:args.include_correction_capacity=True
 os.umask(0o077)
 source=Path(__file__).resolve().parent
 root=source.parents[3]
@@ -149,7 +152,8 @@ enabled = false
   assert 'All tests successful.'in output and 'Files=166, Tests=7338'in output
   proof['ordinary_sql_regression']={'files':166,'assertions':7338}
   print('Ordinary compatibility:166 canonical SQL suites /7338 assertions passed with the candidate installed.',flush=True)
- environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir)}
+ environment={**os.environ,'CONTROLLED_ENGINE_RESULT_DIR':str(result_dir),
+  'CONTROLLED_ENGINE_CORRECTION_RESTORE':'1'if args.include_correction_restore else'0'}
  probes=[('probe-smoke.py','smoke'),('probe-native.py','managed_native'),('probe-opening.py','opening_boundary'),('probe-capacity.py','opening_capacity')]
  if args.include_correction_capacity:probes.append(('probe-correction-capacity.py','opening_correction_capacity'))
  probes.append(('probe-api.py','genuine_auth_api'))
@@ -159,8 +163,13 @@ enabled = false
   probe_timeout=960 if name in('opening_capacity','opening_correction_capacity')else 360
   p=subprocess.run(['python3','-B',str(source/probe)],env=environment,capture_output=True,text=True,cwd=root,timeout=probe_timeout)
   log.write(probe+'\n'+p.stdout+p.stderr+'\n');log.flush()
-  if p.returncode:raise RuntimeError(probe+' failed; protected result directory: '+str(result_dir))
+  if p.returncode:
+   try:print(json.dumps(summarize_probe_failure(probe,p.returncode,p.stdout,p.stderr,result_dir)),flush=True)
+   except Exception:print('Controlled probe failed; sanitized diagnostic unavailable.',flush=True)
+   raise RuntimeError(probe+' failed; protected result directory: '+str(result_dir))
   proof[name]=json.loads(next(line for line in reversed(p.stdout.splitlines())if line.startswith('{')))
+  if name=='opening_correction_capacity'and args.include_correction_restore:
+   assert proof[name].get('selected_schema_populated_restore_proven')is True,'Requested correction restore proof missing'
   print(name+' passed.',flush=True)
  for path,digest in hashes.items():assert hashlib.sha256((root/path).read_bytes()).hexdigest()==digest,'Candidate source changed during proof: '+path
  proof.update(synthetic_only=True,canonical_migration=False,hosted_writes=0,provider_requests=0,actual_practice_rules=False,
@@ -179,6 +188,7 @@ finally:
    runtime=json.loads((result_dir/'runtime.json').read_text());runtime['removed']=True
    (result_dir/'runtime.json').write_text(json.dumps(runtime,indent=2))
    proof['owned_containers_and_volumes_removed']=True
+   print('Owned candidate containers and volumes removed.',flush=True)
   shutil.rmtree(work)
  finally:log.close()
 if proof.get('genuine_auth_api'):

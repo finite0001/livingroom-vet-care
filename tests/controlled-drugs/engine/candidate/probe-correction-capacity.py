@@ -17,6 +17,9 @@ SOURCE = Path(__file__).resolve().parent
 _spec = importlib.util.spec_from_file_location('controlled_capacity_runtime', SOURCE / 'probe-capacity.py')
 capacity = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(capacity)
+_producer_spec = importlib.util.spec_from_file_location('controlled_correction_producer', SOURCE / 'correction_producer.py')
+producer = importlib.util.module_from_spec(_producer_spec)
+_producer_spec.loader.exec_module(producer)
 SCHEMAS = capacity.SCHEMAS
 literal = capacity.literal
 
@@ -195,7 +198,7 @@ def parse_checkpoint(output, target):
 def sections(source):
     contents = (source / 'opening-correction-capacity.sql').read_text()
     result = {}
-    for name in ('PREAMBLE', 'BOOTSTRAP', 'POSITIVE', 'OVERLIMIT'):
+    for name in ('PREAMBLE', 'BOOTSTRAP', 'PRODUCER', 'POSITIVE', 'OVERLIMIT'):
         start = '-- CORRECTION_CAPACITY_' + name + '_BEGIN --'
         end = '-- CORRECTION_CAPACITY_' + name + '_END --'
         assert contents.count(start) == contents.count(end) == 1, 'Exact correction fixture section required: ' + name
@@ -242,7 +245,21 @@ def fixture_parts(root, source):
     for name in ('positive', 'overlimit'):
         parts[name] = parts[name].replace(marker, config)
     parts['bootstrap'] = prefix + '\n' + parts['preamble'].replace('-- CORRECTION_CAPACITY_SEED --', '') + parts['bootstrap']
+    parts['configuration'] = config
     return parts
+
+
+def restore_fixture_parts(source):
+    text = (source / 'correction-history-restore.sql').read_text()
+    result = {}
+    for name in ('build', 'validate'):
+        begin = '-- CORRECTION_RESTORE_' + name.upper() + '_BEGIN --'
+        end = '-- CORRECTION_RESTORE_' + name.upper() + '_END --'
+        assert text.count(begin) == text.count(end) == 1, 'Exact correction restore sections required'
+        assert text.index(begin) < text.index(end)
+        result[name] = text.split(begin, 1)[1].split(end, 1)[0]
+    assert result['validate'].count('-- CORRECTION_RESTORE_TIMEZONE --') == 1
+    return result
 
 
 def seeded_preamble(preamble, seed):
@@ -432,6 +449,7 @@ def finalize_acceptance(proof, workload_finished_before_deadline, cleanup_status
                 'checkpoint_before_replay_matches', 'after_configuration_rollback_matches'):
         assert audit.get(key) is True
     assert type(audit.get('complete_relation_fingerprints_retained')) is int and audit['complete_relation_fingerprints_retained'] > 0
+    producer.validate_producer_proof(proof.get('correction_producer'))
     _positive_contract(proof['genuine_capacity_positive'])
     final = proof['final_observation']
     assert final.get('kind') == 'controlled-opening-correction-capacity-observation-v1'
@@ -450,6 +468,13 @@ def finalize_acceptance(proof, workload_finished_before_deadline, cleanup_status
         assert proof.get(key) is True, 'Final correction preservation required: ' + key
     assert proof.get('clinical_or_register_activation') is False and proof.get('production_capacity_approved') is False
     assert proof.get('hosted_writes') == 0 and proof.get('provider_requests') == 0
+    restored = proof.get('selected_schema_populated_restore_proven', False)
+    assert type(restored) is bool, 'Typed correction restore acceptance flag required'
+    if restored:
+        from correction_history_restore import validate_restore_proof
+        validate_restore_proof(proof.get('correction_history_populated_restore'))
+    else:
+        assert proof.get('correction_history_populated_restore') is None, 'Restore proof requires explicit acceptance flag'
     return {**proof, 'passed': True, 'workload_finished_before_deadline': True,
             'marked_correction_database_removed': True, 'source_runtime_unchanged_after_cleanup': True}
 
@@ -479,6 +504,8 @@ def cleanup(runtime, original, created, prior_failure):
 
 def main():
     os.umask(0o077)
+    restore_flag = os.environ.get('CONTROLLED_ENGINE_CORRECTION_RESTORE', '0')
+    assert restore_flag in ('0', '1'), 'Explicit correction restore opt-in required'
     source = SOURCE
     root = source.parents[3]
     folder = Path(os.environ['CONTROLLED_ENGINE_RESULT_DIR']).resolve()
@@ -496,10 +523,14 @@ def main():
     latest_sample = None
     workload_finished_before_deadline = False
     checkpoint_fingerprints = {}
+    restore_proof = None
+    producer_batches = []
+    producer_contract = None
+    producer_contract_rolled_back = False
     receipt = {'kind': 'controlled-opening-correction-capacity-feasibility-v1', 'passed': False,
                'global_probe_budget_seconds': 900, 'maximum_canonical_writes_per_backend': 32,
                'elapsed_is_production_benchmark': False, 'checkpoints': checkpoints,
-               'admissions': admissions, 'samples': samples, 'full_goal_completion': 'unknown',
+               'admissions': admissions, 'samples': samples, 'producer_batches': producer_batches, 'full_goal_completion': 'unknown',
                'writer_reserve_seconds': 120, 'writer_deadline_is_global_minus_reserve': True}
     receipt_path = folder / 'engine-correction-capacity-v1-checkpoints.json'
     try:
@@ -518,6 +549,15 @@ def main():
         assert runtime.technical(runtime.database) == technical
         parts = fixture_parts(root, source)
         seed = parse_seed(run_stage(runtime, parts['bootstrap'], writer_deadline, 'bootstrap'))
+        producer_before = runtime.snapshot(runtime.database)
+        output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) + parts['producer'],
+                           writer_deadline, 'producer-contract')
+        producer_contract = producer.parse_contract_output(output)
+        producer_after = runtime.snapshot(runtime.database)
+        assert producer_after == producer_before, 'Producer contract must roll back every selected relation'
+        assert runtime.technical(runtime.database) == technical, 'Producer contract changed technical definitions'
+        producer_contract_rolled_back = True
+        receipt.update(producer_contract=producer_contract, producer_contract_rolled_back_exactly=True)
         current = 0
         previous_checkpoint = 0
         for target in (64, 128, 256, 512, 1000):
@@ -535,6 +575,8 @@ def main():
                 if batch_target == target:
                     query += 'select pg_temp.correction_capacity_checkpoint(' + str(target) + ');'
                 output = run_stage(runtime, query, writer_deadline, 'append-' + str(batch_target))
+                batch, output = producer.parse_batch_output(output, current, batch_target, batch_target == target)
+                producer_batches.append(batch)
                 if batch_target == target:
                     observed = parse_checkpoint(output, target)
                 else:
@@ -557,8 +599,16 @@ def main():
             previous_checkpoint = target
         positive_output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) + parts['positive'], deadline, 'positive')
         positive, boundary, replay_baseline = parse_positive(positive_output)
-        replay_audit = verify_replay_baselines(replay_baseline, checkpoint_fingerprints['1000'],
-                                               runtime.snapshot(runtime.database))
+        post_positive_snapshot = runtime.snapshot(runtime.database)
+        replay_audit = verify_replay_baselines(replay_baseline, checkpoint_fingerprints['1000'], post_positive_snapshot)
+        if restore_flag == '1':
+            from correction_history_restore import probe_correction_restore, validate_restore_proof
+            restore_parts = restore_fixture_parts(source)
+            preamble = seeded_preamble(parts['preamble'], seed)
+            restore_proof = probe_correction_restore(
+                runtime, preamble + parts['configuration'] + restore_parts['build'],
+                preamble + restore_parts['validate'], post_positive_snapshot, technical, run_stage)
+            validate_restore_proof(restore_proof)
         seed['retained_boundary'] = boundary
         admission = admit_next_batch(1000, 1001, deadline - time.monotonic(), latest_sample, positive_accepted=True)
         admissions.append(admission)
@@ -567,7 +617,9 @@ def main():
         batch_started = time.monotonic()
         output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) +
                            'select pg_temp.correction_capacity_append_to(1001);set constraints all immediate;commit;', writer_deadline, 'append-1001')
-        assert not _observations(output), 'Unexpected correction overflow writer observation'
+        batch, output = producer.parse_batch_output(output, 1000, 1001)
+        producer_batches.append(batch)
+        assert not output, 'Unexpected correction overflow writer observation'
         latest_sample = {'previous_target': 1000, 'target': 1001, 'elapsed_seconds': time.monotonic() - batch_started}
         samples.append(latest_sample)
         output = run_stage(runtime, seeded_preamble(parts['preamble'], seed) + parts['overlimit'], deadline, 'overlimit')
@@ -580,6 +632,7 @@ def main():
         assert runtime.technical(runtime.database) == technical
         assert runtime.snapshot() == original
         proof.update(checkpoints=checkpoints, admissions=admissions, samples=samples,
+                     correction_producer=producer.build_producer_proof(producer_batches, producer_contract, producer_contract_rolled_back),
                      canonical_replay_audit=replay_audit,
                      full_goal_forecasts_are_diagnostic_only=True,
                      global_probe_budget_seconds=900, writer_reserve_seconds=120,
@@ -593,14 +646,17 @@ def main():
                      technical_manifest_and_ten_canonical_writers_unchanged=True,
                      source_runtime_all_relations_unchanged=True,
                      genuine_1000_correction_chain_proven=True, genuine_1000_return_or_discrepancy_chains_proven=False,
-                     simultaneous_maxima_proven=False, selected_schema_populated_restore_proven=False,
+                     simultaneous_maxima_proven=False, selected_schema_populated_restore_proven=restore_proof is not None,
                      synthetic_only=True, sql_only=True, genuine_auth_api=False, canonical_migration=False,
                      actual_practice_rules=False, clinical_or_register_activation=False,
                      production_capacity_approved=False, hosted_writes=0, provider_requests=0)
+        if restore_proof is not None:
+            proof['correction_history_populated_restore'] = restore_proof
         with (folder / 'engine-correction-capacity-v1-preservation.json').open('x') as stream:
             json.dump({'original_source_and_clone': original, 'checkpoint_fingerprints': checkpoint_fingerprints,
                        'canonical1001_baseline': baseline['fingerprint'], 'canonical_replay_baselines': replay_baseline,
-                       'manifest_and_writers': technical}, stream, indent=2)
+                       'manifest_and_writers': technical, 'producer_contract_before': producer_before,
+                       'producer_contract_after': producer_after}, stream, indent=2)
             stream.write('\n')
         workload_finished_before_deadline = time.monotonic() < deadline
         assert workload_finished_before_deadline, 'Correction workload completed after global deadline'
