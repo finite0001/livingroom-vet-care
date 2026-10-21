@@ -203,8 +203,9 @@ mkdirSync("tmp/clinical-dictation-browser", { recursive: true, mode: 0o700 });
 try {
   sqlCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "204",
+    "205",
   );
+  sqlCheck(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");
   const first = await actor("First"),
     second = await actor("Colleague");
   const client = (

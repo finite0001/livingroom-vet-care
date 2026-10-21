@@ -3,6 +3,7 @@ import argparse
 import json
 import hashlib
 import os
+import re
 from pathlib import Path
 import shutil
 import socket
@@ -14,6 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true')
 parser.add_argument('--include-sql-regression', action='store_true', help='Run all canonical SQL suites in this fresh owned runtime')
 parser.add_argument('--decision-sql-only', action='store_true', help='Run the new decision SQL gate, then clean the owned runtime without claiming full acceptance')
+parser.add_argument('--retain-private-evidence', action='store_true', help='Retain a protected copy of synthetic logs and fixtures after removing the owned runtime')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
 if not args.run_synthetic_local:
@@ -41,7 +43,15 @@ def command(argv, timeout=240, **kwargs):
     log.write('COMMAND ' + ' '.join(map(str, argv)) + '\n' + result.stdout + result.stderr + '\n')
     log.flush()
     if result.returncode:
-        raise RuntimeError('Disposable local command failed; inspect protected log: ' + str(work / 'commands.log'))
+        # Keep raw SQL, records and subprocess output in the protected log.
+        # CI needs only the known harness name and validated SQLSTATE to locate
+        # a failure whose detailed child log is retained inside this runtime.
+        script = next((Path(str(arg)).name for arg in argv if str(arg).endswith(('.py', '.ts', '.mjs'))), 'owned-command')
+        if not re.fullmatch(r'[A-Za-z0-9_.-]{1,100}', script):
+            script = 'owned-command'
+        state = re.search(r'\bSQLSTATE[=: ]+([A-Z0-9]{5})\b', result.stderr)
+        detail = script + (', SQLSTATE=' + state.group(1) if state else '')
+        raise RuntimeError('Disposable local command failed [' + detail + ']; inspect protected log: ' + str(work / 'commands.log'))
     return result.stdout
 
 def verify_identity():
@@ -68,9 +78,9 @@ try:
     assert {'20260916100001','20260916110001','20260916120000','20260916130000','20260916123017'} <= versions, 'Combined communication attachment migrations required'
     if args.include_sql_regression:
         shutil.copytree(root/'supabase/tests',project/'supabase/tests',ignore=shutil.ignore_patterns('__pycache__'))
-    # 183 through 20261013233839_next_visit_staff_recovery.sql. This count is a tripwire:
+    # 205 through 20261020151157_controlled_stock_private_engine.sql. This count is a tripwire:
     # review it deliberately whenever the migration inventory changes.
-    assert len(versions) == 204 and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117','20260924120000','20260924130000','20260926031324','20260926090000','20260927120000','20260928100000','20260928110000','20260928120000','20260928121000','20260928130000','20260928140000','20260928150000','20260928160000','20260928170000','20260928180000','20260928190000','20260930100000','20260930120000','20260930130000','20261009011500','20261009160543','20261010021254','20261010034500','20261010170259','20261011025251','20261011181722','20261011203250','20261012035948','20261012153518','20261012210016','20261013003556','20261013181721','20261013214300','20261013220500','20261013233839','20261014022511','20261014154223','20261014202235','20261015011200','20261015020722','20261015055007','20261015235157','20261016004714','20261016020711','20261016040402','20261016143618','20261016162448'} <= versions, 'Canonical native prescription migration inventory required'
+    assert len(versions) == 205 and '20261020151157' in versions and '20261020151157_controlled_stock_private_engine.sql' in migration_hashes and {'20260916055043','20260916062136','20260916063857','20260916070108','20260916072509','20260916080105','20260916083056','20260916090000','20260916093000','20260916094500','20260916100000','20260916110000','20260916120716','20260916123017','20260916144117','20260924120000','20260924130000','20260926031324','20260926090000','20260927120000','20260928100000','20260928110000','20260928120000','20260928121000','20260928130000','20260928140000','20260928150000','20260928160000','20260928170000','20260928180000','20260928190000','20260930100000','20260930120000','20260930130000','20261009011500','20261009160543','20261010021254','20261010034500','20261010170259','20261011025251','20261011181722','20261011203250','20261012035948','20261012153518','20261012210016','20261013003556','20261013181721','20261013214300','20261013220500','20261013233839','20261014022511','20261014154223','20261014202235','20261015011200','20261015020722','20261015055007','20261015235157','20261016004714','20261016020711','20261016040402','20261016143618','20261016162448'} <= versions, 'Canonical native prescription migration inventory required'
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
 port = 63521
@@ -164,9 +174,9 @@ enabled = false
     stock_api_path=root/'tests/inventory/stock-writer-local.ts'
     stock_api_hash=hashlib.sha256(stock_api_path.read_bytes()).hexdigest()
     stock_api=json.loads(command(['node','--experimental-strip-types',str(stock_api_path)],env={**os.environ,'STOCK_TEST_PROJECT':str(project),'STOCK_RUN_SYNTHETIC_LOCAL':'true'},cwd=root,timeout=180))
-    assert stock_api['api_checks']==40 and stock_api['genuine_auth_postgrest']and stock_api['actual_live_session']and stock_api['anesthesia_one_debit_one_source']and stock_api['owned_actor_and_sessions_retired']and stock_api['non_stock_baselines_unchanged']and stock_api['provider_requests']==0
+    assert stock_api['api_checks']==41 and stock_api['genuine_auth_postgrest']and stock_api['actual_live_session']and stock_api['anesthesia_one_debit_one_source']and stock_api['owned_actor_and_sessions_retired']and stock_api['non_stock_baselines_unchanged']and stock_api['provider_requests']==0
     assert hashlib.sha256(stock_api_path.read_bytes()).hexdigest()==stock_api_hash
-    print('Shared stock boundary:40 genuine Auth/API checks; exact fractions and anesthesia single debit/source.',flush=True)
+    print('Shared stock boundary:41 genuine Auth/API checks; exact fractions and anesthesia single debit/source.',flush=True)
     stock_locks_path=root/'supabase/tests/stock_writer_concurrency.py'
     stock_locks_hash=hashlib.sha256(stock_locks_path.read_bytes()).hexdigest()
     stock_locks=json.loads(command(['python3','-B',str(stock_locks_path),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120))
@@ -221,8 +231,17 @@ if success:
                'runtime_status_sha256': runtime_status_hash, 'sql_regression':{'files':163,'assertions':7101}if args.include_sql_regression else None,
                'stock_boundary':{'api':stock_api,'concurrency':stock_locks,'restore':stock_restore,'api_sha256':stock_api_hash,'concurrency_sha256':stock_locks_hash,'restore_sha256':stock_restore_hash,'rollback_probe':stock_probe,'rollback_probe_sha256':stock_probe_hash,'handoff_rollback_probe':handoff_probe,'handoff_rollback_probe_sha256':handoff_probe_hash},
                'controlled_source_reconciliation':source_reconciliation,'controlled_source_reconciliation_sha256':source_reconciliation_hash}
+    retained = None
+    if args.retain_private_evidence:
+        retained = Path(tempfile.mkdtemp(prefix=identity + '-evidence-'))
+        shutil.copytree(work, retained / 'runtime-work')
+        (retained / 'result.json').write_text(json.dumps(summary, indent=2) + '\n')
     summary_path = work.parent / (identity + '-result.json')
     summary_path.write_text(json.dumps(summary, indent=2) + '\n')
     shutil.rmtree(work)
     print('Sanitized result: ' + str(summary_path), flush=True)
-    print('Disposable project containers, volumes and private temporary files removed; shared foundation untouched.', flush=True)
+    if retained is not None:
+        print('Protected evidence: ' + str(retained), flush=True)
+        print('Disposable project containers, volumes and runtime workdir removed; protected evidence retained.', flush=True)
+    else:
+        print('Disposable project containers, volumes and private temporary files removed; shared foundation untouched.', flush=True)

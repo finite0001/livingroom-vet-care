@@ -80,7 +80,7 @@ select jsonb_build_object(
 """
 
 
-def _validate_snapshot(value, phase):
+def _validate_snapshot(value, phase, *, ledger_mode='pre204', canonical_ledger=None):
     assert isinstance(value, dict) and set(value) == {'rows', 'ledger', 'writers', 'stored_manifest', 'live_manifest', 'implicit_owner_access', 'public_catalog'}
     assert isinstance(value['rows'], dict) and value['rows']
     for name, item in value['rows'].items():
@@ -90,9 +90,19 @@ def _validate_snapshot(value, phase):
         assert isinstance(item['hash'], str) and HEX.fullmatch(item['hash'])
     ledger = value['ledger']
     assert isinstance(ledger, dict) and set(ledger) == {'present', 'rows'} and type(ledger['present']) is bool
-    if ledger['present']:
-        assert isinstance(ledger['rows'], list) and len(ledger['rows']) == 204
+    assert ledger_mode in ('pre204', 'canonical205', 'absent_restore')
+    if ledger_mode == 'canonical205':
+        assert phase == 'installed' and ledger['present'] is True
+        assert isinstance(canonical_ledger, dict) and set(canonical_ledger) == {'original_rows', 'binding'}
+        from canonical_post205 import verify_canonical_ledger
+        verify_canonical_ledger(ledger['rows'], canonical_ledger['original_rows'], canonical_ledger['binding'])
     else:
+        assert canonical_ledger is None
+        if ledger['present']:
+            assert ledger_mode == 'pre204' and isinstance(ledger['rows'], list) and len(ledger['rows']) == 204
+    if ledger_mode == 'absent_restore':
+        assert phase == 'populated_restore' and ledger['present'] is False
+    if not ledger['present']:
         assert phase == 'populated_restore' and ledger['rows'] is None
     assert phase != 'installed' or ledger['present'] is True
     assert isinstance(value['writers'], dict) and len(value['writers']) == 10
@@ -173,7 +183,7 @@ def _failure(result, label):
     assert re.search(r'(?:^|\n)ERROR:\s+23514: ' + re.escape(MESSAGE) + r'\s*(?:\n|$)', result.stderr), 'Exact ongoing manifest refusal required'
 
 
-def probe_column_acl_seal(sql, raw_sql, prior_sql, *, phase='installed'):
+def probe_column_acl_seal(sql, raw_sql, prior_sql, *, phase='installed', ledger_mode='pre204', canonical_ledger=None):
     """Observe six real grants, require ongoing refusal and exact rollback.
 
     prior_sql is accepted for the runner callback interface but is never used to
@@ -182,12 +192,12 @@ def probe_column_acl_seal(sql, raw_sql, prior_sql, *, phase='installed'):
     """
     assert callable(sql) and callable(raw_sql) and isinstance(prior_sql, str)
     assert phase in ('installed', 'populated_restore')
-    baseline = _validate_snapshot(_json(sql(SNAPSHOT_SQL)), phase)
+    baseline = _validate_snapshot(_json(sql(SNAPSHOT_SQL)), phase, ledger_mode=ledger_mode, canonical_ledger=canonical_ledger)
     outcomes = []
     for case in CASES:
         label, relation, column, grantee, option = case
         _failure(raw_sql('\\set VERBOSITY verbose\n' + _mutation(case)), label)
-        after = _validate_snapshot(_json(sql(SNAPSHOT_SQL)), phase)
+        after = _validate_snapshot(_json(sql(SNAPSHOT_SQL)), phase, ledger_mode=ledger_mode, canonical_ledger=canonical_ledger)
         assert after == baseline, 'Column ACL refusal changed private data/catalog baseline: ' + label
         outcomes.append({'case': label, 'relation': relation, 'column': column, 'grantee': grantee,
                          'grant_option_checked': option, 'grant_option_only_metadata_flip_observed': option, 'expected_table_select': grantee == 'owner',
@@ -198,7 +208,8 @@ def probe_column_acl_seal(sql, raw_sql, prior_sql, *, phase='installed'):
         'manifest_version': 2, 'manifest_functions': 171, 'manifest_relations': 51,
         'selected_data_schemas': list(SCHEMAS), 'catalog_schema': 'public',
         'data_relation_count': len(baseline['rows']), 'private_baseline_sha256': _digest(baseline),
-        'ledger_present': baseline['ledger']['present'], 'ledger_rows': 204 if baseline['ledger']['present'] else 0,
+        'ledger_present': baseline['ledger']['present'], 'ledger_rows': len(baseline['ledger']['rows']) if baseline['ledger']['present'] else 0,
+        'ledger_mode': ledger_mode if baseline['ledger']['present'] else 'absent_restore', 'canonical_ledger_verified': ledger_mode == 'canonical205',
         'refusal_count': 6, 'outcomes': outcomes, 'implicit_owner_access_preserved': True,
         'manifest_never_resealed': True, 'grant_option_only_metadata_flip_verified': True, 'all_data_catalog_ledger_writers_and_manifest_rolled_back': True,
         'hosted_writes': 0, 'clinical_or_register_activation': False})
@@ -208,12 +219,16 @@ def validate_proof(proof):
     assert isinstance(proof, dict)
     flags = {'implicit_owner_access_preserved', 'manifest_never_resealed', 'grant_option_only_metadata_flip_verified', 'all_data_catalog_ledger_writers_and_manifest_rolled_back'}
     assert set(proof) == flags | {'kind', 'phase', 'passed', 'manifest_version', 'manifest_functions', 'manifest_relations',
-        'selected_data_schemas', 'catalog_schema', 'data_relation_count', 'private_baseline_sha256', 'ledger_present', 'ledger_rows', 'refusal_count', 'outcomes', 'hosted_writes', 'clinical_or_register_activation'}
+        'selected_data_schemas', 'catalog_schema', 'data_relation_count', 'private_baseline_sha256', 'ledger_present', 'ledger_rows', 'ledger_mode', 'canonical_ledger_verified', 'refusal_count', 'outcomes', 'hosted_writes', 'clinical_or_register_activation'}
     assert proof['kind'] == 'controlled-column-acl-seal-v1' and proof['phase'] in ('installed', 'populated_restore') and proof['passed'] is True
     for key, expected in [('manifest_version', 2), ('manifest_functions', 171), ('manifest_relations', 51), ('refusal_count', 6), ('hosted_writes', 0)]:
         assert type(proof[key]) is int and proof[key] == expected
     assert type(proof['ledger_present']) is bool and type(proof['ledger_rows']) is int
-    assert proof['ledger_rows'] == (204 if proof['ledger_present'] else 0)
+    assert proof['ledger_mode'] in ('pre204', 'canonical205', 'absent_restore')
+    expected_rows = {'pre204': 204, 'canonical205': 205, 'absent_restore': 0}[proof['ledger_mode']]
+    assert proof['ledger_rows'] == expected_rows and proof['ledger_present'] is (proof['ledger_mode'] != 'absent_restore')
+    assert proof['canonical_ledger_verified'] is (proof['ledger_mode'] == 'canonical205')
+    assert proof['ledger_mode'] != 'canonical205' or proof['phase'] == 'installed'
     assert proof['phase'] != 'installed' or proof['ledger_present'] is True
     assert type(proof['data_relation_count']) is int and proof['data_relation_count'] > 0
     assert proof['selected_data_schemas'] == SCHEMAS and proof['catalog_schema'] == 'public'

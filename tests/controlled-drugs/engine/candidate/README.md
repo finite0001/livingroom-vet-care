@@ -1,6 +1,6 @@
 # Isolated controlled-stock execution candidate
 
-This is executable **local development code**, outside `supabase/migrations` and the application runtime. It implements the proposed C1b prepare/execute/read/cancel protocol and physical source/container posting so its invariants can be exercised before a production migration is prepared. It does not complete C1b release acceptance, C2 workflows or C3 commissioning. Susan’s rules remain draft and inactive.
+This directory contains executable **owned-local test code**. The exact reviewed CLI body is also promoted as canonical migration `20261020151157_controlled_stock_private_engine.sql`; that repository promotion does not install it on a hosted backend. It implements the proposed C1b prepare/execute/read/cancel protocol and physical source/container posting so its invariants can be exercised before a production migration is prepared. It does not complete C1b release acceptance, C2 workflows or C3 commissioning. Susan’s rules remain draft and inactive.
 
 ```sh
 python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --include-sql-regression
@@ -371,7 +371,90 @@ an excluded earlier receipt-adapter failure. CI retains the full ordinary and
 historical compatibility runs and adds this proof. Its actual runtime image is
 recorded; this standalone driver does not enforce an independent image pin.
 
-This is a local transaction-boundary proof. The repository still has 204 canonical
-migrations; canonical promotion and full post-205 compatibility remain separate
-work. Hosted installation, C2/C3 completion and clinical/register activation are
+The original dated receipt describes a local transaction-boundary proof against
+204 canonical migrations. The canonical promotion and full post-205 compatibility
+lane are described separately below. Hosted installation, C2/C3 completion and clinical/register activation are
 not established. Susan's clinical and register approval remains pending.
+
+
+### Canonical migration 205 and independent preinstallation proof
+
+The canonical migration contains the exact frozen CLI body `997769…252b3`, with
+no SQL rewrite or expected-pin update. `canonical_prefix.py` accepts precisely
+205 repository files: the independently pinned original 204 files plus this exact
+filename and body. The core release assembly still accepts only its original
+204-file input. The offline artifact checks validate the full repository before
+selecting that original prefix.
+
+CI now selects the canonical lane for the full ordinary and historical runs:
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --use-canonical-migration --include-sql-regression --include-correction-capacity --include-correction-restore
+python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local --use-canonical-migration
+```
+
+Both runners capture the untouched 204 stage before installation; historical
+runs first create genuine 187/188 seeds and upgrade them to 204. Prior metadata
+and original SQL scalar implementations are captured before installation, and ordinary failure
+rehearsals stay on that untouched baseline. The canonical file is then copied to
+the owned project and applied by Supabase CLI 2.118.0. Canonical mode never runs
+the private SQL installer a second time. The strict postinstall verifier compares
+all original source data and complete 204 ledger rows, exact new filename/version/
+name/94-entry array, ten writer definitions, the independent version-2 literal
+manifest, and private zero-activation state. Scalar compatibility uses the actual
+preinstallation originals. Historical replays retain their genuine 187/188 seeds.
+
+Installed column-ACL probes require explicit verified-205 ledger context. A
+populated selected-schema restore still has no migration ledger, and its separate
+absence checks remain strict. Current disposable application runtimes deliberately
+require 205 and the exact new migration version; historical preinstallation checks
+remain at 204. The actual CLI atomicity runner uses this canonical filename for
+clean application and retry, with negative variants confined to its owned copy.
+
+The [canonical promotion evidence](../../../../docs/launch-evidence/2026-10-20-controlled-canonical-205.md)
+records source-bound execution results and any pending checks. Repository promotion
+and local compatibility do not establish hosted installation, physical stock
+reconciliation, complete C1b acceptance, C2 workflows or C3 commissioning. Susan's
+clinical/register approval remains pending.
+
+
+The attachment metadata/original race fixtures now clone the independently
+verified current schema and data, including its real 205 ledger and manifest.
+They refuse conflicting fixture identities or attachment data, verify the clone
+against the independent pin and source fingerprints, then check source
+preservation and marked cleanup. They no longer drop the copied public schema or
+manually replay canonical SQL without a ledger. This is a logical fixture clone;
+publication/subscription and whole-cluster recovery remain outside its scope.
+
+Current counted migration guards also contribute to their existing test receipts.
+The exact reconciliation, controlled-draft and stock-writer receiver totals include
+that extra assertion; unrelated inventory and operational-task totals are retained.
+
+The retained migration SQL fixtures preserve a complete before/after delivery
+baseline across outbox rows, messages, deliveries and attempts. Ordered full-row
+JSON array fingerprints and counts detect same-count changes as well as added or
+removed rows. Baselines precede fixture actors and RPCs; final comparisons run
+after all fixture actions with full visibility. Existing queued messages remain
+intact in verified attachment clones.
+
+Original-capture SQL also preserves complete patient-document and manual-receipt
+baselines captured before fixture setup and compared after all actions. Attachment
+clone admission explicitly refuses existing migration runs, scopes and bindings
+whose global fixture counts require an empty import family. It preserves unrelated
+patient-document rows. Receipt fingerprint diagnostics use a separate rolled-back
+FK-valid fixture; they do not establish persistent receipt-source admission or
+clinical provenance. Canonical document and receipt immutability remains enforced.
+
+The native full-stack runner keeps its current-205 populated stock restore separate
+from genuine 187/188 historical upgrades. Historical checks boot only each pinned
+canonical prefix, then apply the unchanged next migration through the real CLI.
+They retain last-root drift rollback, exact legacy receipts, no backfill and new
+source enforcement. The 188-to-189 manifest change must preserve all eight original
+rows and append exactly the two independently expected handoff rows. They do not
+remove old admission types while retaining 205 triggers.
+
+For owned local audit, `tests/prescriptions/native-disposable.py` accepts
+`--retain-private-evidence`; it copies synthetic logs, snapshots and fixtures into
+a protected directory while removing the runtime containers, volumes and workdir.
+Default CI output includes only a known harness name and validated SQLSTATE on
+subprocess failure. Raw SQL, source rows and detailed child output stay private.

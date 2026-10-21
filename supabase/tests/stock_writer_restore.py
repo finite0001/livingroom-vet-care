@@ -3,9 +3,12 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import uuid
+
+from stock_writer_historical_upgrade import run_historical_upgrades
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true', required=True)
@@ -39,7 +42,9 @@ def sql(query, database='postgres', expected_error=None):
         assert result.returncode != 0 and expected_error in result.stderr, 'Expected isolated restore rejection missing; protected log retained'
         return ''
     if result.returncode:
-        raise RuntimeError('Owned stock-source restore failed; protected stock-source-restore.log retained')
+        states = re.findall(r'^ERROR:\s+([0-9A-Z]{5}):', result.stderr, re.MULTILINE)
+        state = states[-1] if states else 'unknown'
+        raise RuntimeError('Owned stock-source restore failed; SQLSTATE ' + state + '; protected log retained')
     return result.stdout.strip()
 
 
@@ -117,103 +122,32 @@ try:
     sql(f"begin;update profiles set is_active=true where id='{record['actor']}';set local request.jwt.claims='{claims}';insert into inventory_movements(id,lot_id,quantity,kind,reason,created_by,created_at) values('{uuid.uuid4()}','{lot}',1,'adjust','Restored stale admission attempt','{record['actor']}',clock_timestamp());commit;", restored, 'Stock writer admission required')
     assert snapshot(tables, restored) == before
 
-    upgrade = clone('upgrade')
-    manifest = json.loads(sql("select jsonb_agg(jsonb_build_object('writer',writer,'signature',signature,'prior_hash',prior_definition_sha256,'definition',replace(pg_get_functiondef(signature::regprocedure),chr(10)||format(' perform public.stock_writer_enter(%L,p_id);',writer),''))order by writer)from stock_writer_manifests;", upgrade))
-    assert len(manifest) == 10
-    handoff_manifest = [entry for entry in manifest if entry['writer'] in ('record_native_pickup','append_native_dispense_correction')]
-    manifest = [entry for entry in manifest if entry not in handoff_manifest]
-    assert len(manifest) == 8 and len(handoff_manifest) == 2
-    # Reconstruct the real pre-C1a (187) boundary in this OWNED clone. The later
-    # handoff extension must be removed too, rather than silently retaining two
-    # hooks whose private admission helper is about to be removed.
-    for entry in handoff_manifest:
-        assert hashlib.sha256(entry['definition'].encode()).hexdigest() == entry['prior_hash']
-        sql(entry['definition'], upgrade)
-    sql('drop function stock_handoff_guard() cascade;drop function stock_handoff_consistency() cascade;drop table stock_pickup_sources;drop table stock_correction_sources;', upgrade)
-    for entry in manifest:
-        # This is the EXACT canonical pre-migration function text, not a mock
-        # old writer. Only the inserted entry line is removed, hash-verified.
-        assert hashlib.sha256(entry['definition'].encode()).hexdigest() == entry['prior_hash']
-        sql(entry['definition'], upgrade)
-    for helper in helpers:
-        sql('drop function if exists public.' + helper + ' cascade;', upgrade)
-    for table in source_tables:
-        sql('drop table if exists public.' + table + ' cascade;', upgrade)
-    assert sql("select count(*)from pg_trigger where not tgisinternal and tgname in('stock_source_admission','aaa_stock_source_capture','stock_source_required');", upgrade) == '0'
-    for entry in manifest:
-        assert sql(f"select encode(sha256(convert_to(pg_get_functiondef('{entry['signature']}'::regprocedure),'UTF8')),'hex');", upgrade) == entry['prior_hash']
-    actor = record['actor']
-    product = sql("select id from catalog_products where active and kind<>'service'order by id limit 1;", upgrade)
-    legacy_id, legacy_lot = str(uuid.uuid4()), str(uuid.uuid4())
-    legacy_request = f"select to_jsonb(receive_inventory('{legacy_id}','{legacy_lot}','{product}','SYNTHETIC-LEGACY-{legacy_id[:8]}','2099-12-31','Synthetic upgrade clinic',1.125,'Synthetic pre-provenance receipt'))"
-    legacy_receipt = json.loads(sql(staff(actor, legacy_request, False), upgrade).splitlines()[-1])
-    legacy_before = snapshot(clinical_tables, upgrade)
-    assert hashlib.sha256(migration.read_bytes()).hexdigest() == migration_hash
-    # Drift the LAST of the eight roots. Failure must roll back all five new
-    # tables and the SEVEN entry hooks already patched earlier in the migration.
-    last=next(entry for entry in manifest if entry['writer']=='record_native_return_discrepancy')
-    drifted=last['definition'].replace('begin','begin /* synthetic unreviewed drift */',1)
-    sql(drifted,upgrade)
-    sql(migration.read_text(),upgrade,'Unexpected pre-migration stock writer definition')
-    assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and relname in('stock_writer_manifests','stock_writer_admissions','stock_movement_sources','stock_custody_sources','stock_discrepancy_sources');",upgrade)=='0'
-    for entry in manifest:
-        if entry['writer']!=last['writer']:
-            assert sql(f"select encode(sha256(convert_to(pg_get_functiondef('{entry['signature']}'::regprocedure),'UTF8')),'hex');",upgrade)==entry['prior_hash']
-    assert snapshot(clinical_tables,upgrade)==legacy_before
-    sql(last['definition'],upgrade)
-    sql(migration.read_text(), upgrade)
-    assert snapshot(clinical_tables, upgrade) == legacy_before
-    assert sql('select count(*)from stock_movement_sources;', upgrade) == '0', 'Old stock history must not be silently backfilled'
-    assert json.loads(sql(staff(actor, legacy_request), upgrade).splitlines()[-1]) == legacy_receipt
-    assert snapshot(clinical_tables, upgrade) == legacy_before
-    assert sql('select count(*)from stock_movement_sources;', upgrade) == '0', 'Old receipt recovery must not invent a new source/event'
-    next_id, next_lot = str(uuid.uuid4()), str(uuid.uuid4())
-    query = f"select to_jsonb(receive_inventory('{next_id}','{next_lot}','{product}','SYNTHETIC-NEW-{next_id[:8]}','2099-12-31','Synthetic upgrade clinic',0.125,'Synthetic post-upgrade receipt'))"
-    saved = json.loads(sql(staff(actor, query, False), upgrade).splitlines()[-1])
-    assert saved['id'] == next_id
-    assert sql('select count(*)from stock_movement_sources;', upgrade) == '1'
-    sql(f"select stock_source_validate_movement('{next_id}');", upgrade)
-    assert json.loads(sql(staff(actor, legacy_request), upgrade).splitlines()[-1]) == legacy_receipt
-    assert sql(f"select sum(quantity)::text from inventory_movements where lot_id='{next_lot}';", upgrade) == '0.125'
+    # Historical source upgrades run on genuine migration-prefix runtimes.
+    # Removing provenance tables from this installed-205 clone would leave
+    # compiled 205 trigger dependencies and would not reconstruct either era.
+    expected_prior = json.loads(sql("select jsonb_agg(jsonb_build_object('writer',writer,'signature',signature,'prior_hash',prior_definition_sha256)order by writer)from stock_writer_manifests;"))
+    assert len(expected_prior) == 10
+    historical = run_historical_upgrades(root, project/'stock-historical-evidence', expected_prior)
+    # Validate the returned, separately owned era receipts before publishing
+    # compatibility fields below; no historical definitions are adopted here.
+    assert historical['kind'] == 'controlled-stock-genuine-historical-upgrades-v1'
+    assert historical['passed'] is True and historical['owned_runtimes_removed'] is True
+    source_upgrade = historical['source_upgrade187']
+    handoff_upgrade = historical['handoff_upgrade188']
+    assert type(source_upgrade['exact_prior_definition_hashes']) is int and source_upgrade['exact_prior_definition_hashes'] == 8
+    assert type(handoff_upgrade['exact_prior_definition_hashes']) is int and handoff_upgrade['exact_prior_definition_hashes'] == 2
+    for flag in ('legacy_history_preserved', 'unexpected_drift_denied_atomically',
+                 'legacy_receipt_unchanged_without_backfill', 'new_post_upgrade_source_enforced'):
+        assert source_upgrade[flag] is True
+    for flag in ('history_preserved', 'source_drift_rolls_back_all_ddl',
+                 'legacy_replay_has_no_backfill', 'new_correction_has_one_source_and_no_stock_or_billing_effect'):
+        assert handoff_upgrade[flag] is True
+    assert isinstance(historical['source_hashes'], dict) and historical['source_hashes']
+    for name, digest in historical['source_hashes'].items():
+        source = (root/name).resolve()
+        assert source.is_relative_to(root) and isinstance(digest, str) and re.fullmatch('[0-9a-f]{64}', digest)
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
 
-    # Independent 188 -> 189 rehearsal. Retain actual populated old handoffs,
-    # original receipts and all clinical/financial data; remove only the new
-    # coverage inside this marked, disposable clone.
-    handoff_upgrade=clone('handoff_upgrade')
-    for entry in handoff_manifest:
-        sql(entry['definition'],handoff_upgrade)
-    sql("drop function stock_handoff_guard()cascade;drop function stock_handoff_consistency()cascade;drop table stock_pickup_sources;drop table stock_correction_sources;alter table stock_writer_manifests disable trigger immutable;delete from stock_writer_manifests where writer in('record_native_pickup','append_native_dispense_correction');alter table stock_writer_manifests enable trigger immutable;",handoff_upgrade)
-    prior_handoff=snapshot(handoff_clinical,handoff_upgrade)
-    last=next(entry for entry in handoff_manifest if entry['writer']=='append_native_dispense_correction')
-    sql(last['definition'].replace('begin','begin /* synthetic handoff source drift */',1),handoff_upgrade)
-    sql(handoff_migration.read_text(),handoff_upgrade,'Unexpected pre-migration handoff writer definition')
-    assert sql("select count(*)from pg_class where relnamespace='public'::regnamespace and relname in('stock_pickup_sources','stock_correction_sources');",handoff_upgrade)=='0'
-    assert sql('select count(*)from stock_writer_manifests;',handoff_upgrade)=='8'
-    first=next(entry for entry in handoff_manifest if entry['writer']=='record_native_pickup')
-    assert sql(f"select encode(sha256(convert_to(pg_get_functiondef('{first['signature']}'::regprocedure),'UTF8')),'hex');",handoff_upgrade)==first['prior_hash']
-    assert snapshot(handoff_clinical,handoff_upgrade)==prior_handoff
-    sql(last['definition'],handoff_upgrade)
-    assert hashlib.sha256(handoff_migration.read_bytes()).hexdigest()==handoff_migration_hash
-    sql(handoff_migration.read_text(),handoff_upgrade)
-    assert snapshot(handoff_clinical,handoff_upgrade)==prior_handoff
-    for item in handoff_receipts:
-        assert json.loads(sql(staff(item['actor'],item['query']),handoff_upgrade).splitlines()[-1])==item['receipt']
-    assert sql('select(select count(*)from stock_pickup_sources)+(select count(*)from stock_correction_sources);',handoff_upgrade)=='0', 'Legacy recovery must never invent source evidence'
-    assert snapshot(handoff_clinical,handoff_upgrade)==prior_handoff
-    item=json.loads(sql("select jsonb_build_object('actor',actor_id,'request',request)from native_dispense_correction_operations where request->>'kind'='operational_annotation'order by created_at limit 1;",handoff_upgrade))
-    new_id=str(uuid.uuid4())
-    request=json.dumps(item['request'],separators=(',',':')).replace("'","''")
-    # Freeze a fresh canonical preview; the physical/correction request remains
-    # the original native API, with no new approval or stock semantics.
-    new_query=f"""do $proof$declare request jsonb:='{request}'::jsonb;preview jsonb;begin
-      preview:=preview_native_dispense_correction((request->>'authorization_id')::uuid,(request->>'pet_id')::uuid,(request->>'dispense_id')::uuid);
-      request:=request||jsonb_build_object('expected_context_hash',preview->>'context_hash','expected_head',preview#>'{{context,head}}');
-      perform append_native_dispense_correction('{new_id}',request);
-    end $proof$"""
-    stock_before=snapshot(['inventory_movements','billing_invoices','billing_invoice_items'],handoff_upgrade)
-    sql(staff(item['actor'],new_query,False),handoff_upgrade)
-    assert sql(f"select count(*)from stock_correction_sources where event_id='{new_id}'and actor_id='{item['actor']}';",handoff_upgrade)=='1'
-    assert snapshot(['inventory_movements','billing_invoices','billing_invoice_items'],handoff_upgrade)==stock_before
 finally:
     for database, marker in owned.items():
         assert sql(f"select shobj_description(oid,'pg_database')from pg_database where datname='{database}';") == marker
@@ -222,7 +156,8 @@ finally:
 assert snapshot(tables) == before
 assert snapshot(handoff_tables)==handoff_before
 log.close()
-proof = {'populated_source_families': 5, 'snapshot_relations': 21, 'all_eight_writer_sources_present': True, 'exact_snapshot_restored': True, 'exact_native_receipt_replayed': True, 'restored_stale_admission_denied': True, 'private_grants_and_manifest_restored': True, 'upgrade_exact_prior_definition_hashes': 8, 'populated_upgrade_preserved_legacy_history': True, 'unexpected_source_drift_denied_atomically': True, 'legacy_receipt_unchanged_without_backfill': True, 'new_post_upgrade_source_enforced': True, 'owned_clone_databases_removed': True, 'original_database_unchanged': True, 'migration_sha256': migration_hash, 'provider_requests': 0}
-proof['handoff_extension']={'populated_snapshot_relations':26,'additional_source_families':2,'exact_snapshot_restored':True,'original_pickup_and_correction_receipts_restored':True,'upgrade_from_188_preserves_history':True,'source_drift_rolls_back_all_ddl':True,'legacy_replay_has_no_backfill':True,'new_correction_has_one_source_and_no_stock_or_billing_effect':True,'private_grants_restored':True,'migration_sha256':handoff_migration_hash}
+proof = {'populated_source_families': 5, 'snapshot_relations': 21, 'all_eight_writer_sources_present': True, 'exact_snapshot_restored': True, 'exact_native_receipt_replayed': True, 'restored_stale_admission_denied': True, 'private_grants_and_manifest_restored': True, 'upgrade_exact_prior_definition_hashes': source_upgrade['exact_prior_definition_hashes'], 'populated_upgrade_preserved_legacy_history': source_upgrade['legacy_history_preserved'], 'unexpected_source_drift_denied_atomically': source_upgrade['unexpected_drift_denied_atomically'], 'legacy_receipt_unchanged_without_backfill': source_upgrade['legacy_receipt_unchanged_without_backfill'], 'new_post_upgrade_source_enforced': source_upgrade['new_post_upgrade_source_enforced'], 'owned_clone_databases_removed': True, 'original_database_unchanged': True, 'migration_sha256': migration_hash, 'provider_requests': 0}
+proof['handoff_extension']={'populated_snapshot_relations':26,'additional_source_families':2,'exact_snapshot_restored':True,'original_pickup_and_correction_receipts_restored':True,'upgrade_from_188_preserves_history':handoff_upgrade['history_preserved'],'source_drift_rolls_back_all_ddl':handoff_upgrade['source_drift_rolls_back_all_ddl'],'legacy_replay_has_no_backfill':handoff_upgrade['legacy_replay_has_no_backfill'],'new_correction_has_one_source_and_no_stock_or_billing_effect':handoff_upgrade['new_correction_has_one_source_and_no_stock_or_billing_effect'],'private_grants_restored':True,'migration_sha256':handoff_migration_hash}
+proof['genuine_historical_upgrades'] = historical
 (project/'stock-writer-restore-proof.json').write_text(json.dumps(proof, indent=2))
 print(json.dumps(proof))

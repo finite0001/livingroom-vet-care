@@ -17,6 +17,8 @@ import uuid
 
 from local_install import build_install, assert_prior
 from scalar_contract import capture_originals, verify_installation
+from canonical_prefix import canonical_prefix, canonical_binding
+from canonical_post205 import capture_pre204, verify_canonical_installed
 from history_environment import assert_bootstrap_image
 from native_history_restore import probe_generic_restore
 
@@ -178,7 +180,7 @@ enabled = false
             self.log.close()
 
 
-def rehearse(era, files, assembly, folder):
+def rehearse(era, files, assembly, folder, binding=None):
     replay = OwnedReplay(era, folder)
     outcome = None
     try:
@@ -222,7 +224,17 @@ def rehearse(era, files, assembly, folder):
             assert len(roots) == 10
             assert replay.sql("select count(*)from stock_writer_manifests where definition_sha256=encode(sha256(convert_to(pg_get_functiondef(to_regprocedure(signature)),'UTF8')),'hex');").strip() == '10'
             replay.no_controlled_data()
-            replay.sql(assembly['install'])
+            canonical_proof=None
+            if binding is not None:
+                canonical_baseline=capture_pre204(replay.sql,assembly['prior_sql'],assembly['trusted'],phase='historical')
+                (replay.folder/'canonical-pre204-baseline.json').write_text(json.dumps(canonical_baseline,indent=2)+'\n')
+                shutil.copy2(root/binding['canonical_path'],replay.project/'supabase/migrations'/binding['filename'])
+                replay.verify()
+                replay.command(['supabase','migration','up','--local','--workdir',str(replay.project),'--yes','--output-format','json'],timeout=240)
+                canonical_proof=verify_canonical_installed(replay.sql,json.loads((source/'release-expected-204.json').read_text()),canonical_baseline,binding)
+                assert canonical_proof['passed']is True
+            else:
+                replay.sql(assembly['install'])
             scalar_compatibility = verify_installation(replay.sql, scalar_originals, source / 'scalar-compatibility.sql')
             assert replay.snapshot(original_columns) == before, 'Candidate installation changed original history'
             assert replay.json('select jsonb_object_agg(signature,definition_sha256)from stock_writer_manifests;') == roots
@@ -233,7 +245,7 @@ def rehearse(era, files, assembly, folder):
             observations = []
             for case in seed['cases']:
                 observation = replay.json((source / 'native-history-observe.sql').read_text(),
-                                          {'ids_json': json.dumps(seed), 'case_name': case['name']})
+                                          {'ids_json': json.dumps(seed), 'case_name': case['name'], 'expected_migration_count':205 if binding is not None else 204})
                 assert observation['case_name'] == case['name']
                 assert replay.snapshot(final_columns) == installed, 'Observation changed stored state: ' + case['name']
                 replay.verify_writers(roots)
@@ -259,7 +271,8 @@ def rehearse(era, files, assembly, folder):
             (replay.folder / 'preservation.json').write_text(json.dumps({'original_columns': original_columns,
                 'original_before_and_after': before, 'post_install_after_each_observation': installed}, indent=2))
             outcome = {'era': era, 'postgres_image': image, 'postgres_content_pin': image_pin,
-                'original_checkpoint': files[era - 1].name, 'final_migrations': len(files),
+                'original_checkpoint': files[era - 1].name, 'final_migrations':205 if binding is not None else len(files),
+                'canonical_205_install':canonical_proof,
                 'original_relation_count': len(before), 'final_relation_count': len(installed),
                 'original_rows': sum(x['count'] for x in before.values()),
                 'original_columns_rows_unchanged': True, 'post_install_state_unchanged_after_each_case': True,
@@ -279,39 +292,44 @@ def rehearse(era, files, assembly, folder):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-synthetic-local', action='store_true', required=True)
-    parser.add_argument('--use-release-assembly', action='store_true', help='Install the independently pinned artifact after the canonical suffix')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--use-canonical-migration',action='store_true',help='Apply canonical205 via realCLI after original204 capture')
+    mode.add_argument('--use-release-assembly', action='store_true', help='Install the independently pinned artifact after the canonical suffix')
     args = parser.parse_args()
     os.umask(0o077)
-    files = sorted((root / 'supabase/migrations').glob('*.sql'))
-    assert len(files) == 204, 'Review the exact native upgrade baseline before rebasing'
+    all_files=sorted((root/'supabase/migrations').glob('*.sql'))
+    files=canonical_prefix(source,all_files)
+    binding=canonical_binding(source,all_files)if args.use_canonical_migration else None
     assert files[186].name == '20261015011200_controlled_draft_configuration.sql'
     assert files[187].name == '20261015020722_stock_writer_provenance.sql'
     assert files[188].name == '20261015055007_native_custody_provenance.sql'
     for name in ['native-history-seed.sql', 'native-history-observe.sql', 'native-history-generic-opening.sql']:
         assert (source / name).is_file(), 'Required source-bound fixture missing: ' + name
-    inputs = files + sorted(source.glob('*.sql')) + sorted(source.glob('*.py')) + [
+    inputs = all_files + sorted(source.glob('*.sql')) + sorted(source.glob('*.py')) + [
         source / 'trusted-prior-189.json', root / 'supabase/tests/native_fulfillment.test.sql',
-        root / 'tests/controlled-drugs/owned_scheduler.py', source.parent / 'source-reader.sql',
+        root / 'tests/controlled-drugs/owned_scheduler.py',root/'.github/workflows/ci.yml', source.parent / 'source-reader.sql',
         source.parent / 'source-effects.sql']
-    if args.use_release_assembly:
-        inputs.extend([source / 'release-expected-204.json', source / 'release-expected-204-v1.json', source.parent / 'release/controlled-stock-private.sql'])
+    if args.use_release_assembly or args.use_canonical_migration:
+        inputs.extend([source / 'release-expected-204.json', source / 'release-expected-204-v1.json', source.parent / 'release/controlled-stock-private.sql',source.parent/'release/controlled-stock-cli-body.sql'])
     hashes = {str(p.relative_to(root)): digest(p) for p in inputs}
     folder = Path(tempfile.mkdtemp(prefix='lrv-native-history-evidence-'))
     print('Protected evidence: ' + str(folder), flush=True)
+    (folder/'source-hashes.json').write_text(json.dumps(hashes,sort_keys=True,indent=2)+'\n')
     cli = subprocess.run(['supabase', '--version'], capture_output=True, text=True, timeout=30, check=True)
     assert cli.stdout.strip() == '2.118.0', 'Use the reviewed CLI bootstrap; never normalize trusted ACL drift'
     assembly = build_install(source, files)
     release_bundle = None
-    if args.use_release_assembly:
+    if args.use_release_assembly or args.use_canonical_migration:
         from release_assembly import build_release
         release_bundle = build_release(source, files)
         assert release_bundle['install'].encode() == (source.parent / 'release/controlled-stock-private.sql').read_bytes(), 'Frozen release artifact differs from reviewed assembly'
         assembly['install'] = release_bundle['install']
-    outcomes = [rehearse(era, files, assembly, folder) for era in (187, 188)]
+    outcomes = [rehearse(era, files, assembly, folder, binding) for era in (187, 188)]
     assert sum(len(x['observations']) for x in outcomes) == 7
     assert sum(len(x['generic_observations']) for x in outcomes) == 2
     assert all(digest(root / path) == expected for path, expected in hashes.items()), 'Source changed during proof'
-    proof = {'synthetic_only': True, 'hosted_writes': 0, 'provider_requests': 0, 'canonical_migration': False,
+    proof = {'synthetic_only': True, 'hosted_writes': 0, 'provider_requests': 0, 'canonical_migration':binding is not None,'repository_canonical_migration_count':len(all_files),
+             'canonical_migration_filename':binding['filename']if binding is not None else None,
              'clinical_or_register_activation': False, 'trusted_reference_regenerated': False,
              'trusted_reference_sha256': assembly['reference_sha256'], 'supabase_cli': cli.stdout.strip(), 'source_hashes': hashes,
              'replays': outcomes, 'observed_cases': sum(len(x['observations']) for x in outcomes),
@@ -321,6 +339,7 @@ def main():
         proof['frozen_release_artifact'] = {'artifact_sha256': release_bundle['artifact_sha256'],
                                           'pin_sha256': release_bundle['pin_sha256'],
                                           'installed_after_canonical_suffix': True,
+                                          'installation_method':'canonical_cli_205'if binding is not None else'private_artifact',
                                           'hosted_installation': False, 'clinical_or_register_activation': False}
     (folder / 'result.json').write_text(json.dumps(proof, indent=2))
     print('PASS: genuine 187/188 history upgraded unchanged; seven native outcomes and two generic openings observed; populated opening restores and cleanup verified.', flush=True)

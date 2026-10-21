@@ -15,6 +15,8 @@ import uuid
 from cli_migration_body import build_cli_body
 from cli_atomicity import capture_baseline, rehearse
 from local_install import build_install
+from canonical_prefix import canonical_prefix, canonical_binding, CANONICAL_VERSION, CANONICAL_FILENAME, CANONICAL_NAME
+from canonical_post205 import verify_canonical_installed
 
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -28,14 +30,14 @@ work = Path(tempfile.mkdtemp(prefix=identity + '-'))
 project = work / 'project'
 folder = Path(tempfile.mkdtemp(prefix=identity + '-evidence-'))
 container = 'supabase_db_' + identity
-version = '20261020090000'
-migration_name = version + '_controlled_stock_cli_atomicity.sql'
+version = CANONICAL_VERSION
+migration_name = CANONICAL_FILENAME
 log = (folder / 'runner.log').open('w')
 started = False
 proof = None
 runtime = {'identity': identity, 'project': str(project), 'root': str(root),
-           'canonical_migration_count': 204, 'temporary_migration_version': version,
-           'repository_canonical_migration_added': False, 'removed': False}
+           'canonical_migration_count': 205, 'preinstall_migration_count': 204, 'canonical_migration_version': version,
+           'repository_canonical_migration_added': True, 'removed': False}
 
 
 def command(argv, *, query=None, timeout=180, checked=True):
@@ -73,6 +75,8 @@ def run_cli(case, body):
     assert case in ('late_body', 'ledgerfault', 'clean205', 'clean205_retry')
     verify()
     assert isinstance(body, str)
+    if case != 'late_body':
+        assert body.encode() == (root / binding['canonical_path']).read_bytes(), 'Actual canonical migration bytes required'
     migration = project / 'supabase/migrations' / migration_name
     migration.write_bytes(body.encode())
     digest = hashlib.sha256(migration.read_bytes()).hexdigest()
@@ -211,7 +215,8 @@ def run_cli(case, body):
 
 
 files = sorted((root / 'supabase/migrations').glob('*.sql'))
-assert len(files) == 204
+prefix = canonical_prefix(source, files)
+binding = canonical_binding(source, files)
 inputs = [*files, *sorted(source.glob('*.sql')), *sorted(source.glob('*.py')),
           source / 'trusted-prior-189.json', source / 'release-expected-204.json',
           source / 'release-expected-204-v1.json', source.parent / 'source-reader.sql',
@@ -224,14 +229,14 @@ hashes = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() f
 for name in ('run-cli-atomicity.py', 'cli_atomicity.py', 'cli_migration_body.py'):
     shutil.copy2(source / name, folder / 'executable-snapshots' / name)
 try:
-    body = build_cli_body(source, files)
+    body = build_cli_body(source, prefix)
     assert (source.parent / 'release/controlled-stock-cli-body.sql').read_bytes() == body['body'].encode()
     assert command(['supabase', '--version']).stdout.strip() == '2.118.0'
     for port in (65020, 65021, 65022, 65024):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     (project / 'supabase/migrations').mkdir(parents=True)
-    for path in files:
+    for path in prefix:
         shutil.copy2(path, project / 'supabase/migrations' / path.name)
     (project / 'supabase/config.toml').write_text(f'''project_id = "{identity}"
 [api]
@@ -256,7 +261,7 @@ enabled = false
 ''')
     (folder / 'runtime.json').write_text(json.dumps(runtime, indent=2) + '\n')
     print('Protected evidence: ' + str(folder), flush=True)
-    print('Starting owned CLI atomicity stack; repository migrations remain 204.', flush=True)
+    print('Starting owned pre204 CLI atomicity stack; clean application uses canonical migration 205.', flush=True)
     started = True
     command(['supabase', 'start', '--workdir', str(project), '--exclude',
              'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
@@ -281,19 +286,20 @@ enabled = false
     else:
         raise RuntimeError('Owned scheduler pause did not settle')
     assert sql('select count(*)from auth.users;').strip() == '0'
-    bundle = build_install(source, files)
+    bundle = build_install(source, prefix)
     baseline = capture_baseline(sql, bundle['prior_sql'], bundle['trusted'])
     (folder / 'private-baseline.json').write_text(json.dumps(baseline, indent=2) + '\n')
     expected = json.loads((source / 'release-expected-204.json').read_text())
     proof = rehearse(sql, run_cli, body['body'], expected, baseline, migration_version=version,
-                     migration_name='controlled_stock_cli_atomicity',
+                     migration_name=CANONICAL_NAME,
                      expected_statements=body['expected_statements'])
     assert proof.get('passed') is True, 'Actual CLI atomicity proof incomplete'
+    proof['canonical_installed_verification'] = verify_canonical_installed(sql, expected, baseline, binding)
     for name, digest in hashes.items():
         assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, 'CLI proof source changed'
     proof.update(source_hashes=hashes, supabase_cli='2.118.0', body_sha256=body['body_sha256'],
                  artifact_sha256=body['artifact_sha256'], pin_sha256=body['pin_sha256'],
-                 repository_canonical_migration_count=204, canonical_migration=False,
+                 repository_canonical_migration_count=205, canonical_migration=True,
                  hosted_writes=0, provider_requests=0, clinical_or_register_activation=False)
 finally:
     try:

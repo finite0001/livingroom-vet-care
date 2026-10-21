@@ -1,4 +1,16 @@
 begin;create extension if not exists pgtap with schema extensions;set local search_path=public,extensions;select no_plan();
+
+-- Retain unrelated preexisting documents/manual receipts before capture fixtures.
+create function pg_temp.ezyvet_original_side_effect_snapshot()returns jsonb language plpgsql volatile
+set search_path=public,pg_temp set timezone='UTC' as $original_baseline$
+declare relation_name text;fingerprint jsonb;result jsonb:='{}';begin
+ foreach relation_name in array array['patient_documents','external_record_receipts']loop
+  execute format('select jsonb_build_object(''count'',count(*),''hash'',encode(sha256(convert_to(coalesce(jsonb_agg(to_jsonb(r)order by to_jsonb(r)::text),''[]''::jsonb)::text,''UTF8'')),''hex''))from public.%I r',relation_name)into fingerprint;
+  result:=result||jsonb_build_object(relation_name,fingerprint);
+ end loop;
+ return result;
+end$original_baseline$;
+create temp table ezyvet_original_side_effect_baseline as select pg_temp.ezyvet_original_side_effect_snapshot()as value;
 -- FIXTURE_BEGIN
 
 insert into auth.users(id,email,raw_user_meta_data) values('db700000-0000-4000-8000-000000000001','attachment-admin@example.test','{}'),('db700000-0000-4000-8000-000000000002','attachment-other@example.test','{}');
@@ -273,8 +285,6 @@ select ok(not has_table_privilege('authenticated','ezyvet_attachment_capture_req
 select ok(not has_table_privilege('service_role','ezyvet_attachment_original_intents','insert'),'Service cannot forge intent rows directly');
 select ok(not has_function_privilege('authenticated','get_ezyvet_attachment_capture_context(uuid,uuid)','execute'),'Private path/lease context denied to browser');
 select ok(not has_function_privilege('service_role','ezyvet_attachment_capture_private(uuid)','execute'),'Raw private projection helper revoked');
-select ok(not exists(select 1 from patient_documents),'API capture creates no patient document');
-select ok(not exists(select 1 from external_record_receipts),'API capture creates no manual-export receipt');
 select is((select count(*)::integer from ezyvet_attachment_page_observations),2,'Metadata observation count unchanged by capture');
 set local role authenticated;
 select is(jsonb_array_length(list_ezyvet_attachment_capture_mappings()->'mappings'),1,'Historical mappings are grouped for their owner');
@@ -329,4 +339,6 @@ update profiles set is_active=false where id='db700000-0000-4000-8000-0000000000
 set local role service_role;
 select throws_ok($$select get_reviewed_ezyvet_original_context('db700000-0000-4000-8000-000000000002',(select id from fx where k='approval'),(select id from fx where k='pet'),(select v->>'capture_hash' from data where k='approved'))$$,'42501','Active staff access required','Private original context rejects deactivated reader');
 reset role;
+select is(pg_temp.ezyvet_original_side_effect_snapshot()->'patient_documents',(select value->'patient_documents'from ezyvet_original_side_effect_baseline),'API capture creates no patient document');
+select is(pg_temp.ezyvet_original_side_effect_snapshot()->'external_record_receipts',(select value->'external_record_receipts'from ezyvet_original_side_effect_baseline),'API capture creates no manual-export receipt');
 select * from finish();rollback;

@@ -51,7 +51,7 @@ try:
         assert re.match(r'^\d{14}_', migration.name)
         hashes[migration.name] = hashlib.sha256(migration.read_bytes()).hexdigest()
         shutil.copy2(migration, project/'supabase/migrations'/migration.name)
-    assert len(hashes) == 204 and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes and '20261015011200_controlled_draft_configuration.sql' in hashes and '20261015020722_stock_writer_provenance.sql' in hashes and '20261015055007_native_custody_provenance.sql' in hashes and '20261015235157_unpaid_invoice_reminders.sql' in hashes and '20261016004714_invoice_reminder_care_gate_order.sql' in hashes and '20261016020711_invoice_reminder_practice_settings.sql' in hashes and '20261016040402_clinical_dictation_review.sql' in hashes and '20261016143618_clinical_audio_soap.sql' in hashes and '20261016162448_clinical_audio_veterinary_context.sql' in hashes
+    assert len(hashes) == 205 and '20261020151157_controlled_stock_private_engine.sql' in hashes and '20261013181721_appointment_catalog_and_bindings.sql' in hashes and '20261013214300_catalog_patient_eligibility_lock.sql' in hashes and '20261013220500_next_visit_outcomes.sql' in hashes and '20261013233839_next_visit_staff_recovery.sql' in hashes and '20261014022511_operational_tasks.sql' in hashes and '20261014154223_operational_task_reconciliation.sql' in hashes and '20261014202235_supplier_product_identity.sql' in hashes and '20261015011200_controlled_draft_configuration.sql' in hashes and '20261015020722_stock_writer_provenance.sql' in hashes and '20261015055007_native_custody_provenance.sql' in hashes and '20261015235157_unpaid_invoice_reminders.sql' in hashes and '20261016004714_invoice_reminder_care_gate_order.sql' in hashes and '20261016020711_invoice_reminder_practice_settings.sql' in hashes and '20261016040402_clinical_dictation_review.sql' in hashes and '20261016143618_clinical_audio_soap.sql' in hashes and '20261016162448_clinical_audio_veterinary_context.sql' in hashes
     if args.include_sql_regression: shutil.copytree(root/'supabase/tests', project/'supabase/tests')
     harness = root/'tests/scheduling/catalog-local.ts'
     harness_hash = hashlib.sha256(harness.read_bytes()).hexdigest()
@@ -146,12 +146,12 @@ enabled = false
     result = command(['node','--experimental-strip-types',str(reconciliation)], cwd=root,
                      env={**env,'RECONCILIATION_TEST_PROJECT':str(project),'RECONCILIATION_RUN_SYNTHETIC_LOCAL':'true'}, timeout=180)
     receipt = json.loads(result.strip().splitlines()[-1])
-    assert receipt['api_checks']==42 and receipt['real_auth_postgrest'] and receipt['owned_accounts_deactivated'] and receipt['private_timeout_helper_restored'] and receipt['provider_requests']==0
+    assert receipt['api_checks']==43 and receipt['real_auth_postgrest'] and receipt['owned_accounts_deactivated'] and receipt['private_timeout_helper_restored'] and receipt['provider_requests']==0
     assert receipt['http']['actual_edge_entrypoint'] and receipt['http']['lost_response_recovery'] and receipt['http']['unknown_response_replay']
     assert receipt['browser']['genuine_staff_api'] and receipt['browser']['committed_ack_loss_recovered'] and receipt['browser']['mobile_overflow_checked'] and receipt['browser']['dirty_navigation_guard']
     assert 4500<=receipt['timeout_elapsed_ms']<5800
     assert hashlib.sha256(reconciliation.read_bytes()).hexdigest()==reconciliation_hash
-    print('Genuine reconciliation API passed:42 checks; actual5s timeout; owned account cleanup; no provider requests.',flush=True)
+    print('Genuine reconciliation API passed:43 checks; actual5s timeout; owned account cleanup; no provider requests.',flush=True)
     lock_harness = root/'supabase/tests/operational_reconciliation_concurrency.py'
     lock_hash = hashlib.sha256(lock_harness.read_bytes()).hexdigest()
     result = command(['python3','-B',str(lock_harness),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=90)
@@ -180,7 +180,7 @@ enabled = false
     result = command(['node','--experimental-strip-types',str(controlled)],cwd=root,
       env={**env,'CONTROLLED_TEST_PROJECT':str(project),'CONTROLLED_RUN_SYNTHETIC_LOCAL':'true'},timeout=180)
     controlled_receipt=json.loads(result.strip().splitlines()[-1])
-    assert controlled_receipt['api_checks']==28 and controlled_receipt['genuine_auth_postgrest'] and controlled_receipt['owned_actors_retired'] and controlled_receipt['owned_sessions_retired'] and controlled_receipt['baseline_unchanged'] and controlled_receipt['draft_only'] and controlled_receipt['provider_requests']==0
+    assert controlled_receipt['api_checks']==29 and controlled_receipt['genuine_auth_postgrest'] and controlled_receipt['owned_actors_retired'] and controlled_receipt['owned_sessions_retired'] and controlled_receipt['baseline_unchanged'] and controlled_receipt['draft_only'] and controlled_receipt['provider_requests']==0
     assert controlled_receipt['browser']['browser_checks']==14 and controlled_receipt['browser']['committed_ack_loss_recovered'] and controlled_receipt['browser']['reload_readonly_recovery'] and controlled_receipt['browser']['no_default_schedule'] and controlled_receipt['browser']['mobile_overflow_checked'] and controlled_receipt['browser']['staff_read_only']
     assert hashlib.sha256(controlled.read_bytes()).hexdigest()==controlled_hash
     controlled_lock=root/'supabase/tests/controlled_draft_concurrency.py'
@@ -193,7 +193,7 @@ enabled = false
     result=command(['python3','-B',str(controlled_restore),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=180)
     controlled_restored=json.loads(result.strip().splitlines()[-1]);assert controlled_restored['populated_relations']==6 and controlled_restored['exact_snapshot_restored'] and controlled_restored['exact_original_review_recovered'] and controlled_restored['owned_restore_database_removed']
     assert hashlib.sha256(controlled_restore.read_bytes()).hexdigest()==controlled_restore_hash
-    print('Controlled draft passed:28 genuine Auth/API,14 browser,8 observed queues and6 populated restored relations;activation unavailable;provider requests0.',flush=True)
+    print('Controlled draft passed:29 genuine Auth/API,14 browser,8 observed queues and6 populated restored relations;activation unavailable;provider requests0.',flush=True)
     inventory_lock=root/'supabase/tests/supplier_identity_concurrency.py'
     inventory_lock_hash=hashlib.sha256(inventory_lock.read_bytes()).hexdigest()
     result=command(['python3','-B',str(inventory_lock),'--run-synthetic-local','--project-config',str(project/'supabase/config.toml')],cwd=root,timeout=120)

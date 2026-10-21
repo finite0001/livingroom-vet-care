@@ -5,6 +5,8 @@ import json
 import subprocess
 import time
 import uuid
+import sys
+from owned_attachment_clone import admit_source, verify_clone, verify_source_unchanged
 import base64
 import datetime
 
@@ -30,7 +32,26 @@ COMMAND = FOUNDATION_COMMAND.copy()
 CLEANUP_COMMAND = FOUNDATION_COMMAND.copy()
 CLEANUP_COMMAND[CLEANUP_COMMAND.index('-U') + 1] = 'supabase_admin'
 
+def verify_project():
+    observed = subprocess.run(['docker', 'inspect', CONTAINER], capture_output=True, text=True, check=True, timeout=30)
+    labels = json.loads(observed.stdout)[0]['Config']['Labels']
+    assert labels['com.supabase.cli.project'] == CONTAINER.removeprefix('supabase_db_')
+    if args.project_config:
+        assert Path(labels['com.supabase.cli.workdir']).resolve() == args.project_config.resolve().parent.parent
+    return True
+
+
+def verify_clone_target():
+    verify_project()
+    target = COMMAND[COMMAND.index('-d') + 1]
+    if target != 'postgres':
+        assert target == database and target.startswith('lrv_attachment_race_')
+        result = subprocess.run(FOUNDATION_COMMAND, input=f"select shobj_description(oid,'pg_database')from pg_database where datname='{database}';", capture_output=True, text=True, check=True, timeout=30)
+        assert result.stdout.strip() == marker, 'Exact owned attachment clone marker required'
+
+
 def cleanup_sql(query):
+    verify_project()
     result = subprocess.run(CLEANUP_COMMAND, input=query, capture_output=True, text=True)
     if result.returncode:
         raise AssertionError(result.stderr)
@@ -38,6 +59,7 @@ def cleanup_sql(query):
 
 
 def sql(query, fail=True):
+    verify_clone_target()
     result = subprocess.run(COMMAND, input=query, capture_output=True, text=True)
     if fail and result.returncode:
         raise AssertionError(result.stderr + result.stdout[-10000:])
@@ -99,13 +121,13 @@ def contended(first_query, second_query, second_expected, hold_seconds=2, during
     check(first.returncode == 0, first_error)
     check(second_expected(second.returncode, second_output, second_error), second_error or second_output)
 
-# Copy only schemas into a positively identified disposable database.
+# Copy verified current canonical schema/data and its real ledger into an owned database.
 import re
-inspection=subprocess.run(['docker','inspect',CONTAINER],capture_output=True,text=True,check=True)
-check(json.loads(inspection.stdout)[0]['Config']['Labels']['com.supabase.cli.project']==CONTAINER.removeprefix('supabase_db_'),'Verified local project')
+check(verify_project(),'Verified local project')
 database='lrv_attachment_race_'+uuid.uuid4().hex
 marker='owned-attachment-race-'+uuid.uuid4().hex
 created=False
+source_baseline=None
 fixture=Path(__file__).with_name('ezyvet_attachment_originals.test.sql').read_text().split('-- FIXTURE_BEGIN')[1].split('-- FIXTURE_END')[0]
 service="set local role service_role;"
 def scalar(query):return sql(query).stdout.strip().splitlines()[-1]
@@ -113,23 +135,24 @@ def run(query):return scalar('begin;'+service+query+'commit;')
 def claim(run_id):return f"select claim_ezyvet_attachment_import('{run_id}','{actor}','attachment-test-site','https://api.trial.ezyvet.com','{fx['mapping']}');"
 def stage(run_id,lease,page):return f"select stage_ezyvet_attachment_page('{run_id}','{actor}','{lease}',{quote(json.dumps(page))}::jsonb);"
 try:
-    versions=set(sql('select version from supabase_migrations.schema_migrations;').stdout.splitlines())
-    dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--schema-only','--no-owner','--schema=public','--schema=auth','--schema=storage','--schema=extensions','postgres'],capture_output=True,check=True).stdout
+    targeted=['ezyvet_migration_capture_evidence.test.sql','ezyvet_migration_items.test.sql','ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
+    test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
+    source_baseline=admit_source(lambda query: sql(query).stdout,[path.read_text()for path in test_files])
+    dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--no-publications','--no-subscriptions','--schema=public','--schema=auth','--schema=storage','--schema=extensions','--schema=supabase_migrations','postgres'],capture_output=True,check=True).stdout
     sql(f'create database "{database}";');created=True
     sql(f"comment on database {database} is {quote(marker)};")
     COMMAND=FOUNDATION_COMMAND.copy();COMMAND[COMMAND.index('-d')+1]=database
-    sql('drop schema public;create schema extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp" with schema extensions;')
-    dump=dump.replace(b'CREATE SCHEMA extensions;',b'CREATE SCHEMA IF NOT EXISTS extensions;')
-    dump=b"\n".join(line for line in dump.splitlines() if not line.startswith(b'ALTER DEFAULT PRIVILEGES'))
-    restored=subprocess.run(COMMAND,input=b"BEGIN;\n"+dump+b"\nCOMMIT;",capture_output=True)
+    sql('create schema if not exists extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp" with schema extensions;')
+    dump=dump.replace(b'CREATE SCHEMA extensions;',b'CREATE SCHEMA IF NOT EXISTS extensions;').replace(b'CREATE SCHEMA public;',b'CREATE SCHEMA IF NOT EXISTS public;')
+    # Preserve real ledger/manifest data and source ownership/default grants.
+    # The container admin can restore original owners; checks still use postgres.
+    restore_command=COMMAND.copy();restore_command[restore_command.index('-U')+1]='supabase_admin'
+    verify_clone_target()
+    restored=subprocess.run(restore_command,input=b"BEGIN;\n"+dump+b"\nCOMMIT;",capture_output=True)
     check(restored.returncode==0,restored.stderr.decode())
-    # Foundation ledger can lag its schema. Rebuild public only in this owned empty copy.
-    sql('drop schema public cascade;create schema public;grant usage on schema public to anon,authenticated,service_role;create publication supabase_realtime;')
-    for migration in sorted(Path(__file__).resolve().parents[1].joinpath('migrations').glob('*.sql')):
-        sql('begin;'+migration.read_text()+'commit;')
+    clone_proof=verify_clone(lambda query: sql(query).stdout,source_baseline)
+    check(clone_proof['passed']is True,'Verified canonical205 clone with actual ledger and independent manifest')
     regressions=0
-    targeted=['ezyvet_migration_capture_evidence.test.sql','ezyvet_migration_items.test.sql','ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
-    test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
     for test_file in test_files:
         filename=test_file.name
         result=sql(Path(__file__).with_name(filename).read_text());plans=re.findall(r'1\.\.([0-9]+)',result.stdout)
@@ -546,10 +569,27 @@ try:
             finally:restore_staff()
 
 finally:
-    if created:
+    primary=sys.exc_info()[1]
+    cleanup_errors=[]
+    try:
+        if created:
+            COMMAND=FOUNDATION_COMMAND.copy()
+            check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
+            cleanup_sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
+            cleanup_sql(f'drop database "{database}";')
+            check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
+    except BaseException as error:
+        cleanup_errors.append(error)
+    finally:
         COMMAND=FOUNDATION_COMMAND.copy()
-        check(scalar(f"select shobj_description(oid,'pg_database') from pg_database where datname='{database}';")==marker,'Exact owned database marker checked')
-        cleanup_sql(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{database}' and pid<>pg_backend_pid();")
-        cleanup_sql(f'drop database "{database}";')
-        check(scalar(f"select count(*) from pg_database where datname='{database}';")=='0','Disposable database removed')
+        if source_baseline is not None:
+            try:
+                check(verify_source_unchanged(lambda query: sql(query).stdout,source_baseline),'Source data, real ledger and catalog unchanged')
+            except BaseException as error:
+                cleanup_errors.append(error)
+    if cleanup_errors:
+        if primary is None:
+            raise cleanup_errors[0]
+        for error in cleanup_errors:
+            primary.add_note('Owned attachment cleanup/source verification also failed: '+type(error).__name__)
 print(f'Attachment original concurrency: {checks} checks passed; no provider or physical Storage operations.')
