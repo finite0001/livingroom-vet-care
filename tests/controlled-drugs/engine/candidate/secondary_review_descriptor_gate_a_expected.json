@@ -1,0 +1,818 @@
+{
+  "definition": {
+    "facade_objects": [],
+    "foreign_key_triggers": [
+      {
+        "argument_count": 0,
+        "arguments": "",
+        "columns": "",
+        "condition": null,
+        "constraint": "preparations_target_fk",
+        "constraint_relation": "public.controlled_stock_events",
+        "deferrable": false,
+        "enabled": "O",
+        "function": "pg_catalog.RI_FKey_check_ins",
+        "initially_deferred": false,
+        "internal": true,
+        "new_table": null,
+        "old_table": null,
+        "relation": "controlled_review.preparations",
+        "type": 5
+      },
+      {
+        "argument_count": 0,
+        "arguments": "",
+        "columns": "",
+        "condition": null,
+        "constraint": "preparations_target_fk",
+        "constraint_relation": "public.controlled_stock_events",
+        "deferrable": false,
+        "enabled": "O",
+        "function": "pg_catalog.RI_FKey_check_upd",
+        "initially_deferred": false,
+        "internal": true,
+        "new_table": null,
+        "old_table": null,
+        "relation": "controlled_review.preparations",
+        "type": 17
+      },
+      {
+        "argument_count": 0,
+        "arguments": "",
+        "columns": "",
+        "condition": null,
+        "constraint": "preparations_target_fk",
+        "constraint_relation": "controlled_review.preparations",
+        "deferrable": false,
+        "enabled": "O",
+        "function": "pg_catalog.RI_FKey_noaction_upd",
+        "initially_deferred": false,
+        "internal": true,
+        "new_table": null,
+        "old_table": null,
+        "relation": "public.controlled_stock_events",
+        "type": 17
+      },
+      {
+        "argument_count": 0,
+        "arguments": "",
+        "columns": "",
+        "condition": null,
+        "constraint": "preparations_target_fk",
+        "constraint_relation": "controlled_review.preparations",
+        "deferrable": false,
+        "enabled": "O",
+        "function": "pg_catalog.RI_FKey_restrict_del",
+        "initially_deferred": false,
+        "internal": true,
+        "new_table": null,
+        "old_table": null,
+        "relation": "public.controlled_stock_events",
+        "type": 9
+      }
+    ],
+    "functions": {
+      "controlled_review.immutable_guard()": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": null,
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "trigger",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n raise exception 'Secondary-review evidence is immutable' using errcode='23514';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "controlled_review.preparation_context()": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": null,
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "trigger",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n new.prepared_boot:=pg_postmaster_start_time();\n new.prepared_xid:=pg_current_xact_id();\n return new;\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "controlled_review.require_prior_commit(p_operation_id uuid)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_operation_id"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "void",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\n declare p controlled_review.preparations;\nbegin\n perform controlled_review.required();\n select * into strict p from controlled_review.preparations where operation_id=p_operation_id;\n if p.prepared_boot=pg_postmaster_start_time() and p.prepared_xid=pg_current_xact_id() then\n  raise exception 'Preparation must commit before a later signing transaction' using errcode='23514';\n end if;\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "controlled_review.required()": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": null,
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "void",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform public.controlled_stock_manifest_required();\n if (select count(*) from controlled_review.descriptor)<>1 or\n    (select definition from controlled_review.descriptor) is distinct from controlled_review.snapshot() then\n  raise exception 'Secondary-review metadata differs from independent descriptor' using errcode='23514';\n end if;\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "controlled_review.snapshot()": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": null,
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "sql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nwith ns as (select oid,nspowner,nspacl from pg_namespace where nspname='controlled_review'),\nfunctions as (\n select p.* from pg_proc p join pg_namespace n on n.oid=p.pronamespace\n where n.nspname='controlled_review' or (n.nspname='public' and p.proname=any(array[\n 'prepare_controlled_secondary_review','read_controlled_secondary_review','execute_controlled_secondary_review',\n 'cancel_controlled_secondary_review','read_controlled_secondary_review_event','list_controlled_secondary_reviews']))\n), relations as (select c.* from pg_class c,ns where c.relnamespace=ns.oid),\nacl as (\n select 'schema'::text as kind,'controlled_review'::text as name,x.* from ns cross join lateral aclexplode(coalesce(ns.nspacl,acldefault('n',ns.nspowner)))x\n union all select 'function',n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')',x.*\n from functions p join pg_namespace n on n.oid=p.pronamespace cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner)))x\n union all select 'table',c.relname,x.* from relations c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner)))x where c.relkind='r'\n), acl_json as (\n select kind,name,jsonb_agg(jsonb_build_object('grantee',case when grantee=0 then 'PUBLIC' else pg_get_userbyid(grantee) end,\n 'grantor',pg_get_userbyid(grantor),'privilege',privilege_type,'grantable',is_grantable)\n order by (case when grantee=0 then 'PUBLIC' else pg_get_userbyid(grantee) end)collate \"C\",pg_get_userbyid(grantor)collate \"C\",privilege_type collate \"C\") as value from acl group by kind,name\n)\nselect jsonb_build_object('kind','controlled-review-gate-a-v1',\n 'schema',(select jsonb_build_object('owner',pg_get_userbyid(nspowner),'acl',(select value from acl_json where kind='schema'))from ns),\n 'functions',coalesce((select jsonb_object_agg(n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')',\n jsonb_build_object('source',p.prosrc,'owner',pg_get_userbyid(p.proowner),'language',l.lanname,'return_type',format_type(p.prorettype,null),\n 'kind',p.prokind,'security_definer',p.prosecdef,'strict',p.proisstrict,'leakproof',p.proleakproof,'volatility',p.provolatile,\n 'parallel',p.proparallel,'returns_set',p.proretset,'cost',p.procost,'rows',p.prorows,'configuration',to_jsonb(p.proconfig),\n 'argument_names',to_jsonb(p.proargnames),'all_argument_types',to_jsonb(p.proallargtypes),'argument_modes',to_jsonb(p.proargmodes),\n 'default_count',p.pronargdefaults,'defaults',pg_get_expr(p.proargdefaults,0),'variadic',p.provariadic::regtype::text,'support',p.prosupport::text,\n 'sql_body',p.prosqlbody::text,'acl',(select value from acl_json a where a.kind='function' and a.name=n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')')))\n from functions p join pg_namespace n on n.oid=p.pronamespace join pg_language l on l.oid=p.prolang),'{}'::jsonb),\n 'relations',coalesce((select jsonb_object_agg(c.relname,jsonb_build_object('kind',c.relkind,'owner',pg_get_userbyid(c.relowner),\n 'persistence',c.relpersistence,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,'replica_identity',c.relreplident,'options',to_jsonb(c.reloptions),\n 'acl',(select value from acl_json a where a.kind='table' and a.name=c.relname),\n 'columns',(select coalesce(jsonb_agg(jsonb_build_object('name',a.attname,'type',format_type(a.atttypid,a.atttypmod),'not_null',a.attnotnull,\n 'identity',a.attidentity,'generated',a.attgenerated,'default',pg_get_expr(d.adbin,d.adrelid),'collation',a.attcollation::regcollation::text,\n 'column_acl',(select coalesce(jsonb_agg(jsonb_build_object('grantee',case when x.grantee=0 then 'PUBLIC' else pg_get_userbyid(x.grantee)end,\n 'grantor',pg_get_userbyid(x.grantor),'privilege',x.privilege_type,'grantable',x.is_grantable)order by x.grantee::regrole::text,x.grantor::regrole::text,x.privilege_type),'[]'::jsonb)from aclexplode(a.attacl)x))order by a.attnum),'[]'::jsonb)\n from pg_attribute a left join pg_attrdef d on d.adrelid=a.attrelid and d.adnum=a.attnum where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),\n 'constraints',(select coalesce(jsonb_agg(jsonb_build_object('name',k.conname,'definition',pg_get_constraintdef(k.oid,true),'validated',k.convalidated)order by k.conname),'[]'::jsonb)from pg_constraint k where k.conrelid=c.oid),\n 'indexes',(select coalesce(jsonb_agg(jsonb_build_object('definition',pg_get_indexdef(i.indexrelid),'valid',i.indisvalid,'ready',i.indisready,'live',i.indislive,'primary',i.indisprimary,'unique',i.indisunique,'exclusion',i.indisexclusion,'immediate',i.indimmediate)order by i.indexrelid::regclass::text),'[]'::jsonb)from pg_index i where i.indrelid=c.oid),\n 'triggers',(select coalesce(jsonb_agg(jsonb_build_object('name',t.tgname,'enabled',t.tgenabled,'definition',pg_get_triggerdef(t.oid,true))order by t.tgname),'[]'::jsonb)from pg_trigger t where t.tgrelid=c.oid and not t.tgisinternal),\n 'policies',(select coalesce(jsonb_agg(to_jsonb(p)-'oid'-'polrelid' order by p.polname),'[]'::jsonb)from pg_policy p where p.polrelid=c.oid),\n 'rules',(select coalesce(jsonb_agg(pg_get_ruledef(r.oid,true)order by r.rulename),'[]'::jsonb)from pg_rewrite r where r.ev_class=c.oid)))from relations c where c.relkind='r'),'{}'::jsonb),\n 'relation_inventory',coalesce((select jsonb_agg(jsonb_build_object('name',relname,'kind',relkind)order by relname)from relations),'[]'::jsonb),\n 'types',coalesce((select jsonb_agg(jsonb_build_object('name',t.typname,'kind',t.typtype,'owner',pg_get_userbyid(t.typowner),\n 'relation',case when t.typrelid=0 then null else c.relname end,'element',case when t.typelem=0 then null else e.typname end,\n 'acl',t.typacl::text)order by t.typname)from pg_type t join ns on ns.oid=t.typnamespace left join pg_class c on c.oid=t.typrelid left join pg_type e on e.oid=t.typelem),'[]'::jsonb),\n 'facade_objects',coalesce((select jsonb_agg(identity order by identity)from (\n select 'relation:'||relname as identity from pg_class where relnamespace='public'::regnamespace and relname=any(array[\n 'prepare_controlled_secondary_review','read_controlled_secondary_review','execute_controlled_secondary_review',\n 'cancel_controlled_secondary_review','read_controlled_secondary_review_event','list_controlled_secondary_reviews'])\n union all select 'type:'||typname from pg_type where typnamespace='public'::regnamespace and typname=any(array[\n 'prepare_controlled_secondary_review','read_controlled_secondary_review','execute_controlled_secondary_review',\n 'cancel_controlled_secondary_review','read_controlled_secondary_review_event','list_controlled_secondary_reviews'])\n )q),'[]'::jsonb),\n 'foreign_key_triggers',coalesce((select jsonb_agg(jsonb_build_object(\n 'constraint',k.conname,'relation',tn.nspname||'.'||tc.relname,'function',fn.nspname||'.'||f.proname,\n 'constraint_relation',rn.nspname||'.'||rc.relname,'type',t.tgtype,'enabled',t.tgenabled,'internal',t.tgisinternal,\n 'deferrable',t.tgdeferrable,'initially_deferred',t.tginitdeferred,'argument_count',t.tgnargs,'arguments',encode(t.tgargs,'hex'),\n 'columns',t.tgattr::text,'condition',pg_get_expr(t.tgqual,t.tgrelid),'old_table',t.tgoldtable,'new_table',t.tgnewtable)\n order by k.conname,tn.nspname,tc.relname,fn.nspname,f.proname)\n from pg_constraint k join ns on ns.oid=k.connamespace join pg_trigger t on t.tgconstraint=k.oid\n join pg_class tc on tc.oid=t.tgrelid join pg_namespace tn on tn.oid=tc.relnamespace\n join pg_class rc on rc.oid=t.tgconstrrelid join pg_namespace rn on rn.oid=rc.relnamespace\n join pg_proc f on f.oid=t.tgfoid join pg_namespace fn on fn.oid=f.pronamespace where k.contype='f'),'[]'::jsonb),\n 'other_objects',coalesce((select jsonb_agg(identity order by identity)from (\n select pg_describe_object(d.classid,d.objid,d.objsubid) as identity from pg_depend d,ns\n where d.refclassid='pg_namespace'::regclass and d.refobjid=ns.oid\n and d.classid not in('pg_class'::regclass,'pg_type'::regclass,'pg_proc'::regclass,'pg_constraint'::regclass)\n )q),'[]'::jsonb))\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "public.cancel_controlled_secondary_review(p_request jsonb)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_request"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform controlled_review.required();\n raise exception 'Gate A feasibility shell; review protocol is not installed' using errcode='0A000';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "public.execute_controlled_secondary_review(p_request jsonb)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_request"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform controlled_review.required();\n raise exception 'Gate A feasibility shell; review protocol is not installed' using errcode='0A000';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "public.list_controlled_secondary_reviews(p_request jsonb)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_request"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform controlled_review.required();\n raise exception 'Gate A feasibility shell; review protocol is not installed' using errcode='0A000';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "public.prepare_controlled_secondary_review(p_request jsonb)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_request"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform controlled_review.required();\n raise exception 'Gate A feasibility shell; review protocol is not installed' using errcode='0A000';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "public.read_controlled_secondary_review(p_request jsonb)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_request"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform controlled_review.required();\n raise exception 'Gate A feasibility shell; review protocol is not installed' using errcode='0A000';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      },
+      "public.read_controlled_secondary_review_event(p_request jsonb)": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "all_argument_types": null,
+        "argument_modes": null,
+        "argument_names": [
+          "p_request"
+        ],
+        "configuration": [
+          "search_path=pg_catalog, public, pg_temp",
+          "TimeZone=UTC"
+        ],
+        "cost": 100,
+        "default_count": 0,
+        "defaults": null,
+        "kind": "f",
+        "language": "plpgsql",
+        "leakproof": false,
+        "owner": "postgres",
+        "parallel": "u",
+        "return_type": "jsonb",
+        "returns_set": false,
+        "rows": 0,
+        "security_definer": false,
+        "source": "\nbegin\n perform controlled_review.required();\n raise exception 'Gate A feasibility shell; review protocol is not installed' using errcode='0A000';\nend\n",
+        "sql_body": null,
+        "strict": false,
+        "support": "-",
+        "variadic": "-",
+        "volatility": "v"
+      }
+    },
+    "kind": "controlled-review-gate-a-v1",
+    "other_objects": [],
+    "relation_inventory": [
+      {
+        "kind": "r",
+        "name": "descriptor"
+      },
+      {
+        "kind": "i",
+        "name": "descriptor_pkey"
+      },
+      {
+        "kind": "r",
+        "name": "preparations"
+      },
+      {
+        "kind": "i",
+        "name": "preparations_pkey"
+      }
+    ],
+    "relations": {
+      "descriptor": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "DELETE"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "INSERT"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "SELECT"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "UPDATE"
+          }
+        ],
+        "columns": [
+          {
+            "collation": "-",
+            "column_acl": [],
+            "default": null,
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "collation": "-",
+            "column_acl": [],
+            "default": null,
+            "generated": "",
+            "identity": "",
+            "name": "definition",
+            "not_null": true,
+            "type": "jsonb"
+          }
+        ],
+        "constraints": [
+          {
+            "definition": "PRIMARY KEY (id)",
+            "name": "descriptor_pkey",
+            "validated": true
+          },
+          {
+            "definition": "CHECK (id)",
+            "name": "descriptor_singleton",
+            "validated": true
+          }
+        ],
+        "force_rls": false,
+        "indexes": [
+          {
+            "definition": "CREATE UNIQUE INDEX descriptor_pkey ON controlled_review.descriptor USING btree (id)",
+            "exclusion": false,
+            "immediate": true,
+            "live": true,
+            "primary": true,
+            "ready": true,
+            "unique": true,
+            "valid": true
+          }
+        ],
+        "kind": "r",
+        "options": null,
+        "owner": "postgres",
+        "persistence": "p",
+        "policies": [],
+        "replica_identity": "d",
+        "rls": true,
+        "rules": [],
+        "triggers": [
+          {
+            "definition": "CREATE TRIGGER immutable BEFORE DELETE OR UPDATE ON controlled_review.descriptor FOR EACH ROW EXECUTE FUNCTION controlled_review.immutable_guard()",
+            "enabled": "O",
+            "name": "immutable"
+          },
+          {
+            "definition": "CREATE TRIGGER no_truncate BEFORE TRUNCATE ON controlled_review.descriptor FOR EACH STATEMENT EXECUTE FUNCTION controlled_review.immutable_guard()",
+            "enabled": "O",
+            "name": "no_truncate"
+          }
+        ]
+      },
+      "preparations": {
+        "acl": [
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "DELETE"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "INSERT"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "SELECT"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantable": false,
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "privilege": "UPDATE"
+          }
+        ],
+        "columns": [
+          {
+            "collation": "-",
+            "column_acl": [],
+            "default": null,
+            "generated": "",
+            "identity": "",
+            "name": "operation_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "collation": "-",
+            "column_acl": [],
+            "default": null,
+            "generated": "",
+            "identity": "",
+            "name": "event_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "collation": "-",
+            "column_acl": [],
+            "default": null,
+            "generated": "",
+            "identity": "",
+            "name": "prepared_boot",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "collation": "-",
+            "column_acl": [],
+            "default": null,
+            "generated": "",
+            "identity": "",
+            "name": "prepared_xid",
+            "not_null": true,
+            "type": "xid8"
+          }
+        ],
+        "constraints": [
+          {
+            "definition": "PRIMARY KEY (operation_id)",
+            "name": "preparations_pkey",
+            "validated": true
+          },
+          {
+            "definition": "FOREIGN KEY (event_id) REFERENCES controlled_stock_events(id) ON DELETE RESTRICT",
+            "name": "preparations_target_fk",
+            "validated": true
+          }
+        ],
+        "force_rls": false,
+        "indexes": [
+          {
+            "definition": "CREATE UNIQUE INDEX preparations_pkey ON controlled_review.preparations USING btree (operation_id)",
+            "exclusion": false,
+            "immediate": true,
+            "live": true,
+            "primary": true,
+            "ready": true,
+            "unique": true,
+            "valid": true
+          }
+        ],
+        "kind": "r",
+        "options": null,
+        "owner": "postgres",
+        "persistence": "p",
+        "policies": [],
+        "replica_identity": "d",
+        "rls": true,
+        "rules": [],
+        "triggers": [
+          {
+            "definition": "CREATE TRIGGER immutable BEFORE DELETE OR UPDATE ON controlled_review.preparations FOR EACH ROW EXECUTE FUNCTION controlled_review.immutable_guard()",
+            "enabled": "O",
+            "name": "immutable"
+          },
+          {
+            "definition": "CREATE TRIGGER no_truncate BEFORE TRUNCATE ON controlled_review.preparations FOR EACH STATEMENT EXECUTE FUNCTION controlled_review.immutable_guard()",
+            "enabled": "O",
+            "name": "no_truncate"
+          },
+          {
+            "definition": "CREATE TRIGGER server_context BEFORE INSERT ON controlled_review.preparations FOR EACH ROW EXECUTE FUNCTION controlled_review.preparation_context()",
+            "enabled": "O",
+            "name": "server_context"
+          }
+        ]
+      }
+    },
+    "schema": {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "CREATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "USAGE"
+        }
+      ],
+      "owner": "postgres"
+    },
+    "types": [
+      {
+        "acl": null,
+        "element": "descriptor",
+        "kind": "b",
+        "name": "_descriptor",
+        "owner": "postgres",
+        "relation": null
+      },
+      {
+        "acl": null,
+        "element": "preparations",
+        "kind": "b",
+        "name": "_preparations",
+        "owner": "postgres",
+        "relation": null
+      },
+      {
+        "acl": null,
+        "element": null,
+        "kind": "c",
+        "name": "descriptor",
+        "owner": "postgres",
+        "relation": "descriptor"
+      },
+      {
+        "acl": null,
+        "element": null,
+        "kind": "c",
+        "name": "preparations",
+        "owner": "postgres",
+        "relation": "preparations"
+      }
+    ]
+  },
+  "definition_sha256": "3a67403bc39a48ee09437c875b77a9eec9c2ae8cd05ac1908e44214ce06157e5",
+  "derivation_input_sha256": {
+    "secondary-review.sql": "e6a54e01e2e09a259f0be4c6544c4dfb108130460c3265492df0a63dabc14434",
+    "secondary_review_descriptor.py": "d58e12a64c53fae57c14015fd57a0b5512ee44e998dac83f9da6ab21ee0672b6"
+  },
+  "kind": "controlled-review-gate-a-independent-expected-v1"
+}

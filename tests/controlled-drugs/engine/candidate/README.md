@@ -458,3 +458,94 @@ For owned local audit, `tests/prescriptions/native-disposable.py` accepts
 a protected directory while removing the runtime containers, volumes and workdir.
 Default CI output includes only a known harness name and validated SQLSTATE on
 subprocess failure. Raw SQL, source rows and detailed child output stay private.
+
+
+### Separately sealed retrospective secondary-review candidate
+
+The secondary-review candidate records an independent approve/reject decision for
+an already committed, review-required event. Its fixed meaning is “Independent
+record review; no claim of personal physical observation.” It does not change
+stock or confer physical execution permission. Approval and rejection are terminal;
+quorum, reassessment, withdrawal and supersession are outside this foundation.
+
+This is an opt-in synthetic API foundation, not a canonical migration or hosted
+installation. The released 205 migrations, parent seal, ten writers and old pins
+remain unchanged. Susan's practice roles, deadlines and SOP approval remain
+unresolved; no providers or clinical/register workflows are enabled.
+
+The `controlled_review` schema and six enumerated public RPCs have their own exact
+metadata seal. Each entry checks both seals. The default `private` profile grants
+no application access. The separately predetermined `synthetic_auth` profile
+grants authenticated execution on only the six facades for owned local Auth tests.
+No application role receives direct private schema, table or helper access.
+
+Gate A has its own retained source and expected artifact. The retained final v1
+expectations document the first reference realization; they are not current
+acceptance authority. Current v2 expectations were independently derived and
+reference-checked after fixing deferred-trigger execution privileges and reducing
+the queue scan cap to 100. Acceptance compares against the frozen expected bytes;
+observed installation metadata never replaces those expectations.
+
+Only these event kinds have a proven historical controlling-site extractor:
+
+- `receive_inventory`
+- `adjust_inventory`
+- `record_native_dispense_return_v2:retract_disposal`
+
+Missing or ambiguous historical sites, zero-container clinical annotations and
+other event kinds are unsupported. A correction is its own target. The tested
+retraction receives its own signature; its legacy disposal predecessor is
+unsupported and unsigned, so no predecessor-signature transfer is claimed.
+
+Immutable definitions bind exact product, site, event kind, capability and
+consecutive version. Read and review capabilities are separate. The latest
+disabled definition revokes that stream without falling back. Current application
+role rows in `public.user_roles` determine eligibility; JWT role metadata does not. Synthetic definitions
+and roles used by the probes are test fixtures, not practice policy.
+
+Preparation binds the actor, operation UUID, exact target and definition,
+decision, reason, evidence packet and technical 15-minute expiry. Preparation must
+commit before signing in a different top-level transaction; a savepoint is not
+sufficient. The preserved context remains valid across the tested restart and
+restore paths. Identity and unsaved signing eligibility are rechecked after each lock.
+Cancellation and signing serialize; only one final decision may exist per event.
+The same active actor with a valid current session can recover an exact saved
+receipt even after expiry or execution-scope revocation. This does not authorize
+a new decision or continued access to a revoked preparation packet. Lost-response
+testing discards the application receipt body after receiving HTTP 200 headers;
+it does not claim loss of those transport headers.
+
+Queue reads require explicit product/site/event-kind read scope. Pages default to
+25, return at most 100 items, and inspect at most 100 candidates. Sparse filters
+may return an empty page with continuation. Cursors bind the unique per-product
+sequence, scope, filter and current read-definition version without disclosing an
+excluded target UUID. This is live keyset pagination: status changes behind a
+cursor require a new traversal. There is no frozen count or timely/overdue claim;
+`due_at` is null and `deadline_state` is `not_configured`.
+
+Run the two owned-local gates serially with Docker and free ports 64660–64666:
+
+```sh
+python3 -B tests/controlled-drugs/engine/candidate/probe-secondary-review.py --run-synthetic-local --gate-a
+python3 -B tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py --run-synthetic-local --acceptance
+```
+
+The final probe has a separately declared 2,100-second workload bound and
+180-second cleanup reserve. Earlier runner budgets remain unchanged. Diagnostic
+`--exercise` and `--restore-exercise` modes explicitly cannot establish acceptance;
+CI runs the complete `--acceptance` matrix, including actual natural expiry.
+
+The populated restore covers selected schemas in a marked database in the same
+owned cluster. It checks both seals, complete selected source/review rows, exact
+Auth ownership/raw ACLs, retired-token refusal, fresh Auth recovery, exact saved
+receipts and the tested scoped queue page. Dedicated preparations are signed after
+restart and restore without rewriting their contexts. The clone REST service is
+explicitly scoped to restored `public` RPCs; GraphQL recovery is not tested.
+Other extension-member ownership differences are retained diagnostically.
+Global role recreation, default ACL restoration, general extension equivalence,
+Storage bytes and physical-after-backup reconciliation remain outside the proof.
+
+See the [review plan](../../../../plans/20261021-controlled-secondary-review/plan.md)
+and [dated evidence](../../../../docs/launch-evidence/2026-10-21-controlled-secondary-review.md)
+for actual outcomes and limitations. API acceptance does not complete C1b/C2/C3,
+clinical browser acceptance or practice commissioning.

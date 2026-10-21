@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-21",
+  "scope": "Synthetic-only separately sealed retrospective secondary-review foundation",
+  "base_commit": "73b500f7052a9cbd753951216370e1414781f337",
+  "acceptance_status": "Gate A, independent v2 metadata reference, full targeted local acceptance and all three compatibility reruns passed independent review",
+  "release_status": {
+    "merged": false,
+    "hosted_database_installation": false,
+    "provider_enablement": false,
+    "clinical_or_register_activation": false,
+    "exact_head_ci": "pending PR",
+    "exact_head_preview": "pending PR",
+    "specific_merge_approval": "required"
+  },
+  "canonical_invariants": {
+    "migrations": 205,
+    "ledger_statement_entries": 94,
+    "canonical_writers": 10,
+    "original_relation_families_in_review_proof": 457,
+    "parent_expected_file_sha256": "4755a1f1c53008003a11e94ada3963ae416f6c81f163ec43ed2ffea21d6d2f78",
+    "release_artifact_sha256": "7165851ab481f2ee2ab41c7347a7db65213b5c647c101eaf4554a973d896c4a7",
+    "cli_body_sha256": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3",
+    "ledger_statements_canonical_json_sha256": "626e9374546764d9a4070f3a0332bd0c7f606812ffe7355abdaea35088b89e7c",
+    "live_reseal": false
+  },
+  "metadata": {
+    "gate_a_expected_file_sha256": "2e252f21c73e204bbedd8d05003a423123403077c8e774757194f40b12c08f6c",
+    "gate_a_definition_sha256": "3a67403bc39a48ee09437c875b77a9eec9c2ae8cd05ac1908e44214ce06157e5",
+    "retained_v1_private_file_sha256": "74854f671dc281936c7c35ba4d59b46b3f9b8be218163e4d83cf3383e062ac5c",
+    "retained_v1_auth_file_sha256": "653ba17a9de358138b30447e80b963c889e89a2ecfbc40d3d5351c884594366e",
+    "v2_private_file_sha256": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036",
+    "v2_auth_file_sha256": "f5a75555636034647be9cb9505cb75428d280fdbd36f1d5308fc0efd4b377e3a",
+    "v2_private_definition_sha256": "e468ab33f11f90e12fae72441299425a11b76d72e4e112ae71a67b0d9751e999",
+    "v2_auth_definition_sha256": "c5f67439ca11f6f1024cf5c9384ba465538f4d05c047f8c07d91578a035fc31f",
+    "independent_expectations": true,
+    "tables": 5,
+    "functions": 26,
+    "public_facades": 6,
+    "profiles": [
+      "private",
+      "synthetic_auth"
+    ],
+    "application_grant_delta": "Only six authenticated EXECUTE facade grants in the predetermined synthetic_auth profile",
+    "v2_changes": [
+      "Private terminal_check trigger executes as SECURITY DEFINER with safe search_path and no application grant",
+      "Queue scans at most 100 candidates with a 101st lookahead instead of 1000/1001"
+    ]
+  },
+  "protocol": {
+    "supported_event_kinds": [
+      "receive_inventory",
+      "adjust_inventory",
+      "record_native_dispense_return_v2:retract_disposal"
+    ],
+    "preparation_lifetime_seconds": 900,
+    "preparation_must_commit_before_signing": true,
+    "request_limit_bytes": 131072,
+    "packet_limit_bytes": 1048576,
+    "reason_characters": [
+      1,
+      4000
+    ],
+    "queue_default_page_size": 25,
+    "queue_maximum_page_size": 100,
+    "queue_maximum_candidates": 100,
+    "review_deadlines": "not_configured",
+    "signing_meaning": "Independent record review; no claim of personal physical observation.",
+    "identity_and_eligibility": "Live Auth session, active staff account and current public.user_roles application-role rows; no JWT metadata bypass",
+    "recovery": "Exact saved receipt for the same active actor and exact request; new current session permitted",
+    "restore_scope": "Selected schemas in the same owned cluster; exact Auth owners/raw ACLs plus both seals, all original row families and review history",
+    "lost_ack_scope": "Unread application response body discarded after HTTP 200 headers"
+  },
+  "validation": {
+    "gate_a": {
+      "late_ddl_rollback_stages": 6,
+      "drift_refusals": 13,
+      "supported_kinds_proven": 3,
+      "actual_events": 5,
+      "raw_catalog_snapshots": 29,
+      "full_row_snapshots": 31
+    },
+    "targeted": {
+      "observed_revocation_waits": 12,
+      "queue_auth_rpc_checks": 67,
+      "genuine_queue_targets": 111,
+      "schema_negative_cases": 54,
+      "eligible_contenders": 2,
+      "winning_decisions": 1,
+      "auth_owner_acl_entries": 212,
+      "natural_expiry_seconds": 900,
+      "expiry_http_status": 409,
+      "expiry_sqlstate": "PT409",
+      "restart_signature": true,
+      "restored_signature": true,
+      "fresh_clone_auth": true,
+      "retired_tokens_refused": true,
+      "source_services_unchanged": true
+    },
+    "offline": {
+      "harness_tests": 361,
+      "release_assembly_check": true,
+      "cli_body_check": true
+    },
+    "independent_review": "CLEAR for Gate A, v2 reference, full acceptance, all three compatibility runs, CI/docs integration and preservation",
+    "cleanup": "Owned base/clone runtimes, volumes and workdirs absent; marked restore database removed"
+  },
+  "source_binding": {
+    "local_targeted_before_workflow_integration": true,
+    "integration_delta": "Only .github/workflows/ci.yml changed among the 287 targeted acceptance inputs; the other 286 remain byte-exact",
+    "integrated_workflow_sha256": "e0e7d2bbe0d4f7062a8edaedde93190f0316b4d5f810422a96d7c81dcd5aed2a",
+    "final_ci_requires_fresh_gate_a_and_full_acceptance": true,
+    "canonical_source_map_digest_algorithm": "SHA-256 of UTF-8 json.dumps(map, sort_keys=True, separators=(',', ':')) with default ensure_ascii=True"
+  },
+  "exclusions": [
+    "Hosted installation, providers and clinical/register activation",
+    "Susan's practice eligibility, deadlines, physical-witness rules and SOP approval",
+    "Whole C1b/C2/C3 completion or a clinical UI/browser acceptance claim",
+    "Physical stock reconciliation and post-backup physical-history recovery",
+    "Global role or membership recreation, default privileges, whole-cluster restoration and Storage bytes",
+    "General extension-member owner/ACL equivalence and GraphQL restoration",
+    "Frozen queue counts, automatic status catch-up, signature transfer to corrections or lost transport headers"
+  ],
+  "compatibility": {
+    "ordinary": {
+      "passed": true,
+      "source_count": 447,
+      "result_sha256": "b07825f262bfe3c1c0f7c456c8d5faec71687a9705f521b6e43c31ac93b3c8eb",
+      "source_map_file_sha256": "1c0c515b005112e20dce72fa5c8699f5dcd2e37b501778917ff12af24b843ecc",
+      "source_map_digest": "17bb042e77d3dcdd9754016234b8cd4b6539e61b1e9dd0609344c29fac74dde7",
+      "sql_suites": 166,
+      "sql_assertions": 7338,
+      "opening_capacity": true,
+      "genuine_1000_correction_chain": true,
+      "populated_correction_restore": true,
+      "auth_combined_checks": 133,
+      "observed_lock_queues": 8,
+      "all_ten_writers_unchanged": true,
+      "independent_review": "CLEAR",
+      "correction_fixture_and_setup_elapsed_seconds": 365.031,
+      "populated_restore_validation_cases": 7,
+      "selected_schema_relation_fingerprints": 456,
+      "retained_evidence_scope": "Executed source bytes, result proof, logs and count/full-row-hash fingerprints; no claim of retained full raw rows or every per-query snapshot"
+    },
+    "history": {
+      "passed": true,
+      "source_count": 282,
+      "result_sha256": "eecb7f78e7f079a37b00c18d01b801d1293726122813f6991c02f9e726997692",
+      "source_map_file_sha256": "845585bb5b04dd627833fe7df66e92a61c5491821fac6f976c358ef815f63043",
+      "source_map_digest": "de57bdf646b9f470aa4fd9f128beaa9c662793570a1872be185cc349604cf26c",
+      "historical_checkpoints": [
+        187,
+        188
+      ],
+      "native_cases": 7,
+      "generic_opening_cases": 2,
+      "populated_restores": 2,
+      "independent_review": "CLEAR",
+      "selected_schema_relation_fingerprints_per_restore": 456,
+      "provenance_backfilled": false,
+      "retained_evidence_scope": "Seed and observation logs plus columns/count/full-row-hash fingerprints; no claim of every transient raw snapshot or total elapsed duration"
+    },
+    "cli": {
+      "passed": true,
+      "source_count": 281,
+      "result_sha256": "60a81cb10986737e43c6bfd4fa6a70336a8dc120c326e5c4dedb8589365b6e19",
+      "source_map_file_sha256": "57845168b7262a199cb928d2a482841586e8e1f8f2e2590b4511bbab6369736a",
+      "source_map_digest": "eeac1e314c63ae48b8be4295e637c9b502559a39f51de7fdaa09ff6160ec7ff4",
+      "armed_failure_cases": 2,
+      "original_relation_families": 435,
+      "original_migrations": 204,
+      "clean_install_migrations": 205,
+      "ledger_statement_entries": 94,
+      "canonical_writers": 10,
+      "engine_barrier_at_ledger_insertion": true,
+      "exact_noop_retry": true,
+      "independent_review": "CLEAR",
+      "retained_evidence_scope": "Frozen runner assertions, actual saved failure outcomes and original baseline; per-case after-snapshot catalogs/full rows are not separately retained; no total elapsed duration recorded"
+    }
+  },
+  "runs": {
+    "gate_a": {
+      "passed": true,
+      "acceptance": true,
+      "seconds": 119.681,
+      "result_sha256": "50c47169cc40ea88221ebe23a5a1c2da69a5e4cebfd99620de51e417e09cf0e2",
+      "source_count": 275,
+      "source_map_file_sha256": "b0d1f435d157f3bae6609b978a616adc5dac0eb69fe735f6ce120cfca2adf167",
+      "source_map_digest": "6cc2dd9ead751674d1db0404f8e9f8665b3432a32977ba61d51ed30196b32c20"
+    },
+    "reference_v2": {
+      "passed": true,
+      "acceptance": false,
+      "seconds": 51.536,
+      "result_sha256": "18a95013959fdd64816a6e52d19de88fb1a4902fcf237bb3a1ebc951b2334c6e",
+      "source_count": 284,
+      "source_map_file_sha256": "a9150cc8e47ac3fd24fa81701db4e4699c3743c99d3272a0ef5b5b4ae88f3370",
+      "source_map_digest": "c58256bb62a7750ccbd935892dc41b2c1d7b4cc62943f2004d4b0d90363ac8d2"
+    },
+    "acceptance": {
+      "passed": true,
+      "acceptance": true,
+      "seconds": 1162.852,
+      "result_sha256": "b9cbad4dcf1052376d9dc0d8fb2a7a38bd78d8b2529896002c023bfb234863d0",
+      "source_count": 287,
+      "source_map_file_sha256": "65fd652795ecc308b2d9faa9da4735926901c0e6c0a77bc39b2858b5350fa415",
+      "source_map_digest": "de145ef0a4fab7e705e0ab54c0b52a647594cd462ea3d9a6803d5a2b0f0b78e5"
+    }
+  }
+}
