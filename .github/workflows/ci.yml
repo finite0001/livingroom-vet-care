@@ -313,7 +313,8 @@ jobs:
 
   controlled-stock:
     # Run only the owned rehearsal stacks, without the database job's foundation.
-    # All probe deadlines, reserves, workloads and cleanup gates remain unchanged.
+    # Existing probe deadlines, reserves, workloads and cleanup gates remain unchanged.
+    # Secondary review declares its own workload bound and cleanup reserve.
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
@@ -330,6 +331,10 @@ jobs:
         run: python3 -B tests/controlled-drugs/engine/candidate/run-native-history.py --run-synthetic-local --use-canonical-migration
       - name: Verify actual CLI ledger failure rollback and transaction barrier
         run: python3 -B tests/controlled-drugs/engine/candidate/run-cli-atomicity.py --run-synthetic-local
+      - name: Verify separately sealed secondary-review admission and transaction feasibility
+        run: python3 -B tests/controlled-drugs/engine/candidate/probe-secondary-review.py --run-synthetic-local --gate-a
+      - name: Verify private secondary review through real Auth, natural expiry and populated restore
+        run: python3 -B tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py --run-synthetic-local --acceptance
 
   diagnostic-renderer:
     runs-on: ubuntu-24.04
