@@ -109,5 +109,24 @@
     "renderer Linux image build and native sandbox proof"
   ],
   "local_acceptance_complete": true,
-  "code_source_map_sha256": "2c43419dd47623138602ef563bafb65b81488b5c83f316d89d1ad05072f80a4f"
+  "code_source_map_sha256": "2c43419dd47623138602ef563bafb65b81488b5c83f316d89d1ad05072f80a4f",
+  "diagnostics_revision": {
+    "purpose": "retain unknown CI startup failure without plaintext artifact exposure",
+    "first_pr_head": "55c1233005757319951d3c96bca7647b547902c7",
+    "first_pr_run": 39820454419,
+    "database_failed_before_timer": true,
+    "renderer_failed_before_pdf_registration": true,
+    "startup_root_cause_known": false,
+    "exact_preview_ready": true,
+    "private_key_exported": false,
+    "canonical_inputs_changed": false,
+    "workload_cleanup_deadlines_changed": false,
+    "crypto_tests": 14,
+    "local_openssl": "3.6.4",
+    "linux_openssl": "3.0.13",
+    "linux_to_mac_binary_roundtrip": true,
+    "crypto_source_review_sha256": "34cf8ef7fca8b90d48ff97bc92d1caf233ee0a1e1d82b697c1fac2f2e5c9f44e",
+    "compatibility_review_sha256": "4a755ee8d6eab57b8ef2dec23b0837853c52f08541a8108326f6544b0db9fe99",
+    "new_head_ci_complete": false
+  }
 }

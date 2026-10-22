@@ -23,6 +23,7 @@ class FakeRunner:
         self.ledger = []
         self.preexisting = False
         self.fail_migration = False
+        self.fail_stop = False
         self.bad_owner = False
         self.change_after_start = False
         self.bad_ledger = False
@@ -57,7 +58,9 @@ class FakeRunner:
             if self.replace_after_migration:
                 self.container_id = 'c' * 64
         elif argv[:2] == ['supabase', 'stop']:
-            self.live = False
+            code = 9 if self.fail_stop else 0
+            if not self.fail_stop:
+                self.live = False
         elif argv[:3] == ['docker', 'context', 'inspect']:
             out = json.dumps([{'Endpoints': {'docker': {'Host': 'unix:///tmp/test-docker.sock'}}}])
         elif argv[:3] == ['docker', '--host', 'unix:///tmp/test-docker.sock']:
@@ -126,6 +129,87 @@ class OwnedBootstrapTests(unittest.TestCase):
         from secondary_review_ledger import load_frozen
         self.runner.ledger = load_frozen(ROOT / m.CANDIDATE)['ledger'][:1]
         return path
+
+    def test_nonzero_first_failure_survives_failed_cleanup(self):
+        self.first_migration()
+        self.runner.fail_migration = self.runner.fail_stop = True
+        with self.assertRaisesRegex(RuntimeError, 'command failed'):
+            self.runtime(1).execute()
+        folder = Path(self.temp.name) / 'evidence'
+        result = json.loads((folder / 'result.json').read_text())
+        first = result['first_failed_command']
+        self.assertEqual(first['outcome'], 'nonzero')
+        self.assertEqual(first['exit_code'], 1)
+        self.assertEqual(json.loads((folder / first['command_file']).read_text())[:3], ['supabase', 'migration', 'up'])
+        self.assertEqual(result['primary_failure']['command_sequence'], first['sequence'])
+        self.assertIn('command failed', result['cleanup_error'])
+        statuses = [json.loads(p.read_text()) for p in sorted(folder.glob('*-status.json'))]
+        self.assertEqual([s['exit_code'] for s in statuses if s['outcome'] == 'nonzero'], [1, 9])
+        self.assertFalse(result['passed'])
+        self.assertNotIn('failure_cleanup_complete', result)
+
+    def test_timeout_first_failure_and_partial_bytes_survive_failed_cleanup(self):
+        self.runner.timeout_start = self.runner.fail_stop = True
+        with self.assertRaisesRegex(RuntimeError, 'timed out'):
+            self.runtime().execute()
+        folder = Path(self.temp.name) / 'evidence'
+        result = json.loads((folder / 'result.json').read_text())
+        first = result['first_failed_command']
+        self.assertEqual(first['outcome'], 'timeout')
+        self.assertIsNone(first['exit_code'])
+        self.assertEqual(first['error_type'], 'TimeoutExpired')
+        self.assertEqual((folder / first['stdout_file']).read_bytes(), b'partial output')
+        self.assertEqual((folder / first['stderr_file']).read_bytes(), b'partial error')
+        self.assertIn('timed out', result['primary_failure']['message'])
+        self.assertIn('command failed', result['cleanup_error'])
+
+    def test_timeout_retains_non_utf8_partial_bytes(self):
+        runtime = self.runtime()
+        def timeout(*args, **kwargs):
+            raise subprocess.TimeoutExpired(args[0], 1, output=b'\xffpartial', stderr=b'\xfefailure')
+        runtime.runner = timeout
+        with self.assertRaisesRegex(RuntimeError, 'timed out'):
+            runtime.command(['synthetic-timeout'])
+        self.assertEqual((runtime.evidence / '0001-stdout.log').read_bytes(), b'\xffpartial')
+        self.assertEqual((runtime.evidence / '0001-stderr.log').read_bytes(), b'\xfefailure')
+
+    def test_runner_decode_error_has_status_without_transport_changes(self):
+        runtime = self.runtime()
+        def decode_failure(*args, **kwargs):
+            self.assertIs(kwargs['text'], True)
+            raise UnicodeDecodeError('utf-8', b'\xff', 0, 1, 'invalid')
+        runtime.runner = decode_failure
+        with self.assertRaises(UnicodeDecodeError):
+            runtime.command(['synthetic-decode-error'])
+        first = runtime.record['first_failed_command']
+        self.assertEqual(first['outcome'], 'runner_error')
+        self.assertEqual(first['error_type'], 'UnicodeDecodeError')
+        self.assertIsNone(first['exit_code'])
+
+    def test_os_error_is_distinct_and_private(self):
+        runtime = self.runtime()
+        runtime.runner = lambda *args, **kwargs: (_ for _ in ()).throw(FileNotFoundError('private executable detail'))
+        with self.assertRaises(FileNotFoundError):
+            runtime.command(['absent-private-executable'])
+        status = json.loads((runtime.evidence / '0001-status.json').read_text())
+        self.assertEqual(status['outcome'], 'os_error')
+        self.assertEqual(status['error_type'], 'FileNotFoundError')
+        self.assertIsNone(status['exit_code'])
+        self.assertNotIn('private executable detail', json.dumps(status))
+        self.assertEqual(runtime.record['first_failed_command'], status)
+
+    def test_command_status_records_actual_elapsed_and_existing_timeout_bound(self):
+        runtime = self.runtime()
+        runtime.deadline = 110.0
+        runtime.runner = lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, '', '')
+        with patch.object(m.time, 'monotonic', side_effect=[100.0, 101.0, 103.5]):
+            runtime.command(['true'], timeout=60)
+        status = json.loads((runtime.evidence / '0001-status.json').read_text())
+        self.assertEqual(status['outcome'], 'success')
+        self.assertEqual(status['exit_code'], 0)
+        self.assertEqual(status['timeout_seconds'], 10.0)
+        self.assertEqual(status['elapsed_seconds'], 2.5)
+        self.assertNotIn('first_failed_command', runtime.record)
 
     def test_zero_bootstrap_pauses_without_application_migration(self):
         result = self.runtime().execute()

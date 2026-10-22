@@ -163,6 +163,17 @@ class Bootstrap:
             os.chmod(path, 0o600)
             target.write(raw)
 
+    def command_status(self, stem, began, limit, outcome, exit_code=None, error_type=None):
+        status = {'sequence': self.sequence, 'outcome': outcome, 'exit_code': exit_code,
+                  'timeout_seconds': limit, 'elapsed_seconds': round(max(0, time.monotonic() - began), 6),
+                  'command_file': stem + '-command.json', 'stdout_file': stem + '-stdout.log',
+                  'stderr_file': stem + '-stderr.log'}
+        if error_type is not None:
+            status['error_type'] = error_type
+        if outcome != 'success':
+            self.record.setdefault('first_failed_command', status)
+        self.write(stem + '-status.json', (json.dumps(status, sort_keys=True) + '\n').encode())
+
     def command(self, argv, text=None, env=None, timeout=60):
         remaining = self.deadline - time.monotonic()
         require(remaining > 0, 'Owned bootstrap deadline exhausted')
@@ -171,13 +182,21 @@ class Bootstrap:
         self.write(stem + '-command.json', json.dumps(argv).encode())
         if text is not None:
             self.write(stem + '-stdin.sql', text.encode())
+        limit = min(timeout, remaining)
+        began = time.monotonic()
         try:
             result = self.runner(argv, input=text, env=env or self.env, capture_output=True,
-                                 text=True, cwd=self.root, timeout=min(timeout, remaining))
+                                 text=True, cwd=self.root, timeout=limit)
         except subprocess.TimeoutExpired as error:
+            self.command_status(stem, began, limit, 'timeout', error_type=type(error).__name__)
             for label, value in (('stdout', error.stdout), ('stderr', error.stderr)):
                 self.write(stem + '-' + label + '.log', value.encode() if isinstance(value, str) else value or b'')
             raise RuntimeError('Owned bootstrap command timed out; private evidence retained') from error
+        except BaseException as error:
+            self.command_status(stem, began, limit, 'os_error' if isinstance(error, OSError) else 'runner_error',
+                                error_type=type(error).__name__)
+            raise
+        self.command_status(stem, began, limit, 'success' if result.returncode == 0 else 'nonzero', result.returncode)
         self.write(stem + '-stdout.log', result.stdout.encode())
         self.write(stem + '-stderr.log', result.stderr.encode())
         require(result.returncode == 0, 'Owned bootstrap command failed; private evidence retained')
@@ -353,7 +372,9 @@ class Bootstrap:
                                ledger_sha256=digest(json.dumps(actual, sort_keys=True, separators=(',', ':')).encode()),
                                source_sha256=self.sources)
             return self.record
-        except BaseException:
+        except BaseException as primary:
+            self.record.setdefault('primary_failure', {'type': type(primary).__name__, 'message': str(primary),
+                'command_sequence': self.record.get('first_failed_command', {}).get('sequence')})
             if self.started:
                 try:
                     self.cleanup()

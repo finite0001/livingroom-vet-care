@@ -26,3 +26,29 @@ Renderer dependency installation now explicitly uses five APT retries and 20-sec
 Independent final source, runtime and evidence review passed. Exact-head CI and preview remain pending at this capture. Hosted installation, providers and clinical/register activation remain pending. New PR merging requires Dave's specific approval.
 
 The full historical 51/84 upgrade modes and the distinct 201→206 call-note upgrade have not been rerun locally for this repair. The source retains those selections; final CI must establish the paths it exercises. Renderer mirror recovery is also pending actual CI. The fresh observation records inventories without claiming full old/new startup catalog equivalence. The separate v3 Gate A protocol work is not part of this repair.
+
+## PR #293 diagnostics revision
+
+The first PR run at `55c1233005757319951d3c96bca7647b547902c7` has a READY
+preview but failed database and renderer jobs during shared bootstrap, before the
+scheduler-interleaving and PDF-registration assertions respectively. Neither
+private helper log was uploaded, so the primary startup cause remains unknown.
+The renderer's APT installation and pinned image build completed in that run.
+
+The revision adds per-command private status receipts and
+[encrypted CI diagnostics](../ci-owned-bootstrap-evidence.md). It preserves the
+original command failure separately from cleanup errors and uploads only encrypted
+evidence plus fixed public status. Canonical sources, independent expectations,
+startup execution and cleanup deadlines are unchanged. This is a diagnosability
+repair, not a claim that the unknown startup failure has been fixed.
+
+Fourteen real OpenSSL tests passed locally and on Linux, covering binary roundtrip,
+wrong keys, ciphertext/tag tampering, alternate profiles and unsafe/archive inputs.
+Linux OpenSSL 3.0.13 encrypted a synthetic binary fixture to the committed public
+recipient; Mac OpenSSL 3.6.4 decrypted and verified its exact bytes. The private key
+never left this Mac. Independent source, certificate and compatibility reviews
+passed. A 64 MiB incompressible fixture sealed in 2.024 seconds locally; this is a
+resource observation, not a guarantee for the largest admitted archive.
+
+The complete revision still requires exact-head CI and preview before merge
+approval. Hosted installation and clinical activation remain pending.
