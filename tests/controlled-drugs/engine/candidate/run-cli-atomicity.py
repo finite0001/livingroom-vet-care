@@ -15,7 +15,7 @@ import uuid
 from cli_migration_body import build_cli_body
 from cli_atomicity import capture_baseline, rehearse
 from local_install import build_install
-from canonical_prefix import canonical_prefix, canonical_binding, CANONICAL_VERSION, CANONICAL_FILENAME, CANONICAL_NAME
+from canonical_prefix import canonical_prefix, canonical_binding, canonical205_files, canonical_admission_inputs, CANONICAL_VERSION, CANONICAL_FILENAME, CANONICAL_NAME
 from canonical_post205 import verify_canonical_installed
 
 
@@ -215,8 +215,10 @@ def run_cli(case, body):
 
 
 files = sorted((root / 'supabase/migrations').glob('*.sql'))
+admitted205 = canonical205_files(source, files)
 prefix = canonical_prefix(source, files)
 binding = canonical_binding(source, files)
+assert admitted205[-1] == root / binding['canonical_path']
 inputs = [*files, *sorted(source.glob('*.sql')), *sorted(source.glob('*.py')),
           source / 'trusted-prior-189.json', source / 'release-expected-204.json',
           source / 'release-expected-204-v1.json', source.parent / 'source-reader.sql',
@@ -224,6 +226,7 @@ inputs = [*files, *sorted(source.glob('*.sql')), *sorted(source.glob('*.py')),
           source.parent / 'release/controlled-stock-cli-body.sql',
           root / 'tests/controlled-drugs/owned_scheduler.py', root / '.github/workflows/ci.yml']
 hashes = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+hashes.update(canonical_admission_inputs(source, files))
 (folder / 'source-hashes.json').write_text(json.dumps(hashes, indent=2) + '\n')
 (folder / 'executable-snapshots').mkdir()
 for name in ('run-cli-atomicity.py', 'cli_atomicity.py', 'cli_migration_body.py'):

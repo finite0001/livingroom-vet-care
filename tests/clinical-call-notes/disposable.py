@@ -208,7 +208,7 @@ try:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', port))
     migrations = sorted((root / 'supabase/migrations').glob('*.sql'))
-    assert len(migrations) == 205 and new_migration in migrations and migrations[-1].name == '20261020151157_controlled_stock_private_engine.sql'
+    assert len(migrations) == 206 and new_migration in migrations and migrations[-1].name == '20261022010000_controlled_secondary_review_private.sql'
     selected = migrations if args.sql_only else [m for m in migrations if m < new_migration]
     for migration in selected:
         shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
@@ -260,7 +260,7 @@ enabled = false
             if migration >= new_migration:
                 shutil.copy2(migration, project / 'supabase/migrations' / migration.name)
         run(['supabase', 'migration', 'up', '--local', '--workdir', str(project)], timeout=180)
-        check(sql('select count(*)from supabase_migrations.schema_migrations;'), '205')
+        check(sql('select count(*)from supabase_migrations.schema_migrations;'), '206')
         sql("notify pgrst,'reload schema';")
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
@@ -420,7 +420,7 @@ enabled = false
         after_advisors = advisors('current203')
     assert all(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest for name, digest in hashes.items()), 'Proof input changed during run'
     proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only,
-             'baseline_migrations': 201, 'current_migrations': 205, 'initial_migrations': len(selected), 'migration_upgrade_executed': not args.sql_only, 'source_sha256': hashes,
+             'baseline_migrations': 201, 'current_migrations': 206, 'initial_migrations': len(selected), 'migration_upgrade_executed': not args.sql_only, 'source_sha256': hashes,
              'actual_auth_api_assertions': checks, 'observed_source_read_waits': waits,
              'provider_requests': 0, 'hosted_writes': 0, 'owned_runtime_removed': False}
     if not args.sql_only:

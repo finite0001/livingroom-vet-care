@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local', action='store_true', required=True, help='Explicit consent for the verified local disposable attachment rehearsal')
 parser.add_argument('--full-regression',action='store_true',help='Also run all SQL files and canonical prescription/release contention')
 parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
+parser.add_argument('--canonical-baseline',type=int,choices=(205,206),default=206,help='Exact private canonical baseline; retained timer proof selects205 explicitly')
 args = parser.parse_args()
 CONTAINER = 'supabase_db_livingroom-vet-foundation'
 if args.project_config:
@@ -144,8 +145,8 @@ try:
     FOUNDATION_COMMAND=docker+['exec','-i',scheduler_state['container_id']]+FOUNDATION_COMMAND[4:]
     COMMAND=FOUNDATION_COMMAND.copy()
     CLEANUP_COMMAND=FOUNDATION_COMMAND.copy();CLEANUP_COMMAND[CLEANUP_COMMAND.index('-U')+1]='supabase_admin'
-    source_baseline=admit_source(lambda query: sql(query).stdout,[path.read_text()for path in test_files])
-    dump=subprocess.run(docker+['exec',scheduler_state['container_id'],'pg_dump','-U','postgres','--no-publications','--no-subscriptions','--schema=public','--schema=auth','--schema=storage','--schema=extensions','--schema=supabase_migrations','postgres'],capture_output=True,check=True).stdout
+    source_baseline=admit_source(lambda query: sql(query).stdout,[path.read_text()for path in test_files],canonical_baseline=args.canonical_baseline)
+    dump=subprocess.run(docker+['exec',scheduler_state['container_id'],'pg_dump','-U','postgres','--no-publications','--no-subscriptions','--schema=public','--schema=auth','--schema=storage','--schema=extensions','--schema=supabase_migrations']+(['--schema=controlled_review']if args.canonical_baseline==206 else[])+['postgres'],capture_output=True,check=True).stdout
     sql(f'create database "{database}";');created=True
     sql(f"comment on database {database} is {quote(marker)};")
     COMMAND=FOUNDATION_COMMAND.copy();COMMAND[COMMAND.index('-d')+1]=database
@@ -157,8 +158,8 @@ try:
     verify_clone_target()
     restored=subprocess.run(restore_command,input=b"BEGIN;\n"+dump+b"\nCOMMIT;",capture_output=True)
     check(restored.returncode==0,restored.stderr.decode())
-    clone_proof=verify_clone(lambda query: sql(query).stdout,source_baseline)
-    check(clone_proof['passed']is True,'Verified canonical205 clone with actual ledger and independent manifest')
+    clone_proof=verify_clone(lambda query: sql(query).stdout,source_baseline,canonical_baseline=args.canonical_baseline)
+    check(clone_proof['passed']is True,f'Verified canonical{args.canonical_baseline} clone with actual ledger and independent private metadata')
     regressions=0
     for test_file in test_files:
         filename=test_file.name
@@ -220,7 +221,7 @@ finally:
         COMMAND=FOUNDATION_COMMAND.copy()
         if source_baseline is not None:
             try:
-                check(verify_source_unchanged(lambda query: sql(query).stdout,source_baseline),'Source data, real ledger and catalog unchanged')
+                check(verify_source_unchanged(lambda query: sql(query).stdout,source_baseline,canonical_baseline=args.canonical_baseline),'Source data, real ledger and catalog unchanged')
             except BaseException as error:
                 cleanup_errors.append(error)
     if scheduler_state is not None:

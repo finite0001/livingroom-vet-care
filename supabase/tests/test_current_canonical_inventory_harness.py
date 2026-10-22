@@ -4,8 +4,8 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-FILENAME = '20261020151157_controlled_stock_private_engine.sql'
-VERSION = '20261020151157'
+FILENAME = '20261022010000_controlled_secondary_review_private.sql'
+VERSION = '20261022010000'
 RUNTIMES = [
     'tests/invoice-reminders/disposable.py', 'tests/clinical-audio/disposable.py',
     'tests/clinical-notes/disposable.py', 'tests/clinical-calls/disposable.py',
@@ -27,7 +27,7 @@ def guard_expressions(path):
             continue
         text = ast.unparse(node.test)
         if ((any('len(' + name + ')' in text for name in ['files', 'hashes', 'migrations', 'versions'])
-             and ('205' in text or 'CURRENT_RESTORE_MIGRATION_COUNT' in text))
+             and ('206' in text or 'CURRENT_RESTORE_MIGRATION_COUNT' in text))
                 or FILENAME in text):
             guards.append(compile(ast.Expression(node.test), str(path), 'eval'))
     assert guards, path
@@ -41,7 +41,7 @@ def evaluate(path, files):
                 if 'clinical-call-notes' in str(path) else '20261018150000_clinical_call_quote_anchors.sql')
     context = {'files': files, 'migrations': files, 'hashes': names, 'versions': versions,
                'migration_hashes': names, 'new_migration': ROOT / 'supabase/migrations' / new_name,
-               'migration_files': files, 'CURRENT_RESTORE_MIGRATION_COUNT': 205}
+               'migration_files': files, 'CURRENT_RESTORE_MIGRATION_COUNT': 206}
     return all(eval(code, {'__builtins__': {'len': len, 'set': set}}, context) for code in guard_expressions(path))
 
 
@@ -49,22 +49,22 @@ class CurrentCanonicalInventoryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.files = sorted((ROOT / 'supabase/migrations').glob('*.sql'))
-        assert len(cls.files) == 205 and cls.files[-1].name == FILENAME
+        assert len(cls.files) == 206 and cls.files[-1].name == FILENAME
 
-    def test_all_current_python_inventory_guards_accept_exact_205(self):
+    def test_all_current_python_inventory_guards_accept_exact_206(self):
         for name in RUNTIMES:
             with self.subTest(path=name):
                 self.assertTrue(evaluate(ROOT / name, self.files))
 
-    def test_204_or_206_inventory_cannot_be_mistaken_for_current(self):
+    def test_205_or_207_inventory_cannot_be_mistaken_for_current(self):
         for name in RUNTIMES:
-            for files in [self.files[:-1], self.files + [self.files[-1].with_name('20261021120000_extra.sql')]]:
+            for files in [self.files[:-1], self.files + [self.files[-1].with_name('20261022020000_extra.sql')]]:
                 with self.subTest(path=name, count=len(files)):
                     self.assertFalse(evaluate(ROOT / name, files))
 
     def test_equal_count_wrong_latest_filename_or_version_is_rejected(self):
         for name in RUNTIMES:
-            for replacement in ['20261020151157_wrong_name.sql', '20261020151158_controlled_stock_private_engine.sql']:
+            for replacement in ['20261022010000_wrong_name.sql', '20261022010001_controlled_secondary_review_private.sql']:
                 files = self.files[:-1] + [self.files[-1].with_name(replacement)]
                 with self.subTest(path=name, replacement=replacement):
                     self.assertFalse(evaluate(ROOT / name, files))

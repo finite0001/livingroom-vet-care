@@ -1,12 +1,15 @@
-# Controlled-drug rules — Susan’s review draft
+# Controlled-drug rules — approved recommendations, commissioning pending
 
-**Status: DRAFT · INACTIVE · not an approved practice SOP**
+**Status: POLICY RECOMMENDATIONS APPROVED · REGISTER INACTIVE · commissioning details pending**
 
-Prepared October 14, 2026. Susan’s approval: **pending**. Effective date: **not assigned**.
+Prepared October 14, 2026. On October 21, 2026, Dave reported: “Susan approves. Let's finish all work.” This records owner-reported approval of the concrete recommendations below; it is not a separately signed clinical attestation. The approved source is commit `b376f480cd349d779ffe8f345b0a17f2ab328783`, file SHA-256 `4e251c21e1032e6bcec0daa83977ccbe5385ff53fba3ee715832f543f833f996`. No changes to those recommendations were supplied. Operational effective date: **not assigned**. Dave confirmed the building remains
+under construction and actual commissioning inputs do not exist yet. Engineering
+and synthetic testing may proceed; physical commissioning and activation wait for
+practice readiness.
 
 Dave requested proposed rules for Susan to review. The recommendations below are practice-policy choices unless specifically identified as a legal constraint. Saving this document, merging its PR, or reviewing a drug’s draft configuration does **not** activate a controlled-drug register or authorize a physical transaction.
 
-## Proposed rules to approve or edit
+## Approved policy recommendations
 
 | Event | Proposed practice rule | What the second person confirms |
 |---|---|---|
@@ -44,17 +47,17 @@ For a veterinarian working alone, subsequent review can check the record. It **c
 
 Federal sources were checked October 14, 2026. The [regulatory research](../plans/2026-10-14-inventory-register/research/regulatory-20261014-controlled-register.md) records Colorado source dates and the remaining need to obtain/recheck the current consolidated veterinary rules before activation. Preserve the applicable longer record-retention period and any hold; no automatic deletion is proposed.
 
-## Susan’s decision record — all pending
+## Decision record — approval reported October 21, 2026
 
 | Decision | Recommended starting point | Susan’s decision / changes |
 |---|---|---|
-| Receipts and opening counts | Physical check by two authorized people before release | Pending |
-| Ordinary administration / dispensing reviews | Independent record review by end of next staffed business day | Pending |
-| Routine counts | Each staffed day; mobile departure and return | Pending |
-| Clinic residual-waste rule | Actual second-person observation under a separately approved SOP | Pending |
-| Sole-veterinarian housecall waste | Resolve specific lawful procedure before enabling | Pending; no default workaround |
-| Expired stock / disposal service | Select actual provider and documented process | Pending; no provider assumed |
-| Reviewers and escalation owner | Named authorized roster and responsible veterinarian | Pending; no people assigned |
-| Downtime and security | Approved kit/storage and contemporaneous-record procedure | Pending |
+| Receipts and opening counts | Physical check by two authorized people before release | Approved recommendation; actual counts and personnel required |
+| Ordinary administration / dispensing reviews | Independent record review by end of next staffed business day | Approved recommendation; staffed calendar and roster required |
+| Routine counts | Each staffed day; mobile departure and return | Approved recommendation; operating calendar and kit details required |
+| Clinic residual-waste rule | Actual second-person observation under a separately approved SOP | Policy approved; specific residual-waste SOP still required |
+| Sole-veterinarian housecall waste | Resolve specific lawful procedure before enabling | Approval supplies no procedure; remains unavailable |
+| Expired stock / disposal service | Select actual provider and documented process | Approval supplies no provider; selection required |
+| Reviewers and escalation owner | Named authorized roster and responsible veterinarian | Policy approved; actual roster required |
+| Downtime and security | Approved kit/storage and contemporaneous-record procedure | Policy approved; actual kit/storage and downtime instructions required |
 
-Approval must identify the accepted document version, any changes, approver and date. Activation also requires the actual registrant/site information, reviewed drug classifications and units, real opening counts, operational training and completion of the engineering/clinical release checks in [phase 03](../plans/2026-10-14-inventory-register/phase-03-controlled-register.md). Approval of this draft alone does not bypass those checks.
+The approval provenance and exact prior document version are recorded above. Activation still requires the actual registrant/site information, reviewed drug classifications and units, real opening counts, operational training and completion of the engineering/clinical release checks in [phase 03](../plans/2026-10-14-inventory-register/phase-03-controlled-register.md). Approval of this draft alone does not bypass those checks.

@@ -17,7 +17,7 @@ import uuid
 
 from local_install import build_install, assert_prior
 from scalar_contract import capture_originals, verify_installation
-from canonical_prefix import canonical_prefix, canonical_binding
+from canonical_prefix import canonical_prefix, canonical_binding, canonical205_files, canonical_admission_inputs
 from canonical_post205 import capture_pre204, verify_canonical_installed
 from history_environment import assert_bootstrap_image
 from native_history_restore import probe_generic_restore
@@ -298,8 +298,11 @@ def main():
     args = parser.parse_args()
     os.umask(0o077)
     all_files=sorted((root/'supabase/migrations').glob('*.sql'))
+    admitted205=canonical205_files(source,all_files)
     files=canonical_prefix(source,all_files)
     binding=canonical_binding(source,all_files)if args.use_canonical_migration else None
+    if binding is not None:
+        assert admitted205[-1]==root/binding['canonical_path']
     assert files[186].name == '20261015011200_controlled_draft_configuration.sql'
     assert files[187].name == '20261015020722_stock_writer_provenance.sql'
     assert files[188].name == '20261015055007_native_custody_provenance.sql'
@@ -312,6 +315,7 @@ def main():
     if args.use_release_assembly or args.use_canonical_migration:
         inputs.extend([source / 'release-expected-204.json', source / 'release-expected-204-v1.json', source.parent / 'release/controlled-stock-private.sql',source.parent/'release/controlled-stock-cli-body.sql'])
     hashes = {str(p.relative_to(root)): digest(p) for p in inputs}
+    hashes.update(canonical_admission_inputs(source,all_files))
     folder = Path(tempfile.mkdtemp(prefix='lrv-native-history-evidence-'))
     print('Protected evidence: ' + str(folder), flush=True)
     (folder/'source-hashes.json').write_text(json.dumps(hashes,sort_keys=True,indent=2)+'\n')

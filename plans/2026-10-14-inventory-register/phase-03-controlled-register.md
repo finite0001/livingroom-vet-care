@@ -1,5 +1,9 @@
 # 5C — Controlled-drug register and independent review
 
+Current continuation: canonical engine 205 and the private secondary-review foundation are merged through PR #289/#290. Hosted installation and C2/C3 commissioning remain pending. See [completion plan](../20261021-controlled-register-completion/plan.md).
+
+Historical phase baseline follows; dated rollout evidence is retained rather than rewritten.
+
 Priority high. C0 draft metadata, C1a stock/custody provenance and the C1b0 pickup/correction extension are released through PR255/256/257. Both hosted backends are189 and exact production f68a01f6/domain are verified. C1b execution, C2 workflows and C3 actual commissioning remain unfinished; no controlled register or clinical rules are activated. Preserve all45 original requirements.
 
 The [local C1b execution candidate](../../tests/controlled-drugs/engine/candidate/README.md) now implements and tests the owned protocol and exact physical posting, with independent source/lifecycle checks, genuine Auth/observed waits, injected failures/corruption and populated managed restore. [Evidence and remaining release work](../../docs/launch-evidence/2026-10-15-controlled-engine-candidate-local.md). The source oracle is corrected to136 actual canonical retries/961 SQL checks; the earlier687-check anesthesia receipt claim is superseded. Candidate schema/code is installed only inside disposable owned runtimes, outside canonical migrations. C1 remains unchecked until production hardening and full acceptance; Susan’s real rules remain inactive.
@@ -24,7 +28,7 @@ Retain immutable evidence without destructive purge. Federal register minimum an
 
 ## Delivery order and scope
 
-Dave selected **draft rules for Susan to review** on October 14. The [inactive practice-rules draft](../../docs/controlled-drug-rules-susan-review.md) proposes review deadlines, count frequency and mobile-kit handling, distinguishes record review from actual observation, and leaves off-site residual-waste handling unresolved. Susan has not approved it. Merging documentation or engineering PRs does not activate these rules or satisfy C3 commissioning.
+Dave selected **draft rules for Susan to review** on October 14. The [inactive practice-rules draft](../../docs/controlled-drug-rules-susan-review.md) proposes review deadlines, count frequency and mobile-kit handling, distinguishes record review from actual observation, and leaves off-site residual-waste handling unresolved. On October 21 Dave reported Susan’s approval of those recommendations; the linked decision record identifies the exact approved source and remaining factual inputs. Merging documentation or engineering PRs does not activate these rules or satisfy C3 commissioning.
 
 | Slice | Deliverable | Gate |
 |---|---|---|

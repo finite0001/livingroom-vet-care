@@ -17,7 +17,7 @@ import uuid
 from local_install import build_install, assert_prior, PriorMetadataDrift
 from scalar_contract import capture_originals, verify_installation
 from probe_failure import summarize_probe_failure
-from canonical_prefix import canonical_prefix, canonical_binding
+from canonical_prefix import canonical_prefix, canonical_binding, canonical205_files, canonical_admission_inputs
 from canonical_post205 import capture_pre204, verify_canonical_installed
 
 parser=argparse.ArgumentParser(description=__doc__)
@@ -65,6 +65,7 @@ def release_raw_sql(query):
  return result
 
 all_files=sorted((root/'supabase/migrations').glob('*.sql'))
+admitted205=canonical205_files(source,all_files)
 files=canonical_prefix(source,all_files)
 binding=canonical_binding(source,all_files)if args.use_canonical_migration else None
 inputs=all_files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted((root/'supabase/tests').glob('*.sql'))+[source/'trusted-prior-189.json',
@@ -72,6 +73,7 @@ inputs=all_files+sorted(source.glob('*.sql'))+sorted(source.glob('*.py'))+sorted
 if args.use_release_assembly or args.use_canonical_migration:
  inputs.extend([source/'release-expected-204.json',source/'release-expected-204-v1.json',source.parent/'release/controlled-stock-private.sql',source.parent/'release/controlled-stock-cli-body.sql'])
 hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in inputs}
+hashes.update(canonical_admission_inputs(source,all_files))
 proof={}
 (result_dir/'source-hashes.json').write_text(json.dumps(hashes,sort_keys=True,indent=2)+'\n')
 try:
@@ -180,7 +182,8 @@ enabled = false
  if binding is not None:
   canonical_baseline=capture_pre204(sql,prior_sql,trusted,phase='ordinary')
   (result_dir/'canonical-pre204-baseline.json').write_text(json.dumps(canonical_baseline,indent=2)+'\n')
-  canonical_path=root/binding['canonical_path']
+  canonical_path=admitted205[-1]
+  assert canonical_path==root/binding['canonical_path']
   shutil.copy2(canonical_path,project/'supabase/migrations'/binding['filename'])
   verify()
   command(['supabase','migration','up','--local','--workdir',str(project),'--yes','--output-format','json'],timeout=240)

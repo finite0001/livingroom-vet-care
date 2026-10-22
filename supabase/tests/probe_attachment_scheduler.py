@@ -101,7 +101,7 @@ def main():
             print('Running ' + name, flush=True)
             before_case = atomic._snapshot(runtime.query)
             save(name + '-source-before', before_case)
-            result = runtime.command([sys.executable, '-B', str(ROOT / 'supabase/tests' / name), '--run-synthetic-local', '--project-config', str(runtime.project / 'supabase/config.toml')], timeout=450)
+            result = runtime.command([sys.executable, '-B', str(ROOT / 'supabase/tests' / name), '--run-synthetic-local', '--canonical-baseline', '205', '--project-config', str(runtime.project / 'supabase/config.toml')], timeout=450)
             assert 'checks passed' in result.stdout
             after_case = atomic._snapshot(runtime.query)
             save(name + '-source-after', after_case)

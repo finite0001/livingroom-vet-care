@@ -70,24 +70,24 @@ function migrationLatestExpectations(source: string) {
 
 test("latest migration guards recognize actual ledger queries and exclude other latest values", () => {
   assert.deepEqual(migrationLatestExpectations(`
-    check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");
+    check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261022010000");
     check(sql("select max(version)from public.pets;"), "old");
-  `), ["20261020151157"]);
+  `), ["20261022010000"]);
 });
 
-test("all current scalar ledger guards require canonical 205 and its exact version", () => {
+test("all current scalar ledger guards require canonical 206 and its exact version", () => {
   const inventory = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
     .filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
-  assert.equal(inventory.length, 205);
-  assert.equal(inventory.at(-1), "20261020151157_controlled_stock_private_engine.sql");
+  assert.equal(inventory.length, 206);
+  assert.equal(inventory.at(-1), "20261022010000_controlled_secondary_review_private.sql");
   for (const path of ["invoice-reminders/local-roundtrip.ts", "clinical-audio/local-roundtrip.ts",
     "clinical-notes/local-roundtrip.ts", "clinical-dictation/local-roundtrip.ts",
     "clinical-calls/local-roundtrip.ts", "clinical-recap/local-roundtrip.ts",
     "inventory/stock-writer-local.ts", "imaging/local-roundtrip.ts",
     "scheduling/operational-reconciliation-local.ts", "controlled-drugs/native-local.ts"]) {
     const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-    assert.deepEqual(migrationExpectations(source), ["205"], `${path} current count`);
-    assert.deepEqual(migrationLatestExpectations(source), ["20261020151157"], `${path} current version`);
+    assert.deepEqual(migrationExpectations(source), ["206"], `${path} current count`);
+    assert.deepEqual(migrationLatestExpectations(source), ["20261022010000"], `${path} current version`);
   }
 });
 
@@ -117,7 +117,7 @@ function objectInventoryExpectations(source: string) {
 
 test("operational task object guard retains exact canonical count and latest version", () => {
   const source = readFileSync(new URL("../scheduling/operational-tasks-local.ts", import.meta.url), "utf8");
-  assert.deepEqual(objectInventoryExpectations(source), [{ count: "205", latest: "20261020151157" }]);
+  assert.deepEqual(objectInventoryExpectations(source), [{ count: "206", latest: "20261022010000" }]);
   assert.deepEqual(objectInventoryExpectations(`check(JSON.parse(sql("select count(*)from public.pets")), {count: 204,latest: "old"});`), []);
 });
 
@@ -150,11 +150,11 @@ function undeclaredMigrationGuardCallees(source: string) {
 test("ledger guard assertions reject undeclared helpers even when their expected count is correct", () => {
   const source = `
     const sqlCheck = (actual: unknown, expected: unknown) => {};
-    sqlCheck(sql("select count(*)from supabase_migrations.schema_migrations;"), "205");
-    Check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");
+    sqlCheck(sql("select count(*)from supabase_migrations.schema_migrations;"), "206");
+    Check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261022010000");
   `;
-  assert.deepEqual(migrationExpectations(source), ["205"]);
-  assert.deepEqual(migrationLatestExpectations(source), ["20261020151157"]);
+  assert.deepEqual(migrationExpectations(source), ["206"]);
+  assert.deepEqual(migrationLatestExpectations(source), ["20261022010000"]);
   assert.deepEqual(undeclaredMigrationGuardCallees(source), ["Check"]);
   assert.deepEqual(undeclaredMigrationGuardCallees(source.replace("    Check(", "    sqlCheck(")), []);
 });
@@ -249,8 +249,8 @@ test("exact receipt counters follow counted ledger guards in all affected strict
 
 test("receipt contract detects a newly counted assertion and refuses stale or weak receiver checks", () => {
   const producer = `const check = (a: unknown,b: unknown) => { checks++; };
-    check(sql("select count(*)from supabase_migrations.schema_migrations;"), "205");
-    check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");`;
+    check(sql("select count(*)from supabase_migrations.schema_migrations;"), "206");
+    check(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261022010000");`;
   const contract = ledgerCounterContract(producer);
   assert.equal(contract.countedGuards, 2);
   assert.equal(receiverApiCount("assert receipt['api_checks']==43 and receipt['passed']", "receipt"), 41 + contract.countedGuards);

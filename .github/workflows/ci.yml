@@ -325,6 +325,12 @@ jobs:
         run: python3 -B tests/controlled-drugs/engine/candidate/release_assembly.py --check
       - name: Verify CLI-owned controlled-stock migration body
         run: python3 -B tests/controlled-drugs/engine/candidate/cli_migration_body.py --check
+      - name: Verify independently sealed private secondary-review installation artifacts
+        run: |
+          python3 -B tests/controlled-drugs/engine/candidate/secondary_review_release.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py --check
+      - name: Verify canonical 206 reference, CLI atomicity and private attachment restores
+        run: python3 -B tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py --run-synthetic-local --acceptance
       - name: Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore
         run: python3 -B tests/controlled-drugs/engine/candidate/run-local.py --run-synthetic-local --use-canonical-migration --include-sql-regression --include-correction-capacity --include-correction-restore
       - name: Verify genuine 187/188 history, available-only openings and populated opening restore
