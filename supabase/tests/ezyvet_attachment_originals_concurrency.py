@@ -7,10 +7,12 @@ import time
 import uuid
 import sys
 from owned_attachment_clone import admit_source, verify_clone, verify_source_unchanged
+from owned_attachment_scheduler import paused_attachment_scheduler
 import base64
 import datetime
 
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--run-synthetic-local', action='store_true', required=True, help='Explicit consent for the verified local disposable attachment rehearsal')
 parser.add_argument('--full-regression',action='store_true',help='Also run all SQL files and canonical prescription/release contention')
 parser.add_argument('--project-config', type=Path, help='Derive the database container from a Supabase TOML project_id')
 args = parser.parse_args()
@@ -22,6 +24,7 @@ if args.project_config:
 FOUNDATION_COMMAND = ['docker', 'exec', '-i', CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1']
 
 COMMAND = FOUNDATION_COMMAND.copy()
+scheduler_state = None
 
 # Cleanup runs as the container superuser. `postgres` is not a superuser in this
 # image, so terminating a connection it does not own - any supabase_admin or
@@ -33,8 +36,12 @@ CLEANUP_COMMAND = FOUNDATION_COMMAND.copy()
 CLEANUP_COMMAND[CLEANUP_COMMAND.index('-U') + 1] = 'supabase_admin'
 
 def verify_project():
-    observed = subprocess.run(['docker', 'inspect', CONTAINER], capture_output=True, text=True, check=True, timeout=30)
-    labels = json.loads(observed.stdout)[0]['Config']['Labels']
+    docker = ['docker', '--host', scheduler_state['endpoint']] if scheduler_state else ['docker']
+    observed = subprocess.run(docker + ['inspect', CONTAINER], capture_output=True, text=True, check=True, timeout=30)
+    observation = json.loads(observed.stdout)[0]
+    labels = observation['Config']['Labels']
+    if scheduler_state:
+        assert observation['Id'] == scheduler_state['container_id'], 'Original immutable source container required'
     assert labels['com.supabase.cli.project'] == CONTAINER.removeprefix('supabase_db_')
     if args.project_config:
         assert Path(labels['com.supabase.cli.workdir']).resolve() == args.project_config.resolve().parent.parent
@@ -128,6 +135,8 @@ database='lrv_attachment_race_'+uuid.uuid4().hex
 marker='owned-attachment-race-'+uuid.uuid4().hex
 created=False
 source_baseline=None
+scheduler=None
+scheduler_state=None
 fixture=Path(__file__).with_name('ezyvet_attachment_originals.test.sql').read_text().split('-- FIXTURE_BEGIN')[1].split('-- FIXTURE_END')[0]
 service="set local role service_role;"
 def scalar(query):return sql(query).stdout.strip().splitlines()[-1]
@@ -137,8 +146,14 @@ def stage(run_id,lease,page):return f"select stage_ezyvet_attachment_page('{run_
 try:
     targeted=['ezyvet_migration_capture_evidence.test.sql','ezyvet_migration_items.test.sql','ezyvet_migration_attempt_events.test.sql','ezyvet_migration_progress.test.sql','ezyvet_migration_binding_adapters.test.sql','ezyvet_migration_bindings.test.sql','ezyvet_migration_manifests.test.sql','ezyvet_release_discovery_boundaries.test.sql','public_access_defaults.test.sql','ezyvet_attachment_originals.test.sql','ezyvet_attachment_metadata.test.sql','ezyvet_import.test.sql','ezyvet_review_import.test.sql','reviewed_weight_import.test.sql','ezyvet_clinical_runs.test.sql','ezyvet_prescription_runs.test.sql','ezyvet_prescriptionitem_runs.test.sql','ezyvet_prescription_release_reference.test.sql']
     test_files=sorted(Path(__file__).parent.glob('*.test.sql')) if args.full_regression else [Path(__file__).with_name(name) for name in targeted]
+    scheduler=paused_attachment_scheduler(args.project_config)
+    scheduler_state=scheduler.__enter__()
+    docker=['docker','--host',scheduler_state['endpoint']]
+    FOUNDATION_COMMAND=docker+['exec','-i',scheduler_state['container_id']]+FOUNDATION_COMMAND[4:]
+    COMMAND=FOUNDATION_COMMAND.copy()
+    CLEANUP_COMMAND=FOUNDATION_COMMAND.copy();CLEANUP_COMMAND[CLEANUP_COMMAND.index('-U')+1]='supabase_admin'
     source_baseline=admit_source(lambda query: sql(query).stdout,[path.read_text()for path in test_files])
-    dump=subprocess.run(['docker','exec',CONTAINER,'pg_dump','-U','postgres','--no-publications','--no-subscriptions','--schema=public','--schema=auth','--schema=storage','--schema=extensions','--schema=supabase_migrations','postgres'],capture_output=True,check=True).stdout
+    dump=subprocess.run(docker+['exec',scheduler_state['container_id'],'pg_dump','-U','postgres','--no-publications','--no-subscriptions','--schema=public','--schema=auth','--schema=storage','--schema=extensions','--schema=supabase_migrations','postgres'],capture_output=True,check=True).stdout
     sql(f'create database "{database}";');created=True
     sql(f"comment on database {database} is {quote(marker)};")
     COMMAND=FOUNDATION_COMMAND.copy();COMMAND[COMMAND.index('-d')+1]=database
@@ -587,6 +602,12 @@ finally:
                 check(verify_source_unchanged(lambda query: sql(query).stdout,source_baseline),'Source data, real ledger and catalog unchanged')
             except BaseException as error:
                 cleanup_errors.append(error)
+    if scheduler_state is not None:
+        try:
+            scheduler.__exit__(None,None,None)
+            check(scheduler_state['restored'] and scheduler_state['schedules_unchanged'] and scheduler_state['override_provenance_restored'],'Original local scheduler state and schedule rows preserved')
+        except BaseException as error:
+            cleanup_errors.append(error)
     if cleanup_errors:
         if primary is None:
             raise cleanup_errors[0]
