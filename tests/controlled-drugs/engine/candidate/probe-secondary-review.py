@@ -14,6 +14,7 @@ import re
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
@@ -44,8 +45,10 @@ def source_inputs():
     files += sorted((SOURCE.parent / 'release').glob('*.sql'))
     files += [ROOT / 'supabase/tests/test_controlled_secondary_review_harness.py', ROOT / 'supabase/tests/native_fulfillment.test.sql', SOURCE.parent / 'source-reader.sql', SOURCE.parent / 'source-effects.sql', ROOT / '.github/workflows/ci.yml']
     assert all(p.is_file() for p in files), 'Every declared executable input is required'
+    sys.path.insert(0, str(ROOT / 'scripts'))
+    from owned_canonical_bootstrap import bootstrap_inputs
     return {**{str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in files}, **admission}
+            for p in files}, **admission, **bootstrap_inputs(ROOT)}
 
 
 def freeze_inputs(folder):
@@ -170,9 +173,19 @@ enabled = true
 enabled = false
 ''')
         shutil.copy2(self.project / 'supabase/config.toml', self.folder / 'generated-supabase-config.toml')
+        self.helper_failed_unverified = True
+        try:
+            self.command([sys.executable, '-B', str(ROOT / 'scripts/owned_canonical_bootstrap.py'),
+                          '--run-synthetic-local', '--migration-count', str(len(files)),
+                          '--evidence', str(self.folder / 'bootstrap'), '--workdir', str(self.project), '--exclude',
+                          'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
+        except BaseException:
+            result = self.folder / 'bootstrap/result.json'
+            if result.is_file() and json.loads(result.read_text()).get('failure_cleanup_complete') is True:
+                self.helper_failed_unverified = False
+            raise
+        self.helper_failed_unverified = False
         self.started = True
-        self.command(['supabase', 'start', '--workdir', str(self.project), '--exclude',
-                      'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
         from history_environment import assert_bootstrap_image
         inspected = self.verify()
         image = json.loads(self.command(['docker', 'image', 'inspect', inspected['Image']]).stdout)[0]
@@ -194,6 +207,8 @@ enabled = false
         self.cleanup_mode = True
         self.deadline = time.monotonic() + CLEANUP_RESERVE_SECONDS
         try:
+            if getattr(self, 'helper_failed_unverified', False):
+                raise RuntimeError('Bootstrap cleanup was not verified; retain owned workdir for investigation')
             if self.started:
                 for database, marker in list(self.databases.items()):
                     assert self.query("select shobj_description(oid,'pg_database')from pg_database where datname=" + literal(database) + ';').strip() == marker

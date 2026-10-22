@@ -1,4 +1,5 @@
 """Run native prescribing, refill and dispensing acceptance in an owned disposable local Auth/Storage stack."""
+import sys
 import argparse
 import json
 import hashlib
@@ -18,9 +19,14 @@ parser.add_argument('--decision-sql-only', action='store_true', help='Run the ne
 parser.add_argument('--retain-private-evidence', action='store_true', help='Retain a protected copy of synthetic logs and fixtures after removing the owned runtime')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
+if args.additional_migration:
+    parser.error('Additional migration overlays are not admitted by the frozen canonical206 bootstrap; use a separately reviewed forward-install rehearsal')
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 harnesses = [root / 'tests/prescriptions' / name for name in ['local-lifecycle.ts', 'local-fulfillment.ts', 'local-workspace.ts', 'local-releases.ts', 'local-corrections.ts', 'local-returns.ts', 'local-reconciliation.ts', 'local-finance.ts']]
 harnesses.append(root / 'tests/estimates/local-drafts.ts')
 harnesses.append(root / 'tests/estimates/local-publications.ts')
@@ -103,8 +109,8 @@ enabled = true
 enabled = false
 ''')
     print('Starting owned disposable prescription project; no hosted or provider operations.', flush=True)
+    command([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     started = True
-    command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     verify_identity()
     runtime_status_path = root / 'tests/estimates/owned-runtime-status.ts'
     runtime_status_hash = hashlib.sha256(runtime_status_path.read_bytes()).hexdigest()
@@ -222,7 +228,8 @@ finally:
     finally:
         log.close()
 if success:
-    summary = {'synthetic_only': True, 'fixture': 'native-prescribing-and-fulfillment', 'suites': results, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+    assert bootstrap_inputs(root) == bootstrap_hashes, 'Bootstrap source changed during proof'
+    summary = {'bootstrap_source_sha256': bootstrap_hashes, 'synthetic_only': True, 'fixture': 'native-prescribing-and-fulfillment', 'suites': results, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hashes, 'restore_runner_sha256': restore_hash, 'restore': restore,

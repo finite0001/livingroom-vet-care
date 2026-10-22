@@ -530,7 +530,10 @@ rollback;`);
     "dispatch-outbox",
     "process-inbound",
     "process-stripe-events",
+    "purge-expired-email-payloads",
+    "queue-invoice-reminders",
     "queue-reminders",
+    "reconcile-operational-tasks",
     "scheduler-reconcile",
   ];
   const schedulerContainment = JSON.parse(
@@ -540,6 +543,12 @@ rollback;`);
 select jsonb_build_object(
   'pg_cron_installed', exists(select 1 from pg_extension where extname='pg_cron'),
   'pg_net_installed', exists(select 1 from pg_extension where extname='pg_net'),
+  'launch_active_jobs', current_setting('cron.launch_active_jobs'),
+  'inactive_job_flags', (
+    select coalesce(jsonb_object_agg(jobname,active),'{}'::jsonb)
+      from cron.job
+     where jobname in ('queue-invoice-reminders','reconcile-operational-tasks')
+  ),
   'vault_scheduler_secret_count', (
     select count(*) from vault.decrypted_secrets
      where name in ('project_url','scheduler_worker_key')
@@ -558,6 +567,11 @@ select jsonb_build_object(
   );
   assert.equal(schedulerContainment.pg_cron_installed, true);
   assert.equal(schedulerContainment.pg_net_installed, true);
+  assert.equal(schedulerContainment.launch_active_jobs, "off");
+  assert.deepEqual(schedulerContainment.inactive_job_flags, {
+    "queue-invoice-reminders": false,
+    "reconcile-operational-tasks": false,
+  });
   assert.equal(schedulerContainment.vault_scheduler_secret_count, 0);
   assert.deepEqual(schedulerContainment.cron_jobs, expectedSchedulerJobs);
   assert.deepEqual(schedulerContainment.unexpected_cron_jobs, []);

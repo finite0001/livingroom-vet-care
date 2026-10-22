@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -38,13 +39,16 @@ if upgrade_mode and args.retained_hosted_migration:
 if not args.run_synthetic_local_rehearsal:
     parser.error('Explicit --run-synthetic-local-rehearsal is required')
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
 # Pin all fixture modules and their shared-handler dependencies for this run and
 # resumed backups. Evidence must name the exact code that created and read bytes.
 def fixture_source_hashes():
     paths = sorted(set((root/'scripts/restore-rehearsal').glob('*')) | set((root/'supabase/functions/_shared').rglob('*.ts'))
                    | set((root/'supabase/migrations').glob('*.sql')) | set((root/'tests/restore').glob('*'))
                    | {root/'package.json',root/'package-lock.json'})
-    return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file()}
+    return {**{str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file()},
+            **bootstrap_inputs(root)}
 source_hashes = fixture_source_hashes()
 migration_files = sorted((root/'supabase/migrations').glob('*.sql'))
 versions = [p.name.split('_')[0] for p in migration_files]
@@ -164,13 +168,18 @@ enabled = true
 enabled = false
 '''
     (path/'supabase/config.toml').write_text(config)
+    selected = []
     if migrations:
         (path/'supabase/migrations').mkdir(exist_ok=bool(args.resume_backup))
         selected = initial_files if kind=='source' and upgrade_mode else migration_files
         for migration in selected: shutil.copy2(migration,path/'supabase/migrations'/migration.name)
     result={'id':identity,'path':path,'port':port}
+    command([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'),
+             '--run-synthetic-local', '--migration-count', str(len(selected)),
+             '--migration-versions', ','.join(p.name.split('_', 1)[0] for p in selected),
+             '--ignore-health-check', '--workdir', str(path), '--exclude',
+             'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     projects.append(result)
-    command(['supabase','start','--ignore-health-check','--workdir',str(path),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     status=json.loads(command(['supabase','status','--workdir',str(path),'--output','json']))
     assert status['API_URL']==f'http://127.0.0.1:{port}'
     (path/'status.json').write_text(json.dumps(status))

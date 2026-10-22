@@ -1,4 +1,5 @@
 """Guarded call drafts in an owned local Auth/REST runtime. Synthetic fixtures only."""
+import sys
 import argparse
 import base64
 from concurrent.futures import ThreadPoolExecutor
@@ -24,6 +25,9 @@ args = parser.parse_args()
 assert re.fullmatch(r'clinical-calls-[a-z0-9-]{1,65}', args.evidence_prefix)
 os.umask(0o077)
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 private = root / 'tmp'
 private.mkdir(mode=0o700, exist_ok=True)
 assert not list(private.glob(args.evidence_prefix + '-*')), 'Evidence prefix already exists; preserve earlier attempts'
@@ -213,8 +217,8 @@ enabled = true
 enabled = false
 ''')
     print('Starting uniquely owned guarded call-generation runtime.', flush=True)
+    run([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor', '--ignore-health-check'], timeout=600)
     started = True
-    run(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor', '--ignore-health-check'], timeout=600)
     labels = json.loads(run(['docker', 'inspect', container], sensitive=True).stdout)[0]['Config']['Labels']
     assert labels['com.supabase.cli.project'] == identity and Path(labels['com.supabase.cli.workdir']).resolve() == project.resolve()
     run(['docker', 'exec', '-i', container, 'psql', '-X', '-qAt', '-U', 'supabase_admin', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], input='alter system set cron.launch_active_jobs=off;select pg_reload_conf();')
@@ -462,7 +466,8 @@ enabled = false
             check(sql('select current_database();'), 'postgres')
             sql('drop database ' + clone + ' with(force);'); restore_checks += 1
     assert all(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest for name, digest in hashes.items()), 'Proof input changed during run'
-    proof = {'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only, 'migrations': 206,
+    assert bootstrap_inputs(root) == bootstrap_hashes, 'Bootstrap source changed during proof'
+    proof = {'bootstrap_source_sha256': bootstrap_hashes, 'identity': identity, 'sql_summary': summary, 'sql_only': args.sql_only, 'migrations': 206,
              'source_sha256': hashes, 'actual_auth_api_assertions': checks, 'observed_lock_waits': waits,
              'provider_requests': 0, 'hosted_writes': 0, 'owned_runtime_removed': False}
     if not args.sql_only:
@@ -477,12 +482,14 @@ finally:
             run(['supabase','stop','--workdir',str(project),'--no-backup'], timeout=180)
             assert not run(['docker','ps','-a','--filter','label=com.supabase.cli.project=' + identity,'--format','{{.Names}}']).stdout.strip()
             assert not run(['docker','volume','ls','--filter','label=com.supabase.cli.project=' + identity,'--format','{{.Name}}']).stdout.strip()
-        shutil.rmtree(work)
-        if proof:
-            proof['owned_runtime_removed'] = True
-            with (private / (args.evidence_prefix + '-proof.json')).open('x') as handle:
-                handle.write(json.dumps(proof, indent=2) + '\n')
-            print(json.dumps({k:v for k,v in proof.items()if k not in ['identity','source_sha256']}), flush=True)
-            print('Owned call-generation runtime removed.', flush=True)
+            shutil.rmtree(work)
+            if proof:
+                proof['owned_runtime_removed'] = True
+                with (private / (args.evidence_prefix + '-proof.json')).open('x') as handle:
+                    handle.write(json.dumps(proof, indent=2) + '\n')
+                print(json.dumps({k:v for k,v in proof.items()if k not in ['identity','source_sha256']}), flush=True)
+                print('Owned call-generation runtime removed.', flush=True)
+        else:
+            print('Bootstrap did not complete; private work/config retained: ' + str(work), flush=True)
     finally:
         log.close()

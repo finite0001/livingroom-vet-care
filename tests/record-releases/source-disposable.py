@@ -1,4 +1,5 @@
 """Run source artifact acceptance in an owned disposable local Auth/Storage stack."""
+import sys
 import argparse
 import json
 import hashlib
@@ -16,9 +17,14 @@ parser.add_argument('--run-synthetic-local', action='store_true')
 parser.add_argument('--fixture', choices=['source', 'clinical-history'], default='source')
 parser.add_argument('--additional-migration', action='append', type=Path, default=[], help='Local parallel-development dependency; reject duplicate migration versions')
 args = parser.parse_args()
+if args.additional_migration:
+    parser.error('Additional migration overlays are not admitted by the frozen canonical206 bootstrap; use a separately reviewed forward-install rehearsal')
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 fixture = {'source': ('source-local-roundtrip.ts', 'Source original Auth/Storage/PostgREST'), 'clinical-history': ('clinical-history-local-roundtrip.ts', 'Clinical history Auth/Storage/PostgREST')}[args.fixture]
 harness_path = root / 'tests/record-releases' / fixture[0]
 identity = 'lrv-source-artifacts-' + uuid.uuid4().hex[:12]
@@ -86,8 +92,8 @@ enabled = true
 enabled = false
 ''')
     print('Starting owned disposable source-artifact project; no hosted or provider operations.', flush=True)
+    command([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     started = True
-    command(['supabase', 'start', '--workdir', str(project), '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
     output = command(['node', '--experimental-strip-types', str(harness_path)], env={**os.environ, 'PAYMENT_TEST_PROJECT': str(project)}, cwd=root)
     # Only the harness's fixed aggregate evidence line reaches the terminal.
@@ -107,7 +113,8 @@ finally:
     finally:
         log.close()
 if success:
-    summary = {'synthetic_only': True, 'fixture': args.fixture, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+    assert bootstrap_inputs(root) == bootstrap_hashes, 'Bootstrap source changed during proof'
+    summary = {'bootstrap_source_sha256': bootstrap_hashes, 'synthetic_only': True, 'fixture': args.fixture, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': hashlib.sha256(harness_path.read_bytes()).hexdigest(),

@@ -87,7 +87,10 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
-      - run: supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Verify scheduler interference refusal and paused canonical installation
+        run: python3 -B supabase/tests/probe_owned_canonical_bootstrap.py --run-synthetic-local
+      - name: Start owned canonical database with scheduler paused before migrations
+        run: python3 -B scripts/owned_canonical_bootstrap.py --run-synthetic-local --workdir . --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase test db
       - name: Verify diagnostic PDF job contention and captured-byte restore
         run: python3 -B supabase/tests/diagnostic_pdf_jobs_concurrency.py --run-synthetic-local --project-config supabase/config.toml
@@ -352,7 +355,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npx playwright install --with-deps chromium
+      - name: Install Chromium with bounded APT retries
+        run: |
+          apt_config=/etc/apt/apt.conf.d/99lrv-renderer-network
+          test ! -e "$apt_config"
+          trap 'sudo rm -f "$apt_config"' EXIT
+          printf '%s\n' \
+            'Acquire::Retries "5";' \
+            'Acquire::http::Timeout "20";' \
+            'Acquire::https::Timeout "20";' |
+            sudo tee "$apt_config" >/dev/null
+          npx playwright install --with-deps chromium
       - run: node --experimental-strip-types scripts/diagnostics/generate-synthetic-input.ts
       - name: Build pinned native amd64 renderer
         run: docker build --platform linux/amd64 -t lrv-diagnostic-renderer:20261011 services/diagnostic-renderer
