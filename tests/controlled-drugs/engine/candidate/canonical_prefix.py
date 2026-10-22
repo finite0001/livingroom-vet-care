@@ -19,7 +19,7 @@ def _unique(pairs):
     return result
 
 
-def canonical_prefix(source, files):
+def _strict205_prefix(source, files):
     """Accept exactly pinned 204 files plus the single byte-identical new body.
 
     The core assembly still receives only its original independently pinned 204
@@ -49,11 +49,40 @@ def canonical_prefix(source, files):
     return prefix
 
 
+def canonical205_files(source, files):
+    """Admit a complete205 fixture or fully validated206, then select old205."""
+    files = [Path(path).resolve() for path in files]
+    if len(files) == 205:
+        _strict205_prefix(source, files)
+        return files
+    from canonical_review_prefix import admit_canonical206
+    return admit_canonical206(source, files)['prefix205']
+
+
+def canonical_prefix(source, files):
+    """Retain the strict204 builder contract after explicit full admission."""
+    admitted = canonical205_files(source, files)
+    return admitted[:-1]
+
+
+def canonical_admission_inputs(source, files):
+    """Bind every new206 admission input for retained205 runtime evidence."""
+    files = [Path(path).resolve() for path in files]
+    if len(files) == 205:
+        _strict205_prefix(source, files)
+        source = Path(source).resolve()
+        root = source.parents[3]
+        paths = files + [source / 'canonical_prefix.py',source / 'release-expected-204.json']
+        return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in paths}
+    from canonical_review_prefix import admit_canonical206
+    return admit_canonical206(source, files)['input_source_hashes']
+
+
 def canonical_binding(source, files):
     """Bind real CLI application and its ledger row to the reviewed forward port."""
     source = Path(source).resolve()
-    files = [Path(path).resolve() for path in files]
-    prefix = canonical_prefix(source, files)
+    files = canonical205_files(source, files)
+    prefix = files[:-1]
     # Deferred import avoids a module cycle in the CLI entrypoint adapter. The
     # builder itself remains a pure strict-204 API, with independent body framing.
     from cli_migration_body import build_cli_body

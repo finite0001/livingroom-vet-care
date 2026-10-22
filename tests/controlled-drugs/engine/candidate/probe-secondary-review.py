@@ -37,13 +37,15 @@ def json_output(output):
 
 
 def source_inputs():
+    from canonical_prefix import canonical_admission_inputs
     files = sorted((ROOT / 'supabase/migrations').glob('*.sql'))
+    admission = canonical_admission_inputs(SOURCE, files)
     files += sorted(p for p in SOURCE.iterdir() if p.suffix in ('.py', '.sql', '.json'))
     files += sorted((SOURCE.parent / 'release').glob('*.sql'))
     files += [ROOT / 'supabase/tests/test_controlled_secondary_review_harness.py', ROOT / 'supabase/tests/native_fulfillment.test.sql', SOURCE.parent / 'source-reader.sql', SOURCE.parent / 'source-effects.sql', ROOT / '.github/workflows/ci.yml']
     assert all(p.is_file() for p in files), 'Every declared executable input is required'
-    return {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in files}
+    return {**{str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in files}, **admission}
 
 
 def freeze_inputs(folder):
@@ -217,17 +219,19 @@ enabled = false
 
 
 def bootstrap(runtime):
-    from canonical_prefix import canonical_prefix, canonical_binding
+    from canonical_prefix import canonical_prefix, canonical_binding, canonical205_files
     from canonical_post205 import capture_pre204, verify_canonical_installed
     from local_install import build_install
     files = sorted((ROOT / 'supabase/migrations').glob('*.sql'))
+    admitted205 = canonical205_files(SOURCE, files)
     prefix = canonical_prefix(SOURCE, files)
     binding = canonical_binding(SOURCE, files)
     runtime.start(prefix)
     bundle = build_install(SOURCE, prefix)
     before = capture_pre204(runtime.query, bundle['prior_sql'], bundle['trusted'], phase='ordinary')
     (runtime.folder / 'pre204.json').write_text(json.dumps(before, sort_keys=True) + '\n')
-    shutil.copy2(files[-1], runtime.project / 'supabase/migrations' / files[-1].name)
+    assert admitted205[-1].name == binding['filename']
+    shutil.copy2(admitted205[-1], runtime.project / 'supabase/migrations' / binding['filename'])
     runtime.verify()
     runtime.command(['supabase', 'migration', 'up', '--local', '--workdir', str(runtime.project),
                      '--yes', '--output-format', 'json'], timeout=240)

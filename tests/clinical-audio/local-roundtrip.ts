@@ -341,9 +341,9 @@ let cleanupFailure: unknown = null;
 try {
   sqlCheck(
     sql("select count(*)from supabase_migrations.schema_migrations;"),
-    "205",
+    "206",
   );
-  sqlCheck(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261020151157");
+  sqlCheck(sql("select max(version)from supabase_migrations.schema_migrations;"), "20261022010000");
   const first = await actor("First"),
     second = await actor("Second");
   const client = (

@@ -1,0 +1,274 @@
+{
+  "acceptance": true,
+  "acceptance_contract": {
+    "combined_cap_seconds": 1800,
+    "emergency_cleanup_can_extend_pass_deadline": false,
+    "emergency_cleanup_reserve_per_owned_runtime_seconds": 180,
+    "matrix_cap_seconds": 1200,
+    "mode": "--acceptance",
+    "normal_cleanup_included_in_caps": true,
+    "orchestration_source_review_sha256": "01f60cbe956e3d1b0e540ce21b44819a3bf21eca4064cd4d6dcb70e452c1f129",
+    "phases": [
+      "isolated_reference205_and_cleanup",
+      "empty205_matrix_and_two_empty_private206_clones",
+      "populated205_matrix"
+    ],
+    "reference_cap_seconds": 600
+  },
+  "artifact_file_sha256": {
+    "supabase/migrations/20261020151157_controlled_stock_private_engine.sql": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3",
+    "supabase/migrations/20261022010000_controlled_secondary_review_private.sql": "de8e0f4c0d2100b47a490dbd9b8e65c957fa49d003d447cb1af6f37aa8a75bfc",
+    "tests/controlled-drugs/engine/candidate/release-expected-204.json": "4755a1f1c53008003a11e94ada3963ae416f6c81f163ec43ed2ffea21d6d2f78",
+    "tests/controlled-drugs/engine/candidate/secondary_review_206_statements.json": "43736e52a08780b95edb7ef5594e8b98a7080634ce56dbd9180d2fc46d22618e",
+    "tests/controlled-drugs/engine/candidate/secondary_review_expected_205_ledger.json": "73aa7156bebcf869a37a9f5047842c11a46079145d05674790f81d5d9da2f7f4",
+    "tests/controlled-drugs/engine/candidate/secondary_review_protocol_private_expected_v2.json": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036",
+    "tests/controlled-drugs/engine/release/controlled-secondary-review-cli-body.sql": "de8e0f4c0d2100b47a490dbd9b8e65c957fa49d003d447cb1af6f37aa8a75bfc",
+    "tests/controlled-drugs/engine/release/controlled-secondary-review-private.sql": "7f242d4e0f1b7dd2fb8de85048050ce725381f6539cb94d38034392a8669bc75",
+    "tests/controlled-drugs/engine/release/controlled-stock-cli-body.sql": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3",
+    "tests/controlled-drugs/engine/release/controlled-stock-private.sql": "7165851ab481f2ee2ab41c7347a7db65213b5c647c101eaf4554a973d896c4a7"
+  },
+  "claim_limits": [
+    "Final local acceptance and independent audit passed; earlier reference and measurement remain non-acceptance. Exact-head CI, matching preview and specific merge approval remain pending.",
+    "Populated case is genuine committed205 managed/native history, not populated private206 review history.",
+    "No new pre-engine187/188 history proof.",
+    "Empty private206 clone internals were checked by frozen helpers but internal clone snapshots and dump bytes were not separately archived by this runner; full original source snapshots, child commands, stdout and stderr were retained.",
+    "No full-cluster, storage-byte or physical-after-backup recovery claim.",
+    "No hosted installation, real configuration, provider or clinical/register activation."
+  ],
+  "derivation": {
+    "expectations_source_derived": true,
+    "live_catalog_used_as_expected": false,
+    "observed_rows_and_catalog_used_for_preservation_only": true,
+    "official_cli_version": "2.118.0",
+    "official_vendor_provenance_sha256": "28bcd6a27b93fb7a31c3e20519b5ebb6540737b26e2f333e3f44cb3340327884",
+    "typescript_sha256": "dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0",
+    "typescript_version": "5.8.3"
+  },
+  "evidence_date": "2026-10-21",
+  "exact_head_ci": "pending",
+  "final_acceptance": {
+    "acceptance": true,
+    "all_current_and_saved_inputs_verified": 554,
+    "all_owned_cleanup_independently_verified": true,
+    "both_empty206_attachment_clones_and_retained_source_comparisons_passed": true,
+    "cases": {
+      "empty205": {
+        "actual_barrier_gate_blocker_and_shared_refusals": true,
+        "controlled_events": 0,
+        "exact304_statement_ledger": true,
+        "exact_private_descriptor_and_empty_operations": true,
+        "full_both_fault_rollback": true,
+        "full_original_preservation": true,
+        "full_retry_noop": true,
+        "independent_owned_cleanup": true,
+        "original_families": 457
+      },
+      "populated205": {
+        "actual_barrier_gate_blocker_and_shared_refusals": true,
+        "controlled_events": 26,
+        "exact304_statement_ledger": true,
+        "exact_private_descriptor_and_empty_operations": true,
+        "full_both_fault_rollback": true,
+        "full_original_preservation": true,
+        "full_retry_noop": true,
+        "independent_owned_cleanup": true,
+        "original_families": 457
+      },
+      "reference": {
+        "independent_owned_cleanup": true
+      }
+    },
+    "elapsed_seconds": 385.189,
+    "evidence_id": "r_ypxbso",
+    "independent_review_sha256": "919db2223c4d5f6400e855b5d6d2ae7a8b36a407e38f247335d03ca6fdec9a71",
+    "independent_review_status": "FULL_LOCAL_ACCEPTANCE_CLEAR",
+    "independent_reviewed_at": "2026-10-22T01:12:34.633895+00:00",
+    "passed": true,
+    "phases_including_normal_cleanup": {
+      "matrix_including_cleanup": 345.842,
+      "reference_including_cleanup": 39.347
+    },
+    "reference_fixed_expectation_and_cleanup_handshake": true,
+    "result_sha256": "abaac63a68a8d27db01dcd2a6366a58226ada9d32ef0d2a7c0193ec0b35ce338",
+    "source_map_sha256": "754ecf5a78ff55c3504ff55ac6c96d1629e0f3d498d7f6afdbc1493ffaa9a2dc"
+  },
+  "final_self_contained_acceptance": "passed_and_independently_reviewed",
+  "kind": "controlled-secondary-review-canonical206-local-acceptance-evidence-v1",
+  "links": {
+    "c2a_design": "../../plans/20261021-controlled-register-completion/phase-02a-event-policy-design.md",
+    "completion_plan": "../../plans/20261021-controlled-register-completion/plan.md",
+    "installation_contract": "../features/controlled-secondary-review-installation.md"
+  },
+  "local_checks": {
+    "acceptance_orchestration_focused_tests_passed": 10,
+    "final_python_discovery": {
+      "elapsed_seconds": 75.999,
+      "retained_log_sha256": "f8cf0934afb0b421fe60228940b37d8a9c356ac85b73c84f41dc57dc39c7f451",
+      "source_confirmation": "Probe confirmed final discovery against the three reviewed orchestration deltas and 551 unchanged measured inputs.",
+      "tests_passed": 409
+    },
+    "pre_acceptance_orchestration": {
+      "build_passed": true,
+      "javascript_tests_passed": 1696,
+      "python_harness_tests_passed": 405,
+      "scope": "Dated local receipts; not final exact-head CI."
+    },
+    "reminder_static_tests": {
+      "retained_log_sha256": "19b15c5df60d77aa3ad46da867527af216eb0d32e1947530f74dd7c1493dda70",
+      "scope": "Separate reminder static regression checks, not CLI orchestration harness.",
+      "tests_passed": 8
+    }
+  },
+  "matching_preview": "pending",
+  "measurement": {
+    "acceptance": false,
+    "actual_cli_barriers": {
+      "exclusive_practice_barrier_observed": true,
+      "independent_shared_barrier_acquisition_refused": true,
+      "ledger_fault_and_clean_each_case": true
+    },
+    "cases": [
+      {
+        "case": "empty205",
+        "exact_retry_noop": true,
+        "faults": [
+          {
+            "armed_full_rollback": true,
+            "case": "late_body",
+            "cleaned_baseline_exact": true,
+            "sqlstate": "P0001"
+          },
+          {
+            "armed_full_rollback": true,
+            "case": "ledgerfault",
+            "cleaned_baseline_exact": true,
+            "sqlstate": "P0001"
+          }
+        ],
+        "full_original_rows_catalog_types_parent_writers_preserved": true,
+        "installed206_statements": 304,
+        "original_row_families": 457,
+        "private_effective_acl_and_empty_operations_checked": true,
+        "retained205_statements": 94
+      },
+      {
+        "case": "populated205",
+        "exact_retry_noop": true,
+        "faults": [
+          {
+            "armed_full_rollback": true,
+            "case": "late_body",
+            "cleaned_baseline_exact": true,
+            "sqlstate": "P0001"
+          },
+          {
+            "armed_full_rollback": true,
+            "case": "ledgerfault",
+            "cleaned_baseline_exact": true,
+            "sqlstate": "P0001"
+          }
+        ],
+        "full_original_rows_catalog_types_parent_writers_preserved": true,
+        "installed206_statements": 304,
+        "original_row_families": 457,
+        "private_effective_acl_and_empty_operations_checked": true,
+        "retained205_statements": 94
+      }
+    ],
+    "cleanup_reserve_seconds": 180,
+    "cleanup_verified": true,
+    "elapsed_seconds": 353.095,
+    "empty_private206_clones": {
+      "both_retained_source_full_snapshots_exact": true,
+      "bounded_restore_scope": "Frozen source-bound child helpers performed independent206 admission and selected-schema clone checks. Child internal clone snapshots/dump bytes were not separately retained by this runner; source before/after full snapshots and child command/stdout/stderr were retained.",
+      "metadata": {
+        "checks": 44,
+        "sql_assertions": 362
+      },
+      "originals": {
+        "checks": 321,
+        "sql_assertions": 1135
+      }
+    },
+    "evidence_id": "7shdefyy",
+    "independent_review_sha256": "ece8eaf8c275611c3cd506a0b2d73c29d2fc8853042e30c1691cc595d9d91b4c",
+    "independent_review_status": "MEASUREMENT_CLEAR_NOT_ACCEPTANCE",
+    "passed": true,
+    "populated205_counts": {
+      "controlled_events": 26,
+      "native_dispense_correction_events": 3,
+      "native_dispenses": 2,
+      "native_pickups": 1,
+      "native_return_discrepancy_events": 5,
+      "native_return_events": 10
+    },
+    "result_sha256": "38eaf7855aaf5a4db559f71ded06a15083dba1ab407735273b13d04b00a8b89b",
+    "workload_seconds": 1200
+  },
+  "reference": {
+    "acceptance": false,
+    "cleanup_verified": true,
+    "elapsed_seconds": 44.483,
+    "evidence_id": "efex9lcp",
+    "independent_review_sha256": "65fe3dc59e9e2c618768e2162c50da34e6c6b295959d0497a44cea02dbf9a72e",
+    "ledger_rows": 205,
+    "passed": true,
+    "result_sha256": "8a7b810708f03911422179d2812bcd77e0e3dd7c6af17f3447e86af8c076653d",
+    "retained205_statements": 94,
+    "workload_seconds": 600
+  },
+  "retained_failed_lineage": [
+    {
+      "acceptance": false,
+      "cleanup_independently_checked": true,
+      "correction": "Bounded object/array parsing with duplicate-key rejection.",
+      "elapsed_seconds": 50.881,
+      "evidence_id": "gor2h9th",
+      "reason": "Object-only harness JSON parser rejected the actual gate observation array before the ledger CLI launch.",
+      "sql_or_pin_change": false
+    },
+    {
+      "acceptance": false,
+      "cleanup_independently_checked": true,
+      "correction": "Finite mapping of six independent named signatures to their exact type-only raw identities.",
+      "elapsed_seconds": 63.489,
+      "evidence_id": "73uf442s",
+      "late_body_and_ledger_fault_full_rollback": true,
+      "reason": "Harness compared named-argument descriptor identity with type-only regprocedure identity.",
+      "sql_or_pin_change": false
+    }
+  ],
+  "scope": {
+    "app_grants_added": false,
+    "canonical_predecessor": 205,
+    "canonical_target": 206,
+    "clinical_or_register_activation": false,
+    "hosted_writes": 0,
+    "profile": "private_v2",
+    "provider_requests": 0,
+    "real_configuration_seeded": false
+  },
+  "semantic_digests": {
+    "canonical206_statement_array_sha256": "51a4fbc5ef61aa4f6565b36fe480d003f046d7c5c048cfd06b876c01a179fa51",
+    "private_v2_definition_sha256": "e468ab33f11f90e12fae72441299425a11b76d72e4e112ae71a67b0d9751e999",
+    "retained205_statement_array_sha256": "626e9374546764d9a4070f3a0332bd0c7f606812ffe7355abdaea35088b89e7c",
+    "source_derived205_ordered_ledger_sha256": "d776a51d37530600aaf69258eacdd8de433b192cc191bbd95ef0736d95c96fd4"
+  },
+  "source": {
+    "changed_inputs_for_acceptance_orchestration": {
+      ".github/workflows/ci.yml": "40aab13dc012c10613b00368cf233dead2c2bc77c430b041b335a6fe8b14eb76",
+      "supabase/tests/test_controlled_secondary_review_cli_harness.py": "e289ecc1862dfa0cd85a9025b63c5cf18cd69a20540e65012581c09d1eceb25e",
+      "tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py": "6fe8fcae6be21f72087b9c3046cb8644e2fbffabe33bba915457aa9752729c7c"
+    },
+    "final_acceptance_input_count": 554,
+    "final_acceptance_source_map_sha256": "754ecf5a78ff55c3504ff55ac6c96d1629e0f3d498d7f6afdbc1493ffaa9a2dc",
+    "final_acceptance_source_status": "All 554 saved and current inputs independently verified; local acceptance and cleanup clear.",
+    "measured_input_count": 554,
+    "reference_and_measurement_source_map_sha256": "08bc47393ea38211c11c8b5dee2e06c82a836d42b5279ed736716bd6d1305881",
+    "sql_generators_and_frozen_pins_unchanged": true,
+    "unchanged_inputs_for_acceptance_orchestration": 551
+  },
+  "specific_pr_merge_approval": "pending",
+  "status": "LOCAL_ACCEPTANCE_CLEAR_CI_PREVIEW_MERGE_PENDING",
+  "timezone": "America/Denver"
+}
