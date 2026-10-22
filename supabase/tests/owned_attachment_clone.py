@@ -100,5 +100,14 @@ def verify_clone(sql, before, *, root=ROOT):
 
 
 def verify_source_unchanged(sql, before):
-    assert atomic._snapshot(sql) == before, 'Attachment rehearsal changed its source database'
+    after = atomic._snapshot(sql)
+    if after != before:
+        # Names/counts only: never publish raw catalogs, ACLs, patient data or SQL.
+        changed = sorted(key for key in set(before) | set(after)
+                         if before.get(key) != after.get(key))
+        relations = sorted(key for key in set(before.get('relations', {})) | set(after.get('relations', {}))
+                           if before.get('relations', {}).get(key) != after.get('relations', {}).get(key))
+        diagnostic = {'changed_components': changed, 'changed_relation_count': len(relations),
+                      'changed_relations': relations[:20], 'relations_truncated': len(relations) > 20}
+        raise AssertionError('Attachment rehearsal changed its source database: ' + json.dumps(diagnostic, sort_keys=True))
     return True

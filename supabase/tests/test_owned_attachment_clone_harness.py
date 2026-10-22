@@ -186,6 +186,28 @@ class OwnedAttachmentCloneTests(unittest.TestCase):
         c = Callbacks()
         self.assertTrue(m.verify_source_unchanged(c.sql, c.before))
 
+    def test_scheduler_receipt_mutation_is_refused_with_bounded_safe_diagnostics(self):
+        c = Callbacks()
+        original = copy.deepcopy(c.before)
+        c.before['relations']['public.scheduler_job_runs'] = {'count': 1, 'hash': 'b' * 64}
+        c.before['catalog']['functions']['public.original()'] = 'PRIVATE BODY'
+        with self.assertRaises(AssertionError) as caught:
+            m.verify_source_unchanged(c.sql, original)
+        diagnostic = json.loads(str(caught.exception).split(': ', 1)[1])
+        self.assertEqual(diagnostic['changed_components'], ['catalog', 'relations'])
+        self.assertEqual(diagnostic['changed_relations'], ['public.scheduler_job_runs'])
+        self.assertNotIn('PRIVATE', str(caught.exception))
+        self.assertEqual(original, source_snapshot(), 'Expected source is never adopted or rewritten')
+        c.snapshots = 0
+        for number in range(25):
+            c.before['relations']['public.synthetic_' + str(number)] = {'count': 1, 'hash': 'c' * 64}
+        with self.assertRaises(AssertionError) as caught:
+            m.verify_source_unchanged(c.sql, original)
+        diagnostic = json.loads(str(caught.exception).split(': ', 1)[1])
+        self.assertEqual(diagnostic['changed_relation_count'], 26)
+        self.assertEqual(len(diagnostic['changed_relations']), 20)
+        self.assertTrue(diagnostic['relations_truncated'])
+
     def test_both_entrypoints_use_full_verified_copy_without_drop_or_replay(self):
         for name in ('ezyvet_attachment_metadata_concurrency.py', 'ezyvet_attachment_originals_concurrency.py'):
             text = (SOURCE / name).read_text()
