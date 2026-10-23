@@ -43,7 +43,8 @@ def source_inputs():
     paths.update((root/'supabase/tests').glob('*.sql'))
     paths.update((SOURCE.parent/n)for n in ('source-reader.sql','source-effects.sql'))
     paths.add(root/'.github/workflows/ci.yml')
-    return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(paths)}
+    return {**{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(paths)},
+            **base.source_inputs()}
 
 
 def save(name,value):

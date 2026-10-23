@@ -1,4 +1,5 @@
 """Prove diagnostics in a uniquely owned local runtime; never hosted/provider operations."""
+import sys
 import argparse
 import hashlib
 import json
@@ -15,6 +16,9 @@ parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--run-synthetic-local',action='store_true',required=True)
 args=parser.parse_args()
 root=Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 identity='lrv-diagnostics-'+uuid.uuid4().hex[:10]
 os.umask(0o077)
 work=Path(tempfile.mkdtemp(prefix=identity+'-'))
@@ -66,9 +70,9 @@ enabled = true
 [edge_runtime]
 enabled = false
 ''')
-    started=True
     print('Starting uniquely owned synthetic diagnostic runtime; private status output withheld.',flush=True)
-    command(['supabase','start','--workdir',str(project),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'],timeout=600)
+    command([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local','--workdir',str(project),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'],timeout=600)
+    started = True
     verify()
     env={**os.environ,'DIAGNOSTICS_TEST_PROJECT':str(project),'DIAGNOSTICS_RUN_SYNTHETIC_LOCAL':'true'}
     result=command(['node','--experimental-strip-types',str(harness)],cwd=root,env=env,timeout=180)
@@ -76,7 +80,7 @@ enabled = false
     assert match,result[-500:]
     assert hashlib.sha256(harness.read_bytes()).hexdigest()==harness_hash
     assert all(hashlib.sha256((root/'supabase/migrations'/name).read_bytes()).hexdigest()==digest for name,digest in hashes.items())
-    print(match.group(0),flush=True);success=True
+    print(match.group(0),flush=True);assert bootstrap_inputs(root) == bootstrap_hashes, 'Bootstrap source changed during proof'; success=True
 finally:
     if started:
         inspected=subprocess.run(['docker','inspect','supabase_db_'+identity],capture_output=True,text=True)

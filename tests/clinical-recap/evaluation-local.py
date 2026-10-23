@@ -1,4 +1,5 @@
 """Capture eight fictional records through an owned local Auth/native recap adapter; no provider calls."""
+import sys
 import argparse
 import hashlib
 import json
@@ -15,6 +16,9 @@ parser.add_argument('--run-synthetic-local', action='store_true', required=True)
 args = parser.parse_args()
 os.umask(0o077)
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 identity = 'lrv-recap-eval-' + uuid.uuid4().hex[:10]
 work = Path(tempfile.mkdtemp(prefix=identity + '-'))
 project = work / 'project'
@@ -22,7 +26,7 @@ project = work / 'project'
 evidence = Path(tempfile.mkdtemp(prefix=identity + '-evidence-'))
 log = (evidence / 'commands.log').open('w')
 started = False
-proof = {
+proof = {'bootstrap_source_sha256': bootstrap_hashes,
     'identity': identity, 'synthetic_only': True, 'provider_requests': 0,
     'owned_runtime_removed': False, 'capture_completed': False,
 }
@@ -36,6 +40,7 @@ inputs = set((root / 'supabase/migrations').glob('*.sql')) | {
     root / 'package-lock.json',
 }
 hashes = {str(f.relative_to(root)): hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted(inputs)}
+hashes.update(bootstrap_hashes)
 proof['source_sha256'] = hashes
 
 def run(argv, **kw):
@@ -79,10 +84,10 @@ enabled = true
 enabled = false
 ''')
     print('Starting uniquely owned local eight-case synthetic capture.', flush=True)
-    started = True
     excluded = 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'
-    run(['supabase', 'start', '--workdir', str(project), '--exclude', excluded,
+    run([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local', '--workdir', str(project), '--exclude', excluded,
          '--ignore-health-check'], timeout=600)
+    started = True
     labels = json.loads(run(['docker', 'inspect', 'supabase_db_' + identity]))[0]['Config']['Labels']
     assert labels['com.supabase.cli.project'] == identity
     assert Path(labels['com.supabase.cli.workdir']).resolve() == project.resolve()

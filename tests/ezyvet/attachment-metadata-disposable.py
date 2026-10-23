@@ -1,4 +1,5 @@
 """Run attachment metadata intake acceptance in an owned disposable local Auth/Storage stack."""
+import sys
 import argparse
 import json
 import hashlib
@@ -20,11 +21,16 @@ parser.add_argument('--additional-migration', action='append', type=Path, defaul
 parser.add_argument('--extra-sql-test', action='append', type=Path, default=[])
 parser.add_argument('--api-port', type=int, default=62421, help='Disjoint local port group; alternate ports supported for migration fixture')
 args = parser.parse_args()
+if args.additional_migration:
+    parser.error('Additional migration overlays are not admitted by the frozen canonical206 bootstrap; use a separately reviewed forward-install rehearsal')
 if not 1025 <= args.api_port <= 65532 or (args.api_port != 62421 and args.fixture != 'migration'):
     parser.error('Alternate port must be 1025–65532 and use migration fixture')
 if not args.run_synthetic_local:
     parser.error('Explicit --run-synthetic-local required')
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 fixtures = {
     'migration': ('migration-local-roundtrip.ts', 'Migration manifest HTTP/Auth/PostgREST'),
     'metadata': ('attachment-metadata-local-roundtrip.ts', 'Attachment metadata HTTP/Auth/PostgREST'),
@@ -113,8 +119,8 @@ enabled = true
 enabled = false
 ''')
     print('Starting owned disposable attachment project; no hosted or provider operations.', flush=True)
+    command([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local', '--workdir', str(project), '--ignore-health-check', '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
     started = True
-    command(['supabase', 'start', '--workdir', str(project), '--ignore-health-check', '--exclude', 'realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'])
     verify_identity()
     local = json.loads(command(['supabase', 'status', '--workdir', str(project), '--output', 'json']))
     assert local['API_URL'] == f'http://127.0.0.1:{args.api_port}'
@@ -166,7 +172,8 @@ finally:
     finally:
         log.close()
 if success:
-    summary = {'synthetic_only': True, 'fixture': 'attachment-' + args.fixture, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
+    assert bootstrap_inputs(root) == bootstrap_hashes, 'Bootstrap source changed during proof'
+    summary = {'bootstrap_source_sha256': bootstrap_hashes, 'synthetic_only': True, 'fixture': 'attachment-' + args.fixture, 'project_id': identity, 'checks_passed': checks, 'cleanup_verified': True,
                'git_revision': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip(),
                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'harness_sha256': harness_hashes, 'checks_by_fixture': checks_by_fixture,

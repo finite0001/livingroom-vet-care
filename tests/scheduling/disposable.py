@@ -1,4 +1,5 @@
 """Canonical migration replay and genuine scheduling proof in a uniquely owned local runtime."""
+import sys
 import argparse
 import hashlib
 import json
@@ -18,6 +19,9 @@ parser.add_argument('--staff-only', action='store_true', help='Focused local sta
 args = parser.parse_args()
 assert not (os.environ.get("CI")=="true" and args.staff_only), "CI must include all scheduling layers"
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from owned_canonical_bootstrap import bootstrap_inputs
+bootstrap_hashes = bootstrap_inputs(root)
 os.umask(0o077)
 identity = 'lrv-catalog-' + uuid.uuid4().hex[:10]
 work = Path(tempfile.mkdtemp(prefix=identity + '-'))
@@ -76,9 +80,9 @@ enabled = true
 [edge_runtime]
 enabled = false
 ''')
-    started = True
     print('Starting uniquely owned scheduling runtime; private status withheld.', flush=True)
-    command(['supabase','start','--workdir',str(project),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
+    command([sys.executable, '-B', str(root / 'scripts/owned_canonical_bootstrap.py'), '--run-synthetic-local','--workdir',str(project),'--exclude','realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'], timeout=600)
+    started = True
     verify()
     if args.include_sql_regression:
         result = command(['supabase','test','db','--workdir',str(project)], cwd=root)
@@ -209,7 +213,8 @@ enabled = false
     baseline = json.loads(command(['docker','exec','supabase_db_'+identity,'psql','-X','-qAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-c',
       "select jsonb_build_object('active_staff',(select count(*)from profiles where is_active),'reconciliation_enabled',coalesce((select enabled from operational_reconciliation_policy order by version desc limit 1),false),'pending_run',(select pending_run_id from operational_reconciliation_cursor),'outbox',(select count(*)from communication_outbox),'inventory_movements',(select count(*)from inventory_movements),'cron_active',(select active from cron.job where jobname='reconcile-operational-tasks'));" ]))
     assert baseline == {'active_staff':0,'reconciliation_enabled':False,'pending_run':None,'outbox':0,'inventory_movements':0,'cron_active':False}
-    proof = {'canonical_migrations':len(hashes),'migration189_sha256':hashes['20261015055007_native_custody_provenance.sql'],'migration188_sha256':hashes['20261015020722_stock_writer_provenance.sql'],'migration187_sha256':hashes['20261015011200_controlled_draft_configuration.sql'],'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
+    assert bootstrap_inputs(root) == bootstrap_hashes, 'Bootstrap source changed during proof'
+    proof = {'bootstrap_source_sha256': bootstrap_hashes, 'canonical_migrations':len(hashes),'migration189_sha256':hashes['20261015055007_native_custody_provenance.sql'],'migration188_sha256':hashes['20261015020722_stock_writer_provenance.sql'],'migration187_sha256':hashes['20261015011200_controlled_draft_configuration.sql'],'migration186_sha256':hashes['20261014202235_supplier_product_identity.sql'],'migration185_sha256':hashes['20261014154223_operational_task_reconciliation.sql'],
              'sql_regression':{'files':163,'assertions':7101} if args.include_sql_regression else None,
              'staff_only':args.staff_only,'controlled_draft':{'api':controlled_receipt,'concurrency':controlled_locks,'restore':controlled_restored},'inventory':{'api':inventory_receipt,'concurrency':inventory_locks,'restore':inventory_restored},'api':receipt,'concurrency':lock_receipt,'restore':restored,'rollback_probe':rollback_receipt,'inventory_rollback_probe':identity_rollback,'controlled_rollback_probe':controlled_rollback,'cleanup_baseline':baseline}
     proof_path=root/'tmp/reconciliation-release-disposable-proof.json'
