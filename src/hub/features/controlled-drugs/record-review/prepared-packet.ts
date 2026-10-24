@@ -83,8 +83,9 @@ export function reviewNumericTextBytes(value: ExactJsonNumber): bigint {
   const integral = digits.length ? BigInt(digits.length) + exponent - BigInt(fraction.length) : 1n;
   return (digits.length && match[1] ? 1n : 0n) + (integral > 0n ? integral : 1n) + (scale > 0n ? 1n + scale : 0n);
 }
-/** Count canonical jsonb text bytes without serializing or coercing evidence. */
-function packetBytes(value: unknown): number {
+/** Count canonical jsonb text bytes of losslessly decoded evidence, without
+ * serializing/hashing it or conferring source authority. Decoder bounds apply. */
+export function reviewJsonbTextBytes(value: unknown): number {
   if (value === null) return 4;
   if (typeof value === "boolean") return value ? 4 : 5;
   if (typeof value === "string") return new TextEncoder().encode(JSON.stringify(value)).length;
@@ -92,10 +93,10 @@ function packetBytes(value: unknown): number {
     const bytes = reviewNumericTextBytes(value);
     return bytes > 1048576n ? 1048577 : Number(bytes); // bounded byte count, never the clinical value
   }
-  if (Array.isArray(value)) return 2 + value.reduce((n, item) => n + packetBytes(item), 0) + Math.max(0, value.length - 1) * 2;
+  if (Array.isArray(value)) return 2 + value.reduce((n, item) => n + reviewJsonbTextBytes(item), 0) + Math.max(0, value.length - 1) * 2;
   if (typeof value !== "object" || !value) throw new Error("Review evidence is not lossless JSON");
   const entries = Object.entries(value);
-  return 2 + entries.reduce((n, [key, item]) => n + packetBytes(key) + 2 + packetBytes(item), 0) + Math.max(0, entries.length - 1) * 2;
+  return 2 + entries.reduce((n, [key, item]) => n + reviewJsonbTextBytes(key) + 2 + reviewJsonbTextBytes(item), 0) + Math.max(0, entries.length - 1) * 2;
 }
 function freeze<T>(value: T): T {
   if (value !== null && typeof value === "object") { Object.values(value).forEach(freeze); Object.freeze(value); }
@@ -117,7 +118,7 @@ export async function verifyPreparedReview(pointer: RecordReviewPointer, input: 
     p.current_authorization.read.actor_id !== req.actor_id || p.current_authorization.review.actor_id !== req.actor_id ||
     (original && Object.keys(original).some(key => original[key] !== req[key])) ||
     Date.parse(data.expires_at) - Date.parse(data.created_at) !== 15 * 60 * 1000 ||
-    data.created_at.slice(20, 26) !== data.expires_at.slice(20, 26) || packetBytes(p) > 1048576)
+    data.created_at.slice(20, 26) !== data.expires_at.slice(20, 26) || reviewJsonbTextBytes(p) > 1048576)
     throw new Error("Prepared review does not match its original request");
   const digest = await reviewTransportDigest(req); check();
   if (digest !== pointer.transport_digest) throw new Error("Prepared review request commitment differs");

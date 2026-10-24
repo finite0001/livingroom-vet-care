@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { ExactJsonNumber, protocolInteger } from "./exact-json.ts";
+import { ExactJsonNumber, protocolInteger, type ExactJson } from "./exact-json.ts";
 import { reviewDigestSchema, reviewUuidSchema, type RecordReviewRequest } from "./request.ts";
 import { reviewMeaning, reviewProtocolInstantSchema, reviewTargetSchema, type PreparedReviewPacket } from "./prepared-packet.ts";
 import { prospectiveSourceShapes } from "./prospective-source-shapes.ts";
+import { reviewInstantMicroseconds, reviewQuantityThousandths } from "./exact-values.ts";
+import { sameReviewJsonb as equal } from "./jsonb-equality.ts";
 
 /** Structural checks against the explicitly prospective backend DTO. This is
  * NOT ReviewEvidenceAdmission and must never be wired as its complete validator.
@@ -16,7 +18,9 @@ const integer = (min: bigint, max: bigint) => z.instanceof(ExactJsonNumber).refi
 const one = z.instanceof(ExactJsonNumber).refine(value => { try { return protocolInteger(value, 1, 1) === 1; } catch { return false; } });
 // Raw retained source timestamps keep their original offset/precision. Derived
 // historical DTOs use exact UTC6-Z, including anchors before v3's config window.
-const sourceInstant = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)));
+const sourceInstant = z.string().datetime({ offset: true }).refine(value => {
+  try { reviewInstantMicroseconds(value); return true; } catch { return false; }
+});
 const historicalInstant = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/)
   .refine(value => {
     const parsed = new Date(value);
@@ -58,23 +62,18 @@ const sourceRoles = new Set(["reviewed_target", "correction_target", "case_repor
   "amendment_predecessor", "original_dispense", "resolution_correction", "opening_basis", "retained_context"]);
 const sourceTypes = {
   uuid: reviewUuidSchema, text: z.string(), boolean: z.boolean(), integer: integer(-2147483648n, 2147483647n),
-  bigint: integer(-9223372036854775808n, 9223372036854775807n), "numeric(14,3)": z.instanceof(ExactJsonNumber),
+  bigint: integer(-9223372036854775808n, 9223372036854775807n), "numeric(14,3)": z.instanceof(ExactJsonNumber).refine(value => {
+    try { reviewQuantityThousandths(value); return true; } catch { return false; }
+  }),
   "timestamp with time zone": sourceInstant, date, jsonb: z.unknown(),
 };
 function invalid(): never { throw new Error("Prospective packet structure differs from its declared DTO"); }
-function object(value: unknown): Record<string, unknown> {
+function object(value: unknown): Record<string, ExactJson> {
   if (!value || typeof value !== "object" || Array.isArray(value) || value instanceof ExactJsonNumber) invalid();
-  return value as Record<string, unknown>;
+  return value as Record<string, ExactJson>;
 }
 function keys(value: Record<string, unknown>, expected: readonly string[]) {
   if (Object.keys(value).length !== expected.length || expected.some(k => !Object.prototype.hasOwnProperty.call(value, k))) invalid();
-}
-function equal(a: unknown, b: unknown): boolean {
-  if (a instanceof ExactJsonNumber || b instanceof ExactJsonNumber) return a instanceof ExactJsonNumber && b instanceof ExactJsonNumber && String(a) === String(b);
-  if (a === null || b === null || typeof a !== "object" || typeof b !== "object") return a === b;
-  if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => equal(v, b[i]));
-  const aa = Object.entries(a), bb = Object.entries(b);
-  return aa.length === bb.length && aa.every(([k, v]) => Object.prototype.hasOwnProperty.call(b, k) && equal(v, b[k]));
 }
 function shapeFor(relation: string) {
   if (!Object.prototype.hasOwnProperty.call(prospectiveSourceShapes, relation)) invalid();
@@ -86,6 +85,11 @@ function sourceRow(relation: string, value: unknown) {
     if (row[name] === null ? required : !sourceTypes[type].safeParse(row[name]).success) invalid();
   }
   return row;
+}
+/** Row shape only, for frozen historical row snapshots as well as references.
+ * This does not establish source semantics, membership or complete admission. */
+export function verifyProspectiveSourceRowStructure(relation: string, value: unknown): void {
+  sourceRow(relation, value);
 }
 // Every declared PK is UUID-only. jsonb key text orders object keys by UTF-8
 // length then bytes; these declared ASCII names make that ordering explicit.
@@ -119,7 +123,7 @@ export function verifyProspectivePacketStructure(packet: PreparedReviewPacket, r
     event.event_kind !== packet.adapter.event_kind || !equal(event.canonical_result, packet.original_result) ||
     !equal(event.clinical_snapshot, packet.clinical_snapshot) || ob.data.event_id !== request.event_id ||
     ob.data.product_id !== target.product_id || ob.data.event_sequence !== String(target.sequence) ||
-    !equal(ob.data.target, target) || !equal(ob.data.adapter, packet.adapter) || ob.data.site_id !== packet.adapter.site_id ||
+    !equal(ob.data.target, target) || !equal(packet.obligation.adapter, packet.adapter) || ob.data.site_id !== packet.adapter.site_id ||
     ob.data.due_at !== ob.data.historical.due_at ||
     (ob.data.family_dispense_id !== packet.adapter.native_family_dispense_id && !missingManagedFamily)) invalid();
   if (packet.source_rows.length !== packet.adapter.source_refs.length) invalid();
