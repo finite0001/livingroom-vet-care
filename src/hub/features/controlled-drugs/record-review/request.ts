@@ -12,6 +12,8 @@ export const recordReviewRequestSchema = z.object({
     Array.from(value).every(char => char === "\n" || char === "\t" || (char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127)), "Use clean review reason text"),
 }).strict();
 export interface RecordReviewRequest extends z.infer<typeof recordReviewRequestSchema> {}
+/** Source evidence can be checked before a mutation operation exists. */
+export interface ReviewEvidenceTarget { readonly event_id: string }
 const fields = ["actor_id", "operation_id", "event_id", "policy_id", "read_eligibility_id", "review_eligibility_id", "decision", "reason"] as const;
 
 /** Exact C2b domain/UTF-8-byte framing; no trimming or Unicode normalization. */

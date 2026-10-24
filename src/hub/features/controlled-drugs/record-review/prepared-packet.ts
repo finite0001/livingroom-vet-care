@@ -54,6 +54,8 @@ const envelope = z.object({ version: wireInteger(3), state: z.literal("prepared"
 }).strict() }).strict();
 export interface PreparedReview extends z.infer<typeof envelope> {}
 export interface PreparedReviewPacket extends z.infer<typeof packet> {}
+/** P alone: this schema creates no preparation envelope or operation. */
+export const reviewRequiredPacketSchema = packet;
 
 /** Required source-specific admission. No production implementation is implied.
  * It must validate every row/key/order, exact original event/preparation/result/

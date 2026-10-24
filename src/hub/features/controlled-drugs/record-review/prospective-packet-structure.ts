@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ExactJsonNumber, protocolInteger, type ExactJson } from "./exact-json.ts";
-import { reviewDigestSchema, reviewUuidSchema, type RecordReviewRequest } from "./request.ts";
+import { reviewDigestSchema, reviewUuidSchema, type ReviewEvidenceTarget } from "./request.ts";
 import { reviewMeaning, reviewProtocolInstantSchema, reviewTargetSchema, type PreparedReviewPacket } from "./prepared-packet.ts";
 import { prospectiveSourceShapes } from "./prospective-source-shapes.ts";
 import { reviewInstantMicroseconds, reviewQuantityThousandths } from "./exact-values.ts";
@@ -102,7 +102,7 @@ function sourceKey(relation: string, input: unknown): string {
 
 /** Additional finite syntactic controls. Does not hash/rewrite the packet and
  * cannot, on its own, establish a complete source-specific admission. */
-export function verifyProspectivePacketStructure(packet: PreparedReviewPacket, request: Readonly<RecordReviewRequest>): void {
+export function verifyProspectivePacketStructure(packet: PreparedReviewPacket, request: Readonly<ReviewEvidenceTarget>): void {
   const policy = rule.safeParse(packet.current_authorization.policy.rule), ob = obligation.safeParse(packet.obligation);
   if (!policy.success || !policy.data.enabled || !ob.success) invalid();
   // Frozen A2 pickup provenance uses the event's own transitions. An opening

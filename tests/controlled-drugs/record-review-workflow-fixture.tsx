@@ -29,24 +29,29 @@ const model = createReviewLifecycle({ pointers: { ...browserPointers, async reso
 model.setIdentity(identity);
 export function Fixture() {
   const [sessionChanged, setSessionChanged] = useState(false);
+  const [selectionAvailable, setSelectionAvailable] = useState(true), [selectedEvent, setSelectedEvent] = useState(request.event_id);
+  const [draftDirty, setDraftDirty] = useState(false);
   return <main className="mx-auto max-w-4xl space-y-6 p-4 md:p-8">
     <aside aria-label="Synthetic test controls" className="space-y-3 rounded-xl border bg-muted p-4 text-sm">
       <p>Synthetic staff workflow · no real Auth, backend or clinical signing</p>
       <p>Local RPC calls: <span data-testid="rpc-count">0</span></p>
+      <p>Local draft guard: <span data-testid="draft-dirty">{draftDirty ? "dirty" : "clean"}</span></p>
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" className="min-h-11" onClick={() => { drop = true; }}>Lose next response</Button>
         <Button variant="outline" className="min-h-11" onClick={() => { notFound = true; }}>Return not found on recovery</Button>
         <Button variant="outline" className="min-h-11" onClick={() => { failCleanup = true; }}>Fail recovery cleanup</Button>
         <Button variant="outline" className="min-h-11" onClick={() => { pauseCleanup = true; }}>Pause cleanup retry</Button>
         <Button variant="outline" className="min-h-11" onClick={() => { rejectCleanup?.(new Error("Synthetic delayed cleanup failure")); }}>Reject paused cleanup</Button>
+        <Button variant="outline" className="min-h-11" onClick={() => { setSelectionAvailable(value => !value); }}>Toggle record selection</Button>
+        <Button variant="outline" className="min-h-11" onClick={() => { setSelectedEvent(other); }}>Select another synthetic record</Button>
         <Button variant="outline" className="min-h-11" onClick={() => {
           model.setIdentity({ ...identity, sessionId: other, generation: 2 }); setSessionChanged(true);
         }}>Change synthetic session</Button>
       </div>
       {sessionChanged && <p>New synthetic session selected.</p>}
     </aside>
-    <RecordReviewWorkflow model={model} selection={{ actor_id: request.actor_id, event_id: request.event_id, policy_id: request.policy_id,
-      read_eligibility_id: request.read_eligibility_id, review_eligibility_id: request.review_eligibility_id }} />
+    <RecordReviewWorkflow model={model} selection={selectionAvailable ? { actor_id: request.actor_id, event_id: selectedEvent, policy_id: request.policy_id,
+      read_eligibility_id: request.read_eligibility_id, review_eligibility_id: request.review_eligibility_id } : null} onDraftDirtyChange={setDraftDirty} />
   </main>;
 }
 createRoot(document.getElementById("root")!).render(<Fixture />);

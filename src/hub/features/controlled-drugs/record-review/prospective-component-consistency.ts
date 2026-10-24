@@ -4,7 +4,7 @@ import { sameReviewJsonb as equal } from "./jsonb-equality.ts";
 import { hashReviewEvent, hashReviewObligation, hashReviewParentRequest, hashReviewPreparationContext, hashReviewSourceRow, hashReviewTarget } from "./component-hashes.ts";
 import { verifyProspectivePacketStructure } from "./prospective-packet-structure.ts";
 import type { PreparedReviewPacket } from "./prepared-packet.ts";
-import type { RecordReviewRequest } from "./request.ts";
+import type { ReviewEvidenceTarget } from "./request.ts";
 
 interface EvidenceObject { readonly [key: string]: ExactJson }
 // Literal C0/A1 dispatch; prefix matching would admit unreviewed native actions.
@@ -35,7 +35,7 @@ function instant(value: ExactJson): bigint {
  * establish consistency of supplied components, not genuine row membership.
  * Never rebuild or hash the whole prepared packet.
  */
-export async function verifyProspectiveComponentConsistency(packet: PreparedReviewPacket, request: Readonly<RecordReviewRequest>): Promise<void> {
+export async function verifyProspectiveComponentConsistency(packet: PreparedReviewPacket, request: Readonly<ReviewEvidenceTarget>): Promise<void> {
   verifyProspectivePacketStructure(packet, request);
   for (let index = 0; index < packet.source_rows.length; index++) {
     const source = packet.source_rows[index];
