@@ -25,6 +25,18 @@ integration is implied by this review.
 - [WARNING] `RecordReviewWorkflow.tsx` — the fixed review meaning could scroll
   away from the later confirmation. The exact meaning is now repeated beside
   that button and covered by a browser assertion.
+- [WARNING] `prospective-packet-structure.ts` — a valid opening-package pickup
+  can retain the original dispense UUID without a managed family row. The exact
+  frozen A2 own-transition provenance, missing-family reason and null binding
+  now permit that explicit exception; close but invalid variants still reject.
+- [WARNING] `prospective-packet-structure.ts` — derived historical timestamps
+  need exact UTC6-Z spelling, while retained source timestamps keep their older
+  date range, offset and precision. Separate schemas and controls now enforce
+  both contracts without normalizing historical evidence.
+- [WARNING] `prospective-packet-structure.ts` — permitting old selection anchors
+  must not also permit calendar-derived deadlines outside2026–2101. Both due-time
+  projections now reuse the bounded protocol schema, with otherwise valid
+  configured-deadline controls for both invalid sides of the interval.
 
 ## Current result and limits
 
@@ -35,8 +47,8 @@ cleanup. Session changes invalidate in-memory clinical state. Saved recovery
 does not depend on retrieving a clinical packet or retaining signing permission.
 Supplementary prospective DTO shape checks do not grant evidence admission.
 
-Author verification: full project check passed 1,740 tests with zero skipped,
-typechecks and build; 26 new focused controls and six synthetic browser cases
+Verification: full project check passed 1,743 tests with zero skipped,
+typechecks and build; 29 new focused controls and six synthetic browser cases
 passed. The reviewer inspected the code and retained 375/1280-pixel screenshots.
 These tests do not establish genuine v3 Auth, server persistence or signing.
 

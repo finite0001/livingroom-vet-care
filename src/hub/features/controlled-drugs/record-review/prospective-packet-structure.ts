@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ExactJsonNumber, protocolInteger } from "./exact-json.ts";
 import { reviewDigestSchema, reviewUuidSchema, type RecordReviewRequest } from "./request.ts";
-import { reviewMeaning, reviewTargetSchema, type PreparedReviewPacket } from "./prepared-packet.ts";
+import { reviewMeaning, reviewProtocolInstantSchema, reviewTargetSchema, type PreparedReviewPacket } from "./prepared-packet.ts";
 import { prospectiveSourceShapes } from "./prospective-source-shapes.ts";
 
 /** Structural checks against the explicitly prospective backend DTO. This is
@@ -14,7 +14,14 @@ const integer = (min: bigint, max: bigint) => z.instanceof(ExactJsonNumber).refi
   return /^(0|-?[1-9][0-9]*)$/.test(token) && token.length <= 20 && BigInt(token) >= min && BigInt(token) <= max;
 });
 const one = z.instanceof(ExactJsonNumber).refine(value => { try { return protocolInteger(value, 1, 1) === 1; } catch { return false; } });
-const instant = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)));
+// Raw retained source timestamps keep their original offset/precision. Derived
+// historical DTOs use exact UTC6-Z, including anchors before v3's config window.
+const sourceInstant = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)));
+const historicalInstant = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/)
+  .refine(value => {
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 23) === value.slice(0, 23);
+  });
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
   const d = new Date(value + "T00:00:00Z"); return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === value;
 });
@@ -29,10 +36,10 @@ const routing = z.object({ version: one, id: reviewUuidSchema, record_hash: revi
 }).strict();
 const unavailableReason = z.enum(["kind_not_configured", "other_native_kind_selected", "no_policy_at_anchor", "policy_disabled_at_anchor",
   "missing_managed_dispense_family", "family_site_unproven", "anchor_outside_calendar_range", "anchor_outside_coverage", "no_later_staffed_day_in_coverage", "site_unproven"]);
-const historical = z.object({ version: one, selection_anchor: instant, anchor_basis: z.enum(["observed_at", "recorded_at"]),
+const historical = z.object({ version: one, selection_anchor: historicalInstant, anchor_basis: z.enum(["observed_at", "recorded_at"]),
   policy_id: reviewUuidSchema.nullable(), policy_hash: reviewDigestSchema.nullable(), rule: rule.nullable(), family_binding_hash: reviewDigestSchema.nullable(),
   calendar_id: reviewUuidSchema.nullable(), calendar_hash: reviewDigestSchema.nullable(), anchor_local_date: date.nullable(), selected_staffed_date: date.nullable(),
-  due_at: instant.nullable(), deadline_basis: z.enum(["configured", "not_configured", "not_assigned", "historical_policy_unavailable", "calendar_unavailable"]),
+  due_at: reviewProtocolInstantSchema.nullable(), deadline_basis: z.enum(["configured", "not_configured", "not_assigned", "historical_policy_unavailable", "calendar_unavailable"]),
   unavailable_reason: unavailableReason.nullable(), routing_id: reviewUuidSchema.nullable(), routing_hash: reviewDigestSchema.nullable(), routing_snapshot: routing.nullable(),
 }).strict().superRefine((value, ctx) => {
   const pairs = [[value.policy_id, value.policy_hash], [value.calendar_id, value.calendar_hash], [value.routing_id, value.routing_hash]];
@@ -45,14 +52,14 @@ const historical = z.object({ version: one, selection_anchor: instant, anchor_ba
 const obligation = z.object({ event_id: reviewUuidSchema, product_id: reviewUuidSchema,
   event_sequence: z.string().regex(/^[1-9][0-9]*$/).max(19).refine(v => BigInt(v) <= 9223372036854775807n), meaning: z.literal(reviewMeaning),
   target: reviewTargetSchema, target_hash: reviewDigestSchema, adapter: z.unknown(), historical, binding_hash: reviewDigestSchema,
-  site_id: reviewUuidSchema.nullable(), due_at: instant.nullable(), family_dispense_id: reviewUuidSchema.nullable(),
+  site_id: reviewUuidSchema.nullable(), due_at: reviewProtocolInstantSchema.nullable(), family_dispense_id: reviewUuidSchema.nullable(),
 }).strict();
 const sourceRoles = new Set(["reviewed_target", "correction_target", "case_report", "ordinary_source", "original_intake", "original_pickup",
   "amendment_predecessor", "original_dispense", "resolution_correction", "opening_basis", "retained_context"]);
 const sourceTypes = {
   uuid: reviewUuidSchema, text: z.string(), boolean: z.boolean(), integer: integer(-2147483648n, 2147483647n),
   bigint: integer(-9223372036854775808n, 9223372036854775807n), "numeric(14,3)": z.instanceof(ExactJsonNumber),
-  "timestamp with time zone": instant, date, jsonb: z.unknown(),
+  "timestamp with time zone": sourceInstant, date, jsonb: z.unknown(),
 };
 function invalid(): never { throw new Error("Prospective packet structure differs from its declared DTO"); }
 function object(value: unknown): Record<string, unknown> {
@@ -94,6 +101,15 @@ function sourceKey(relation: string, input: unknown): string {
 export function verifyProspectivePacketStructure(packet: PreparedReviewPacket, request: Readonly<RecordReviewRequest>): void {
   const policy = rule.safeParse(packet.current_authorization.policy.rule), ob = obligation.safeParse(packet.obligation);
   if (!policy.success || !policy.data.enabled || !ob.success) invalid();
+  // Frozen A2 pickup provenance uses the event's own transitions. An opening
+  // package may prove that site while its original dispense has no managed
+  // canonical event, so no family row/binding may be invented for that UUID.
+  const missingManagedFamily = packet.adapter.event_kind === "record_native_pickup" &&
+    packet.adapter.adapter_id === "pickup_v1" && packet.adapter.provenance_state === "supported" &&
+    packet.adapter.site_basis === "event_transitions" && packet.adapter.native_family_dispense_id !== null &&
+    ob.data.family_dispense_id === null && ob.data.historical.family_binding_hash === null &&
+    ob.data.historical.unavailable_reason === "missing_managed_dispense_family";
+  if (ob.data.historical.unavailable_reason === "missing_managed_dispense_family" && !missingManagedFamily) invalid();
   const event = sourceRow("public.controlled_stock_events", packet.event), preparation = sourceRow("public.controlled_stock_preparations", packet.parent_preparation);
   const target = packet.target, required = { id: target.event_id, product_id: target.product_id, sequence: target.sequence,
     record_hash: target.record_hash, actor_id: target.original_actor_id, policy_version_id: target.policy_version_id,
@@ -104,7 +120,8 @@ export function verifyProspectivePacketStructure(packet: PreparedReviewPacket, r
     !equal(event.clinical_snapshot, packet.clinical_snapshot) || ob.data.event_id !== request.event_id ||
     ob.data.product_id !== target.product_id || ob.data.event_sequence !== String(target.sequence) ||
     !equal(ob.data.target, target) || !equal(ob.data.adapter, packet.adapter) || ob.data.site_id !== packet.adapter.site_id ||
-    ob.data.due_at !== ob.data.historical.due_at || ob.data.family_dispense_id !== packet.adapter.native_family_dispense_id) invalid();
+    ob.data.due_at !== ob.data.historical.due_at ||
+    (ob.data.family_dispense_id !== packet.adapter.native_family_dispense_id && !missingManagedFamily)) invalid();
   if (packet.source_rows.length !== packet.adapter.source_refs.length) invalid();
   let previous = "";
   for (let i = 0; i < packet.source_rows.length; i++) {

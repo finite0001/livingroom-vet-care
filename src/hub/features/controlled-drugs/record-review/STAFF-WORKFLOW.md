@@ -86,8 +86,17 @@ node --experimental-strip-types --test tests/controlled-drugs/record-review-life
 node node_modules/@playwright/test/cli.js test --config tests/controlled-drugs/record-review-workflow.playwright.ts
 ```
 
-Verification of this prospective slice: 26 new unit controls and six synthetic
-browser cases pass. Full `npm run check` passed 1,740 tests (zero skipped), all
+Supplemental DTO validation also preserves the frozen A2 exception for a supported
+opening-package pickup with no managed dispense family. It requires the exact
+pickup/own-transition provenance, explicit missing-family reason and null family
+binding. It does not invent a family or authorize signing. Derived historical
+timestamps require UTC with six fractional digits and `Z`; old retained source
+timestamps keep their original offset/precision and can predate configuration.
+Historical selection anchors can also predate configuration, while calendar-derived
+due times retain the2026–2101 protocol window.
+
+Verification of this prospective slice: 29 new unit controls and six synthetic
+browser cases pass. Full `npm run check` passed 1,743 tests (zero skipped), all
 three TypeScript projects and the production build. The repository retains four
 pre-existing Fast Refresh warnings and its existing bundle-size warning; the
 new files have no focused lint warnings. Browser screenshots at 375/1280 pixels
