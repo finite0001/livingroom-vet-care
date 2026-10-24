@@ -1,0 +1,59 @@
+{
+  "addendum": {
+    "bytes": 2115,
+    "path": "docs/controlled-drugs/record-review-dialog-independent-review-final-v2-20261024.md",
+    "sha256": "1af96b7be8dfecca34e3fed43428b71459e8558ff523090c8c61b7284f0b4e9d"
+  },
+  "backend_auth_mounted_acceptance": false,
+  "files": {
+    "e2e/controlled-record-review-dialog.spec.ts": {
+      "bytes": 7626,
+      "sha256": "b8c56dcf81a6b38a7994b69bcab3176c1ddf12fe590e8876440f915154b5951a"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewDialog.tsx": {
+      "bytes": 6201,
+      "sha256": "4899972f94365cebd530083167aa224ee03a17f6ef2beb05266e059df31466ce"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewWorkflow.tsx": {
+      "bytes": 15605,
+      "sha256": "8f468134dca79052b92fc677fb22c63a16c7841145bcba84e1caf1248abae6ff"
+    },
+    "src/hub/features/controlled-drugs/record-review/STAFF-WORKFLOW.md": {
+      "bytes": 7687,
+      "sha256": "362134dcb19714031d844d8f507e54a6cf8df701e00a7bca7bfcc7335928d919"
+    },
+    "tests/controlled-drugs/record-review-dialog-fixture.html": {
+      "bytes": 292,
+      "sha256": "dec9fe7c2cd001cc6e8c69c948689636fa53521e7f059b00697224ae37d125f3"
+    },
+    "tests/controlled-drugs/record-review-dialog-fixture.tsx": {
+      "bytes": 3321,
+      "sha256": "50e6e22392f1f3971c909adec1c978303a29e727692b7e5eba7362a30a7c4adf"
+    },
+    "tests/controlled-drugs/record-review-workflow.playwright.ts": {
+      "bytes": 813,
+      "sha256": "1eebb12698e4a3f748990b8f3975627353e6183181275a1e2f6bafefb0f48a1d"
+    }
+  },
+  "kind": "independent-unmounted-dialog-review-final-v2",
+  "parent_executed_logs": {
+    "/private/tmp/lrv-staff-dialog-final-browser-20261024.log": {
+      "bytes": 2284,
+      "sha256": "e98df11c33a286f238cd625cb3d6d334e852cbb4e696d499b54205394def704e"
+    },
+    "/private/tmp/lrv-staff-dialog-final-check-20261024.log": {
+      "bytes": 394798,
+      "sha256": "3b6ef8cb7db50b277662864a8abec501464fe9efd3eb41205160674f7b1be0b8"
+    }
+  },
+  "prior_binding_unchanged": {
+    "bytes": 1288,
+    "path": "docs/controlled-drugs/record-review-dialog-independent-source-bindings-20261024.json",
+    "sha256": "e70bfd00ae5936db03fcfd3b38409041a892296d8e0230462eb921a7b5b094e1"
+  },
+  "prior_report_unchanged": {
+    "bytes": 4741,
+    "path": "docs/controlled-drugs/record-review-dialog-independent-review-20261024.md",
+    "sha256": "56036f76a79f3477c51f055e90a0a34ca931f33d918e46d266f1bc4b468bd5c1"
+  }
+}
