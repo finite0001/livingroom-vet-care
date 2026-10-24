@@ -1,0 +1,178 @@
+-- Incoming original capture, fenced by the reviewed inbound identity and attempt token.
+create table public.inbound_attachment_captures (
+ id uuid primary key default gen_random_uuid(),
+ inbound_id uuid not null references public.communication_inbound(id),
+ attachment_id uuid not null,
+ message_id uuid not null references public.messages(id),
+ inbound_version integer not null check(inbound_version>0),
+ email_id uuid not null,
+ metadata jsonb not null check(jsonb_typeof(metadata)='object'),
+ actor_id uuid not null references public.profiles(id),
+ status text not null check(status in ('capturing','ready')),
+ lease_token uuid not null,lease_expires_at timestamptz,
+ storage_path text not null unique,sha256 text check(sha256 ~ '^[a-f0-9]{64}$'),
+ created_at timestamptz not null default clock_timestamp(),captured_at timestamptz,
+ unique(inbound_id,attachment_id),
+ check(storage_path=inbound_id::text||'/'||attachment_id::text||'/'||lease_token::text||'/original'),
+ check((status='capturing' and lease_expires_at is not null and sha256 is null and captured_at is null)
+  or(status='ready' and lease_expires_at is null and sha256 is not null and captured_at is not null))
+);
+alter table public.inbound_attachment_captures enable row level security;
+revoke all on public.inbound_attachment_captures from public,anon,authenticated,service_role;
+create function public.guard_inbound_attachment_capture() returns trigger language plpgsql set search_path=public as $$
+begin
+ if tg_op='DELETE' or old.status='ready'
+  or (to_jsonb(new)-array['actor_id','status','lease_token','lease_expires_at','storage_path','sha256','captured_at'])
+   is distinct from (to_jsonb(old)-array['actor_id','status','lease_token','lease_expires_at','storage_path','sha256','captured_at']) then
+  raise exception 'Incoming capture evidence is immutable' using errcode='23514';end if;
+ if new.status='ready' and row(new.actor_id,new.lease_token,new.storage_path) is distinct from row(old.actor_id,old.lease_token,old.storage_path) then
+  raise exception 'Finalization must preserve its exact lease' using errcode='23514';end if;
+ return new;
+end $$;
+create trigger inbound_attachment_capture_guard before update or delete on public.inbound_attachment_captures for each row execute function public.guard_inbound_attachment_capture();
+create function public.inbound_capture_receipt(p_row public.inbound_attachment_captures) returns jsonb language sql immutable set search_path=public as $$
+ select jsonb_build_object('id',p_row.id,'inbound_id',p_row.inbound_id,'attachment_id',p_row.attachment_id,'message_id',p_row.message_id,
+ 'inbound_version',p_row.inbound_version,'status',p_row.status,'sha256',p_row.sha256,'byte_length',(p_row.metadata->>'size')::bigint,'mime_type',p_row.metadata->>'content_type')
+$$;
+create function public.claim_inbound_attachment(p_inbound_id uuid,p_attachment_id uuid,p_version integer,p_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare incoming public.communication_inbound;capture public.inbound_attachment_captures;meta jsonb;matches integer;token uuid:=gen_random_uuid();
+begin
+ perform public.communication_require_service();
+ if p_attachment_id is null or public.is_active_staff(p_actor_id) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into incoming from public.communication_inbound where id=p_inbound_id for update;
+ if not found or incoming.version is distinct from p_version or incoming.provider<>'resend' or incoming.channel<>'EMAIL'
+  or incoming.message_id is null or incoming.conversation_id is null or incoming.client_id is null
+  or not exists(select 1 from public.messages m join public.conversations c on c.id=m.conversation_id where m.id=incoming.message_id
+    and m.conversation_id=incoming.conversation_id and c.client_id=incoming.client_id and m.sender_type='CLIENT' and m.type='EMAIL' and not m.is_internal)
+  or public.is_active_staff(p_actor_id) is not true then
+  raise exception 'Reviewed inbound message changed or is unavailable' using errcode='42501';end if;
+ select count(*),jsonb_agg(value)->0 into matches,meta from jsonb_array_elements(incoming.attachment_metadata) where value->>'id'=p_attachment_id::text;
+ if matches<>1 or jsonb_typeof(meta->'size') is distinct from 'number' or (meta->>'size')::numeric not between 1 and 10485760
+  or (meta->>'size')::numeric<>trunc((meta->>'size')::numeric)
+  or jsonb_typeof(meta->'content_type') is distinct from 'string'
+  or meta->'filename' is null or jsonb_typeof(meta->'filename') not in ('null','string')
+  or (jsonb_typeof(meta->'filename')='string' and (length(trim(meta->>'filename')) not between 1 and 255 or meta->>'filename' ~ '[[:cntrl:]]'))
+  or meta->>'content_type' not in ('application/pdf','image/png','image/jpeg') then
+  raise exception 'Supported exact incoming attachment required' using errcode='23514';end if;
+ meta:=jsonb_build_object('id',meta->>'id','filename',meta->'filename','content_type',meta->>'content_type','size',meta->'size');
+ select * into capture from public.inbound_attachment_captures where inbound_id=p_inbound_id and attachment_id=p_attachment_id for update;
+ if found then
+  if row(capture.message_id,capture.inbound_version,capture.email_id,capture.metadata) is distinct from row(incoming.message_id,incoming.version,incoming.resource_id::uuid,meta) then
+   raise exception 'Saved incoming capture identity changed' using errcode='42501';end if;
+  if capture.status='ready' then return jsonb_build_object('ready',public.inbound_capture_receipt(capture),'lease',null);end if;
+  if capture.lease_expires_at>clock_timestamp() then raise exception 'Incoming capture already in progress' using errcode='40001';end if;
+  update public.inbound_attachment_captures set actor_id=p_actor_id,lease_token=token,lease_expires_at=clock_timestamp()+interval '2 minutes',
+   storage_path=p_inbound_id::text||'/'||p_attachment_id::text||'/'||token::text||'/original' where id=capture.id returning * into capture;
+ else
+  insert into public.inbound_attachment_captures(inbound_id,attachment_id,message_id,inbound_version,email_id,metadata,actor_id,status,lease_token,lease_expires_at,storage_path)
+  values(p_inbound_id,p_attachment_id,incoming.message_id,incoming.version,incoming.resource_id::uuid,meta,p_actor_id,'capturing',token,clock_timestamp()+interval '2 minutes',
+   p_inbound_id::text||'/'||p_attachment_id::text||'/'||token::text||'/original') returning * into capture;
+ end if;
+ return jsonb_build_object('ready',null,'lease',jsonb_build_object('id',capture.id,'inbound_id',capture.inbound_id,'attachment_id',capture.attachment_id,
+ 'message_id',capture.message_id,'inbound_version',capture.inbound_version,'actor_id',capture.actor_id,'email_id',capture.email_id,'token',capture.lease_token,'storage_path',capture.storage_path,'metadata',capture.metadata));
+end $$;
+create function public.finalize_inbound_attachment(p_id uuid,p_actor_id uuid,p_token uuid,p_sha256 text,p_byte_length bigint,p_mime_type text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare capture public.inbound_attachment_captures;incoming public.communication_inbound;object_meta jsonb;
+begin
+ perform public.communication_require_service();
+ select * into capture from public.inbound_attachment_captures where id=p_id;
+ if not found then raise exception 'Capture unavailable' using errcode='42501';end if;
+ -- Consistent lock order with claim and inbound assignment.
+ select * into incoming from public.communication_inbound where id=capture.inbound_id for update;
+ select * into capture from public.inbound_attachment_captures where id=p_id for update;
+ if incoming.provider<>'resend' or incoming.channel<>'EMAIL' or incoming.message_id is null
+  or not exists(select 1 from public.messages m join public.conversations c on c.id=m.conversation_id where m.id=incoming.message_id and m.conversation_id=incoming.conversation_id and c.client_id=incoming.client_id and m.sender_type='CLIENT' and m.type='EMAIL' and not m.is_internal)
+  or public.is_active_staff(p_actor_id) is not true or capture.actor_id is distinct from p_actor_id or capture.lease_token is distinct from p_token
+  or row(capture.message_id,capture.inbound_version,capture.email_id) is distinct from row(incoming.message_id,incoming.version,incoming.resource_id::uuid)
+  or not exists(select 1 from jsonb_array_elements(incoming.attachment_metadata) item where
+    jsonb_build_object('id',item->>'id','filename',item->'filename','content_type',item->>'content_type','size',item->'size')=capture.metadata) then
+  raise exception 'Incoming capture association or lease changed' using errcode='42501';end if;
+ if p_sha256 is null or p_sha256 !~ '^[a-f0-9]{64}$' or p_byte_length is distinct from (capture.metadata->>'size')::bigint
+  or p_mime_type is distinct from capture.metadata->>'content_type' then
+  raise exception 'Incoming captured bytes differ' using errcode='23514';end if;
+ if capture.status='ready' then
+  if capture.sha256 is distinct from p_sha256 then raise exception 'Incoming captured bytes changed' using errcode='23514';end if;
+  return public.inbound_capture_receipt(capture);
+ end if;
+ if capture.lease_expires_at<=clock_timestamp() then raise exception 'Capture lease expired' using errcode='40001';end if;
+ select metadata into object_meta from storage.objects where bucket_id='inbound-attachment-originals' and name=capture.storage_path for share;
+ if not found or object_meta->>'size' is distinct from p_byte_length::text or object_meta->>'mimetype' is distinct from p_mime_type then
+  raise exception 'Stored incoming original does not match' using errcode='23514';end if;
+ update public.inbound_attachment_captures set status='ready',sha256=p_sha256,captured_at=clock_timestamp(),lease_expires_at=null where id=p_id returning * into capture;
+ return public.inbound_capture_receipt(capture);
+end $$;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+ values('inbound-attachment-originals','inbound-attachment-originals',false,10485760,array['application/pdf','image/png','image/jpeg']);
+-- No authenticated object policies: original reads/writes require authorized adapters.
+revoke all on function public.guard_inbound_attachment_capture() from public,anon,authenticated,service_role;
+revoke all on function public.inbound_capture_receipt(public.inbound_attachment_captures) from public,anon,authenticated,service_role;
+revoke all on function public.claim_inbound_attachment(uuid,uuid,integer,uuid) from public,anon,authenticated,service_role;
+revoke all on function public.finalize_inbound_attachment(uuid,uuid,uuid,text,bigint,text) from public,anon,authenticated,service_role;
+grant execute on function public.claim_inbound_attachment(uuid,uuid,integer,uuid),public.finalize_inbound_attachment(uuid,uuid,uuid,text,bigint,text) to service_role;
+
+-- Service-only read context: callers supply identity, never an arbitrary object path.
+create function public.authorize_inbound_attachment_read(p_actor_id uuid,p_capture_id uuid,p_message_id uuid)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare capture public.inbound_attachment_captures;incoming public.communication_inbound;
+begin
+ perform public.communication_require_service();
+ if public.is_active_staff(p_actor_id) is not true then raise exception 'Active staff required' using errcode='42501';end if;
+ select * into capture from public.inbound_attachment_captures where id=p_capture_id and message_id=p_message_id and status='ready';
+ if not found then raise exception 'Incoming original unavailable' using errcode='42501';end if;
+ select * into incoming from public.communication_inbound where id=capture.inbound_id;
+ if not found or incoming.provider<>'resend' or incoming.channel<>'EMAIL'
+  or row(incoming.message_id,incoming.version,incoming.resource_id) is distinct from row(capture.message_id,capture.inbound_version,capture.email_id::text)
+  or not exists(select 1 from public.messages m join public.conversations c on c.id=m.conversation_id
+    where m.id=p_message_id and m.conversation_id=incoming.conversation_id and c.client_id=incoming.client_id
+      and m.sender_type='CLIENT' and m.type='EMAIL' and not m.is_internal)
+  or not exists(select 1 from jsonb_array_elements(incoming.attachment_metadata) item where
+    jsonb_build_object('id',item->>'id','filename',item->'filename','content_type',item->>'content_type','size',item->'size')=capture.metadata)
+  or public.is_active_staff(p_actor_id) is not true then
+  raise exception 'Incoming original association changed' using errcode='42501';end if;
+ return jsonb_build_object('id',capture.id,'message_id',capture.message_id,'storage_path',capture.storage_path,
+  'sha256',capture.sha256,'byte_length',(capture.metadata->>'size')::bigint,'mime_type',capture.metadata->>'content_type','filename',capture.metadata->'filename');
+end $$;
+revoke all on function public.authorize_inbound_attachment_read(uuid,uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.authorize_inbound_attachment_read(uuid,uuid,uuid) to service_role;
+
+create function public.list_inbound_message_attachments(p_message_ids uuid[]) returns jsonb
+language plpgsql security definer set search_path=public as $$
+declare result jsonb;
+begin
+ if auth.uid() is null or public.is_active_staff(auth.uid()) is not true then
+  raise exception 'Active staff required' using errcode='42501';end if;
+ if p_message_ids is null or cardinality(p_message_ids)>100 then
+  raise exception 'At most 100 message identities required' using errcode='23514';end if;
+ select coalesce(jsonb_agg(row_data order by message_id,position),'[]'::jsonb) into result from (
+  select i.message_id,item.ordinality as position,jsonb_build_object(
+   'inbound_id',i.id,'inbound_version',i.version,'message_id',i.message_id,
+   'attachment_id',item.value->>'id','filename',item.value->'filename',
+   'mime_type',item.value->'content_type','byte_length',item.value->'size',
+   'capture_id',case when cap.status='ready' then cap.id end,
+   'sha256',case when cap.status='ready' then cap.sha256 end,
+   'status',case when cap.status='ready' then 'ready'
+     when cap.status='capturing' and cap.lease_expires_at>clock_timestamp() then 'capturing'
+     when item.value->>'content_type' in ('application/pdf','image/png','image/jpeg')
+       and case when jsonb_typeof(item.value->'size')='number' then
+         (item.value->>'size')::numeric between 1 and 10485760
+         and (item.value->>'size')::numeric=trunc((item.value->>'size')::numeric) else false end
+       and item.value->>'id' ~* '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+       and (jsonb_typeof(item.value->'filename')='null' or
+         (jsonb_typeof(item.value->'filename')='string' and length(trim(item.value->>'filename')) between 1 and 255 and item.value->>'filename' !~ '[[:cntrl:]]'))
+       then 'pending' else 'unsupported' end) as row_data
+  from public.communication_inbound i
+  join public.messages m on m.id=i.message_id and m.conversation_id=i.conversation_id
+  join public.conversations c on c.id=m.conversation_id and c.client_id=i.client_id
+  cross join lateral jsonb_array_elements(i.attachment_metadata) with ordinality item(value,ordinality)
+  left join public.inbound_attachment_captures cap on cap.inbound_id=i.id and cap.attachment_id::text=item.value->>'id'
+    and cap.message_id=i.message_id and cap.inbound_version=i.version and cap.email_id::text=i.resource_id
+    and cap.metadata=jsonb_build_object('id',item.value->>'id','filename',item.value->'filename','content_type',item.value->>'content_type','size',item.value->'size')
+  where i.message_id=any(p_message_ids) and i.provider='resend' and i.channel='EMAIL'
+    and m.type='EMAIL' and m.sender_type='CLIENT' and not m.is_internal
+ ) attachment_rows;
+ return result;
+end $$;
+revoke all on function public.list_inbound_message_attachments(uuid[]) from public,anon,authenticated,service_role;
+grant execute on function public.list_inbound_message_attachments(uuid[]) to authenticated;

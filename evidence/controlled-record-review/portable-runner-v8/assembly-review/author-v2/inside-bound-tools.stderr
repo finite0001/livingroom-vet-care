@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/assemble.py", line 253, in <module>
+    main()
+    ~~~~^^
+  File "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/assemble.py", line 191, in main
+    copier._assert_outside_source(tool_root,parent_root)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/source/tests/controlled-drugs/portable-runner/source_copy.py", line 130, in _assert_outside_source
+    raise ValueError('destination parent physically inside source tree')
+ValueError: destination parent physically inside source tree

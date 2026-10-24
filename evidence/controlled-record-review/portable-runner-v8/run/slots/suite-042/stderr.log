@@ -1,0 +1,11 @@
+test_actual_child_output_cap_preserves_partial_bytes_then_cleanup_runs (portable_worker_target.EvidenceTests.test_actual_child_output_cap_preserves_partial_bytes_then_cleanup_runs) ... ok
+test_actual_success_nonzero_and_timeout_retain_exact_streams (portable_worker_target.EvidenceTests.test_actual_success_nonzero_and_timeout_retain_exact_streams) ... ok
+test_binary_roundtrip_digests_complete_inventory_and_no_overwrite (portable_worker_target.EvidenceTests.test_binary_roundtrip_digests_complete_inventory_and_no_overwrite) ... ok
+test_digest_size_encoding_and_decompression_limit_corruption_reject (portable_worker_target.EvidenceTests.test_digest_size_encoding_and_decompression_limit_corruption_reject) ... ok
+test_exhausted_workload_evidence_does_not_consume_cleanup_reserve (portable_worker_target.EvidenceTests.test_exhausted_workload_evidence_does_not_consume_cleanup_reserve) ... ok
+test_retention_failure_preserves_pending_raw_and_cannot_verify (portable_worker_target.EvidenceTests.test_retention_failure_preserves_pending_raw_and_cannot_verify) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.870s
+
+OK

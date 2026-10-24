@@ -1,0 +1,101 @@
+{
+  "functions": [
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_request",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "external_relation_reads": [
+        "pg_catalog.pg_timezone_names"
+      ],
+      "helper_edges": [],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "calendar_candidates",
+      "namespace": "controlled_review_v3",
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    },
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_calendar",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "external_relation_reads": [],
+      "helper_edges": [
+        "controlled_review_v3.calendar_candidates(jsonb)",
+        "public.controlled_stock_text(jsonb,integer,boolean)"
+      ],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "resolve_calendar",
+      "namespace": "controlled_review_v3",
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    }
+  ],
+  "kind": "calendar-resolver-private-helper-metadata-v1",
+  "source": {
+    "body_change_permitted": false,
+    "path": "tests/controlled-drugs/engine/candidate/record-review-v3-calendar.sql",
+    "sha256": "0cb15fdb8ce7fd88a89495e80d6c2eac3efc34b370652e6b814a99c338f4909b"
+  }
+}

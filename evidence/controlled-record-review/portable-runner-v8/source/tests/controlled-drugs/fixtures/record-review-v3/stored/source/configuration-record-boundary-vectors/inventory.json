@@ -1,0 +1,12 @@
+{
+  "kind": "independent-record-boundary-addendum-v1",
+  "original_manifest_sha256": "124145aed3ca5b82f35526b4486ba5d54b117e014879da897cc1d93b545fd7e1",
+  "encoder_sha256": "ff0c31eece06e4fed23a7632ea907a995e87ca9dd86ceeba11f0635696446488",
+  "original_family_literals_sha256": "02cf2efb2413a2d528984847a293a0d9b991ae01fa81dd2edb9aefea2e7ee6ae",
+  "families": 17,
+  "cases": 85,
+  "success_cases": 68,
+  "refusal_cases": 17,
+  "database_runs": 0,
+  "postgres_renderer_confirmed": false
+}

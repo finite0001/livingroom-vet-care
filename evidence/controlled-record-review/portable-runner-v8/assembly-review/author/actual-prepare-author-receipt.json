@@ -1,0 +1,26 @@
+{
+  "actual_rerun_pending": true,
+  "assemble_sha256": "8b6b6c3215b61a2b2df9d1623c1c058932c828d15594a4d6361bf3dd1e870a49",
+  "author_directory": "/private/tmp/lrv-v8-assemble-author-kg4ti85l",
+  "formal_runner_acceptance": false,
+  "inside_source_refused": {
+    "returncode": 1,
+    "source_keys_and_identities_unchanged": true
+  },
+  "kind": "actual-v8-checkout-prepare-author-controls",
+  "prepare": {
+    "bytes": 163795442,
+    "elapsed_seconds": 11.483959916004096,
+    "exact_independent_profile_match": true,
+    "files": 908,
+    "modes": {
+      "directories": "0700",
+      "files": "0600"
+    },
+    "publication": "/private/tmp/lrv-v8-prepared-parent-g9yr0s1h/prepared-v8-28c17910a1a24299805e05c613f9cc7b/publication-acdb1ee3d9a6447b9a4ba7d9e82ac16d",
+    "receipt": "/private/tmp/lrv-v8-prepared-parent-g9yr0s1h/prepared-v8-28c17910a1a24299805e05c613f9cc7b/preparation-receipt.json",
+    "returncode": 0,
+    "tracked_source_unchanged": true
+  },
+  "target_tool_setup_network_auth_database_executed": false
+}

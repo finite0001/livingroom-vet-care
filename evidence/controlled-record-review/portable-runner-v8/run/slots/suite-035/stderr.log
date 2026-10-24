@@ -1,0 +1,15 @@
+test_all_sql_and_plpgsql_parse (portable_worker_target.GeneratorTests.test_all_sql_and_plpgsql_parse) ... ok
+test_exact_case_ids_input_spans_and_expected_outputs (portable_worker_target.GeneratorTests.test_exact_case_ids_input_spans_and_expected_outputs) ... ok
+test_exact_phases_batches_and_completion_outcomes (portable_worker_target.GeneratorTests.test_exact_phases_batches_and_completion_outcomes) ... ok
+test_full_conservation_after_every_observation_phase (portable_worker_target.GeneratorTests.test_full_conservation_after_every_observation_phase) ... ok
+test_lexical_extractor_preserves_tokens_and_nested_strings (portable_worker_target.GeneratorTests.test_lexical_extractor_preserves_tokens_and_nested_strings) ... ok
+test_no_install_or_runtimes_and_complete_input_hashes (portable_worker_target.GeneratorTests.test_no_install_or_runtimes_and_complete_input_hashes) ... ok
+test_null_wire_and_alternate_session_controls_are_separate (portable_worker_target.GeneratorTests.test_null_wire_and_alternate_session_controls_are_separate) ... ok
+test_only_target_call_is_inside_accepted_negative_handler (portable_worker_target.GeneratorTests.test_only_target_call_is_inside_accepted_negative_handler) ... ok
+test_pinned_corpus_bytes_refuse_any_edit (portable_worker_target.GeneratorTests.test_pinned_corpus_bytes_refuse_any_edit) ... ok
+test_stubs_guard_and_acl_requests_are_finite (portable_worker_target.GeneratorTests.test_stubs_guard_and_acl_requests_are_finite) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 1.043s
+
+OK

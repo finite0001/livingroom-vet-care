@@ -1,0 +1,38 @@
+{
+  "supabase/tests/test_record_review_v3_configuration_record_runtime_harness.py": {
+    "bytes": 33122,
+    "sha256": "ee2c6c15b9e7bf84959bbcda42ebd2d37a414f4f529d1753f1fafb51b8fd8774"
+  },
+  "tests/controlled-drugs/engine/candidate/record_review_v3_configuration_record_runtime.py": {
+    "bytes": 28400,
+    "sha256": "78af8b5019cecd98a3228aa7e9beb309092c0c36e17cff2190065152ff7127c1"
+  },
+  "tests/controlled-drugs/engine/candidate/record_review_v3_configuration_record_session.py": {
+    "bytes": 18302,
+    "sha256": "380a930cb36fa244f7091e2bbe4212925f53427c504fbe32f285e5a8b70c330e"
+  },
+  "tests/controlled-drugs/engine/candidate/record_review_v3_paused_bootstrap.py": {
+    "bytes": 12142,
+    "sha256": "74cc4126d5211771ee1831645a34d70bf8154625c760d0ca599cfbf17763f19a"
+  },
+  "tests/controlled-drugs/harness/portable-envelope.json": {
+    "bytes": 61491,
+    "sha256": "039912f46ad95d41be6c65ff8b8d2a77666e57f8e7410597e509e4ab4df08fc6"
+  },
+  "tests/controlled-drugs/harness/portable_generator.py": {
+    "bytes": 36178,
+    "sha256": "250a0cd2339f0ab10333635d31a19901e04433446d2b1b06f25bbc080ce9e20e"
+  },
+  "tests/controlled-drugs/harness/portable_loader.py": {
+    "bytes": 15533,
+    "sha256": "fdddff0ed190d668808ff874fab4b395f246dddc037692ef1842f7be6786f5d9"
+  },
+  "tests/controlled-drugs/harness/test_portable_fixture.py": {
+    "bytes": 16851,
+    "sha256": "b912aec3592a70d401aa6dccb1ea868bdbdaec75e5a437ec3656699207cf497f"
+  },
+  "tests/controlled-drugs/fixtures/record-review-v3/history/maps/stored634.json": {
+    "bytes": 84980,
+    "sha256": "9138f6415099ebab1081ebfe8f169b0f13aca8d06cb4c375cf1fffa737044b54"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "allowed_original_test_ids": [
+    "supabase/tests/test_record_review_v3_configuration_record_runtime_harness.py::RuntimeTests.test_canonical_integration_preserves_frozen634_and_exact_closure"
+  ],
+  "argv": [
+    "PINNED_PYTHON",
+    "-I",
+    "-B",
+    "PINNED_HISTORICAL638_WORKER",
+    "--repository-root",
+    "ADMITTED_REPOSITORY_ROOT",
+    "--tree-root",
+    "REGISTERED_EXACT_STORED638_ROOT"
+  ],
+  "deadline_seconds": 60,
+  "id": "portable-stored:historical638-assertion",
+  "implemented_guard_route": false,
+  "independent_review": "pending",
+  "kind": "prospective-finite-historical638-child-route-v1",
+  "max_calls_per_test": 1,
+  "network_children_forbidden": true,
+  "parent_timeout_seconds": 90,
+  "worker_bytes": 6853,
+  "worker_sha256": "2a891488d158b62e05e11ba9d19b4eb21dca93dfdce2d4e34d08e65025730423"
+}

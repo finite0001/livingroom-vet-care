@@ -1,0 +1,33 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into auth.users(id,email,raw_user_meta_data) values('37000000-0000-4000-8000-000000000001','stock-read@example.test','{}');
+update public.profiles set is_active = true where id in ('37000000-0000-4000-8000-000000000001');
+insert into public.user_roles (user_id, role) values ('37000000-0000-4000-8000-000000000001','STAFF');
+
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"37000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select lives_ok($$select public.create_inventory_product('37000000-0000-4000-8000-000000000002','Test vaccine','vaccine','Test maker','dose',1000)$$,'Create product with retry key');
+select lives_ok($$select public.create_inventory_product('37000000-0000-4000-8000-000000000002','Test vaccine','vaccine','Test maker','dose',1000)$$,'Exact create retry works');
+select is((select count(*) from public.search_inventory_products('test vaccine',101)),1::bigint,'Retry creates one product');
+select throws_ok($$select public.create_inventory_product('37000000-0000-4000-8000-000000000002','Test vaccine','vaccine','Test maker','dose',2000)$$,'23514',null,'Create retry cannot change price');
+select lives_ok($$select public.receive_inventory('37000000-0000-4000-8000-000000000003','37000000-0000-4000-8000-000000000004','37000000-0000-4000-8000-000000000002','BIG',current_date+365,'Housecall kit',2000,'Initial')$$,'Seed stock');
+-- More movements than a client REST page; aggregate must include every movement.
+select public.adjust_inventory(gen_random_uuid(),'37000000-0000-4000-8000-000000000004',-1,'Synthetic movement') from generate_series(1,1100);
+select is((select balance from public.inventory_lot_balances('BIG',null,101)),900::numeric,'Balance sums beyond client row limits');
+select is((select count(*) from public.inventory_lot_balances('housecall','37000000-0000-4000-8000-000000000002',101)),1::bigint,'Lot search covers location');
+select is((select count(*) from public.search_inventory_products('TEST MAKER',101)),1::bigint,'Catalog search case-insensitive manufacturer match');
+select is((select count(*) from public.inventory_lot_balances('not found',null,101)),0::bigint,'Nonmatching lot filtered');
+reset role;
+select set_config('request.jwt.claims','{}',true);
+update public.profiles set is_active=false where id='37000000-0000-4000-8000-000000000001';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"37000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($$select * from public.inventory_lot_balances('',null,101)$$,'42501','Active staff access required','Inactive staff read model denied');
+select throws_ok($$select * from public.search_inventory_products('',101)$$,'42501','Active staff access required','Inactive catalog search denied');
+set local role anon;
+select throws_ok($$select * from public.inventory_lot_balances('',null,101)$$,'42501',null,'Anonymous balance RPC denied');
+reset role;
+select * from finish();
+rollback;

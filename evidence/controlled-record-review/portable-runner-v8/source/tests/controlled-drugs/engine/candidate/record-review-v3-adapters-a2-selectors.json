@@ -1,0 +1,2332 @@
+{
+  "kind": "record-review-v3-adapter-a2-selector-proposal-v1",
+  "status": "private additive source draft; no integration or runtime acceptance",
+  "stage": "A1 shared behavior plus proposed exact O/K A2 site paths; actual A2 coverage unproved",
+  "fixed_meaning": "independent_record_review_v1",
+  "public_grants": [],
+  "entry_points": [
+    {
+      "name": "controlled_review_v3.adapt_event",
+      "arguments": [
+        "p_event_id uuid"
+      ],
+      "returns": "jsonb",
+      "result_keys": [
+        "version",
+        "event_kind",
+        "adapter_id",
+        "target",
+        "site_basis",
+        "site_id",
+        "source_refs",
+        "native_family_dispense_id",
+        "provenance_state",
+        "reason"
+      ]
+    },
+    {
+      "name": "controlled_review_v3.collect_event_sources",
+      "arguments": [
+        "p_event_id uuid"
+      ],
+      "returns": "jsonb",
+      "result_keys": [
+        "adapter",
+        "source_rows"
+      ]
+    },
+    {
+      "name": "controlled_review_v3.managed_source_event",
+      "arguments": [
+        "p_request jsonb"
+      ],
+      "returns": "jsonb",
+      "request_keys": [
+        "source_kind",
+        "source_id",
+        "product_id"
+      ],
+      "source_kinds": [
+        "movement",
+        "return",
+        "pickup",
+        "discrepancy",
+        "correction",
+        "dispense"
+      ],
+      "result_keys": [
+        "event_id",
+        "source_link_ids"
+      ],
+      "historical_absence_result": null
+    }
+  ],
+  "function_attributes": {
+    "owner": "postgres",
+    "security": "invoker",
+    "language": "plpgsql",
+    "volatility": "volatile",
+    "strict": false,
+    "parallel": "unsafe",
+    "search_path": [
+      "pg_catalog",
+      "public",
+      "pg_temp"
+    ],
+    "application_execute": false,
+    "write_statements": false,
+    "timezone": "UTC"
+  },
+  "errors": {
+    "22023": [
+      "invalid_adapter_argument",
+      "unsupported_event_kind"
+    ],
+    "23514": [
+      "adapter_source_integrity",
+      "adapter_parent_integrity",
+      "adapter_source_role_conflict"
+    ],
+    "54000": [
+      "evidence_limit_exceeded"
+    ]
+  },
+  "unsupported_reasons": [
+    "unmanaged_original_dispense",
+    "unmanaged_original_return",
+    "opening_provenance_unavailable",
+    "opening_package_incomplete",
+    "opening_package_multisite",
+    "opening_history_gap",
+    "unmanaged_original_pickup"
+  ],
+  "supported_reason": null,
+  "unsupported_shape": {
+    "site_basis": "unproven",
+    "site_id": null,
+    "provenance_state": "unsupported"
+  },
+  "bounds": {
+    "source_rows": 512,
+    "allocations": 100,
+    "correction_links": 100,
+    "immediate_documents": 100,
+    "dependency_depth": 4,
+    "packet_utf8_bytes": 1048576,
+    "request_utf8_bytes": 131072,
+    "receipt_utf8_bytes": 131072
+  },
+  "roles": [
+    {
+      "role": "reviewed_target",
+      "priority": 0
+    },
+    {
+      "role": "correction_target",
+      "priority": 1
+    },
+    {
+      "role": "case_report",
+      "priority": 2
+    },
+    {
+      "role": "ordinary_source",
+      "priority": 3
+    },
+    {
+      "role": "original_intake",
+      "priority": 4
+    },
+    {
+      "role": "original_pickup",
+      "priority": 5
+    },
+    {
+      "role": "amendment_predecessor",
+      "priority": 6
+    },
+    {
+      "role": "original_dispense",
+      "priority": 7
+    },
+    {
+      "role": "resolution_correction",
+      "priority": 8
+    },
+    {
+      "role": "opening_basis",
+      "priority": 9
+    },
+    {
+      "role": "retained_context",
+      "priority": 10
+    }
+  ],
+  "role_rule": "Lowest numeric priority wins for identical relation/key; identical priority has same literal role. Reject distinct full-row values/hash for same relation/key. No role from traversal order.",
+  "collection_shape": {
+    "source_ref_keys": [
+      "relation",
+      "key",
+      "row_hash",
+      "role"
+    ],
+    "source_row_keys": [
+      "relation",
+      "key",
+      "row"
+    ],
+    "key_values": "typed original primary-key JSON values",
+    "sort": [
+      "relation COLLATE C",
+      "key::text COLLATE C"
+    ],
+    "hash": "public.controlled_stock_hash(full immutable row JSON)",
+    "one_to_one_refs_and_rows": true,
+    "aggregate_rule": "Probe bound+1 before aggregate; reject overflow; deduplicate before global512 append; byte-check each full row and bounded accumulator before final arrays; no truncation",
+    "depth_rule": "root event0; each declared document reference edge adds1; repeated exact relation/key is not another row but may not evade maximum traversal depth; no recursive expansion of predecessor heads"
+  },
+  "managed_classification": {
+    "managed": "Every expected exact source member has exactly one controlled source link; all links identify one validated exact writer/root/product event; parent source bundle agrees; no opening membership overlaps.",
+    "historical_null": "All expected source members have zero controlled links and the immutable source/group validates, with no same-root controlled event or retained managed reference claiming the source. If product has an immutable opening, every source movement belongs exactly once to that opening and every historical native source belongs to its exact retained native prefix; original dispense allocations require complete opening membership and exactly one matching boundary entry. Zero controlled plus zero opening membership for an opened product is23514. Only a product with no opening may have neither membership; it cannot be a dependency of reviewed target E, whose opening is mandatory.",
+    "integrity_failure": [
+      "missing source row",
+      "wrong product/writer/actor/root/hash",
+      "partial controlled membership",
+      "more than one controlled parent event",
+      "same-root controlled event with missing or wrong source links",
+      "retained managed reference with no controlled link",
+      "partial opening membership",
+      "multiple opening memberships",
+      "opening and controlled membership overlap",
+      "substituted allocation/movement membership",
+      "opened product source movement belongs to neither opening nor managed event",
+      "historical native source is outside exact retained opening prefix",
+      "old dispense lacks its exact unique opening boundary entry"
+    ],
+    "unsupported_vs_error": "Only historical_null is ordinary absence. Empty expected allocation set is corruption, not historical absence. The reviewed target event itself must always be managed.",
+    "historical_stock_provenance": "Stock provenance may be wholly absent or complete, but partial membership, actor/writer/root mismatch or substituted movement membership is23514. Absence alone is not controlled admission."
+  },
+  "site_rules": {
+    "E": "Exact own nonzero source/line/cell effects and all retained transitions agree on one immutable controlling site, product and stock_unit.",
+    "E_with_exact_target": "E plus equality with exact managed ordinary correction target original cells/site.",
+    "R": "Exact managed ordinary return source; no previous discrepancy or arbitrary empty-line transition site.",
+    "A_or_O": "Exact managed original dispense first; otherwise clinical/operational annotation uses only adapter_opening_site exact target opening and original D. Integrity checked first; support requires full original prepared package at one positive site.",
+    "A_or_K": "Exact managed original dispense first, with existing original pickup agreement. Otherwise only exact document original_pickup_id whose managed pickup membership is complete; no O fallback, arbitrary previous pickup, current head, or target empty-line site.",
+    "conflicts": "All existing retained managed/assertion containers agree before O adds rows. Every selected O container, including zero, must agree with any prior singleton. Zero O cells outside nonempty positive site set refuse before unsupported. A valid full package at multiple positive O sites is unsupported only absent earlier cross-set conflict. Empty assertion transitions cannot independently establish site."
+  },
+  "clock_rules": {
+    "P": "physical_record; opening.observed_at <= event.observed_at <= event.recorded_at; finite",
+    "T": "P and treatment administered_at equals original request and event.observed_at",
+    "C": "correction_assertion; observed_at null",
+    "D": "discrepancy_assertion; observed_at null",
+    "N": "annotation; observed_at null"
+  },
+  "source_cutoff": "Only target-retained direct IDs, document hashes and reviewed_context prefix. Never SELECT latest source/native/controlled head; unchanged validators may inspect later history solely for integrity, never to build packet rows.",
+  "selectors": [
+    {
+      "id": "controlled_stock_events",
+      "relation": "public.controlled_stock_events",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected_parent_event_id",
+      "group": "parent",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "controlled_stock_actions",
+      "relation": "public.controlled_stock_actions",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected_parent_event_id",
+      "group": "parent",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "controlled_stock_preparations",
+      "relation": "public.controlled_stock_preparations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected_parent_event_id",
+      "group": "parent",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "parent_policy",
+      "relation": "public.controlled_stock_policy_versions",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected_parent_event.policy_version_id",
+      "group": "parent",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "parent_opening",
+      "relation": "public.controlled_stock_openings",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected_parent_event.opening_id",
+      "group": "parent",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "event_links",
+      "relation": "public.controlled_stock_source_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "event_id = selected_parent_event_id",
+      "group": "physical",
+      "max_rows": 512,
+      "fetch_limit": 513,
+      "order": [
+        "id"
+      ],
+      "index_support": "Existing FK-prefix index cs_fk_aed4567edc588ad8f11e9b29(event_id); ORDER BY id may require sorting. Actual planner choice and runtime feasibility require measurement; LIMIT does not bound scanned rows.",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "At least one exact native or movement source link for a managed parent; complete source_bundle membership"
+    },
+    {
+      "id": "event_lines",
+      "relation": "public.controlled_stock_event_lines",
+      "key": [
+        "id"
+      ],
+      "predicate": "event_id = selected_parent_event_id",
+      "group": "physical",
+      "max_rows": 512,
+      "fetch_limit": 513,
+      "order": [
+        "cell_id",
+        "source_link_id"
+      ],
+      "index_support": "UNIQUE(event_id,cell_id,source_link_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "0 exactly for annotation/discrepancy assertions; at least1 for physical/retraction nonzero effects; exact per-source/cell quantity equality"
+    },
+    {
+      "id": "event_transitions",
+      "relation": "public.controlled_stock_container_transitions",
+      "key": [
+        "id"
+      ],
+      "predicate": "event_id = selected_parent_event_id",
+      "group": "physical",
+      "max_rows": 512,
+      "fetch_limit": 513,
+      "order": [
+        "container_id"
+      ],
+      "index_support": "UNIQUE(event_id,container_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "0..512 for annotation/discrepancy assertions, at least1 for physical/retraction; exact retained context membership"
+    },
+    {
+      "id": "event_cells",
+      "relation": "public.controlled_stock_cells",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = each exact selected_event_line.cell_id",
+      "group": "physical",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "event_containers",
+      "relation": "public.controlled_stock_containers",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = each selected cell.container_id or transition.container_id",
+      "group": "physical",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "movement",
+      "relation": "public.inventory_movements",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact selected movement_id",
+      "group": "movement",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "movement_source",
+      "relation": "public.stock_movement_sources",
+      "key": [
+        "movement_id"
+      ],
+      "predicate": "movement_id = exact selected movement_id",
+      "group": "movement",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "movement_id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "presence_rule": "required_for_proven_managed_source; permitted_absent_only_for_validated_historical_source",
+      "if_present": "validate exact immutable source identity/writer/root/actor even for historical source; mismatches23514",
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "movement_lot",
+      "relation": "public.inventory_lots",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected_movement.lot_id",
+      "group": "movement",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "root_movement_sources",
+      "relation": "public.stock_movement_sources",
+      "key": [
+        "movement_id"
+      ],
+      "predicate": "writer = selected_source_root.writer AND source_id = selected_source_root.id; never implicitly target E",
+      "group": "movement",
+      "max_rows": 100,
+      "fetch_limit": 101,
+      "order": [
+        "movement_id"
+      ],
+      "index_support": "INDEX stock_movement_sources_root(writer,source_id)",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "presence_rule": "complete expected movement set for proven_managed source; historical permits zero provenance rows or complete matching set, never partial set",
+      "min_rows": 0,
+      "cardinality_rule": "0..max_rows unless exact declared source membership requires more; always reject extra/missing expected members"
+    },
+    {
+      "id": "treatment",
+      "relation": "public.patient_treatments",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = target_event.id; historical = false",
+      "group": "treatment",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "treatment_item",
+      "relation": "public.billing_invoice_items",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = target_event.id",
+      "group": "treatment",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "treatment_alert",
+      "relation": "public.treatment_alert_reviews",
+      "key": [
+        "id"
+      ],
+      "predicate": "treatment_id = target_event.id",
+      "group": "treatment",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(treatment_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "anesthesia_link",
+      "relation": "public.anesthesia_drug_administrations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = target_event.id",
+      "group": "anesthesia",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "dispense",
+      "relation": "public.native_dispenses",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact D",
+      "group": "dispense",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "dispense_operation",
+      "relation": "public.native_fulfillment_operations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = D AND operation = 'dispense'",
+      "group": "dispense",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "dispense_allocations",
+      "relation": "public.native_dispense_allocations",
+      "key": [
+        "id"
+      ],
+      "predicate": "dispense_id = D",
+      "group": "dispense",
+      "max_rows": 100,
+      "fetch_limit": 101,
+      "order": [
+        "lot_id"
+      ],
+      "index_support": "UNIQUE(dispense_id,lot_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "1..100 complete original allocation set; empty is23514,101 is54000"
+    },
+    {
+      "id": "dispense_item",
+      "relation": "public.billing_invoice_items",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact dispense.invoice_item_id",
+      "group": "dispense",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "pickup",
+      "relation": "public.native_pickups",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact selected pickup id AND dispense_id = D",
+      "group": "pickup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "pickup_source",
+      "relation": "public.stock_pickup_sources",
+      "key": [
+        "event_id"
+      ],
+      "predicate": "event_id = selected pickup.id",
+      "group": "pickup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "event_id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "presence_rule": "required_for_proven_managed_source; permitted_absent_only_for_validated_historical_source",
+      "if_present": "validate exact immutable source identity/writer/root/actor even for historical source; mismatches23514",
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "pickup_operation",
+      "relation": "public.native_fulfillment_operations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected pickup.id AND operation = 'pickup'",
+      "group": "pickup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "return",
+      "relation": "public.native_return_events",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact selected return id AND dispense_id = D",
+      "group": "return",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "return_operation",
+      "relation": "public.native_return_operations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected return.id",
+      "group": "return",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "return_source",
+      "relation": "public.stock_custody_sources",
+      "key": [
+        "event_id"
+      ],
+      "predicate": "event_id = selected return.id",
+      "group": "return",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "event_id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "presence_rule": "required_for_proven_managed_source; permitted_absent_only_for_validated_historical_source",
+      "if_present": "validate exact immutable source identity/writer/root/actor even for historical source; mismatches23514",
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "return_stock_links",
+      "relation": "public.native_return_stock_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "event_id = selected ordinary restock.id",
+      "group": "restock",
+      "max_rows": 100,
+      "fetch_limit": 101,
+      "order": [
+        "allocation_id"
+      ],
+      "index_support": "UNIQUE(event_id,allocation_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "Only invoked for restock/retract_restock;1..100 and exact declared allocation membership"
+    },
+    {
+      "id": "compensation_links",
+      "relation": "public.native_return_compensation_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "event_id = selected retract_restock.id",
+      "group": "compensation",
+      "max_rows": 100,
+      "fetch_limit": 101,
+      "order": [
+        "allocation_id"
+      ],
+      "index_support": "UNIQUE(event_id,allocation_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "Only invoked for restock/retract_restock;1..100 and exact declared allocation membership"
+    },
+    {
+      "id": "discrepancy",
+      "relation": "public.native_return_discrepancy_events",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact selected discrepancy id AND dispense_id = D",
+      "group": "discrepancy",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "discrepancy_operation",
+      "relation": "public.native_return_discrepancy_operations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected discrepancy.id",
+      "group": "discrepancy",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "discrepancy_source",
+      "relation": "public.stock_discrepancy_sources",
+      "key": [
+        "event_id"
+      ],
+      "predicate": "event_id = selected discrepancy.id",
+      "group": "discrepancy",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "event_id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "presence_rule": "required_for_proven_managed_source; permitted_absent_only_for_validated_historical_source",
+      "if_present": "validate exact immutable source identity/writer/root/actor even for historical source; mismatches23514",
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "resolution_links",
+      "relation": "public.native_return_discrepancy_correction_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "correction_id = each exact sorted unique target.document.correction_ids element; require case_id and resolution_id equal target",
+      "group": "resolution",
+      "max_rows": 100,
+      "fetch_limit": 101,
+      "order": [
+        "correction_id"
+      ],
+      "index_support": "UNIQUE(correction_id)",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "Only invoked for resolve_corrected; exact nonempty sorted unique correction_ids set1..100"
+    },
+    {
+      "id": "resolution_link_extras",
+      "relation": "public.native_return_discrepancy_correction_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "resolution_id = target_event.id; compare complete set to exact document.correction_ids",
+      "group": "resolution",
+      "max_rows": 100,
+      "fetch_limit": 101,
+      "order": [
+        "correction_id"
+      ],
+      "index_support": "NO resolution_id-leading index; bounded result scan, runtime feasibility required",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "Only invoked for resolve_corrected; exact nonempty sorted unique correction_ids set1..100"
+    },
+    {
+      "id": "annotation",
+      "relation": "public.native_dispense_correction_events",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact selected annotation id AND dispense_id = D",
+      "group": "annotation",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "annotation_operation",
+      "relation": "public.native_dispense_correction_operations",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = selected annotation.id",
+      "group": "annotation",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "annotation_source",
+      "relation": "public.stock_correction_sources",
+      "key": [
+        "event_id"
+      ],
+      "predicate": "event_id = selected annotation.id",
+      "group": "annotation",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "event_id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "presence_rule": "required_for_proven_managed_source; permitted_absent_only_for_validated_historical_source",
+      "if_present": "validate exact immutable source identity/writer/root/actor even for historical source; mismatches23514",
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "opening_movement",
+      "relation": "public.controlled_stock_opening_movements",
+      "key": [
+        "opening_id",
+        "movement_id"
+      ],
+      "predicate": "opening_id = exact immutable product opening.id AND movement_id = each exact historical source movement_id",
+      "group": "opening_membership",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "opening_id",
+        "movement_id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A1_and_A2",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "opening_cells",
+      "relation": "public.controlled_stock_cells",
+      "key": [
+        "id"
+      ],
+      "predicate": "opening_id = target_event.opening_id AND dispense_id = D AND channel = 'prepared'; preserve zero rows for explicit refusal",
+      "group": "opening",
+      "max_rows": 512,
+      "fetch_limit": 513,
+      "order": [
+        "id"
+      ],
+      "index_support": "Existing separate FK-prefix indexes cs_fk_c287087edfb973779877cc0e(opening_id) and cs_fk_a4d860c8d830055d3ee7048e(dispense_id); no assertion of a combined predicate/order path. Reserved A2 selector: actual planner choice, residual channel filtering and ORDER BY id require measurement.",
+      "optional": false,
+      "stage": "A2_proposed",
+      "role": "opening_basis",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "Select all exact immutable prepared cells, including zero quantities; LIMIT513 before processing; global512/full-byte limits still apply. Exact per-allocation sum reconciles retained boundary prepared_quantity for integrity. O support additionally requires that amount equal the original positive dispensed quantity. Cross-set and zero-site conflicts precede unsupported outcome."
+    },
+    {
+      "id": "opening_container",
+      "relation": "public.controlled_stock_containers",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact opening cell.container_id",
+      "group": "opening",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A2_proposed",
+      "role": "opening_basis",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "managed_movement",
+      "relation": "public.controlled_stock_source_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "movement_id = exact requested source_id",
+      "group": "managed_lookup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(movement_id)",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "managed_return",
+      "relation": "public.controlled_stock_source_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "return_event_id = exact requested source_id",
+      "group": "managed_lookup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(return_event_id)",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "managed_pickup",
+      "relation": "public.controlled_stock_source_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "pickup_id = exact requested source_id",
+      "group": "managed_lookup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(pickup_id)",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "managed_discrepancy",
+      "relation": "public.controlled_stock_source_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "discrepancy_event_id = exact requested source_id",
+      "group": "managed_lookup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(discrepancy_event_id)",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "managed_correction",
+      "relation": "public.controlled_stock_source_links",
+      "key": [
+        "id"
+      ],
+      "predicate": "correction_event_id = exact requested source_id",
+      "group": "managed_lookup",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(correction_event_id)",
+      "optional": true,
+      "stage": "A1",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    },
+    {
+      "id": "source_product_opening",
+      "relation": "public.controlled_stock_openings",
+      "key": [
+        "id"
+      ],
+      "predicate": "product_id = exact requested source product_id; if collecting target require id = E.opening_id",
+      "group": "opening_membership",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "UNIQUE(product_id)",
+      "optional": true,
+      "presence_rule": "required for every reviewed target dependency; absent allowed only standalone historical helper lookup",
+      "stage": "A1_and_A2",
+      "role": "inherited_purpose",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    }
+  ],
+  "reference_edges": [
+    {
+      "purpose": "reviewed_target",
+      "group": "parent",
+      "source": "E.id",
+      "depth": 0
+    },
+    {
+      "purpose": "reviewed_target",
+      "group": "physical",
+      "source": "E.id",
+      "depth": 0
+    },
+    {
+      "purpose": "original_dispense",
+      "group": "dispense",
+      "source": "D selected from target immutable source tuple",
+      "depth": 1
+    },
+    {
+      "purpose": "original_dispense",
+      "group": "movement",
+      "source": "every original allocation movement_id",
+      "depth": 2
+    },
+    {
+      "purpose": "original_pickup",
+      "group": "pickup",
+      "source": "annotation.document.pickup_amendment.original_pickup_id",
+      "depth": 1
+    },
+    {
+      "purpose": "original_intake",
+      "group": "return",
+      "source": "coalesce(selected ordinary return.intake_id,selected ordinary return.id)",
+      "depth": 2
+    },
+    {
+      "purpose": "correction_target",
+      "group": "return",
+      "source": "retraction.document.correction_target.event_id plus exact record_hash",
+      "depth": 1
+    },
+    {
+      "purpose": "correction_target",
+      "group": "parent",
+      "source": "managed event uniquely proven from correction target return source link",
+      "depth": 2
+    },
+    {
+      "purpose": "correction_target",
+      "group": "physical",
+      "source": "same exact correction target managed parent id",
+      "depth": 2
+    },
+    {
+      "purpose": "ordinary_source",
+      "group": "return",
+      "source": "discrepancy.document.source.event_id plus exact record_hash",
+      "depth": 1
+    },
+    {
+      "purpose": "ordinary_source",
+      "group": "parent",
+      "source": "managed event uniquely proven from ordinary return source link",
+      "depth": 2
+    },
+    {
+      "purpose": "ordinary_source",
+      "group": "physical",
+      "source": "same exact ordinary return managed parent id",
+      "depth": 2
+    },
+    {
+      "purpose": "case_report",
+      "group": "discrepancy",
+      "source": "target discrepancy.case_id; action report; same exact source/allocation set",
+      "depth": 1
+    },
+    {
+      "purpose": "resolution_correction",
+      "group": "return",
+      "source": "each target discrepancy.document.correction_ids id, matched resolution link",
+      "depth": 1
+    },
+    {
+      "purpose": "resolution_correction",
+      "group": "compensation",
+      "source": "only explicitly listed retract_restock",
+      "depth": 2
+    },
+    {
+      "purpose": "amendment_predecessor",
+      "group": "annotation",
+      "source": "target annotation.document.amends_event_id; same kind, earlier sequence",
+      "depth": 1
+    },
+    {
+      "purpose": "opening_basis",
+      "group": "opening",
+      "source": "exact retained target opening and original D",
+      "depth": 1
+    },
+    {
+      "purpose": "original_dispense",
+      "group": "parent",
+      "source": "managed event uniquely proven from all original allocation movement source links",
+      "depth": 2
+    },
+    {
+      "purpose": "original_dispense",
+      "group": "physical",
+      "source": "same exact original managed dispense parent id",
+      "depth": 2
+    },
+    {
+      "purpose": "original_pickup",
+      "group": "parent",
+      "source": "managed event uniquely proven from exact original pickup source link",
+      "depth": 2
+    },
+    {
+      "purpose": "original_pickup",
+      "group": "physical",
+      "source": "same exact managed pickup parent id",
+      "depth": 2
+    },
+    {
+      "purpose": "correction_target",
+      "group": "restock",
+      "source": "Exact ordinary restock identified by selected retraction.document.correction_target.event_id/hash",
+      "depth": 2,
+      "when": "Selected target or explicitly listed resolution correction has action retract_restock"
+    },
+    {
+      "purpose": "correction_target",
+      "group": "movement",
+      "source": "Each exact original stock-link.movement_id; source root is original ordinary restock writer/id",
+      "depth": 3,
+      "when": "Same exact correction target is ordinary restock"
+    },
+    {
+      "purpose": "reviewed_target",
+      "group": "movement",
+      "source": "Each selected target compensation_link.movement_id; source root is target retraction writer/id",
+      "depth": 1,
+      "when": "Reviewed target action retract_restock"
+    },
+    {
+      "purpose": "resolution_correction",
+      "group": "movement",
+      "source": "Each explicitly listed resolution correction compensation_link.movement_id; source root is that exact correction writer/id",
+      "depth": 2,
+      "when": "Reviewed target is resolve_corrected and explicit correction action retract_restock"
+    },
+    {
+      "purpose": "correction_target",
+      "group": "movement",
+      "source": "Each compensation_link.original_movement_id must equal exact original stock link for target_event_id/allocation_id/lot_id; source root is original ordinary restock writer/id",
+      "depth": 3,
+      "when": "Selected target or explicit resolution correction action retract_restock"
+    },
+    {
+      "purpose": "ordinary_source",
+      "group": "restock",
+      "source": "Exact discrepancy document.source return id/hash",
+      "depth": 2,
+      "when": "Reviewed discrepancy source action restock"
+    },
+    {
+      "purpose": "ordinary_source",
+      "group": "movement",
+      "source": "Every exact source restock stock-link.movement_id with source restock writer/id",
+      "depth": 3,
+      "when": "Reviewed discrepancy source action restock"
+    },
+    {
+      "purpose": "opening_basis",
+      "group": "opening_membership",
+      "source": "exact immutable product opening and historical original/source movements; A1 requiredness, not A2 site claim",
+      "depth": 1,
+      "when": "managed_source_event returns historical_null for an opened product"
+    }
+  ],
+  "kinds": [
+    {
+      "event_kind": "receive_inventory",
+      "writer": "receive_inventory",
+      "adapter_id": "movement_v1",
+      "module": "clinical",
+      "clock": "P",
+      "target_groups": [
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": null,
+      "document_version": null,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "adjust_inventory",
+      "writer": "adjust_inventory",
+      "adapter_id": "movement_v1",
+      "module": "clinical",
+      "clock": "P",
+      "target_groups": [
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": null,
+      "document_version": null,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_patient_treatment",
+      "writer": "record_patient_treatment",
+      "adapter_id": "treatment_v1",
+      "module": "clinical",
+      "clock": "T",
+      "target_groups": [
+        "treatment",
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": null,
+      "document_version": null,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_anesthesia_drug_administration",
+      "writer": "record_anesthesia_drug_administration",
+      "adapter_id": "anesthesia_v1",
+      "module": "clinical",
+      "clock": "T",
+      "target_groups": [
+        "anesthesia",
+        "treatment",
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": null,
+      "document_version": null,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense",
+      "writer": "record_native_dispense",
+      "adapter_id": "dispense_v1",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "dispense",
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": "original_dispense_id",
+      "action": null,
+      "document_version": null,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_pickup",
+      "writer": "record_native_pickup",
+      "adapter_id": "pickup_v1",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "pickup"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": "original_dispense_id",
+      "action": null,
+      "document_version": null,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return:intake",
+      "writer": "record_native_dispense_return",
+      "adapter_id": "return_v1",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "return"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": "intake",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return:dispose",
+      "writer": "record_native_dispense_return",
+      "adapter_id": "return_v1",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "return"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": "dispose",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return:restock",
+      "writer": "record_native_dispense_return",
+      "adapter_id": "return_v1",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "return",
+        "restock",
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": "restock",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return_v2:intake",
+      "writer": "record_native_dispense_return_v2",
+      "adapter_id": "return_v2",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "return"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": "intake",
+      "document_version": 2,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return_v2:dispose",
+      "writer": "record_native_dispense_return_v2",
+      "adapter_id": "return_v2",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "return"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": "dispose",
+      "document_version": 2,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return_v2:restock",
+      "writer": "record_native_dispense_return_v2",
+      "adapter_id": "return_v2",
+      "module": "native",
+      "clock": "P",
+      "target_groups": [
+        "return",
+        "restock",
+        "movement"
+      ],
+      "site_rule": "E",
+      "native_family_dispense_id": null,
+      "action": "restock",
+      "document_version": 2,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return_v2:retract_intake",
+      "writer": "record_native_dispense_return_v2",
+      "adapter_id": "retraction_v1",
+      "module": "native",
+      "clock": "C",
+      "target_groups": [
+        "return"
+      ],
+      "site_rule": "E_with_exact_target",
+      "native_family_dispense_id": null,
+      "action": "retract_intake",
+      "document_version": 2,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return_v2:retract_disposal",
+      "writer": "record_native_dispense_return_v2",
+      "adapter_id": "retraction_v1",
+      "module": "native",
+      "clock": "C",
+      "target_groups": [
+        "return"
+      ],
+      "site_rule": "E_with_exact_target",
+      "native_family_dispense_id": null,
+      "action": "retract_disposal",
+      "document_version": 2,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_dispense_return_v2:retract_restock",
+      "writer": "record_native_dispense_return_v2",
+      "adapter_id": "retraction_v1",
+      "module": "native",
+      "clock": "C",
+      "target_groups": [
+        "return",
+        "compensation",
+        "movement"
+      ],
+      "site_rule": "E_with_exact_target",
+      "native_family_dispense_id": null,
+      "action": "retract_restock",
+      "document_version": 2,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_return_discrepancy:report",
+      "writer": "record_native_return_discrepancy",
+      "adapter_id": "discrepancy_v1",
+      "module": "context",
+      "clock": "D",
+      "target_groups": [
+        "discrepancy"
+      ],
+      "site_rule": "R",
+      "native_family_dispense_id": null,
+      "action": "report",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_return_discrepancy:note",
+      "writer": "record_native_return_discrepancy",
+      "adapter_id": "discrepancy_v1",
+      "module": "context",
+      "clock": "D",
+      "target_groups": [
+        "discrepancy"
+      ],
+      "site_rule": "R",
+      "native_family_dispense_id": null,
+      "action": "note",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_return_discrepancy:resolve_corrected",
+      "writer": "record_native_return_discrepancy",
+      "adapter_id": "discrepancy_v1",
+      "module": "context",
+      "clock": "D",
+      "target_groups": [
+        "discrepancy",
+        "resolution"
+      ],
+      "site_rule": "R",
+      "native_family_dispense_id": null,
+      "action": "resolve_corrected",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "record_native_return_discrepancy:resolve_confirmed_original",
+      "writer": "record_native_return_discrepancy",
+      "adapter_id": "discrepancy_v1",
+      "module": "context",
+      "clock": "D",
+      "target_groups": [
+        "discrepancy"
+      ],
+      "site_rule": "R",
+      "native_family_dispense_id": null,
+      "action": "resolve_confirmed_original",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "append_native_dispense_correction:clinical_annotation",
+      "writer": "append_native_dispense_correction",
+      "adapter_id": "annotation_v1",
+      "module": "context",
+      "clock": "N",
+      "target_groups": [
+        "annotation"
+      ],
+      "site_rule": "A_or_O",
+      "native_family_dispense_id": null,
+      "action": "clinical_annotation",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "append_native_dispense_correction:operational_annotation",
+      "writer": "append_native_dispense_correction",
+      "adapter_id": "annotation_v1",
+      "module": "context",
+      "clock": "N",
+      "target_groups": [
+        "annotation"
+      ],
+      "site_rule": "A_or_O",
+      "native_family_dispense_id": null,
+      "action": "operational_annotation",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    },
+    {
+      "event_kind": "append_native_dispense_correction:pickup_amendment",
+      "writer": "append_native_dispense_correction",
+      "adapter_id": "annotation_v1",
+      "module": "context",
+      "clock": "N",
+      "target_groups": [
+        "annotation"
+      ],
+      "site_rule": "A_or_K",
+      "native_family_dispense_id": null,
+      "action": "pickup_amendment",
+      "document_version": 1,
+      "target_groups_purpose": "reviewed_target"
+    }
+  ],
+  "forbidden_packet_relations": [
+    "public.catalog_products",
+    "public.profiles",
+    "public.pets",
+    "public.billing_invoices",
+    "public.patient_anesthesia_records",
+    "public.native_fill_slots",
+    "public.controlled_stock_positions",
+    "public.controlled_stock_container_heads",
+    "public.controlled_stock_states"
+  ],
+  "source_evidence_sha256": {
+    "tests/controlled-drugs/engine/candidate/schema.sql": "5467263c4776ca2ff67454a7086229644e3a6d233fc0a96d2ce831e20dd6fefe",
+    "tests/controlled-drugs/engine/candidate/posting.sql": "4f3e9f6829ff148ad2ee355f6535af9627ae6b176e64ff6356028f6a0cd8172b",
+    "tests/controlled-drugs/engine/candidate/constraints.sql": "dffb244cf0f9cba015d74f09f48ee225f012c60be271abdb5801f8ca151e6e52",
+    "tests/controlled-drugs/engine/candidate/review.sql": "8d013b1aa949966d50ccca00ad34dbde1b7bb974dd84de97e550c889757eb2d3",
+    "tests/controlled-drugs/engine/candidate/opening.sql": "22f004a119e0bfe989e7612fbf9f337a1d26f67e95076eecd6a73cf9806d22b6",
+    "supabase/migrations/20260916072509_native_fulfillment.sql": "51fab4412ccffa2e11b3b48d579bd729cfd432c7f8510cbf8d5acf9d647ce9f8",
+    "supabase/migrations/20260916083056_native_dispense_corrections.sql": "9f69e07b24e7d01007420f5f444941422177e6bf2fa4ff548c20b210dd642c03",
+    "supabase/migrations/20260916090000_native_dispense_returns.sql": "fc89ac2801bbb39b21c7be5e6f7fffb06a381710a3ff7020c4b77e087373b99b",
+    "supabase/migrations/20260916094500_native_return_reconciliation.sql": "2e8040d9750d5b580dbc102562e6fd9c0d09dd4af30682606273d8848787553d",
+    "supabase/migrations/20260913260000_treatment_alert_review.sql": "3c3d9356795038795223953e290344135c3bf2d189d9163d4f80f3ab97ccf19b",
+    "supabase/migrations/20260928140000_anesthesia_drug_administrations.sql": "a51db3bf019d467eb166ed46b6d1a44738bc0be28b9f3f0ff2df409bf1e5c429",
+    "supabase/migrations/20261015020722_stock_writer_provenance.sql": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+    "supabase/migrations/20261015055007_native_custody_provenance.sql": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe"
+  },
+  "open_review_points": [
+    "Source draft only. Separate A2 descriptor/schema/builder/expected admission required; current A1 closure and catalog expectations remain unchanged.",
+    "Actual genuine188 prefix lifecycle, opening fixture, independent membership/effect oracle, failures, restore and cost remain unproved.",
+    "The A1 resolution_link_extras lookup lacks a resolution_id-leading index. Opening cells has separate opening_id/dispense_id FK-prefix indexes, no combined-order guarantee; LIMIT bounds output, not scan work. Parent index and deadlines unchanged."
+  ],
+  "source_scope": {
+    "selected_parent_event": "Only a uniquely proven managed event for the exact expanded source; never reuse reviewed E for a dependency. Historical source expansion has no selected_parent_event and does not select parent/physical groups.",
+    "selected_source_root": "Exact immutable source writer/root independent of managed status: scalar rootE; original dispense writerrecord_native_dispense/rootD; selected restock or compensation writerfromvalidateddocumentversion/rootselectedreturn.id.",
+    "movement_group": "Direct movement/lot rows come from the exact original allocation or stock/compensation link; provenance selectors use that source root. Root enumeration cross-checks complete membership, never discovers another source by latest row."
+  },
+  "group_expansion_rules": {
+    "target_groups": "Every kind target_groups enters at purpose reviewed_target and root E; parent and physical target groups always included.",
+    "restock": "Select complete stock links by exact ordinary restock id, then their exact original allocation, lot, positive movement/source; no latest movement.",
+    "compensation": "Select complete compensation links by exact retract_restock id; each must bind its exact correction target, allocation, lot, original positive movement and new negative movement. Select exact original stock-link row and both movements/source rows under their distinct writer/root scopes.",
+    "resolution": "Only target document.correction_ids; resolve each exact correction with role resolution_correction and its immediate correction_target/original_intake/original_dispense references. If retract_restock expand compensation plus correction_target restock as explicitly declared.",
+    "depth": "Declared depth values are maximum expected document depths from reviewed target for those edges; actual traversal carries depth and fails above4. Leaf stock links/movements/cells are evidence rows, not an invitation to recurse into another event. A nested correction target cannot reset depth to1.",
+    "opening": "Only clinical/operational annotation with unmanaged original D enters exact target opening+D prepared cells and their containers at opening_basis. Original allocation/movement rows remain original_dispense and opening-membership rows opening_basis. K pickup amendment does not enter O."
+  },
+  "historical_prefix": {
+    "opening_lookup": "public.controlled_stock_openings WHERE product_id = requested product_id; UNIQUE(product_id), exact id must equal target E.opening_id when collecting target dependencies",
+    "validator": "public.controlled_stock_validate_opening(exact immutable opening id); no current state/head site inference",
+    "dispense": "Every original allocation movement belongs to exact opening, none controlled; exactly one native_custody_boundary entry for D, document/operation hashes and original allocations match canonical retained constructor",
+    "return": "source.sequence <= boundary.return_head.version, exact document/hash validated against retained prefix; all restock/compensation movements belong to same opening",
+    "correction": "source.sequence <= boundary.correction_head.version; exact retained prefix/document/hash, no controlled link",
+    "discrepancy": "source.sequence <= boundary.discrepancy_head.version; exact retained prefix/document/hash, no controlled link",
+    "pickup": "exact source.id equals boundary.pickup.id and exact retained document/operation hashes; no controlled link",
+    "missing_membership": "23514 on an opened product; never unsupported fallback",
+    "no_opening": "Only standalone validated historical lookup may return null without membership; collect_event_sources target dependencies always have E.opening_id"
+  },
+  "selector_cardinality_semantics": {
+    "optional": "Applies only to an exact singleton lookup. Conditional presence_rule overrides it. Multirow cardinality uses min_rows/cardinality_rule; optional:false never means a multirow set must be nonempty.",
+    "missing_singleton": "Exact requested immutable row absent is23514 unless its explicit historical presence_rule permits absence; no optional dangling referenced row.",
+    "empty_assertion_evidence": "Annotation/discrepancy event_lines must be empty; retained transitions may be empty or contain exact zero-line history. Empty transitions cannot prove site.",
+    "physical_evidence": "Physical/retraction exact nonzero effects require nonempty exact event lines/transitions and complete source membership.",
+    "historical_empty_opening_cells": "No positive complete opening cells is unsupported A2 site proof, not permission to fabricate cells; malformed existing cells remain integrity failure."
+  },
+  "function_inventory": [
+    {
+      "name": "adapt_event",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-a2.sql",
+      "arguments": [
+        {
+          "name": "p_event_id",
+          "type": "uuid"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "collect_event_sources",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-a2.sql",
+      "arguments": [
+        {
+          "name": "p_event_id",
+          "type": "uuid"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "managed_source_event",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-a2.sql",
+      "arguments": [
+        {
+          "name": "p_request",
+          "type": "jsonb"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_add",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-a2.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_relation",
+          "type": "text"
+        },
+        {
+          "name": "p_key",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_row",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_role",
+          "type": "text"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_parent",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-a2.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_event_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_role",
+          "type": "text"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_event_site",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-a2.sql",
+      "arguments": [
+        {
+          "name": "p_event_id",
+          "type": "uuid"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_movement",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-clinical.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_movement_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_source_writer",
+          "type": "text"
+        },
+        {
+          "name": "p_source_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_actor_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_role",
+          "type": "text"
+        },
+        {
+          "name": "p_managed",
+          "type": "boolean"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_clinical",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-clinical.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_event_id",
+          "type": "uuid"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_dispense",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-native.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_dispense_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_product_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_role",
+          "type": "text"
+        },
+        {
+          "name": "p_depth",
+          "type": "integer"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_pickup",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-native.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_pickup_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_product_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_role",
+          "type": "text"
+        },
+        {
+          "name": "p_depth",
+          "type": "integer"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_return",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-native.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_return_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_product_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_role",
+          "type": "text"
+        },
+        {
+          "name": "p_depth",
+          "type": "integer"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_context",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-context.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_event_id",
+          "type": "uuid"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    },
+    {
+      "name": "adapter_opening_site",
+      "schema": "controlled_review_v3",
+      "file": "record-review-v3-adapters-opening.sql",
+      "arguments": [
+        {
+          "name": "p_state",
+          "type": "jsonb"
+        },
+        {
+          "name": "p_dispense_id",
+          "type": "uuid"
+        },
+        {
+          "name": "p_product_id",
+          "type": "uuid"
+        }
+      ],
+      "result": "jsonb",
+      "language": "plpgsql",
+      "security_definer": false,
+      "volatility": "volatile",
+      "strict": false,
+      "parallel": "unsafe",
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "owner": "postgres",
+      "application_execute": false
+    }
+  ],
+  "internal_accumulator": {
+    "keys": [
+      "rows",
+      "documents",
+      "allocations",
+      "target_event_id",
+      "product_id",
+      "opening_id"
+    ],
+    "rows": "object keyed by canonical JSON pair [qualified relation, typed primary-key object]; values {relation,key,row,row_hash,role}",
+    "documents": "unique exact native relation/key identities, bounded100",
+    "allocations": "unique original allocation UUIDs, bounded100",
+    "mutability": "Local function values only; never table, temp table, GUC or public API state",
+    "entry": "Only collect_event_sources constructs initial state; private module helpers accept bounded state under postgres-only privileges"
+  },
+  "opening_site_proof": {
+    "helper_identity": "Read E only at p_state.target_event_id; require E.product_id=p_product_id=p_state.product_id, E.opening_id=p_state.opening_id, writer append_native_dispense_correction and exact clinical_annotation/operational_annotation kind. Require original correction event E.id binds exact D, product, patient/authorization and sequence. Opening fetched only by E.opening_id, matching product and immutable policy stock_unit; no latest/product-head selector.",
+    "opening_integrity": "Call unchanged controlled_stock_validate_opening; exact unique boundary entry for D equals constructor using stored return/correction/discrepancy versions and pickup id. Require all original D allocations, positive quantities, document/operation identities and exact original opening debit membership; no controlled/opening overlap. Parent validates complete retained ancestry and later links; target correction sequence exceeds stored correction version and exact later-source lookup yields E.id.",
+    "quantity_rule": {
+      "integrity": "Every selected cell has exact original allocation/lot/D/opening, matching prepared container/product/unit, no created_event_id, nonnegative opening_quantity. Sum all selected positive quantities per allocation equals that allocation stored boundary prepared_quantity. Parent reciprocal validation remains unchanged; no extra/missing/substituted allocation accepted.",
+      "support": "All original allocations have full boundary prepared_quantity=dispensed_quantity>0, empty held; pickup JSON null, return/discrepancy version0, retained correction prefix only clinical/operational. Full prepared quantity at one positive site.",
+      "valid_shortfall": "A valid partial/held/handoff boundary reconciled exactly by cells is unsupported; it is not converted to integrity failure solely because prepared<original. Inconsistent sum versus stored boundary always raises23514."
+    },
+    "site_precedence": [
+      {
+        "condition": "Original retained managed/assertion containers have >1 site or null site",
+        "outcome": "23514 before adding O rows"
+      },
+      {
+        "condition": "Retained singleton R exists and any selected O container (positive or zero) has site != R",
+        "outcome": "23514 before any unsupported return"
+      },
+      {
+        "condition": "Positive O site set is nonempty and any selected zero-quantity container site is outside that positive set",
+        "outcome": "23514; zero cells cannot hide a second site"
+      },
+      {
+        "condition": "Parent/cell/boundary integrity valid but full-package conditions fail or no positive cells",
+        "outcome": "site null, opening_package_incomplete; zero-only cells never establish site"
+      },
+      {
+        "condition": "Full-package conditions true; >1 positive sites; no prior cross-set/zero-site conflict",
+        "outcome": "site null, opening_package_multisite"
+      },
+      {
+        "condition": "Full-package true and exactly1 positive site; all earlier checks pass",
+        "outcome": "site that UUID, reason null, caller basis opening_custody_site"
+      }
+    ],
+    "helper_result": {
+      "exact_keys": [
+        "state",
+        "site_id",
+        "reason"
+      ],
+      "state": "same bounded local accumulator with only declared opening cell/container rows added; no mutation of existing row values",
+      "site_id": "canonical UUID JSON string on supported O; JSON null on unsupported",
+      "reason": "JSON null on supported; opening_package_incomplete or opening_package_multisite on unsupported; integrity failures raise23514 instead"
+    },
+    "validation_dependencies": {
+      "unchanged_parent": "controlled_stock_validate_opening(exact E.opening_id), including full native prefixes/reciprocal cells and later links; no packet rows from that full audit",
+      "original_dispense": "unchanged managed_source_event and adapter_dispense(state,D,product,original_dispense,1) verify original full source set; repeating exact accumulator additions does not add a different role or row",
+      "retained_constructor": "controlled_stock_opening_selector for three retained head versions, controlled_stock_opening_native_entry for exact D and selectors, controlled_stock_opening_later_source for exact target correction",
+      "prefix_kind": "Read only native_dispense_correction_events for exact D and sequence<=retained correction version; EXISTS excluded kind identifies incomplete support, not packet membership. Parent already limits each history to1000; no current head substitution.",
+      "limits": "Boundary <=200 entries/1MiB before parent; original allocations LIMIT101; selected prepared cells LIMIT513; global unchanged adapter_add limits; parent historical limits unchanged. No scan-cost or timeout guarantee."
+    }
+  },
+  "lineage": {
+    "A1_retained": "Existing A1 common file/selector manifest/31-function246-input closure and independent expected/install remain separately admissible and unchanged.",
+    "A2_common_module": "record-review-v3-adapters-a2.sql",
+    "A2_selector_manifest": "record-review-v3-adapters-a2-selectors.json",
+    "A2_new_module": "record-review-v3-adapters-opening.sql",
+    "A2_builder_proposed": "record_review_v3_gate_b_a2.py",
+    "A2_descriptor_proposed": "record_review_v3_gate_b_a2_descriptor.py",
+    "copy_rule": "A2 common module copies all existing common function bodies byte-exact except collect_event_sources. Existing native/clinical/context modules remain unchanged and pinned shared dependencies. Function inventory for copied common helpers names the new A2 module; no A1 selector/source overwrite.",
+    "installation": "Separately source-derived expected metadata and sealed freshcanonical206-only A2 profile, with new A2 schema/snapshot discriminator. No in-place replacement of installed A1 namespace or expected metadata. Prospective names only; no builder/descriptor/schema candidate edits by this declaration.",
+    "A2_schema_module": "record-review-v3-schema-a2.sql",
+    "schema_copy_rule": "Copy A1 schema module into a new A2 filename, changing only snapshot() discriminator literal. Existing A1 schema/descriptor/builder remain untouched. Future separate A2 descriptor/build selection uses this new file and the explicit A2 kind/stage; no automatic rewriting of A1 validators."
+  },
+  "independent_expected_metadata_proposal": {
+    "source_only": true,
+    "new_functions": [
+      "controlled_review_v3.adapter_opening_site(jsonb,uuid,uuid)"
+    ],
+    "changed_functions": [
+      "controlled_review_v3.collect_event_sources(uuid)",
+      "controlled_review_v3.snapshot()"
+    ],
+    "unchanged_functions": "All other 29 existing A1 function bodies/signatures/attributes, including 14 protocol stubs and the three trigger guards plus required(), remain byte-exact. No calendar/config/signing/worker/public-facade or guard implementation.",
+    "new_module": "record-review-v3-adapters-opening.sql",
+    "descriptor_integration": "Future separately named record_review_v3_gate_b_a2.py and record_review_v3_gate_b_a2_descriptor.py select new A2 common module/selector manifest plus pinned shared A1 native/clinical/context modules and opening helper. Derive a distinct expected metadata artifact from reviewed declared source; preserve independent A1 closure/expected/install. Fresh canonical206 reference only; no builder edits or new expected artifact now.",
+    "historical_pins": "Preserve A1, GateA, canonical205/private206 and source expectation bytes; never derive expectation from live observation.",
+    "profile_discriminator": {
+      "old_kind": "controlled-review-v3-gate-b-private-adapters-a1-v1",
+      "new_kind": "controlled-review-v3-gate-b-private-adapters-a2-v1",
+      "old_stage": "private_adapters_a1",
+      "new_stage": "private_adapters_a2",
+      "snapshot_delta": "Only snapshot() JSON kind literal changes in the new A2 schema copy. Its catalog observation shape and parent checks remain unchanged. All other schema module function bodies, including existing A1-worded refusal messages, stay byte-exact.",
+      "expected_delta": "New source-derived expected top-level kind, snapshot source, collector source, and one new helper entry. Total32 functions; identical13 tables/15 foreign keys and parent205/private206 descriptors. Source manifests/module paths/profile bookkeeping differ without broadening catalog or privileges."
+    }
+  }
+}

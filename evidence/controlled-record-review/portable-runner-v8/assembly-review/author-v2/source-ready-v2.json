@@ -1,0 +1,58 @@
+{
+  "actual_rerun_pending": true,
+  "files": {
+    "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/assemble.py": {
+      "bytes": 14454,
+      "sha256": "eba97b3b401aa7d28f799324a18ce427185cb68c0f3a6845f7eb3e6eddd916de"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/actual-prepare-author-receipt-v2.json": {
+      "bytes": 2090,
+      "sha256": "9110b339878e3facd75e23a225c41309af90b1cff11e401e6207a031f6c0f130"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/actual-prepare.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/actual-prepare.stdout": {
+      "bytes": 3678,
+      "sha256": "6a50df3e2c2795a4cfe1ad090298704b62f2d3049c851d21aa5e3dd7510cad98"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/inside-bound-tools.stderr": {
+      "bytes": 850,
+      "sha256": "2aad495ea2587e4e54ea610e76ee82390eca5d3ade2641b276c9f9e65c688b26"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/inside-bound-tools.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/inside-package.stderr": {
+      "bytes": 856,
+      "sha256": "34cc52610a359785b4f136e191a8eac63b0f3dd3443252fe67f61421c1ba6385"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/inside-package.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/inside-source.stderr": {
+      "bytes": 854,
+      "sha256": "d8b40835d1d266a37874989bb1f79fca9d696d5a7dccb25dce379cd129f88899"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/inside-source.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk/source-controls-v2.json": {
+      "bytes": 358,
+      "sha256": "3643ec8bc77262523574437cf2faccef907f73264ec65aecbbc1bcc3e80efccf"
+    }
+  },
+  "kind": "v8-preparation-wrapper-source-ready-v2",
+  "one_fresh_preparation_completed": true,
+  "protected_roots": [
+    "entire package including source and bindings",
+    "existing bound tool root"
+  ],
+  "target_tool_setup_network_auth_database_executed": false,
+  "three_actual_refusal_controls_passed": true,
+  "v1_archive_retained_unchanged": true
+}

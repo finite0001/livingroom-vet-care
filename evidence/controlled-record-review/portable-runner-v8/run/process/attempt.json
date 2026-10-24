@@ -1,0 +1,21 @@
+{
+  "kind": "actual-full-portable-controller-attempt-v1",
+  "argv": [
+    "/private/tmp/lrvt-fdjazqmt/local-portable-tools/environment/bin/python3",
+    "-I",
+    "-B",
+    "/private/tmp/lrv-controller-profile-final-20261024-v8/entry.py",
+    "/private/tmp/lrvpub-9ysr1z4j/publication-822fafdb60d440aba970338fbdc7e300",
+    "/private/tmp/lrvpub-9ysr1z4j/publication-822fafdb60d440aba970338fbdc7e300/tests/controlled-drugs/portable-runner",
+    "/private/tmp/lrvt-fdjazqmt/local-portable-tools",
+    "/private/tmp/lrv-full-run-attempt-jfyo292w/output"
+  ],
+  "started": 1792811077.158761,
+  "profile_sha256": "bc7c134b9521697664bc5b18c7784b1d967d531289712672f3b2a1d49124ecb1",
+  "entry_sha256": "3b887090f1fefa8b6904df4d3915438175897be86e035bd72a5a665cf3e5f283",
+  "guarded_jobs": 67,
+  "regression_jobs": 22,
+  "expected_combined_ids": 1394,
+  "runtime_result_pending": true,
+  "prior_prefix_credit": false
+}

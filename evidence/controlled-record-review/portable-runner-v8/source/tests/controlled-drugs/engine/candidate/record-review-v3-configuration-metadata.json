@@ -1,0 +1,65 @@
+{
+  "arguments": [
+    {
+      "mode": "in",
+      "name": "p_request",
+      "type": "jsonb"
+    }
+  ],
+  "configuration": [
+    "search_path=pg_catalog, public, pg_temp",
+    "TimeZone=UTC"
+  ],
+  "cost": 100,
+  "execute_acl": [
+    {
+      "grantable": false,
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "privilege": "EXECUTE"
+    }
+  ],
+  "explicit_revocations": [
+    "PUBLIC",
+    "anon",
+    "authenticated",
+    "service_role"
+  ],
+  "function_body_source": "record-review-v3-configuration-input.sql",
+  "function_body_source_sha256": "1379cf1d81e90d6f4152e9339c3035945ed9856e24cfaecbcf23110f579d4ffa",
+  "future_integration": "Separate exact descriptor/source closure and independent reference required; no public stub/guard or schema/table replacement.",
+  "language": "plpgsql",
+  "leakproof": false,
+  "name": "validate_configuration",
+  "namespace": "controlled_review_v3",
+  "noncatalog_function_dependencies": [
+    "public.controlled_stock_keys(jsonb,text[])",
+    "public.controlled_stock_uuid(jsonb)",
+    "public.controlled_stock_text(jsonb,integer,boolean)"
+  ],
+  "observed_ast_function_names": [
+    "pg_catalog.array_append",
+    "pg_catalog.char_length",
+    "pg_catalog.isfinite",
+    "pg_catalog.jsonb_array_elements",
+    "pg_catalog.jsonb_array_length",
+    "pg_catalog.jsonb_typeof",
+    "pg_catalog.octet_length",
+    "pg_catalog.timezone",
+    "pg_catalog.to_char",
+    "pg_catalog.to_jsonb",
+    "public.controlled_stock_keys",
+    "public.controlled_stock_text",
+    "public.controlled_stock_uuid"
+  ],
+  "owner": "postgres",
+  "parallel": "unsafe",
+  "relations": [],
+  "result": "jsonb",
+  "rows": 0,
+  "security_definer": false,
+  "status": "proposed_source_declaration_only_not_installed",
+  "strict": false,
+  "support": null,
+  "volatility": "volatile"
+}

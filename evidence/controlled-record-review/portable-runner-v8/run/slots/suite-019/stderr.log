@@ -1,0 +1,11 @@
+test_count_only_or_ambiguous_serialization_guard_is_rejected (portable_worker_target.EzyvetDeliveryBaselineTests.test_count_only_or_ambiguous_serialization_guard_is_rejected) ... ok
+test_five_standalone_fixtures_capture_all_rows_before_any_fixture_work (portable_worker_target.EzyvetDeliveryBaselineTests.test_five_standalone_fixtures_capture_all_rows_before_any_fixture_work) ... ok
+test_late_capture_cannot_hide_fixture_side_effects (portable_worker_target.EzyvetDeliveryBaselineTests.test_late_capture_cannot_hide_fixture_side_effects) ... ok
+test_later_adapter_actions_cannot_escape_the_final_guard (portable_worker_target.EzyvetDeliveryBaselineTests.test_later_adapter_actions_cannot_escape_the_final_guard) ... ok
+test_missing_family_or_fixed_timezone_is_rejected (portable_worker_target.EzyvetDeliveryBaselineTests.test_missing_family_or_fixed_timezone_is_rejected) ... ok
+test_sql_assertion_count_is_unchanged_for_each_fixture (portable_worker_target.EzyvetDeliveryBaselineTests.test_sql_assertion_count_is_unchanged_for_each_fixture) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+OK

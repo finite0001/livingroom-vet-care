@@ -1,0 +1,59 @@
+{
+  "kind": "independent-record-boundary-addendum-freeze-v1",
+  "contract_sha256": "69e182574806c78a8bbc0fd4da1e4713bb0b83ceb2b9d86f2ce8bb12c6309e0f",
+  "original_manifest_sha256": "124145aed3ca5b82f35526b4486ba5d54b117e014879da897cc1d93b545fd7e1",
+  "original_files_hash_verified_unchanged": true,
+  "files": {
+    "README.md": {
+      "sha256": "baf767606eff5f64bdce38c1bc8f1d95b65153e5213f60004ba9afe02572a375",
+      "bytes": 6364
+    },
+    "build_boundaries.py": {
+      "sha256": "7d0750b2d526373461f81720d088c9462ab7e3cf7b9a353244932549da8f1845",
+      "bytes": 10776
+    },
+    "cases.json": {
+      "sha256": "a665d80a4d7024f3e36f2cbf98d968cdbfaa1fb8a01dc56f0edc8cac626463a4",
+      "bytes": 1460398
+    },
+    "check_boundaries.py": {
+      "sha256": "bb3a2201b40621cdff917dd201308d485c2eb6fedc20d708240788a21634433a",
+      "bytes": 7261
+    },
+    "families.json": {
+      "sha256": "acc32c3ece9a183414ef4cabe5d4d39b6830439563efc425de1a1271cadb53c6",
+      "bytes": 1199897
+    },
+    "inventory.json": {
+      "sha256": "104642ab7ae70619cd7bc2110dc32158f176b248a4cce8b0d098b4d66a41d7cd",
+      "bytes": 488
+    },
+    "offline-build-check.log": {
+      "sha256": "87b53f7c0dc7063de606e611546bef63f0235a043ab5666bcf002372b058d26b",
+      "bytes": 466
+    },
+    "offline-consistency-check.log": {
+      "sha256": "4f07c878c950290375ecde2670dceac5a7f4272a8cad6d7fba3e745e57f2fde2",
+      "bytes": 263
+    }
+  },
+  "positive_families": 17,
+  "cases": 85,
+  "success_cases": 68,
+  "refusal_cases": 17,
+  "cases_by_function": {
+    "validate_stored_configuration": 28,
+    "validate_configuration_record": 20,
+    "configuration_record": 17,
+    "validate_configuration_pair": 20
+  },
+  "case_ids_sha256": "6cd1cd3dd12219c3c9083252a659ca9d31dbee792030677db856a8e46d7c0487",
+  "offline_checks": {
+    "build_boundaries": "exit0",
+    "check_boundaries": "exit0"
+  },
+  "database_runs": 0,
+  "postgres_renderer_confirmed": false,
+  "status": "source_ready_for_independent_review_before_helpers",
+  "remaining_scope": "Original exhaustive integration/byte-guard/runtime gaps remain; closes representative legal text/roster/lower-time/microsecond/fractional-offset gaps only."
+}

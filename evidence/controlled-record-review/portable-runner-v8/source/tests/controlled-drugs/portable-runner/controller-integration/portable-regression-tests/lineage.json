@@ -1,0 +1,36 @@
+{
+  "test_guard.py": {
+    "changes": [
+      [
+        "HERE = Path(__file__).resolve().parent",
+        "HERE = Path(__file__).resolve().parents[2] / 'guard'"
+      ],
+      [
+        "tempfile.mkdtemp(prefix='guard-unit-', dir=HERE)",
+        "tempfile.mkdtemp(prefix='guard-unit-', dir=Path(os.environ['CONTROLLED_REGRESSION_EVIDENCE']))"
+      ]
+    ],
+    "original": "guard/test_guard.py",
+    "original_sha256": "74e62f766b233024cdcd1fe5cd834a74445f89aa8222dcf357c1f561f4df5d64",
+    "prospective_sha256": "f92b39c85b4ec30d109b2749999e68a07d2b180712e4f48382c0c2139f7e0e38",
+    "test_method_ASTs_unchanged": true,
+    "test_methods": 38
+  },
+  "test_historical638_assertion.py": {
+    "changes": [
+      [
+        "HERE = Path(__file__).resolve().parent",
+        "HERE = Path(__file__).resolve().parents[2]"
+      ],
+      [
+        "cls.evidence = HERE / ('historical-worker-test-'",
+        "cls.evidence = Path(os.environ['CONTROLLED_REGRESSION_EVIDENCE']) / ('historical-worker-test-'"
+      ]
+    ],
+    "original": "test_historical638_assertion.py",
+    "original_sha256": "5991ed26159df351fa3932c9797bf9598f9702008838d451a304d8c9ecf671c3",
+    "prospective_sha256": "9b2b03221dd13db7ca0557a5028443d11cdf12b19f1660b7cadd36967e83aa18",
+    "test_method_ASTs_unchanged": true,
+    "test_methods": 5
+  }
+}

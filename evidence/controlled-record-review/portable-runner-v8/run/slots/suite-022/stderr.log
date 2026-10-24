@@ -1,0 +1,11 @@
+test_container_ownership_failure_refuses_any_database_query (portable_worker_target.NativeHistoryRestoreTests.test_container_ownership_failure_refuses_any_database_query) ... ok
+test_exact_marker_drops_only_selected_owned_database_and_checks_absence (portable_worker_target.NativeHistoryRestoreTests.test_exact_marker_drops_only_selected_owned_database_and_checks_absence) ... ok
+test_invalid_local_marker_cannot_authorize_cleanup (portable_worker_target.NativeHistoryRestoreTests.test_invalid_local_marker_cannot_authorize_cleanup) ... ok
+test_surviving_database_is_cleanup_failure (portable_worker_target.NativeHistoryRestoreTests.test_surviving_database_is_cleanup_failure) ... ok
+test_unsafe_or_unknown_target_refuses_cleanup_before_sql (portable_worker_target.NativeHistoryRestoreTests.test_unsafe_or_unknown_target_refuses_cleanup_before_sql) ... ok
+test_wrong_comment_marker_refuses_cleanup (portable_worker_target.NativeHistoryRestoreTests.test_wrong_comment_marker_refuses_cleanup) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK

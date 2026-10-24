@@ -1,0 +1,2 @@
+MANDATORY_PARSE [590, 81]
+{"source_only": true, "seed_phases": 6, "positive_phases": 17, "expected": "997955a567db36449969e22859744ce0b28a0d8e37d0bdccecfb8b38ee441aa7", "acceptance": false}

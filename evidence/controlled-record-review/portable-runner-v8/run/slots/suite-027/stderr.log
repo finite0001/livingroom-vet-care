@@ -1,0 +1,13 @@
+test_busy_jobs_drain_and_normal_or_exception_exit_restores_original (portable_worker_target.AttachmentSchedulerTests.test_busy_jobs_drain_and_normal_or_exception_exit_restores_original) ... ok
+test_configured_provider_or_pending_http_fails_before_pause (portable_worker_target.AttachmentSchedulerTests.test_configured_provider_or_pending_http_fails_before_pause) ... ok
+test_existing_off_state_preserved_without_settings_write (portable_worker_target.AttachmentSchedulerTests.test_existing_off_state_preserved_without_settings_write) ... ok
+test_missing_config_remote_endpoint_and_wrong_ownership_never_write (portable_worker_target.AttachmentSchedulerTests.test_missing_config_remote_endpoint_and_wrong_ownership_never_write) ... ok
+test_original_explicit_override_and_default_provenance_both_restored (portable_worker_target.AttachmentSchedulerTests.test_original_explicit_override_and_default_provenance_both_restored) ... ok
+test_replaced_container_or_config_never_receives_restore_write (portable_worker_target.AttachmentSchedulerTests.test_replaced_container_or_config_never_receives_restore_write) ... ok
+test_schedule_mutation_is_refused_but_settings_restored (portable_worker_target.AttachmentSchedulerTests.test_schedule_mutation_is_refused_but_settings_restored) ... ok
+test_timeout_and_failed_pause_attempt_restore_enabled_state (portable_worker_target.AttachmentSchedulerTests.test_timeout_and_failed_pause_attempt_restore_enabled_state) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.021s
+
+OK

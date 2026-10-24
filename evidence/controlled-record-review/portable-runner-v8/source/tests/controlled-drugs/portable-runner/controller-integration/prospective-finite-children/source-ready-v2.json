@@ -1,0 +1,34 @@
+{
+  "actual_stage_or_full_acceptance": false,
+  "author_controls": {
+    "children": 0,
+    "database": 0,
+    "network": 0,
+    "outside_formal_inventory": true,
+    "passed": 7,
+    "skipped": 0
+  },
+  "diagnostic_failure_root": "/private/tmp/lrv-whole-regression-diagnostic-iksi4pwa",
+  "files": {
+    "README.md": {
+      "bytes": 2531,
+      "sha256": "9dff808a215eecd9b809dc798d24e788ec480098549c336bc0b3bc8c7ec48d0f"
+    },
+    "finite_children_v2.py": {
+      "bytes": 18219,
+      "sha256": "5903008c2325fdf3aea1a05cad45f942a7dbca5f81709a79eb1f4f9bf8d43bef"
+    },
+    "test_policy_author_controls.py": {
+      "bytes": 8184,
+      "sha256": "ee9c1c338f8e487f6fc9f91d335aeb53240777339979279093fa30ee56ceee7b"
+    }
+  },
+  "formal_regression_ids_unchanged": 467,
+  "formal_regression_jobs_unchanged": 22,
+  "kind": "prospective-finite-policy-source-ready-v2",
+  "old_policy": {
+    "bytes": 17883,
+    "path": "tmp/secondary-review-20261021/portable-runner-draft/regression-stage-integration/finite_children.py",
+    "sha256": "c6fea32f3d2439d1738fd191e4a48b5dec24575b6eaea05d0129d3525684c89f"
+  }
+}

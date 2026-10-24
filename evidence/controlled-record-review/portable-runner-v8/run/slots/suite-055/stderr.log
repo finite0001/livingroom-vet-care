@@ -1,0 +1,27 @@
+test_bad_source_refuses_before_creating_tree (portable_worker_target.HistoricalTreeTests.test_bad_source_refuses_before_creating_tree) ... ok
+test_bounded_read_refuses_oversize_without_reading_whole_file (portable_worker_target.HistoricalTreeTests.test_bounded_read_refuses_oversize_without_reading_whole_file) ... ok
+test_copy_write_failure_retains_partial_tree (portable_worker_target.HistoricalTreeTests.test_copy_write_failure_retains_partial_tree) ... ok
+test_current_workflow_is_never_historical_fallback (portable_worker_target.HistoricalTreeTests.test_current_workflow_is_never_historical_fallback) ... ok
+test_duplicate_manifest_keys_and_changed_pin_refuse (portable_worker_target.HistoricalTreeTests.test_duplicate_manifest_keys_and_changed_pin_refuse) ... ok
+test_exact_copy_and_distinct_source_inode (portable_worker_target.HistoricalTreeTests.test_exact_copy_and_distinct_source_inode) ... ok
+test_expected_root_identity_rejects_replacement (portable_worker_target.HistoricalTreeTests.test_expected_root_identity_rejects_replacement) ... ok
+test_expired_or_boolean_deadline_prevents_copy (portable_worker_target.HistoricalTreeTests.test_expired_or_boolean_deadline_prevents_copy) ... ok
+test_extra_empty_directory_is_not_part_of_exact_tree (portable_worker_target.HistoricalTreeTests.test_extra_empty_directory_is_not_part_of_exact_tree) ... ok
+test_fixed_manifest_counts_and_no_process_or_network (portable_worker_target.HistoricalTreeTests.test_fixed_manifest_counts_and_no_process_or_network) ... ok
+test_formal_sizes_and_bounds (portable_worker_target.HistoricalTreeTests.test_formal_sizes_and_bounds) ... ok
+test_historical_expected_metadata_unchanged_by_workflow_locator (portable_worker_target.HistoricalTreeTests.test_historical_expected_metadata_unchanged_by_workflow_locator) ... ok
+test_missing_or_changed_workflow_override_refuses (portable_worker_target.HistoricalTreeTests.test_missing_or_changed_workflow_override_refuses) ... ok
+test_no_missing_extra_changed_or_symlink_members (portable_worker_target.HistoricalTreeTests.test_no_missing_extra_changed_or_symlink_members) ... ok
+test_nonregular_fifo_refuses_without_waiting_for_writer (portable_worker_target.HistoricalTreeTests.test_nonregular_fifo_refuses_without_waiting_for_writer) ... ok
+test_parent_swap_cannot_write_through_new_symlink (portable_worker_target.HistoricalTreeTests.test_parent_swap_cannot_write_through_new_symlink) ... ok
+test_path_normalization_and_duplicate_destinations (portable_worker_target.HistoricalTreeTests.test_path_normalization_and_duplicate_destinations) ... ok
+test_real_stored638_and_a2_669_trees_and_unchanged_gates (portable_worker_target.HistoricalTreeTests.test_real_stored638_and_a2_669_trees_and_unchanged_gates) ... ok
+test_source_change_between_preflight_and_copy_is_retained_failure (portable_worker_target.HistoricalTreeTests.test_source_change_between_preflight_and_copy_is_retained_failure) ... ok
+test_source_leaf_and_parent_symlinks_refuse (portable_worker_target.HistoricalTreeTests.test_source_leaf_and_parent_symlinks_refuse) ... ok
+test_symlink_ancestor_of_declared_root_refuses (portable_worker_target.HistoricalTreeTests.test_symlink_ancestor_of_declared_root_refuses) ... ok
+test_unknown_profile_cannot_copy (portable_worker_target.HistoricalTreeTests.test_unknown_profile_cannot_copy) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 2.663s
+
+OK

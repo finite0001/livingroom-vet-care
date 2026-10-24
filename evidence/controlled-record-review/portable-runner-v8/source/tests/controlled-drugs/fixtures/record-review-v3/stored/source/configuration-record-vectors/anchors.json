@@ -1,0 +1,44 @@
+[
+  {
+    "id": "key_length_then_utf8",
+    "input_wire_json": "{\"aa\":1,\"b\":2,\"é\":3,\"a\":4}",
+    "expected_jsonb_text": "{\"a\": 4, \"b\": 2, \"aa\": 1, \"é\": 3}",
+    "expected_utf8_hex": "7b2261223a20342c202262223a20322c20226161223a20312c2022c3a9223a20337d",
+    "expected_sha256": "ece15134b9db1a13acdc01ab4402964b4dfe8fb6df54e15552e16c511f433d99"
+  },
+  {
+    "id": "unicode_direct",
+    "input_wire_json": "{\"name\":\"Zoë 火 🐾\"}",
+    "expected_jsonb_text": "{\"name\": \"Zoë 火 🐾\"}",
+    "expected_utf8_hex": "7b226e616d65223a20225a6fc3ab20e781ab20f09f90be227d",
+    "expected_sha256": "3b73cedf8718437caeabf6d5fbb7244fb66df786d58cc9fe83b892fbca0e89f9"
+  },
+  {
+    "id": "escaping",
+    "input_wire_json": "{\"s\":\"quote\\\" backslash\\\\ slash/ line\\n tab\\t back\\b form\\f return\\r control\\u0001\"}",
+    "expected_jsonb_text": "{\"s\": \"quote\\\" backslash\\\\ slash/ line\\n tab\\t back\\b form\\f return\\r control\\u0001\"}",
+    "expected_utf8_hex": "7b2273223a202271756f74655c22206261636b736c6173685c5c20736c6173682f206c696e655c6e207461625c74206261636b5c6220666f726d5c662072657475726e5c7220636f6e74726f6c5c7530303031227d",
+    "expected_sha256": "5c2fd58fddb58a3924a76ef1e5ee5986a6a6fb53c333c341eba91445add8c2a4"
+  },
+  {
+    "id": "numeric_scale",
+    "input_wire_json": "[1,1.0,3.0,1e2,1e-2,-0.0]",
+    "expected_jsonb_text": "[1, 1.0, 3.0, 100, 0.01, 0.0]",
+    "expected_utf8_hex": "5b312c20312e302c20332e302c203130302c20302e30312c20302e305d",
+    "expected_sha256": "7a691293dd27de30be1f881e4d210d679522f88e33cbd61d0c5c81afb776842a"
+  },
+  {
+    "id": "array_order_null_boolean",
+    "input_wire_json": "[null,true,false,{\"zz\":0,\"b\":1},[]]",
+    "expected_jsonb_text": "[null, true, false, {\"b\": 1, \"zz\": 0}, []]",
+    "expected_utf8_hex": "5b6e756c6c2c20747275652c2066616c73652c207b2262223a20312c20227a7a223a20307d2c205b5d5d",
+    "expected_sha256": "21c7316392155b42642e48d2683f9b54c698a41422982dbcedf3ee366c9e8f16"
+  },
+  {
+    "id": "empty_objects",
+    "input_wire_json": "{\"b\":{},\"a\":[]}",
+    "expected_jsonb_text": "{\"a\": [], \"b\": {}}",
+    "expected_utf8_hex": "7b2261223a205b5d2c202262223a207b7d7d",
+    "expected_sha256": "65d2392a013a899ee9fc514c3aff6dd6e2af1c8ae7a132f92fbe027860e59180"
+  }
+]

@@ -1,0 +1,16 @@
+test_cleanup_or_deadline_failure_cannot_be_pass (portable_worker_target.RuntimeTests.test_cleanup_or_deadline_failure_cannot_be_pass) ... ok
+test_complete_source_and_saved_keyset_drift_refused (portable_worker_target.RuntimeTests.test_complete_source_and_saved_keyset_drift_refused) ... ok
+test_diagnostic_requires_full_before_after_preservation (portable_worker_target.RuntimeTests.test_diagnostic_requires_full_before_after_preservation) ... ok
+test_only_integrated_fixture_and_integer_budgets_are_admitted (portable_worker_target.RuntimeTests.test_only_integrated_fixture_and_integer_budgets_are_admitted) ... ok
+test_output_markers_and_final_summary_full_keysets (portable_worker_target.RuntimeTests.test_output_markers_and_final_summary_full_keysets) ... ok
+test_private_location_cannot_launch_before_resource_import (portable_worker_target.RuntimeTests.test_private_location_cannot_launch_before_resource_import) ... ok
+test_real_session_admission_counter_preserves_receipt_location (portable_worker_target.RuntimeTests.test_real_session_admission_counter_preserves_receipt_location) ... ok
+test_separate_engine_preserves_safety_core_with_only_declared_diff (portable_worker_target.RuntimeTests.test_separate_engine_preserves_safety_core_with_only_declared_diff) ... ok
+test_source_symlink_refused (portable_worker_target.RuntimeTests.test_source_symlink_refused) ... ok
+test_stage_contract_and_556_authoritative_outcomes (portable_worker_target.RuntimeTests.test_stage_contract_and_556_authoritative_outcomes) ... ok
+test_summary_exact_keys_types_and_no_decoder_23514_credit (portable_worker_target.RuntimeTests.test_summary_exact_keys_types_and_no_decoder_23514_credit) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.452s
+
+OK

@@ -1,0 +1,10 @@
+test_changed_source_refused_before_import (portable_regression_target_reg_historical_profile.HistoricalAssertionTests.test_changed_source_refused_before_import) ... ok
+test_complete_independent638_and267_profile_pass (portable_regression_target_reg_historical_profile.HistoricalAssertionTests.test_complete_independent638_and267_profile_pass) ... ok
+test_extra_eligible_source_is_not_projected_away (portable_regression_target_reg_historical_profile.HistoricalAssertionTests.test_extra_eligible_source_is_not_projected_away) ... ok
+test_symlink_root_refuses (portable_regression_target_reg_historical_profile.HistoricalAssertionTests.test_symlink_root_refuses) ... ok
+test_unknown_cli_argument_refuses (portable_regression_target_reg_historical_profile.HistoricalAssertionTests.test_unknown_cli_argument_refuses) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 3.217s
+
+OK

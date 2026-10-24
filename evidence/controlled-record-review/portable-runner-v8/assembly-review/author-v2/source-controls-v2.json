@@ -1,0 +1,13 @@
+{
+  "all_three_physical_guards_before_first_mkdir": true,
+  "formal_runner_acceptance": false,
+  "kind": "v8-preparation-wrapper-source-controls-v2",
+  "new_receipt_uses_explicit_outer_root": true,
+  "original600_cutoff_preserved": true,
+  "unchanged_helper_asts": [
+    "read",
+    "write_receipt",
+    "existing_tool_placements",
+    "load_verified"
+  ]
+}

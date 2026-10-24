@@ -1,0 +1,11 @@
+test_count_or_id_only_and_delimiter_framing_are_rejected (portable_worker_target.EzyvetOriginalBaselineTests.test_count_or_id_only_and_delimiter_framing_are_rejected) ... ok
+test_empty_global_assertions_cannot_replace_exact_baselines (portable_worker_target.EzyvetOriginalBaselineTests.test_empty_global_assertions_cannot_replace_exact_baselines) ... ok
+test_late_baseline_cannot_hide_capture_side_effects (portable_worker_target.EzyvetOriginalBaselineTests.test_late_baseline_cannot_hide_capture_side_effects) ... ok
+test_missing_family_or_timezone_is_rejected (portable_worker_target.EzyvetOriginalBaselineTests.test_missing_family_or_timezone_is_rejected) ... ok
+test_restricted_or_early_final_comparison_is_rejected (portable_worker_target.EzyvetOriginalBaselineTests.test_restricted_or_early_final_comparison_is_rejected) ... ok
+test_two_complete_baselines_precede_extracted_fixture_work (portable_worker_target.EzyvetOriginalBaselineTests.test_two_complete_baselines_precede_extracted_fixture_work) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK

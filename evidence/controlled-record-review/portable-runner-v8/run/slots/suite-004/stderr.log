@@ -1,0 +1,16 @@
+test_arbitrary_binding_count_path_name_version_or_array_rejected (portable_worker_target.CanonicalPost205Tests.test_arbitrary_binding_count_path_name_version_or_array_rejected) ... ok
+test_capture_refuses_prior_drift_existing_engine_and_missing_schema (portable_worker_target.CanonicalPost205Tests.test_capture_refuses_prior_drift_existing_engine_and_missing_schema) ... ok
+test_exact_205_record_rejects_wrong_name_version_or_statement (portable_worker_target.CanonicalPost205Tests.test_exact_205_record_rejects_wrong_name_version_or_statement) ... ok
+test_exact_install_proof_and_sanitized_output_without_install_sql (portable_worker_target.CanonicalPost205Tests.test_exact_install_proof_and_sanitized_output_without_install_sql) ... ok
+test_installed_boolean_gate_is_strict (portable_worker_target.CanonicalPost205Tests.test_installed_boolean_gate_is_strict) ... ok
+test_none_or_postinstall_baseline_is_not_accepted (portable_worker_target.CanonicalPost205Tests.test_none_or_postinstall_baseline_is_not_accepted) ... ok
+test_original_204_ledger_rows_cannot_be_normalized_or_replaced (portable_worker_target.CanonicalPost205Tests.test_original_204_ledger_rows_cannot_be_normalized_or_replaced) ... ok
+test_original_source_writers_and_ledger_catalog_are_preserved (portable_worker_target.CanonicalPost205Tests.test_original_source_writers_and_ledger_catalog_are_preserved) ... ok
+test_public_proof_validator_rejects_missing_flags_and_coercion (portable_worker_target.CanonicalPost205Tests.test_public_proof_validator_rejects_missing_flags_and_coercion) ... ok
+test_real_pre204_capture_ordinary_and_historical (portable_worker_target.CanonicalPost205Tests.test_real_pre204_capture_ordinary_and_historical) ... ok
+test_unexpected_tables_or_leftover_fixture_are_rejected (portable_worker_target.CanonicalPost205Tests.test_unexpected_tables_or_leftover_fixture_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.289s
+
+OK

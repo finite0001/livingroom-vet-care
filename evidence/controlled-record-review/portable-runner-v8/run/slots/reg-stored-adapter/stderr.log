@@ -1,0 +1,13 @@
+test_all25_adapter_methods_offline_callback_receipt_only (portable_regression_target_reg_stored_adapter.AdapterTests.test_all25_adapter_methods_offline_callback_receipt_only) ... ok
+test_callback_exact_key_type_value_boundaries (portable_regression_target_reg_stored_adapter.AdapterTests.test_callback_exact_key_type_value_boundaries) ... ok
+test_callback_primary_failure_and_forged_receipt_not_swallowed (portable_regression_target_reg_stored_adapter.AdapterTests.test_callback_primary_failure_and_forged_receipt_not_swallowed) ... ok
+test_exact25_names_four_replacements21_function_identities_and_helper (portable_regression_target_reg_stored_adapter.AdapterTests.test_exact25_names_four_replacements21_function_identities_and_helper) ... ok
+test_missing_authority_is_exact_first_path_in_new_copy (portable_regression_target_reg_stored_adapter.AdapterTests.test_missing_authority_is_exact_first_path_in_new_copy) ... ok
+test_missing_source_root_refuses_before_any_import (portable_regression_target_reg_stored_adapter.AdapterTests.test_missing_source_root_refuses_before_any_import) ... ok
+test_original_globals_and_sourcebytes_unchanged_by_factory (portable_regression_target_reg_stored_adapter.AdapterTests.test_original_globals_and_sourcebytes_unchanged_by_factory) ... ok
+test_pinned_source_reader_refuses_changed_bytes_symlink_and_fifo (portable_regression_target_reg_stored_adapter.AdapterTests.test_pinned_source_reader_refuses_changed_bytes_symlink_and_fifo) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 7.431s
+
+OK

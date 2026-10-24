@@ -1,0 +1,1311 @@
+{
+  "aggregate_source_bytes": 90346306,
+  "corpus_files": {
+    "configuration-record-boundary-vectors": [
+      "README.md",
+      "build_boundaries.py",
+      "cases.json",
+      "check_boundaries.py",
+      "families.json",
+      "inventory.json"
+    ],
+    "configuration-record-vectors": [
+      "README.md",
+      "anchors.json",
+      "build_corpus.py",
+      "build_supplement.py",
+      "cases.json",
+      "check_corpus.py",
+      "families.json",
+      "inventory.json",
+      "supplement-cases.json"
+    ]
+  },
+  "excluded_legacy_authorities": [
+    {
+      "bytes": 466,
+      "reason": "private_offline_evidence_not_executable_source",
+      "sha256": "87b53f7c0dc7063de606e611546bef63f0235a043ab5666bcf002372b058d26b",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-boundary-vectors/offline-build-check.log"
+    },
+    {
+      "bytes": 263,
+      "reason": "private_offline_evidence_not_executable_source",
+      "sha256": "4f07c878c950290375ecde2670dceac5a7f4272a8cad6d7fba3e745e57f2fde2",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-boundary-vectors/offline-consistency-check.log"
+    },
+    {
+      "bytes": 8514,
+      "reason": "private_runtime_design_authority_replaced_by_explicit_portable_contract",
+      "sha256": "ce219e439addb0fea380eba4426cffeaa64f76bfa56f2fc9bc043560653feca1",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-runtime-plan.md"
+    },
+    {
+      "bytes": 781,
+      "reason": "private_offline_evidence_not_executable_source",
+      "sha256": "8cbf37c82afdff4b0dc090dc630a810b730927571eae1639459f9864dec07f0f",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-vectors/offline-build-check.log"
+    },
+    {
+      "bytes": 373,
+      "reason": "private_offline_evidence_not_executable_source",
+      "sha256": "360ed2ff01b981f0d714f8deb706e1e83db88d88ec0f2b86bfe4cfaf65d963d6",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-vectors/offline-consistency-check.log"
+    },
+    {
+      "bytes": 80,
+      "reason": "private_offline_evidence_not_executable_source",
+      "sha256": "b9dbb185adadd24ebe7769136dba7389f6cdc5b272b9b773bfe325f542cc4463",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-vectors/offline-supplement-check.log"
+    },
+    {
+      "bytes": 38715,
+      "reason": "private_review_receipt_lineage_digest_only",
+      "sha256": "a94da4ad1b989f61f17537a0815e86bb15299e031274e071c9e6527cfab2499b",
+      "source_path": "tmp/secondary-review-20261021/configuration-record-fixture-draft/source-ready-manifest.json"
+    }
+  ],
+  "expected_outcome_count": 1727,
+  "fixed_source_files": {
+    "tests/controlled-drugs/engine/candidate/canonical_post206.py": {
+      "bytes": 9981,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "27d6bedd8d66674a1274b26ddf5b01d2f2f230afe0448af96a5d3c888b025b61"
+    },
+    "tests/controlled-drugs/engine/candidate/canonical_prefix.py": {
+      "bytes": 6160,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "a9d9f9611a67319ed5b161ad977fa75923e241c4b2568d810e1bfde432586178"
+    },
+    "tests/controlled-drugs/engine/candidate/canonical_review_prefix.py": {
+      "bytes": 2498,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "5d9fece209ea925b283e4881b2b49b3a03044c624b137eefe98ed3f7c669afc3"
+    },
+    "tests/controlled-drugs/engine/candidate/cli_atomicity.py": {
+      "bytes": 21048,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "0099b4280564447340ba6640e6872b2b03592f53cc7957f2547dcdba0480d896"
+    },
+    "tests/controlled-drugs/engine/candidate/cli_migration_body.py": {
+      "bytes": 9157,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "c8cd378b0b9b3b755a891dc44d3951bb6db8cb920071f342f4f55222345696ef"
+    },
+    "tests/controlled-drugs/engine/candidate/derive_column_acl_pin.py": {
+      "bytes": 7291,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "71f9b565924db6d99ba00f740292eb906b1df01c9629ddd2c5b71355a8969403"
+    },
+    "tests/controlled-drugs/engine/candidate/local_install.py": {
+      "bytes": 5478,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "4fd338314493d6e3ed6da2b8fec4f96a7f69d386df796530331e09be8e847083"
+    },
+    "tests/controlled-drugs/engine/candidate/record-review-v3-schema.sql": {
+      "bytes": 11112,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "137680d4692bc96966d4fb1b8e2d9beee30d7f971ce079d127622a2bef37e5b4"
+    },
+    "tests/controlled-drugs/engine/candidate/record_review_v3_gate_a_descriptor.py": {
+      "bytes": 20930,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "a09d0edefe78ef7f5d6420a9128559ab217ed8dcbf5f3d8777132985d774d417"
+    },
+    "tests/controlled-drugs/engine/candidate/record_review_v3_gate_a_snapshot.py": {
+      "bytes": 6894,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "dfcc104f5274f0a633c4fd3bc862d8723b95590cbda5595f26e8107776de337e"
+    },
+    "tests/controlled-drugs/engine/candidate/release_assembly.py": {
+      "bytes": 12816,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "4109bdd789efe7536ea1323527f21638aba45e453a3ae5baf499ef8cdfeaf971"
+    },
+    "tests/controlled-drugs/engine/candidate/release_rehearsal.py": {
+      "bytes": 20816,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "325aea693e7e46e6fc0e5fb35d575fa027b8d36469bd7befc8946a5c1ced1466"
+    },
+    "tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py": {
+      "bytes": 6427,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "61e1d514e67b30e8e807567eb51f398a7702c4e01ab476b0d3c98d002e1f867f"
+    },
+    "tests/controlled-drugs/engine/candidate/secondary_review_ledger.py": {
+      "bytes": 8855,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "0f8a791b1bd7dc8cc2a3e60018e2ea9aacb5451ff5465136b7e75675c3e5f63d"
+    },
+    "tests/controlled-drugs/engine/candidate/secondary_review_release.py": {
+      "bytes": 14539,
+      "role": "existing_observer_or_guard_source",
+      "sha256": "0914c26c717147d670e60e9de96da9e55f56cc043958a6a154285523e4ed8ac6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/legacy-inventory.json": {
+      "bytes": 34941362,
+      "role": "parity_authority_only_never_legacy_loader_authority",
+      "sha256": "a8e613e74d72dca2f2638aa2e0139659d6850a7ab13ddc980f987159b3344e23"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/README.md": {
+      "bytes": 6364,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "baf767606eff5f64bdce38c1bc8f1d95b65153e5213f60004ba9afe02572a375"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/build_boundaries.py": {
+      "bytes": 10776,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "7d0750b2d526373461f81720d088c9462ab7e3cf7b9a353244932549da8f1845"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/cases.json": {
+      "bytes": 1460398,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "a665d80a4d7024f3e36f2cbf98d968cdbfaa1fb8a01dc56f0edc8cac626463a4"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/check_boundaries.py": {
+      "bytes": 7261,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "bb3a2201b40621cdff917dd201308d485c2eb6fedc20d708240788a21634433a"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/families.json": {
+      "bytes": 1199897,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "acc32c3ece9a183414ef4cabe5d4d39b6830439563efc425de1a1271cadb53c6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/freeze-manifest.json": {
+      "bytes": 2184,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "2efb0b0362e03d8f46dc80f248d96bccd4de3578b28032b98879c9f2e85cabe8"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-boundary-vectors/inventory.json": {
+      "bytes": 488,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "104642ab7ae70619cd7bc2110dc32158f176b248a4cce8b0d098b4d66a41d7cd"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-fixture-draft/fixture_generator.py": {
+      "bytes": 36435,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "edb910f9bd955404f0579c91050a6e6d6f7fe31ba8c241a9b2fb78a3603b5b7e"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-fixture-draft/guard-input.json": {
+      "bytes": 164,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "72f1eb188ba60096b04136a307c00553d6379bad72841f011563b1844c4e9218"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-fixture-draft/observer-inputs.json": {
+      "bytes": 2729,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "4103953a6307e6b33ca1431a03339f299ad269c24cf0e59482f5a2af11159ec4"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-fixture-draft/test_fixture_generator.py": {
+      "bytes": 15555,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "d554f777475d6a4cf758de82f68ea65d44588a4656af1333d2db1f7687429a3b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/README.md": {
+      "bytes": 12009,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "44d8667527ff94babea31a767f7a3212669aa6854fcdf3b6f09bc0af7f38b748"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/anchors.json": {
+      "bytes": 2272,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "418cc5489fe151328800953c19a71bb3ec68d9ef7bce4578822083eedcad8c5b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/build_corpus.py": {
+      "bytes": 33805,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "ff0c31eece06e4fed23a7632ea907a995e87ca9dd86ceeba11f0635696446488"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/build_supplement.py": {
+      "bytes": 9020,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "9dde47440eccbf13e17f2f40a23df476cc7a74b98838cba0fa9e6df20fe17df6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/cases.json": {
+      "bytes": 16103567,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "2927ddcfe71858db2f4a99bdcf6b05ccbe7f2c5247f2794e9920d448d9751dad"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/check_corpus.py": {
+      "bytes": 9607,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "c1cd53c708928df86c7cc74b42718610ba81f31aaf41f5e3dfeaa7258c34ee39"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/families.json": {
+      "bytes": 1365357,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "02cf2efb2413a2d528984847a293a0d9b991ae01fa81dd2edb9aefea2e7ee6ae"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/freeze-manifest.json": {
+      "bytes": 3271,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "124145aed3ca5b82f35526b4486ba5d54b117e014879da897cc1d93b545fd7e1"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/inventory.json": {
+      "bytes": 831,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "21da1b49532d6d49485c8b160cda3d953d4abd363bd5458d75e66132e99b0c0d"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/source/configuration-record-vectors/supplement-cases.json": {
+      "bytes": 1531699,
+      "role": "literal_corpus_or_original_generator_reference",
+      "sha256": "f7a6a411af58fbc090346d26541b87ad82a78de9c4de3d4fb63cc3a2b4caabc5"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/000-setup.sql": {
+      "bytes": 10770,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "d5734e5c3e9af5c4cb41a0a06b9548c52907214dc69e53bb054436b5d2bc172c"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/001-render_0000.sql": {
+      "bytes": 1203829,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "f82785e724643c7f9d95cca4acb5352be2ea50b912e8be1ed4759df62f19057f"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/002-render_0064.sql": {
+      "bytes": 1234421,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "56957a09ee6af0fbd57dafda5e4801f81673a85cd96ebc3d960a8a5e0732de44"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/003-render_0128.sql": {
+      "bytes": 893279,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "9f257d56d7650b82d9f0d4773618bbf5d6f2179d93938cd3998552eeb61513d3"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/004-render_0192.sql": {
+      "bytes": 2582485,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "df771253f7e7d2062af69bcc81f9385a569a0c87bc43795f1f21c4f9a542d192"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/005-render_0256.sql": {
+      "bytes": 945745,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "9b0983df6c60c33d71c23bb96cc4463e1ed00d12e2525f1b3fa47a3ac443dd60"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/006-render_0320.sql": {
+      "bytes": 955591,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "c3b2ae20134538676e1c7cb78ccf8de6f8482ce262db9473eea3c6b5365634e4"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/007-render_0384.sql": {
+      "bytes": 946221,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "f7b1c8051a620eaf2dd713d873cb75b0ffd4c313a67e3b10473f26948b719956"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/008-render_0448.sql": {
+      "bytes": 1077431,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "d7d8b09755be491f4de0177b6a9d865685e7c3a2595010bbd0e72452f9625f10"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/009-render_0512.sql": {
+      "bytes": 851601,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "1876743f8c5b1c2b3f6ab3bf0523c2fab31815d95ce12cbcd35ef8054d58f571"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/010-render_0576.sql": {
+      "bytes": 853869,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "d09c2e4b4dd190aa2c13d772d2bfb991c1a0b6d8ffcea720517e5dc4ba96d77f"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/011-render_0640.sql": {
+      "bytes": 1093467,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "4281c1907e3fa40f22d9116325519c027d4aa18d2b70fc37b03598deae21f21a"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/012-render_0704.sql": {
+      "bytes": 1040679,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "0a089c1defcb96697381645bb56da8acf97027dca1acdba725ae36d04b3eb3c9"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/013-render_0768.sql": {
+      "bytes": 1062603,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b05effc6ffbd4ae3e68058198d81f1e5eb1c44883f343fac9921a427cb7fe987"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/014-render_0832.sql": {
+      "bytes": 988003,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b2dae3f8dec5a0e0e834adfa9bc440acf5f8a9a9321edad420cf7c7815f62fcd"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/015-render_0896.sql": {
+      "bytes": 1136239,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "f3c2b41ca91abf08b5ca51509ac72cdd2ec6f5f41e37d5abffbd453d3714b4f6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/016-render_0960.sql": {
+      "bytes": 931233,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "94beff7933bbc8fd89c9dcf7409e03ed1e52dbcdf608c9ad468c4964a93517c7"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/017-render_1024.sql": {
+      "bytes": 743369,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "f5020f8ae6f8f893b5c9623f7a110d647b8818afa94d6960a835b4e145c04e9b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/018-render_1088.sql": {
+      "bytes": 892079,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "a90f2a92b8e2df8c145a085ae559cde42f512b32827d635e2a5fd97849927eaa"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/019-render_1152.sql": {
+      "bytes": 882955,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "0c95aa1f8bdf09de3dcf29483dabc8213fb81b133f627967275e0107c92762e2"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/020-render_1216.sql": {
+      "bytes": 971807,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "d7c097d1bbce1c57ce848c370c25b0263c674a3be8504ac135a40cdfbdd6d5ac"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/021-render_1280.sql": {
+      "bytes": 1233929,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "a902589b4e07717992810b1bf95651c2a624233a1927967bf3a7fabb161499fd"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/022-render_1344.sql": {
+      "bytes": 964179,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "aa4fe79c66b34ee0fc68f4927810ec85ee31da019115be65b7fbbfd140d0bf6f"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/023-render_1408.sql": {
+      "bytes": 1695095,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ca4e239e55415ec360cd862947bf553d5901f68d538dee9345eefd1d672592a1"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/024-render_1472.sql": {
+      "bytes": 1325079,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "324f55f053a98f138bb191093bb0b55e4df262a1de3f5019dd241ae285c0e9dd"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/025-render_1536.sql": {
+      "bytes": 862461,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "c112e07baf86a751fc0fe0061d43d1b78fd3f4673ab8a7822d87f952958b47a8"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/026-render_1600.sql": {
+      "bytes": 916735,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "892efb78cddc7e5f07f372a8bd80c923e5c368cf028431ddee1cf966c5626d82"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/027-render_1664.sql": {
+      "bytes": 944425,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "87e6eb39384e53059671a0241a6fccb372d92f94bcc11e6d54b0ca42651be4c6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/028-render_1728.sql": {
+      "bytes": 1024055,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "1d1021546f41eeaf800238d6799a98434f8bfd90c5cd3a1a1b668081d878a652"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/029-decode_0000.sql": {
+      "bytes": 42290,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "bcd3b40f1f4c2c714aa1fb7966291a9f16410294ad57e0a37cb0f34c92b73fe1"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/030-decode_0100.sql": {
+      "bytes": 35495,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "64b727faf648de30db31ea77fbad3a9c698c69124b30a2f2de3ca12a8e500c07"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/031-decode_0200.sql": {
+      "bytes": 37869,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "9a4b181d1ff280592f5a0324d163f7d453d93e7b3e61fd8e50f446b697a3ae21"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/032-decode_0300.sql": {
+      "bytes": 42137,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "5edc23550e9b7a6d74d520980893b0ac535e1133aa53b7352c4a700688fe1ccf"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/033-decode_0400.sql": {
+      "bytes": 40938,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "8991fcf3de11c87f44178575f7895e19203cd544582fbd239aa1fcb1d9e92ab5"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/034-decode_0500.sql": {
+      "bytes": 41948,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ac618a5c3d058459f9904b42985e2e5250d3021a23f1986b0576b7c4999e507e"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/035-decode_0600.sql": {
+      "bytes": 43385,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "d135d623ce5b5284f9ff599a15235850331e548734c48de3ec7e9e910b31ac15"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/036-decode_0700.sql": {
+      "bytes": 37925,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "5e72df31ac1ee5e3ea3545f9811b80698f6757253926f2fd3297a9091290e1d9"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/037-decode_0800.sql": {
+      "bytes": 38134,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "a9b0332f036a51bc83d4486c99d90427cf0cb7b8f35077cc9550d146e222f254"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/038-decode_0900.sql": {
+      "bytes": 37687,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "36002e895117af66c50c94735b385b0c0777d7352c4fba77680c26a6230242cc"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/039-decode_1000.sql": {
+      "bytes": 37490,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "2b2cb2bed2bf1f8963eebcf135672d4f80e0f0bb1bd7b63427605fe5aaaf57b6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/040-decode_1100.sql": {
+      "bytes": 33806,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "71ff9d46bfd81e6351e8362266a44d1a2afdf45878a891f6f28d50d0c8bc7923"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/041-decode_1200.sql": {
+      "bytes": 32716,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "5c322a5b88eca4f92af5417491287a3ba21dc8e4d8e67036619f58645a58b94a"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/042-decode_1300.sql": {
+      "bytes": 33405,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "6edb0ff50eb54b547970f573ae83c30c686a0844f50e51d86b3c016c139b7423"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/043-decode_1400.sql": {
+      "bytes": 34199,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "cd4eed79e8be294bbadae38f6ef515413b3c5ba85456c2f9b6ed582b1d8360c8"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/044-decode_1500.sql": {
+      "bytes": 38283,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "4a974b4031509d2aed24f34ec9e766d3112f3ac44929bb340436493f1ab1000f"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/045-renderer_and_case_gate.sql": {
+      "bytes": 714573,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "9c1d9d7b03fd6122c0344e836978e6db71c04c10e2c522ce114abfac5d092490"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/046-capture_baseline.sql": {
+      "bytes": 2622,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ac54ee35cfb431dfb785d6ec452b9f8528f588924d78dbdbfda21500975946d9"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/047-success_0000.sql": {
+      "bytes": 16897,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ad7a1fef2e82c6260b8fa03eec675fe2f134f25583f540c87c86028300c92477"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/048-success_0025.sql": {
+      "bytes": 16857,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "af3fa559efbe0da87bf9bd42c10664e398b7deeadf9f7f1949d194676dfecb36"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/049-success_0050.sql": {
+      "bytes": 16626,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "bdac849c0ed92fec59a986d7bb6afb9901f556abcfca071e727e6c21058aebae"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/050-success_0075.sql": {
+      "bytes": 16695,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "633967d7ac6309ed3ded75406bde3c428df3ddbcef96a2ddcb36ac317b8d97e7"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/051-success_0100.sql": {
+      "bytes": 16527,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b074df833d7d18577e5f8f08d919823dcb11c70414e43dc2f336f84c8349c8cf"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/052-success_0125.sql": {
+      "bytes": 16871,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "911f82b4bbdad50c49e11ba2a9e38b3706b186784ddc5b70b8b05e80a8de44ef"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/053-success_0150.sql": {
+      "bytes": 16980,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "f7000e5c8ace361c7c018c96af622090731f8ddd87d393cc934bbb73a849d356"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/054-success_0175.sql": {
+      "bytes": 17153,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b1e9c5d5e537c9424be789b304cebe7640575af5bf32366819b6592f0fb6deae"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/055-success_0200.sql": {
+      "bytes": 3000,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b20bbc298c6a97cd361bd07fcbac607a720f62951e10a919611fec1761db7948"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/056-refusal_0000.sql": {
+      "bytes": 39450,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "241f4f13382768c1a8a18979ee73e054db3a27ee18536ecff5269aef72ab730b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/057-refusal_0050.sql": {
+      "bytes": 41532,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b694c1e3d50b06b1bfa49be9c827f90a2eab355c012cb16afc3e3aa6d2ecf91e"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/058-refusal_0100.sql": {
+      "bytes": 46531,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ae37c93e5e1b03b9ac7086d7daf49bbac031e6b7e6b15eb29e4adede79a7a98b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/059-refusal_0150.sql": {
+      "bytes": 48095,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b23a154bf61baea964381b480453027b55e6ed0f64ff8f42747be7e35afac3f3"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/060-refusal_0200.sql": {
+      "bytes": 49543,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "144ada63ed513b2e436311e93a5c3e0d2cdef6353722bc4d63a2da7542a9d226"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/061-refusal_0250.sql": {
+      "bytes": 50301,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "5e5d08c5f370f2e8274c29a641e273248dd37b5471f6f88afb56dfce0f0658e0"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/062-refusal_0300.sql": {
+      "bytes": 47001,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "6e63e5ba39f3b0672c31ea00af1dbf215b2e04c405eb17d175e179e9bb9a0646"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/063-refusal_0350.sql": {
+      "bytes": 47931,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "2cb7290151f831413475262b693e8e8bb2ccd25301c3382287c3a7ba94b95827"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/064-refusal_0400.sql": {
+      "bytes": 49167,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b6fa4ef2932e248d4a245d00f3f3637e54b3bb56a051c6e0c349e65be9136280"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/065-refusal_0450.sql": {
+      "bytes": 50493,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "6b2bca92742b73aee617e0fa47adbc05688414f871ee2ffae41f31e2c50aed0e"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/066-refusal_0500.sql": {
+      "bytes": 51045,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "57b405983ca81f11f318302ea6f15481c067c9fb833af109a09b19b351e3aaea"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/067-refusal_0550.sql": {
+      "bytes": 45675,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "af65e9256ade400b7cb047a749044bc06c9721bf00382bae7d8315214089104a"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/068-refusal_0600.sql": {
+      "bytes": 45315,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ef43754ca69161c67a5c87ccd7e8e81d166d99abb30d3722e94ffd8be06ad924"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/069-refusal_0650.sql": {
+      "bytes": 44499,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "04863489f28370508055c42aedd39b1fbd6b0b8fa929a948ae8b3377fc53964f"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/070-refusal_0700.sql": {
+      "bytes": 46041,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "9be345a2eb9e0d3bc61529abe13a6f813b1d4bacd6e1c21876469a9083859f19"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/071-refusal_0750.sql": {
+      "bytes": 44913,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "37bbacb8bc9e92d866865cb316a204c6a7701e54035201446824d41403aa1468"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/072-refusal_0800.sql": {
+      "bytes": 44593,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "136e6380b0e07c1ab80595bd0496b640cbd8b7466e91d18f879d3adeea9196e5"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/073-refusal_0850.sql": {
+      "bytes": 44791,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ca9fe866ba63755e3277d328fd4e146bba13c29f4297be6a6f45cd9aa0e7a105"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/074-refusal_0900.sql": {
+      "bytes": 44291,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "1cef376e55c6d201d60d352d61b5d896b41b8ff42d6bb30039e77105f64a2fac"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/075-refusal_0950.sql": {
+      "bytes": 42545,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ce47b2694264b0dae9e90907d6b34f4105aa4ce42b9271dba0090895ccd09968"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/076-refusal_1000.sql": {
+      "bytes": 40344,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "1365f0ab6d49ae1ca8c7c7442b98d72e36f07dee9684a1cf49645df9d518985a"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/077-refusal_1050.sql": {
+      "bytes": 40174,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "ea3840c86310298b0f34b261dd01be937b2a538b9bf60a2f032e8f78efe44bfd"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/078-refusal_1100.sql": {
+      "bytes": 39450,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "b451f5d96484258a4c5522de31da6ce3e35b0115f3216abe8bed6e56621b84bb"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/079-refusal_1150.sql": {
+      "bytes": 39790,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "4651cf15c2977f24e25b35ed75c10b856cb314469a2ba556a2e410bea30f4309"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/080-refusal_1200.sql": {
+      "bytes": 40709,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "5497dc276d00b73430b71a33c43a5e6eb6348fff9067fed2c3677dab084b6386"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/081-refusal_1250.sql": {
+      "bytes": 40621,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "a4b48786ad683bfec37c32cace1387d58abeba678fb3ce33c04c6e59506ba2b7"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/082-refusal_1300.sql": {
+      "bytes": 42228,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "65a546373fd964703cb3abadb70a80c92c0e46216b09ef3cc1f0da2d09417d6b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/083-refusal_1350.sql": {
+      "bytes": 32751,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "02abb592d95b2d01825285e9f5a4bc7012b22afae861542ddd8d8f2c7a194e04"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/084-zone_00.sql": {
+      "bytes": 13215,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "877869a66486e81b8633c87b4f421fb00265d1d5de3a5615b2b7e9e0f1236103"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/085-zone_01.sql": {
+      "bytes": 13424,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "c4077ab9a8f61258723b53e8641dbe37d5b6c606c0e4b4b61386a78cc40c2769"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/086-zone_02.sql": {
+      "bytes": 13424,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "4db4818a1c1a4c7d4a00b68ff52b215d69e4494bcfd6d8e61921572788407700"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/087-stubs_and_guards.sql": {
+      "bytes": 12088,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "aa844212374ed920be69e8ee5d0f767adfe5c8035352824803a8f8bbb0bf1a3b"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/088-all_metadata_acl.sql": {
+      "bytes": 6226,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "10a0dfc34036ee23884a9ab1aa32ad7afdc87bed4fa547e3576417305df054c6"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/089-role_anon.sql": {
+      "bytes": 13632,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "7af50912f6219c65ad60aaef8ef8ef6c962a4705a85319e269e8cc0ce7db49f7"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/090-role_authenticated.sql": {
+      "bytes": 13821,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "a3b86171972332c00f332e15c4c59dfaade96d753eb8869a284562497edff359"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/091-role_service_role.sql": {
+      "bytes": 13800,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "e552a93f3e929d6af566d1f60f4b76a1be47b7bf4da61c977c7100847ebc78e9"
+    },
+    "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/092-final_inventory.sql": {
+      "bytes": 361662,
+      "role": "byte_identical_SQL_parity_authority",
+      "sha256": "02522b03bf46345d41442cc8501272bc22ffd4035dc895aa8c147e94eb1ea84c"
+    }
+  },
+  "kind": "portable-stored-record-fixture-envelope-v1",
+  "legacy_full761_admission": false,
+  "legacy_inventory_path": "tests/controlled-drugs/fixtures/record-review-v3/stored/legacy-inventory.json",
+  "legacy_provenance": {
+    "interpretation": "lineage_only_not_active_legacy_admission",
+    "inventory_sha256": "a8e613e74d72dca2f2638aa2e0139659d6850a7ab13ddc980f987159b3344e23",
+    "original_complete_sources": 761,
+    "original_fixture_sources": 137,
+    "original_source_ready_sha256": "a94da4ad1b989f61f17537a0815e86bb15299e031274e071c9e6527cfab2499b"
+  },
+  "limits": {
+    "max_envelope_bytes": 131072,
+    "max_file_bytes": 37748736,
+    "max_generated_files": 94,
+    "max_generated_output_bytes": 75497472,
+    "max_source_bytes": 134217728
+  },
+  "phase_names": [
+    "setup",
+    "render_0000",
+    "render_0064",
+    "render_0128",
+    "render_0192",
+    "render_0256",
+    "render_0320",
+    "render_0384",
+    "render_0448",
+    "render_0512",
+    "render_0576",
+    "render_0640",
+    "render_0704",
+    "render_0768",
+    "render_0832",
+    "render_0896",
+    "render_0960",
+    "render_1024",
+    "render_1088",
+    "render_1152",
+    "render_1216",
+    "render_1280",
+    "render_1344",
+    "render_1408",
+    "render_1472",
+    "render_1536",
+    "render_1600",
+    "render_1664",
+    "render_1728",
+    "decode_0000",
+    "decode_0100",
+    "decode_0200",
+    "decode_0300",
+    "decode_0400",
+    "decode_0500",
+    "decode_0600",
+    "decode_0700",
+    "decode_0800",
+    "decode_0900",
+    "decode_1000",
+    "decode_1100",
+    "decode_1200",
+    "decode_1300",
+    "decode_1400",
+    "decode_1500",
+    "renderer_and_case_gate",
+    "capture_baseline",
+    "success_0000",
+    "success_0025",
+    "success_0050",
+    "success_0075",
+    "success_0100",
+    "success_0125",
+    "success_0150",
+    "success_0175",
+    "success_0200",
+    "refusal_0000",
+    "refusal_0050",
+    "refusal_0100",
+    "refusal_0150",
+    "refusal_0200",
+    "refusal_0250",
+    "refusal_0300",
+    "refusal_0350",
+    "refusal_0400",
+    "refusal_0450",
+    "refusal_0500",
+    "refusal_0550",
+    "refusal_0600",
+    "refusal_0650",
+    "refusal_0700",
+    "refusal_0750",
+    "refusal_0800",
+    "refusal_0850",
+    "refusal_0900",
+    "refusal_0950",
+    "refusal_1000",
+    "refusal_1050",
+    "refusal_1100",
+    "refusal_1150",
+    "refusal_1200",
+    "refusal_1250",
+    "refusal_1300",
+    "refusal_1350",
+    "zone_00",
+    "zone_01",
+    "zone_02",
+    "stubs_and_guards",
+    "all_metadata_acl",
+    "role_anon",
+    "role_authenticated",
+    "role_service_role",
+    "final_inventory"
+  ],
+  "phases": {
+    "all_metadata_acl": {
+      "bytes": 6226,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/088-all_metadata_acl.sql",
+      "sha256": "10a0dfc34036ee23884a9ab1aa32ad7afdc87bed4fa547e3576417305df054c6"
+    },
+    "capture_baseline": {
+      "bytes": 2622,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/046-capture_baseline.sql",
+      "sha256": "ac54ee35cfb431dfb785d6ec452b9f8528f588924d78dbdbfda21500975946d9"
+    },
+    "decode_0000": {
+      "bytes": 42290,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/029-decode_0000.sql",
+      "sha256": "bcd3b40f1f4c2c714aa1fb7966291a9f16410294ad57e0a37cb0f34c92b73fe1"
+    },
+    "decode_0100": {
+      "bytes": 35495,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/030-decode_0100.sql",
+      "sha256": "64b727faf648de30db31ea77fbad3a9c698c69124b30a2f2de3ca12a8e500c07"
+    },
+    "decode_0200": {
+      "bytes": 37869,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/031-decode_0200.sql",
+      "sha256": "9a4b181d1ff280592f5a0324d163f7d453d93e7b3e61fd8e50f446b697a3ae21"
+    },
+    "decode_0300": {
+      "bytes": 42137,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/032-decode_0300.sql",
+      "sha256": "5edc23550e9b7a6d74d520980893b0ac535e1133aa53b7352c4a700688fe1ccf"
+    },
+    "decode_0400": {
+      "bytes": 40938,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/033-decode_0400.sql",
+      "sha256": "8991fcf3de11c87f44178575f7895e19203cd544582fbd239aa1fcb1d9e92ab5"
+    },
+    "decode_0500": {
+      "bytes": 41948,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/034-decode_0500.sql",
+      "sha256": "ac618a5c3d058459f9904b42985e2e5250d3021a23f1986b0576b7c4999e507e"
+    },
+    "decode_0600": {
+      "bytes": 43385,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/035-decode_0600.sql",
+      "sha256": "d135d623ce5b5284f9ff599a15235850331e548734c48de3ec7e9e910b31ac15"
+    },
+    "decode_0700": {
+      "bytes": 37925,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/036-decode_0700.sql",
+      "sha256": "5e72df31ac1ee5e3ea3545f9811b80698f6757253926f2fd3297a9091290e1d9"
+    },
+    "decode_0800": {
+      "bytes": 38134,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/037-decode_0800.sql",
+      "sha256": "a9b0332f036a51bc83d4486c99d90427cf0cb7b8f35077cc9550d146e222f254"
+    },
+    "decode_0900": {
+      "bytes": 37687,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/038-decode_0900.sql",
+      "sha256": "36002e895117af66c50c94735b385b0c0777d7352c4fba77680c26a6230242cc"
+    },
+    "decode_1000": {
+      "bytes": 37490,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/039-decode_1000.sql",
+      "sha256": "2b2cb2bed2bf1f8963eebcf135672d4f80e0f0bb1bd7b63427605fe5aaaf57b6"
+    },
+    "decode_1100": {
+      "bytes": 33806,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/040-decode_1100.sql",
+      "sha256": "71ff9d46bfd81e6351e8362266a44d1a2afdf45878a891f6f28d50d0c8bc7923"
+    },
+    "decode_1200": {
+      "bytes": 32716,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/041-decode_1200.sql",
+      "sha256": "5c322a5b88eca4f92af5417491287a3ba21dc8e4d8e67036619f58645a58b94a"
+    },
+    "decode_1300": {
+      "bytes": 33405,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/042-decode_1300.sql",
+      "sha256": "6edb0ff50eb54b547970f573ae83c30c686a0844f50e51d86b3c016c139b7423"
+    },
+    "decode_1400": {
+      "bytes": 34199,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/043-decode_1400.sql",
+      "sha256": "cd4eed79e8be294bbadae38f6ef515413b3c5ba85456c2f9b6ed582b1d8360c8"
+    },
+    "decode_1500": {
+      "bytes": 38283,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/044-decode_1500.sql",
+      "sha256": "4a974b4031509d2aed24f34ec9e766d3112f3ac44929bb340436493f1ab1000f"
+    },
+    "final_inventory": {
+      "bytes": 361662,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/092-final_inventory.sql",
+      "sha256": "02522b03bf46345d41442cc8501272bc22ffd4035dc895aa8c147e94eb1ea84c"
+    },
+    "refusal_0000": {
+      "bytes": 39450,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/056-refusal_0000.sql",
+      "sha256": "241f4f13382768c1a8a18979ee73e054db3a27ee18536ecff5269aef72ab730b"
+    },
+    "refusal_0050": {
+      "bytes": 41532,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/057-refusal_0050.sql",
+      "sha256": "b694c1e3d50b06b1bfa49be9c827f90a2eab355c012cb16afc3e3aa6d2ecf91e"
+    },
+    "refusal_0100": {
+      "bytes": 46531,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/058-refusal_0100.sql",
+      "sha256": "ae37c93e5e1b03b9ac7086d7daf49bbac031e6b7e6b15eb29e4adede79a7a98b"
+    },
+    "refusal_0150": {
+      "bytes": 48095,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/059-refusal_0150.sql",
+      "sha256": "b23a154bf61baea964381b480453027b55e6ed0f64ff8f42747be7e35afac3f3"
+    },
+    "refusal_0200": {
+      "bytes": 49543,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/060-refusal_0200.sql",
+      "sha256": "144ada63ed513b2e436311e93a5c3e0d2cdef6353722bc4d63a2da7542a9d226"
+    },
+    "refusal_0250": {
+      "bytes": 50301,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/061-refusal_0250.sql",
+      "sha256": "5e5d08c5f370f2e8274c29a641e273248dd37b5471f6f88afb56dfce0f0658e0"
+    },
+    "refusal_0300": {
+      "bytes": 47001,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/062-refusal_0300.sql",
+      "sha256": "6e63e5ba39f3b0672c31ea00af1dbf215b2e04c405eb17d175e179e9bb9a0646"
+    },
+    "refusal_0350": {
+      "bytes": 47931,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/063-refusal_0350.sql",
+      "sha256": "2cb7290151f831413475262b693e8e8bb2ccd25301c3382287c3a7ba94b95827"
+    },
+    "refusal_0400": {
+      "bytes": 49167,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/064-refusal_0400.sql",
+      "sha256": "b6fa4ef2932e248d4a245d00f3f3637e54b3bb56a051c6e0c349e65be9136280"
+    },
+    "refusal_0450": {
+      "bytes": 50493,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/065-refusal_0450.sql",
+      "sha256": "6b2bca92742b73aee617e0fa47adbc05688414f871ee2ffae41f31e2c50aed0e"
+    },
+    "refusal_0500": {
+      "bytes": 51045,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/066-refusal_0500.sql",
+      "sha256": "57b405983ca81f11f318302ea6f15481c067c9fb833af109a09b19b351e3aaea"
+    },
+    "refusal_0550": {
+      "bytes": 45675,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/067-refusal_0550.sql",
+      "sha256": "af65e9256ade400b7cb047a749044bc06c9721bf00382bae7d8315214089104a"
+    },
+    "refusal_0600": {
+      "bytes": 45315,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/068-refusal_0600.sql",
+      "sha256": "ef43754ca69161c67a5c87ccd7e8e81d166d99abb30d3722e94ffd8be06ad924"
+    },
+    "refusal_0650": {
+      "bytes": 44499,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/069-refusal_0650.sql",
+      "sha256": "04863489f28370508055c42aedd39b1fbd6b0b8fa929a948ae8b3377fc53964f"
+    },
+    "refusal_0700": {
+      "bytes": 46041,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/070-refusal_0700.sql",
+      "sha256": "9be345a2eb9e0d3bc61529abe13a6f813b1d4bacd6e1c21876469a9083859f19"
+    },
+    "refusal_0750": {
+      "bytes": 44913,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/071-refusal_0750.sql",
+      "sha256": "37bbacb8bc9e92d866865cb316a204c6a7701e54035201446824d41403aa1468"
+    },
+    "refusal_0800": {
+      "bytes": 44593,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/072-refusal_0800.sql",
+      "sha256": "136e6380b0e07c1ab80595bd0496b640cbd8b7466e91d18f879d3adeea9196e5"
+    },
+    "refusal_0850": {
+      "bytes": 44791,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/073-refusal_0850.sql",
+      "sha256": "ca9fe866ba63755e3277d328fd4e146bba13c29f4297be6a6f45cd9aa0e7a105"
+    },
+    "refusal_0900": {
+      "bytes": 44291,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/074-refusal_0900.sql",
+      "sha256": "1cef376e55c6d201d60d352d61b5d896b41b8ff42d6bb30039e77105f64a2fac"
+    },
+    "refusal_0950": {
+      "bytes": 42545,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/075-refusal_0950.sql",
+      "sha256": "ce47b2694264b0dae9e90907d6b34f4105aa4ce42b9271dba0090895ccd09968"
+    },
+    "refusal_1000": {
+      "bytes": 40344,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/076-refusal_1000.sql",
+      "sha256": "1365f0ab6d49ae1ca8c7c7442b98d72e36f07dee9684a1cf49645df9d518985a"
+    },
+    "refusal_1050": {
+      "bytes": 40174,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/077-refusal_1050.sql",
+      "sha256": "ea3840c86310298b0f34b261dd01be937b2a538b9bf60a2f032e8f78efe44bfd"
+    },
+    "refusal_1100": {
+      "bytes": 39450,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/078-refusal_1100.sql",
+      "sha256": "b451f5d96484258a4c5522de31da6ce3e35b0115f3216abe8bed6e56621b84bb"
+    },
+    "refusal_1150": {
+      "bytes": 39790,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/079-refusal_1150.sql",
+      "sha256": "4651cf15c2977f24e25b35ed75c10b856cb314469a2ba556a2e410bea30f4309"
+    },
+    "refusal_1200": {
+      "bytes": 40709,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/080-refusal_1200.sql",
+      "sha256": "5497dc276d00b73430b71a33c43a5e6eb6348fff9067fed2c3677dab084b6386"
+    },
+    "refusal_1250": {
+      "bytes": 40621,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/081-refusal_1250.sql",
+      "sha256": "a4b48786ad683bfec37c32cace1387d58abeba678fb3ce33c04c6e59506ba2b7"
+    },
+    "refusal_1300": {
+      "bytes": 42228,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/082-refusal_1300.sql",
+      "sha256": "65a546373fd964703cb3abadb70a80c92c0e46216b09ef3cc1f0da2d09417d6b"
+    },
+    "refusal_1350": {
+      "bytes": 32751,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/083-refusal_1350.sql",
+      "sha256": "02abb592d95b2d01825285e9f5a4bc7012b22afae861542ddd8d8f2c7a194e04"
+    },
+    "render_0000": {
+      "bytes": 1203829,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/001-render_0000.sql",
+      "sha256": "f82785e724643c7f9d95cca4acb5352be2ea50b912e8be1ed4759df62f19057f"
+    },
+    "render_0064": {
+      "bytes": 1234421,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/002-render_0064.sql",
+      "sha256": "56957a09ee6af0fbd57dafda5e4801f81673a85cd96ebc3d960a8a5e0732de44"
+    },
+    "render_0128": {
+      "bytes": 893279,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/003-render_0128.sql",
+      "sha256": "9f257d56d7650b82d9f0d4773618bbf5d6f2179d93938cd3998552eeb61513d3"
+    },
+    "render_0192": {
+      "bytes": 2582485,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/004-render_0192.sql",
+      "sha256": "df771253f7e7d2062af69bcc81f9385a569a0c87bc43795f1f21c4f9a542d192"
+    },
+    "render_0256": {
+      "bytes": 945745,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/005-render_0256.sql",
+      "sha256": "9b0983df6c60c33d71c23bb96cc4463e1ed00d12e2525f1b3fa47a3ac443dd60"
+    },
+    "render_0320": {
+      "bytes": 955591,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/006-render_0320.sql",
+      "sha256": "c3b2ae20134538676e1c7cb78ccf8de6f8482ce262db9473eea3c6b5365634e4"
+    },
+    "render_0384": {
+      "bytes": 946221,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/007-render_0384.sql",
+      "sha256": "f7b1c8051a620eaf2dd713d873cb75b0ffd4c313a67e3b10473f26948b719956"
+    },
+    "render_0448": {
+      "bytes": 1077431,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/008-render_0448.sql",
+      "sha256": "d7d8b09755be491f4de0177b6a9d865685e7c3a2595010bbd0e72452f9625f10"
+    },
+    "render_0512": {
+      "bytes": 851601,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/009-render_0512.sql",
+      "sha256": "1876743f8c5b1c2b3f6ab3bf0523c2fab31815d95ce12cbcd35ef8054d58f571"
+    },
+    "render_0576": {
+      "bytes": 853869,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/010-render_0576.sql",
+      "sha256": "d09c2e4b4dd190aa2c13d772d2bfb991c1a0b6d8ffcea720517e5dc4ba96d77f"
+    },
+    "render_0640": {
+      "bytes": 1093467,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/011-render_0640.sql",
+      "sha256": "4281c1907e3fa40f22d9116325519c027d4aa18d2b70fc37b03598deae21f21a"
+    },
+    "render_0704": {
+      "bytes": 1040679,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/012-render_0704.sql",
+      "sha256": "0a089c1defcb96697381645bb56da8acf97027dca1acdba725ae36d04b3eb3c9"
+    },
+    "render_0768": {
+      "bytes": 1062603,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/013-render_0768.sql",
+      "sha256": "b05effc6ffbd4ae3e68058198d81f1e5eb1c44883f343fac9921a427cb7fe987"
+    },
+    "render_0832": {
+      "bytes": 988003,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/014-render_0832.sql",
+      "sha256": "b2dae3f8dec5a0e0e834adfa9bc440acf5f8a9a9321edad420cf7c7815f62fcd"
+    },
+    "render_0896": {
+      "bytes": 1136239,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/015-render_0896.sql",
+      "sha256": "f3c2b41ca91abf08b5ca51509ac72cdd2ec6f5f41e37d5abffbd453d3714b4f6"
+    },
+    "render_0960": {
+      "bytes": 931233,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/016-render_0960.sql",
+      "sha256": "94beff7933bbc8fd89c9dcf7409e03ed1e52dbcdf608c9ad468c4964a93517c7"
+    },
+    "render_1024": {
+      "bytes": 743369,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/017-render_1024.sql",
+      "sha256": "f5020f8ae6f8f893b5c9623f7a110d647b8818afa94d6960a835b4e145c04e9b"
+    },
+    "render_1088": {
+      "bytes": 892079,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/018-render_1088.sql",
+      "sha256": "a90f2a92b8e2df8c145a085ae559cde42f512b32827d635e2a5fd97849927eaa"
+    },
+    "render_1152": {
+      "bytes": 882955,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/019-render_1152.sql",
+      "sha256": "0c95aa1f8bdf09de3dcf29483dabc8213fb81b133f627967275e0107c92762e2"
+    },
+    "render_1216": {
+      "bytes": 971807,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/020-render_1216.sql",
+      "sha256": "d7c097d1bbce1c57ce848c370c25b0263c674a3be8504ac135a40cdfbdd6d5ac"
+    },
+    "render_1280": {
+      "bytes": 1233929,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/021-render_1280.sql",
+      "sha256": "a902589b4e07717992810b1bf95651c2a624233a1927967bf3a7fabb161499fd"
+    },
+    "render_1344": {
+      "bytes": 964179,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/022-render_1344.sql",
+      "sha256": "aa4fe79c66b34ee0fc68f4927810ec85ee31da019115be65b7fbbfd140d0bf6f"
+    },
+    "render_1408": {
+      "bytes": 1695095,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/023-render_1408.sql",
+      "sha256": "ca4e239e55415ec360cd862947bf553d5901f68d538dee9345eefd1d672592a1"
+    },
+    "render_1472": {
+      "bytes": 1325079,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/024-render_1472.sql",
+      "sha256": "324f55f053a98f138bb191093bb0b55e4df262a1de3f5019dd241ae285c0e9dd"
+    },
+    "render_1536": {
+      "bytes": 862461,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/025-render_1536.sql",
+      "sha256": "c112e07baf86a751fc0fe0061d43d1b78fd3f4673ab8a7822d87f952958b47a8"
+    },
+    "render_1600": {
+      "bytes": 916735,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/026-render_1600.sql",
+      "sha256": "892efb78cddc7e5f07f372a8bd80c923e5c368cf028431ddee1cf966c5626d82"
+    },
+    "render_1664": {
+      "bytes": 944425,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/027-render_1664.sql",
+      "sha256": "87e6eb39384e53059671a0241a6fccb372d92f94bcc11e6d54b0ca42651be4c6"
+    },
+    "render_1728": {
+      "bytes": 1024055,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/028-render_1728.sql",
+      "sha256": "1d1021546f41eeaf800238d6799a98434f8bfd90c5cd3a1a1b668081d878a652"
+    },
+    "renderer_and_case_gate": {
+      "bytes": 714573,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/045-renderer_and_case_gate.sql",
+      "sha256": "9c1d9d7b03fd6122c0344e836978e6db71c04c10e2c522ce114abfac5d092490"
+    },
+    "role_anon": {
+      "bytes": 13632,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/089-role_anon.sql",
+      "sha256": "7af50912f6219c65ad60aaef8ef8ef6c962a4705a85319e269e8cc0ce7db49f7"
+    },
+    "role_authenticated": {
+      "bytes": 13821,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/090-role_authenticated.sql",
+      "sha256": "a3b86171972332c00f332e15c4c59dfaade96d753eb8869a284562497edff359"
+    },
+    "role_service_role": {
+      "bytes": 13800,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/091-role_service_role.sql",
+      "sha256": "e552a93f3e929d6af566d1f60f4b76a1be47b7bf4da61c977c7100847ebc78e9"
+    },
+    "setup": {
+      "bytes": 10770,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/000-setup.sql",
+      "sha256": "d5734e5c3e9af5c4cb41a0a06b9548c52907214dc69e53bb054436b5d2bc172c"
+    },
+    "stubs_and_guards": {
+      "bytes": 12088,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/087-stubs_and_guards.sql",
+      "sha256": "aa844212374ed920be69e8ee5d0f767adfe5c8035352824803a8f8bbb0bf1a3b"
+    },
+    "success_0000": {
+      "bytes": 16897,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/047-success_0000.sql",
+      "sha256": "ad7a1fef2e82c6260b8fa03eec675fe2f134f25583f540c87c86028300c92477"
+    },
+    "success_0025": {
+      "bytes": 16857,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/048-success_0025.sql",
+      "sha256": "af3fa559efbe0da87bf9bd42c10664e398b7deeadf9f7f1949d194676dfecb36"
+    },
+    "success_0050": {
+      "bytes": 16626,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/049-success_0050.sql",
+      "sha256": "bdac849c0ed92fec59a986d7bb6afb9901f556abcfca071e727e6c21058aebae"
+    },
+    "success_0075": {
+      "bytes": 16695,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/050-success_0075.sql",
+      "sha256": "633967d7ac6309ed3ded75406bde3c428df3ddbcef96a2ddcb36ac317b8d97e7"
+    },
+    "success_0100": {
+      "bytes": 16527,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/051-success_0100.sql",
+      "sha256": "b074df833d7d18577e5f8f08d919823dcb11c70414e43dc2f336f84c8349c8cf"
+    },
+    "success_0125": {
+      "bytes": 16871,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/052-success_0125.sql",
+      "sha256": "911f82b4bbdad50c49e11ba2a9e38b3706b186784ddc5b70b8b05e80a8de44ef"
+    },
+    "success_0150": {
+      "bytes": 16980,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/053-success_0150.sql",
+      "sha256": "f7000e5c8ace361c7c018c96af622090731f8ddd87d393cc934bbb73a849d356"
+    },
+    "success_0175": {
+      "bytes": 17153,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/054-success_0175.sql",
+      "sha256": "b1e9c5d5e537c9424be789b304cebe7640575af5bf32366819b6592f0fb6deae"
+    },
+    "success_0200": {
+      "bytes": 3000,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/055-success_0200.sql",
+      "sha256": "b20bbc298c6a97cd361bd07fcbac607a720f62951e10a919611fec1761db7948"
+    },
+    "zone_00": {
+      "bytes": 13215,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/084-zone_00.sql",
+      "sha256": "877869a66486e81b8633c87b4f421fb00265d1d5de3a5615b2b7e9e0f1236103"
+    },
+    "zone_01": {
+      "bytes": 13424,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/085-zone_01.sql",
+      "sha256": "c4077ab9a8f61258723b53e8641dbe37d5b6c606c0e4b4b61386a78cc40c2769"
+    },
+    "zone_02": {
+      "bytes": 13424,
+      "path": "tests/controlled-drugs/fixtures/record-review-v3/stored/sql-v1/086-zone_02.sql",
+      "sha256": "4db4818a1c1a4c7d4a00b68ff52b215d69e4494bcfd6d8e61921572788407700"
+    }
+  },
+  "portable_inventory_changed_fields": [
+    "kind",
+    "source_hashes",
+    "portable_provenance"
+  ],
+  "render_entry_count": 1788,
+  "runtime_executed": false,
+  "source_file_count": 130,
+  "source_only": true,
+  "target_case_count": 1594,
+  "version": 1
+}

@@ -1,0 +1,1111 @@
+{
+  "kind": "finite-node-input-declaration-v1",
+  "source_only": true,
+  "guard_implemented": false,
+  "exact_request_keys": [
+    "sources",
+    "typescript",
+    "vendor"
+  ],
+  "input_type": "exact str UTF8 canonical JSON; duplicate keys rejected",
+  "canonical_serialization": {
+    "sort_keys": true,
+    "separators": [
+      ",",
+      ":"
+    ],
+    "ensure_ascii": true
+  },
+  "limits": {
+    "request_utf8_bytes": 9437184,
+    "path_utf8_bytes": 4096,
+    "sources_max": 205,
+    "aggregate_body_utf8_bytes": 8388608
+  },
+  "typescript": {
+    "version": "5.8.3",
+    "sha256": "dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0",
+    "path_contract": "exact admitted external physical TypeScript file; no caller-selected replacement"
+  },
+  "vendor": {
+    "provenance_sha256": "28bcd6a27b93fb7a31c3e20519b5ebb6540737b26e2f333e3f44cb3340327884",
+    "files": {
+      "LICENSE": {
+        "sha256": "81f7d60afa4316010b1c0df8eb8f0c80b27586a86b72f1bde85e129bfd10d52a",
+        "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli-go/LICENSE"
+      },
+      "migration-apply.ts": {
+        "sha256": "17c3bea8046bb26f1fdd7f0234d34b30d6258a4bfcd8959813152528270ec208",
+        "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/migration-apply.ts"
+      },
+      "migration-file.ts": {
+        "sha256": "ec8018d9c9ec4a3a60637ff2f386d7edb7b683d85dcbf56551b67e138c1a4cfe",
+        "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/migration-file.ts"
+      },
+      "migration-history.ts": {
+        "sha256": "693f2333c9c2697696fd8e3067448916ea32064456ccae5a57df515f5ac69fc8",
+        "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/migration-history.ts"
+      },
+      "package.json": {
+        "sha256": "17bdbc9d711339955618ae9e94d8d7504c5bd3e6f3155eec7d6500d4a681ba61",
+        "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/package.json"
+      },
+      "sql-split.ts": {
+        "sha256": "2d2e707f9463081e3806726a161d424ed90f9c1025f7acfc0bed2e1f69e1bda7",
+        "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/sql-split.ts"
+      }
+    },
+    "path_contract": "physical owned copied-source candidate/vendor/supabase-cli-2.118.0 or explicitly admitted fixed source tree; all ancestors/members checked; full provenance exact"
+  },
+  "source_arrays": {
+    "prefix205": [
+      {
+        "name": "20260308184039_cbd27973-fb79-4b1b-9fe4-3036b0fc4640.sql",
+        "body_sha256": "bc5cdd2b4996121a4dca04d640d1b851e55d5bb52f67f595b7edc983b298fda6",
+        "body_utf8_bytes": 47039
+      },
+      {
+        "name": "20260308194312_688620cd-8ef1-4782-bb44-a5b6b5355eac.sql",
+        "body_sha256": "d113f1afdfaba4127af9e4968885eeeab611c9b492b385f52cd9fc7732e95c83",
+        "body_utf8_bytes": 96
+      },
+      {
+        "name": "20260308215204_ca5349ea-d2b2-4f7b-bd73-c46c19dfadb6.sql",
+        "body_sha256": "faecd5e51a541c7b69b9ed410fb9dfd71cacece43bf0351fc8e6904d22a7f681",
+        "body_utf8_bytes": 520
+      },
+      {
+        "name": "20260308231655_aa98042d-5e6d-4530-8cc2-b66f9581b35d.sql",
+        "body_sha256": "006d9b3ce55b1a6540775bc0d2a1eb3200d7729394a31e6ceff4f5cb4f45587e",
+        "body_utf8_bytes": 1651
+      },
+      {
+        "name": "20260309034659_7490047a-6052-4ad6-9f68-9a16b0851759.sql",
+        "body_sha256": "1fdb8d6dd54e1b5dd2364f114524fdd85952af97383e5a920fd3faa9dd594b99",
+        "body_utf8_bytes": 1985
+      },
+      {
+        "name": "20260309045202_7de7ae36-24fd-46b2-9fe5-ddd9e38ff237.sql",
+        "body_sha256": "0272b2ed511c39cb8006bee2eb8a588a388f15783ab601dff08203c3e8f5be0d",
+        "body_utf8_bytes": 1075
+      },
+      {
+        "name": "20260309045831_031a7a42-a506-4c29-bce7-e20869ded224.sql",
+        "body_sha256": "00cadf9a3bcb8645bb850b20962175694ae994ca1c07328ab051306797a73b7f",
+        "body_utf8_bytes": 777
+      },
+      {
+        "name": "20260613183224_9575f409-8565-4e33-ab7a-1a004e11a670.sql",
+        "body_sha256": "c2c7c30ec2a0c2af87067ba5994f9fa6702274d3aa4d2f6626a04fc0a03f5ef0",
+        "body_utf8_bytes": 9280
+      },
+      {
+        "name": "20260613184005_cbe9bfe4-734b-4f1e-ac8e-854a19ad7864.sql",
+        "body_sha256": "f26ad7401854df31703d2daf678c3dbdfa3a49daa4af5a86e257a347e8218e7b",
+        "body_utf8_bytes": 6572
+      },
+      {
+        "name": "20260613195035_768d08b4-e93d-4eb6-8f21-ca48b39d895f.sql",
+        "body_sha256": "86b431780095a17390d8c58ca16740fe5c616f5d2c099efd7bbebf0a313f846f",
+        "body_utf8_bytes": 1677
+      },
+      {
+        "name": "20260613223600_0b5db918-2014-43cf-aaf0-08cdccbc4d96.sql",
+        "body_sha256": "c0cdad5f23b5603f58c234bb3e62a320654d5de619e2b578f3f1fc25cd642ecc",
+        "body_utf8_bytes": 5056
+      },
+      {
+        "name": "20260613225133_e28d9447-249a-4821-9614-c088efb2f9b8.sql",
+        "body_sha256": "9c461518b67bbe6adfe7aed34640079788b35cfd62c261cc180207b39e8e89f7",
+        "body_utf8_bytes": 1487
+      },
+      {
+        "name": "20260614151553_376b87c5-04a7-4f77-8386-321af04d2cfe.sql",
+        "body_sha256": "9de1b8538881568584b5b703b80d37d5d92518c8a1c7265bcbb57cbcbe1af5dd",
+        "body_utf8_bytes": 6234
+      },
+      {
+        "name": "20260614171114_5b96273b-12b6-48bc-8ff1-d89edc292f62.sql",
+        "body_sha256": "7c3bc59c2941d24936ef939f0f86f41a58198608b7b25daca76f61cef834b8a3",
+        "body_utf8_bytes": 2939
+      },
+      {
+        "name": "20260912193000_explicit_application_grants.sql",
+        "body_sha256": "15e9bb4e187863d2cefbf613d4fd8e493689018f60cf7e09c514a6906e44786d",
+        "body_utf8_bytes": 4002
+      },
+      {
+        "name": "20260912210000_clinical_core.sql",
+        "body_sha256": "848c88dbce56db3a208b61196204d82c510d35ad06d04936e56e06e687a2e570",
+        "body_utf8_bytes": 21424
+      },
+      {
+        "name": "20260912220000_patient_documents.sql",
+        "body_sha256": "bea51a8fa11700f5f35e29ecdb1b16fc4530fbc62b24c576cb3a7f6aed9b5527",
+        "body_utf8_bytes": 11368
+      },
+      {
+        "name": "20260912230000_scheduling.sql",
+        "body_sha256": "21b7763c7fc8f7076b8b228683ccaaed5a3b800722a855b2e77c0fb92f5774ec",
+        "body_utf8_bytes": 9137
+      },
+      {
+        "name": "20260913000000_inventory_billing.sql",
+        "body_sha256": "f66ea7f8becb2086b877d95b7d07f7d09d6376b98c34727ad6f6a5b652700b42",
+        "body_utf8_bytes": 25634
+      },
+      {
+        "name": "20260913010000_ezyvet_import.sql",
+        "body_sha256": "c1ebeb6ff344a62dba3bb87b7ec93386c77db4985f3dbde306d63700d060d561",
+        "body_utf8_bytes": 11589
+      },
+      {
+        "name": "20260913020000_communications_outbox.sql",
+        "body_sha256": "79dc2e0b7f3502282aaab07b54ad3f7c088e18c38012dfc08c2727a024e529ba",
+        "body_utf8_bytes": 23390
+      },
+      {
+        "name": "20260913030000_inventory_read_models.sql",
+        "body_sha256": "b489a6144497e6c587b3589fabc94331675f23028db430dd7399074b3cd117e9",
+        "body_utf8_bytes": 2960
+      },
+      {
+        "name": "20260913040000_ezyvet_review_import.sql",
+        "body_sha256": "265de3144193c9953421e665a2a6edbaa565f3fe15104e5c9743e19e2873a0f5",
+        "body_utf8_bytes": 9891
+      },
+      {
+        "name": "20260913050000_inbound_delivery.sql",
+        "body_sha256": "54b16c38f7f28b0d051452a33c1a3c78e1539326bc5114e6129afe5989140206",
+        "body_utf8_bytes": 26638
+      },
+      {
+        "name": "20260913060000_care_charts.sql",
+        "body_sha256": "2a5748e49d6d5227bb4ae8f3bca2808bfbb2575d38b61f8fbbb7e176f56b721e",
+        "body_utf8_bytes": 14610
+      },
+      {
+        "name": "20260913070000_dental_chart.sql",
+        "body_sha256": "29bf371559422dab92e8080c52013d83595b2ec073a15983b03b5ea39d28632e",
+        "body_utf8_bytes": 11998
+      },
+      {
+        "name": "20260913080000_vaccine_certificates.sql",
+        "body_sha256": "0458a8935b232cee05ddcce8dbef1ff9c3a9b525c939e2d30906ab6800662819",
+        "body_utf8_bytes": 18832
+      },
+      {
+        "name": "20260913095000_inbox_workspace.sql",
+        "body_sha256": "ec1e2b4e04f9d5b378963d870da52958dc3d172c61987e25f4b77b623e0ada6a",
+        "body_utf8_bytes": 14730
+      },
+      {
+        "name": "20260913095500_sms_consent_workspace.sql",
+        "body_sha256": "a500f8d6c22cea59c1d4e7caec4dde6747afe662bc6b4df840f9f8250c4fa529",
+        "body_utf8_bytes": 1213
+      },
+      {
+        "name": "20260913100000_lab_work.sql",
+        "body_sha256": "57de6079bd4ac4aa5f1ce5c265d55043dc92028080165656d5bd6568730ceb48",
+        "body_utf8_bytes": 11181
+      },
+      {
+        "name": "20260913110000_anesthesia_records.sql",
+        "body_sha256": "6d6ae2efd81a3369f53f9318bb92f1548d6e39b318ea07d0e86c0bda57a3aee3",
+        "body_utf8_bytes": 13103
+      },
+      {
+        "name": "20260913120000_message_recovery.sql",
+        "body_sha256": "6b4539677ee5623cebba7a08d6d725e8e82c6bcd45703b8f69798f070ebefd76",
+        "body_utf8_bytes": 9595
+      },
+      {
+        "name": "20260913130000_record_releases.sql",
+        "body_sha256": "b3020a8d6a5ec8e339fff9175f3886894c6c63238702ebb7884e85da1a780b6e",
+        "body_utf8_bytes": 20045
+      },
+      {
+        "name": "20260913140000_care_reminders.sql",
+        "body_sha256": "d6178c6b01babbb4cbd084155f7775b0a76d895a5bc2e50d52be4884206cfad7",
+        "body_utf8_bytes": 25702
+      },
+      {
+        "name": "20260913150000_invoice_documents.sql",
+        "body_sha256": "b749f0582cb559a044c2a934f219b1315dbabe0a25752e96ee9b3e964aab9dfb",
+        "body_utf8_bytes": 1901
+      },
+      {
+        "name": "20260913160000_record_release_charts.sql",
+        "body_sha256": "edd3837724baef301e3c79993a5664857a07fe7e0c7c098764f5b9211a208a24",
+        "body_utf8_bytes": 24246
+      },
+      {
+        "name": "20260913170000_website_inquiries.sql",
+        "body_sha256": "67784aa96721fdf0e7449feae27e3371b21e65c53281cccfbfdbe662864f4772",
+        "body_utf8_bytes": 12199
+      },
+      {
+        "name": "20260913180000_reminder_outbox.sql",
+        "body_sha256": "8cd864b017f6f45c98e069020a5af708576f1f1d66f93a4027194ff7d248f8de",
+        "body_utf8_bytes": 20472
+      },
+      {
+        "name": "20260913190000_certificate_due_plans.sql",
+        "body_sha256": "7b881b762d20f67c3c55d7e403237f783646419586589cedd8c529b336db03f0",
+        "body_utf8_bytes": 5900
+      },
+      {
+        "name": "20260913200000_record_release_history.sql",
+        "body_sha256": "bbb1d07c0af92d5c2c4b5364e0dde9b2c6c2b366ddf82f71e9db811b70145d93",
+        "body_utf8_bytes": 26542
+      },
+      {
+        "name": "20260913210000_public_intake.sql",
+        "body_sha256": "9a982e9954923406800d9322cbcb293878aac525d84f916521d5ead4dc87b926",
+        "body_utf8_bytes": 5329
+      },
+      {
+        "name": "20260913220000_release_email_delivery.sql",
+        "body_sha256": "96d067482676be11272b6744a5800bc8114bbc823a136b27a32c384a983b5dd8",
+        "body_utf8_bytes": 26118
+      },
+      {
+        "name": "20260913230000_reviewed_weight_import.sql",
+        "body_sha256": "0cca99074bbec7295247a31c9e0b4602218e24a77aae9a73e6381cff1a1c06f5",
+        "body_utf8_bytes": 21525
+      },
+      {
+        "name": "20260913240000_disable_reminder_policy.sql",
+        "body_sha256": "808fb93229dc37fe195cd9182371b1926229a343de9ceeaa0e56c27ec065ae41",
+        "body_utf8_bytes": 1660
+      },
+      {
+        "name": "20260913250000_release_weight_provenance.sql",
+        "body_sha256": "93f2e036b98086ad19c1da102b26f2c855e27bc7f368cc5e4350711e523f3e80",
+        "body_utf8_bytes": 9465
+      },
+      {
+        "name": "20260913260000_treatment_alert_review.sql",
+        "body_sha256": "3c3d9356795038795223953e290344135c3bf2d189d9163d4f80f3ab97ccf19b",
+        "body_utf8_bytes": 5987
+      },
+      {
+        "name": "20260913270000_invoice_email.sql",
+        "body_sha256": "c68f9651ee967836043f37e8e2015ff0d5d79092bc48ffb48e7dd57cab20ec22",
+        "body_utf8_bytes": 26978
+      },
+      {
+        "name": "20260913280000_document_links.sql",
+        "body_sha256": "5518d60b15af79a6539e77ac221a10afbfe2f6e8c52f30fa6da7fbdaa8d8bc8d",
+        "body_utf8_bytes": 22471
+      },
+      {
+        "name": "20260913290000_document_link_sms.sql",
+        "body_sha256": "9f75d5200cd8840dbd3706b2327fe5063ced6a76b6da355511561a3efa259bb4",
+        "body_utf8_bytes": 11132
+      },
+      {
+        "name": "20260913300000_payment_ledger.sql",
+        "body_sha256": "9734e98439ed740e9f834ee6a7a08b8c6f08789ebf1b2d7d38ef4e37322220fa",
+        "body_utf8_bytes": 27631
+      },
+      {
+        "name": "20260913310000_stripe_event_inbox.sql",
+        "body_sha256": "9e0d777bf53ad93ea7b4b80a3684ee8a3e16c4da38ecab56379d81c77c867fd5",
+        "body_utf8_bytes": 17497
+      },
+      {
+        "name": "20260913320000_document_link_history.sql",
+        "body_sha256": "e32225762e75eacb105a9568cc37dfee499e98e092f228388c14b16df78be956",
+        "body_utf8_bytes": 1304
+      },
+      {
+        "name": "20260913330000_payment_reconciliation_observations.sql",
+        "body_sha256": "5642a52d381c3d52197a12b53080dda519754aa8cb9126a5de0c07e700f87c33",
+        "body_utf8_bytes": 12336
+      },
+      {
+        "name": "20260913340000_payment_collection_access.sql",
+        "body_sha256": "4f2c57d1d48b3b7e704b1fd312c14ff696465447b9632e456b3cb1f504e411a7",
+        "body_utf8_bytes": 23995
+      },
+      {
+        "name": "20260913350000_payment_reconciliation_resolution.sql",
+        "body_sha256": "fab068acdbd9e87b9ad94c7f1f2e484eec5561802b5c07b0f2f0dd3492ee49f9",
+        "body_utf8_bytes": 25159
+      },
+      {
+        "name": "20260913360000_payment_capability_persistence.sql",
+        "body_sha256": "3db739a03a752fd8e1f5d7fc79c7025e0024c9a2e4e73f0bc38d00b775d59c95",
+        "body_utf8_bytes": 1017
+      },
+      {
+        "name": "20260913370000_payment_link_delivery.sql",
+        "body_sha256": "4c7d72537c2a1f67978886737fbe92d8e46f80fd6e8b0b2c926db3ec1308c007",
+        "body_utf8_bytes": 18259
+      },
+      {
+        "name": "20260913380000_payment_reconciliation_discovery.sql",
+        "body_sha256": "31afef5f8f6eef4d32762d8f0c93e91df8fa0103193dbab7cc8b331ad6e561a5",
+        "body_utf8_bytes": 2425
+      },
+      {
+        "name": "20260913390000_payment_delivery_history.sql",
+        "body_sha256": "dc0940bf93f5efa995b82b984ccacaaa3a44d56781deb64379e58f45a8f8bc06",
+        "body_utf8_bytes": 1694
+      },
+      {
+        "name": "20260913400000_stripe_event_retry_cycles.sql",
+        "body_sha256": "24eccd4439891a011f351d1e9968dcf86bcb5d491be2f4a080f968332f21550d",
+        "body_utf8_bytes": 14204
+      },
+      {
+        "name": "20260913410000_lab_result_provenance.sql",
+        "body_sha256": "2235cd0e6c0723e4a52edb9832debe3de84a4b170f9d69bfb60a512d0111db47",
+        "body_utf8_bytes": 23889
+      },
+      {
+        "name": "20260913420000_external_record_provenance.sql",
+        "body_sha256": "f898abaae9e5dca5ffefeb9ebce62b32ca6d4ca51d73f4b05ded9050c9c94b95",
+        "body_utf8_bytes": 21418
+      },
+      {
+        "name": "20260913430000_inbound_processing_recovery.sql",
+        "body_sha256": "6b795cb4a90294393f78785edcbfe957e880d38d925475f6d7bdd9faee6d3e61",
+        "body_utf8_bytes": 18464
+      },
+      {
+        "name": "20260913440000_operations_visibility.sql",
+        "body_sha256": "d16ae722b1bf061bcc1279f43836b7fe01827473368546e8b0d6d10441e375b2",
+        "body_utf8_bytes": 24536
+      },
+      {
+        "name": "20260913450000_outbox_retry_recovery.sql",
+        "body_sha256": "d4d839dc6330afe94fa7119fc60a4115e3a93b3e3bc54103c0c0e49cf3849193",
+        "body_utf8_bytes": 14855
+      },
+      {
+        "name": "20260913460000_explicit_staff_rpc_grants.sql",
+        "body_sha256": "911a1b7ef72fba6adf76e3d3ddadd7014862382462f219e038f034237639a090",
+        "body_utf8_bytes": 1119
+      },
+      {
+        "name": "20260913470000_release_source_provenance.sql",
+        "body_sha256": "c93ee13241ae03224933682d9f1fa545e111d7572198385c4c525189f822d2f7",
+        "body_utf8_bytes": 29268
+      },
+      {
+        "name": "20260913480000_release_source_byte_binding.sql",
+        "body_sha256": "5fa8f57c60170d1d37c00fb6efa939430fb6c9dfbccb7dd5c659bb2aa6f6be31",
+        "body_utf8_bytes": 11551
+      },
+      {
+        "name": "20260913490000_ezyvet_clinical_runs.sql",
+        "body_sha256": "2be6365996c6a9b6f8913c136beed26ed9e7a349b366d1e28db702a9efc8ecda",
+        "body_utf8_bytes": 18456
+      },
+      {
+        "name": "20260913500000_reviewed_imported_history.sql",
+        "body_sha256": "934ce9f93334f9c2b8ca363a8241f62d09fd0f4231d3a223136013cc1a171178",
+        "body_utf8_bytes": 38318
+      },
+      {
+        "name": "20260913510000_release_imported_history.sql",
+        "body_sha256": "0cf7d1430aa717c00ed8c1cc702af1fe05555013f184d29050c0c77c16910ea9",
+        "body_utf8_bytes": 17473
+      },
+      {
+        "name": "20260913520000_consult_scoped_vaccination_import.sql",
+        "body_sha256": "f5e52dffeb5e074d8f09496e968cb4392d098d27cad983600b88746115d11238",
+        "body_utf8_bytes": 25546
+      },
+      {
+        "name": "20260913530000_reviewed_imported_vaccinations.sql",
+        "body_sha256": "cafca6ef47c3567659c0860fbffdf62d322f243856e9f3a4f74f2af0b66e28a4",
+        "body_utf8_bytes": 33960
+      },
+      {
+        "name": "20260913540000_record_release_vaccination_history.sql",
+        "body_sha256": "9cdd5c52a9a5cd21aa8975717eb254a5ba9144f3c2cc2c8f77fe62338d9029d6",
+        "body_utf8_bytes": 12389
+      },
+      {
+        "name": "20260913550000_patient_scoped_prescription_import.sql",
+        "body_sha256": "c88563d4f7be486e342bbd861fee3ce64c757ac7a8bac3b11aeb0cb61ce64fa8",
+        "body_utf8_bytes": 20489
+      },
+      {
+        "name": "20260913560000_parent_scoped_prescription_items.sql",
+        "body_sha256": "c0e54a6e493fdbbb2a6dc5929e77c25f7b799b94e930a3eb5fb3faa614f26d48",
+        "body_utf8_bytes": 26564
+      },
+      {
+        "name": "20260913570000_prescription_reference_reconciliation.sql",
+        "body_sha256": "0f997eda4bff08f8176022a39fba030593f2c4da1926afd877acfef7e6b4bcbc",
+        "body_utf8_bytes": 3917
+      },
+      {
+        "name": "20260913580000_prescription_source_review_context.sql",
+        "body_sha256": "eefb2b5082655e3370627af9bbfa241fd03139d4e2b2df3ca6c52fd915d9ee91",
+        "body_utf8_bytes": 5424
+      },
+      {
+        "name": "20260913590000_prescription_review_preparation.sql",
+        "body_sha256": "b4f1b7f1bf8cc7049e51a2be7567b6961c345809415694202c34563e228a2b4c",
+        "body_utf8_bytes": 8946
+      },
+      {
+        "name": "20260913600000_prescription_interpretation_context.sql",
+        "body_sha256": "f384af5b367967f266ccbe784daa4d745c2e336d71ed5447ba596fbb4e397530",
+        "body_utf8_bytes": 11902
+      },
+      {
+        "name": "20260913610000_reviewed_imported_prescriptions.sql",
+        "body_sha256": "90ffe6b5f1239bbe023bcc73c4b46e43c7f16c33e9da7d5829502683a53a4340",
+        "body_utf8_bytes": 17085
+      },
+      {
+        "name": "20260913620000_prescription_review_discovery.sql",
+        "body_sha256": "f8956c02f11e601b04493ac1c583ded18f2da19c218b410f95733328474e2e75",
+        "body_utf8_bytes": 5915
+      },
+      {
+        "name": "20260913630000_record_release_prescription_history.sql",
+        "body_sha256": "493d5bd5fec3218b0cefe5b592b0e1f456afc7959b2c842922e10cd11db2ebac",
+        "body_utf8_bytes": 15747
+      },
+      {
+        "name": "20260913650000_prescription_release_reference_hardening.sql",
+        "body_sha256": "b65de6b1174a29697005b4712f6d8ea29a3232beade870b9d6d674e9f15b2314",
+        "body_utf8_bytes": 3896
+      },
+      {
+        "name": "20260913690000_attachment_metadata_runs.sql",
+        "body_sha256": "4bd2efe726b1a65e234789b6ed3e782119f18a8489f717d4fa23f8199e74f675",
+        "body_utf8_bytes": 28446
+      },
+      {
+        "name": "20260913700000_attachment_original_capture.sql",
+        "body_sha256": "a7bdad11bd33ddc708cc6f4d961d0dd4c54c441e3a5d6202ab89fe1a5c4ce851",
+        "body_utf8_bytes": 39885
+      },
+      {
+        "name": "20260913900000_payment_immutable_search_path.sql",
+        "body_sha256": "10d42581e8fab9fe793d4cd5685e600106332476be5f4a4ef53d846d158ef335",
+        "body_utf8_bytes": 241
+      },
+      {
+        "name": "20260914010000_reviewed_canonical_api_originals.sql",
+        "body_sha256": "857aa836de8e9665551214e2cd8ec043b43fdf2a44072e5cab791a0f8a338a58",
+        "body_utf8_bytes": 8104
+      },
+      {
+        "name": "20260914020000_canonical_api_approval_cancellation.sql",
+        "body_sha256": "cd63b0ae5872ff7dea924ce776ddf94f4cfea59ed2952489adf4338f6405851f",
+        "body_utf8_bytes": 6956
+      },
+      {
+        "name": "20260914030000_canonical_api_review_history.sql",
+        "body_sha256": "f8f28dc0e56acd4b1bd8b666a2d42454302622486ac1969a14a35e7da982016c",
+        "body_utf8_bytes": 2501
+      },
+      {
+        "name": "20260914040000_canonical_api_patient_chart.sql",
+        "body_sha256": "7b99052b98a6b04bf2a3576bbd9eb6fb39ee39ce91fe9a4a9e2572ec8b3aa3a7",
+        "body_utf8_bytes": 1906
+      },
+      {
+        "name": "20260914050000_canonical_reviewed_original_context.sql",
+        "body_sha256": "4c79b8ed01e2118cd0f506ff683ed77e609857793c8202611da3f4e59639d60f",
+        "body_utf8_bytes": 1996
+      },
+      {
+        "name": "20260914060000_canonical_release_attachment_validation.sql",
+        "body_sha256": "e13aad2cfa60dafa1c6343216d0b79c794967486591c47f80616d6162ee7917e",
+        "body_utf8_bytes": 6819
+      },
+      {
+        "name": "20260914070000_canonical_api_release_preview.sql",
+        "body_sha256": "6904f48810147c251ee808554efaf70234380eb3cabcada1c1346e42aae6ca32",
+        "body_utf8_bytes": 7568
+      },
+      {
+        "name": "20260914080000_canonical_release_original_verification.sql",
+        "body_sha256": "746be80a19ab71c76a437082c891bf0ce9d0e5319715c1772d6726d1cebe1f07",
+        "body_utf8_bytes": 4405
+      },
+      {
+        "name": "20260914090000_canonical_api_release_confirmation.sql",
+        "body_sha256": "6a04c3278fb2d586992e7184904bdbed0984e4a32e1615d38e1bd11247e9b076",
+        "body_utf8_bytes": 11390
+      },
+      {
+        "name": "20260914100000_canonical_api_release_discovery.sql",
+        "body_sha256": "9e6caaf747d742119da8fa3bf9d6d05928421e340f1aae30a3cabb7b5ee3d9ac",
+        "body_utf8_bytes": 5110
+      },
+      {
+        "name": "20260914110000_document_link_retrieval_wait_authorization.sql",
+        "body_sha256": "e2587cba8bc82776c12240aa14ebbcda11c834a386a7df16070477532f5a270a",
+        "body_utf8_bytes": 932
+      },
+      {
+        "name": "20260914120000_explicit_public_creation_privileges.sql",
+        "body_sha256": "5a380d2b047fd5a7e9f8790048b9d040cbb0a6033e524fdc08ab6d0c112ae179",
+        "body_utf8_bytes": 1227
+      },
+      {
+        "name": "20260914130000_ezyvet_migration_manifests.sql",
+        "body_sha256": "37c71f3b999dc364622e4fa0a522bbc6fd0bff4b69d4fc2d86e6be0c78f353de",
+        "body_utf8_bytes": 11774
+      },
+      {
+        "name": "20260914140000_ezyvet_migration_bindings.sql",
+        "body_sha256": "163ee3c5cfd9d860ee1d73a3e646f4fee8f9bd08f56a9b785be29d9f6323f8a5",
+        "body_utf8_bytes": 11039
+      },
+      {
+        "name": "20260914150000_ezyvet_migration_progress.sql",
+        "body_sha256": "586b74a7061ca47da6baf0419a7742b8fa13fcb5a292c94a28b6de9f97e85783",
+        "body_utf8_bytes": 7221
+      },
+      {
+        "name": "20260914160000_ezyvet_migration_attempt_events.sql",
+        "body_sha256": "508bb76cdcfbfdc8c7c297f5668ea26b0a45ce0e6eb419f7a7024e5f01cbef0d",
+        "body_utf8_bytes": 13682
+      },
+      {
+        "name": "20260914170000_ezyvet_claim_wait_authorization.sql",
+        "body_sha256": "8068210531712750907bc76b7c020529744a7451b59b2a24b61bdeaf370409b8",
+        "body_utf8_bytes": 25202
+      },
+      {
+        "name": "20260914180000_ezyvet_stage_failure_wait_authorization.sql",
+        "body_sha256": "3bb76fd6f48d17e908ca24ece1f6db2ea2535c129e6bb1c31fe9d1ef67a70dbd",
+        "body_utf8_bytes": 34837
+      },
+      {
+        "name": "20260914190000_ezyvet_migration_items.sql",
+        "body_sha256": "ae3fe406e5ec31ef87f8dd752e857526dadce49840961f75d4293ba366962cd5",
+        "body_utf8_bytes": 7443
+      },
+      {
+        "name": "20260914200000_ezyvet_migration_capture_evidence.sql",
+        "body_sha256": "d77f381718e70a4b9bf4e5ac1bc44225621c30c52f1e40c9407d1461dd55a9dc",
+        "body_utf8_bytes": 5971
+      },
+      {
+        "name": "20260914210000_ezyvet_migration_history_evidence.sql",
+        "body_sha256": "fd3ca27d247245fe1d6d4787de4da25145bdd79d26e07773b363aa2437669bdb",
+        "body_utf8_bytes": 4954
+      },
+      {
+        "name": "20260914220000_ezyvet_migration_vaccination_evidence.sql",
+        "body_sha256": "4298f81466a19aa7553d28d5d323df243e39e01dc2e47be1bf2ebb57a8088e77",
+        "body_utf8_bytes": 4974
+      },
+      {
+        "name": "20260914230000_ezyvet_migration_prescription_evidence.sql",
+        "body_sha256": "3743aa061f51443b12436aaf2310e0d8bc7cef4086805a6ff69d9b29317ae612",
+        "body_utf8_bytes": 6059
+      },
+      {
+        "name": "20260916000000_ezyvet_migration_prescription_item_evidence.sql",
+        "body_sha256": "a5f2538bd30054f9b703a3b6b955a351bed1d4ee0fdbf8740b4a5e157a54a80e",
+        "body_utf8_bytes": 6451
+      },
+      {
+        "name": "20260916010000_ezyvet_migration_identity_evidence.sql",
+        "body_sha256": "da1c5c63687ef1d5a958cd21c24ee75eb1ea4edb620c328ad86f05cad710521b",
+        "body_utf8_bytes": 4087
+      },
+      {
+        "name": "20260916020000_ezyvet_migration_weight_evidence.sql",
+        "body_sha256": "9d2679e7de4190054de10cddd17d49af9d70e8d0793367c6d137d60ff28a67da",
+        "body_utf8_bytes": 5925
+      },
+      {
+        "name": "20260916033310_ezyvet_migration_weight_evidence.sql",
+        "body_sha256": "34bcc7cc5fe438dbf9eebecf823d26aea372428dd11a81195e65ea1856cb1633",
+        "body_utf8_bytes": 6226
+      },
+      {
+        "name": "20260916043949_ezyvet_migration_resolutions.sql",
+        "body_sha256": "b63e5239dfd42e2f5c75617ac372a6762165230e6d0b9358ed52e2adcf64bc96",
+        "body_utf8_bytes": 31120
+      },
+      {
+        "name": "20260916055043_native_prescriptions_lifecycle.sql",
+        "body_sha256": "efecf301581ab56378d31c72e9aa8df573f6d8c2686de41e3e2f8bd64c8657f2",
+        "body_utf8_bytes": 28239
+      },
+      {
+        "name": "20260916062136_native_prescription_authorization_events.sql",
+        "body_sha256": "95d4efb383231f02b0272f617330b4a39de6da68d54dab01c5d9b94795592bb9",
+        "body_utf8_bytes": 25423
+      },
+      {
+        "name": "20260916063857_native_refill_operational_intake.sql",
+        "body_sha256": "7a9e7e4cd397b1c623f90fbfc41af88cf9b776c6fe5aa23a2103d7d28bfcf623",
+        "body_utf8_bytes": 22173
+      },
+      {
+        "name": "20260916070108_inventory_product_before_lot_locking.sql",
+        "body_sha256": "be9f2492346f3ac585ef8c5a13b5a7524b7031067f6a64457ee2b2289781b1cd",
+        "body_utf8_bytes": 2495
+      },
+      {
+        "name": "20260916072509_native_fulfillment.sql",
+        "body_sha256": "51fab4412ccffa2e11b3b48d579bd729cfd432c7f8510cbf8d5acf9d647ce9f8",
+        "body_utf8_bytes": 51235
+      },
+      {
+        "name": "20260916080105_native_record_releases.sql",
+        "body_sha256": "31e775d594072b0c42ae1da3427c4d5d60c9986aa5b24d1dd2873c2ac0f29c70",
+        "body_utf8_bytes": 17213
+      },
+      {
+        "name": "20260916083056_native_dispense_corrections.sql",
+        "body_sha256": "9f69e07b24e7d01007420f5f444941422177e6bf2fa4ff548c20b210dd642c03",
+        "body_utf8_bytes": 34791
+      },
+      {
+        "name": "20260916090000_native_dispense_returns.sql",
+        "body_sha256": "fc89ac2801bbb39b21c7be5e6f7fffb06a381710a3ff7020c4b77e087373b99b",
+        "body_utf8_bytes": 56200
+      },
+      {
+        "name": "20260916093000_native_return_quantity_replay.sql",
+        "body_sha256": "b641b80ae0ae32cdff63111bcaa928ebed5178c70636506ad11f83c268786463",
+        "body_utf8_bytes": 11855
+      },
+      {
+        "name": "20260916094500_native_return_reconciliation.sql",
+        "body_sha256": "2e8040d9750d5b580dbc102562e6fd9c0d09dd4af30682606273d8848787553d",
+        "body_utf8_bytes": 92343
+      },
+      {
+        "name": "20260916100000_native_return_reconciliation_releases.sql",
+        "body_sha256": "7886c3873ebf467d8fb9b621448fbd4ff7900d78f629deec36d5bb12050f1d47",
+        "body_utf8_bytes": 10113
+      },
+      {
+        "name": "20260916100001_conversation_attachment_uploads.sql",
+        "body_sha256": "54501285475cb1de4e73d00a12085816feab9acd34760d8bd72fc2f34e8a33b4",
+        "body_utf8_bytes": 9860
+      },
+      {
+        "name": "20260916110000_native_dispense_finance.sql",
+        "body_sha256": "0f2180c0f91304bdf44971fea3b8ececa25c479eb199b546731cf866f496906d",
+        "body_utf8_bytes": 45961
+      },
+      {
+        "name": "20260916110001_conversation_email_preparation.sql",
+        "body_sha256": "7af008b5c2a3cc70dc3882d455c758cf8fd2307750c8c7e870221de158128e9f",
+        "body_utf8_bytes": 25457
+      },
+      {
+        "name": "20260916120000_inbound_attachment_capture.sql",
+        "body_sha256": "39517274f1dcac9649fe3da8ec22589d843bc99546b09d9edf7cd7df2d47d742",
+        "body_utf8_bytes": 16129
+      },
+      {
+        "name": "20260916120716_native_estimate_drafts.sql",
+        "body_sha256": "c96db25282024213273242077891f7a4845623a70ceda2a25fde139502ef651b",
+        "body_utf8_bytes": 26654
+      },
+      {
+        "name": "20260916123017_native_estimate_publications.sql",
+        "body_sha256": "0c8926c227a396cd5a9502ee73503407095815cd817965597fa3d0c251451ab3",
+        "body_utf8_bytes": 47959
+      },
+      {
+        "name": "20260916130000_abandoned_attachment_cleanup.sql",
+        "body_sha256": "5d98f50441f1d28321e2ba250b965fb2c9f0a9893c98240e6eac24a3ada6dc41",
+        "body_utf8_bytes": 11456
+      },
+      {
+        "name": "20260916144117_native_estimate_decisions.sql",
+        "body_sha256": "0bc0b36f565d16e88252ca2601afba41d40a21e23e1d82ded7c8d09c41ed4646",
+        "body_utf8_bytes": 70772
+      },
+      {
+        "name": "20260919120000_new_auth_users_inactive.sql",
+        "body_sha256": "c28c479859fd931cf7c7ca7d7dd94bb4c8ff8a60307357d6e3a35424aedb4ecc",
+        "body_utf8_bytes": 1175
+      },
+      {
+        "name": "20260921120000_a5_on_duty_guard.sql",
+        "body_sha256": "7c61e87a14bd4201c2d1d800bbb00073b3170afadeadbc496102c2e62311605d",
+        "body_utf8_bytes": 2375
+      },
+      {
+        "name": "20260921130000_a4_consent_submission_columns.sql",
+        "body_sha256": "0dc97453d9f4d278d45b65c80ba9330dc0da1fa922d63bac9df455faba426ddc",
+        "body_utf8_bytes": 2301
+      },
+      {
+        "name": "20260922120000_b1_scheduler.sql",
+        "body_sha256": "ca3845c34112a46fd41666031ff7d498fced7d581ef717563c8e7613df39a539",
+        "body_utf8_bytes": 11814
+      },
+      {
+        "name": "20260922170000_outbound_deliveries.sql",
+        "body_sha256": "35a18cc9fcbddb4c2b5ace1bf3bbf1bfad9782cd2f2924d4486989fa4dcffb2a",
+        "body_utf8_bytes": 6836
+      },
+      {
+        "name": "20260922183000_contact_submission_triage.sql",
+        "body_sha256": "59745e47a21d68ac20b7968933712fee9c8e697aeb2483355ebcf48745d5c772",
+        "body_utf8_bytes": 5134
+      },
+      {
+        "name": "20260922190000_appointment_reminder_outbound_deliveries.sql",
+        "body_sha256": "8b3f849eb303196009c7cbbc66bd3f0bdd511e79b9f41c4ef4beb9c05a6da34b",
+        "body_utf8_bytes": 10393
+      },
+      {
+        "name": "20260922203000_appointment_write_safety.sql",
+        "body_sha256": "2672762292fe773b392d91d62b8537ad5853eaf75518ce8176b272c55d3d212c",
+        "body_utf8_bytes": 11676
+      },
+      {
+        "name": "20260922210000_outbound_delivery_worker_results.sql",
+        "body_sha256": "9f06fc738ebacf757e3e042d87a28e3670f52c219bb31e9dac7f5a446154d05a",
+        "body_utf8_bytes": 5122
+      },
+      {
+        "name": "20260922213000_outbound_delivery_callbacks.sql",
+        "body_sha256": "590dea2bc119a1d0e2e920deb6ab737ea19dc47e066726c68b339fb9e4180f58",
+        "body_utf8_bytes": 4527
+      },
+      {
+        "name": "20260922220000_inbound_sms_processing.sql",
+        "body_sha256": "ecabd8c7d825cd2f079afe986c651afdb38912af22d10b2d348f056f4a3657a3",
+        "body_utf8_bytes": 7913
+      },
+      {
+        "name": "20260922223000_staff_outbound_message_queue.sql",
+        "body_sha256": "2d14901953b91ad686ce1aff64b90697f4ee0572cd6f2ca6b5b2c87f1eb2f3a3",
+        "body_utf8_bytes": 7730
+      },
+      {
+        "name": "20260922224500_outbound_delivery_staff_controls.sql",
+        "body_sha256": "04378005a55e864075e7320eb62343e9b7848e93d07fbcdf3bb9fec1f38b0f2f",
+        "body_utf8_bytes": 5092
+      },
+      {
+        "name": "20260922230000_contact_submission_abuse_controls.sql",
+        "body_sha256": "a39d58a039eecfda4f86db6b415fc9b9bb05b72fdcff6fd875428286f5e706cf",
+        "body_utf8_bytes": 2938
+      },
+      {
+        "name": "20260924120000_canonical_housecall_appointment_contract.sql",
+        "body_sha256": "b2a3556ef53b5b0cc9abb9183e12a7a92497e6f62cbdb30f80f6f8951694156e",
+        "body_utf8_bytes": 6547
+      },
+      {
+        "name": "20260924130000_inbound_sms_service_rpc_security.sql",
+        "body_sha256": "e252bb8e2ab7937bb759bed33ed9b2a27b344e0f71691a5b0de0b87d8f8fb30a",
+        "body_utf8_bytes": 549
+      },
+      {
+        "name": "20260926031324_restore_verified_contact_intake_boundary.sql",
+        "body_sha256": "4acf797365cc686b536024428d8a5af95baae0c819270522681719d04f58fa60",
+        "body_utf8_bytes": 2455
+      },
+      {
+        "name": "20260926090000_cloudtalk_activity.sql",
+        "body_sha256": "882516da5dfd8a9ec2955f9952055857280944ea1d5a105dbbaa9cbc581f6beb",
+        "body_utf8_bytes": 8279
+      },
+      {
+        "name": "20260927120000_contact_sms_consent.sql",
+        "body_sha256": "cb82e967a55c300c57eceb56f6b5a4b28d4bd80f1a6d54a99213a52a0ba17fb6",
+        "body_utf8_bytes": 7081
+      },
+      {
+        "name": "20260928100000_cloudtalk_outbound_sms.sql",
+        "body_sha256": "f3586fd88c68fd34949b200aeb70ca7bbd684d373b9c578a0e5e907ceec995be",
+        "body_utf8_bytes": 11595
+      },
+      {
+        "name": "20260928110000_cloudtalk_unified_inbox.sql",
+        "body_sha256": "e2e9adf752ded506594b68504701ded2e1e9e93c608f9f105e688c695bb5d860",
+        "body_utf8_bytes": 28298
+      },
+      {
+        "name": "20260928120000_vaccine_catalog_profiles_and_status.sql",
+        "body_sha256": "a26a5629fa3e122008bbff323d891f04071a64a278cf7f485d721fd4e23c9a8c",
+        "body_utf8_bytes": 13735
+      },
+      {
+        "name": "20260928121000_rabies_certificate_serial_number.sql",
+        "body_sha256": "e78fbd7d23f4fb9cc344eab140ff50729389320868e9a4792bde82e3cb67d574",
+        "body_utf8_bytes": 2105
+      },
+      {
+        "name": "20260928130000_qol_hhhhhmm_scale.sql",
+        "body_sha256": "011be2c4b5fef9a14c78c3c8feda912cdb2b1b7f5332ad29c25d27ef65b97abd",
+        "body_utf8_bytes": 15059
+      },
+      {
+        "name": "20260928140000_anesthesia_drug_administrations.sql",
+        "body_sha256": "a51db3bf019d467eb166ed46b6d1a44738bc0be28b9f3f0ff2df409bf1e5c429",
+        "body_utf8_bytes": 7093
+      },
+      {
+        "name": "20260928150000_reminder_pipeline_readiness.sql",
+        "body_sha256": "8ee08b02b3ab1c876edc8d285b6524e8b11f67d8d864606fb95d80490b769a32",
+        "body_utf8_bytes": 32696
+      },
+      {
+        "name": "20260928160000_cloudtalk_capability_redaction.sql",
+        "body_sha256": "8b1694531cf11f57351f3eac840e7ce349c3a85f11f80c59f62f4f59715609ff",
+        "body_utf8_bytes": 16453
+      },
+      {
+        "name": "20260928170000_patient_360_read_model.sql",
+        "body_sha256": "2efd40b106f9a12bd7c4695f5cf6620b030c18a9a48512c4674ec2447e8bef91",
+        "body_utf8_bytes": 38646
+      },
+      {
+        "name": "20260928180000_agentmail_inbound.sql",
+        "body_sha256": "d9604f1104590c6bcd6ff1e445c8ed0ecea900157f0c796e18cb4b8f06f39576",
+        "body_utf8_bytes": 6211
+      },
+      {
+        "name": "20260928190000_no_retryable_sqlstate_for_permanent_conditions.sql",
+        "body_sha256": "a79e8e9355472a333472b9cefbce8782c48c66264bf19965c456acbb3c4d8e88",
+        "body_utf8_bytes": 481268
+      },
+      {
+        "name": "20260930100000_sms_resubscribe_after_stop.sql",
+        "body_sha256": "cf447e4d6dae31021ea692d34ffd7f82be9de88f9aec4a836f9900bd3729d9fa",
+        "body_utf8_bytes": 32371
+      },
+      {
+        "name": "20260930120000_linkage_integrity.sql",
+        "body_sha256": "06adaef1f602184b13437aeace367a58136a4125e7a4367d613215b22e4a17fa",
+        "body_utf8_bytes": 16038
+      },
+      {
+        "name": "20260930130000_scheduler_timeout_and_payload_purge.sql",
+        "body_sha256": "11a08941c989c81e41af15511f3eb39203b5eaeba43f167bbc858e20ad4f7866",
+        "body_utf8_bytes": 6586
+      },
+      {
+        "name": "20261009011500_client_contact_integrity.sql",
+        "body_sha256": "1e2b9164fd34277e8f7b6e4b022244b3ca0b5f18535691709afe9628353ba394",
+        "body_utf8_bytes": 14768
+      },
+      {
+        "name": "20261009160543_patient_identity_photos.sql",
+        "body_sha256": "245a2c70e6c4a5c2a47e91c7eb4ab03a378620608da8d187c97423e1edb45af2",
+        "body_utf8_bytes": 12433
+      },
+      {
+        "name": "20261010021254_whogot_and_performed_services.sql",
+        "body_sha256": "f336e79c98561d961941f827ccb641c2c5cf09fce064c2c47d2861a27a61b596",
+        "body_utf8_bytes": 19194
+      },
+      {
+        "name": "20261010034500_daily_communications.sql",
+        "body_sha256": "e65ed0341944bad3c21f530d81955099d2712cb6085dbcd9b1ea0286e1962f12",
+        "body_utf8_bytes": 12517
+      },
+      {
+        "name": "20261010170259_care_plan_recurrence.sql",
+        "body_sha256": "600e69817b2caab68738aea7be94e04a5dc70c568e51264e82a8074733cf857b",
+        "body_utf8_bytes": 98847
+      },
+      {
+        "name": "20261011025251_records_requests_and_packages.sql",
+        "body_sha256": "46d04df37bd6b1b0d3efcdc36bc9b1a480048e4c250525ed7abd6a0a4ddb166c",
+        "body_utf8_bytes": 86386
+      },
+      {
+        "name": "20261011181722_manual_diagnostic_panels.sql",
+        "body_sha256": "ec1682c941fc632fda33a963f92295382c7bc0447edeb1ede277cb1849a8f789",
+        "body_utf8_bytes": 27417
+      },
+      {
+        "name": "20261011203250_diagnostic_pdf_jobs.sql",
+        "body_sha256": "c91203146119b8e5bc5689b58e4cc32433c9f07343eab61caeb33da0cda24543",
+        "body_utf8_bytes": 22379
+      },
+      {
+        "name": "20261012035948_diagnostic_pdf_artifact_processing.sql",
+        "body_sha256": "d1d72601b9756b71e381179f3c6ad715b77668e1a7a7f92025173b1bb6d1483a",
+        "body_utf8_bytes": 29957
+      },
+      {
+        "name": "20261012153518_diagnostic_pdf_staff_review.sql",
+        "body_sha256": "26c1beb0b728a6da251a2e61cd522cb2f6fd85814b1797e6851cb9b62655b97e",
+        "body_utf8_bytes": 12186
+      },
+      {
+        "name": "20261012210016_diagnostic_pdf_release_scope.sql",
+        "body_sha256": "bfb99625e39205307918aea1647d1d6548f5324f9bcdf10f98a9d8ab6e24a516",
+        "body_utf8_bytes": 7831
+      },
+      {
+        "name": "20261013003556_diagnostic_pdf_record_packages.sql",
+        "body_sha256": "d2724dd9d8be1d6b6f96eabd88025ac0548d7a3b1f602a77a272c69076510ce7",
+        "body_utf8_bytes": 23235
+      },
+      {
+        "name": "20261013181721_appointment_catalog_and_bindings.sql",
+        "body_sha256": "8407cccde4d7f39c84a8515677d54f2c79213c4c185c512dfaadc173fd1fe7ab",
+        "body_utf8_bytes": 33468
+      },
+      {
+        "name": "20261013214300_catalog_patient_eligibility_lock.sql",
+        "body_sha256": "b17c32aa14d54966fc56f598591272fcf6900e9a0abccee166e94577f305332c",
+        "body_utf8_bytes": 805
+      },
+      {
+        "name": "20261013220500_next_visit_outcomes.sql",
+        "body_sha256": "3ba3bb48a68be9b875128358c064f923468034d6c860f6c7a488822f270575f7",
+        "body_utf8_bytes": 23954
+      },
+      {
+        "name": "20261013233839_next_visit_staff_recovery.sql",
+        "body_sha256": "aaa3af1791f150cda128760b851babeb7a6b26a403d2909617c625633c5153d4",
+        "body_utf8_bytes": 17928
+      },
+      {
+        "name": "20261014022511_operational_tasks.sql",
+        "body_sha256": "2f7ce0a079041cfddf1f20d4a1436425c5c07b9fb64b850b94612fe839aede1c",
+        "body_utf8_bytes": 68933
+      },
+      {
+        "name": "20261014154223_operational_task_reconciliation.sql",
+        "body_sha256": "51f991555087667ce462d9243f92faf910e5b220428e1841e413f5ba2557ada3",
+        "body_utf8_bytes": 31614
+      },
+      {
+        "name": "20261014202235_supplier_product_identity.sql",
+        "body_sha256": "693a974f59a86f50c4fabaf9253a1f579bacdade545171c74a17231e812e6df4",
+        "body_utf8_bytes": 35271
+      },
+      {
+        "name": "20261015011200_controlled_draft_configuration.sql",
+        "body_sha256": "253fcf9dd2b4775ec7db79ea2acea4581569b4a255b64d383feed98bb7845122",
+        "body_utf8_bytes": 26102
+      },
+      {
+        "name": "20261015020722_stock_writer_provenance.sql",
+        "body_sha256": "3dc4dfc60ccf2dc8d28ddc701d8a8d33cae19bb8ef8cd0a138ef8a2e526a13d9",
+        "body_utf8_bytes": 17702
+      },
+      {
+        "name": "20261015055007_native_custody_provenance.sql",
+        "body_sha256": "e74c541ff7fd8cc5e75ae148ec7260c15b5cbbe580685a804d97f0276feb0afe",
+        "body_utf8_bytes": 9687
+      },
+      {
+        "name": "20261015235157_unpaid_invoice_reminders.sql",
+        "body_sha256": "0bacad470b67baa0968733235afc5fb846a5995c4c828e80be2116b99a61f584",
+        "body_utf8_bytes": 28917
+      },
+      {
+        "name": "20261016004714_invoice_reminder_care_gate_order.sql",
+        "body_sha256": "1811eff6a9f485b4f764f89b4557dcd0cddbb57bbae732e9c78141dbf274f456",
+        "body_utf8_bytes": 844
+      },
+      {
+        "name": "20261016020711_invoice_reminder_practice_settings.sql",
+        "body_sha256": "88a538df44e3aaac4ed1a1209a20fb91de1356eca8af3329cceaa584a31b06ac",
+        "body_utf8_bytes": 799
+      },
+      {
+        "name": "20261016040402_clinical_dictation_review.sql",
+        "body_sha256": "c364135417967ba2560c7a7ae3998921f7d846d52cc0df0021a455d93894ddef",
+        "body_utf8_bytes": 13308
+      },
+      {
+        "name": "20261016143618_clinical_audio_soap.sql",
+        "body_sha256": "ee692da2686b85c3088938b3fd22cb1225bc2232a93bcacfd210e996796ecb1e",
+        "body_utf8_bytes": 28612
+      },
+      {
+        "name": "20261016162448_clinical_audio_veterinary_context.sql",
+        "body_sha256": "819f2cf3ae434191dc27c34dc3315685282144bd3cc6cfd86f5c4f5da5b39166",
+        "body_utf8_bytes": 8017
+      },
+      {
+        "name": "20261016200826_appointment_dictation.sql",
+        "body_sha256": "eb6f467f2d0aaafb6dba7673401950393c5ab6fbf697cd6e8d6be1185520b6c3",
+        "body_utf8_bytes": 6974
+      },
+      {
+        "name": "20261016215048_patient_imaging_studies.sql",
+        "body_sha256": "6981eba2d615c8e0df827daba43e496dfe38b41f3856baa01fc463b2531005bf",
+        "body_utf8_bytes": 19325
+      },
+      {
+        "name": "20261016224741_clinical_note_templates.sql",
+        "body_sha256": "87199bbee302cf75bc0502f9271bbede9f586db2649c3edd8dbb9ff9ce61e11d",
+        "body_utf8_bytes": 57457
+      },
+      {
+        "name": "20261017015543_clinical_record_recap.sql",
+        "body_sha256": "801965b142ad970a92fc5027dc0d6e47dda52217938136c9326f32d078142e55",
+        "body_utf8_bytes": 67187
+      },
+      {
+        "name": "20261017042009_clinical_recap_prompt_v2.sql",
+        "body_sha256": "f51ecd2a6d4faf6c65b173cf773be0cdb26dbf24609f3934644bc0527bf0f999",
+        "body_utf8_bytes": 4174
+      },
+      {
+        "name": "20261017042642_clinical_call_sources.sql",
+        "body_sha256": "c03b19f3a2112f72914dd36019d54aaed9298a9d7c9f02a207f994436a201612",
+        "body_utf8_bytes": 32251
+      },
+      {
+        "name": "20261017135245_clinical_call_note_sources.sql",
+        "body_sha256": "5835c89322576812b1c00af9d5ffc207119c68ee1a447e97fb63c7911d43b4d2",
+        "body_utf8_bytes": 47242
+      },
+      {
+        "name": "20261018032610_clinical_call_note_generation.sql",
+        "body_sha256": "ccb3c9460a20da848fd0fd262facf58ae8249b3ce6b4d869f2d41963bf71eb72",
+        "body_utf8_bytes": 53501
+      },
+      {
+        "name": "20261018150000_clinical_call_quote_anchors.sql",
+        "body_sha256": "52d887c9079f6c7bb647325f2ce9eb0b153b0af17684415fc16362fd4ea350a2",
+        "body_utf8_bytes": 10434
+      },
+      {
+        "name": "20261020151157_controlled_stock_private_engine.sql",
+        "body_sha256": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3",
+        "body_utf8_bytes": 1173738
+      }
+    ],
+    "private206": [
+      {
+        "name": "20261022010000_controlled_secondary_review_private.sql",
+        "body_sha256": "de8e0f4c0d2100b47a490dbd9b8e65c957fa49d003d447cb1af6f37aa8a75bfc",
+        "body_utf8_bytes": 8202276
+      }
+    ],
+    "unicode": [
+      {
+        "name": "unicode-test",
+        "body": "-- café\nselect 'é;猫';\n-- τέλος",
+        "body_sha256": "32a2317a7f3f91d08b2799b59495561abbc7fa9cbb9373689085477f5d20fda0",
+        "body_utf8_bytes": 39
+      }
+    ]
+  },
+  "independent_authority_pins": {
+    "tests/controlled-drugs/engine/candidate/secondary_review_ledger.py": "0f8a791b1bd7dc8cc2a3e60018e2ea9aacb5451ff5465136b7e75675c3e5f63d",
+    "tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py": "61e1d514e67b30e8e807567eb51f398a7702c4e01ab476b0d3c98d002e1f867f",
+    "tests/controlled-drugs/engine/candidate/release-expected-204.json": "4755a1f1c53008003a11e94ada3963ae416f6c81f163ec43ed2ffea21d6d2f78",
+    "supabase/tests/test_controlled_secondary_review_release_harness.py": "5e6d763af03a017ae33d95d8c20967ae823be550280746eccecbd914db9a1b3f"
+  },
+  "permit": "worker-owned one-launch immutable payload/argv/environment/cwd authorization consumed by exact Popen event; direct Node Popen without matching permit refused; cleared on every return/failure"
+}

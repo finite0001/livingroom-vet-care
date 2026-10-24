@@ -1,0 +1,38 @@
+{
+  "author_directory": "/private/tmp/lrv-v8-assemble-author-kg4ti85l",
+  "controls": [
+    {
+      "name": "exact reviewed bootstrap read AST",
+      "passed": true
+    },
+    {
+      "name": "expired original cutoff refuses read",
+      "passed": true,
+      "refusal": "TimeoutError"
+    },
+    {
+      "name": "wrong source hash refuses read",
+      "passed": true,
+      "refusal": "ValueError"
+    },
+    {
+      "name": "lying receipt write cannot credit",
+      "passed": true,
+      "refusal": "ValueError"
+    },
+    {
+      "name": "receipt close failure prevents credit",
+      "passed": true,
+      "refusal": "OSError"
+    }
+  ],
+  "files": {
+    "assemble.py": {
+      "bytes": 13637,
+      "sha256": "8b6b6c3215b61a2b2df9d1623c1c058932c828d15594a4d6361bf3dd1e870a49"
+    }
+  },
+  "formal_runner_acceptance": false,
+  "kind": "v8-preparation-wrapper-author-source-controls",
+  "target_tool_setup_network_auth_database_executed": false
+}

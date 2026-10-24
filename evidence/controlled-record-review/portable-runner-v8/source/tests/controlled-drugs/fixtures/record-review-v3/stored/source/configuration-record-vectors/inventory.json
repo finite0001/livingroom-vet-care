@@ -1,0 +1,21 @@
+{
+  "kind": "independent-configuration-record-corpus-v1",
+  "contract_sha256": "69e182574806c78a8bbc0fd4da1e4713bb0b83ceb2b9d86f2ce8bb12c6309e0f",
+  "status": "private_literal_expectations_not_sql_executed",
+  "database_runs": 0,
+  "target_helpers_implemented_by_this_author": false,
+  "families": 34,
+  "cases": 1332,
+  "success_cases": 136,
+  "refusal_cases": 1196,
+  "sql_null_cases": 4,
+  "by_function": {
+    "validate_stored_configuration": 108,
+    "validate_configuration_record": 153,
+    "configuration_record": 74,
+    "validate_configuration_pair": 997
+  },
+  "coverage_status": "representative_expanded_corpus_with_explicit_remaining_gaps_in_README",
+  "byte_guard_status": "oversize cases are otherwise malformed; no isolated cap-branch or unreachable-valid-edge credit",
+  "decode_error_cases_counted_as_23514": 0
+}

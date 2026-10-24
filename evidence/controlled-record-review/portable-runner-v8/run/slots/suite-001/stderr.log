@@ -1,0 +1,7 @@
+test_missing_lock_wait_still_fails_without_authorization_change (portable_worker_target.ContentionTimingTest.test_missing_lock_wait_still_fails_without_authorization_change) ... ok
+test_slow_holder_does_not_consume_waiter_budget (portable_worker_target.ContentionTimingTest.test_slow_holder_does_not_consume_waiter_budget) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.022s
+
+OK

@@ -1,0 +1,15 @@
+test_actual_prefix_cli_upgrade_and_no_epoch_reconstruction (portable_worker_target.GenuineStockHistoryTests.test_actual_prefix_cli_upgrade_and_no_epoch_reconstruction) ... ok
+test_adapter_uses_receipts_without_adopting_false_flags (portable_worker_target.GenuineStockHistoryTests.test_adapter_uses_receipts_without_adopting_false_flags) ... ok
+test_audit_proof_binds_all_actual_canonical_fields (portable_worker_target.GenuineStockHistoryTests.test_audit_proof_binds_all_actual_canonical_fields) ... ok
+test_duplicate_substituted_or_malformed_prior_metadata_refused (portable_worker_target.GenuineStockHistoryTests.test_duplicate_substituted_or_malformed_prior_metadata_refused) ... ok
+test_exact_primary_postgres_refusal_only (portable_worker_target.GenuineStockHistoryTests.test_exact_primary_postgres_refusal_only) ... ok
+test_handoff_expected_rows_derive_only_from_pinned_genuine_bodies (portable_worker_target.GenuineStockHistoryTests.test_handoff_expected_rows_derive_only_from_pinned_genuine_bodies) ... ok
+test_only_exact_eight_plus_two_manifest_rows_may_change (portable_worker_target.GenuineStockHistoryTests.test_only_exact_eight_plus_two_manifest_rows_may_change) ... ok
+test_replay_requires_all_original_relations_and_exact_one_audit (portable_worker_target.GenuineStockHistoryTests.test_replay_requires_all_original_relations_and_exact_one_audit) ... ok
+test_rollback_covers_catalog_ledger_and_old_rows (portable_worker_target.GenuineStockHistoryTests.test_rollback_covers_catalog_ledger_and_old_rows) ... ok
+test_ten_distinct_prior_hashes_are_required (portable_worker_target.GenuineStockHistoryTests.test_ten_distinct_prior_hashes_are_required) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.006s
+
+OK

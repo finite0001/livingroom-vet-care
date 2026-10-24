@@ -1,0 +1,58 @@
+{
+  "canonical_post206": {
+    "path": "tests/controlled-drugs/engine/candidate/canonical_post206.py",
+    "sha256": "27d6bedd8d66674a1274b26ddf5b01d2f2f230afe0448af96a5d3c888b025b61"
+  },
+  "canonical_prefix": {
+    "path": "tests/controlled-drugs/engine/candidate/canonical_prefix.py",
+    "sha256": "a9d9f9611a67319ed5b161ad977fa75923e241c4b2568d810e1bfde432586178"
+  },
+  "canonical_review_prefix": {
+    "path": "tests/controlled-drugs/engine/candidate/canonical_review_prefix.py",
+    "sha256": "5d9fece209ea925b283e4881b2b49b3a03044c624b137eefe98ed3f7c669afc3"
+  },
+  "cli_atomicity": {
+    "path": "tests/controlled-drugs/engine/candidate/cli_atomicity.py",
+    "sha256": "0099b4280564447340ba6640e6872b2b03592f53cc7957f2547dcdba0480d896"
+  },
+  "cli_migration_body": {
+    "path": "tests/controlled-drugs/engine/candidate/cli_migration_body.py",
+    "sha256": "c8cd378b0b9b3b755a891dc44d3951bb6db8cb920071f342f4f55222345696ef"
+  },
+  "derive_column_acl_pin": {
+    "path": "tests/controlled-drugs/engine/candidate/derive_column_acl_pin.py",
+    "sha256": "71f9b565924db6d99ba00f740292eb906b1df01c9629ddd2c5b71355a8969403"
+  },
+  "local_install": {
+    "path": "tests/controlled-drugs/engine/candidate/local_install.py",
+    "sha256": "4fd338314493d6e3ed6da2b8fec4f96a7f69d386df796530331e09be8e847083"
+  },
+  "record_review_v3_gate_a_descriptor": {
+    "path": "tests/controlled-drugs/engine/candidate/record_review_v3_gate_a_descriptor.py",
+    "sha256": "a09d0edefe78ef7f5d6420a9128559ab217ed8dcbf5f3d8777132985d774d417"
+  },
+  "record_review_v3_gate_a_snapshot": {
+    "path": "tests/controlled-drugs/engine/candidate/record_review_v3_gate_a_snapshot.py",
+    "sha256": "dfcc104f5274f0a633c4fd3bc862d8723b95590cbda5595f26e8107776de337e"
+  },
+  "release_assembly": {
+    "path": "tests/controlled-drugs/engine/candidate/release_assembly.py",
+    "sha256": "4109bdd789efe7536ea1323527f21638aba45e453a3ae5baf499ef8cdfeaf971"
+  },
+  "release_rehearsal": {
+    "path": "tests/controlled-drugs/engine/candidate/release_rehearsal.py",
+    "sha256": "325aea693e7e46e6fc0e5fb35d575fa027b8d36469bd7befc8946a5c1ced1466"
+  },
+  "secondary_review_cli_body": {
+    "path": "tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py",
+    "sha256": "61e1d514e67b30e8e807567eb51f398a7702c4e01ab476b0d3c98d002e1f867f"
+  },
+  "secondary_review_ledger": {
+    "path": "tests/controlled-drugs/engine/candidate/secondary_review_ledger.py",
+    "sha256": "0f8a791b1bd7dc8cc2a3e60018e2ea9aacb5451ff5465136b7e75675c3e5f63d"
+  },
+  "secondary_review_release": {
+    "path": "tests/controlled-drugs/engine/candidate/secondary_review_release.py",
+    "sha256": "0914c26c717147d670e60e9de96da9e55f56cc043958a6a154285523e4ed8ac6"
+  }
+}

@@ -1,0 +1,18 @@
+test_changed_definition_and_claimed_hash_rejected (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_changed_definition_and_claimed_hash_rejected) ... ok
+test_direct_derivation_add_delete_and_hash_drift_rejected (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_direct_derivation_add_delete_and_hash_drift_rejected) ... ok
+test_extra_and_missing_wrapper_fields_rejected (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_extra_and_missing_wrapper_fields_rejected) ... ok
+test_fixed_wrapper_and_pure_regeneration (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_fixed_wrapper_and_pure_regeneration) ... ok
+test_full_derivation_add_delete_rename_and_hash_drift_rejected (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_full_derivation_add_delete_rename_and_hash_drift_rejected) ... ok
+test_install_and_reference_lineage_pins_are_distinct (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_install_and_reference_lineage_pins_are_distinct) ... ok
+test_matching_mutated_builder_map_cannot_replace_frozen_map (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_matching_mutated_builder_map_cannot_replace_frozen_map) ... ok
+test_missing_source_and_extra_canonical_file_rejected (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_missing_source_and_extra_canonical_file_rejected) ... ok
+test_no_self_referential_file_hash_loop (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_no_self_referential_file_hash_loop) ... ok
+test_pure_builder_must_match_independent_literal (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_pure_builder_must_match_independent_literal) ... ok
+test_source_bytes_drift_rejected_even_when_metadata_identical (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_source_bytes_drift_rejected_even_when_metadata_identical) ... ok
+test_wrapper_byte_drift_refuses_before_regeneration (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_wrapper_byte_drift_refuses_before_regeneration) ... ok
+test_wrong_kind_and_version_including_boolean_rejected (portable_worker_target.RecordReviewV3GateBA1AdmissionTests.test_wrong_kind_and_version_including_boolean_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 2.527s
+
+OK

@@ -1,0 +1,160 @@
+{
+  "admission": {
+    "application_grants": [],
+    "auth_profile": false,
+    "independent_metadata_only": true,
+    "new_frozen_artifact_written": false,
+    "publication_connected": false,
+    "reference_complete": false,
+    "runtime_acceptance": false
+  },
+  "base_a1": {
+    "canonical_map_sha256": "2380f99699bbe3b3c3a97714ca01dc4f0eea0a233e87056f43ef962b763ac43d",
+    "expected_sha256": "17df4505f964f02314eb5524c896041076d8f30f1f5b437d95bb14af23459447",
+    "input_count": 246,
+    "install_sha256": "eb591816d79cf06a980648dccecb7f556866bfc5e0490a95ba34cb461ed8214f"
+  },
+  "declared_changed_bodies": {
+    "controlled_review_v3.required()": {
+      "semantic_change": "none; exact unchanged parent205/private206 and descriptor-vs-snapshot checks",
+      "text_change": "three A1-stage diagnostic literals replaced by explicit configuration-input stage diagnostic literals"
+    },
+    "controlled_review_v3.snapshot()": {
+      "inventory": "existing namespace-wide observation automatically includes added function; no excluded objects or metadata columns",
+      "semantic_change": "descriptor kind literal changes to controlled-review-v3-private-configuration-input-v1"
+    }
+  },
+  "descriptor_kind": "controlled-review-v3-private-configuration-input-v1",
+  "existing_v3_namespace_must_be_absent": true,
+  "files_proposed": [
+    "record-review-v3-configuration-schema.sql",
+    "record-review-v3-configuration-input.sql",
+    "record-review-v3-configuration-profile.json",
+    "record-review-v3-configuration-metadata.json",
+    "record-review-v3-configuration-vectors.json",
+    "record_review_v3_configuration_descriptor.py",
+    "record_review_v3_configuration_profile.py",
+    "record_review_v3_configuration_fixtures.py",
+    "supabase/tests/test_record_review_v3_configuration_profile_harness.py",
+    "supabase/tests/test_record_review_v3_configuration_fixtures_harness.py"
+  ],
+  "fresh_canonical206_only": true,
+  "frozen_a1_admission": {
+    "admission_file": "record_review_v3_gate_b_a1_admission.py",
+    "admission_input_count": 248,
+    "admission_sha256": "9153f8b79f735de00048afb8b30fa3558bfde7ab5fc1f8f6ac999f9896214476",
+    "wrapper_file": "record_review_v3_gate_b_a1_expected.json",
+    "wrapper_sha256": "35ebe7d2cbb374fdeb73c34106bdb11af3f22ee058e64013d47e67db81defa93"
+  },
+  "kind": "record-review-v3-private-configuration-input-profile-declaration-v1",
+  "new_function": {
+    "arguments": [
+      {
+        "mode": "in",
+        "name": "p_request",
+        "type": "jsonb"
+      }
+    ],
+    "configuration": [
+      "search_path=pg_catalog, public, pg_temp",
+      "TimeZone=UTC"
+    ],
+    "cost": 100,
+    "execute_acl": [
+      {
+        "grantable": false,
+        "grantee": "postgres",
+        "grantor": "postgres",
+        "privilege": "EXECUTE"
+      }
+    ],
+    "explicit_revocations": [
+      "PUBLIC",
+      "anon",
+      "authenticated",
+      "service_role"
+    ],
+    "function_body_source": "record-review-v3-configuration-input.sql",
+    "function_body_source_sha256": "1379cf1d81e90d6f4152e9339c3035945ed9856e24cfaecbcf23110f579d4ffa",
+    "future_integration": "Separate exact descriptor/source closure and independent reference required; no public stub/guard or schema/table replacement.",
+    "language": "plpgsql",
+    "leakproof": false,
+    "name": "validate_configuration",
+    "namespace": "controlled_review_v3",
+    "noncatalog_function_dependencies": [
+      "public.controlled_stock_keys(jsonb,text[])",
+      "public.controlled_stock_uuid(jsonb)",
+      "public.controlled_stock_text(jsonb,integer,boolean)"
+    ],
+    "observed_ast_function_names": [
+      "pg_catalog.array_append",
+      "pg_catalog.char_length",
+      "pg_catalog.isfinite",
+      "pg_catalog.jsonb_array_elements",
+      "pg_catalog.jsonb_array_length",
+      "pg_catalog.jsonb_typeof",
+      "pg_catalog.octet_length",
+      "pg_catalog.timezone",
+      "pg_catalog.to_char",
+      "pg_catalog.to_jsonb",
+      "public.controlled_stock_keys",
+      "public.controlled_stock_text",
+      "public.controlled_stock_uuid"
+    ],
+    "owner": "postgres",
+    "parallel": "unsafe",
+    "relations": [],
+    "result": "jsonb",
+    "rows": 0,
+    "security_definer": false,
+    "status": "proposed_source_declaration_only_not_installed",
+    "strict": false,
+    "support": null,
+    "volatility": "volatile"
+  },
+  "runtime_executed": false,
+  "schema": "controlled_review_v3",
+  "shape": {
+    "foreign_key_triggers": 60,
+    "foreign_keys": 15,
+    "functions_after": 32,
+    "functions_before": 31,
+    "new_indexes": 0,
+    "private_stubs": 3,
+    "public_stubs": 11,
+    "tables": 13,
+    "tables_changed": false
+  },
+  "source_closure": {
+    "new_derivation": [
+      "record-review-v3-configuration-schema.sql",
+      "record-review-v3-configuration-input.sql",
+      "record-review-v3-configuration-profile.json",
+      "record-review-v3-configuration-metadata.json",
+      "record_review_v3_configuration_descriptor.py",
+      "record_review_v3_configuration_profile.py"
+    ],
+    "no_cross_worktree_imports": true,
+    "no_mutation_of_imported_globals": true,
+    "no_rendered_ddl_replacement": true,
+    "no_self_hash_in_manifest": true,
+    "predecessor": "Frozen A1 admission248 includes original246 derivation unchanged plus independent wrapper/admission; six new candidate derivation inputs yield254.",
+    "test_execution_separate": [
+      "supabase/tests/test_record_review_v3_configuration_profile_harness.py",
+      "record_review_v3_configuration_fixtures.py",
+      "supabase/tests/test_record_review_v3_configuration_fixtures_harness.py",
+      "record-review-v3-configuration-vectors.json",
+      "fresh evidence inventory and all25 generated SQL stages"
+    ]
+  },
+  "source_integration": true,
+  "stage": "private_configuration_input_v1",
+  "status": "source_integrated_not_runtime_integrated",
+  "unchanged_bodies": [
+    "all12 A1 adapter functions",
+    "all14 public/private operational stubs",
+    "immutable_guard",
+    "refuse_insert",
+    "terminal_check"
+  ]
+}

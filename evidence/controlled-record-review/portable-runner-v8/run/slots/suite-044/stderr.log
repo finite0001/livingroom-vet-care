@@ -1,0 +1,18 @@
+test_all_operational_entries_are_private_and_fail_closed (portable_worker_target.RecordReviewV3GateATests.test_all_operational_entries_are_private_and_fail_closed) ... ok
+test_append_only_and_operational_insert_guards (portable_worker_target.RecordReviewV3GateATests.test_append_only_and_operational_insert_guards) ... ok
+test_both_sides_of_all_ri_enforcement_are_expected (portable_worker_target.RecordReviewV3GateATests.test_both_sides_of_all_ri_enforcement_are_expected) ... ok
+test_complete_absence_admission_covers_all_facade_object_kinds (portable_worker_target.RecordReviewV3GateATests.test_complete_absence_admission_covers_all_facade_object_kinds) ... ok
+test_exact_finite_tables_and_parent_fk_boundary (portable_worker_target.RecordReviewV3GateATests.test_exact_finite_tables_and_parent_fk_boundary) ... ok
+test_expected_is_source_derived_candidate_not_frozen_acceptance (portable_worker_target.RecordReviewV3GateATests.test_expected_is_source_derived_candidate_not_frozen_acceptance) ... ok
+test_extra_or_missing_canonical_file_refused (portable_worker_target.RecordReviewV3GateATests.test_extra_or_missing_canonical_file_refused) ... ok
+test_nested_retained_ledger_bytes_are_not_rewritten (portable_worker_target.RecordReviewV3GateATests.test_nested_retained_ledger_bytes_are_not_rewritten) ... ok
+test_old_pins_and_changed_canonical_body_refused (portable_worker_target.RecordReviewV3GateATests.test_old_pins_and_changed_canonical_body_refused) ... ok
+test_preservation_keeps_old_extension_and_excludes_only_declared_parent_ri (portable_worker_target.RecordReviewV3GateATests.test_preservation_keeps_old_extension_and_excludes_only_declared_parent_ri) ... ok
+test_source_closure_and_canonical206_ledger_are_exact (portable_worker_target.RecordReviewV3GateATests.test_source_closure_and_canonical206_ledger_are_exact) ... ok
+test_transaction_and_unique_failure_stage_order (portable_worker_target.RecordReviewV3GateATests.test_transaction_and_unique_failure_stage_order) ... ok
+test_unreviewed_function_inventory_and_outer_sql_refused (portable_worker_target.RecordReviewV3GateATests.test_unreviewed_function_inventory_and_outer_sql_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.478s
+
+OK

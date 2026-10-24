@@ -1,0 +1,99 @@
+{
+  "files": {
+    "scripts/restore-rehearsal/run.py": {
+      "bytes": 61724,
+      "reason": "inventory harness AST-only read",
+      "sha256": "f143360d483a8bce3674fbdf4092273ac1ead18b937b8dcf87d3bb4b2d75c969"
+    },
+    "supabase/config.toml": {
+      "bytes": 4850,
+      "reason": "owned scheduler and runtime config read",
+      "sha256": "90ff852959bbc855bedbe96d016e7ff6ee40b67741a42c9406749b41124c278a"
+    },
+    "tests/clinical-audio/disposable.py": {
+      "bytes": 5123,
+      "reason": "inventory harness AST-only read",
+      "sha256": "c365f46fe1a4d74346a2d5d88b68a96fbfbe07bdd69ada4da8500ed9b07b65a7"
+    },
+    "tests/clinical-call-generation/disposable.py": {
+      "bytes": 38900,
+      "reason": "inventory harness AST-only read",
+      "sha256": "3e62e27f1165c60da95b3e6854a5d8005da78d9e3552b3a401bbe86ab60cd125"
+    },
+    "tests/clinical-call-notes/disposable.py": {
+      "bytes": 34695,
+      "reason": "inventory harness AST-only read",
+      "sha256": "72202531d8c97a9977166559dd1c8d261ca812c746589ecbb9362b98ab6917a5"
+    },
+    "tests/clinical-calls/disposable.py": {
+      "bytes": 5510,
+      "reason": "inventory harness AST-only read",
+      "sha256": "b7d08a3ee73ce3855d26ee764c0e6054d0a090bf167ecf96efea8ecc80eca808"
+    },
+    "tests/clinical-dictation/disposable.py": {
+      "bytes": 4728,
+      "reason": "inventory harness AST-only read",
+      "sha256": "c53e9f333902419014ad5c5f7e5381e30e84005bf52f05ddfd8b9bc37d246680"
+    },
+    "tests/clinical-notes/disposable.py": {
+      "bytes": 5308,
+      "reason": "inventory harness AST-only read",
+      "sha256": "115fc45f8e824ba2eb308c07123ef6ae7f17edd1b935889bbb5eae7e2a4da827"
+    },
+    "tests/clinical-recap/disposable.py": {
+      "bytes": 5437,
+      "reason": "inventory harness AST-only read",
+      "sha256": "30d7302390da2a8b8b0fc557bc3391457bd4d400c1e53cbb85bed9043ac80090"
+    },
+    "tests/clinical-recap/evaluation-local.py": {
+      "bytes": 5837,
+      "reason": "inventory harness AST-only read",
+      "sha256": "06b6326c9ac19e1215a47511ccf3e216c7f610d36a60a10e4a63bade604b6c54"
+    },
+    "tests/diagnostics/local-disposable.py": {
+      "bytes": 5423,
+      "reason": "inventory harness AST-only read",
+      "sha256": "ddb69e43f15788c945d49407250b91a1b34819896765a489e8bad4ae843e56c8"
+    },
+    "tests/diagnostics/pdf-jobs-disposable.py": {
+      "bytes": 5901,
+      "reason": "inventory harness AST-only read",
+      "sha256": "e7c2fa1110bd58492d8523f5d0aba0999d5be3b10878db81464cc5903e5c0698"
+    },
+    "tests/diagnostics/pdf-registration-disposable.py": {
+      "bytes": 7999,
+      "reason": "inventory harness AST-only read",
+      "sha256": "9c36e134f9a20d474109ce2a15660e44ed9fe910d000bec781a9b9f65809b9de"
+    },
+    "tests/ezyvet/attachment-metadata-disposable.py": {
+      "bytes": 14405,
+      "reason": "inventory harness AST-only read",
+      "sha256": "bcdf25991dff1a4048ed179775083ff7bff8355b2f4b79fb9f185559d31218f2"
+    },
+    "tests/imaging/disposable.py": {
+      "bytes": 4293,
+      "reason": "inventory harness AST-only read",
+      "sha256": "c49964906bb5a6dc46748f75a2d8b688a290d7910f8ed4ab1c496aaf144df9be"
+    },
+    "tests/invoice-reminders/disposable.py": {
+      "bytes": 5514,
+      "reason": "inventory harness AST-only read",
+      "sha256": "748194514cc843642c5a63a5e6047f4e71bc5a8c6930ec45a6e6b17e7c371bd8"
+    },
+    "tests/prescriptions/native-disposable.py": {
+      "bytes": 21909,
+      "reason": "inventory harness AST-only read",
+      "sha256": "775bd1b7092dd1b713cca2a4203e00592ef19e4395dc2cea63e701ccab25a39c"
+    },
+    "tests/scheduling/disposable.py": {
+      "bytes": 21397,
+      "reason": "inventory harness AST-only read",
+      "sha256": "fa575007d32df95a24cfb205720b5ece07218de3ebb6bcf58d4db212eba6247e"
+    }
+  },
+  "inventory_harness_sha256": "3c5f5f2249e7f4d11b4ac83045912447b3eaf72c54306db486458d58afc5ba19",
+  "kind": "portable-publication-read-dependencies-v1",
+  "original_maps_changed": false,
+  "parent_worktree_head": "badf336b7870323b92f75105d988a87534a204da",
+  "runtime_discovery": false
+}

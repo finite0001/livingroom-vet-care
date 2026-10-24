@@ -1,0 +1,503 @@
+{
+  "caps_bytes": {
+    "caller": 131072,
+    "pair": 524288,
+    "publication": 393216,
+    "receipt": 131072,
+    "record": 262144,
+    "request": 131072,
+    "retained_calendar_pair": 131072,
+    "row": 262144,
+    "stored": 131072,
+    "stream": 4096
+  },
+  "exception_conditions": [
+    "check_violation",
+    "datetime_field_overflow",
+    "invalid_datetime_format",
+    "invalid_text_representation",
+    "numeric_value_out_of_range"
+  ],
+  "expected_function_count_after_separate_future_integration": 37,
+  "functions": [
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_request",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "declared_helper_edges": [
+        "validate_calendar_observation",
+        "validate_configuration"
+      ],
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "validate_stored_configuration",
+      "namespace": "controlled_review_v3",
+      "observed_source_analysis": {
+        "aliases": [],
+        "calls": [
+          "controlled_review_v3.validate_calendar_observation",
+          "controlled_review_v3.validate_configuration",
+          "isfinite",
+          "jsonb_build_object",
+          "jsonb_set",
+          "jsonb_typeof",
+          "left",
+          "octet_length",
+          "public.controlled_stock_keys",
+          "to_char"
+        ],
+        "expressions": 29,
+        "locals": [
+          "calendar_pair",
+          "caller_copy",
+          "effective_text",
+          "effective_value",
+          "found",
+          "p_request",
+          "sqlerrm",
+          "sqlstate"
+        ],
+        "name": "validate_stored_configuration",
+        "plpgsql_functions": 1,
+        "relation_reads": 0,
+        "sql_statements": 1
+      },
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "primary_malformed_input": {
+        "message": "stored_configuration_invalid",
+        "sqlstate": "23514"
+      },
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "source": {
+        "location": "private",
+        "path": "record-review-v3-stored-configuration.sql",
+        "sha256": "8699b3930274124a9e45f226d2bfbe6eac313b852f7019319f6c6736e24a24f3"
+      },
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    },
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_request",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "declared_helper_edges": [
+        "validate_stored_configuration"
+      ],
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "validate_configuration_record",
+      "namespace": "controlled_review_v3",
+      "observed_source_analysis": {
+        "aliases": [],
+        "calls": [
+          "controlled_review_v3.validate_stored_configuration",
+          "isfinite",
+          "jsonb_typeof",
+          "left",
+          "octet_length",
+          "public.controlled_stock_hash",
+          "public.controlled_stock_keys",
+          "public.controlled_stock_text",
+          "public.controlled_stock_uuid",
+          "to_char"
+        ],
+        "expressions": 41,
+        "locals": [
+          "effective_value",
+          "found",
+          "kind_text",
+          "mode_text",
+          "p_request",
+          "published_text",
+          "published_value",
+          "sqlerrm",
+          "sqlstate",
+          "stored_document",
+          "version_value"
+        ],
+        "name": "validate_configuration_record",
+        "plpgsql_functions": 1,
+        "relation_reads": 0,
+        "sql_statements": 1
+      },
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "primary_malformed_input": {
+        "message": "configuration_record_invalid",
+        "sqlstate": "23514"
+      },
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "source": {
+        "location": "private",
+        "path": "record-review-v3-configuration-record-value.sql",
+        "sha256": "2161acca2cba0325a2cae398dc5f1157fae78f522fd6ef2a470497634a255697"
+      },
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    },
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_row",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "declared_helper_edges": [
+        "validate_configuration_record",
+        "validate_stored_configuration"
+      ],
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "configuration_record",
+      "namespace": "controlled_review_v3",
+      "observed_source_analysis": {
+        "aliases": [],
+        "calls": [
+          "controlled_review_v3.validate_configuration_record",
+          "controlled_review_v3.validate_stored_configuration",
+          "jsonb_build_object",
+          "jsonb_typeof",
+          "octet_length",
+          "public.controlled_stock_keys"
+        ],
+        "expressions": 28,
+        "locals": [
+          "complete_record",
+          "expected_stream",
+          "found",
+          "p_row",
+          "sqlerrm",
+          "sqlstate",
+          "stored_document",
+          "version_value"
+        ],
+        "name": "configuration_record",
+        "plpgsql_functions": 1,
+        "relation_reads": 0,
+        "sql_statements": 1
+      },
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "primary_malformed_input": {
+        "message": "configuration_record_invalid",
+        "sqlstate": "23514"
+      },
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "source": {
+        "location": "private",
+        "path": "record-review-v3-configuration-record-projection.sql",
+        "sha256": "d32a06ab6197d5ad24b19eb0ebd6867b6cb8a442f197ae7b7a1e5a00329cd556"
+      },
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    },
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_request",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "declared_helper_edges": [
+        "configuration_record",
+        "validate_configuration"
+      ],
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "validate_configuration_pair",
+      "namespace": "controlled_review_v3",
+      "observed_source_analysis": {
+        "aliases": [],
+        "calls": [
+          "controlled_review_v3.configuration_record",
+          "controlled_review_v3.validate_configuration",
+          "jsonb_build_object",
+          "jsonb_set",
+          "jsonb_typeof",
+          "octet_length",
+          "public.controlled_stock_hash",
+          "public.controlled_stock_keys",
+          "public.controlled_stock_text",
+          "public.controlled_stock_uuid"
+        ],
+        "expressions": 53,
+        "locals": [
+          "caller_document",
+          "complete_record",
+          "configuration_dto",
+          "expected_receipt",
+          "expected_stored",
+          "found",
+          "mode_text",
+          "original_request",
+          "p_request",
+          "publication_dto",
+          "receipt_value",
+          "sqlerrm",
+          "sqlstate",
+          "stored_comparison"
+        ],
+        "name": "validate_configuration_pair",
+        "plpgsql_functions": 1,
+        "relation_reads": 0,
+        "sql_statements": 1
+      },
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "primary_malformed_input": {
+        "message": "configuration_pair_invalid",
+        "sqlstate": "23514"
+      },
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "source": {
+        "location": "private",
+        "path": "record-review-v3-configuration-pair.sql",
+        "sha256": "d65816c5619e43549e3951f4c3eda9d6a0b5a72f51f88622d121ba064172fcdd"
+      },
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    },
+    {
+      "arguments": [
+        {
+          "mode": "in",
+          "name": "p_request",
+          "type": "jsonb"
+        }
+      ],
+      "configuration": [
+        "search_path=pg_catalog, public, pg_temp",
+        "TimeZone=UTC"
+      ],
+      "cost": 100,
+      "declared_helper_edges": [],
+      "execute_acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "EXECUTE"
+        }
+      ],
+      "explicit_revocations": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "language": "plpgsql",
+      "leakproof": false,
+      "name": "validate_calendar_observation",
+      "namespace": "controlled_review_v3",
+      "observed_source_analysis": {
+        "aliases": [
+          "k",
+          "q"
+        ],
+        "calls": [
+          "array_agg",
+          "array_append",
+          "isfinite",
+          "jsonb_array_elements",
+          "jsonb_array_length",
+          "jsonb_object_keys",
+          "jsonb_typeof",
+          "left",
+          "octet_length",
+          "public.controlled_stock_text",
+          "to_char",
+          "to_jsonb",
+          "unnest"
+        ],
+        "expressions": 106,
+        "locals": [
+          "body",
+          "candidate",
+          "candidates",
+          "close_candidate",
+          "close_value",
+          "day_date",
+          "day_row",
+          "end_candidate",
+          "end_value",
+          "first_day",
+          "fold",
+          "found",
+          "idx",
+          "item",
+          "label",
+          "last_day",
+          "local_value",
+          "observation",
+          "observed",
+          "offset_seconds",
+          "p_request",
+          "previous_end",
+          "previous_label",
+          "previous_utc",
+          "requested",
+          "sqlerrm",
+          "sqlstate",
+          "start_candidate",
+          "start_value",
+          "utc_text",
+          "utc_value",
+          "version_text",
+          "zone_name"
+        ],
+        "name": "validate_calendar_observation",
+        "plpgsql_functions": 1,
+        "relation_reads": 0,
+        "sql_statements": 1
+      },
+      "owner": "postgres",
+      "parallel": "unsafe",
+      "primary_malformed_input": {
+        "message": "calendar_observation_invalid",
+        "sqlstate": "23514"
+      },
+      "result": "jsonb",
+      "returns_set": false,
+      "rows": 0,
+      "security_definer": false,
+      "source": {
+        "location": "repository",
+        "path": "tests/controlled-drugs/engine/candidate/record-review-v3-calendar-observation.sql",
+        "sha256": "fd96822c2b2b65477055144324f801a0614d626b5ad224b92518aaa8979f1c64"
+      },
+      "strict": false,
+      "support": null,
+      "volatility": "volatile"
+    }
+  ],
+  "input_helper": "controlled_review_v3.validate_configuration(jsonb)",
+  "installed": false,
+  "kind": "configuration-record-five-helper-declaration-v1",
+  "parent_input_only_dependencies": [
+    "public.controlled_stock_hash",
+    "public.controlled_stock_keys",
+    "public.controlled_stock_text",
+    "public.controlled_stock_uuid"
+  ],
+  "private_authority_sha256": {
+    "configuration-record-boundary-vectors/freeze-manifest.json": "2efb0b0362e03d8f46dc80f248d96bccd4de3578b28032b98879c9f2e85cabe8",
+    "configuration-record-contract.md": "69e182574806c78a8bbc0fd4da1e4713bb0b83ceb2b9d86f2ce8bb12c6309e0f",
+    "configuration-record-vectors/freeze-manifest.json": "124145aed3ca5b82f35526b4486ba5d54b117e014879da897cc1d93b545fd7e1"
+  },
+  "profile_assembly": false,
+  "repository_dependency_sha256": {
+    "tests/controlled-drugs/engine/candidate/helpers.sql": "ee07aa22bb075f19c3e5516238953d45f6800fa178dd045850b0b25e97468a79",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-calendar-observation.sql": "fd96822c2b2b65477055144324f801a0614d626b5ad224b92518aaa8979f1c64",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-configuration-input.sql": "1379cf1d81e90d6f4152e9339c3035945ed9856e24cfaecbcf23110f579d4ffa",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-configuration-metadata.json": "17b092581f89ae7d65c99aafbc3616e52f0f6796bc335de23018452c066a6da0",
+    "tests/controlled-drugs/engine/candidate/record_review_v3_configuration_admission.py": "cb16e13ea3e01068c0e9ddb97babcbedf48be993e848418771e4b25afe98bbbd",
+    "tests/controlled-drugs/engine/candidate/record_review_v3_configuration_expected.json": "10eba1a8691c9da14e6fe3f358a6f846c01e03c919741c7aaae6ad8ab9501116"
+  },
+  "runtime_acceptance": false,
+  "scope": "Supplied-value structural correspondence only. No origin, authority, publication, reference existence, historical timezone exhaustiveness, replay, signing or runtime proof. No current-time or timezone resolver; no relation access or mutation. Repository leaf source hashes are direct dependencies; complete retained 256 admitted-input closure must be bound by the future profile assembly.",
+  "status": "private_source_declaration_only",
+  "version": 1
+}

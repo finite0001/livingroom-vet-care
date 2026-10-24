@@ -1,0 +1,217 @@
+{
+  "kind": "private-a2-opening-helper-declaration-v3",
+  "status": "DECLARATION_ONLY_BEFORE_BODY_SOURCE",
+  "candidate_changed": false,
+  "database_runs": 0,
+  "acceptance": false,
+  "source_input_sha256": {
+    "tests/controlled-drugs/engine/candidate/record-review-v3-adapters-selectors.json": "d54349f5968504eef8c1864b34e35c5a1f17aa150cab104a123d5deccb007e6f",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-adapters.sql": "fab132e8c047f5d2afec0eb24b87933e2747ae0163456e6e32f3b9b0ff03f4cd",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-adapters-clinical.sql": "63d91f43fb9891fdf2d3dbac04331a19ff3838d5693b653f3e11e02eb248bba8",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-adapters-native.sql": "cd552bfb977b209b58b514a01e2433d6eaf612a2aaba64391752a70cfd3bc2e8",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-adapters-context.sql": "de886b1127e964cc9b5a44bcdff13187d2032bc7fd9d298beebb764725252b88",
+    "tests/controlled-drugs/engine/candidate/opening.sql": "22f004a119e0bfe989e7612fbf9f337a1d26f67e95076eecd6a73cf9806d22b6",
+    "tests/controlled-drugs/engine/candidate/helpers.sql": "ee07aa22bb075f19c3e5516238953d45f6800fa178dd045850b0b25e97468a79",
+    "tests/controlled-drugs/engine/candidate/review.sql": "8d013b1aa949966d50ccca00ad34dbde1b7bb974dd84de97e550c889757eb2d3",
+    "tests/controlled-drugs/engine/candidate/protocol.sql": "a09af997dbbb125fca1dbc660dd667d396c0534f334f9a0cb2881260e5a46b60",
+    "tests/controlled-drugs/engine/candidate/constraints.sql": "dffb244cf0f9cba015d74f09f48ee225f012c60be271abdb5801f8ca151e6e52",
+    "tests/controlled-drugs/engine/candidate/schema.sql": "5467263c4776ca2ff67454a7086229644e3a6d233fc0a96d2ce831e20dd6fefe",
+    "tests/controlled-drugs/engine/candidate/posting.sql": "4f3e9f6829ff148ad2ee355f6535af9627ae6b176e64ff6356028f6a0cd8172b",
+    "tests/controlled-drugs/engine/candidate/effects.sql": "5e210e9c1ccc1ae5ff6f4e9f3b42144a9f6e416ee64ac8b6a68a8e573aec939e",
+    "tests/controlled-drugs/engine/candidate/native-history-seed.sql": "9470f5d39c13f4fc10fbf23bc0b1ef2963faa9ca4ac49be5dc27e040ed16ac0d",
+    "tests/controlled-drugs/engine/candidate/native-history-observe.sql": "0f884a72c8ecc22f8375e91e1718e90b81e4158b88bf611cb48d7cce94262b88",
+    "tests/controlled-drugs/engine/candidate/opening-boundary-acceptance.sql": "55ffc37696d6fe4f61ebc4c34bf3fc79518e1af46400c3de76ce9ce8a204e1e6",
+    "tmp/secondary-review-20261021/gate-b-a2-genuine-opening-implementation-map.md": "248cc0f77d303490f54cfeb4683496f5a475d9995285bf2b765a2306b13aad8b",
+    "tmp/secondary-review-20261021/A2-map-independent-review-amendment.json": "4483c67eaff0e3dd0cbf6621804a2cd0399e0fb6a41d47cd0f16ec73d2476662",
+    "plans/20261021-controlled-register-completion/phase-02a-event-policy-design.md": "d8a0a50db58e39be30c544d533c886b23d51b69a39c3879954e6ac38cb6623a4",
+    "plans/20261021-controlled-register-completion/phase-02d-source-adapter-acceptance.md": "3459e0cc98f2111a339a8c5ff4acd3a5809a06ee98f5cdd36b6539007cad4b02",
+    "tests/controlled-drugs/engine/candidate/record-review-v3-schema.sql": "137680d4692bc96966d4fb1b8e2d9beee30d7f971ce079d127622a2bef37e5b4",
+    "tests/controlled-drugs/engine/candidate/record_review_v3_gate_b_descriptor.py": "1cfd9f8ec0e9d04f6d8b77f60d53442de5e7854da05ad95a8bbdcbdb9c24319f",
+    "tests/controlled-drugs/engine/candidate/record_review_v3_gate_b.py": "d6fc2a3dd0af3e86289a32880da0f5d2809b48acb59e2eab2e97227460f95ef3"
+  },
+  "new_function": {
+    "name": "adapter_opening_site",
+    "schema": "controlled_review_v3",
+    "file": "record-review-v3-adapters-opening.sql",
+    "arguments": [
+      {
+        "name": "p_state",
+        "type": "jsonb"
+      },
+      {
+        "name": "p_dispense_id",
+        "type": "uuid"
+      },
+      {
+        "name": "p_product_id",
+        "type": "uuid"
+      }
+    ],
+    "result": "jsonb",
+    "language": "plpgsql",
+    "security_definer": false,
+    "volatility": "volatile",
+    "strict": false,
+    "parallel": "unsafe",
+    "configuration": [
+      "search_path=pg_catalog, public, pg_temp",
+      "TimeZone=UTC"
+    ],
+    "owner": "postgres",
+    "application_execute": false
+  },
+  "helper_result": {
+    "exact_keys": [
+      "state",
+      "site_id",
+      "reason"
+    ],
+    "state": "same bounded local accumulator with only declared opening cell/container rows added; no mutation of existing row values",
+    "site_id": "canonical UUID JSON string on supported O; JSON null on unsupported",
+    "reason": "JSON null on supported; opening_package_incomplete or opening_package_multisite on unsupported; integrity failures raise23514 instead"
+  },
+  "allowed_new_packet_selectors": [
+    {
+      "id": "opening_cells",
+      "relation": "public.controlled_stock_cells",
+      "key": [
+        "id"
+      ],
+      "predicate": "opening_id = target_event.opening_id AND dispense_id = D AND channel = 'prepared'; preserve zero rows for explicit refusal",
+      "group": "opening",
+      "max_rows": 512,
+      "fetch_limit": 513,
+      "order": [
+        "id"
+      ],
+      "index_support": "Existing separate FK-prefix indexes cs_fk_c287087edfb973779877cc0e(opening_id) and cs_fk_a4d860c8d830055d3ee7048e(dispense_id); no assertion of a combined predicate/order path. Reserved A2 selector: actual planner choice, residual channel filtering and ORDER BY id require measurement.",
+      "optional": false,
+      "stage": "A2_proposed",
+      "role": "opening_basis",
+      "full_row": true,
+      "min_rows": 0,
+      "cardinality_rule": "Select all exact immutable prepared cells, including zero quantities; LIMIT513 before processing; global512/full-byte limits still apply. Exact per-allocation sum reconciles retained boundary prepared_quantity for integrity. O support additionally requires that amount equal the original positive dispensed quantity. Cross-set and zero-site conflicts precede unsupported outcome."
+    },
+    {
+      "id": "opening_container",
+      "relation": "public.controlled_stock_containers",
+      "key": [
+        "id"
+      ],
+      "predicate": "id = exact opening cell.container_id",
+      "group": "opening",
+      "max_rows": 1,
+      "fetch_limit": 2,
+      "order": [
+        "id"
+      ],
+      "index_support": "PRIMARY KEY",
+      "optional": false,
+      "stage": "A2_proposed",
+      "role": "opening_basis",
+      "full_row": true,
+      "min_rows": 1,
+      "cardinality_rule": "exact singleton, subject to explicit conditional presence_rule"
+    }
+  ],
+  "existing_membership_reused": [
+    "reviewed_target parent/event/action/preparation/policy/opening",
+    "original_dispense native row/operation/invoice item/allocations/movements/exact stock sources/lots",
+    "opening_basis original movement-membership rows",
+    "reviewed_target annotation plus exact immediate amendment predecessor already retained by context"
+  ],
+  "helper_identity": "Read E only at p_state.target_event_id; require E.product_id=p_product_id=p_state.product_id, E.opening_id=p_state.opening_id, writer append_native_dispense_correction and exact clinical_annotation/operational_annotation kind. Require original correction event E.id binds exact D, product, patient/authorization and sequence. Opening fetched only by E.opening_id, matching product and immutable policy stock_unit; no latest/product-head selector.",
+  "opening_integrity": "Call unchanged controlled_stock_validate_opening; exact unique boundary entry for D equals constructor using stored return/correction/discrepancy versions and pickup id. Require all original D allocations, positive quantities, document/operation identities and exact original opening debit membership; no controlled/opening overlap. Parent validates complete retained ancestry and later links; target correction sequence exceeds stored correction version and exact later-source lookup yields E.id.",
+  "quantity_rule": {
+    "integrity": "Every selected cell has exact original allocation/lot/D/opening, matching prepared container/product/unit, no created_event_id, nonnegative opening_quantity. Sum all selected positive quantities per allocation equals that allocation stored boundary prepared_quantity. Parent reciprocal validation remains unchanged; no extra/missing/substituted allocation accepted.",
+    "support": "All original allocations have full boundary prepared_quantity=dispensed_quantity>0, empty held; pickup JSON null, return/discrepancy version0, retained correction prefix only clinical/operational. Full prepared quantity at one positive site.",
+    "valid_shortfall": "A valid partial/held/handoff boundary reconciled exactly by cells is unsupported; it is not converted to integrity failure solely because prepared<original. Inconsistent sum versus stored boundary always raises23514."
+  },
+  "site_precedence": [
+    {
+      "condition": "Original retained managed/assertion containers have >1 site or null site",
+      "outcome": "23514 before adding O rows"
+    },
+    {
+      "condition": "Retained singleton R exists and any selected O container (positive or zero) has site != R",
+      "outcome": "23514 before any unsupported return"
+    },
+    {
+      "condition": "Positive O site set is nonempty and any selected zero-quantity container site is outside that positive set",
+      "outcome": "23514; zero cells cannot hide a second site"
+    },
+    {
+      "condition": "Parent/cell/boundary integrity valid but full-package conditions fail or no positive cells",
+      "outcome": "site null, opening_package_incomplete; zero-only cells never establish site"
+    },
+    {
+      "condition": "Full-package conditions true; >1 positive sites; no prior cross-set/zero-site conflict",
+      "outcome": "site null, opening_package_multisite"
+    },
+    {
+      "condition": "Full-package true and exactly1 positive site; all earlier checks pass",
+      "outcome": "site that UUID, reason null, caller basis opening_custody_site"
+    }
+  ],
+  "common_dispatch_delta": {
+    "order": "Move existing retained-site agreement scan before site dispatch, preserving all existing non-O checks. Managed original D remains first A choice; never change A1 helper bodies/classifier.",
+    "K": "Only pickup_amendment with unmanaged D: exact document.pickup_amendment.original_pickup_id, already selected/validated by adapter_context/adapter_pickup, must classify as exact managed pickup. Derive its site with adapter_event_site and existing retained-site agreement. Null managed pickup =>unmanaged_original_pickup; never O fallback. Family remains null.",
+    "O": "Only clinical/operational annotation with unmanaged D: call new helper, adopt bounded returned state/site/reason. Opening rows added only by exact selectors.",
+    "other": "No changed scalar/native physical/return/discrepancy behavior, original D/pickup source membership, role precedence, errors or output envelope."
+  },
+  "bounds": {
+    "distinct_rows": 512,
+    "cell_fetch": 513,
+    "original_allocations": 100,
+    "allocation_fetch": 101,
+    "documents": 100,
+    "depth": 4,
+    "packet_bytes": 1048576,
+    "opening_boundary_entries": 200,
+    "new_recursive_queries": 0,
+    "scan_bound_claim": false
+  },
+  "independent_expected_metadata_proposal": {
+    "source_only": true,
+    "new_functions": [
+      "controlled_review_v3.adapter_opening_site(jsonb,uuid,uuid)"
+    ],
+    "changed_functions": [
+      "controlled_review_v3.collect_event_sources(uuid)",
+      "controlled_review_v3.snapshot()"
+    ],
+    "unchanged_functions": "All other 29 existing A1 function bodies/signatures/attributes, including 14 protocol stubs and the three trigger guards plus required(), remain byte-exact. No calendar/config/signing/worker/public-facade or guard implementation.",
+    "new_module": "record-review-v3-adapters-opening.sql",
+    "descriptor_integration": "Future separately named record_review_v3_gate_b_a2.py and record_review_v3_gate_b_a2_descriptor.py select new A2 common module/selector manifest plus pinned shared A1 native/clinical/context modules and opening helper. Derive a distinct expected metadata artifact from reviewed declared source; preserve independent A1 closure/expected/install. Fresh canonical206 reference only; no builder edits or new expected artifact now.",
+    "historical_pins": "Preserve A1, GateA, canonical205/private206 and source expectation bytes; never derive expectation from live observation.",
+    "profile_discriminator": {
+      "old_kind": "controlled-review-v3-gate-b-private-adapters-a1-v1",
+      "new_kind": "controlled-review-v3-gate-b-private-adapters-a2-v1",
+      "old_stage": "private_adapters_a1",
+      "new_stage": "private_adapters_a2",
+      "snapshot_delta": "Only snapshot() JSON kind literal changes in the new A2 schema copy. Its catalog observation shape and parent checks remain unchanged. All other schema module function bodies, including existing A1-worded refusal messages, stay byte-exact.",
+      "expected_delta": "New source-derived expected top-level kind, snapshot source, collector source, and one new helper entry. Total32 functions; identical13 tables/15 foreign keys and parent205/private206 descriptors. Source manifests/module paths/profile bookkeeping differ without broadening catalog or privileges."
+    }
+  },
+  "required_independent_review": [
+    "Signature/metadata/selector declaration and finite quantity/site precedence before source-body clearance",
+    "Exact K managed pickup source/row membership and zero-effect annotation versus pickup prepared decrease",
+    "Complete original-byte/body and manifest delta audit; no broad helper edits",
+    "Genuine188 prefix lifecycle and isolated products/opening fixture construction are separate dependencies",
+    "Independent full-row/ref/effect expected fixtures, later-append stability, boundary/overflow and cross-set corruption negatives",
+    "Actual bounded query/parent validator/phase cost and populated-source restore remain unproved"
+  ],
+  "prior_declaration_sha256": "2aa204a31114841111182298c59fec892f71555f716c2b0f18885333d1c1b879",
+  "lineage": {
+    "A1_retained": "Existing A1 common file/selector manifest/31-function246-input closure and independent expected/install remain separately admissible and unchanged.",
+    "A2_common_module": "record-review-v3-adapters-a2.sql",
+    "A2_selector_manifest": "record-review-v3-adapters-a2-selectors.json",
+    "A2_new_module": "record-review-v3-adapters-opening.sql",
+    "A2_builder_proposed": "record_review_v3_gate_b_a2.py",
+    "A2_descriptor_proposed": "record_review_v3_gate_b_a2_descriptor.py",
+    "copy_rule": "A2 common module copies all existing common function bodies byte-exact except collect_event_sources. Existing native/clinical/context modules remain unchanged and pinned shared dependencies. Function inventory for copied common helpers names the new A2 module; no A1 selector/source overwrite.",
+    "installation": "Separately source-derived expected metadata and sealed freshcanonical206-only A2 profile, with new A2 schema/snapshot discriminator. No in-place replacement of installed A1 namespace or expected metadata. Prospective names only; no builder/descriptor/schema candidate edits by this declaration.",
+    "A2_schema_module": "record-review-v3-schema-a2.sql",
+    "schema_copy_rule": "Copy A1 schema module into a new A2 filename, changing only snapshot() discriminator literal. Existing A1 schema/descriptor/builder remain untouched. Future separate A2 descriptor/build selection uses this new file and the explicit A2 kind/stage; no automatic rewriting of A1 validators."
+  }
+}

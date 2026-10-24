@@ -1,0 +1,48 @@
+{
+  "kind": "prospective-stored-adapter-v2-regression-lineage",
+  "old_eight_method_asts_unchanged": true,
+  "new_seven_method_asts_unchanged_between_contexts": true,
+  "old_logical_id_path": "tmp/secondary-review-20261021/portable-stored-runtime-adapter-draft/test_portable_runtime_adapter.py",
+  "old_classes": {
+    "AdapterTests": [
+      "test_all25_adapter_methods_offline_callback_receipt_only",
+      "test_callback_exact_key_type_value_boundaries",
+      "test_callback_primary_failure_and_forged_receipt_not_swallowed",
+      "test_exact25_names_four_replacements21_function_identities_and_helper",
+      "test_missing_authority_is_exact_first_path_in_new_copy",
+      "test_missing_source_root_refuses_before_any_import",
+      "test_original_globals_and_sourcebytes_unchanged_by_factory",
+      "test_pinned_source_reader_refuses_changed_bytes_symlink_and_fifo"
+    ]
+  },
+  "new_logical_id_path": "tests/controlled-drugs/portable-runner/controller-integration/prospective-stored-adapter/test_stored_adapter_v2.py",
+  "new_classes": {
+    "StoredAdapterV2Tests": [
+      "test_actual_old_missing_path_failure_then_all25_new_assertions_pass_offline",
+      "test_changed_missing_symlink_and_fifo_support_refuse_before_target_import",
+      "test_explicit_support_path_and_legacy_hash_are_exact_no_private_fallback",
+      "test_factory_changes_no_target_global_and_class_cleanup_restores_even_failed_setup",
+      "test_four_replacement_asts_and_twentyone_inherited_method_identities_unchanged",
+      "test_original_deadline_and_external_failure_are_not_reset_or_swallowed",
+      "test_prospective_worker_has_only_explicit_source_placement_role_delta"
+    ]
+  },
+  "files": {
+    "tmp/secondary-review-20261021/portable-stored-runtime-adapter-draft/test_portable_runtime_adapter.py": {
+      "bytes": 7147,
+      "sha256": "00b29fa7f9521df40774e1b2630686bba83beebaf4e3ca8d5b493f9cfca07e09"
+    },
+    "tmp/secondary-review-20261021/portable-runner-draft/controller-integration/prospective-stored-adapter/test_portable_runtime_adapter_v2_regression.py": {
+      "bytes": 8032,
+      "sha256": "cf4d345b35144fcdda1a7375d341a9406d030ce69c818b4a39b0510497aa7c1e"
+    },
+    "tmp/secondary-review-20261021/portable-runner-draft/controller-integration/prospective-stored-adapter/test_stored_adapter_v2.py": {
+      "bytes": 8928,
+      "sha256": "e7b785e0d8ccc727c9964dd3f07d62045c71f5c11538f046cf6ba9d69695fd54"
+    },
+    "tmp/secondary-review-20261021/portable-runner-draft/controller-integration/prospective-stored-adapter/test_stored_adapter_v2_canonical.py": {
+      "bytes": 8939,
+      "sha256": "56fa226ca553bb09ae1f336086154d722bfe0f75c68620fe53e28a6ae18d966f"
+    }
+  }
+}
