@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ExactJsonNumber } from "../../src/hub/features/controlled-drugs/record-review/exact-json.ts";
-import { reviewContextQuantity, reviewInstantMicroseconds, reviewQuantityThousandths } from "../../src/hub/features/controlled-drugs/record-review/exact-values.ts";
+import { reviewContextQuantity, reviewInstantMicroseconds, reviewQuantityThousandths, reviewSnapshotTotalThousandths } from "../../src/hub/features/controlled-drugs/record-review/exact-values.ts";
 
 const quantity = (token: string) => reviewQuantityThousandths(new ExactJsonNumber(token));
 test("source quantities retain exact thousandths across scale, exponents and cancellation", () => {
@@ -24,6 +24,15 @@ test("context decimal grammar stays separate from general numeric JSON", () => {
   assert.equal(reviewContextQuantity("0.000", true), 0n);
   for (const token of ["0", "-0", "0.000", "01", "+1", "1e0", "1.0000", ".1", "1.", "100000000000", " 1"])
     assert.throws(() => reviewContextQuantity(token));
+});
+test("snapshot aggregates may exceed individual stock row bounds without losing thousandths", () => {
+  assert.equal(reviewSnapshotTotalThousandths("19999999999999.800"), 19999999999999800n);
+  assert.equal(reviewSnapshotTotalThousandths("-19999999999999.8"), -19999999999999800n);
+  assert.equal(reviewSnapshotTotalThousandths("0"), 0n);
+  assert.equal(reviewSnapshotTotalThousandths("-0.000"), 0n);
+  assert.equal(reviewSnapshotTotalThousandths("1.1"), 1100n);
+  assert.equal(reviewSnapshotTotalThousandths("9".repeat(1024)), BigInt("9".repeat(1024)) * 1000n);
+  for (const value of ["1e3", "+1", "01", "1.0001", "1.", " 1", "9".repeat(1025)]) assert.throws(() => reviewSnapshotTotalThousandths(value));
 });
 test("instants preserve the microsecond boundary and equivalent explicit offsets", () => {
   const utc = reviewInstantMicroseconds("2026-10-24T10:00:00.123456Z");

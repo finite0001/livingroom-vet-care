@@ -1,5 +1,6 @@
 import { ExactJsonNumber, type ExactJson } from "./exact-json.ts";
 import { reviewInstantMicroseconds } from "./exact-values.ts";
+import { sameReviewJsonb as equal } from "./jsonb-equality.ts";
 import { hashReviewEvent, hashReviewObligation, hashReviewParentRequest, hashReviewPreparationContext, hashReviewSourceRow, hashReviewTarget } from "./component-hashes.ts";
 import { verifyProspectivePacketStructure } from "./prospective-packet-structure.ts";
 import type { PreparedReviewPacket } from "./prepared-packet.ts";
@@ -22,14 +23,6 @@ function object(value: ExactJson): EvidenceObject {
   if (!value || typeof value !== "object" || Array.isArray(value) || value instanceof ExactJsonNumber) invalid();
   return value as EvidenceObject;
 }
-function equal(a: ExactJson, b: ExactJson): boolean {
-  if (a instanceof ExactJsonNumber || b instanceof ExactJsonNumber)
-    return a instanceof ExactJsonNumber && b instanceof ExactJsonNumber && a.token === b.token;
-  if (a === null || b === null || typeof a !== "object" || typeof b !== "object") return a === b;
-  if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((value, index) => equal(value, b[index]));
-  const aa = object(a), bb = object(b);
-  return Object.keys(aa).length === Object.keys(bb).length && Object.keys(aa).every(key => Object.prototype.hasOwnProperty.call(bb, key) && equal(aa[key], bb[key]));
-}
 function instant(value: ExactJson): bigint {
   if (typeof value !== "string") invalid();
   return reviewInstantMicroseconds(value);
@@ -50,7 +43,10 @@ export async function verifyProspectiveComponentConsistency(packet: PreparedRevi
   }
   const event = packet.event, obligation = packet.obligation;
   if (adapters[packet.adapter.event_kind] !== packet.adapter.adapter_id) invalid();
-  if (event.secondary_review_required !== true || await hashReviewTarget(packet.target) !== obligation.target_hash ||
+  if (event.secondary_review_required !== true || await hashReviewEvent(event) !== event.record_hash ||
+    await hashReviewPreparationContext(packet.parent_preparation) !== event.context_hash ||
+    await hashReviewParentRequest(packet.parent_preparation) !== packet.parent_preparation.request_hash ||
+    await hashReviewTarget(packet.target) !== obligation.target_hash ||
     await hashReviewObligation(obligation) !== obligation.binding_hash) invalid();
 
   function retained(relation: string, id: ExactJson, role: string): EvidenceObject {

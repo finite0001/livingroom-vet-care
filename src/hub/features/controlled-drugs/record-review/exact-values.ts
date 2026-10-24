@@ -31,6 +31,18 @@ export function reviewContextQuantity(value: string, allowZero = false): bigint 
   return quantity;
 }
 
+/** A frozen sum of numeric(14,3) rows can exceed the range of any single row.
+ * PostgreSQL emits ordinary decimal text with at most three places here. The
+ * 1,024-character ceiling is a conservative client resource limit; exceeding it
+ * refuses the review instead of rounding or truncating the aggregate.
+ */
+export function reviewSnapshotTotalThousandths(value: string): bigint {
+  if (typeof value !== "string" || value.length > 1024) invalid();
+  const match = /^(-?)(0|[1-9][0-9]*)(?:\.([0-9]{1,3}))?$/.exec(value);
+  if (!match) invalid();
+  return (match[1] ? -1n : 1n) * BigInt(match[2] + (match[3] ?? "").padEnd(3, "0"));
+}
+
 /** Source instants compare at PostgreSQL's microsecond precision. Date is used
  * only for bounded Gregorian calendar arithmetic, never for the final instant
  * comparison (which would discard the last three fractional digits).
