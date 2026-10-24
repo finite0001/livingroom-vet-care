@@ -24,8 +24,47 @@ test("empty but continuing pages remain navigable without an automatic scan", ()
   const parsed = verifyReviewQueuePage(request, decode({ ...page, data: { ...page.data, items: [] } }));
   assert.equal(parsed.data.items.length, 0); assert.ok(parsed.data.next_cursor);
   const nextRequest = { ...request, cursor };
-  const next = { ...page, data: { ...page.data, items: [], next_cursor: { ...cursor, after_sequence: "9007199254740994" } } };
+  const next = { ...page, data: { ...page.data, items: [], next_cursor: { ...cursor, after_sequence: "9007199254741093" } } };
   assert.ok(verifyReviewQueuePage(nextRequest, decode(next)).data.next_cursor);
+});
+test("nonphysical events preserve absent observation without substituting the recorded time", () => {
+  const kind = "append_native_dispense_correction:clinical_annotation";
+  const input = { ...request, event_kind: kind };
+  const data = { ...page.data, next_cursor: null, items: [{ ...summary, event_kind: kind, observed_at: null }] };
+  const accepted = verifyReviewQueuePage(input, decode({ ...page, data })).data.items[0];
+  assert.equal(accepted.observed_at, null);
+  assert.equal(accepted.recorded_at, summary.recorded_at);
+  const { observed_at: _omitted, ...missingObservation } = data.items[0];
+  for (const item of [missingObservation, { ...data.items[0], observed_at: "" }, { ...data.items[0], recorded_at: null }])
+    assert.throws(() => verifyReviewQueuePage(input, decode({ ...page, data: { ...data, items: [item] } })));
+});
+test("a continuation must leave positions below the frozen high water to examine", () => {
+  const exhausted = { ...page.data, next_cursor: { ...cursor, after_sequence: cursor.high_water } };
+  assert.throws(() => verifyReviewQueuePage(request, decode({ ...page, data: exhausted })));
+  assert.throws(() => verifyReviewQueuePage(request, decode({ ...page, data: { ...exhausted, items: [] } })));
+  assert.equal(verifyReviewQueuePage(request, decode({ ...page, data: { ...exhausted, next_cursor: null } })).data.next_cursor, null);
+});
+test("examined counts and stopping points fit the exact integer scan range", () => {
+  const response = (changes: Record<string, unknown>) => decode({ ...page, data: { ...page.data, ...changes } });
+  for (const changes of [
+    { items: [], high_water: "10", examined: 100, next_cursor: { ...cursor, after_sequence: "1", high_water: "10" } },
+    { items: [], high_water: "1", examined: 0, next_cursor: null },
+    { items: [], next_cursor: { ...cursor, after_sequence: "99" } },
+    { items: [], examined: 99 },
+  ]) assert.throws(() => verifyReviewQueuePage(request, response(changes)));
+  assert.equal(verifyReviewQueuePage(request, response({ items: [], high_water: "0", examined: 0, next_cursor: null })).data.examined, 0);
+  const single = { ...request, page_size: 1 };
+  assert.throws(() => verifyReviewQueuePage(single, response({ next_cursor: null })));
+  assert.throws(() => verifyReviewQueuePage(single, response({ next_cursor: { ...cursor, after_sequence: "9007199254740994" } })));
+  // Sparse sequence ranges remain valid; there is no consecutive-row assumption.
+  const sparse = response({ items: [{ ...summary, event_sequence: "9" }], high_water: "10", examined: 1,
+    next_cursor: { ...cursor, after_sequence: "9", high_water: "10" } });
+  assert.equal(verifyReviewQueuePage(single, sparse).data.examined, 1);
+  const exhausted = response({ items: [{ ...summary, event_sequence: "10" }], high_water: "10", examined: 1, next_cursor: null });
+  assert.equal(verifyReviewQueuePage(single, exhausted).data.next_cursor, null);
+  const hiddenEndpoint = { items: [{ ...summary, event_sequence: "9" }], high_water: "10", examined: 1, next_cursor: null };
+  assert.throws(() => verifyReviewQueuePage(request, response(hiddenEndpoint)));
+  assert.equal(verifyReviewQueuePage(request, response({ ...hiddenEndpoint, examined: 2 })).data.examined, 2);
 });
 test("cursor scope, authorization version, order and bounds cannot drift", () => {
   for (const bad of [{ ...request, cursor: { ...cursor, actor_id: product } }, { ...request, view: "exceptions" }, { ...request, page_size: 101 }])

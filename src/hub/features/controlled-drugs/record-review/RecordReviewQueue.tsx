@@ -42,7 +42,7 @@ export function RecordReviewQueue({ page, busy, error, openRecord, nextPage, res
           <div><dt className="text-muted-foreground">Record review</dt><dd>{labels[item.review_state]}</dd></div>
           <div><dt className="text-muted-foreground">Deadline</dt><dd>{labels[item.deadline_state]}</dd></div>
           <div><dt className="text-muted-foreground">Signing</dt><dd>{labels[item.signing_state]} · {labels[item.signing_reason]}</dd></div>
-          <div className="min-w-0"><dt className="text-muted-foreground">Event time</dt><dd className="break-words"><time dateTime={item.observed_at}>{item.observed_at}</time></dd></div>
+          <div className="min-w-0"><dt className="text-muted-foreground">Physical observation time</dt><dd className="break-words">{item.observed_at === null ? "No physical observation recorded" : <time dateTime={item.observed_at}>{item.observed_at}</time>}</dd></div>
           <div className="min-w-0"><dt className="text-muted-foreground">Recorded time</dt><dd className="break-words"><time dateTime={item.recorded_at}>{item.recorded_at}</time></dd></div>
           <div className="min-w-0"><dt className="text-muted-foreground">Due time</dt><dd className="break-words">{item.due_at ? <time dateTime={item.due_at}>{item.due_at}</time> : "No resolved deadline"}</dd></div>
         </dl>

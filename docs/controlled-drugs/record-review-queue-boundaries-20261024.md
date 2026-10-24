@@ -1,0 +1,9 @@
+# Review queue observation and page boundaries — 2026-10-24
+
+Canonical annotation, correction and discrepancy records can have no physical observation time. The queue now accepts an explicit null and displays “No physical observation recorded,” with recorded time separately labeled. Missing fields, empty timestamps and absent recorded time remain invalid. Historical source timestamps are preserved; no recorded-time fallback or configuration-era floor is introduced.
+
+The page verifier also rejects impossible scan progress using exact bigint sequence arithmetic. Examined candidates must fit between the prior position and the examined endpoint. A continuation must leave positions below the frozen high water, and it may exist only after a full visible page or 100 examined candidates. A full visible page stops at its final visible event; an excluded endpoint must count as another examined event. Sparse sequences remain valid: numeric distance bounds the candidate count but does not equal it.
+
+These checks depend on the backend contract that a nonzero high-water endpoint names an existing event in the requested product. Future backend handling of untrusted supplied cursors must verify that endpoint; cursor contents never authorize access. This change does not implement or mount queue/detail RPCs. It preserves the separate source, current authorization, evidence-admission and release requirements.
+
+Validation: all 1,808 local tests, three TypeScript configurations and build pass; four existing lint warnings remain. Three focused browser tests pass, including absent-observation presentation, responsive queue behavior and cross-tab recovery-pointer locking. Independent review accepted 14,241 valid sparse/capped/bigint page cases and refused 14 hostile cases. Review report SHA256: `d86ae4c7298221fdec9ebe1a502baf1662fd61c0e4bffd88fbb4e8fbcf689d84`.
